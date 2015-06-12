@@ -316,17 +316,6 @@ class SecurionPayTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_create_token
-    @gateway.expects(:ssl_request).returns(successful_create_token_response)
-
-    assert response = @gateway.create_token(@credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-
-    assert_equal 'tok_xPpdNTy847F12N4CW8847p9A', response.authorization
-    assert response.test?
-  end
-
   private
 
   def pre_scrubbed
@@ -800,23 +789,6 @@ class SecurionPayTest < Test::Unit::TestCase
         "brand" : "Visa",
         "type" : "Credit Card"
       } ]
-    }
-    RESPONSE
-  end
-
-  def successful_create_token_response
-    <<-RESPONSE
-    {
-      "id": "tok_xPpdNTy847F12N4CW8847p9A",
-      "created": 1426844151,
-      "objectType": "token",
-      "first6": "424242",
-      "last4": "4242",
-      "fingerprint": "nHV0cI7tBJLRTpQc",
-      "expMonth": "11",
-      "expYear": "2022",
-      "cardholderName": "John Doe",
-      "used": false
     }
     RESPONSE
   end

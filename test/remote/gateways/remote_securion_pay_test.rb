@@ -50,27 +50,6 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
-  def test_successful_purchase_with_token
-    # Create token
-    assert response = @gateway.create_token(@credit_card)
-    assert_success response
-    token = response.authorization
-    assert_match TOKEN_ID_REGEX, token
-
-    # Charge
-    assert response = @gateway.purchase(@amount, token, @options)
-    assert_success response
-    assert_equal "Transaction approved", response.message
-    assert_equal "foo@example.com", response.params["metadata"]["email"]
-    assert_match CHARGE_ID_REGEX, response.authorization
-  end
-
-  def test_unsuccessful_purchase_with_token
-    assert response = @gateway.purchase(@amount, @invalid_token, @options)
-    assert_failure response
-    assert_match %r{Wrong token or already used}, response.message
-  end
-
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
