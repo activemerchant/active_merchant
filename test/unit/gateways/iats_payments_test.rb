@@ -243,6 +243,15 @@ class IatsPaymentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_handles_empty_authorization_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+    end.respond_with(empty_authorization_result_response)
+
+    assert_nil response.params[:authorization_result]
+  end
+
   private
 
   def successful_purchase_response
@@ -502,6 +511,31 @@ class IatsPaymentsTest < Test::Unit::TestCase
           </DeleteCustomerCodeV1Response>
         </soap:Body>
       </soap:Envelope>
+    XML
+  end
+
+  def empty_authorization_result_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+  <soap12:Body>
+    <ProcessCreditCardV1Response xmlns="https://www.iatspayments.com/NetGate/">
+      <ProcessCreditCardV1Result>
+        <IATSRESPONSE>
+          <STATUS>Success</STATUS>
+          <ERRORS />
+          <PROCESSRESULT>
+            <AUTHORIZATIONRESULT></AUTHORIZATIONRESULT>
+            <CUSTOMERCODE />
+            <SETTLEMENTBATCHDATE> 04/22/2014</SETTLEMENTBATCHDATE>
+            <SETTLEMENTDATE> 04/23/2014</SETTLEMENTDATE>
+            <TRANSACTIONID>A6DE6F24</TRANSACTIONID>
+          </PROCESSRESULT>
+        </IATSRESPONSE>
+      </ProcessCreditCardV1Result>
+    </ProcessCreditCardV1Response>
+  </soap12:Body>
+</soap12:Envelope>
     XML
   end
 end
