@@ -14,10 +14,6 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       description: 'Purchase',
       email: "longbob.longsen@example.com"
     }
-
-    @minimal_options= {
-      billing_address: address
-    }
   end
 
   def test_transcript_scrubbing
@@ -37,7 +33,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_minimal_options
-    response = @gateway.purchase(@amount, @credit_card, @minimal_options)
+    response = @gateway.purchase(@amount, @credit_card, billing_address: address)
     assert_success response
     assert_equal 'Succeeded', response.message
   end

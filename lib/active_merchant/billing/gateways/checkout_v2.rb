@@ -3,8 +3,8 @@ module ActiveMerchant #:nodoc:
     class CheckoutV2Gateway < Gateway
       self.display_name = "Checkout.com V2 Gateway"
       self.homepage_url = "https://www.checkout.com/"
-      self.test_url = "https://api2.checkout.com/v2/"
-      self.live_url = "http://sandbox.checkout.com/api2/v2/"
+      self.test_url = "https://api2.checkout.com/v2"
+      self.live_url = "http://sandbox.checkout.com/api2/v2"
 
       self.supported_countries = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'MU', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'US']
       self.default_currency = "USD"
@@ -67,9 +67,9 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((Authorization: )[a-zA-Z0-9._-]+)i, '\1[FILTERED]').
-          gsub(%r((\\",\\"number\\":\\")\d+), '\1[FILTERED]').
-          gsub(%r((\\"cvv\\":\\")\d+), '\1[FILTERED]')
+          gsub(%r((Authorization: )[^\\]*)i, '\1[FILTERED]').
+          gsub(%r(("number\\":\\")\d+), '\1[FILTERED]').
+          gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -91,16 +91,16 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:email] = options[:email] || "unspecified@example.com"
-        if(billing_address = options[:billing_address] && post[:card])
+        address = options[:billing_address]
+        if(address && post[:card])
           post[:card][:billingDetails] = {}
-          post[:card][:billingDetails][:address1] = billing_address[:address1]
-          post[:card][:billingDetails][:address2] = billing_address[:address2]
-          post[:card][:billingDetails][:city] = billing_address[:city]
-          post[:card][:billingDetails][:state] = billing_address[:state]
-          post[:card][:billingDetails][:country] = billing_address[:country]
-          post[:card][:billingDetails][:postcode]    = billing_address[:zip]
-          post[:card][:billingDetails][:phone] ={}
-          post[:card][:billingDetails][:phone][:number] = billing_address[:phone]
+          post[:card][:billingDetails][:address1] = address[:address1]
+          post[:card][:billingDetails][:address2] = address[:address2]
+          post[:card][:billingDetails][:city] = address[:city]
+          post[:card][:billingDetails][:state] = address[:state]
+          post[:card][:billingDetails][:country] = address[:country]
+          post[:card][:billingDetails][:postcode] = address[:zip]
+          post[:card][:billingDetails][:phone] = { number: address[:phone] }
         end
       end
 
@@ -113,17 +113,16 @@ module ActiveMerchant #:nodoc:
           response = parse(e.response.body)
         end
 
-          succeeded = success_from(response)
-          Response.new(
-            succeeded,
-            message_from(succeeded, response),
-            response,
-            authorization: authorization_from(response),
-            error_code: error_code_from(succeeded, response),
-            test: test?,
-            avs_result: avs_result(action, response),
-            cvv_result: cvv_result(action, response),
-          )
+        succeeded = success_from(response)
+        Response.new(
+          succeeded,
+          message_from(succeeded, response),
+          response,
+          authorization: authorization_from(response),
+          error_code: error_code_from(succeeded, response),
+          test: test?,
+          avs_result: avs_result(action, response),
+          cvv_result: cvv_result(action, response))
       end
 
       def headers
@@ -133,12 +132,16 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def url(post,action, authorization)
+      def url(post, action, authorization)
         if action == :authorize
-          (test? ? test_url : live_url) + "charges/card"
+          "#{base_url}/charges/card"
         else
-          (test? ? test_url : live_url) + "charges/" + authorization + "/"+ action.to_s
+          "#{base_url}/charges/#{authorization}/#{action}"
         end
+      end
+
+      def base_url
+        test? ? test_url : live_url
       end
 
       def avs_result(action, response)
@@ -150,7 +153,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        return {} unless body
         JSON.parse(body)
         rescue JSON::ParserError
           {

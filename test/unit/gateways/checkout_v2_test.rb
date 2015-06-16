@@ -127,7 +127,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    assert_equal post_scrubbed, @gateway.scrub(transcript)
+    assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
   end
 
   def test_invalid_json
@@ -142,18 +142,18 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   private
 
-  def transcript
-    <<-PRE_SCRUBBED
-    <- "POST /api2/v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: sk_test_ab12301d-e432-4ea7-97d1-569809518aaf\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: sandbox.checkout.com\r\nContent-Length: 359\r\n\r\n"
-    <- "{\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"4242424242424242\",\"cvv\":\"100\",\"expiryYear\":\"2018\",\"expiryMonth\":\"06\",\"billingDetails\":{\"address1\":\"456 My Street\",\"address2\":\"Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"country\":\"CA\",\"postcode\":\"K1C2N6\",\"phone\":{\"number\":\"(555)555-5555\"}}},\"email\":\"longbob.longsen@gmail.com\"}"
-    PRE_SCRUBBED
+  def pre_scrubbed
+    %q(
+      <- "POST /v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: sk_test_ab12301d-e432-4ea7-97d1-569809518aaf\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api2.checkout.com\r\nContent-Length: 346\r\n\r\n"
+      <- "{\"autoCapture\":\"n\",\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"4242424242424242\",\"cvv\":\"100\",\"expiryYear\":\"2018\"
+    )
   end
 
   def post_scrubbed
-    <<-POST_SCRUBBED
-    <- "POST /api2/v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: sandbox.checkout.com\r\nContent-Length: 359\r\n\r\n"
-    <- "{\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"4242424242424242\",\"cvv\":\"100\",\"expiryYear\":\"2018\",\"expiryMonth\":\"06\",\"billingDetails\":{\"address1\":\"456 My Street\",\"address2\":\"Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"country\":\"CA\",\"postcode\":\"K1C2N6\",\"phone\":{\"number\":\"(555)555-5555\"}}},\"email\":\"longbob.longsen@gmail.com\"}"
-    POST_SCRUBBED
+    %q(
+      <- "POST /v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api2.checkout.com\r\nContent-Length: 346\r\n\r\n"
+      <- "{\"autoCapture\":\"n\",\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"cvv\":\"[FILTERED]\",\"expiryYear\":\"2018\"
+    )
   end
 
   def successful_purchase_response
