@@ -637,6 +637,34 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_contactless_flag_is_included_with_emv_card_data
+    stub_comms(@gateway, :ssl_request) do
+      @emv_credit_card.contactless = true
+      @gateway.purchase(@amount, @emv_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      data =~ /card\[read_method\]=contactless/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_contactless_flag_is_not_included_with_emv_card_data_by_default
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @emv_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      data !~ /card\[read_method\]=contactless/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_encrypted_pin_is_included_with_emv_card_data
+    stub_comms(@gateway, :ssl_request) do
+      @emv_credit_card.encrypted_pin_cryptogram = "8b68af72199529b8"
+      @emv_credit_card.encrypted_pin_ksn = "ffff0102628d12000001"
+      @gateway.purchase(@amount, @emv_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert data =~ /card\[encrypted_pin\]=8b68af72199529b8/
+      assert data =~ /card\[encrypted_pin_key_id\]=ffff0102628d12000001/
+    end.respond_with(successful_purchase_response)
+  end
+
   def generate_options_should_allow_key
     assert_equal({:key => '12345'}, generate_options({:key => '12345'}))
   end
