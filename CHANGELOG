@@ -65,7 +65,10 @@
 * QuickPay: Add support for v10 API [ta]
 * Fat Zebra: Fix refund and store signatures [duff]
 * Fat Zebra: Allow transactions without a CVV [duff]
-
+* Add "contactless" flag to credit card model [davidseal]
+* Stripe: Add "contactless" flag support to gateway [davidseal]
+* Add encrypted_pin data to credit card model [ryanbalsdon]
+* Stripe: Add encrypted_pin support to gateway [ryanbalsdon]
 
 == Version 1.49.0 (May 1, 2015)
 
