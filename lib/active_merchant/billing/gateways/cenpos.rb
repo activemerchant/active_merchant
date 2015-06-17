@@ -49,6 +49,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_void_required_elements(post)
         add_reference(post, authorization)
+        add_remembered_amount(post, authorization)
         add_tax(post, options)
 
         commit("Void", post)
@@ -130,10 +131,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        reference_number, last_four_digits, original_amount = split_authorization(authorization)
+        reference_number, last_four_digits = split_authorization(authorization)
         post[:ReferenceNumber] = reference_number
         post[:CardLastFourDigits] = last_four_digits
-        post[:Amount] = original_amount
+      end
+
+      def add_remembered_amount(post, authorization)
+        post[:Amount] = split_authorization(authorization).last
       end
 
       def commit(action, post)

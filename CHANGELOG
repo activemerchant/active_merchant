@@ -18,6 +18,7 @@
 * Litle: Add debt_repayment_flag [duff]
 * iATS: Support ACH [rwdaigle]
 * CheckoutV2: Add Gateway [anellis]
+* CenPOS: Fix refund amount issue [duff]
 
 
 == Version 1.50.0 (June 1, 2015)

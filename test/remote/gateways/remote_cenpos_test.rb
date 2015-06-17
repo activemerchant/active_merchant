@@ -81,8 +81,8 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_success response
     assert_equal "Succeeded", response.message
 
-    capture = @gateway.capture(@amount + 200, response.authorization)
-    capture = @gateway.capture(@amount + 200, response.authorization)
+    capture = @gateway.capture(@amount, response.authorization)
+    capture = @gateway.capture(@amount, response.authorization)
     assert_failure capture
     assert_equal "Duplicated transaction", capture.message
   end
