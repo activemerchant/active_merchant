@@ -540,10 +540,10 @@ module ActiveMerchant #:nodoc:
             :last_name => payment.last_name
           )
           parameters[:credit_card] = {
-            :number => credit_card_or_vault_id.number,
-            :cvv => credit_card_or_vault_id.verification_value,
-            :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-            :expiration_year => credit_card_or_vault_id.year.to_s
+            :number => payment.number,
+            :cvv => payment.verification_value,
+            :expiration_month => payment.month.to_s.rjust(2, "0"),
+            :expiration_year => payment.year.to_s
           }
         end
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address] && !options[:payment_method_token]
