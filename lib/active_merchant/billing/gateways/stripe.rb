@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
         'incorrect_cvc' => STANDARD_ERROR_CODE[:incorrect_cvc],
         'incorrect_zip' => STANDARD_ERROR_CODE[:incorrect_zip],
         'card_declined' => STANDARD_ERROR_CODE[:card_declined],
+        'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
         'processing_error' => STANDARD_ERROR_CODE[:processing_error]
       }
 
@@ -435,7 +436,7 @@ module ActiveMerchant #:nodoc:
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code,
           :emv_authorization => emv_authorization_from_response(response),
-          :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]]
+          :error_code => success ? nil : error_code_from(response)
         )
       end
 
@@ -473,6 +474,15 @@ module ActiveMerchant #:nodoc:
         return response["error"]["emv_auth_data"] if response["error"]
 
         card_from_response(response)["emv_auth_data"]
+      end
+
+      def error_code_from(response)
+        code = response['error']['code']
+        decline_code = response['error']['decline_code'] if code == 'card_declined'
+
+        error_code = STANDARD_ERROR_CODE_MAPPING[decline_code]
+        error_code ||= STANDARD_ERROR_CODE_MAPPING[code]
+        error_code
       end
     end
   end

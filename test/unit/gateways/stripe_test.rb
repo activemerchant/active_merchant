@@ -430,6 +430,28 @@ class StripeTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    refute response.test? # unsuccessful request defaults to live
+    assert_equal 'ch_test_charge', response.authorization
+  end
+
+  def test_declined_request_advanced_decline_codes
+    @gateway.expects(:ssl_request).returns(declined_call_issuer_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:call_issuer], response.error_code
+    refute response.test? # unsuccessful request defaults to live
+    assert_equal 'ch_test_charge', response.authorization
+  end
+
+  def test_declined_request_advanced_decline_code_not_in_standard_mapping
+    @gateway.expects(:ssl_request).returns(declined_generic_decline_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert !response.test? # unsuccessful request defaults to live
     assert_equal 'ch_test_charge', response.authorization
   end
@@ -1325,6 +1347,34 @@ class StripeTest < Test::Unit::TestCase
         "message": "Your card was declined.",
         "type": "card_error",
         "code": "card_declined",
+        "charge": "ch_test_charge"
+      }
+    }
+    RESPONSE
+  end
+
+  def declined_call_issuer_purchase_response
+    <<-RESPONSE
+    {
+      "error": {
+        "message": "Your card was declined.",
+        "type": "card_error",
+        "code": "card_declined",
+        "decline_code": "call_issuer",
+        "charge": "ch_test_charge"
+      }
+    }
+    RESPONSE
+  end
+
+  def declined_generic_decline_purchase_response
+    <<-RESPONSE
+    {
+      "error": {
+        "message": "Your card was declined.",
+        "type": "card_error",
+        "code": "card_declined",
+        "decline_code": "generic_decline",
         "charge": "ch_test_charge"
       }
     }
