@@ -123,6 +123,7 @@ module ActiveMerchant #:nodoc:
             end
             xml.refTransId(transaction_id)
 
+            add_invoice(xml, options)
             add_customer_data(xml, nil, options)
             add_user_fields(xml, amount, options)
           end
