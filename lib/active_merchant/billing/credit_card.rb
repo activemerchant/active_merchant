@@ -159,6 +159,21 @@ module ActiveMerchant #:nodoc:
       # @return [String]
       attr_accessor :fallback_reason
 
+      # Returns or sets whether card-present card data has been read contactlessly.
+      #
+      # @return [true, false]
+      attr_accessor :contactless
+
+      # Returns the ciphertext of the card's encrypted PIN.
+      #
+      # @return [String]
+      attr_accessor :encrypted_pin_cryptogram
+
+      # Returns the Key Serial Number (KSN) of the card's encrypted PIN.
+      #
+      # @return [String]
+      attr_accessor :encrypted_pin_ksn
+
       def type
         ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         brand
