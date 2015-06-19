@@ -14,6 +14,7 @@
 * Sage: Credit really is credit not refund [duff]
 * Sage: Add ability to refund [duff]
 * Cardstream: Add scrubbing [anellis]
+* Stripe: Parse EMV ARC from error response [bizla]
 
 
 == Version 1.50.0 (June 1, 2015)

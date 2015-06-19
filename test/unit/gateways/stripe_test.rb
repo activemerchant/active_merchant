@@ -214,6 +214,17 @@ class StripeTest < Test::Unit::TestCase
     assert response.emv_authorization, "Response should include emv_authorization containing the EMV ARPC"
   end
 
+  def test_declined_authorization_with_emv_credit_card
+    @gateway.expects(:ssl_request).returns(declined_authorization_response_with_emv_auth_data)
+
+    assert response = @gateway.authorize(@amount, @emv_credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+
+    assert_equal 'ch_declined_auth', response.authorization
+    assert response.emv_authorization, "Response should include emv_auth_data containing the EMV ARC"
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
@@ -1301,6 +1312,21 @@ class StripeTest < Test::Unit::TestCase
         "code": "card_declined",
         "charge": "ch_4IKxffGOKVRJ4l"
       }
+    }
+    RESPONSE
+  end
+
+  def declined_authorization_response_with_emv_auth_data
+    <<-RESPONSE
+    {
+     "error": {
+       "message": "Your card was declined.",
+       "type": "card_error",
+       "code": "card_declined",
+       "decline_code": "generic_decline",
+       "charge": "ch_declined_auth",
+       "emv_auth_data": "8A023531910ACD16B371D277FDB90000"
+     }
     }
     RESPONSE
   end
