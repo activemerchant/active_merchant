@@ -418,7 +418,7 @@ module ActiveMerchant #:nodoc:
 
         success = !response.key?("error")
 
-        card = response["card"] || response["active_card"] || response["source"] || {}
+        card = card_from_response(response)
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
         cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
 
@@ -429,7 +429,7 @@ module ActiveMerchant #:nodoc:
           :authorization => success ? response["id"] : response["error"]["charge"],
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code,
-          :emv_authorization => card["emv_auth_data"],
+          :emv_authorization => emv_authorization_from_response(response),
           :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]]
         )
       end
@@ -458,6 +458,16 @@ module ActiveMerchant #:nodoc:
 
       def emv_payment?(payment)
         payment.respond_to?(:emv?) && payment.emv?
+      end
+
+      def card_from_response(response)
+        response["card"] || response["active_card"] || response["source"] || {}
+      end
+
+      def emv_authorization_from_response(response)
+        return response["error"]["emv_auth_data"] if response["error"]
+
+        card_from_response(response)["emv_auth_data"]
       end
     end
   end
