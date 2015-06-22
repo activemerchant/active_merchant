@@ -295,6 +295,7 @@ module ActiveMerchant #:nodoc:
         card = {}
         if emv_payment?(creditcard)
           add_emv_creditcard(post, creditcard.icc_data)
+          post[:card][:read_method] = "contactless" if creditcard.contactless
         elsif creditcard.respond_to?(:number)
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
