@@ -15,6 +15,7 @@
 * Sage: Add ability to refund [duff]
 * Cardstream: Add scrubbing [anellis]
 * Stripe: Parse EMV ARC from error response [bizla]
+* Redsys: Add MYR currency [agseco]
 
 
 == Version 1.50.0 (June 1, 2015)

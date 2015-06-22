@@ -50,6 +50,7 @@ module ActiveMerchant #:nodoc:
         "GBP" => '826',
         "GTQ" => '320',
         "JPY" => '392',
+        "MYR" => '458',
         "MXN" => '484',
         "NZD" => '554',
         "PEN" => '604',
