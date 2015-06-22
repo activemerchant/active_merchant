@@ -1,6 +1,6 @@
 # Active Merchant
-[![Build Status](https://travis-ci.org/Shopify/active_merchant.png?branch=master)](https://travis-ci.org/Shopify/active_merchant)
-[![Code Climate](https://codeclimate.com/github/Shopify/active_merchant.png)](https://codeclimate.com/github/Shopify/active_merchant)
+[![Build Status](https://travis-ci.org/activemerchant/active_merchant.png?branch=master)](https://travis-ci.org/Shopify/active_merchant)
+[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.png)](https://codeclimate.com/github/Shopify/active_merchant)
 
 Active Merchant is an extraction from the ecommerce system [Shopify](http://www.shopify.com).
 Shopify's requirements for a simple and unified API to access dozens of different payment
@@ -23,7 +23,7 @@ applications.
 
 You can check out the latest source from git:
 
-    git clone git://github.com/Shopify/active_merchant.git
+    git clone git://github.com/activemerchant/active_merchant.git
 
 ### From RubyGems
 
@@ -76,11 +76,11 @@ end
 ```
 
 For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
-[API documentation](http://www.rubydoc.info/github/Shopify/active_merchant/).
+[API documentation](http://www.rubydoc.info/github/activemerchant/active_merchant/).
 
 ## Supported Payment Gateways
 
-The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) contains a [table of features supported by each gateway](http://github.com/Shopify/active_merchant/wikis/gatewayfeaturematrix).
+The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis) contains a [table of features supported by each gateway](http://github.com/activemerchant/active_merchant/wikis/gatewayfeaturematrix).
 
 * [App55](https://www.app55.com/) - AU, BR, CA, CH, CL, CN, CO, CZ, DK, EU, GB, HK, HU, ID, IS, JP, KE, KR, MX, MY, NO, NZ, PH, PL, TH, TW, US, VN, ZA
 * [Authorize.Net CIM](http://www.authorize.net/) - US
