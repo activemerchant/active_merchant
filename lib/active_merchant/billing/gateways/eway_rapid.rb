@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
       def purchase(amount, payment_method, options={})
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object
       def refund(amount, identification, options = {})
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where the authorization is the customer_token on success
       def store(payment_method, options = {})
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where the authorization is the customer_token on success
       def update(customer_token, payment_method, options = {})

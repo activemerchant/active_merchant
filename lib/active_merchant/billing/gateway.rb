@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
     #
     # == Implmenting new gateways
     #
-    # See the {ActiveMerchant Guide to Contributing}[https://github.com/Shopify/active_merchant/wiki/Contributing]
+    # See the {ActiveMerchant Guide to Contributing}[https://github.com/activemerchant/active_merchant/wiki/Contributing]
     #
     class Gateway
       include PostsData
