@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_CODES = {
         "ARS" => '032',
-        "AUD" => '036',
+        "AUD" => '36',
         "BRL" => '986',
         "BOB" => '068',
         "CAD" => '124',
