@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaystationGateway < Gateway
 
-      self.live_url = self.test_url = "https://www.paystation.co.nz/direct/paystation.dll"
+      self.live_url = self.test_url = "https://paystation.co.nz/direct/paystation.dll"
 
       # an "error code" of "0" means "No error - transaction successful"
       SUCCESSFUL_RESPONSE_CODE = '0'
@@ -24,6 +24,9 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :paystation_id, :gateway_id)
+		unless options.has_key?(:hmac_key)
+			options[:hmac_key]= 0
+		end 
         super
       end
 
@@ -97,9 +100,9 @@ module ActiveMerchant #:nodoc:
         def add_invoice(post, options)
           requires!(options, :order_id)
 
-          post[:ms] = options[:order_id]     # "Merchant Session", must be unique per request
+          post[:ms] = options[:order_id] +"-"+ Time.now.to_f.to_s    # "Merchant Session", must be unique per request
           post[:mo] = options[:invoice]      # "Order Details", displayed in Paystation Admin
-          post[:mr] = options[:description]  # "Merchant Reference Code", seen from Paystation Admin
+          post[:mr] = options[:description]  # "Merchant Reference Code", seen from Paystation Admin		
         end
 
         def add_credit_card(post, credit_card)
@@ -159,18 +162,70 @@ module ActiveMerchant #:nodoc:
         def commit(post)
 
           post[:tm] = "T" if test? # test mode
+          post[:paystation]="_empty" # need include paystation param as "initiator flag for payment engine"
+         
+          temp_hash={}
+          post.each do |key|
+            temp_hash["pstn_"+key[0].to_s]=key[1]
+          end
+          post = temp_hash
+          
+          url = self.live_url+hmacGetParams(post)
 
-          pstn_prefix_params = post.collect { |key, value| "pstn_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+          uri = URI.parse (url)
+          https = Net::HTTP.new(uri.host, uri.port)
+          https.use_ssl = true 
+          https.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          request = Net::HTTP::Post.new(uri.request_uri)
+          response = {}
 
-          # need include paystation param as "initiator flag for payment engine"
-          data     = ssl_post(self.live_url, "#{pstn_prefix_params}&paystation=_empty")
-          response = parse(data)
+          request.set_form_data(post)
+          http_response = https.request(request)
+
           message  = message_from(response)
+          response_text =http_response.body
+          xml = REXML::Document.new(http_response.body)
+
+          response = {}
+          xml.elements.each("#{xml.root.name}/*") do |element|
+            response[element.name.underscore.to_sym] = element.text
+          end
 
           PaystationResponse.new(success?(response), message, response,
               :test          => (response[:tm] && response[:tm].downcase == "t"),
               :authorization => response[:paystation_transaction_id]
           )
+        end
+
+        def hmacGetParams(post)
+          turi = URI.parse (self.live_url)
+          thttps = Net::HTTP.new(turi.host, turi.port)
+          thttps.use_ssl = true # if uri.scheme == 'https'
+          thttps.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          trequest = Net::HTTP::Post.new(turi.request_uri)
+          trequest.set_form_data(post)
+          post_body = trequest.body
+
+          
+		  if @options[:hmac_key]!=0
+			  hmac = makeHMAChash(post_body)
+
+			  getParams ="?pstn_HMACTimestamp="+hmac[:pstn_HMACTimestamp]
+			  getParams +="&pstn_HMAC="+hmac[:pstn_HMAC]
+		  else 
+			  getParams =""
+		  end
+			
+        end
+
+        def makeHMAChash (post_body)
+
+          hmacTimestamp = Time.now.to_i.to_s
+          hmacWebserviceName = "paystation"
+
+          hmacBody= [hmacTimestamp].pack("a*")+[hmacWebserviceName].pack("a*")+[post_body].pack("a*")
+          hmacHash= Digest::HMAC.hexdigest(hmacBody, @options[:hmac_key], Digest::SHA512)
+          return {:pstn_HMACTimestamp=>hmacTimestamp, :pstn_HMAC => hmacHash}
         end
 
         def success?(response)
@@ -184,6 +239,7 @@ module ActiveMerchant #:nodoc:
         def format_date(month, year)
           "#{format(year, :two_digits)}#{format(month, :two_digits)}"
         end
+
 
     end
 
