@@ -22,6 +22,7 @@
 * Stripe: Add encrypted_pin support to gateway [ryanbalsdon]
 * Stripe: Support mapping advanced decline codes to standard codes [abecevello]
 * Epay: filter out invalid characters in returned URLs [dwradcliffe]
+* Redsys: Strip leading zeroes from currency codes [agseco]
 
 
 == Version 1.50.0 (June 1, 2015)
