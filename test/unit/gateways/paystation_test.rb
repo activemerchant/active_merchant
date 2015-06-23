@@ -78,6 +78,23 @@ class PaystationTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store_with_hmac_authentication
+    hmac_gateway = PaystationGateway.new(
+     :paystation_id           => 'some_id_number',
+     :gateway_id              => 'another_id_number',
+     :hmac_authentication_key => '12345'
+    )
+
+    signature         = "cc9ac7aea51761dddb45b601d9830ce7d3df1762855120b2355291c2ccbe36a203bd5d403911d38f5cf3cd32c68a0c42b3ccb64572f387c18d3c810f38df480c"
+    timestamp         = 1426683881
+    expected_endpoint = PaystationGateway.live_url + "?pstn_HMAC=#{signature}&pstn_HMACTimestamp=#{timestamp}"
+    hmac_gateway.expects(:ssl_post).with { |endpoint, data| endpoint == expected_endpoint }.returns(successful_store_response)
+    Time.any_instance.expects(:to_i).returns(timestamp)
+
+    assert response = hmac_gateway.store(@credit_card, @options.merge(:token => "justatest1310263135"))
+    assert_success response
+  end
+
   private
 
     def successful_purchase_response
