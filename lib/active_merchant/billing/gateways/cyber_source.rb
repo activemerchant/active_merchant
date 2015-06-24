@@ -234,7 +234,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def success?(response)
-        response[:decision] == "ACCEPT" || response[:reasonCode] == '100'
+        accepted?(response) || fraud_review?(response)
+      end
+
+      def accepted?(response)
+        response[:decision] == "ACCEPT"
       end
 
       def fraud_review?(response)
