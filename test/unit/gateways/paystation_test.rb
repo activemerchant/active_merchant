@@ -1,6 +1,7 @@
 require 'test_helper'
 
 class PaystationTest < Test::Unit::TestCase
+  include CommStub
   def setup
 
     @gateway = PaystationGateway.new(
@@ -76,6 +77,33 @@ class PaystationTest < Test::Unit::TestCase
 
     assert response = @gateway.capture(@amount, "0009062250-01", @options.merge(:credit_card_verification => 123))
     assert_success response
+  end
+
+  def test_successful_refund
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '0008813023-01', response.authorization
+    assert_equal 'Store Purchase', response.params["merchant_reference"]
+
+    refund = stub_comms do
+      @gateway.refund(@amount, response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/0008813023-01/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
+  def test_failed_refund
+    response = stub_comms do
+      @gateway.refund(nil, "", @options)
+    end.respond_with(failed_refund_response)
+
+    assert_failure response
   end
 
   private
@@ -328,4 +356,56 @@ class PaystationTest < Test::Unit::TestCase
       <AuthorisedAmount/>
       </PaystationCaptureResponse>)
     end
+
+    def successful_refund_response
+      %(<?xml version="1.0" standalone="yes"?>
+      <PaystationRefundResponse>
+      <ec>0</ec>
+      <em>Transaction successful</em>
+      <ti>0008813023-01</ti>
+      <ct>mastercard</ct>
+      <merchant_ref>Store Purchase</merchant_ref>
+      <tm>T</tm>
+      <MerchantSession>70ceae1b3f069e41ca7f4350a1180cb1</MerchantSession>
+      <UsedAcquirerMerchantID>924518</UsedAcquirerMerchantID>
+      <TransactionID>0008813023-01</TransactionID>
+      <RefundAmount>10000</RefundAmount>
+      <SurchargeAmount/>
+      <Locale>en</Locale>
+      <ReturnReceiptNumber>58160420</ReturnReceiptNumber>
+      <ShoppingTransactionNumber/>
+      <AcqResponseCode>00</AcqResponseCode>
+      <QSIResponseCode>0</QSIResponseCode>
+      <CSCResultCode/>
+      <AVSResultCode/>
+      <TransactionTime>2015-06-25 03:23:24</TransactionTime>
+      <PaystationErrorCode>0</PaystationErrorCode>
+      <PaystationErrorMessage>Transaction successful</PaystationErrorMessage>
+      <PaystationExtendedErrorMessage/>
+      <MerchantReference>Store Purchase</MerchantReference>
+      <CardNo>512345XXXXXXX346</CardNo>
+      <CardExpiry>1305</CardExpiry>
+      <TransactionProcess>refund</TransactionProcess>
+      <TransactionMode>T</TransactionMode>
+      <BatchNumber>0625</BatchNumber>
+      <AuthorizeID/>
+      <Cardtype>MC</Cardtype>
+      <Username>609035</Username>
+      <RequestIP>173.95.131.239</RequestIP>
+      <RequestUserAgent>Ruby</RequestUserAgent>
+      <RequestHttpReferrer/>
+      <PaymentRequestTime>2015-06-25 03:23:24</PaymentRequestTime>
+      <DigitalOrderTime>2015-06-25 03:23:24</DigitalOrderTime>
+      <DigitalReceiptTime/>
+      <PaystationTransactionID/>
+      <RefundedAmount>10000</RefundedAmount>
+      <CapturedAmount/>
+      </PaystationRefundResponse>)
+    end
+
+    def failed_refund_response
+      %(<?xml version="1.0" standalone="yes"?>
+        <FONT FACE="Arial" SIZE="2"><strong>Error 11:</strong> Not enough input parameters.</FONT>)
+    end
+
 end

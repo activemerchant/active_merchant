@@ -32,9 +32,7 @@ module ActiveMerchant #:nodoc:
 
         add_invoice(post, options)
         add_amount(post, money, options)
-
         add_credit_card(post, credit_card)
-
         add_authorize_flag(post, options)
 
         commit(post)
@@ -45,7 +43,6 @@ module ActiveMerchant #:nodoc:
 
         add_invoice(post, options)
         add_amount(post, money, options)
-
         add_authorization_token(post, authorization_token, options[:credit_card_verification])
 
         commit(post)
@@ -78,6 +75,16 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+
+      def refund(money, authorization, options={})
+        post = new_request
+        add_amount(post, money, options)
+        add_invoice(post, options)
+        add_refund_specific_fields(post, authorization)
+
+        commit(post)
+      end
+
       private
 
         def new_request
@@ -103,12 +110,10 @@ module ActiveMerchant #:nodoc:
         end
 
         def add_credit_card(post, credit_card)
-
           post[:cn] = credit_card.number
           post[:ct] = credit_card.brand
           post[:ex] = format_date(credit_card.month, credit_card.year)
           post[:cc] = credit_card.verification_value if credit_card.verification_value?
-
         end
 
         # bill a token (stored via "store") rather than a Credit Card
@@ -118,15 +123,18 @@ module ActiveMerchant #:nodoc:
         end
 
         def store_credit_card(post, options)
-
           post[:fp] = "t"                                # turn on "future payments" - what paystation calls Token Billing
           post[:fs] = "t"                                # tells paystation to store right now, not bill
           post[:ft] = options[:token] if options[:token] # specify a token to use that, or let Paystation generate one
-
         end
 
         def add_authorize_flag(post, options)
           post[:pa] = "t" # tells Paystation that this is a pre-auth authorisation payment (account must be in pre-auth mode)
+        end
+
+        def add_refund_specific_fields(post, authorization)
+          post[:rc] = "t"
+          post[:rt] = authorization
         end
 
         def add_authorization_token(post, auth_token, verification_value = nil)
@@ -136,10 +144,8 @@ module ActiveMerchant #:nodoc:
         end
 
         def add_amount(post, money, options)
-
           post[:am] = amount(money)
           post[:cu] = options[:currency] || currency(money)
-
         end
 
         def parse(xml_response)
