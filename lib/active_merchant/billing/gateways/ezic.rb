@@ -34,6 +34,9 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'EZIC Gateway'
 
+      # temporary hack to get bluefin working
+      self.ssl_strict = false
+
 
       # the :login parameter is the "account_id" provided by bluefin
       def initialize(options = {})
