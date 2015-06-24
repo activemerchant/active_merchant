@@ -468,6 +468,11 @@ openpay:
   key: 'sk_e568c42a6c384b7ab02cd47d2e407cab'
   merchant_id: 'mzdtln0bmtms6o3kck8f'
 
+opp:
+  userId: '8a8294174b7ecb28014b9699220015cc'
+  password: 'sy6KJsT8'
+  entityId: '8a8294174d0a8edd014d242337942575' 
+
 optimal_payment:
   store_id: test
   password: test
@@ -477,11 +482,6 @@ orbital_gateway:
   login: LOGIN
   password: PASSWORD
   merchant_id: MERCHANTID
-
-opp:
-  userId: '8a8294174b7ecb28014b9699220015cc'
-  password: 'sy6KJsT8'
-  entityId: '8a8294174d0a8edd014d242337942575' 
 
 # Working credentials, no need to replace
 pago_facil:
