@@ -478,6 +478,11 @@ orbital_gateway:
   password: PASSWORD
   merchant_id: MERCHANTID
 
+opp:
+  userId: '8a8294174b7ecb28014b9699220015cc'
+  password: 'sy6KJsT8'
+  entityId: '8a8294174d0a8edd014d242337942575' 
+
 # Working credentials, no need to replace
 pago_facil:
   branch_id: 60f961360ca187d533d5adba7d969d6334771370
