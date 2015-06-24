@@ -78,6 +78,16 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+
+      def refund(money, authorization, options={})
+        post = new_request
+        add_amount(post, money, options)
+        add_invoice(post, options)
+        add_refund_specific_fields(post, authorization)
+
+        commit(post)
+      end
+
       private
 
         def new_request
@@ -127,6 +137,12 @@ module ActiveMerchant #:nodoc:
 
         def add_authorize_flag(post, options)
           post[:pa] = "t" # tells Paystation that this is a pre-auth authorisation payment (account must be in pre-auth mode)
+        end
+
+        def add_refund_specific_fields(post, authorization)
+          post[:rc] = "t"  # tells Paystation that this is a refund
+          post[:rt] = authorization
+
         end
 
         def add_authorization_token(post, auth_token, verification_value = nil)

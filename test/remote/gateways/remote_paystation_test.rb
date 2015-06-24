@@ -29,6 +29,7 @@ class RemotePaystationTest < Test::Unit::TestCase
   
   def test_successful_purchase_in_gbp
     assert response = @gateway.purchase(@successful_amount, @credit_card, @options.merge(:currency => "GBP", :order_id => get_uid))
+    # this test is dependent on the gateway and account being used in the transaction, prone to fail
     assert_success response
     
     assert_equal 'Transaction successful', response.message
@@ -78,8 +79,7 @@ class RemotePaystationTest < Test::Unit::TestCase
   end
   
   def test_capture_without_cvv
-    # for some merchant accounts, paystation requires you send through the card verification value
-    # on a capture request
+    # CVV must be passed through when CVV is ‘Enforced’ on your merchant facility, is optional when CVV is ‘Enabled’
     
     assert auth = @gateway.authorize(@successful_amount, @credit_card, @options.merge(:order_id => get_uid))
     
@@ -87,6 +87,8 @@ class RemotePaystationTest < Test::Unit::TestCase
     assert auth.authorization
     
     assert capture = @gateway.capture(@successful_amount, auth.authorization, @options.merge(:order_id => get_uid))
+
+    # results of this test change depending on which account it is using, prone to fail
     assert_failure capture
     
     assert_equal "Card Security Code (CVV/CSC) Required", capture.message
@@ -103,11 +105,25 @@ class RemotePaystationTest < Test::Unit::TestCase
     assert_failure response
     assert_nil response.authorization
   end
+
+  def test_successful_refund
+    assert response = @gateway.purchase(@successful_amount, @credit_card, @options.merge(:order_id => get_uid))
+    assert_success response
+    refund = @gateway.refund(@successful_amount, response.authorization,@options.merge(:order_id => get_uid))
+    assert_success refund
+    assert_equal "Transaction successful", refund.message
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(nil, "", @options.merge(:order_id => get_uid))
+    assert_failure response
+    assert_equal "Error 11:", response.params["strong"]
+  end
   
   private
   
     # should be unique enough for test purposes
     def get_uid
-      ActiveSupport::SecureRandom.hex(16)
+      SecureRandom.hex(16)
     end
 end
