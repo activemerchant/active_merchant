@@ -5,6 +5,9 @@ module ActiveMerchant #:nodoc:
       base.superclass_delegating_accessor :ssl_strict
       base.ssl_strict = true
       
+      base.superclass_delegating_accessor :ciphers
+      base.ciphers = nil
+
       base.class_attribute :retry_safe
       base.retry_safe = false
 
@@ -16,6 +19,8 @@ module ActiveMerchant #:nodoc:
       
       base.superclass_delegating_accessor :logger
       base.superclass_delegating_accessor :wiredump_device
+
+
     end
     
     def ssl_get(endpoint, headers={})
@@ -35,6 +40,7 @@ module ActiveMerchant #:nodoc:
       connection.open_timeout = open_timeout
       connection.read_timeout = read_timeout
       connection.retry_safe   = retry_safe
+      connection.ciphers      = ciphers
       connection.verify_peer  = ssl_strict
       connection.logger       = logger
       connection.tag          = self.class.name

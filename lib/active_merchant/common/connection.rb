@@ -28,6 +28,7 @@ module ActiveMerchant
     OPEN_TIMEOUT = 60
     READ_TIMEOUT = 60
     VERIFY_PEER = true
+    CIPHERS = nil
     RETRY_SAFE = false
     RUBY_184_POST_HEADERS = { "Content-Type" => "application/x-www-form-urlencoded" }
   
@@ -35,6 +36,7 @@ module ActiveMerchant
     attr_accessor :open_timeout
     attr_accessor :read_timeout
     attr_accessor :verify_peer
+    attr_accessor :ciphers
     attr_accessor :retry_safe
     attr_accessor :pem
     attr_accessor :pem_password
@@ -49,6 +51,7 @@ module ActiveMerchant
       @read_timeout = READ_TIMEOUT
       @retry_safe   = RETRY_SAFE
       @verify_peer  = VERIFY_PEER
+      @ciphers      = CIPHERS
       @ignore_http_status = false
     end
     
@@ -118,6 +121,10 @@ module ActiveMerchant
         http.ca_file     = File.dirname(__FILE__) + '/../../certs/cacert.pem'
       else               
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+
+      if ciphers.present?
+        http.ciphers = ciphers
       end
     end
     
