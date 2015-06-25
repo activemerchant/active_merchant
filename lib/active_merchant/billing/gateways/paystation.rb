@@ -102,11 +102,9 @@ module ActiveMerchant #:nodoc:
         end
 
         def add_invoice(post, options)
-          requires!(options, :order_id)
-
-          post[:ms] = options[:order_id]     # "Merchant Session", must be unique per request
-          post[:mo] = options[:invoice]      # "Order Details", displayed in Paystation Admin
-          post[:mr] = options[:description]  # "Merchant Reference Code", seen from Paystation Admin
+          post[:ms] = options[:order_id] || generate_unique_id
+          post[:mo] = options[:invoice]
+          post[:mr] = options[:description]
         end
 
         def add_credit_card(post, credit_card)
@@ -116,7 +114,6 @@ module ActiveMerchant #:nodoc:
           post[:cc] = credit_card.verification_value if credit_card.verification_value?
         end
 
-        # bill a token (stored via "store") rather than a Credit Card
         def add_token(post, token)
           post[:fp] = "t"    # turn on "future payments" - what paystation calls Token Billing
           post[:ft] = token
@@ -153,8 +150,6 @@ module ActiveMerchant #:nodoc:
 
           xml = REXML::Document.new(xml_response)
 
-          # for normal payments, the root node is <Response>
-          # for "future payments", it's <PaystationFuturePaymentResponse>
           xml.elements.each("#{xml.root.name}/*") do |element|
             response[element.name.underscore.to_sym] = element.text
           end
@@ -163,12 +158,9 @@ module ActiveMerchant #:nodoc:
         end
 
         def commit(post)
-
-          post[:tm] = "T" if test? # test mode
-
+          post[:tm] = "T" if test?
           pstn_prefix_params = post.collect { |key, value| "pstn_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
 
-          # need include paystation param as "initiator flag for payment engine"
           data     = ssl_post(self.live_url, "#{pstn_prefix_params}&paystation=_empty")
           response = parse(data)
           message  = message_from(response)
@@ -194,8 +186,6 @@ module ActiveMerchant #:nodoc:
     end
 
     class PaystationResponse < Response
-      # add a method to response so we can easily get the token
-      # for Validate transactions
       def token
         @params["future_payment_token"]
       end

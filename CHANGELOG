@@ -30,7 +30,8 @@
 * Redsys: Strip leading zeroes from currency codes [agseco]
 * Authorize.net: Add invoice information to refund [marquisong]
 * Authorize.net: Add store ability [duff]
-* Paystation: add refund [mrezentes]
+* Paystation: Add refund [mrezentes]
+* Paystation: No longer require order_id everywhere [duff]
 
 
 == Version 1.50.0 (June 1, 2015)
