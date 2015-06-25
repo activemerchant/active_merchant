@@ -8,6 +8,7 @@
 * S5: Make scrubbing regex less greedy [duff]
 * CardStream: Add support for verify [anellis]
 * Authorize.net: UTF-8 encode requests [duff]
+* Authorize.net: Add invoice information to refund [marquisong]
 * Banwire: Add default email [anellis]
 * PayU India: Handle bad JSON [ntalbott]
 * Dibs: Pass CVC param only if there's a value [bruno]
