@@ -32,7 +32,9 @@ module ActiveMerchant #:nodoc:
         '23' => STANDARD_ERROR_CODE[:card_declined],
         '3153' => STANDARD_ERROR_CODE[:processing_error],
         '235' => STANDARD_ERROR_CODE[:processing_error],
-        '24' => STANDARD_ERROR_CODE[:pickup_card]
+        '24' => STANDARD_ERROR_CODE[:pickup_card],
+        '300' => STANDARD_ERROR_CODE[:config_error],
+        '384' => STANDARD_ERROR_CODE[:config_error]
       }
 
       MARKET_TYPE = {

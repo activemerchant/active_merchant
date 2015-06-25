@@ -23,6 +23,7 @@
 * Stripe: Support mapping advanced decline codes to standard codes [abecevello]
 * Epay: filter out invalid characters in returned URLs [dwradcliffe]
 * Redsys: Strip leading zeroes from currency codes [agseco]
+* Authorize.net: Add config_error standard error code [andrewpaliga]
 
 
 == Version 1.50.0 (June 1, 2015)
