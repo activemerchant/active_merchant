@@ -91,7 +91,8 @@ module ActiveMerchant #:nodoc:
         :card_declined => 'card_declined',
         :processing_error => 'processing_error',
         :call_issuer => 'call_issuer',
-        :pickup_card => 'pick_up_card'
+        :pickup_card => 'pick_up_card',
+        :config_error => 'config_error'
       }
 
       cattr_reader :implementations
