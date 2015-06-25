@@ -38,10 +38,10 @@ module ActiveMerchant #:nodoc:
       self.display_name        = "Redsys"
 
       CURRENCY_CODES = {
-        "ARS" => '032',
+        "ARS" => '32',
         "AUD" => '36',
         "BRL" => '986',
-        "BOB" => '068',
+        "BOB" => '68',
         "CAD" => '124',
         "CHF" => '756',
         "CLP" => '152',
