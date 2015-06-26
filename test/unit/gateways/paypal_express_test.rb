@@ -544,6 +544,14 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '0', REXML::XPath.first(do_not_allow_optin_xml, '//n2:BuyerEmailOptInEnable').text
   end
 
+  def test_add_total_type_if_specified
+    total_type_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:total_type => 'EstimatedTotal'}))
+    no_total_type_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {}))
+
+    assert_equal 'EstimatedTotal', REXML::XPath.first(total_type_xml, '//n2:TotalType').text
+    assert_nil REXML::XPath.first(no_total_type_xml, '//n2:BuyerEmailOptInEnable')
+  end
+
   def test_structure_correct
     all_options_enabled = {
         :allow_guest_checkout => true,
@@ -562,6 +570,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         :shipping => 10,
         :handling => 0,
         :tax => 5,
+        :total_type => 'EstimatedTotal',
         :items => [{:name => 'item one',
                     :number => 'number 1',
                     :quantity => 3,

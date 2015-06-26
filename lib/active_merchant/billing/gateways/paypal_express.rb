@@ -170,9 +170,12 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:CallbackTimeout', options[:callback_timeout] unless options[:callback_timeout].blank?
               xml.tag! 'n2:CallbackVersion', options[:callback_version] unless options[:callback_version].blank?
 
+
               if options.has_key?(:allow_buyer_optin)
                 xml.tag! 'n2:BuyerEmailOptInEnable', (options[:allow_buyer_optin] ? '1' : '0')
               end
+
+              xml.tag! 'n2:TotalType', options[:total_type] unless options[:total_type].blank?
             end
           end
         end
