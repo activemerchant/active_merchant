@@ -186,6 +186,8 @@ module ActiveMerchant #:nodoc:
               if options.has_key?(:allow_buyer_optin)
                 xml.tag! 'n2:BuyerEmailOptInEnable', (options[:allow_buyer_optin] ? '1' : '0')
               end
+
+              xml.tag! 'n2:TotalType', options[:total_type] unless options[:total_type].blank?
             end
           end
         end
