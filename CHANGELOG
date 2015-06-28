@@ -31,7 +31,7 @@
 * Cardstream: Check for nil street address [anellis]
 * Checkout.com and CheckoutV2.com: Update country list [duff]
 * Cardstream: Handle nil addresses [rwdaigle]
-
+* MiGS: Allow passing in currency [alovak]
 
 == Version 1.52.0 (July 20, 2015)
 
