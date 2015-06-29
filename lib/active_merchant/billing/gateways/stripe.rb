@@ -305,6 +305,7 @@ module ActiveMerchant #:nodoc:
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
             card[:fallback_reason] = creditcard.fallback_reason if creditcard.fallback_reason
+            card[:read_method] = "contactless" if creditcard.contactless
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
