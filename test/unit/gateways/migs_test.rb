@@ -58,11 +58,20 @@ class MigsTest < Test::Unit::TestCase
     response = @gateway.purchase_offsite_response(response_params)
     assert_success response
 
+    # Tampering with any params detected via SecureHash
     tampered_response1 = response_params.gsub('83F8', '93F8')
     assert_raise(SecurityError){@gateway.purchase_offsite_response(tampered_response1)}
 
     tampered_response2 = response_params.gsub('Locale=en', 'Locale=es')
     assert_raise(SecurityError){@gateway.purchase_offsite_response(tampered_response2)}
+
+    # ...but not when failed
+    failed_response_params = response_params
+    failed_response_params.gsub!("vpc_TxnResponseCode=0", "vpc_TxnResponseCode=3")  # fail
+    failed_response_params.gsub!("vpc_SecureHash=8794D9478D030B65F3092282E76283F8", # no SecureHash
+                                 "vpc_SecureHash=")
+    response = @gateway.purchase_offsite_response(response_params)
+    assert_failure response
   end
 
   private
