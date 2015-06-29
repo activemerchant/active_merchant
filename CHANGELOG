@@ -32,6 +32,7 @@
 * Authorize.net: Add store ability [duff]
 * Paystation: Add refund [mrezentes]
 * Paystation: No longer require order_id everywhere [duff]
+* Checkout: Support descriptor_name and descriptor_city [duff]
 
 
 == Version 1.50.0 (June 1, 2015)
