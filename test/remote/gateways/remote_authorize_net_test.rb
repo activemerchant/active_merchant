@@ -469,6 +469,34 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_network_tokenization_transcript_scrubbing
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :eci                => "05",
+      :payment_cryptogram => "EHuWW9PiBkWvqE5juRwDzAUFBAk="
+    )
+
+    transcript = capture_transcript(@gateway) do
+      @gateway.authorize(@amount, credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.payment_cryptogram, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_purchase_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
   private
 
   def apple_pay_payment_token(options = {})
