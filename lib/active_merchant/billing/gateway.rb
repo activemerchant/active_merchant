@@ -190,6 +190,10 @@ module ActiveMerchant #:nodoc:
         raise RuntimeError.new("This gateway does not support scrubbing.")
       end
 
+      def supports_network_tokenization?
+        false
+      end
+
       protected # :nodoc: all
 
       def normalize(field)

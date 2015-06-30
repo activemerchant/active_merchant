@@ -169,6 +169,10 @@ module ActiveMerchant #:nodoc:
       end
       alias_method :delete, :unstore
 
+      def supports_network_tokenization?
+        true
+      end
+
       private
 
       def check_customer_exists(customer_vault_id)

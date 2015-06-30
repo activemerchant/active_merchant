@@ -842,6 +842,36 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141794', response.authorization.split('#')[0]
   end
 
+  def test_supports_network_tokenization_true
+    response = stub_comms do
+      @gateway.supports_network_tokenization?
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal "authOnlyTransaction", doc.at_xpath("//transactionType").content
+        assert_equal "0.01", doc.at_xpath("//amount").content
+        assert_equal "EHuWW9PiBkWvqE5juRwDzAUFBAk=", doc.at_xpath("//creditCard/cryptogram").content
+        assert_equal "4111111111111111", doc.at_xpath("//creditCard/cardNumber").content
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert_instance_of TrueClass, response
+  end
+
+  def test_supports_network_tokenization_false
+    response = stub_comms do
+      @gateway.supports_network_tokenization?
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal "authOnlyTransaction", doc.at_xpath("//transactionType").content
+        assert_equal "0.01", doc.at_xpath("//amount").content
+        assert_equal "EHuWW9PiBkWvqE5juRwDzAUFBAk=", doc.at_xpath("//creditCard/cryptogram").content
+        assert_equal "4111111111111111", doc.at_xpath("//creditCard/cardNumber").content
+      end
+    end.respond_with(network_tokenization_not_supported_response)
+
+    assert_instance_of FalseClass, response
+  end
+
   private
 
   def pre_scrubbed
@@ -1804,6 +1834,52 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
         <directResponse>1,1,310,This transaction has already been voided.,,P,0,,,0.00,CC,void,,,,,,,,,,,,,,,,,,,,,,,,,,FD9FAE70BEF461997A6C15D7D597658D,,,,,,,,,,,,,,Visa,,,,,,,,,,,,,,,,</directResponse>
       </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def network_tokenization_not_supported_response
+    <<-eos
+      <?xml version="1.0" encoding="utf-8"?>
+      <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                 xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <refId>123456</refId>
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00155</code>
+            <text>This processor does not support this method of submitting payment data</text>
+          </message>
+        </messages>
+        <transactionResponse>
+          <responseCode>3</responseCode>
+          <authCode/>
+          <avsResultCode>P</avsResultCode>
+          <cvvResultCode/>
+          <cavvResultCode/>
+          <transId>0</transId>
+          <refTransID/>
+          <transHash>DA56E64108957174C5AE9BE466914741</transHash>
+          <testRequest>0</testRequest>
+          <accountNumber>XXXX0001</accountNumber>
+          <accountType/>
+          <errors>
+            <error>
+              <errorCode>155</errorCode>
+              <errorText>This processor does not support this method of submitting payment data</errorText>
+            </error>
+          </errors>
+          <userFields>
+            <userField>
+              <name>MerchantDefinedFieldName1</name>
+              <value>MerchantDefinedFieldValue1</value>
+            </userField>
+            <userField>
+              <name>favorite_color</name>
+              <value>blue</value>
+            </userField>
+          </userFields>
+        </transactionResponse>
+      </createTransactionResponse>
     eos
   end
 

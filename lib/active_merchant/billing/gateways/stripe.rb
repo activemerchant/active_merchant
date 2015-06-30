@@ -223,6 +223,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2')
       end
 
+      def supports_network_tokenization?
+        true
+      end
+
       private
 
       class StripePaymentToken < PaymentToken

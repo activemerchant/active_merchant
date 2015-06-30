@@ -229,6 +229,10 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
+  end
+
   private
 
   def pre_scrubbed

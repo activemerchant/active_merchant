@@ -384,6 +384,10 @@ class CyberSourceTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
   end
 
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
+  end
+
   private
 
   def pre_scrubbed
