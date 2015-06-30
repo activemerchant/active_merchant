@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MercuryEncryptedGateway < Gateway
-      self.test_url = 'https://w1.mercurycert.net/PaymentsAPI/'
+      self.test_url = 'https://w1.mercurycert.net/PaymentsAPI'
       self.live_url = 'https://example.com/live'
 
       self.supported_countries = ['US']
@@ -19,85 +19,111 @@ module ActiveMerchant #:nodoc:
       SUCCESS_CODES = [ 'Approved', 'Success' ]
 
       def initialize(options={})
-        requires!(options, :some_credential, :another_credential)
+        requires!(options, :login, :password)
         super
       end
 
       def purchase(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-
         add_payment(post, payment)
-
 
         commit('/Credit/Sale', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, swiper_output, options={})
+        requires!(options, :invoice_no)
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
+        add_payment(post, swiper_output)
 
-        commit('authonly', post)
+        post["Authorize"] ||= post["Purchase"]
+
+        commit('/Credit/PreAuth', post)
       end
 
       def capture(money, authorization, options={})
-        commit('capture', post)
+        requires!(options, :invoice_no, :auth_code, :acq_ref_data)
+        post = {}
+        add_invoice(post, money, options)
+
+        post["RecordNo"] = authorization
+        post["AuthCode"] = options[:auth_code]
+        post["AcqRefData"] = options[:acq_ref_data]
+        
+        commit('/Credit/PreAuthCaptureByRecordNo', post)
       end
 
       def refund(money, authorization, options={})
-        commit('refund', post)
+        requires!(options, :invoice_no)
+        post = {}
+        add_invoice(post, money, options)
+
+        post["RecordNo"] = authorization
+        
+        commit('/Credit/ReturnByRecordNo', post)
       end
 
       def void(authorization, options={})
-        commit('void', post)
-      end
+        requires!(options, :invoice_no, :auth_code, :purchase)
+        post = {}
+        add_invoice(post, nil, options)
+        
+        post["RecordNo"] = authorization
+        post["AuthCode"] = options[:auth_code]
 
-      def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        commit('/Credit/VoidSaleByRecordNo', post)
       end
 
       def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript
+        false
       end
 
       private
 
       def add_invoice(post, money, options)
+        money = options[:purchase] if money.nil?
         post['InvoiceNo'] = options[:invoice_no]
         post['RefNo'] = (options[:ref_no] || options[:invoice_no])
         post['OperatorID'] = options[:merchant] if options[:merchant]
         post['Memo'] = options[:description] if options[:description]
-        post['Purchase'] = amount(money)
-        #post[:currency] = (options[:currency] || currency(money))
+        post['Purchase'] = amount(money) if money
+        post['Authorize'] = amount(options[:authorized]) if options[:authorized]
+        post['Gratuity'] = amount(options[:tip]) if options[:tip]
       end
 
       def add_payment(post, payment)
+        post["EncryptedFormat"] = "MagneSafe"
         post['EncryptedBlock'] = payment.split("|")[3]
         post['EncryptedKey'] = payment.split("|")[9]
       end
 
-      def commit(action, parameters)
-        url = (test? ? test_url : live_url)
-        parameters["RefNo"]           = "1"
-        parameters["Memo"]            = "MPS Example JSON v1.0"
-        parameters["Purchase"]        = "1.00"
-        parameters["Frequency"]       = "OneTime"
-        parameters["EncryptedFormat"] = "MagneSafe"
-        parameters["AccountSource"]   = "Swiped"
-        parameters["RecordNo"]        = "RecordNumberRequested"
+      def add_common_params post
+        post["Memo"] ||= "via ActiveMerchant"
+        post["Frequency"] ||= "OneTime"
+        post["AccountSource"] ||= "Swiped"
+        post["RecordNo"] ||= "RecordNumberRequested"
+      end
 
-        response = ssl_post(url + action, parameters.to_param, headers)
-        response = CGI.parse(response || "")
+      def parse response
+        CGI.parse(response).inject({}){|h,(k, v)| h[k] = v.first; h }
+      end
+
+      def commit(action, post)
+        add_common_params(post)
+        url = (test? ? test_url : live_url)
+
+        response = parse(ssl_post(url + action, post.to_param, headers))
+
+        # Debugging stuff
+        # puts "URL:"
+        # puts (url + action)
+        # puts "Headers:"
+        # puts headers.inspect
+        # puts "Request:"
+        # puts post.inspect
+        # puts "Response:"
+        # puts response.inspect
 
         Response.new(
           success_from(response),
@@ -111,20 +137,20 @@ module ActiveMerchant #:nodoc:
 
       def headers
         headers = {
-          "Authorization" => "Basic " + Base64.encode64("019588466313922"+":"+ "xyz").strip
+          "Authorization" => "Basic " + Base64.encode64(@options[:login] +":"+ @options[:password]).strip
         }
       end
 
       def success_from(response)
-        response["CmdStatus"].present? && SUCCESS_CODES.include?(response["CmdStatus"].first)
+        response["CmdStatus"].present? && SUCCESS_CODES.include?(response["CmdStatus"])
       end
 
       def message_from(response)
-        response[:text_response]
+        response["TextResponse"]
       end
 
       def authorization_from(response)
-        response["RecordNo"].first
+        response["RecordNo"]
       end
 
       def error_code_from(response)
