@@ -165,8 +165,12 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
+          gsub(%r((<transactionKey>).+(</transactionKey>)), '\1[FILTERED]\2').
           gsub(%r((<cardNumber>).+(</cardNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<cardCode>).+(</cardCode>)), '\1[FILTERED]\2')
+          gsub(%r((<cardCode>).+(</cardCode>)), '\1[FILTERED]\2').
+          gsub(%r((<track1>).+(</track1>)), '\1[FILTERED]\2').
+          gsub(%r((<track2>).+(</track2>)), '\1[FILTERED]\2').
+          gsub(%r((<cryptogram>).+(</cryptogram>)), '\1[FILTERED]\2')
       end
 
       private
