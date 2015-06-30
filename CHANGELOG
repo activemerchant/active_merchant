@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Authorize.Net: Add device type to authorize.net retail requests [abecevello]
+
 
 == Version 1.51.0 (July 2, 2015)
 

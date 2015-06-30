@@ -40,6 +40,19 @@ module ActiveMerchant #:nodoc:
         :retail  => '2'
       }
 
+      DEVICE_TYPE = {
+        :unknown => '1',
+        :unattended_terminal => '2',
+        :self_service_terminal => '3',
+        :electronic_cash_register => '4',
+        :personal_computer_terminal => '5',
+        :airpay => '6',
+        :wireless_pos => '7',
+        :website => '8',
+        :dial_terminal => '9',
+        :virtual_terminal => '10'
+      }
+
       class_attribute :duplicate_window
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
@@ -204,7 +217,7 @@ module ActiveMerchant #:nodoc:
           add_payment_source(xml, payment)
           add_invoice(xml, options)
           add_customer_data(xml, payment, options)
-          add_market_type(xml, payment)
+          add_market_type_device_type(xml, payment)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
         end
@@ -407,11 +420,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_market_type(xml, payment)
+      def add_market_type_device_type(xml, payment)
         return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
         if valid_track_data
           xml.retail do
             xml.marketType(MARKET_TYPE[:retail])
+            xml.deviceType(DEVICE_TYPE[:unknown])
           end
         elsif payment.manual_entry
           xml.retail do
