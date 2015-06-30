@@ -56,6 +56,8 @@ module ActiveMerchant #:nodoc:
 
       APPLE_PAY_DATA_DESCRIPTOR = "COMMON.APPLE.INAPP.PAYMENT"
 
+      PAYMENT_METHOD_NOT_SUPPORTED_ERROR = "155"
+
       def initialize(options={})
         requires!(options, :login, :password)
         super
@@ -171,6 +173,25 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<track1>).+(</track1>)), '\1[FILTERED]\2').
           gsub(%r((<track2>).+(</track2>)), '\1[FILTERED]\2').
           gsub(%r((<cryptogram>).+(</cryptogram>)), '\1[FILTERED]\2')
+      end
+
+      def supports_network_tokenization?
+        card = Billing::NetworkTokenizationCreditCard.new({
+          :number => "4111111111111111",
+          :month => 12,
+          :year => 20,
+          :first_name => 'John',
+          :last_name => 'Smith',
+          :brand => 'visa',
+          :payment_cryptogram => 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+        })
+
+        request = post_data(:authorize) do |xml|
+          add_auth_purchase(xml, "authOnlyTransaction", 1, card, {})
+        end
+        raw_response = ssl_post(url, request, headers)
+        response = parse(:authorize, raw_response)
+        response[:response_reason_code].to_s != PAYMENT_METHOD_NOT_SUPPORTED_ERROR
       end
 
       private

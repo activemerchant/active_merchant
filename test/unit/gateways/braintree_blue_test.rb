@@ -579,6 +579,10 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal "transaction_id", response.authorization
   end
 
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
+  end
+
   private
 
   def braintree_result(options = {})
