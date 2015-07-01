@@ -281,6 +281,7 @@ module ActiveMerchant #:nodoc:
         post[:createRegistration] = options[:createRegistration] if options[:createRegistration] && !options[:registrationId]
         post[:testMode] = options[:testMode] if test? && options[:testMode]
         options.each {|key, value| post[key] = value if key.to_s.match('customParameters\[[a-zA-Z0-9\._]{3,64}\]') }
+        post['customParameters[SHOPPER_pluginId]'] = 'activemerchant'
       end
 
       def add_cart_items(post, options)
