@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 
+== Version 1.51.0 (July 2, 2015)
+
 * Garanti: Illegal character '&' parsing response [masaruhoshi]
 * Stripe: Revert force USD for verify [duff]
 * Litle: Surface XML validation errors in the response [jasonbosco]
@@ -34,7 +36,6 @@
 * Paystation: No longer require order_id everywhere [duff]
 * Checkout: Support descriptor_name and descriptor_city [duff]
 * Add supports_network_tokenization? to gateways [jnormore]
-
 
 == Version 1.50.0 (June 1, 2015)
 
