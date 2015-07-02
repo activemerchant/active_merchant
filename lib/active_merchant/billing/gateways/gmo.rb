@@ -525,16 +525,21 @@ module ActiveMerchant #:nodoc:
       def commit(process, money, parameters)
         if ['AUTH', 'CAPTURE'].include?(process)
           authorization = nil
+          first_response_data = nil
+          first_response = nil
           response = MultiResponse.run do |r|
-            data = ssl_post *create_transaction_data(process, money, parameters)
-            first_response_data = parse_response(data)
-            first_response = create_response(first_response_data)
-            r << first_response
+            r.process do
+              data = ssl_post *create_transaction_data(process, money, parameters)
+              first_response_data = parse_response(data)
+              first_response = create_response(first_response_data)
+            end
 
             if first_response.success?
-              data = ssl_post *execute_transaction_data(first_response_data, parameters)
-              second_response_data = parse_response(data)
-              r << create_response(second_response_data, first_response_data)
+              r.process do
+                data = ssl_post *execute_transaction_data(first_response_data, parameters)
+                second_response_data = parse_response(data)
+                create_response(second_response_data, first_response_data)
+              end
             end
           end
 
