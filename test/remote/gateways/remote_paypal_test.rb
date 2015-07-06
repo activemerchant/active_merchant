@@ -54,6 +54,13 @@ class PaypalTest < Test::Unit::TestCase
     assert response.params['transaction_id']
   end
 
+  def test_successful_purchase_with_soft_descriptor
+    @params[:soft_descriptor] = "Active Merchant TXN"
+    response = @gateway.purchase(@amount, @credit_card, @params)
+    assert_success response
+    assert response.params['transaction_id']
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @params)
     assert_failure response
@@ -244,6 +251,18 @@ class PaypalTest < Test::Unit::TestCase
     id_for_reference = response.params['transaction_id']
 
     @params.delete(:order_id)
+    response2 = @gateway.purchase(@amount + 100, id_for_reference, @params)
+    assert_success response2
+  end
+
+
+  def test_successful_referenced_id_purchase_with_soft_descriptor
+    response = @gateway.purchase(@amount, @credit_card, @params)
+    assert_success response
+    id_for_reference = response.params['transaction_id']
+
+    @params.delete(:order_id)
+    @params[:soft_descriptor] = "Active Merchant TXN"
     response2 = @gateway.purchase(@amount + 100, id_for_reference, @params)
     assert_success response2
   end
