@@ -20,8 +20,13 @@ class FirstdataE4Test < Test::Unit::TestCase
     @authorization = "ET1700;106625152;4738"
   end
 
-  def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4Gateway.supported_cardtypes
+  def test_invalid_credentials
+    @gateway.expects(:ssl_post).raises(bad_credentials_response)
+    assert response = @gateway.store(@credit_card, {})
+    assert_failure response
+    assert response.test?
+    assert_equal '', response.authorization
+    assert_equal 'Unauthorized Request. Bad or missing credentials.', response.message
   end
 
   def test_successful_purchase
@@ -32,7 +37,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
 
-    ExactGateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
+    FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
   end
 
   def test_successful_purchase_with_token
@@ -74,6 +79,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
+    assert_equal response.error_code, "invalid_expiry_date"
   end
 
   def test_successful_verify
@@ -99,11 +105,11 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], ExactGateway.supported_countries
+    assert_equal ['CA', 'US'], FirstdataE4Gateway.supported_countries
   end
 
-  def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], ExactGateway.supported_cardtypes
+  def test_supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4Gateway.supported_cardtypes
   end
 
   def test_avs_result
@@ -124,7 +130,58 @@ class FirstdataE4Test < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match "<VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>", data
+      assert_match "<VerificationStr1>456 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_network_tokenization_requests_with_visa
+    stub_comms do
+      credit_card = network_tokenization_credit_card('4111111111111111',
+        :brand              => 'visa',
+        :transaction_id     => "123",
+        :eci                => "05",
+        :payment_cryptogram => "111111111100cryptogram"
+      )
+
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+      assert_match "<XID>123</XID>", data
+      assert_match "<CAVV>111111111100cryptogram</CAVV>", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_network_tokenization_requests_with_mastercard
+    stub_comms do
+      credit_card = network_tokenization_credit_card('5555555555554444',
+        :brand              => 'mastercard',
+        :transaction_id     => "123",
+        :eci                => "05",
+        :payment_cryptogram => "111111111100cryptogram"
+      )
+
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+      assert_match "<XID>123</XID>", data
+      assert_match "<CAVV>111111111100cryptogram</CAVV>", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_network_tokenization_requests_with_amex
+    stub_comms do
+      credit_card = network_tokenization_credit_card('378282246310005',
+        :brand              => 'american_express',
+        :transaction_id     => "123",
+        :eci                => "05",
+        :payment_cryptogram => Base64.encode64("111111111100cryptogram")
+      )
+
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+      assert_match "<XID>YW0=\n</XID>", data
+      assert_match "<CAVV>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</CAVV>", data
     end.respond_with(successful_purchase_response)
   end
 
@@ -148,6 +205,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_card_type
     assert_equal 'Visa', @gateway.send(:card_type, 'visa')
     assert_equal 'Mastercard', @gateway.send(:card_type, 'master')
+    assert_equal 'Mastercard', @gateway.send(:card_type, 'mastercard')
     assert_equal 'American Express', @gateway.send(:card_type, 'american_express')
     assert_equal 'JCB', @gateway.send(:card_type, 'jcb')
     assert_equal 'Discover', @gateway.send(:card_type, 'discover')
@@ -169,6 +227,10 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
   private
@@ -701,6 +763,43 @@ response: !ruby/object:Net::HTTPBadRequest
   http_version: "1.1"
   message: Bad Request
   read: true
+  socket:
+    RESPONSE
+    YAML.load(yamlexcep)
+  end
+
+  def bad_credentials_response
+    yamlexcep = <<-RESPONSE
+--- !ruby/exception:ActiveMerchant::ResponseError
+message:
+response: !ruby/object:Net::HTTPUnauthorized
+  code: '401'
+  message: Authorization Required
+  body: Unauthorized Request. Bad or missing credentials.
+  read: true
+  header:
+    cache-control:
+    - no-cache
+    content-type:
+    - text/html; charset=utf-8
+    date:
+    - Tue, 30 Dec 2014 23:28:32 GMT
+    server:
+    - Apache
+    status:
+    - '401'
+    x-rack-cache:
+    - invalidate, pass
+    x-request-id:
+    - 4157e21cc5620a95ead8d2025b55bdf4
+    x-ua-compatible:
+    - IE=Edge,chrome=1
+    content-length:
+    - '49'
+    connection:
+    - Close
+  body_exist: true
+  http_version: '1.1'
   socket:
     RESPONSE
     YAML.load(yamlexcep)

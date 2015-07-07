@@ -59,7 +59,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/<billToAddress>.*Widgets.*1234.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+      assert_match(/<billToAddress>.*Widgets.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -67,7 +67,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, shipping_address: address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/<shipToAddress>.*Widgets.*1234.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+      assert_match(/<shipToAddress>.*Widgets.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -79,6 +79,14 @@ class LitleTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(%r(<customBilling>.*<descriptor>Name<)m, data)
       assert_match(%r(<customBilling>.*<phone>Phone<)m, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_passing_debt_repayment
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, { debt_repayment: true })
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<debtRepayment>true</debtRepayment>), data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -271,6 +279,16 @@ class LitleTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match "<orderSource>recurring</orderSource>", data
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_unsuccessful_xml_schema_validation
+    response = stub_comms do
+      @gateway.store(@credit_card)
+    end.respond_with(unsuccessful_xml_schema_validation_response)
+
+    assert_failure response
+    assert_match(/^Error validating xml data against the schema/, response.message)
+    assert_equal "1", response.params["response"]
   end
 
   private
@@ -483,6 +501,15 @@ class LitleTest < Test::Unit::TestCase
           <message>Credit card number was invalid</message>
         </registerTokenResponse>
       </litleOnlineResponse>
+    )
+  end
+
+  def unsuccessful_xml_schema_validation_response
+    %(
+    <litleOnlineResponse version='8.29' xmlns='http://www.litle.com/schema'
+                     response='1'
+                     message='Error validating xml data against the schema on line 8\nthe length of the value is 10, but the required minimum is 13.'/>
+
     )
   end
 

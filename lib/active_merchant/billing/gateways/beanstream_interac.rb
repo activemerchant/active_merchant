@@ -32,6 +32,10 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def success?(response)
+        response[:responseType] == 'R' || response[:trnApproved] == '1' || response[:responseCode] == '1'
+      end
+
       # Confirm a transaction posted back from the bank to Beanstream.
       def confirm(transaction)
         post(transaction)

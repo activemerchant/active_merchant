@@ -120,6 +120,14 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_purchase_without_billing_address
+    @options[:billing_address] = nil
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -227,7 +235,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     <cardPayMethod>WEB</cardPayMethod>
     <firstName>Jim</firstName>
     <lastName>Smith</lastName>
-    <street>1234 My Street</street>
+    <street>456 My Street</street>
     <street2>Apt 1</street2>
     <city>Ottawa</city>
     <state>ON</state>

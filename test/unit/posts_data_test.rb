@@ -71,5 +71,4 @@ class PostsDataTests < Test::Unit::TestCase
       @gateway.ssl_post(@url, '')
     end
   end
-
 end

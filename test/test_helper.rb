@@ -82,11 +82,11 @@ module ActiveMerchant
       end
     end
 
-    def assert_valid(model)
+    def assert_valid(model, message=nil)
       errors = model.validate
 
       clean_backtrace do
-        assert_equal({}, errors, "Expected to be valid")
+        assert_equal({}, errors, (message || "Expected to be valid"))
       end
 
       errors
@@ -122,7 +122,7 @@ module ActiveMerchant
     end
 
     def assert_scrubbed(unexpected_value, transcript)
-      refute transcript.include?(unexpected_value), "Expected #{unexpected_value} to be scrubbed out of transcript"
+      refute transcript.include?(unexpected_value.to_s), "Expected #{unexpected_value} to be scrubbed out of transcript"
     end
 
     private
@@ -151,7 +151,7 @@ module ActiveMerchant
         :year => default_expiration_date.year,
         :first_name => 'Longbob',
         :last_name => 'Longsen',
-        :verification_value => '123',
+        :verification_value => options[:verification_value] || '123',
         :brand => 'visa'
       }.update(options)
 
@@ -164,6 +164,20 @@ module ActiveMerchant
       }.update(options)
 
       Billing::CreditCard.new(defaults)
+    end
+
+    def network_tokenization_credit_card(number = '4242424242424242', options = {})
+      defaults = {
+        :number => number,
+        :month => default_expiration_date.month,
+        :year => default_expiration_date.year,
+        :first_name => 'Longbob',
+        :last_name => 'Longsen',
+        :verification_value => '123',
+        :brand => 'visa'
+      }.update(options)
+
+      Billing::NetworkTokenizationCreditCard.new(defaults)
     end
 
     def check(options = {})
@@ -201,7 +215,7 @@ module ActiveMerchant
     def address(options = {})
       {
         name:     'Jim Smith',
-        address1: '1234 My Street',
+        address1: '456 My Street',
         address2: 'Apt 1',
         company:  'Widgets Inc',
         city:     'Ottawa',

@@ -62,6 +62,12 @@ module ActiveMerchant #:nodoc:
         commit('void', nil, post)
       end
 
+      def refund(money, authorization, options = {})
+        post = {}
+        post[:transactionid] = authorization
+        commit('refund', money, post)
+      end
+
       # Update the values (such as CC expiration) stored at
       # InspireGateway.  The CC number must be supplied in the
       # CreditCard object.
@@ -157,7 +163,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(/=/)
+          key,val = pair.split(%r{=})
           results[key] = val
         end
 

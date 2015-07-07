@@ -7,6 +7,7 @@ module ActiveMerchant
       Timeout::Error         => "The connection to the remote server timed out",
       Errno::ETIMEDOUT       => "The connection to the remote server timed out",
       SocketError            => "The connection to the remote server could not be established",
+      Errno::EHOSTUNREACH    => "The connection to the remote server could not be established",
       OpenSSL::SSL::SSLError => "The SSL connection to the remote server could not be established"
     }
 
@@ -21,14 +22,14 @@ module ActiveMerchant
         begin
           yield
         rescue Errno::ECONNREFUSED => e
-          raise ActiveMerchant::RetriableConnectionError, "The remote server refused the connection"
+          raise ActiveMerchant::RetriableConnectionError.new("The remote server refused the connection", e)
         rescue OpenSSL::X509::CertificateError => e
           NetworkConnectionRetries.log(options[:logger], :error, e.message, options[:tag])
           raise ActiveMerchant::ClientCertificateError, "The remote server did not accept the provided SSL certificate"
         rescue Zlib::BufError => e
           raise ActiveMerchant::InvalidResponseError, "The remote server replied with an invalid response"
         rescue *connection_errors.keys => e
-          raise ActiveMerchant::ConnectionError, derived_error_message(connection_errors, e.class)
+          raise ActiveMerchant::ConnectionError.new(derived_error_message(connection_errors, e.class), e)
         end
       end
     end
@@ -50,7 +51,7 @@ module ActiveMerchant
 
         log_with_retry_details(options[:logger], initial_retries-retries, Time.now.to_f - request_start, e.message, options[:tag])
         retry unless retries.zero?
-        raise ActiveMerchant::ConnectionError, e.message
+        raise ActiveMerchant::ConnectionError.new(e.message, e)
       rescue ActiveMerchant::ConnectionError, ActiveMerchant::InvalidResponseError => e
         retries -= 1
         log_with_retry_details(options[:logger], initial_retries-retries, Time.now.to_f - request_start, e.message, options[:tag])

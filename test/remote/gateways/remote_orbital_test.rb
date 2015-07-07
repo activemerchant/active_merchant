@@ -163,4 +163,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       # puts
     end
   end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal 'AUTH DECLINED                   12001', response.message
+  end
 end

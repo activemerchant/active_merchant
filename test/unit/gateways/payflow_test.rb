@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class PayflowTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.mode = :test
 
@@ -168,6 +170,21 @@ class PayflowTest < Test::Unit::TestCase
 
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :jcb, :discover, :diners_club], PayflowGateway.supported_cardtypes
+  end
+
+  def test_successful_verify
+    response = stub_comms(@gateway) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms(@gateway) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorization_response)
+    assert_failure response
+    assert_equal "Declined", response.message
   end
 
   def test_initial_recurring_transaction_missing_parameters

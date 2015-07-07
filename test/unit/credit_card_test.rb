@@ -432,4 +432,12 @@ class CreditCardTest < Test::Unit::TestCase
     card.start_year = "1"
     assert_equal 1, card.start_year
   end
+
+  def test_should_report_as_emv_if_icc_data_present
+    assert CreditCard.new(icc_data: "E480").emv?
+  end
+
+  def test_should_not_report_as_emv_if_icc_data_not_present
+    refute CreditCard.new.emv?
+  end
 end

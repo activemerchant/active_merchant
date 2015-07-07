@@ -366,7 +366,7 @@ module ActiveMerchant #:nodoc:
       def commit(request, options)
         requires!(options, :action)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request,
-                              {"SOAPAction" => "https://www.thepaymentgateway.net/#{options[:action]}",
+                              {"SOAPAction" => "https://www.thepaymentgateway.net/" + options[:action],
                                "Content-Type" => "text/xml; charset=utf-8" }))
 
         success = response[:transaction_result][:status_code] == "0"

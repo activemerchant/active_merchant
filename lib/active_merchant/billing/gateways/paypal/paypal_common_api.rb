@@ -581,6 +581,8 @@ module ActiveMerchant #:nodoc:
           # This value is ignored when set in SetExpressCheckout or GetExpressCheckoutDetails
           xml.tag! 'n2:NotifyURL', options[:notify_url] unless options[:notify_url].blank?
 
+          xml.tag! 'n2:SoftDescriptor', options[:soft_descriptor] unless options[:soft_descriptor].blank?
+
           add_address(xml, 'n2:ShipToAddress', options[:shipping_address]) unless options[:shipping_address].blank?
 
           add_payment_details_items_xml(xml, options, currency_code) unless options[:items].blank?
@@ -604,9 +606,9 @@ module ActiveMerchant #:nodoc:
 
       def add_express_only_payment_details(xml, options = {})
         add_optional_fields(xml,
-                            %w{n2:NoteText          n2:SoftDescriptor
+                            %w{n2:NoteText          n2:PaymentAction
                                n2:TransactionId     n2:AllowedPaymentMethodType
-                               n2:PaymentRequestID  n2:PaymentAction},
+                               n2:PaymentRequestID  },
                             options)
       end
 

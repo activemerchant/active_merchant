@@ -154,6 +154,14 @@ class PaypalTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_soft_descriptor_passed
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: "Eggcellent"))
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<n2:SoftDescriptor>Eggcellent}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_reauthorization
     @gateway.expects(:ssl_post).returns(successful_reauthorization_response)
     response = @gateway.reauthorize(@amount, '32J876265E528623B')

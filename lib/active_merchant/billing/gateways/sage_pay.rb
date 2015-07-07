@@ -138,6 +138,13 @@ module ActiveMerchant #:nodoc:
         commit(:unstore, post)
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       private
       def add_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';')
@@ -264,11 +271,6 @@ module ActiveMerchant #:nodoc:
         truncate(cleansed, 20)
       end
 
-      def truncate(value, max_size)
-        return nil unless value
-        value[0, max_size]
-      end
-
       def is_usa(country)
         truncate(country, 2) == 'US'
       end
@@ -354,7 +356,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :Vendor => @options[:login],
           :TxType => TRANSACTIONS[action],
-          :VPSProtocol => "3.00"
+          :VPSProtocol => @options.fetch(:protocol_version, '3.00')
         )
 
         if(application_id && (application_id != Gateway.application_id))
@@ -395,4 +397,3 @@ module ActiveMerchant #:nodoc:
 
   end
 end
-

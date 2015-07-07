@@ -25,6 +25,7 @@ class ConektaTest < Test::Unit::TestCase
     )
 
     @options = {
+      :device_fingerprint => "41l9l92hjco6cuekf0c7dq68v4",
       :description => 'Blue clip',
       :success_url => "https://www.example.com/success",
       :failure_url => "https://www.example.com/failure",

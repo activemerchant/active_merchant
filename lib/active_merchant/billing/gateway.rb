@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
     #
     # == Implmenting new gateways
     #
-    # See the {ActiveMerchant Guide to Contributing}[https://github.com/Shopify/active_merchant/wiki/Contributing]
+    # See the {ActiveMerchant Guide to Contributing}[https://github.com/activemerchant/active_merchant/wiki/Contributing]
     #
     class Gateway
       include PostsData
@@ -190,6 +190,10 @@ module ActiveMerchant #:nodoc:
         raise RuntimeError.new("This gateway does not support scrubbing.")
       end
 
+      def supports_network_tokenization?
+        false
+      end
+
       protected # :nodoc: all
 
       def normalize(field)
@@ -210,6 +214,16 @@ module ActiveMerchant #:nodoc:
           :platform => RUBY_PLATFORM,
           :publisher => 'active_merchant'
         })
+      end
+
+      def strip_invalid_xml_chars(xml)
+        begin
+          REXML::Document.new(xml)
+        rescue REXML::ParseException
+          xml = xml.gsub(/&(?!(?:[a-z]+|#[0-9]+|x[a-zA-Z0-9]+);)/, '&amp;')
+        end
+
+        xml
       end
 
       private # :nodoc: all
@@ -250,9 +264,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-
       def currency(money)
         money.respond_to?(:currency) ? money.currency : self.default_currency
+      end
+
+      def truncate(value, max_size)
+        return nil unless value
+        value.to_s[0, max_size]
       end
 
       def requires_start_date_or_issue_number?(credit_card)

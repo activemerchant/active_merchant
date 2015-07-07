@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
     # test access details please get in touch: sam@cabify.com.
     class RedsysGateway < Gateway
       self.live_url = "https://sis.sermepa.es/sis/operaciones"
-      self.test_url = "https://sis-t.sermepa.es:25443/sis/operaciones"
+      self.test_url = "https://sis-t.redsys.es:25443/sis/operaciones"
 
       self.supported_countries = ['ES']
       self.default_currency    = 'EUR'
@@ -38,10 +38,10 @@ module ActiveMerchant #:nodoc:
       self.display_name        = "Redsys"
 
       CURRENCY_CODES = {
-        "ARS" => '032',
-        "AUD" => '036',
+        "ARS" => '32',
+        "AUD" => '36',
         "BRL" => '986',
-        "BOB" => '068',
+        "BOB" => '68',
         "CAD" => '124',
         "CHF" => '756',
         "CLP" => '152',
@@ -50,6 +50,7 @@ module ActiveMerchant #:nodoc:
         "GBP" => '826',
         "GTQ" => '320',
         "JPY" => '392',
+        "MYR" => '458',
         "MXN" => '484',
         "NZD" => '554',
         "PEN" => '604',
@@ -159,28 +160,30 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, creditcard, options = {})
+      def purchase(money, payment, options = {})
         requires!(options, :order_id)
 
         data = {}
         add_action(data, :purchase)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
-        add_creditcard(data, creditcard)
+        add_payment(data, payment)
         data[:description] = options[:description]
+        data[:store_in_vault] = options[:store]
 
         commit data
       end
 
-      def authorize(money, creditcard, options = {})
+      def authorize(money, payment, options = {})
         requires!(options, :order_id)
 
         data = {}
         add_action(data, :authorize)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
-        add_creditcard(data, creditcard)
+        add_payment(data, payment)
         data[:description] = options[:description]
+        data[:store_in_vault] = options[:store]
 
         commit data
       end
@@ -244,16 +247,20 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
-      def add_creditcard(data, card)
-        name  = [card.first_name, card.last_name].join(' ').slice(0, 60)
-        year  = sprintf("%.4i", card.year)
-        month = sprintf("%.2i", card.month)
-        data[:card] = {
-          :name => name,
-          :pan  => card.number,
-          :date => "#{year[2..3]}#{month}",
-          :cvv  => card.verification_value
-        }
+      def add_payment(data, card)
+        if card.is_a?(String)
+          data[:credit_card_token] = card
+        else
+          name  = [card.first_name, card.last_name].join(' ').slice(0, 60)
+          year  = sprintf("%.4i", card.year)
+          month = sprintf("%.2i", card.month)
+          data[:card] = {
+            :name => name,
+            :pan  => card.number,
+            :date => "#{year[2..3]}#{month}",
+            :cvv  => card.verification_value
+          }
+        end
       end
 
       def commit(data)
@@ -276,6 +283,11 @@ module ActiveMerchant #:nodoc:
         end
 
         str << data[:action]
+        if data[:store_in_vault]
+          str << 'REQUIRED'
+        elsif data[:credit_card_token]
+          str << data[:credit_card_token]
+        end
         str << @options[:secret_key]
 
         Digest::SHA1.hexdigest(str)
@@ -301,6 +313,9 @@ module ActiveMerchant #:nodoc:
             xml.DS_MERCHANT_PAN        data[:card][:pan]
             xml.DS_MERCHANT_EXPIRYDATE data[:card][:date]
             xml.DS_MERCHANT_CVV2       data[:card][:cvv]
+            xml.DS_MERCHANT_IDENTIFIER 'REQUIRED' if data[:store_in_vault]
+          elsif data[:credit_card_token]
+            xml.DS_MERCHANT_IDENTIFIER data[:credit_card_token]
           end
         end
         xml.target!

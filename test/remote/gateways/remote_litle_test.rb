@@ -95,6 +95,12 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_debt_repayment_flag
+    assert response = @gateway.purchase(10010, @credit_card1, @options.merge(debt_repayment: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(60060, @credit_card2, {
         :order_id=>'6',
@@ -254,6 +260,15 @@ class RemoteLitleTest < Test::Unit::TestCase
     ))
     assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_xml_schema_validation
+    credit_card = CreditCard.new(@credit_card_hash.merge(:number => '123456'))
+    assert store_response = @gateway.store(credit_card, :order_id => '51')
+
+    assert_failure store_response
+    assert_match(/^Error validating xml data against the schema/, store_response.message)
+    assert_equal '1', store_response.params['response']
   end
 
 end

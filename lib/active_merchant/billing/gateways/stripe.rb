@@ -24,10 +24,10 @@ module ActiveMerchant #:nodoc:
       # Source: https://support.stripe.com/questions/which-zero-decimal-currencies-does-stripe-support
       CURRENCIES_WITHOUT_FRACTIONS = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'VUV', 'XAF', 'XOF', 'XPF']
 
-      self.supported_countries = %w(AU BE CA CH DE ES FI FR GB IE IT LU NL US)
+      self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE US)
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
 
       self.homepage_url = 'https://stripe.com/'
       self.display_name = 'Stripe'
@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
         'incorrect_cvc' => STANDARD_ERROR_CODE[:incorrect_cvc],
         'incorrect_zip' => STANDARD_ERROR_CODE[:incorrect_zip],
         'card_declined' => STANDARD_ERROR_CODE[:card_declined],
+        'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
         'processing_error' => STANDARD_ERROR_CODE[:processing_error]
       }
 
@@ -49,7 +50,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
         @api_key = options[:login]
         @fee_refund_api_key = options[:fee_refund_login]
-        @version = options[:version]
 
         super
       end
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            post[:capture] = "false"
+            post[:capture] = "false" unless emv_payment?(payment)
             commit(:post, 'charges', post, options)
           end
         end.responses.last
@@ -90,10 +90,16 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
-        add_amount(post, money, options)
+
         add_application_fee(post, options)
 
-        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
+        if emv_tc_response = options.delete(:icc_data)
+          post[:card] = { emv_approval_data: emv_tc_response }
+          commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
+        else
+          add_amount(post, money, options)
+          commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
+        end
       end
 
       def void(identification, options = {})
@@ -104,6 +110,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         post[:refund_application_fee] = true if options[:refund_application_fee]
+        post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
 
         MultiResponse.run(:first) do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
@@ -212,7 +219,12 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
+          gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2')
+      end
+
+      def supports_network_tokenization?
+        true
       end
 
       private
@@ -225,24 +237,24 @@ module ActiveMerchant #:nodoc:
 
       def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
-        add_amount(post, money, options, true)
+
         if payment.is_a?(StripePaymentToken)
           add_payment_token(post, payment, options)
         else
           add_creditcard(post, payment, options)
         end
-        add_customer(post, payment, options)
-        add_customer_data(post, options)
-        post[:description] = options[:description]
-        post[:statement_description] = options[:statement_description]
+        unless emv_payment?(payment)
+          add_amount(post, money, options, true)
+          add_customer_data(post, options)
+          add_metadata(post, options)
+          post[:description] = options[:description]
+          post[:statement_descriptor] = options[:statement_description]
+          add_customer(post, payment, options)
+          add_flags(post, options)
+        end
 
-        post[:metadata] = {}
-        post[:metadata][:email] = options[:email] if options[:email]
-        post[:metadata][:order_id] = options[:order_id] if options[:order_id]
-        post.delete(:metadata) if post[:metadata].empty?
-
-        add_flags(post, options)
         add_application_fee(post, options)
+        add_destination(post, options)
         post
       end
 
@@ -254,6 +266,10 @@ module ActiveMerchant #:nodoc:
 
       def add_application_fee(post, options)
         post[:application_fee] = options[:application_fee] if options[:application_fee]
+      end
+
+      def add_destination(post, options)
+        post[:destination] = options[:destination] if options[:destination]
       end
 
       def add_expand_parameters(post, options)
@@ -282,9 +298,17 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(post, creditcard, options)
         card = {}
-        if creditcard.respond_to?(:number)
+        if emv_payment?(creditcard)
+          add_emv_creditcard(post, creditcard.icc_data)
+          post[:card][:read_method] = "contactless" if creditcard.contactless
+          if creditcard.encrypted_pin_cryptogram.present? && creditcard.encrypted_pin_ksn.present?
+            post[:card][:encrypted_pin] = creditcard.encrypted_pin_cryptogram
+            post[:card][:encrypted_pin_key_id] = creditcard.encrypted_pin_ksn
+          end
+        elsif creditcard.respond_to?(:number)
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
+            card[:fallback_reason] = creditcard.fallback_reason if creditcard.fallback_reason
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
@@ -292,8 +316,15 @@ module ActiveMerchant #:nodoc:
             card[:cvc] = creditcard.verification_value if creditcard.verification_value?
             card[:name] = creditcard.name if creditcard.name
           end
-
           post[:card] = card
+
+          if creditcard.is_a?(NetworkTokenizationCreditCard)
+            post[:three_d_secure] = {
+              apple_pay:  true,
+              cryptogram: creditcard.payment_cryptogram
+            }
+          end
+
           add_address(post, options)
         elsif creditcard.kind_of?(String)
           if options[:track_data]
@@ -303,6 +334,10 @@ module ActiveMerchant #:nodoc:
           end
           post[:card] = card
         end
+      end
+
+      def add_emv_creditcard(post, icc_data, options = {})
+        post[:card] = { emv_auth_data: icc_data }
       end
 
       def add_payment_token(post, token, options = {})
@@ -316,6 +351,13 @@ module ActiveMerchant #:nodoc:
       def add_flags(post, options)
         post[:uncaptured] = true if options[:uncaptured]
         post[:recurring] = true if (options[:eci] == 'recurring' || options[:recurring])
+      end
+
+      def add_metadata(post, options = {})
+        post[:metadata] = options[:metadata] || {}
+        post[:metadata][:email] = options[:email] if options[:email]
+        post[:metadata][:order_id] = options[:order_id] if options[:order_id]
+        post.delete(:metadata) if post[:metadata].empty?
       end
 
       def fetch_application_fees(identification, options = {})
@@ -349,16 +391,21 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         key     = options[:key] || @api_key
-        version = options[:version] || @version
+        idempotency_key = options[:idempotency_key]
 
         headers = {
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "Stripe-Version" => api_version(options),
           "X-Stripe-Client-User-Agent" => user_agent,
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
-        headers.merge!("Stripe-Version" => version) if version
+        headers.merge!("Idempotency-Key" => idempotency_key) if idempotency_key
         headers
+      end
+
+      def api_version(options)
+        options[:version] || @options[:version] || "2015-04-07"
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})
@@ -377,11 +424,11 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
-
         response = api_request(method, url, parameters, options)
+
         success = !response.key?("error")
 
-        card = response["card"] || response["active_card"] || {}
+        card = card_from_response(response)
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
         cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
 
@@ -392,7 +439,8 @@ module ActiveMerchant #:nodoc:
           :authorization => success ? response["id"] : response["error"]["charge"],
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code,
-          :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]]
+          :emv_authorization => emv_authorization_from_response(response),
+          :error_code => success ? nil : error_code_from(response)
         )
       end
 
@@ -416,6 +464,29 @@ module ActiveMerchant #:nodoc:
 
       def non_fractional_currency?(currency)
         CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
+      end
+
+      def emv_payment?(payment)
+        payment.respond_to?(:emv?) && payment.emv?
+      end
+
+      def card_from_response(response)
+        response["card"] || response["active_card"] || response["source"] || {}
+      end
+
+      def emv_authorization_from_response(response)
+        return response["error"]["emv_auth_data"] if response["error"]
+
+        card_from_response(response)["emv_auth_data"]
+      end
+
+      def error_code_from(response)
+        code = response['error']['code']
+        decline_code = response['error']['decline_code'] if code == 'card_declined'
+
+        error_code = STANDARD_ERROR_CODE_MAPPING[decline_code]
+        error_code ||= STANDARD_ERROR_CODE_MAPPING[code]
+        error_code
       end
     end
   end

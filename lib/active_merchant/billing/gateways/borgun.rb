@@ -4,11 +4,12 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BorgunGateway < Gateway
       self.display_name = "Borgun"
+      self.homepage_url = 'http://www.borgun.com'
 
       self.test_url = 'https://gatewaytest.borgun.is/ws/Heimir.pub.ws:Authorization'
       self.live_url = 'https://gateway01.borgun.is/ws/Heimir.pub.ws:Authorization'
 
-      self.supported_countries = ['IS']
+      self.supported_countries = ['IS', 'GB', 'HU', 'CZ', 'DE', 'DK', 'SE' ]
       self.default_currency = 'ISK'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb]

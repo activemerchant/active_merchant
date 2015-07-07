@@ -26,19 +26,15 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        @url = (options[:gateway_url] || self.live_url)
-
         requires!(options, :merchant_id, :password)
         super
       end
 
       def purchase(amount, payment_method, options)
-        requires!(options, :order_id)
-
         commit('purchase', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
-          add_track_id(xml, options[:order_id])
+          add_track_id(xml, options[:order_id] || generate_unique_id)
           add_payment_method(xml, payment_method)
           add_billing_info(xml, options)
           add_shipping_info(xml, options)
@@ -48,12 +44,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, payment_method, options)
-        requires!(options, :order_id)
-
         commit('authorize', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
-          add_track_id(xml, options[:order_id])
+          add_track_id(xml, options[:order_id] || generate_unique_id)
           add_payment_method(xml, payment_method)
           add_billing_info(xml, options)
           add_shipping_info(xml, options)
@@ -153,6 +147,8 @@ module ActiveMerchant #:nodoc:
         xml.bill_email_   options[:email]
         xml.bill_customerip_ options[:ip]
         xml.merchantcustomerid_ options[:customer]
+        xml.descriptor_name options[:descriptor_name]
+        xml.descriptor_city options[:descriptor_city]
       end
 
       def add_reference(xml, authorization)
@@ -166,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, amount=nil, options={}, &builder)
-        response = parse_xml(ssl_post(@url, build_xml(action, &builder)))
+        response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
         Response.new(
           (response[:responsecode] == "0"),
           (response[:result] || response[:error_text] || "Unknown Response"),

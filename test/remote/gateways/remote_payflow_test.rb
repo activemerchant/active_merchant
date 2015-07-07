@@ -114,6 +114,18 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "Verified", response.message
+  end
+
+  def test_failed_verify
+    assert response = @gateway.verify(credit_card("4000056655665556"), @options)
+    assert_failure response
+    assert_equal "Declined", response.message
+  end
+
   def test_invalid_login
     gateway = PayflowGateway.new(
       :login => '',

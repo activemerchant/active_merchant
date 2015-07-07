@@ -283,4 +283,27 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
   end
+
+  def test_successful_verify
+    response = @gateway.verify(@mastercard, @mastercard_options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @mastercard_options)
+    assert_failure response
+    assert_equal 'INVALID CARDNUMBER', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visacreditcard, @visacredit_options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed( @visacreditcard.number, clean_transcript)
+    assert_scrubbed( @visacreditcard.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@gateway.options[:shared_secret], clean_transcript)
+  end
 end
