@@ -115,16 +115,6 @@ module ActiveMerchant #:nodoc:
 
         response = parse(ssl_post(url + action, post.to_param, headers))
 
-        # Debugging stuff
-        # puts "URL:"
-        # puts (url + action)
-        # puts "Headers:"
-        # puts headers.inspect
-        # puts "Request:"
-        # puts post.inspect
-        # puts "Response:"
-        # puts response.inspect
-
         Response.new(
           success_from(response),
           message_from(response),
@@ -132,7 +122,19 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response),
           test: test?,
           error_code: error_code_from(response)
-        )
+          )
+      rescue ActiveMerchant::ResponseError => e
+        # treat auth failures as an error response
+        if 401 == e.response.code.to_i && "Not Authorized" == e.response.message
+          Response.new(
+            false,
+            e.message,
+            {},
+            { test: test? }
+            )
+        else
+          raise
+        end
       end
 
       def headers
