@@ -3,6 +3,7 @@
 * Authorize.Net: Add device type to authorize.net retail requests [abecevello]
 * Vanco: Change transaction type to WEB for echecks [duff]
 * PayPal: Allow soft descriptor to be specified [davidsantoso]
+* Authorize.net: Add disable_partial_auth field [anellis]
 
 
 == Version 1.51.0 (July 2, 2015)

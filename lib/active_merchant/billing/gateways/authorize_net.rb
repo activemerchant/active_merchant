@@ -340,6 +340,12 @@ module ActiveMerchant #:nodoc:
               xml.settingValue("true")
             end
           end
+          if options[:disable_partial_auth] == true
+            xml.setting do
+              xml.settingName("allowPartialAuth")
+              xml.settingValue("false")
+            end
+          end
           if options[:duplicate_window]
             set_duplicate_window(xml, options[:duplicate_window])
           elsif self.class.duplicate_window

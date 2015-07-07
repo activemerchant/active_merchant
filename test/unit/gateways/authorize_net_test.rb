@@ -248,6 +248,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passes_partial_auth
+    stub_comms do
+      @gateway.purchase(100, credit_card, disable_partial_auth: true)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<settingName>allowPartialAuth<\/settingName>/, data)
+      assert_match(/<settingValue>false<\/settingValue>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
