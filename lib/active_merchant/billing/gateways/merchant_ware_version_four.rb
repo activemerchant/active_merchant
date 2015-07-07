@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantWareVersionFourGateway < Gateway
       self.live_url = 'https://ps1.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
-      self.test_url = 'https://staging.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
+      self.test_url = 'https://ps1.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
