@@ -30,6 +30,13 @@ class RemoteMercuryEncryptedTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_from_pre_auth
+    auth = @gateway.authorize(@amount, @swiper_output, @options)
+    assert_success auth
+
+    response = @gateway.purchase(@amount + 1, auth.authorization, @options)
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @swiper_output, @options)
     assert_success auth

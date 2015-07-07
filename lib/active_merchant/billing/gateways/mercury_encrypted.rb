@@ -26,9 +26,13 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
-
-        commit('/Credit/Sale', post)
+        if payment.include?('|')
+          add_payment(post, payment)
+          commit('/Credit/Sale', post)
+        else
+          post["RecordNo"] = payment
+          commit('/Credit/SaleByRecordNo', post)
+        end
       end
 
       def authorize(money, swiper_output, options={})
