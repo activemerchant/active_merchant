@@ -128,6 +128,14 @@ class SagePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_avscv2_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:avscv2 => 1}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/ApplyAVSCV2=1/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_FIxxxx_optional_fields_are_submitted
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({:recipient_account_number => '1234567890', :recipient_surname => 'Withnail', :recipient_postcode => 'AB11AB', :recipient_dob => '19701223'}))

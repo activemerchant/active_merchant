@@ -187,6 +187,7 @@ module ActiveMerchant #:nodoc:
 
       def add_optional_data(post, options)
         add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
+        add_pair(post, :ApplyAVSCV2, options[:avscv2]) unless options[:avscv2].blank?
         add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
         add_pair(post, :CreateToken, 1) unless options[:store].blank?
         add_pair(post, :FIRecipientAcctNumber, options[:recipient_account_number])
