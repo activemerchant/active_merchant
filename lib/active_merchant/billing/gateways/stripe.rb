@@ -43,7 +43,8 @@ module ActiveMerchant #:nodoc:
         'incorrect_zip' => STANDARD_ERROR_CODE[:incorrect_zip],
         'card_declined' => STANDARD_ERROR_CODE[:card_declined],
         'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
-        'processing_error' => STANDARD_ERROR_CODE[:processing_error]
+        'processing_error' => STANDARD_ERROR_CODE[:processing_error],
+        'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin]
       }
 
       def initialize(options = {})
