@@ -7,6 +7,7 @@
 * SagePay: Add apply_avscv2 field [anellis]
 * S5: Add Store [anellis]
 * Merchant Ware v4: Add support for verify [davidsantoso]
+* Mercury: No longer default to allow partial auth [duff]
 
 
 == Version 1.51.0 (July 2, 2015)
