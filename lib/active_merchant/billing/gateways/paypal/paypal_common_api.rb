@@ -581,8 +581,6 @@ module ActiveMerchant #:nodoc:
           # This value is ignored when set in SetExpressCheckout or GetExpressCheckoutDetails
           xml.tag! 'n2:NotifyURL', options[:notify_url] unless options[:notify_url].blank?
 
-          xml.tag! 'n2:SoftDescriptor', options[:soft_descriptor] unless options[:soft_descriptor].blank?
-
           add_address(xml, 'n2:ShipToAddress', options[:shipping_address]) unless options[:shipping_address].blank?
 
           add_payment_details_items_xml(xml, options, currency_code) unless options[:items].blank?

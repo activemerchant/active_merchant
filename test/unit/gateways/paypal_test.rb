@@ -154,11 +154,12 @@ class PaypalTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_soft_descriptor_passed
+  def test_descriptors_passed
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: "Eggcellent"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: "Eggcellent", soft_descriptor_city: "New York"))
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<n2:SoftDescriptor>Eggcellent}, data)
+      assert_match(%r{<n2:SoftDescriptorCity>New York}, data)
     end.respond_with(successful_purchase_response)
   end
 

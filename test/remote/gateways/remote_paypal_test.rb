@@ -49,8 +49,8 @@ class PaypalTest < Test::Unit::TestCase
     assert response.params['transaction_id']
   end
 
-  def test_successful_purchase_with_soft_descriptor
-    response = @gateway.purchase(@amount, @credit_card, @params.merge(soft_descriptor: "Active Merchant TXN"))
+  def test_successful_purchase_with_descriptors
+    response = @gateway.purchase(@amount, @credit_card, @params.merge(soft_descriptor: "Active Merchant TXN", soft_descriptor_city: "800-883-3931"))
     assert_success response
     assert response.params['transaction_id']
   end
