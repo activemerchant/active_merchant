@@ -19,7 +19,7 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
@@ -31,7 +31,7 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_soap_fault_during_authorization
-    response_400 = stub(:code => "400", :message => "Bad Request", :body => fault_authorization_response)
+    response_400 = stub(:code => "400", :message => "Bad Request", :body => failed_authorize_response)
     @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_400))
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
@@ -94,14 +94,14 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_avs_result
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'N', response.avs_result['code']
   end
 
   def test_cvv_result
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
@@ -119,9 +119,31 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_successful_verify_with_failed_void
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+  end
+
   private
 
-  def successful_authorization_response
+  def successful_authorize_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope
@@ -153,7 +175,7 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
     XML
   end
 
-  def fault_authorization_response
+  def failed_authorize_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
@@ -208,6 +230,35 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
         <TransactionType>5</TransactionType>
       </PreAuthorizationKeyedResult>
     </PreAuthorizationKeyedResponse>
+  </soap:Body>
+</soap:Envelope>
+    XML
+  end
+
+  def successful_void_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body>
+    <VoidPreAuthorizationResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <VoidPreAuthorizationResult>
+        <Amount />
+        <ApprovalStatus>APPROVED</ApprovalStatus>
+        <AuthorizationCode>VOID</AuthorizationCode>
+        <AvsResponse />
+        <Cardholder />
+        <CardNumber />
+        <CardType>0</CardType>
+        <CvResponse />
+        <EntryMode>0</EntryMode>
+        <ErrorMessage />
+        <ExtraData />
+        <InvoiceNumber />
+        <Token>266783537</Token>
+        <TransactionDate>7/9/2015 3:13:51 PM</TransactionDate>
+        <TransactionType>3</TransactionType>
+      </VoidPreAuthorizationResult>
+    </VoidPreAuthorizationResponse>
   </soap:Body>
 </soap:Envelope>
     XML
