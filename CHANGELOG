@@ -15,6 +15,8 @@
 * Litle: Use schema version 9.4 rather than 8.18 [anellis]
 * Litle: Add decrypted apple_pay [anellis]
 * QuickPay: fix method signature on #void [girasquid]
+* Forte: Add gateway [davidsantoso]
+
 
 == Version 1.52.0 (July 20, 2015)
 
