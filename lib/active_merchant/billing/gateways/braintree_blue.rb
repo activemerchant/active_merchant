@@ -517,7 +517,8 @@ module ActiveMerchant #:nodoc:
           },
           :options => {
             :store_in_vault => options[:store] ? true : false,
-            :submit_for_settlement => options[:submit_for_settlement]
+            :submit_for_settlement => options[:submit_for_settlement],
+            :hold_in_escrow => options[:hold_in_escrow]
           }
         }
 

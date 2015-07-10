@@ -16,6 +16,7 @@
 * PayU India: Increase allowed txnid to 30 characters [ntalbott]
 * Authorize.Net: Allow passing device type through options, make wireless POS the default [abecevello]
 * Authorize.Net: Update to new Akamai URL [taf2]
+* Braintree: Add hold_in_escrow [anellis]
 
 == Version 1.51.0 (July 2, 2015)
 
