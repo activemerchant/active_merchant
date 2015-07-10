@@ -188,17 +188,16 @@ module ActiveMerchant #:nodoc:
         commit(:post, "customers/#{CGI.escape(customer_id)}", options, options)
       end
 
-      def unstore(customer_id, options = {}, deprecated_options = {})
+      def unstore(identification, options = {}, deprecated_options = {})
+        customer_id, card_id = identification.split("|")
+
         if options.kind_of?(String)
-          ActiveMerchant.deprecated "Passing the card_id as the 2nd parameter is deprecated. Put it in the options hash instead."
-          options = deprecated_options.merge(card_id: options)
+          ActiveMerchant.deprecated "Passing the card_id as the 2nd parameter is deprecated. The response authorization includes both the customer_id and the card_id."
+          card_id ||= options
+          options = deprecated_options
         end
 
-        if options[:card_id]
-          commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(options[:card_id])}", nil, options)
-        else
-          commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, options)
-        end
+        commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
       end
 
       def tokenize_apple_pay_token(apple_pay_payment_token, options = {})
@@ -244,6 +243,7 @@ module ActiveMerchant #:nodoc:
         else
           add_creditcard(post, payment, options)
         end
+
         unless emv_payment?(payment)
           add_amount(post, money, options, true)
           add_customer_data(post, options)
@@ -332,7 +332,9 @@ module ActiveMerchant #:nodoc:
           if options[:track_data]
             card[:swipe_data] = options[:track_data]
           else
-            card = creditcard
+            customer_id, card_id = creditcard.split("|")
+            card = card_id
+            post[:customer] = customer_id
           end
           post[:card] = card
         end
@@ -347,7 +349,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer(post, payment, options)
-        post[:customer] = options[:customer] if options[:customer] && !payment.respond_to?(:number)
+        if options[:customer] && !payment.respond_to?(:number)
+          ActiveMerchant.deprecated "Passing the customer in the options is deprecated. Just use the response.authorization instead."
+          post[:customer] = options[:customer] 
+        end
       end
 
       def add_flags(post, options)
@@ -438,12 +443,24 @@ module ActiveMerchant #:nodoc:
           success ? "Transaction approved" : response["error"]["message"],
           response,
           :test => response.has_key?("livemode") ? !response["livemode"] : false,
-          :authorization => success ? response["id"] : response["error"]["charge"],
+          :authorization => authorization_from(success, url, method, response),
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code,
           :emv_authorization => emv_authorization_from_response(response),
           :error_code => success ? nil : error_code_from(response)
         )
+      end
+
+      def authorization_from(success, url, method, response)
+        return response["error"]["charge"] unless success
+
+        if url == "customers"
+          [response["id"], response["sources"]["data"].first["id"]].join("|")
+        elsif method == :post && url.match(/customers\/.*\/cards/)
+          [response["customer"], response["id"]].join("|")
+        else
+          response["id"]
+        end
       end
 
       def response_error(raw_response)
