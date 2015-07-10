@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        if payment.include?('|')
+        if payment.is_a?(Hash) || (payment.is_a?(String) && payment.include?('|'))
           add_payment(post, payment)
           commit('/Credit/Sale', post)
         else
@@ -98,8 +98,13 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         post["EncryptedFormat"] = "MagneSafe"
-        post['EncryptedBlock'] = payment.split("|")[3]
-        post['EncryptedKey'] = payment.split("|")[9]
+        if payment.is_a?(Hash)
+          post['EncryptedBlock'] = payment[:encrypted_block]
+          post['EncryptedKey'] = payment[:encrypted_key]
+        else
+          post['EncryptedBlock'] = payment.split("|")[3]
+          post['EncryptedKey'] = payment.split("|")[9]
+        end
       end
 
       def add_common_params post

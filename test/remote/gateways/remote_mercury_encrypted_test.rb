@@ -6,6 +6,7 @@ class RemoteMercuryEncryptedTest < Test::Unit::TestCase
     @amount = 100
     @declined_amount = 2401
     @swiper_output = "%B4003000050006781^TEST/MPS^19120000000000000?;4003000050006781=19120000000000000000?|0600|7EFC7CD505B74493DC4B01B8506E7B927B947ED2EDBF34E8DB470909238BC1ABAB007BFBB5395A730A48BFC2CD021260|9EF440CE67CAD230A307B5581F063AB8B8971E32F26F7CC64C2C15A274B8BD0E220334C8E964E719||61401000|C95DAB4041E723946C54A63066108634DD24A93E587BDDCF49A0459C5649464B6ABFE8CB714AEB4B3B7F7F803E22548B7E23292200F92D74|B29C0D1120214AA|8BCE84619C673F4F|9012090B29C0D1000003|D860||1000"
+    @payment = { encrypted_key: "9012090B29C0D1000003", encrypted_block: "9EF440CE67CAD230A307B5581F063AB8B8971E32F26F7CC64C2C15A274B8BD0E220334C8E964E719" }
     @options = {
       invoice_no: "1",
       ref_no: "1",
@@ -15,6 +16,15 @@ class RemoteMercuryEncryptedTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @swiper_output, @options)
+    assert_success response
+
+    assert response.authorization.present?
+    assert_equal "1.00", response.params["Purchase"]
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_hash_payment_object
+    response = @gateway.purchase(@amount, @payment, @options)
     assert_success response
 
     assert response.authorization.present?
