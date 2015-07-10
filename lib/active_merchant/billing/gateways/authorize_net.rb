@@ -340,7 +340,7 @@ module ActiveMerchant #:nodoc:
               xml.settingValue("true")
             end
           end
-          if options[:disable_partial_auth] == true
+          if options[:disable_partial_auth]
             xml.setting do
               xml.settingName("allowPartialAuth")
               xml.settingValue("false")
