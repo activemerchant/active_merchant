@@ -112,6 +112,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card("41111111111111111111"), :service_fee_amount => "2.31")
   end
 
+  def test_hold_in_escrow_can_be_specified
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:options][:hold_in_escrow] == true)
+    end.returns(braintree_result)
+
+    @gateway.authorize(100, credit_card("41111111111111111111"), :hold_in_escrow => true)
+  end
+
   def test_merchant_account_id_absent_if_not_provided
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       not params.has_key?(:merchant_account_id)
@@ -556,7 +564,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
         :amount => '1.00',
         :order_id => '1',
         :customer => {:id => nil, :email => nil, :first_name => 'Longbob', :last_name => 'Longsen'},
-        :options => {:store_in_vault => false, :submit_for_settlement => nil},
+        :options => {:store_in_vault => false, :submit_for_settlement => nil, :hold_in_escrow => nil},
         :custom_fields => nil,
         :apple_pay_card => {
           :number => '4111111111111111',
