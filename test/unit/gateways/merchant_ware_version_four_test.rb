@@ -141,7 +141,24 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
+
+  def pre_scrubbed
+    %q(
+    <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <SaleKeyed xmlns=\"http://schemas.merchantwarehouse.com/merchantware/40/Credit/\">\n      <merchantName>Test Spreedly PayItSimple</merchantName>\n      <merchantSiteId>BK34Z768</merchantSiteId>\n      <merchantKey>TCTTS-IDYQV-RDFY1-6DS01-WTPVH</merchantKey>\n      <invoiceNumber>14b33b8a</invoiceNumber>\n      <amount>10.20</amount>\n      <cardNumber>5424180279791732</cardNumber>\n      <expirationDate>0916</expirationDate>\n      <cardholder>Longbob Longsen</cardholder>\n      <cardSecurityCode>123</cardSecurityCode>\n      <avsStreetAddress>456 My Street</avsStreetAddress>\n      <avsStreetZipCode>K1C2N6</avsStreetZipCode>\n    </SaleKeyed>\n  </soap:Body>\n</soap:Envelope>\n"
+    )
+  end
+
+  def post_scrubbed
+    %q(
+    <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <SaleKeyed xmlns=\"http://schemas.merchantwarehouse.com/merchantware/40/Credit/\">\n      <merchantName>Test Spreedly PayItSimple</merchantName>\n      <merchantSiteId>BK34Z768</merchantSiteId>\n      <merchantKey>[FILTERED]</merchantKey>\n      <invoiceNumber>14b33b8a</invoiceNumber>\n      <amount>10.20</amount>\n      <cardNumber>[FILTERED]</cardNumber>\n      <expirationDate>0916</expirationDate>\n      <cardholder>Longbob Longsen</cardholder>\n      <cardSecurityCode>[FILTERED]</cardSecurityCode>\n      <avsStreetAddress>456 My Street</avsStreetAddress>\n      <avsStreetZipCode>K1C2N6</avsStreetZipCode>\n    </SaleKeyed>\n  </soap:Body>\n</soap:Envelope>\n"
+    )
+  end
 
   def successful_authorize_response
     <<-XML

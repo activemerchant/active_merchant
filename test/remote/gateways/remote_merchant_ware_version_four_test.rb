@@ -112,4 +112,15 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Invalid card number.', response.message
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end

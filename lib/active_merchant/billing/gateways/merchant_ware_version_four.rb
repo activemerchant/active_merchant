@@ -115,6 +115,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<merchantKey>).+?(</merchantKey>))i, '\1[FILTERED]\2').
+          gsub(%r((<cardNumber>).+?(</cardNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<cardSecurityCode>).+?(</cardSecurityCode>))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def soap_request(action)
