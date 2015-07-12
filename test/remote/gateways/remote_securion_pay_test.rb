@@ -173,23 +173,6 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert_equal @credit_card.last_digits, first_card["last4"]
   end
 
-  def test_successful_add_card_to_existing_customer
-    assert response = @gateway.store(@credit_card, { description: "Customer Test", email: "email@example.com" })
-    assert_success response
-    store_response = response
-
-    assert response = @gateway.update_customer(store_response.params['id'], @new_credit_card, { description: "Test Customer Update" })
-    assert_success response
-
-    assert_equal 2, response.params['cards'].size
-    first_card, second_card = response.params['cards']
-    assert_equal "Transaction approved", response.message
-    assert_equal @new_credit_card.last_digits, second_card["last4"]
-    assert_equal "Test Customer Update", response.params["description"]
-    assert_equal "email@example.com", response.params["email"]
-    assert_equal response.params["defaultCardId"], second_card['id']
-  end
-
   def test_successful_unstore_card
     response = @gateway.store(@credit_card, { description: "Active Merchant Unstore Customer", email: "email@example.pl" })
     assert_success response

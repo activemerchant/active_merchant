@@ -281,41 +281,6 @@ class SecurionPayTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_new_card
-    @gateway.expects(:ssl_request).returns(successful_new_card_response)
-    @gateway.expects(:add_creditcard)
-
-    assert response = @gateway.update_customer('cust_QwQdf2Y1fjCFKrchTtSmwpUM', @credit_card)
-    assert_instance_of Response, response
-    assert_success response
-
-    assert_equal 'cust_QwQdf2Y1fjCFKrchTtSmwpUM', response.authorization
-    assert response.test?
-  end
-
-  def test_customer_update
-    @gateway.expects(:ssl_request).returns(successful_customer_update_response)
-
-    assert response = @gateway.update_customer('cust_QwQdf2Y1fjCFKrchTtSmwpUM', { email: 'test@email.pl', description: 'Test Description' })
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal 'test@email.pl', response.params['email']
-    assert_equal 'cust_QwQdf2Y1fjCFKrchTtSmwpUM', response.authorization
-    assert response.test?
-  end
-
-  def test_successful_change_default_card
-    @gateway.expects(:ssl_request).returns(successful_change_default_card_response)
-
-    assert response = @gateway.update_customer('cust_QwQdf2Y1fjCFKrchTtSmwpUM', { defaultCardId: 'card_gF90YA1KO56BSjkyQmCGfjO5' })
-    assert_instance_of Response, response
-    assert_success response
-
-    assert_equal 'cust_QwQdf2Y1fjCFKrchTtSmwpUM', response.authorization
-    assert_equal 'card_gF90YA1KO56BSjkyQmCGfjO5', response.params['defaultCardId']
-    assert response.test?
-  end
-
   private
 
   def pre_scrubbed
