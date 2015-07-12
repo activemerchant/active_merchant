@@ -130,11 +130,11 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-    assert purchase.authorization
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
 
-    assert void = @gateway.void(purchase.authorization, @options)
+    assert void = @gateway.void(authorization.authorization, @options)
     assert_success void
     assert void.params["refunded"]
     assert_equal 0, void.params["amount"]
