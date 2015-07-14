@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
           add_payment_source(xml, payment)
           add_invoice(xml, options)
           add_customer_data(xml, payment, options)
-          add_market_type_device_type(xml, payment)
+          add_market_type_device_type(xml, payment, options)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
         end
@@ -426,12 +426,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_market_type_device_type(xml, payment)
+      def add_market_type_device_type(xml, payment, options)
         return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
         if valid_track_data
           xml.retail do
             xml.marketType(MARKET_TYPE[:retail])
-            xml.deviceType(DEVICE_TYPE[:unknown])
+
+            device_type = options[:device_type] || DEVICE_TYPE[:wireless_pos]
+            xml.deviceType(device_type)
           end
         elsif payment.manual_entry
           xml.retail do

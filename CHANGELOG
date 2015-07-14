@@ -14,6 +14,7 @@
 * Moneris: Add network tokenization support [andrewpaliga]
 * Ogone: Allow specifying a timeout value for requests [tomhipkin]
 * PayU India: Increase allowed txnid to 30 characters [ntalbott]
+* Authorize.Net: Allow passing device type through options, make wireless POS the default [abecevello]
 
 == Version 1.51.0 (July 2, 2015)
 
