@@ -25,6 +25,7 @@
 * FirstData e4: Honor currency when supplied [tchill]
 * Authorize.net: Add config_error standard error code [andrewpaliga]
 * PayPal Express: Add support for TotalType in SetExpressCheckout [gingerhendrix]
+* eWay Rapid: Add :invoice option [DylanFM]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
