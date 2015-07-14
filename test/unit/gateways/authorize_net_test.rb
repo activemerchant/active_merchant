@@ -69,7 +69,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_retail_market_type_included_in_swipe_transactions_with_valid_track_data
+  def test_retail_market_type_device_type_included_in_swipe_transactions_with_valid_track_data
     [BAD_TRACK_DATA, nil].each do |track|
       @credit_card.track_data = track
       stub_comms do
@@ -89,6 +89,22 @@ class AuthorizeNetTest < Test::Unit::TestCase
         parse(data) do |doc|
           assert_not_nil doc.at_xpath('//retail')
           assert_equal "2", doc.at_xpath('//retail/marketType').content
+          assert_equal "7", doc.at_xpath('//retail/deviceType').content
+        end
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_device_type_used_from_options_if_included_with_valid_track_data
+    [TRACK1_DATA, TRACK2_DATA].each do |track|
+      @credit_card.track_data = track
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, {device_type: 1})
+      end.check_request do |endpoint, data, headers|
+        parse(data) do |doc|
+          assert_not_nil doc.at_xpath('//retail')
+          assert_equal "2", doc.at_xpath('//retail/marketType').content
+          assert_equal "1", doc.at_xpath('//retail/deviceType').content
         end
       end.respond_with(successful_purchase_response)
     end
