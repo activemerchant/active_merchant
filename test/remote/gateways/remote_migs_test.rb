@@ -15,7 +15,8 @@ class RemoteMigsTest < Test::Unit::TestCase
     @credit_card = @visa
 
     @options = {
-      :order_id => '1'
+      :order_id => '1',
+      :currency => 'USD'
     }
   end
 
