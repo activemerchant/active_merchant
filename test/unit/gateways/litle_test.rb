@@ -13,6 +13,14 @@ class LitleTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        month: '01',
+        year: '2012',
+        brand: "visa",
+        number:  "44444444400009",
+        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+      })
     @amount = 100
     @options = {}
   end
@@ -89,6 +97,23 @@ class LitleTest < Test::Unit::TestCase
       assert_match(%r(<debtRepayment>true</debtRepayment>), data)
     end.respond_with(successful_authorize_response)
   end
+
+  def test_passing_payment_cryptogram
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_apple_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/BwABBJQ1AgAAAAAgJDUCAAAAAAA=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_add_applepay_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_apple_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>applepay</orderSource>", data
+    end.respond_with(successful_purchase_response)
+  end
+
 
   def test_successful_authorize_and_capture
     response = stub_comms do
