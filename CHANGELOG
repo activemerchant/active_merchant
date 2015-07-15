@@ -12,6 +12,9 @@
 * Stripe: Support validate:false field on store [anellis]
 * CheckoutV2: Use correct live_url [duff]
 * QuickPay: strip # from Order IDs before submission [girasquid]
+* Litle: Use schema version 9.4 rather than 8.18 [anellis]
+* Litle: Add decrypted apple_pay [anellis]
+
 
 == Version 1.52.0 (July 20, 2015)
 
