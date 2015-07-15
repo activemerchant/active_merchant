@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
       #               :currency         Sale currency to override money object or default (optional)
       #
       # Returns Active Merchant response object
-      def purchase(money, credit_card, options)
+      def purchase(money, credit_card, options={})
         execute_new_order(:purchase, money, credit_card, options)
       end
 
