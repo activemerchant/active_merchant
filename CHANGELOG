@@ -17,6 +17,7 @@
 * Authorize.Net: Allow passing device type through options, make wireless POS the default [abecevello]
 * Authorize.Net: Update to new Akamai URL [taf2]
 * Braintree: Add hold_in_escrow [anellis]
+* Stripe: Allow purchases with tokens without customer specification [bizla]
 
 == Version 1.51.0 (July 2, 2015)
 

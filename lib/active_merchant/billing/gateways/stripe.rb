@@ -331,10 +331,12 @@ module ActiveMerchant #:nodoc:
         elsif creditcard.kind_of?(String)
           if options[:track_data]
             card[:swipe_data] = options[:track_data]
-          else
+          elsif creditcard.include?("|")
             customer_id, card_id = creditcard.split("|")
             card = card_id
             post[:customer] = customer_id
+          else
+            card = creditcard
           end
           post[:card] = card
         end
@@ -351,7 +353,7 @@ module ActiveMerchant #:nodoc:
       def add_customer(post, payment, options)
         if options[:customer] && !payment.respond_to?(:number)
           ActiveMerchant.deprecated "Passing the customer in the options is deprecated. Just use the response.authorization instead."
-          post[:customer] = options[:customer] 
+          post[:customer] = options[:customer]
         end
       end
 
