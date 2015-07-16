@@ -5,6 +5,7 @@ class RemoteNmiTest < Test::Unit::TestCase
     @gateway = NmiGateway.new(fixtures(:nmi))
     @amount = 100
     @credit_card = credit_card('4000100011112224')
+    @check = check
     @options = {
       :order_id => generate_unique_id,
       :billing_address => address,
@@ -14,6 +15,14 @@ class RemoteNmiTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_check_purchase
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -58,6 +67,24 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_success response
 
     assert response = @gateway.refund(@amount, response.authorization, :card_number => @credit_card.number)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_check_void
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+
+    assert response = @gateway.void(response.authorization, :method => "ECHECK")
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_check_refund
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+
+    assert response = @gateway.refund(@amount, response.authorization, :method => "ECHECK")
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end
