@@ -276,11 +276,21 @@ class StripeTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
-  def test_successful_purchase_with_token
+  def test_successful_purchase_with_token_including_customer
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, "cus_xxx|card_xxx")
     end.check_request do |method, endpoint, data, headers|
       assert_match(/customer=cus_xxx/, data)
+      assert_match(/card=card_xxx/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_token
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "card_xxx")
+    end.check_request do |method, endpoint, data, headers|
       assert_match(/card=card_xxx/, data)
     end.respond_with(successful_purchase_response)
 
@@ -486,6 +496,13 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_add_creditcard_with_token
+    post = {}
+    credit_card_token = "card_2iD4AezYnNNzkW"
+    @gateway.send(:add_creditcard, post, credit_card_token, {})
+    assert_equal "card_2iD4AezYnNNzkW", post[:card]
+  end
+
+  def test_add_creditcard_with_token_and_customer
     post = {}
     credit_card_token = "cus_3sgheFxeBgTQ3M|card_2iD4AezYnNNzkW"
     @gateway.send(:add_creditcard, post, credit_card_token, {})
