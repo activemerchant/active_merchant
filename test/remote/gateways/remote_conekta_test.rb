@@ -23,7 +23,7 @@ class RemoteConektaTest < Test::Unit::TestCase
       first_name:         "Mario F.",
       last_name:          "Moreno Reyes"
     )
-
+    
     @options = {
       :device_fingerprint => "41l9l92hjco6cuekf0c7dq68v4",
       description: 'Blue clip',
