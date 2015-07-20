@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* Redsys: Add a number of currencies [agseco]
+
+
 == Version 1.52.0 (July 20, 2015)
 
 * Authorize.Net: Add device type to authorize.net retail requests [abecevello]

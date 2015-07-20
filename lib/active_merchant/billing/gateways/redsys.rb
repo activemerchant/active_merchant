@@ -38,6 +38,7 @@ module ActiveMerchant #:nodoc:
       self.display_name        = "Redsys"
 
       CURRENCY_CODES = {
+        "AED" => '784',
         "ARS" => '32',
         "AUD" => '36',
         "BRL" => '986',
@@ -46,16 +47,22 @@ module ActiveMerchant #:nodoc:
         "CHF" => '756',
         "CLP" => '152',
         "COP" => '170',
+        "CZK" => '203',
         "EUR" => '978',
         "GBP" => '826',
         "GTQ" => '320',
+        "HUF" => '348',
         "JPY" => '392',
         "MYR" => '458',
         "MXN" => '484',
+        "NOK" => '578',
         "NZD" => '554',
         "PEN" => '604',
+        "PLN" => '616',
         "RUB" => '643',
+        "SEK" => '752',
         "SGD" => '702',
+        "THB" => '764',
         "USD" => '840',
         "UYU" => '858'
       }
