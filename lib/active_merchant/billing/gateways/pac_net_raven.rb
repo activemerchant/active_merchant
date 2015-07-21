@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = {}
         post['TrackingNumber'] = authorization
-        post['PymtType'] = options[:pymt_type] || 'cc_debit'
+        post['PymtType'] = options[:pymt_type]
 
         commit('void', nil, post)
       end

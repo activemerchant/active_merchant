@@ -129,7 +129,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
 
   def test_purchase_and_void
     purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert void = @gateway.void(purchase.authorization, {:pymt_type =>  purchase.params['PymtType']})
+    assert void = @gateway.void(purchase.authorization)
     assert_success void
     assert void.params['ApprovalCode']
     assert void.params['TrackingNumber']
@@ -142,7 +142,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
 
   def test_authorize_and_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert void = @gateway.void(auth.authorization, {:pymt_type => auth.params['PymtType']})
+    assert void = @gateway.void(auth.authorization)
     assert_failure void
     assert void.params['ApprovalCode']
     assert void.params['TrackingNumber']
@@ -156,7 +156,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
   def test_authorize_capture_and_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert capture = @gateway.capture(@amount, auth.authorization)
-    assert void = @gateway.void(capture.authorization, {:pymt_type => capture.params['PymtType']})
+    assert void = @gateway.void(capture.authorization)
     assert_success void
     assert void.params['ApprovalCode']
     assert void.params['TrackingNumber']
