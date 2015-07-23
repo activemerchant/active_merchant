@@ -252,6 +252,10 @@ class BluePayTest < Test::Unit::TestCase
     ActiveMerchant::Billing::BluePayGateway.application_id = nil
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def minimum_requirements
@@ -292,5 +296,13 @@ class BluePayTest < Test::Unit::TestCase
 
   def successful_status_recurring_response
     'last_date=2012-04-13%2009%3A49%3A27&usual_date=2012-04-13%2000%3A00%3A00&template_id=100096219668&status=active&account_id=100096218902&rebill_id=100096219669&reb_amount=2.00&creation_date=2012-04-13%2009%3A49%3A19&sched_expr=1%20DAY&next_date=2012-04-13%2000%3A00%3A00&next_amount=&user_id=100096218903&cycles_remain=4'
+  end
+
+  def transcript
+    "card_num=4111111111111111&exp_date=1212&MASTER_ID=&PAYMENT_TYPE=CREDIT&PAYMENT_ACCOUNT=4242424242424242&CARD_CVV2=123&CARD_EXPIRE=0916&NAME1=Longbob&NAME2=Longsen&ORDER_ID=78c40687dd55dbdc140df777b0e8ece3&INVOICE_ID=&invoice_num=78c40687dd55dbdc140df777b0e8ece3&EMAIL=&CUSTOM_ID=&DUPLICATE_OVERRIDE=&TRANS_TYPE=SALE&AMOUNT=1.00&MODE=TEST&ACCOUNT_ID=100096218902&TAMPER_PROOF_SEAL=55624458ce3e15fa8e33e6f2d784bbcb"
+  end
+
+  def scrubbed_transcript
+    "card_num=[FILTERED]&exp_date=1212&MASTER_ID=&PAYMENT_TYPE=CREDIT&PAYMENT_ACCOUNT=[FILTERED]&CARD_CVV2=[FILTERED]&CARD_EXPIRE=0916&NAME1=Longbob&NAME2=Longsen&ORDER_ID=78c40687dd55dbdc140df777b0e8ece3&INVOICE_ID=&invoice_num=78c40687dd55dbdc140df777b0e8ece3&EMAIL=&CUSTOM_ID=&DUPLICATE_OVERRIDE=&TRANS_TYPE=SALE&AMOUNT=1.00&MODE=TEST&ACCOUNT_ID=100096218902&TAMPER_PROOF_SEAL=[FILTERED]"
   end
 end
