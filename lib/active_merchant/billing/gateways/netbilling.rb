@@ -105,6 +105,17 @@ module ActiveMerchant #:nodoc:
         (@options[:login] == TEST_LOGIN || super)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card_number=)[^&]*), '\1[FILTERED]').
+          gsub(%r((&?card_cvv2=)[^&]*), '\1[FILTERED]')
+      end
+
       private
 
       def add_amount(post, money)
@@ -221,4 +232,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

@@ -103,6 +103,10 @@ class ConektaTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_purchase_response
@@ -277,5 +281,13 @@ class ConektaTest < Test::Unit::TestCase
       'type' => 'authentication_error',
       'message' => 'Unrecognized authentication token'
     }.to_json
+  end
+
+  def transcript
+    "card%5Baddress%5D%5Bzip%5D=5555&card%5Bcvc%5D=183&card%5Bexp_month%5D=01&card%5Bexp_year%5D=18&card%5Bname%5D=Mario+F.+Moreno+Reyes&card%5Bnumber%5D=4242424242424242&currency=mxn&description=Blue+clip&details%5Bbilling_address%5D%5Bcity%5D=Guerrero"
+  end
+
+  def scrubbed_transcript
+    "card%5Baddress%5D%5Bzip%5D=5555&card%5Bcvc%5D=[FILTERED]&card%5Bexp_month%5D=01&card%5Bexp_year%5D=18&card%5Bname%5D=Mario+F.+Moreno+Reyes&card%5Bnumber%5D=[FILTERED]&currency=mxn&description=Blue+clip&details%5Bbilling_address%5D%5Bcity%5D=Guerrero"
   end
 end

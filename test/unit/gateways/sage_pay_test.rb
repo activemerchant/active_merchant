@@ -215,6 +215,10 @@ class SagePayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_purchase_response
@@ -308,5 +312,49 @@ AddressResult=MATCHED
 PostCodeResult=MATCHED
 CV2Result=MATCHED
     RESP
+  end
+
+  def transcript
+    <<-TRANSCRIPT
+    Amount=1.00&Currency=GBP&VendorTxCode=9094108b21f7b917e68d3e84b49ce9c4&Description=Store+purchase&CardHolder=Tekin+Suleyman&CardNumber=4929000000006&ExpiryDate=0616&CardType=VISA&CV2=123&BillingSurname=Suleyman&BillingFirstnames=Tekin&BillingAddress1=Flat+10+Lapwing+Court&BillingAddress2=West+Didsbury&BillingCity=Manchester&BillingCountry=GB&BillingPostCode=M20+2PS&DeliverySurname=Suleyman&DeliveryFirstnames=Tekin&DeliveryAddress1=120+Grosvenor+St&DeliveryCity=Manchester&DeliveryCountry=GB&DeliveryPostCode=M1+7QW&CustomerEMail=tekin%40tekin.co.uk&ClientIPAddress=86.150.65.37&Vendor=spreedly&TxType=PAYMENT&VPSProtocol=3.00
+I, [2015-07-22T17:16:49.292774 #97998]  INFO -- : [ActiveMerchant::Billing::SagePayGateway] --> 200 OK (356 1.8635s)
+D, [2015-07-22T17:16:49.292836 #97998] DEBUG -- : VPSProtocol=3.00
+Status=OK
+StatusDetail=0000 : The Authorisation was Successful.
+VPSTxId={D5B43220-E93C-ED13-6643-D22224BD1CDB}
+SecurityKey=7OYK4OHM7Y
+TxAuthNo=8769237
+AVSCV2=DATA NOT CHECKED
+AddressResult=NOTPROVIDED
+PostCodeResult=NOTPROVIDED
+CV2Result=NOTPROVIDED
+3DSecureStatus=NOTCHECKED
+DeclineCode=00
+ExpiryDate=0616
+BankAuthCode=999777
+  TRANSCRIPT
+
+  end
+
+  def scrubbed_transcript
+    <<-TRANSCRIPT
+    Amount=1.00&Currency=GBP&VendorTxCode=9094108b21f7b917e68d3e84b49ce9c4&Description=Store+purchase&CardHolder=Tekin+Suleyman&CardNumber=[FILTERED]&ExpiryDate=0616&CardType=VISA&CV2=[FILTERED]&BillingSurname=Suleyman&BillingFirstnames=Tekin&BillingAddress1=Flat+10+Lapwing+Court&BillingAddress2=West+Didsbury&BillingCity=Manchester&BillingCountry=GB&BillingPostCode=M20+2PS&DeliverySurname=Suleyman&DeliveryFirstnames=Tekin&DeliveryAddress1=120+Grosvenor+St&DeliveryCity=Manchester&DeliveryCountry=GB&DeliveryPostCode=M1+7QW&CustomerEMail=tekin%40tekin.co.uk&ClientIPAddress=86.150.65.37&Vendor=spreedly&TxType=PAYMENT&VPSProtocol=3.00
+I, [2015-07-22T17:16:49.292774 #97998]  INFO -- : [ActiveMerchant::Billing::SagePayGateway] --> 200 OK (356 1.8635s)
+D, [2015-07-22T17:16:49.292836 #97998] DEBUG -- : VPSProtocol=3.00
+Status=OK
+StatusDetail=0000 : The Authorisation was Successful.
+VPSTxId={D5B43220-E93C-ED13-6643-D22224BD1CDB}
+SecurityKey=7OYK4OHM7Y
+TxAuthNo=8769237
+AVSCV2=DATA NOT CHECKED
+AddressResult=NOTPROVIDED
+PostCodeResult=NOTPROVIDED
+CV2Result=NOTPROVIDED
+3DSecureStatus=NOTCHECKED
+DeclineCode=00
+ExpiryDate=0616
+BankAuthCode=999777
+  TRANSCRIPT
+
   end
 end

@@ -109,6 +109,18 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(((?:\?|&)cardno=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?cvc=)\d*(&?)), '\1[FILTERED]\2')
+      end
+
+
       private
 
       def add_amount(post, money, options)

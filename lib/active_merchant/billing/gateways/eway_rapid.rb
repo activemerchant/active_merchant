@@ -169,6 +169,17 @@ module ActiveMerchant #:nodoc:
         commit(url_for("Transaction"), params)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("Number\\?":\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("CVN\\?":\\?"?)[^",]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_metadata(params, options)

@@ -3,6 +3,8 @@
 * Redsys: Add a number of currencies [agseco]
 * Raven: update description, test url, and routing; fix tests [bslobodin]
 * Raven: do not pass default (incorrect) PaymentType to #void [bslobodin]
+* Add scrubbing to a number of gateways [anellis]
+
 
 == Version 1.52.0 (July 20, 2015)
 
