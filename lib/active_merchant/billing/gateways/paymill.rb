@@ -51,6 +51,17 @@ module ActiveMerchant #:nodoc:
         save_card(credit_card)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(account.number=)(\d*)/, '\1[FILTERED]').
+          gsub(/(account.verification=)(\d*)/, '\1[FILTERED]')
+      end
+
       private
 
       def add_credit_card(post, credit_card)

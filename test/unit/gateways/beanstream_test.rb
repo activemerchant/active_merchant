@@ -192,6 +192,12 @@ class BeanstreamTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+
   private
 
   def successful_purchase_response
@@ -234,5 +240,12 @@ class BeanstreamTest < Test::Unit::TestCase
     "<response><code>1</code><message>Request successful</message></response>"
   end
 
-end
+  def transcript
+    "ref1=reference+one&trnCardOwner=Longbob+Longsen&trnCardNumber=4030000010001234&trnExpMonth=09&trnExpYear=16&trnCardCvd=123&ordName=xiaobo+zzz&ordEmailAddress=xiaobozzz%40example.com&username=awesomesauce&password=sp00nz%21%21"
+  end
 
+  def scrubbed_transcript
+    "ref1=reference+one&trnCardOwner=Longbob+Longsen&trnCardNumber=[FILTERED]&trnExpMonth=09&trnExpYear=16&trnCardCvd=[FILTERED]&ordName=xiaobo+zzz&ordEmailAddress=xiaobozzz%40example.com&username=awesomesauce&password=[FILTERED]"
+  end
+
+end

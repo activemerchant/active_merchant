@@ -235,6 +235,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((%3CDS_MERCHANT_PAN%3E)\d+(%3C%2FDS_MERCHANT_PAN%3E))i, '\1[FILTERED]\2').
+          gsub(%r((%3CDS_MERCHANT_CVV2%3E)\d+(%3C%2FDS_MERCHANT_CVV2%3E))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def add_action(data, action)

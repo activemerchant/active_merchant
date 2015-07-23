@@ -368,6 +368,10 @@ class EwayRapidTest < Test::Unit::TestCase
     assert_equal "I", response.avs_result["code"]
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_purchase_response(options = {})
@@ -1011,4 +1015,21 @@ class EwayRapidTest < Test::Unit::TestCase
     )
   end
 
+  def transcript
+    <<-TRANSCRIPT
+      "CardDetails":{"Name":"Longbob Longsen","Number":"4444333322221111","ExpiryMonth":"09","ExpiryYear":"2015","CVN":"123"}},"ShippingAddress"
+      \"CardDetails\":{\"Name\":\"Longbob Longsen\",\"Number\":\"4444333322221111\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"2015\",\"CVN\":\"123\"}},\"ShippingAddress\"
+      {\"CardDetails\":{\"Number\":\"444433XXXXXX1111\",\"Name\":\"Longbob Longsen\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"15\"
+      "Verification":{"CVN":0,"Address":0,"Email":0,"Mobile":0,"Phone":0},"Customer":{"CardDetails":{"Number":"444433XXXXXX1111","Name":"Longbob Longsen","ExpiryMonth":"09"
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+      "CardDetails":{"Name":"Longbob Longsen","Number":"[FILTERED]","ExpiryMonth":"09","ExpiryYear":"2015","CVN":"[FILTERED]"}},"ShippingAddress"
+      \"CardDetails\":{\"Name\":\"Longbob Longsen\",\"Number\":\"[FILTERED]\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"2015\",\"CVN\":\"[FILTERED]\"}},\"ShippingAddress\"
+      {\"CardDetails\":{\"Number\":\"[FILTERED]\",\"Name\":\"Longbob Longsen\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"15\"
+      "Verification":{"CVN":[FILTERED],"Address":0,"Email":0,"Mobile":0,"Phone":0},"Customer":{"CardDetails":{"Number":"[FILTERED]","Name":"Longbob Longsen","ExpiryMonth":"09"
+    SCRUBBED_TRANSCRIPT
+  end
 end
