@@ -7,7 +7,9 @@ class OgoneTest < Test::Unit::TestCase
                      :user => 'username',
                      :password => 'password',
                      :signature => 'mynicesig',
-                     :signature_encryptor => 'sha512' }
+                     :signature_encryptor => 'sha512',
+                     :timeout => '30' }
+
     @gateway = OgoneGateway.new(@credentials)
     @credit_card = credit_card
     @amount = 100
@@ -87,6 +89,16 @@ class OgoneTest < Test::Unit::TestCase
     assert_equal '3014726;SAL', response.authorization
     assert response.params['HTML_ANSWER']
     assert_equal nil, response.params['HTML_ANSWER'] =~ /<HTML_ANSWER>/
+    assert response.test?
+  end
+
+  def test_successful_with_timeout
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'RTIMEOUT', '30')
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '3014726;SAL', response.authorization
     assert response.test?
   end
 

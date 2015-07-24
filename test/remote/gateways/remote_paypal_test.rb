@@ -31,11 +31,6 @@ class PaypalTest < Test::Unit::TestCase
     #@three_days_old_auth_id2 = "62503445A3738160X"
   end
 
-  def test_dump_transcript
-    skip("Transcript scrubbing for this gateway has been tested.")
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @params)
-  end
-
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @params)
@@ -50,6 +45,12 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @params)
+    assert_success response
+    assert response.params['transaction_id']
+  end
+
+  def test_successful_purchase_with_descriptors
+    response = @gateway.purchase(@amount, @credit_card, @params.merge(soft_descriptor: "Active Merchant TXN", soft_descriptor_city: "800-883-3931"))
     assert_success response
     assert response.params['transaction_id']
   end
@@ -247,4 +248,5 @@ class PaypalTest < Test::Unit::TestCase
     response2 = @gateway.purchase(@amount + 100, id_for_reference, @params)
     assert_success response2
   end
+
 end

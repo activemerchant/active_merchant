@@ -145,6 +145,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?CardNumber=)\d+(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?CV2=)\d+(&?)), '\1[FILTERED]\2')
+      end
+
       private
       def add_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';')
@@ -187,6 +198,7 @@ module ActiveMerchant #:nodoc:
 
       def add_optional_data(post, options)
         add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
+        add_pair(post, :ApplyAVSCV2, options[:apply_avscv2]) unless options[:apply_avscv2].blank?
         add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
         add_pair(post, :CreateToken, 1) unless options[:store].blank?
         add_pair(post, :FIRecipientAcctNumber, options[:recipient_account_number])

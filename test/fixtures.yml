@@ -355,10 +355,11 @@ merchant_ware:
  password:
  name:
 
+# Working credentials, no need to replace
 merchant_ware_version_four:
- login:
- password:
- name:
+ login: 'BK34Z768'
+ password: 'TCTTS-IDYQV-RDFY1-6DS01-WTPVH'
+ name: 'Test Spreedly PayItSimple'
 
 merchant_warrior:
   merchant_uuid: '50c5b9f0b52ea'
@@ -719,7 +720,7 @@ qvalent:
 raven_pac_net:
   user: ernest
   secret: "all good men die young"
-  prn: 840033
+  prn: 987743
 
 realex:
   login: X

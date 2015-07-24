@@ -72,6 +72,7 @@ module ActiveMerchant #:nodoc:
       # :incorrect_cvc - Secerity code was not matched by the processor
       # :incorrect_zip - Zip code is not in correct format
       # :incorrect_address - Billing address info was not matched by the processor
+      # :incorrect_pin - Card PIN is incorrect
       # :card_declined - Card number declined by processor
       # :processing_error - Processor error
       # :call_issuer - Transaction requires voice authentication, call issuer
@@ -86,6 +87,7 @@ module ActiveMerchant #:nodoc:
         :incorrect_cvc => 'incorrect_cvc',
         :incorrect_zip => 'incorrect_zip',
         :incorrect_address => 'incorrect_address',
+        :incorrect_pin => 'incorrect_pin',
         :card_declined => 'card_declined',
         :processing_error => 'processing_error',
         :call_issuer => 'call_issuer',
@@ -188,6 +190,10 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         raise RuntimeError.new("This gateway does not support scrubbing.")
+      end
+
+      def supports_network_tokenization?
+        false
       end
 
       protected # :nodoc: all

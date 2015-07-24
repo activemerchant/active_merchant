@@ -313,6 +313,9 @@ class PinTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, :partner_key => 'MyPartnerKey', :safe_card => '1')
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
 
   private
 
@@ -493,6 +496,50 @@ class PinTest < Test::Unit::TestCase
         "total_fees":62,
         "merchant_entitlement":338,
         "refund_pending":false
+      }
+    }'
+  end
+
+  def transcript
+    '{
+      "amount":"100",
+      "currency":"AUD",
+      "email":"roland@pin.net.au",
+      "ip_address":"203.59.39.62",
+      "description":"Store Purchase 1437598192",
+      "card":{
+        "number":"5520000000000000",
+        "expiry_month":9,
+        "expiry_year":2017,
+        "cvc":"123",
+        "name":"Longbob Longsen",
+        "address_line1":"456 My Street",
+        "address_city":"Ottawa",
+        "address_postcode":"K1C2N6",
+        "address_state":"ON",
+        "address_country":"CA"
+      }
+    }'
+  end
+
+  def scrubbed_transcript
+    '{
+      "amount":"100",
+      "currency":"AUD",
+      "email":"roland@pin.net.au",
+      "ip_address":"203.59.39.62",
+      "description":"Store Purchase 1437598192",
+      "card":{
+        "number":"[FILTERED]",
+        "expiry_month":9,
+        "expiry_year":2017,
+        "cvc":"[FILTERED]",
+        "name":"Longbob Longsen",
+        "address_line1":"456 My Street",
+        "address_city":"Ottawa",
+        "address_postcode":"K1C2N6",
+        "address_state":"ON",
+        "address_country":"CA"
       }
     }'
   end

@@ -245,6 +245,17 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<cardnumber>)\d+(</cardnumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<cvmvalue>)\d+(</cvmvalue>))i, '\1[FILTERED]\2')
+      end
+
       private
       # Commit the transaction by posting the XML file to the LinkPoint server
       def commit(money, creditcard, options = {})

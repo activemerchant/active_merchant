@@ -245,6 +245,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<authenticationData>)[^<]*(</authenticationData>))i, '\1[FILTERED]\2')
       end
 
+      def supports_network_tokenization?
+        true
+      end
+
       private
 
       # Create all address hash key value pairs so that we still function if we

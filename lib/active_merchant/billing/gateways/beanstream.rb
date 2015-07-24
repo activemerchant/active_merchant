@@ -182,6 +182,18 @@ module ActiveMerchant #:nodoc:
         commit(post, true)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
+      end
+
       private
       def build_response(*args)
         Response.new(*args)
@@ -189,4 +201,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

@@ -139,6 +139,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
       end
 
+      def supports_network_tokenization?
+        true
+      end
+
       private
 
       def build_request(action, body)
@@ -410,4 +414,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

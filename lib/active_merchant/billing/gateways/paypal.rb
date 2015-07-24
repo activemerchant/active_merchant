@@ -74,6 +74,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
+              add_descriptors(xml, options)
               add_payment_details(xml, money, currency_code, options)
               add_credit_card(xml, credit_card_or_referenced_id, billing_address, options) unless transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:IPAddress', options[:ip]
@@ -108,6 +109,11 @@ module ActiveMerchant #:nodoc:
             add_address(xml, 'n2:Address', address)
           end
         end
+      end
+
+      def add_descriptors(xml, options)
+        xml.tag! 'n2:SoftDescriptor', options[:soft_descriptor] unless options[:soft_descriptor].blank?
+        xml.tag! 'n2:SoftDescriptorCity', options[:soft_descriptor_city] unless options[:soft_descriptor_city].blank?
       end
 
       def credit_card_type(type)

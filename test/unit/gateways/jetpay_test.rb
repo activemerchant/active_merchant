@@ -130,6 +130,10 @@ class JetpayTest < Test::Unit::TestCase
     assert_equal 'P', response.cvv_result['code']
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
 
   private
   def successful_purchase_response
@@ -197,6 +201,32 @@ class JetpayTest < Test::Unit::TestCase
         <Approval>002F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
+    EOF
+  end
+
+  def transcript
+    <<-EOF
+    <TerminalID>TESTTERMINAL</TerminalID>
+    <TransactionType>SALE</TransactionType>
+    <TransactionID>e23c963a1247fd7aad</TransactionID>
+    <CardNum>4000300020001000</CardNum>
+    <CardExpMonth>09</CardExpMonth>
+    <CardExpYear>16</CardExpYear>
+    <CardName>Longbob Longsen</CardName>
+    <CVV2>123</CVV2>
+    EOF
+  end
+
+  def scrubbed_transcript
+    <<-EOF
+    <TerminalID>TESTTERMINAL</TerminalID>
+    <TransactionType>SALE</TransactionType>
+    <TransactionID>e23c963a1247fd7aad</TransactionID>
+    <CardNum>[FILTERED]</CardNum>
+    <CardExpMonth>09</CardExpMonth>
+    <CardExpYear>16</CardExpYear>
+    <CardName>Longbob Longsen</CardName>
+    <CVV2>[FILTERED]</CVV2>
     EOF
   end
 end

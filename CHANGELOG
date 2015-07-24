@@ -1,5 +1,35 @@
 = ActiveMerchant CHANGELOG
 
+* Redsys: Add a number of currencies [agseco]
+* Raven: update description, test url, and routing; fix tests [bslobodin]
+* Raven: do not pass default (incorrect) PaymentType to #void [bslobodin]
+* Add scrubbing to a number of gateways [anellis]
+* BluePay: Add scrubbing [anellis]
+* BraintreeBlue: Allow custom logger [duff]
+
+
+== Version 1.52.0 (July 20, 2015)
+
+* Authorize.Net: Add device type to authorize.net retail requests [abecevello]
+* Vanco: Change transaction type to WEB for echecks [duff]
+* PayPal: Allow soft descriptor to be specified [davidsantoso]
+* Authorize.net: Add disable_partial_auth field [anellis]
+* SagePay: Add apply_avscv2 field [anellis]
+* S5: Add Store [anellis]
+* Merchant Ware v4: Add support for verify [davidsantoso]
+* Mercury: No longer default to allow partial auth [duff]
+* PayPal: Fix soft_descriptor and support soft_descriptor_city [duff]
+* Merchant Ware: Add scrubbing [davidsantoso]
+* Stripe: Make purchase via vaulted card consistent [duff]
+* Moneris: Add network tokenization support [andrewpaliga]
+* Ogone: Allow specifying a timeout value for requests [tomhipkin]
+* PayU India: Increase allowed txnid to 30 characters [ntalbott]
+* Authorize.Net: Allow passing device type through options, make wireless POS the default [abecevello]
+* Authorize.Net: Update to new Akamai URL [taf2]
+* Braintree: Add hold_in_escrow [anellis]
+* Stripe: Allow purchases with tokens without customer specification [bizla]
+
+== Version 1.51.0 (July 2, 2015)
 
 * Garanti: Illegal character '&' parsing response [masaruhoshi]
 * Stripe: Revert force USD for verify [duff]
@@ -14,6 +44,11 @@
 * Sage: Credit really is credit not refund [duff]
 * Sage: Add ability to refund [duff]
 * Cardstream: Add scrubbing [anellis]
+* Litle: Add debt_repayment_flag [duff]
+* iATS: Support ACH [rwdaigle]
+* CheckoutV2: Add Gateway [anellis]
+* CenPOS: Fix refund amount issue [duff]
+* Add error_code mapping and error_code_from to gateway generator [jnormore]
 * Stripe: Parse EMV ARC from error response [bizla]
 * Redsys: Add MYR currency [agseco]
 * Add "contactless" flag to credit card model [davidseal]
@@ -22,7 +57,13 @@
 * Stripe: Add encrypted_pin support to gateway [ryanbalsdon]
 * Stripe: Support mapping advanced decline codes to standard codes [abecevello]
 * Epay: filter out invalid characters in returned URLs [dwradcliffe]
-
+* Redsys: Strip leading zeroes from currency codes [agseco]
+* Authorize.net: Add invoice information to refund [marquisong]
+* Authorize.net: Add store ability [duff]
+* Paystation: Add refund [mrezentes]
+* Paystation: No longer require order_id everywhere [duff]
+* Checkout: Support descriptor_name and descriptor_city [duff]
+* Add supports_network_tokenization? to gateways [jnormore]
 
 == Version 1.50.0 (June 1, 2015)
 

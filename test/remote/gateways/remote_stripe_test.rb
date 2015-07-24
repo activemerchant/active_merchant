@@ -130,10 +130,10 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@credit_card, {:description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert response = @gateway.store(@credit_card, description: "TheDescription", email: "email@example.com")
     assert_success response
     assert_equal "customer", response.params["object"]
-    assert_equal "Active Merchant Test Customer", response.params["description"]
+    assert_equal "TheDescription", response.params["description"]
     assert_equal "email@example.com", response.params["email"]
     first_card = response.params["sources"]["data"].first
     assert_equal response.params["default_source"], first_card["id"]
@@ -141,10 +141,10 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_store_with_existing_customer
-    assert response = @gateway.store(@credit_card, {:description => "Active Merchant Test Customer"})
+    assert response = @gateway.store(@credit_card)
     assert_success response
 
-    assert response = @gateway.store(@new_credit_card, {:customer => response.params['id'], :description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert response = @gateway.store(@new_credit_card, customer: response.params['id'], email: "email@example.com", description: "TheDesc")
     assert_success response
     assert_equal 2, response.responses.size
 
@@ -154,38 +154,70 @@ class RemoteStripeTest < Test::Unit::TestCase
 
     customer_response = response.responses[1]
     assert_equal "customer", customer_response.params["object"]
-    assert_equal "Active Merchant Test Customer", customer_response.params["description"]
+    assert_equal "TheDesc", customer_response.params["description"]
     assert_equal "email@example.com", customer_response.params["email"]
     assert_equal 2, customer_response.params["sources"]["total_count"]
   end
 
+  def test_successful_purchase_using_stored_card
+    assert store = @gateway.store(@credit_card)
+    assert_success store
+
+    assert response = @gateway.purchase(@amount, store.authorization)
+    assert_success response
+    assert_equal "Transaction approved", response.message
+
+    assert response.params["paid"]
+    assert_equal "4242", response.params["source"]["last4"]
+  end
+
+  def test_successful_purchase_using_stored_card_on_existing_customer
+    assert first_store_response = @gateway.store(@credit_card)
+    assert_success first_store_response
+
+    assert second_store_response = @gateway.store(@new_credit_card, customer: first_store_response.params['id'])
+    assert_success second_store_response
+
+    assert response = @gateway.purchase(@amount, second_store_response.authorization)
+    assert_success response
+    assert_equal "5100", response.params["source"]["last4"]
+  end
+
+  def test_successful_purchase_using_stored_card_and_deprecated_api
+    assert store = @gateway.store(@credit_card)
+    assert_success store
+
+    recharge_options = @options.merge(:customer => store.params["id"])
+    assert_deprecation_warning do
+      response = @gateway.purchase(@amount, nil, recharge_options)
+      assert_success response
+      assert_equal "4242", response.params["source"]["last4"]
+    end
+  end
+
   def test_successful_unstore
     creation = @gateway.store(@credit_card, {:description => "Active Merchant Unstore Customer"})
-    customer_id = creation.params['id']
     card_id = creation.params['sources']['data'].first['id']
 
-    # Unstore the card
-    assert response = @gateway.unstore(customer_id, card_id: card_id)
+    assert response = @gateway.unstore(creation.authorization)
     assert_success response
     assert_equal card_id, response.params['id']
     assert_equal true, response.params['deleted']
-
-    # Unstore the customer
-    assert response = @gateway.unstore(customer_id)
-    assert_success response
-    assert_equal customer_id, response.params['id']
-    assert_equal true, response.params['deleted']
+    assert_equal "Transaction approved", response.message
   end
 
-  def test_successful_recurring
-    assert response = @gateway.store(@credit_card, {:description => "Active Merchant Test Customer", :email => "email@example.com"})
-    assert_success response
-    assert recharge_options = @options.merge(:customer => response.params["id"])
-    assert response = @gateway.purchase(@amount, nil, recharge_options)
-    assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["paid"]
+  def test_successful_unstore_using_deprecated_api
+    creation = @gateway.store(@credit_card, {:description => "Active Merchant Unstore Customer"})
+    card_id = creation.params['sources']['data'].first['id']
+    customer_id = creation.params["id"]
+
+    assert_deprecation_warning do
+      response = @gateway.unstore(customer_id, card_id)
+      assert_success response
+      assert_equal true, response.params['deleted']
+    end
   end
+
 
   def test_invalid_login
     gateway = StripeGateway.new(:login => 'active_merchant_test')

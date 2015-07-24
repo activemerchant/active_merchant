@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
 
-        post[:txnid] = clean(options[:order_id], :alphanumeric, 25)
+        post[:txnid] = clean(options[:order_id], :alphanumeric, 30)
         post[:productinfo] = clean(options[:description] || "Purchase", nil, 100)
 
         post[:surl] = "http://example.com"

@@ -604,9 +604,9 @@ module ActiveMerchant #:nodoc:
 
       def add_express_only_payment_details(xml, options = {})
         add_optional_fields(xml,
-                            %w{n2:NoteText          n2:SoftDescriptor
+                            %w{n2:NoteText          n2:PaymentAction
                                n2:TransactionId     n2:AllowedPaymentMethodType
-                               n2:PaymentRequestID  n2:PaymentAction},
+                               n2:PaymentRequestID  },
                             options)
       end
 

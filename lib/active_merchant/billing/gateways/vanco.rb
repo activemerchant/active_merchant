@@ -223,7 +223,7 @@ module ActiveMerchant
         doc.CustomerName("#{echeck.last_name}, #{echeck.first_name}")
         doc.AccountNumber(echeck.account_number)
         doc.RoutingNumber(echeck.routing_number)
-        doc.TransactionTypeCode("TEL")
+        doc.TransactionTypeCode("WEB")
       end
 
       def add_purchase_noise(doc)

@@ -3,10 +3,9 @@ require 'test_helper'
 class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWareVersionFourGateway.new(fixtures(:merchant_ware_version_four))
-
     @amount = rand(1000) + 200
-
     @credit_card = credit_card('5424180279791732', {:brand => 'master'})
+    @declined_card = credit_card('1234567890123')
 
     @options = {
       :order_id => generate_unique_id[0,8],
@@ -100,5 +99,28 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Credentials.', response.message
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal 'Invalid card number.', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

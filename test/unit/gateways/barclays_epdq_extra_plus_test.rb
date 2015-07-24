@@ -395,6 +395,10 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     assert_instance_of Hash, response.params
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def string_to_digest
@@ -677,5 +681,43 @@ class BarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     ALIAS="2">
     </ncresponse>
     END
+  end
+
+  def transcript
+    <<-TRANSCRIPT
+    CARDNO=4000100011112224&CN=Longbob+Longsen&COM=Store+Purchase&CVC=123&ECI=7&ED=0914&Operation=SAL&OwnerZip=K1C2N6&Owneraddress=1234+My+Street&PSPID=epdq1004895&PSWD=test&SHASign=0798F0F333C1867CC2B22D77E6452F8CAEFE9888&USERID=spreedly&amount=100&currency=GBP&orderID=b15d2f92e3ddee1a14b1b4b92cae9c&ownercty=CA&ownertelno=%28555%29555-5555&ownertown=Ottawa
+    <?xml version="1.0"?><ncresponse
+    orderID="b15d2f92e3ddee1a14b1b4b92cae9c"
+    PAYID="22489229"
+    NCSTATUS="0"
+    NCERROR="0"
+    ACCEPTANCE="test123"
+    STATUS="9"
+    amount="1"
+    currency="GBP"
+    PM="CreditCard"
+    BRAND="VISA"
+    NCERRORPLUS="!">
+    </ncresponse>
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+    CARDNO=[FILTERED]&CN=Longbob+Longsen&COM=Store+Purchase&CVC=[FILTERED]&ECI=7&ED=0914&Operation=SAL&OwnerZip=K1C2N6&Owneraddress=1234+My+Street&PSPID=epdq1004895&PSWD=[FILTERED]&SHASign=0798F0F333C1867CC2B22D77E6452F8CAEFE9888&USERID=spreedly&amount=100&currency=GBP&orderID=b15d2f92e3ddee1a14b1b4b92cae9c&ownercty=CA&ownertelno=%28555%29555-5555&ownertown=Ottawa
+    <?xml version="1.0"?><ncresponse
+    orderID="b15d2f92e3ddee1a14b1b4b92cae9c"
+    PAYID="22489229"
+    NCSTATUS="0"
+    NCERROR="0"
+    ACCEPTANCE="test123"
+    STATUS="9"
+    amount="1"
+    currency="GBP"
+    PM="CreditCard"
+    BRAND="VISA"
+    NCERRORPLUS="!">
+    </ncresponse>
+    SCRUBBED_TRANSCRIPT
   end
 end

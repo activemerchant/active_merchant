@@ -33,6 +33,16 @@ class MercuryTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_allow_partial_auth
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(allow_partial_auth: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/PartialAuth>Allow</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 

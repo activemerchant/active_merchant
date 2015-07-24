@@ -16,7 +16,6 @@ class RemoteCheckoutTest < Test::Unit::TestCase
       verification_value: '958'
     )
     @options = {
-      order_id: generate_unique_id,
       currency: "CAD"
     }
   end
@@ -41,6 +40,12 @@ class RemoteCheckoutTest < Test::Unit::TestCase
 
   def test_successful_purchase_without_billing_address
     response = @gateway.purchase(100, @credit_card, @options)
+    assert_success response
+    assert_equal 'Successful', response.message
+  end
+
+  def test_successful_purchase_with_descriptors
+    response = @gateway.purchase(100, @credit_card, descriptor_name: "TheName", descriptor_city: "Wanaque")
     assert_success response
     assert_equal 'Successful', response.message
   end
