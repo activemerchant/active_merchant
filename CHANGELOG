@@ -8,7 +8,7 @@
 * BraintreeBlue: Allow custom logger [duff]
 * MerchantWareFour: Truncate invoiceNumber [duff]
 * S5: Pass recurrence_mode in store [duff]
-
+* QuickPay: Support 2-letter country codes in V10 API [girasquid]
 
 == Version 1.52.0 (July 20, 2015)
 
