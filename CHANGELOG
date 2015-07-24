@@ -21,6 +21,7 @@
 * TNS: Translate countries to alpha3 codes [anellis]
 * TNS: Handle non existent country [duff]
 * TNS: Rescue Errors [anellis]
+* CenPOS: Support avs_result and cvv_result [tjstankus]
 
 
 == Version 1.52.0 (July 20, 2015)
