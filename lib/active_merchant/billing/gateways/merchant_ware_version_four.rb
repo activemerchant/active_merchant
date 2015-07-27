@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(xml, options)
-        xml.tag! "invoiceNumber", options[:order_id].to_s.gsub(/[^\w]/, '').slice(0, 25)
+        xml.tag! "invoiceNumber", truncate(options[:order_id].to_s.gsub(/[^\w]/, ''), 8)
       end
 
       def add_amount(xml, money, tag = "amount")
