@@ -9,6 +9,7 @@ class NmiTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card
+    @check = check
     @options = {}
   end
 
@@ -45,6 +46,15 @@ class NmiTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization
+  end
+
+  def test_successful_check_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @check, :echeck_type => :ppd)
     assert_instance_of Response, response
     assert_success response
     assert_equal '508141795', response.authorization
@@ -202,6 +212,13 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.refund(@amount, '123456789', :card_number => @credit_card.number)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_successful_check_refund
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.refund(@amount, '123456789', :method => "ECHECK")
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end

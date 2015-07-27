@@ -25,6 +25,16 @@ module ActiveMerchant #:nodoc:
       AVS_REASON_CODES = %w(27 45)
       TRANSACTION_ALREADY_ACTIONED = %w(310 311)
 
+      METHOD_TYPES = { cc: "CC", check: "ECHECK"}
+      ECHECK_TYPES = {
+          :arc => 'ARC',
+          :boc => 'BOC',
+          :ccd => 'CCD',
+          :ppd => 'PPD',
+          :tel => 'TEL',
+          :web => 'WEB'
+      }
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -63,16 +73,22 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         post = {:trans_id => authorization}
+        post[:method] = METHOD_TYPES[:check] if options[:method] == METHOD_TYPES[:check]
         add_duplicate_window(post)
         commit('VOID', nil, post)
       end
 
       def refund(money, identification, options = {})
-        requires!(options, :card_number)
+        post = { :trans_id => identification }
 
-        post = { :trans_id => identification,
-                 :card_num => options[:card_number]
-               }
+        # Check or Credit card type
+        if options[:method] == METHOD_TYPES[:check]
+          post[:method] = METHOD_TYPES[:check]
+        else
+          requires!(options, :card_number)
+
+          post[:card_num] = options[:card_number]
+        end
 
         post[:first_name] = options[:first_name] if options[:first_name]
         post[:last_name] = options[:last_name] if options[:last_name]
@@ -178,8 +194,29 @@ module ActiveMerchant #:nodoc:
         post[:recurring_billing] = "TRUE" if options[:recurring]
       end
 
+      def add_check(post, ach, options={})
+        post[:method]            = METHOD_TYPES[:check]
+        post[:first_name]        = ach.first_name
+        post[:last_name]         = ach.last_name
+        post[:bank_aba_code]     = ach.routing_number
+        post[:bank_acct_num]     = ach.account_number
+        post[:bank_acct_type]    = ach.account_type
+        post[:bank_name]         = ach.bank_name
+        post[:bank_acct_name]    = ach.name
+        # Check number is required when check type is ARC or BOC
+        post[:bank_check_number] = ach.number
+        post[:echeck_type]       = ECHECK_TYPES[options[:echeck_type]] if options[:echeck_type]
+
+        post[:recurring_billing] = "TRUE" if options[:recurring]
+      end
+
       def add_payment_source(params, source, options={})
-        add_creditcard(params, source, options)
+        case
+        when source.kind_of?(ActiveMerchant::Billing::CreditCard)
+          add_creditcard(params, source, options)
+        when source.kind_of?(ActiveMerchant::Billing::Check)
+          add_check(params, source, options)
+        end
       end
 
       def add_customer_data(post, options)
