@@ -140,6 +140,12 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal @credit_card.last_digits, first_card["last4"]
   end
 
+  def test_successful_store_with_validate_false
+    assert response = @gateway.store(@credit_card, validate: false)
+    assert_success response
+    assert_equal "customer", response.params["object"]
+  end
+
   def test_successful_store_with_existing_customer
     assert response = @gateway.store(@credit_card)
     assert_success response
