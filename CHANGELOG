@@ -6,6 +6,7 @@
 * Add scrubbing to a number of gateways [anellis]
 * BluePay: Add scrubbing [anellis]
 * BraintreeBlue: Allow custom logger [duff]
+* MerchantWareFour: Truncate invoiceNumber [duff]
 
 
 == Version 1.52.0 (July 20, 2015)
