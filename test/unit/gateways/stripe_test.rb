@@ -179,6 +179,16 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_passing_validate_false_on_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, validate: false)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/validate=false/, data)
+    end.respond_with(successful_new_customer_response)
+
+    assert_success response
+  end
+
   def test_successful_authorization
     @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_authorization_response)

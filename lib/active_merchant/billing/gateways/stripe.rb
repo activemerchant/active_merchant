@@ -159,6 +159,7 @@ module ActiveMerchant #:nodoc:
           add_creditcard(card_params, payment, options)
         end
 
+        post[:validate] = options[:validate] unless options[:validate].nil?
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
 
@@ -383,7 +384,7 @@ module ActiveMerchant #:nodoc:
         return nil unless params
 
         params.map do |key, value|
-          next if value.blank?
+          next if value.nil?
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
@@ -391,7 +392,7 @@ module ActiveMerchant #:nodoc:
             end
             post_data(h)
           elsif value.is_a?(Array)
-            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&")
+            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&") unless value.blank?
           else
             "#{key}=#{CGI.escape(value.to_s)}"
           end
