@@ -81,6 +81,7 @@ module ActiveMerchant #:nodoc:
           xml.Payment(code: SUPPORTED_TRANSACTIONS["store"])
           add_account(xml, payment)
           add_customer(xml, payment, options)
+          add_recurrence_mode(xml, options)
         end
 
         commit(request)

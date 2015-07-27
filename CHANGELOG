@@ -7,6 +7,7 @@
 * BluePay: Add scrubbing [anellis]
 * BraintreeBlue: Allow custom logger [duff]
 * MerchantWareFour: Truncate invoiceNumber [duff]
+* S5: Pass recurrence_mode in store [duff]
 
 
 == Version 1.52.0 (July 20, 2015)
