@@ -40,6 +40,7 @@
 * QuickPay: Handle issue where no operations exists on payment [ta]
 * NMI: Support merchant_defined_fields [duff]
 * QuickpayV10: Add verify [anellis]
+* BraintreeBlue: Use wiredump_device for logging only if present [braintreeps]
 
 
 == Version 1.52.0 (July 20, 2015)
