@@ -39,7 +39,6 @@ class RemoteCenposTest < Test::Unit::TestCase
 
   def test_successful_purchase_avs_result
     response = @gateway.purchase(@amount, @credit_card, @options)
-    puts response.avs_result["message"]
     assert_equal "D", response.avs_result["code"]
   end
 

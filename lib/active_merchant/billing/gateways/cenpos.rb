@@ -148,8 +148,11 @@ module ActiveMerchant #:nodoc:
 
         data = build_request(post)
         begin
-          raw = parse(ssl_post(self.live_url, data, headers))
+          xml = ssl_post(self.live_url, data, headers)
+          raw = parse(xml)
+          validation_results = validation_results_from_xml(xml)
         rescue ActiveMerchant::ResponseError => e
+          validation_results = {}
           if(e.response.code == "500" && e.response.body.start_with?("<s:Envelope"))
             raw = {
               message: "See transcript for detailed error description."
@@ -167,8 +170,8 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(post, raw),
           error_code: error_code_from(succeeded, raw),
           test: test?,
-          cvv_result: @cvv_result,
-          avs_result: @avs_result
+          cvv_result: validation_results[:cvv_result],
+          avs_result: validation_results[:avs_result],
         )
       end
 
@@ -223,9 +226,6 @@ module ActiveMerchant #:nodoc:
           end
         end unless doc.root.nil?
 
-        @cvv_result = cvv_result_from_xml(xml)
-        @avs_result = avs_result_from_xml(xml)
-
         response
       end
 
@@ -261,6 +261,13 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         succeeded ? nil : STANDARD_ERROR_CODE_MAPPING[response[:result]]
+      end
+
+      def validation_results_from_xml(xml)
+        {}.tap do |h|
+          h[:cvv_result] =  cvv_result_from_xml(xml)
+          h[:avs_result] = avs_result_from_xml(xml)
+        end
       end
 
       def cvv_result_from_xml(xml)
