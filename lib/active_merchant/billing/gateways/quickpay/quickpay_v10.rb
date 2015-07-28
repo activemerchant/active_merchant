@@ -201,7 +201,7 @@ module ActiveMerchant
             :city         => address[:city],
             :region       => address[:address2],
             :zip_code     => address[:zip],
-            :country_code => country.code(:alpha3)
+            :country_code => country.code(:alpha3).value
           }
           mapped
         end
