@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
 
         super
 
-        if wiredump_device
+        if wiredump_device.present?
           logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
           logger.level = Logger::DEBUG
         else
