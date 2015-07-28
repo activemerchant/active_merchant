@@ -10,6 +10,7 @@
 * S5: Pass recurrence_mode in store [duff]
 * QuickPay: Support 2-letter country codes in V10 API [girasquid]
 * Stripe: Support validate:false field on store [anellis]
+* CheckoutV2: Use correct live_url [duff]
 
 
 == Version 1.52.0 (July 20, 2015)
