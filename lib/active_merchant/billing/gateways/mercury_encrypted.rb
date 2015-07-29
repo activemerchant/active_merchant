@@ -2,13 +2,13 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MercuryEncryptedGateway < Gateway
       self.test_url = 'https://w1.mercurycert.net/PaymentsAPI'
-      self.live_url = 'https://example.com/live'
+      self.live_url = 'https://w1.mercurypay.com/PaymentsAPI/'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
-      self.homepage_url = 'http://www.example.net/'
+      self.homepage_url = 'http://mercurypay.com/'
       self.display_name = 'Mercury Gateway E2E'
 
       STANDARD_ERROR_CODE_MAPPING = {
