@@ -354,6 +354,23 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
+      # Update a customer by changing only a few fields.
+      #
+      # ==== Required
+      # * <tt>:customer_number</tt> -- customer to update
+      #
+      # ==== Options
+      # * <tt>:fields</tt> -- array of 2 element long arrays representing FieldValue object
+      #   * <tt>:Field</tt> -- name of the field
+      #   * <tt>:Value</tt> -- field value
+      #
+      def quick_update_customer(options={})
+        requires! options, :customer_number
+
+        request = build_request(__method__, options)
+        commit(__method__, request)
+      end
+
       # Enable a customer for recurring billing.
       #
       # Note: Customer does not need to have all recurring parameters to succeed.
@@ -1007,6 +1024,19 @@ module ActiveMerchant #:nodoc:
         build_customer(soap, options, 'updateCustomer', true)
       end
 
+      def build_quick_update_customer_data(soap, options, type)
+        soap.tag! "ns1:#{type}" do
+          build_token soap, options
+          build_tag soap, :integer, 'CustNum', options[:customer_number]
+          build_quick_update_data soap, options
+        end
+      end
+
+      def build_quick_update_customer(soap, options)
+
+        build_quick_update_customer_data(soap, options, 'quickUpdateCustomer')
+      end      
+
       def build_enable_customer(soap, options)
         build_customer(soap, options, 'enableCustomer')
       end
@@ -1213,6 +1243,26 @@ module ActiveMerchant #:nodoc:
           build_customer_payments soap, options
           build_custom_fields soap, options
         end
+      end
+
+      def build_quick_update_data(soap, options={})
+        soap.UpdateData 'SOAP-ENC:arrayType' => 'ns1:FieldValue[#{options[:fields].size}]', 'xsi:type' => 'ns1:FieldValueArray' do
+          options.each do |k,v|
+            if(k == :customer_number) then next end
+            fields_values = v
+            fields_values.each do |field_value|
+              soap.item 'xsi:type' => 'ns1:FieldValue' do
+                build_tag soap, :string, :Field, field_value[0]
+                build_tag soap, :string, :Value, field_value[1]
+              end
+            end
+            
+          end
+        end
+      end
+
+      def build_tag(soap, type, tag, value)
+        soap.tag!(tag, value, 'xsi:type' => "xsd:#{type}") if value != nil
       end
 
       def build_customer_payments(soap, options)

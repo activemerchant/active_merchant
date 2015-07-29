@@ -62,6 +62,10 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
       :notes => "NEW NOTE!"
     }
 
+    @quick_update_customer_options = {
+      :notes => "QUICK UPDATE NOTE!"
+    }
+
     @add_payment_options = {
       :make_default => true,
       :payment_method => {
@@ -173,6 +177,15 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     @options.merge!(@update_customer_options.merge!(:customer_number => customer_number))
     response = @gateway.update_customer(@options)
     assert response.params['update_customer_return']
+  end
+
+  def test_quick_update_customer
+    response = @gateway.add_customer(@options.merge(@customer_options))
+    customer_number = response.params['add_customer_return']
+
+    response = @gateway.quick_update_customer(customer_number: customer_number, fields: @quick_update_customer_options)
+
+    assert response.params['quick_update_customer_return']
   end
 
   def test_enable_disable_customer

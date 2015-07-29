@@ -63,6 +63,10 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
       :payment_methods => payment_methods # optional
     }
 
+    @quick_update_customer_options = [
+          [:notes, "Quick note about customer"]
+    ]
+
     @payment_options = {
       :payment_method => payment_method
     }
@@ -192,6 +196,18 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_customer_response('updateCustomer'))
 
     assert response = @gateway.update_customer(@options)
+    assert_instance_of Response, response
+    assert response.test?
+    assert_success response
+    assert_equal 'true', response.message
+    assert_nil response.authorization
+  end
+
+  def test_successful_quick_update_customer
+    @options.merge!(@customer_options)
+    @gateway.expects(:ssl_post).returns(successful_quick_update_customer_response('quickUpdateCustomer'))
+
+    assert response = @gateway.quick_update_customer(customer_number: @options[:customer_number], fields: @quick_update_customer_options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
@@ -617,6 +633,12 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   end
 
   def successful_customer_response(method)
+    <<-XML
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:#{method}Response><#{method}Return xsi:type="xsd:boolean">true</#{method}Return></ns1:#{method}Response></SOAP-ENV:Body></SOAP-ENV:Envelope>
+    XML
+  end
+
+  def successful_quick_update_customer_response(method)
     <<-XML
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:#{method}Response><#{method}Return xsi:type="xsd:boolean">true</#{method}Return></ns1:#{method}Response></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
