@@ -1,6 +1,9 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardStreamGateway < Gateway
+
+      THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE = "Specifying the :threeDSRequired initialization option is deprecated. Please use the `:threeds_required => true` *transaction* option instead."
+
       self.test_url = self.live_url = 'https://gateway.cardstream.com/direct/'
       self.money_format = :cents
       self.default_currency = 'GBP'
@@ -62,9 +65,8 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :shared_secret)
         if (options[:threeDSRequired])
-          @threeDSRequired = options[:threeDSRequired]
-        else
-          @threeDSRequired = 'N'
+          ActiveMerchant.deprecated(THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE)
+          @threeds_required = options[:threeDSRequired]
         end
         super
       end
@@ -158,6 +160,7 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
           add_pair(post, :item1GrossValue, amount(money))
         end
+        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
       end
 
       def add_creditcard(post, credit_card)
@@ -202,7 +205,6 @@ module ActiveMerchant #:nodoc:
           :action => action,
           :type => '1', #Ecommerce
           :countryCode => self.supported_countries[0],
-          :threeDSRequired => @threeDSRequired #Disable 3d secure by default
         )
         # adds a signature to the post hash/array
         add_hmac(parameters)
