@@ -104,6 +104,12 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :order_id => generate_unique_id,
       :description => 'AM test purchase'
     }
+
+    @three_ds_enrolled_card = credit_card('4012001037141112',
+      :month => '12',
+      :year => '2020',
+      :brand => :visa
+    )
   end
 
   def test_successful_visacreditcard_authorization_and_capture
@@ -294,6 +300,28 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @mastercard_options)
     assert_failure response
     assert_equal 'INVALID CARDNUMBER', response.message
+  end
+
+  def test_successful_3dsecure_purchase
+    assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @mastercard_options.merge(threeds_required: true))
+    assert_equal '3DS AUTHENTICATION REQUIRED', response.message
+    assert_equal "65802", response.params["responseCode"]
+    assert response.test?
+    assert !response.authorization.blank?
+    assert !response.params["threeDSACSURL"].blank?
+    assert !response.params["threeDSMD"].blank?
+    assert !response.params["threeDSPaReq"].blank?
+  end
+
+  def test_successful_3dsecure_auth
+    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @mastercard_options.merge(threeds_required: true))
+    assert_equal '3DS AUTHENTICATION REQUIRED', response.message
+    assert_equal "65802", response.params["responseCode"]
+    assert response.test?
+    assert !response.authorization.blank?
+    assert !response.params["threeDSACSURL"].blank?
+    assert !response.params["threeDSMD"].blank?
+    assert !response.params["threeDSPaReq"].blank?
   end
 
   def test_transcript_scrubbing
