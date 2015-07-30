@@ -27,6 +27,7 @@
 * PayPal Express: Add support for TotalType in SetExpressCheckout [gingerhendrix]
 * eWay Rapid: Add :invoice option [DylanFM]
 * Braintree: Add nonce payment method [eric1234,cwoodcox]
+* Payflow: Allow passing of 3D Secure details via options [marquisong]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
