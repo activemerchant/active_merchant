@@ -7,6 +7,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @gateway = OgoneGateway.new(fixtures(:ogone))
     @amount = 100
     @credit_card     = credit_card('4000100011112224')
+    @mastercard      = credit_card('5399999999999999', :brand => "mastercard")
     @declined_card   = credit_card('1111111111111111')
     @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
     @options = {
@@ -119,6 +120,12 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'No brand', response.message
+  end
+
+  def test_successful_authorize_with_mastercard
+    assert auth = @gateway.authorize(@amount, @mastercard, @options)
+    assert_success auth
+    assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, auth.message
   end
 
   def test_authorize_and_capture
