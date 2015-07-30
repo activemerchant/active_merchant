@@ -17,6 +17,7 @@
 * QuickPay: fix method signature on #void [girasquid]
 * Forte: Add gateway [davidsantoso]
 * Stripe: return refund id for refund authorization [anellis]
+* Paypal: Update api version [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)
