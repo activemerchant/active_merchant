@@ -31,6 +31,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "charge", response.params["object"]
+    assert_equal response.authorization, response.params["id"]
     assert response.params["paid"]
     assert_equal "ActiveMerchant Test Purchase", response.params["description"]
     assert_equal "wow@example.com", response.params["metadata"]["email"]
@@ -93,6 +94,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     assert refund = @gateway.refund(@amount - 20, response.authorization)
+    refund_id = refund.params["refunds"]["data"].first["id"]
+    assert_equal refund.authorization, refund_id
     assert_success refund
   end
 
