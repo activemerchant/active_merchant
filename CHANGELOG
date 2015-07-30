@@ -18,6 +18,7 @@
 * Forte: Add gateway [davidsantoso]
 * Stripe: return refund id for refund authorization [anellis]
 * Paypal: Update api version [anellis]
+* TNS: Translate countries to alpha3 codes [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)
