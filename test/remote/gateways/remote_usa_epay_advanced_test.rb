@@ -175,7 +175,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     customer_number = response.params['add_customer_return']
 
     @options.merge!(@update_customer_options.merge!(:customer_number => customer_number))
-    response = @gateway.update_customer(@options)
+    response = @gateway.update(@options)
     assert response.params['update_customer_return']
   end
 
@@ -183,7 +183,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     response = @gateway.add_customer(@options.merge(@customer_options))
     customer_number = response.params['add_customer_return']
 
-    response = @gateway.quick_update_customer(customer_number: customer_number, fields: @quick_update_customer_options)
+    response = @gateway.update(customer_number: customer_number, fields: @quick_update_customer_options)
 
     assert response.params['quick_update_customer_return']
   end
