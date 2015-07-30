@@ -35,7 +35,7 @@ module ActiveMerchant
         end
       end
 
-      def void(identification)
+      def void(identification, _options = {})
         commit(synchronized_path "/payments/#{identification}/cancel")
       end
 
