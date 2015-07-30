@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add Cardknox gateway [dlehren]
 
 == Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]

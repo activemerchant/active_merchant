@@ -125,6 +125,10 @@ card_stream:
   login: 103191
   shared_secret: Dear0Coming15Edge
 
+# Working credentials, no need to replace
+cardknox:
+  api_key: ActiveMerchant_Test
+
 # Cashnet doesn't provide public testing data
 cashnet:
   merchant: 'X'
