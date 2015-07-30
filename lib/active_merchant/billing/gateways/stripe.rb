@@ -461,6 +461,8 @@ module ActiveMerchant #:nodoc:
           [response["id"], response["sources"]["data"].first["id"]].join("|")
         elsif method == :post && url.match(/customers\/.*\/cards/)
           [response["customer"], response["id"]].join("|")
+        elsif url.include?("refund") && response["refunds"]
+          response["refunds"]["data"].first["id"]
         else
           response["id"]
         end
