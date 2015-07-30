@@ -10,7 +10,7 @@ class RemoteTnsTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      billing_address: address.merge!(country: 'USA'),
+      billing_address: address,
       description: 'Store Purchase'
     }
   end
