@@ -118,13 +118,10 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal '0.40', response_2.params['gross_amount']
   end
 
-  # NOTE THIS SETTING: http://skitch.com/jimmybaker/nysus/payment-receiving-preferences-paypal
-  # PayPal doesn't return the InvoiceID in the response, so I am unable to check for it. Looking at the transaction
-  # on PayPal's site will show "NEWID123" as the InvoiceID.
   def test_successful_capture_updating_the_invoice_id
     auth = @gateway.authorize(@amount, @credit_card, @params)
     assert_success auth
-    response = @gateway.capture(@amount, auth.authorization, :order_id => "NEWID123")
+    response = @gateway.capture(@amount, auth.authorization, :order_id => "NEWID#{generate_unique_id}")
     assert_success response
     assert response.params['transaction_id']
     assert_equal '1.00', response.params['gross_amount']
