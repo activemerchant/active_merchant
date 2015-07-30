@@ -14,7 +14,7 @@
 * QuickPay: strip # from Order IDs before submission [girasquid]
 * Litle: Use schema version 9.4 rather than 8.18 [anellis]
 * Litle: Add decrypted apple_pay [anellis]
-
+* QuickPay: fix method signature on #void [girasquid]
 
 == Version 1.52.0 (July 20, 2015)
 
