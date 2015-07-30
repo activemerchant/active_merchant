@@ -24,6 +24,7 @@
 * CenPOS: Support avs_result and cvv_result [tjstankus]
 * Stripe: Add application fee only on non-EMV transactions [bizla]
 * Stripe: don't send blank, non-nil values [girasquid]
+* Ogone: Send different auth type for mastercard [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)

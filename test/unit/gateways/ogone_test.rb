@@ -12,6 +12,7 @@ class OgoneTest < Test::Unit::TestCase
 
     @gateway = OgoneGateway.new(@credentials)
     @credit_card = credit_card
+    @mastercard  = credit_card('5399999999999999', :brand => "mastercard")
     @amount = 100
     @identification = "3014726"
     @billing_id = "myalias"
@@ -109,6 +110,16 @@ class OgoneTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal '3014726;RES', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_mastercard
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'Operation', 'PAU')
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @mastercard, @options)
+    assert_success response
+    assert_equal '3014726;PAU', response.authorization
     assert response.test?
   end
 
