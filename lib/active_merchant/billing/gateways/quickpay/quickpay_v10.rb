@@ -142,7 +142,7 @@ module ActiveMerchant
 
         def add_order_id(post, options)
           requires!(options, :order_id)
-          post[:order_id] = options[:order_id]
+          post[:order_id] = format_order_id(options[:order_id])
         end
 
         def add_invoice(post, options)
@@ -204,6 +204,10 @@ module ActiveMerchant
             :country_code => country.code(:alpha3).value
           }
           mapped
+        end
+
+        def format_order_id(order_id)
+          order_id.to_s.gsub(/#/, '')
         end
 
         def headers
