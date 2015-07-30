@@ -32,6 +32,16 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_purchase_with_order_id_format
+    options = @options.merge({order_id: "#1001.1"})
+    assert response = @gateway.purchase(@amount, @valid_card, options)
+
+    assert_equal 'OK', response.message
+    assert_equal 'DKK', response.params['currency']
+    assert_success response
+    assert !response.authorization.blank?
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @valid_card, @options)
 
