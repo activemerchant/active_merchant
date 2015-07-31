@@ -406,7 +406,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>#message</tt> -- customer number assigned by gateway
 
       def update(identifier, options={})
-        options[customer_number] = identifier
+        options.merge!(customer_number: identifier)
         if options[:fields].blank?
           update_customer(options)
         else
