@@ -148,8 +148,11 @@ module ActiveMerchant #:nodoc:
 
         data = build_request(post)
         begin
-          raw = parse(ssl_post(self.live_url, data, headers))
+          xml = ssl_post(self.live_url, data, headers)
+          raw = parse(xml)
+          validation_results = validation_results_from_xml(xml)
         rescue ActiveMerchant::ResponseError => e
+          validation_results = {}
           if(e.response.code == "500" && e.response.body.start_with?("<s:Envelope"))
             raw = {
               message: "See transcript for detailed error description."
@@ -166,7 +169,9 @@ module ActiveMerchant #:nodoc:
           raw,
           authorization: authorization_from(post, raw),
           error_code: error_code_from(succeeded, raw),
-          test: test?
+          test: test?,
+          cvv_result: validation_results[:cvv_result],
+          avs_result: validation_results[:avs_result],
         )
       end
 
@@ -256,6 +261,72 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         succeeded ? nil : STANDARD_ERROR_CODE_MAPPING[response[:result]]
+      end
+
+      def validation_results_from_xml(xml)
+        {}.tap do |h|
+          h[:cvv_result] =  cvv_result_from_xml(xml)
+          h[:avs_result] = avs_result_from_xml(xml)
+        end
+      end
+
+      def cvv_result_from_xml(xml)
+        ActiveMerchant::Billing::CVVResult.new(cvv_result_code(xml))
+      end
+
+      def avs_result_from_xml(xml)
+        ActiveMerchant::Billing::AVSResult.new(code: avs_result_code(xml))
+      end
+
+      def cvv_result_code(xml)
+        cvv = validation_result_element(xml, "CVV")
+        return nil unless cvv
+        cvv && validation_result_matches?(
+          *validation_result_element_text(cvv.parent)) ? 'M' : 'N'
+      end
+
+      def avs_result_code(xml)
+        billing_address_elem = validation_result_element(xml, "Billing Address")
+        zip_code_elem = validation_result_element(xml, "Zip Code")
+
+        return nil unless billing_address_elem && zip_code_elem
+
+        billing_matches = avs_result_matches(billing_address_elem)
+        zip_matches = avs_result_matches(zip_code_elem)
+
+        if billing_matches && zip_matches
+          'D'
+        elsif !billing_matches && zip_matches
+          'P'
+        elsif billing_matches && !zip_matches
+          'B'
+        else
+          'C'
+        end
+      end
+
+      def avs_result_matches(elem)
+        validation_result_matches?(*validation_result_element_text(elem.parent))
+      end
+
+      def validation_result_element(xml, name)
+        doc = Nokogiri::XML(xml)
+        doc.remove_namespaces!
+        doc.at_xpath("//ParameterValidationResultList//" +
+                     "ParameterValidationResult//Name[text() = '#{name}']")
+      end
+
+      def validation_result_element_text(element)
+        result_text = element.elements.detect { |elem|
+          elem.name == "Result"
+        }.children.detect { |elem| elem.text }.text
+
+        result_text.split(";").collect(&:strip)
+      end
+
+      def validation_result_matches?(present, match)
+        present.downcase.start_with?('present') &&
+          match.downcase.start_with?('match')
       end
     end
   end
