@@ -314,6 +314,10 @@ class WirecardTest < Test::Unit::TestCase
     assert_equal "10003", response.params["ErrorCode"]
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def assert_xml_element_text(xml, xpath, expected_text)
@@ -685,6 +689,92 @@ class WirecardTest < Test::Unit::TestCase
           <Message>Job Refused</Message>
         </ERROR>
       </W_RESPONSE>
+    </WIRECARD_BXML>
+    XML
+  end
+
+  def transcript
+    <<-XML
+    <WIRECARD_BXML>
+      <W_REQUEST>
+        <W_JOB>
+          <JobID></JobID>
+          <BusinessCaseSignature>00000031629CAFD5</BusinessCaseSignature>
+          <FNC_CC_PURCHASE>
+            <FunctionID>Wirecard remote test purchase</FunctionID>
+            <CC_TRANSACTION>
+              <TransactionID>1</TransactionID>
+              <Amount>100</Amount>
+              <Currency>EUR</Currency>
+              <CountryCode>CA</CountryCode>
+              <RECURRING_TRANSACTION>
+                <Type>Single</Type>
+              </RECURRING_TRANSACTION>
+              <CREDIT_CARD_DATA>
+                <CreditCardNumber>4200000000000000</CreditCardNumber>
+                <CVC2>123</CVC2>
+                <ExpirationYear>2016</ExpirationYear>
+                <ExpirationMonth>09</ExpirationMonth>
+                <CardHolderName>Longbob Longsen</CardHolderName>
+              </CREDIT_CARD_DATA>
+              <CORPTRUSTCENTER_DATA>
+                <ADDRESS>
+                  <Address1>456 My Street</Address1>
+                  <Address2>Apt 1</Address2>
+                  <City>Ottawa</City>
+                  <ZipCode>K1C2N6</ZipCode>
+                  <State>ON</State>
+                  <Country>CA</Country>
+                  <Email>soleone@example.com</Email>
+                </ADDRESS>
+              </CORPTRUSTCENTER_DATA>
+            </CC_TRANSACTION>
+          </FNC_CC_PURCHASE>
+        </W_JOB>
+      </W_REQUEST>
+    </WIRECARD_BXML>
+    XML
+  end
+
+  def scrubbed_transcript
+    <<-XML
+    <WIRECARD_BXML>
+      <W_REQUEST>
+        <W_JOB>
+          <JobID></JobID>
+          <BusinessCaseSignature>00000031629CAFD5</BusinessCaseSignature>
+          <FNC_CC_PURCHASE>
+            <FunctionID>Wirecard remote test purchase</FunctionID>
+            <CC_TRANSACTION>
+              <TransactionID>1</TransactionID>
+              <Amount>100</Amount>
+              <Currency>EUR</Currency>
+              <CountryCode>CA</CountryCode>
+              <RECURRING_TRANSACTION>
+                <Type>Single</Type>
+              </RECURRING_TRANSACTION>
+              <CREDIT_CARD_DATA>
+                <CreditCardNumber>[FILTERED]</CreditCardNumber>
+                <CVC2>[FILTERED]</CVC2>
+                <ExpirationYear>2016</ExpirationYear>
+                <ExpirationMonth>09</ExpirationMonth>
+                <CardHolderName>Longbob Longsen</CardHolderName>
+              </CREDIT_CARD_DATA>
+              <CORPTRUSTCENTER_DATA>
+                <ADDRESS>
+                  <Address1>456 My Street</Address1>
+                  <Address2>Apt 1</Address2>
+                  <City>Ottawa</City>
+                  <ZipCode>K1C2N6</ZipCode>
+                  <State>ON</State>
+                  <Country>CA</Country>
+                  <Email>soleone@example.com</Email>
+                </ADDRESS>
+              </CORPTRUSTCENTER_DATA>
+            </CC_TRANSACTION>
+          </FNC_CC_PURCHASE>
+        </W_JOB>
+      </W_REQUEST>
     </WIRECARD_BXML>
     XML
   end

@@ -385,6 +385,10 @@ class WorldpayTest < Test::Unit::TestCase
     end
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_authorize_response
@@ -661,5 +665,75 @@ class WorldpayTest < Test::Unit::TestCase
       </submit>
       </paymentService>
     REQUEST
+  end
+
+  def transcript
+    <<-TRANSCRIPT
+    <paymentService version="1.4" merchantCode="CHARGEBEEM1">
+      <submit>
+        <order orderCode="4efd348dbe6708b9ec9c118322e0954f">
+          <description>Purchase</description>
+          <amount value="100" currencyCode="GBP" exponent="2"/>
+          <paymentDetails>
+            <VISA-SSL>
+              <cardNumber>4111111111111111</cardNumber>
+              <expiryDate>
+                <date month="09" year="2016"/>
+              </expiryDate>
+              <cardHolderName>Longbob Longsen</cardHolderName>
+              <cvc>123</cvc>
+              <cardAddress>
+                <address>
+                  <address1>N/A</address1>
+                  <postalCode>0000</postalCode>
+                  <city>N/A</city>
+                  <state>N/A</state>
+                  <countryCode>US</countryCode>
+                </address>
+              </cardAddress>
+            </VISA-SSL>
+          </paymentDetails>
+          <shopper>
+            <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+          </shopper>
+        </order>
+      </submit>
+    </paymentService>
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-TRANSCRIPT
+    <paymentService version="1.4" merchantCode="CHARGEBEEM1">
+      <submit>
+        <order orderCode="4efd348dbe6708b9ec9c118322e0954f">
+          <description>Purchase</description>
+          <amount value="100" currencyCode="GBP" exponent="2"/>
+          <paymentDetails>
+            <VISA-SSL>
+              <cardNumber>[FILTERED]</cardNumber>
+              <expiryDate>
+                <date month="09" year="2016"/>
+              </expiryDate>
+              <cardHolderName>Longbob Longsen</cardHolderName>
+              <cvc>[FILTERED]</cvc>
+              <cardAddress>
+                <address>
+                  <address1>N/A</address1>
+                  <postalCode>0000</postalCode>
+                  <city>N/A</city>
+                  <state>N/A</state>
+                  <countryCode>US</countryCode>
+                </address>
+              </cardAddress>
+            </VISA-SSL>
+          </paymentDetails>
+          <shopper>
+            <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+          </shopper>
+        </order>
+      </submit>
+    </paymentService>
+    TRANSCRIPT
   end
 end

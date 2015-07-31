@@ -25,15 +25,15 @@ module ActiveMerchant #:nodoc:
         'cvv2_not_checked' => 'X'
       }
 
-      self.test_url = 'https://demo.deepcovelabs.com/realtime/'
-      self.live_url = 'https://raven.pacnetservices.com/realtime/'
+      self.test_url = 'https://raven.deepcovelabs.com/realtime/'
+      self.live_url = 'https://raven.deepcovelabs.com/realtime/'
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master]
       self.money_format = :cents
       self.default_currency = 'USD'
-      self.homepage_url = 'http://www.pacnetservices.com/'
-      self.display_name = 'Raven PacNet'
+      self.homepage_url = 'http://www.deepcovelabs.com/raven'
+      self.display_name = 'Raven'
 
       def initialize(options = {})
         requires!(options, :user, :secret, :prn)
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = {}
         post['TrackingNumber'] = authorization
-        post['PymtType'] = options[:pymt_type] || 'cc_debit'
+        post['PymtType'] = options[:pymt_type]
 
         commit('void', nil, post)
       end

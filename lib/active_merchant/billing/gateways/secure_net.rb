@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         add_merchant_key(xml, options)
         xml.tag! 'METHOD', 'CC'
         xml.tag! 'NOTE', options[:description] if options[:description]
-        xml.tag! 'ORDERID', options[:order_id]
+        xml.tag! 'ORDERID', truncate(options[:order_id], 25)
         xml.tag! 'OVERRIDE_FROM', 0 # Docs say not required, but doesn't work without it
       end
 

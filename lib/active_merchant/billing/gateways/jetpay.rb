@@ -99,6 +99,16 @@ module ActiveMerchant #:nodoc:
         commit(money, build_credit_request('CREDIT', money, transaction_id, credit_card))
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<CardNum>)\d+(</CardNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CVV2>)\d+(</CVV2>)), '\1[FILTERED]\2')
+      end
 
       private
 
@@ -272,4 +282,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

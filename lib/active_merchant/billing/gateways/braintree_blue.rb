@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
           :private_key       => options[:private_key],
           :environment       => (options[:environment] || (test? ? :sandbox : :production)).to_sym,
           :custom_user_agent => "ActiveMerchant #{ActiveMerchant::VERSION}",
-          :logger            => logger,
+          :logger            => options[:logger] || logger,
         )
 
         @braintree_gateway = Braintree::Gateway.new( @configuration )
@@ -168,6 +168,10 @@ module ActiveMerchant #:nodoc:
         end
       end
       alias_method :delete, :unstore
+
+      def supports_network_tokenization?
+        true
+      end
 
       private
 
@@ -513,7 +517,8 @@ module ActiveMerchant #:nodoc:
           },
           :options => {
             :store_in_vault => options[:store] ? true : false,
-            :submit_for_settlement => options[:submit_for_settlement]
+            :submit_for_settlement => options[:submit_for_settlement],
+            :hold_in_escrow => options[:hold_in_escrow]
           }
         }
 

@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
     module PaypalCommonAPI
       include Empty
 
-      API_VERSION = '72'
+      API_VERSION = '124'
 
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
@@ -604,9 +604,9 @@ module ActiveMerchant #:nodoc:
 
       def add_express_only_payment_details(xml, options = {})
         add_optional_fields(xml,
-                            %w{n2:NoteText          n2:SoftDescriptor
+                            %w{n2:NoteText          n2:PaymentAction
                                n2:TransactionId     n2:AllowedPaymentMethodType
-                               n2:PaymentRequestID  n2:PaymentAction},
+                               n2:PaymentRequestID  },
                             options)
       end
 

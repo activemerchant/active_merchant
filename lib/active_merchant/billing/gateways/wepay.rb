@@ -73,27 +73,34 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:client_id] = @options[:client_id]
         post[:user_name] = "#{creditcard.first_name} #{creditcard.last_name}"
-        post[:email] = options[:email]
+        post[:email] = options[:email] || "unspecified@example.com"
         post[:cc_number] = creditcard.number
-        post[:cvv] = creditcard.verification_value
-        post[:expiration_month] = creditcard.month
-        post[:expiration_year] = creditcard.year
+        post[:cvv] = creditcard.verification_value unless options[:recurring]
+        post[:expiration_month] = "#{creditcard.month}"
+        post[:expiration_year] = "#{creditcard.year}"
         post[:original_ip] = options[:ip] if options[:ip]
         post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
         if(billing_address = (options[:billing_address] || options[:address]))
           post[:address] = {
             "address1" => billing_address[:address1],
             "city"     => billing_address[:city],
-            "state"    => billing_address[:state],
             "country"  => billing_address[:country]
           }
           if(post[:country] == "US")
             post[:address]["zip"] = billing_address[:zip]
+            post[:address]["state"] = billing_address[:state]
           else
+            post[:address]["region"] = billing_address[:state]
             post[:address]["postcode"] = billing_address[:zip]
           end
         end
-        commit('/credit_card/create', post)
+
+        if options[:recurring] == true
+          post[:client_secret] = @options[:client_secret]
+          commit('/credit_card/transfer', post)
+        else
+          commit('/credit_card/create', post)
+        end
       end
 
       private

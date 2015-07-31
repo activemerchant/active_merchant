@@ -13,6 +13,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       :merchant_id => 'merchant_id'
     )
     @customer_ref_num = "ABC"
+
+    @options = { :order_id => '1'}
   end
 
   def test_successful_purchase
@@ -597,6 +599,32 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_nil response.params['account_num']
+  end
+
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, successful_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal "Approved", response.message
+  end
+
+  def test_successful_verify_and_failed_void
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, failed_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal "Approved", response.message
+  end
+
+  def test_failed_verify
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(failed_purchase_response, failed_purchase_response)
+    assert_failure response
+    assert_equal "AUTH DECLINED                   12001", response.message
   end
 
   private

@@ -35,12 +35,13 @@ module ActiveMerchant #:nodoc:
     #
     # == Example Usage
     #   cc = CreditCard.new(
-    #     :first_name => 'Steve',
-    #     :last_name  => 'Smith',
-    #     :month      => '9',
-    #     :year       => '2010',
-    #     :brand      => 'visa',
-    #     :number     => '4242424242424242'
+    #     :first_name         => 'Steve',
+    #     :last_name          => 'Smith',
+    #     :month              => '9',
+    #     :year               => '2017',
+    #     :brand              => 'visa',
+    #     :number             => '4242424242424242',
+    #     :verification_value => '424'
     #   )
     #
     #   cc.validate # => {}
@@ -138,6 +139,15 @@ module ActiveMerchant #:nodoc:
       # @return [String]
       attr_accessor :track_data
 
+      # Returns or sets whether a card has been processed using manual entry.
+      #
+      # This attribute is optional and is only used by gateways who use this information in their transaction risk
+      # calculations. See {this page on 'card not present' transactions}[http://en.wikipedia.org/wiki/Card_not_present_transaction]
+      # for further explanation and examples of this kind of transaction.
+      #
+      # @return [true, false]
+      attr_accessor :manual_entry
+
       # Returns or sets the ICC/ASN1 credit card data for a EMV transaction, typically this is a BER-encoded TLV string.
       #
       # @return [String]
@@ -148,6 +158,21 @@ module ActiveMerchant #:nodoc:
       #
       # @return [String]
       attr_accessor :fallback_reason
+
+      # Returns or sets whether card-present card data has been read contactlessly.
+      #
+      # @return [true, false]
+      attr_accessor :contactless
+
+      # Returns the ciphertext of the card's encrypted PIN.
+      #
+      # @return [String]
+      attr_accessor :encrypted_pin_cryptogram
+
+      # Returns the Key Serial Number (KSN) of the card's encrypted PIN.
+      #
+      # @return [String]
+      attr_accessor :encrypted_pin_ksn
 
       def type
         ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."

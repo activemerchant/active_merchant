@@ -144,6 +144,16 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal "Could not find payment for order", response.message
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card,  @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
 
   # Worldpay has a delay between asking for a transaction to be captured and actually marking it as captured
   # These 2 tests work if you take the auth code, wait some time and then perform the next operation.

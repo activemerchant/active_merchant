@@ -212,6 +212,18 @@ module ActiveMerchant #:nodoc:
         void(response.authorization) if response.success?
         response
       end
+      
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+        gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+        gsub(%r((&?cardno=)[^&]*)i, '\1[FILTERED]').
+        gsub(%r((&?cvc=)[^&]*)i, '\1[FILTERED]').
+        gsub(%r((&?pswd=)[^&]*)i, '\1[FILTERED]')
+      end
 
       private
 
@@ -335,6 +347,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
+        add_pair parameters, 'RTIMEOUT', @options[:timeout] if @options[:timeout]
         add_pair parameters, 'PSPID',  @options[:login]
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]

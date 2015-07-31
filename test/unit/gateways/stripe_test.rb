@@ -27,7 +27,7 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal 'cus_3sgheFxeBgTQ3M', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert response.test?
   end
 
@@ -39,7 +39,7 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal 'cus_3sgheFxeBgTQ3M', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert response.test?
   end
 
@@ -50,7 +50,7 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal 'cus_3sgheFxeBgTQ3M', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert response.test?
   end
 
@@ -63,7 +63,7 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert response.test?
   end
 
@@ -75,7 +75,7 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert response.test?
   end
 
@@ -87,7 +87,7 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert response.test?
   end
 
@@ -99,9 +99,9 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert_equal 2, response.responses.size
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
     assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
     assert response.test?
   end
@@ -114,9 +114,9 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert_equal 2, response.responses.size
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
     assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
     assert response.test?
   end
@@ -128,9 +128,9 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert_equal 2, response.responses.size
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
     assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
     assert response.test?
   end
@@ -143,9 +143,9 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert_equal 2, response.responses.size
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
     assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
     assert response.test?
   end
@@ -158,9 +158,9 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
     assert_equal 2, response.responses.size
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
     assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
     assert response.test?
   end
@@ -172,11 +172,21 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
     assert_equal 2, response.responses.size
-    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
     assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
     assert response.test?
+  end
+
+  def test_passing_validate_false_on_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, validate: false)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/validate=false/, data)
+    end.respond_with(successful_new_customer_response)
+
+    assert_success response
   end
 
   def test_successful_authorization
@@ -212,6 +222,17 @@ class StripeTest < Test::Unit::TestCase
 
     assert_equal 'ch_test_emv_charge', response.authorization
     assert response.emv_authorization, "Response should include emv_authorization containing the EMV ARPC"
+  end
+
+  def test_declined_authorization_with_emv_credit_card
+    @gateway.expects(:ssl_request).returns(declined_authorization_response_with_emv_auth_data)
+
+    assert response = @gateway.authorize(@amount, @emv_credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+
+    assert_equal 'ch_declined_auth', response.authorization
+    assert response.emv_authorization, "Response should include emv_auth_data containing the EMV ARC"
   end
 
   def test_successful_capture
@@ -265,15 +286,24 @@ class StripeTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
-  def test_successful_purchase_with_token
+  def test_successful_purchase_with_token_including_customer
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, "tok_xxx")
+      @gateway.purchase(@amount, "cus_xxx|card_xxx")
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/card=tok_xxx/, data)
+      assert_match(/customer=cus_xxx/, data)
+      assert_match(/card=card_xxx/, data)
     end.respond_with(successful_purchase_response)
 
-    assert response
-    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_successful_purchase_with_token
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "card_xxx")
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/card=card_xxx/, data)
+    end.respond_with(successful_purchase_response)
+
     assert_success response
   end
 
@@ -281,7 +311,7 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, statement_description: '5K RACE TICKET')
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/statement_description=5K\+RACE\+TICKET/, data)
+      assert_match(/statement_descriptor=5K\+RACE\+TICKET/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -320,6 +350,14 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_application_fee => true)
     assert_success response
+  end
+
+  def test_successful_refund_with_reverse_transfer
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(@amount, "auth", reverse_transfer: true)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/reverse_transfer=true/, data)
+    end.respond_with(successful_partially_refunded_response)
   end
 
   def test_successful_refund_with_refund_fee_amount
@@ -411,6 +449,28 @@ class StripeTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    refute response.test? # unsuccessful request defaults to live
+    assert_equal 'ch_test_charge', response.authorization
+  end
+
+  def test_declined_request_advanced_decline_codes
+    @gateway.expects(:ssl_request).returns(declined_call_issuer_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:call_issuer], response.error_code
+    refute response.test? # unsuccessful request defaults to live
+    assert_equal 'ch_test_charge', response.authorization
+  end
+
+  def test_declined_request_advanced_decline_code_not_in_standard_mapping
+    @gateway.expects(:ssl_request).returns(declined_generic_decline_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert !response.test? # unsuccessful request defaults to live
     assert_equal 'ch_test_charge', response.authorization
   end
@@ -449,7 +509,15 @@ class StripeTest < Test::Unit::TestCase
     post = {}
     credit_card_token = "card_2iD4AezYnNNzkW"
     @gateway.send(:add_creditcard, post, credit_card_token, {})
-    assert_equal credit_card_token, post[:card]
+    assert_equal "card_2iD4AezYnNNzkW", post[:card]
+  end
+
+  def test_add_creditcard_with_token_and_customer
+    post = {}
+    credit_card_token = "cus_3sgheFxeBgTQ3M|card_2iD4AezYnNNzkW"
+    @gateway.send(:add_creditcard, post, credit_card_token, {})
+    assert_equal "cus_3sgheFxeBgTQ3M", post[:customer]
+    assert_equal "card_2iD4AezYnNNzkW", post[:card]
   end
 
   def test_add_creditcard_with_token_and_track_data
@@ -464,12 +532,6 @@ class StripeTest < Test::Unit::TestCase
     @gateway.send(:add_creditcard, post, @emv_credit_card, {})
 
     assert_equal @emv_credit_card.icc_data, post[:card][:emv_auth_data]
-  end
-
-  def test_add_customer
-    post = {}
-    @gateway.send(:add_customer, post, nil, {:customer => "test_customer"})
-    assert_equal "test_customer", post[:customer]
   end
 
   def test_application_fee_is_submitted_for_purchase
@@ -618,6 +680,34 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_contactless_flag_is_included_with_emv_card_data
+    stub_comms(@gateway, :ssl_request) do
+      @emv_credit_card.contactless = true
+      @gateway.purchase(@amount, @emv_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      data =~ /card\[read_method\]=contactless/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_contactless_flag_is_not_included_with_emv_card_data_by_default
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @emv_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      data !~ /card\[read_method\]=contactless/
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_encrypted_pin_is_included_with_emv_card_data
+    stub_comms(@gateway, :ssl_request) do
+      @emv_credit_card.encrypted_pin_cryptogram = "8b68af72199529b8"
+      @emv_credit_card.encrypted_pin_ksn = "ffff0102628d12000001"
+      @gateway.purchase(@amount, @emv_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert data =~ /card\[encrypted_pin\]=8b68af72199529b8/
+      assert data =~ /card\[encrypted_pin_key_id\]=ffff0102628d12000001/
+    end.respond_with(successful_purchase_response)
+  end
+
   def generate_options_should_allow_key
     assert_equal({:key => '12345'}, generate_options({:key => '12345'}))
   end
@@ -699,16 +789,6 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_update_credit_card_response)
   end
 
-  def test_deprecated_unstore
-    assert_deprecation_warning do
-      assert @gateway.unstore("CustomerID", "card_id")
-    end
-
-    assert_deprecation_warning do
-      assert @gateway.unstore("CustomerID", "card_id", {})
-    end
-  end
-
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
@@ -755,6 +835,10 @@ class StripeTest < Test::Unit::TestCase
 
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
+  end
+
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
   private
@@ -837,7 +921,7 @@ class StripeTest < Test::Unit::TestCase
       "subscription": null,
       "discount": null,
       "account_balance": 0,
-      "cards":
+      "sources":
       {
         "object": "list",
         "count": 1,
@@ -1284,6 +1368,34 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def declined_call_issuer_purchase_response
+    <<-RESPONSE
+    {
+      "error": {
+        "message": "Your card was declined.",
+        "type": "card_error",
+        "code": "card_declined",
+        "decline_code": "call_issuer",
+        "charge": "ch_test_charge"
+      }
+    }
+    RESPONSE
+  end
+
+  def declined_generic_decline_purchase_response
+    <<-RESPONSE
+    {
+      "error": {
+        "message": "Your card was declined.",
+        "type": "card_error",
+        "code": "card_declined",
+        "decline_code": "generic_decline",
+        "charge": "ch_test_charge"
+      }
+    }
+    RESPONSE
+  end
+
   def declined_authorization_response
     <<-RESPONSE
     {
@@ -1293,6 +1405,21 @@ class StripeTest < Test::Unit::TestCase
         "code": "card_declined",
         "charge": "ch_4IKxffGOKVRJ4l"
       }
+    }
+    RESPONSE
+  end
+
+  def declined_authorization_response_with_emv_auth_data
+    <<-RESPONSE
+    {
+     "error": {
+       "message": "Your card was declined.",
+       "type": "card_error",
+       "code": "card_declined",
+       "decline_code": "generic_decline",
+       "charge": "ch_declined_auth",
+       "emv_auth_data": "8A023531910ACD16B371D277FDB90000"
+     }
     }
     RESPONSE
   end

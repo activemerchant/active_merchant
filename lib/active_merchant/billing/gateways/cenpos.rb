@@ -49,6 +49,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_void_required_elements(post)
         add_reference(post, authorization)
+        add_remembered_amount(post, authorization)
+        add_tax(post, options)
+
         commit("Void", post)
       end
 
@@ -89,33 +92,13 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["AUD"] = "036"
-      CURRENCY_CODES["CAD"] = "124"
-      CURRENCY_CODES["CHF"] = "756"
-      CURRENCY_CODES["CZK"] = "203"
-      CURRENCY_CODES["DKK"] = "208"
-      CURRENCY_CODES["EUR"] = "978"
-      CURRENCY_CODES["GBP"] = "826"
-      CURRENCY_CODES["HKD"] = "344"
-      CURRENCY_CODES["HUF"] = "348"
-      CURRENCY_CODES["IRR"] = "364"
-      CURRENCY_CODES["JPY"] = "392"
-      CURRENCY_CODES["LVL"] = "428"
-      CURRENCY_CODES["MYR"] = "458"
-      CURRENCY_CODES["NOK"] = "578"
-      CURRENCY_CODES["PLN"] = "985"
-      CURRENCY_CODES["SEK"] = "752"
-      CURRENCY_CODES["SGD"] = "702"
-      CURRENCY_CODES["USD"] = "840"
-      CURRENCY_CODES["ZAR"] = "710"
-
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
-        post[:CurrencyCode] = CURRENCY_CODES[options[:currency] || currency(money)]
-        post[:TaxAmount] = amount(options[:tax])
+        post[:CurrencyCode] = options[:currency] || currency(money)
         post[:InvoiceNumber] = options[:order_id]
-        post[:InvoiceDetail] = options[:description]
+        post[:InvoiceDetail] = options[:invoice_detail] if options[:invoice_detail]
+        post[:CustomerCode] = options[:customer_code] if options[:customer_code]
+        add_tax(post, options)
       end
 
       def add_payment_method(post, payment_method)
@@ -124,7 +107,7 @@ module ActiveMerchant #:nodoc:
         post[:CardVerificationNumber] = payment_method.verification_value
         post[:CardExpirationDate] = format(payment_method.month, :two_digits) + format(payment_method.year, :two_digits)
         post[:CardLastFourDigits] = payment_method.last_digits
-        post[:MagneticData] = payment_method.track_data
+        post[:MagneticData] = payment_method.track_data if payment_method.track_data
       end
 
       def add_customer_data(post, options)
@@ -143,11 +126,18 @@ module ActiveMerchant #:nodoc:
         post[:IMEI] = nil
       end
 
+      def add_tax(post, options)
+        post[:TaxAmount] = amount(options[:tax] || 0)
+      end
+
       def add_reference(post, authorization)
-        reference_number, last_four_digits, original_amount = split_authorization(authorization)
+        reference_number, last_four_digits = split_authorization(authorization)
         post[:ReferenceNumber] = reference_number
         post[:CardLastFourDigits] = last_four_digits
-        post[:Amount] = original_amount
+      end
+
+      def add_remembered_amount(post, authorization)
+        post[:Amount] = split_authorization(authorization).last
       end
 
       def commit(action, post)
@@ -184,7 +174,7 @@ module ActiveMerchant #:nodoc:
         {
           "Accept-Encoding" => "gzip,deflate",
           "Content-Type"  => "text/xml;charset=UTF-8",
-          "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCard"
+          "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCreditCard"
         }
       end
 
@@ -204,11 +194,11 @@ module ActiveMerchant #:nodoc:
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <soapenv:Header/>
    <soapenv:Body>
-      <tem:ProcessCard>
+      <tem:ProcessCreditCard>
          <tem:request>
            #{body}
          </tem:request>
-      </tem:ProcessCard>
+      </tem:ProcessCreditCard>
    </soapenv:Body>
 </soapenv:Envelope>
         EOS
@@ -219,7 +209,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.remove_namespaces!
-        body = doc.xpath("//ProcessCardResult")
+        body = doc.xpath("//ProcessCreditCardResult")
         body.children.each do |node|
           if (node.elements.size == 0)
             response[node.name.underscore.to_sym] = node.text
