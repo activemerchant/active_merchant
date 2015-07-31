@@ -32,6 +32,7 @@
 * Checkout.com and CheckoutV2.com: Update country list [duff]
 * Cardstream: Handle nil addresses [rwdaigle]
 * MiGS: Allow passing in currency [alovak]
+* [POSSIBLE BREAKAGE] NMI: No longer use auth.net emulator [rwdaigle]
 
 == Version 1.52.0 (July 20, 2015)
 
@@ -89,6 +90,7 @@
 * Paystation: No longer require order_id everywhere [duff]
 * Checkout: Support descriptor_name and descriptor_city [duff]
 * Add supports_network_tokenization? to gateways [jnormore]
+
 
 == Version 1.50.0 (June 1, 2015)
 
