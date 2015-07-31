@@ -195,7 +195,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     @options.merge!(@customer_options)
     @gateway.expects(:ssl_post).returns(successful_customer_response('updateCustomer'))
 
-    assert response = @gateway.update(@options)
+    assert response = @gateway.update(@options[:customer_number], @options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
@@ -207,7 +207,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     @options.merge!(@customer_options)
     @gateway.expects(:ssl_post).returns(successful_quick_update_customer_response('quickUpdateCustomer'))
 
-    assert response = @gateway.update(customer_number: @options[:customer_number], fields: @quick_update_customer_options)
+    assert response = @gateway.update(@options[:customer_number], fields: @quick_update_customer_options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response

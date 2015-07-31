@@ -358,8 +358,8 @@ module ActiveMerchant #:nodoc:
       # Update a customer by replacing either all of the customer details or changing only a few fields
       #
       #
-      # ==== Required
-      # * <tt>:customer_number</tt> -- customer to update
+      # ==== Identifier
+      # * <tt>:identifier</tt> -- customer number of the customer to be updated
       #
       # 
       # To update only a few fields use this set of options
@@ -405,7 +405,8 @@ module ActiveMerchant #:nodoc:
       # ==== Response
       # * <tt>#message</tt> -- customer number assigned by gateway
 
-      def update(options={})
+      def update(identifier, options={})
+        options[customer_number] = identifier
         if options[:fields].blank?
           update_customer(options)
         else
