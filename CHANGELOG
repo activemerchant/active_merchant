@@ -19,6 +19,8 @@
 * Stripe: return refund id for refund authorization [anellis]
 * Paypal: Update api version [anellis]
 * TNS: Translate countries to alpha3 codes [anellis]
+* TNS: Handle non existent country [duff]
+* TNS: Rescue Errors [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)

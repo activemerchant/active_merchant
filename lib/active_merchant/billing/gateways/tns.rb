@@ -158,8 +158,11 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/json',
         }
         post[:apiOperation] = action.upcase
-        raw = parse(ssl_request(:put, url, build_request(post), headers))
-
+        begin
+          raw = parse(ssl_request(:put, url, build_request(post), headers))
+        rescue ResponseError => e
+          raw = parse(e.response.body)
+        end
         succeeded = success_from(raw['result'])
         Response.new(
           succeeded,
