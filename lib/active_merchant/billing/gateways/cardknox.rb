@@ -44,7 +44,8 @@ module ActiveMerchant #:nodoc:
           add_address(post, source, options)
           add_customer_data(post, options)
         end
-        commit(purchase_action(source), post)
+    #    commit(purchase_action(source), post)
+        commit(transacton_action("purchase", source), post)
       end
 
       def authorize(money, credit_card, options={})
@@ -72,14 +73,14 @@ module ActiveMerchant #:nodoc:
         reference, _, command = split_auth(source) 
         add_reference(post, reference)
         add_amount(post, money)
-        commit(refund_action(command), post)
+        commit(transacton_action("refund", command), post)
       end
 
       def void(source, options = {})
         post = {}
         reference, _, command  = split_auth(source)
         add_reference(post, reference)   
-        commit(void_action(command), post )
+        commit(transacton_action("void", command), post )
       end
 
       def verify(credit_card, options={})
@@ -95,7 +96,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, source, options)
         add_invoice(post,options)
         add_customer_data(post, options)
-        commit(store_action(source), post)
+        commit(transacton_action("save", source), post)
       end
 
       def supports_scrubbing?
@@ -122,6 +123,16 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction_type(post, action)
         post [:Command]  = TRANSACTIONS[action]
+      end
+
+      def transacton_action(command, source)
+        if source.is_a?(Check) 
+          "check_#{command}".to_sym
+        elsif source.is_a?(String) and source.include? "check"
+          "check_#{command}".to_sym
+        else 
+          command.to_sym
+        end
       end
 
       def purchase_action(source)
