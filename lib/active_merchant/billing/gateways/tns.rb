@@ -148,6 +148,7 @@ module ActiveMerchant #:nodoc:
           country = ActiveMerchant::Country.find(country)
           country.code(:alpha3).value
         end
+      rescue InvalidCountryCodeError
       end
 
       def commit(action, post)
