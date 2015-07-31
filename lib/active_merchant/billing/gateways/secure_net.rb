@@ -212,6 +212,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'TEST', 'TRUE' if test?
         xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
         xml.tag! 'TRANSACTION_SERVICE', 0
+        xml.tag! 'DEVELOPERID', options[:developer_id] if options[:developer_id]
       end
 
       def success?(response)

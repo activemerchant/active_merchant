@@ -33,6 +33,7 @@
 * Cardstream: Handle nil addresses [rwdaigle]
 * MiGS: Allow passing in currency [alovak]
 * [POSSIBLE BREAKAGE] NMI: No longer use auth.net emulator [rwdaigle]
+* SecureNet: Add DEVELOPERID if supplied [wedy]
 
 == Version 1.52.0 (July 20, 2015)
 
