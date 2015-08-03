@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       # self.test_url = 'https://x1.cardknox.com/gateway'
       self.live_url = self.test_url = 'https://x1.cardknox.com/gateway'
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US','CA','GB']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
@@ -35,6 +35,8 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      #There are three sources for doing a purchase a credit card, check, and cardknox token
+
       def purchase(money, source, options={})
         post = {}
         add_amount(post, money)
@@ -44,17 +46,16 @@ module ActiveMerchant #:nodoc:
           add_address(post, source, options)
           add_customer_data(post, options)
         end
-    #    commit(purchase_action(source), post)
         commit(transacton_action("purchase", source), post)
       end
 
-      def authorize(money, credit_card, options={})
+      def authorize(money, source, options={})
         post = {}
         add_amount(post, money)
         add_invoice(post,options)
-        add_credit_card(post, credit_card)
-        unless credit_card.track_data.present?
-          add_address(post, credit_card, options)
+        add_source(post, source)
+        unless source.is_a?(CreditCard) and source.track_data.present?
+          add_address(post, source, options)
           add_customer_data(post, options)
         end
         commit(:authorization, post)
@@ -62,31 +63,33 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
-        reference, _, type = split_auth(authorization)
-        add_reference(post, reference)
+        add_reference(post, authorization)
         add_amount(post, money)
         commit(:capture, post)
       end
 
+      # Use refund for transactions that the batch settled or for partial refounds
+
       def refund(money, source, options={})
         post = {}
-        reference, _, command = split_auth(source) 
-        add_reference(post, reference)
+        add_reference(post, source)
         add_amount(post, money)
-        commit(transacton_action("refund", command), post)
+        commit(transacton_action("refund", source), post)
       end
+
+      # Use void for tansactions that have not batched yet
 
       def void(source, options = {})
         post = {}
-        reference, _, command  = split_auth(source)
-        add_reference(post, reference)   
-        commit(transacton_action("void", command), post )
+        add_reference(post, source)   
+        commit(transacton_action("void", source), post )
       end
 
+      # verify the credit card 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+         r.process { authorize(100, credit_card, options) }
+         r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
@@ -114,74 +117,33 @@ module ActiveMerchant #:nodoc:
       private
 
       def split_auth(string)
-        string.split(";")
+        string.split(";") if !string.empty?
       end
 
       def add_reference(post, reference)
+        reference, _, _ = split_auth(reference) 
         post[:Refnum] = reference
       end
 
-      def add_transaction_type(post, action)
-        post [:Command]  = TRANSACTIONS[action]
-      end
+      # detrmines if the what type of transaction command to post
 
       def transacton_action(command, source)
-        if source.is_a?(Check) 
+        if source.is_a?(Check) or (source.is_a?(String) and source.include? "check") 
           "check_#{command}".to_sym
-        elsif source.is_a?(String) and source.include? "check"
-          "check_#{command}".to_sym
-        else 
+        else # if source.is_a?(CreditCard) or (source.is_a?(String) and !source.empty?) 
           command.to_sym
         end
       end
-
-      def purchase_action(source)
-        if source.is_a?(String) and !source.empty?
-          _, _,command = split_auth(source)
-          command[0..4] == "check" ? :check_purchase : :purchase
-        else
-          if source.is_a?(Check)
-            :check_purchase
-          else
-            :purchase
-          end
-        end
-      end
-
-      def void_action(original_transaction_type)
-        (original_transaction_type == TRANSACTIONS[:check_purchase]) ? :check_void : :void
-      end
-
-      def refund_action(original_transaction_type)
-        (original_transaction_type == TRANSACTIONS[:check_purchase]) ? :check_refund : :refund
-        # if original_transaction_type[0..4] == "check" 
-        #  :check_refund 
-        # else
-        #  :refund
-        # end
-      end
-
-      def store_action(source)
-        if source.is_a?(String)
-          _, _, command = split_auth(source)
-          command == TRANSACTIONS[:check_purchase] ? :check_save : :save
-        else
-          if source.is_a?(Check)
-            :check_save
-          else
-            :save
-          end
-        end
-      end
-
+  
+      # determines if the source is a credit card, check or cardknox token
 
       def add_source(post, source)
-        if source.is_a?(String) 
-          _, token, command = split_auth(source)
-          command[0..4] == "check" ?  add_check(post, token) : add_credit_card(post, token)
-        else
-       
-          card_brand(source) == "check" ? add_check(post, source) : add_credit_card(post, source)
+        if source.is_a?(String) and !source.empty?
+          add_cardknox_token(post, source)
+        elsif source.is_a?(Check)
+          add_check(post, source)
+        elsif source.is_a?(CreditCard)
+          add_credit_card(post, source)
         end
       end
 
@@ -258,37 +220,37 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:Invoice]      = options[:invoice] unless options[:invoice].blank?
-        post[:orderID]      = options[:order_id] unless options[:order_id].blank?
+        post[:OrderID]      = options[:order_id] unless options[:order_id].blank?
+
         post[:Description]  = options[:description] unless options[:description].blank?
       end
 
       def add_credit_card(post, credit_card)
-        if credit_card.is_a?(String) 
-           post[:Token] = credit_card
-        else
-          if credit_card.track_data.present?
-            post[:Magstripe] = credit_card.track_data
-            post[:Cardpresent] = true
-          elsif credit_card.respond_to?(:number)
-            post[:CardNum]   = credit_card.number
-            post[:CVV]   = credit_card.verification_value if credit_card.verification_value?
-            post[:Exp]  = expdate(credit_card)
-            post[:Name]   = credit_card.name unless credit_card.name.blank?
-            post[:CardPresent] = true if credit_card.manual_entry
-          end
+        if credit_card.track_data.present?
+          post[:Magstripe] = credit_card.track_data
+          post[:Cardpresent] = true
+        elsif credit_card.respond_to?(:number)
+          post[:CardNum]   = credit_card.number
+          post[:CVV]   = credit_card.verification_value if credit_card.verification_value?
+          post[:Exp]  = expdate(credit_card)
+          post[:Name]   = credit_card.name unless credit_card.name.blank?
+          post[:CardPresent] = true if credit_card.manual_entry
         end
       end
 
       def add_check(post, check)
-        if check.is_a?(String)
-           post[:Token] = check
-        else
-          post[:Routing] = check.routing_number
+        post[:Routing] = check.routing_number
 
-          post[:Account] = check.account_number
+        post[:Account] = check.account_number
 
-          post[:Name] = check.name
-        end
+        post[:Name] = check.name
+  
+      end
+
+      def add_cardknox_token(post, token)
+        _, token = split_auth(token) 
+
+        post[:Token] = token
       end
 
       def parse(body)
@@ -342,12 +304,17 @@ module ActiveMerchant #:nodoc:
         "#{response[:ref_num]};#{response[:token]};#{action}"
       end    
 
-      def post_data(action, parameters = {})
-        parameters[:Key]      = @options[:api_key]
-        parameters[:Version] = "4.5.4"
-        parameters[:SoftwareName] = 'Active Merchant'
-        parameters[:SoftwareVersion] = "1.5.1"
-        parameters[:Command]  = TRANSACTIONS[action]
+      def post_data(action, parameters = {}) 
+        initial_parameters = {
+        :Key      => @options[:api_key],
+        :Version => "4.5.4",
+        :SoftwareName => 'Active Merchant',
+        :SoftwareVersion => "1.5.1",
+        :Command  => TRANSACTIONS[action],
+      }
+
+        parameters = initial_parameters.merge(parameters)
+        parameters[:Custom01] = parameters[:Invoice] || parameters[:OrderID] if parameters[:Command].to_s.include? "check"
 
         parameters.collect { |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
