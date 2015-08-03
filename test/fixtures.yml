@@ -246,6 +246,8 @@ first_pay:
 firstdata_e4:
   login:
   password:
+  key_id:
+  key_secret:
 
 flo2cash:
   username: SOMECREDENTIAL
