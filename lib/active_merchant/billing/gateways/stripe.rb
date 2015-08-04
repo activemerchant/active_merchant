@@ -92,12 +92,11 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
 
-        add_application_fee(post, options)
-
         if emv_tc_response = options.delete(:icc_data)
           post[:card] = { emv_approval_data: emv_tc_response }
           commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
         else
+          add_application_fee(post, options)
           add_amount(post, money, options)
           commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
         end
