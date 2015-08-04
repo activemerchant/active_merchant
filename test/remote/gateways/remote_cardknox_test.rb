@@ -10,6 +10,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220', verification_value:  '518')
     @options = {
       billing_address: address,
+      shipping_address: address,
       description: 'Store Purchase'   
     }
       @more_options = {
