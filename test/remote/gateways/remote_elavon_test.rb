@@ -42,6 +42,16 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorize_and_capture_with_auth_code
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'APPROVAL', auth.message
+    assert auth.authorization
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, '', :credit_card => @credit_card)
     assert_failure response
