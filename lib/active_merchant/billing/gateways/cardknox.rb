@@ -35,11 +35,11 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      #There are three sources for doing a purchase a credit card, check, and cardknox token
+      # There are three sources for doing a purchase a credit card, check, and cardknox token which is returned in the the authrization hash "ref_num;token;command"
 
       def purchase(money, source, options={})
         post = {}
-        add_amount(post, money)
+        add_amount(post, money, options)
         add_invoice(post,options)
         add_source(post, source)
         unless source.is_a?(CreditCard) and source.track_data.present?
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, source, options={})
         post = {}
-        add_amount(post, money)
+        add_amount(post, money,)
         add_invoice(post,options)
         add_source(post, source)
         unless source.is_a?(CreditCard) and source.track_data.present?
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      # Use refund for transactions that the batch settled or for partial refounds
+      # Use refund for transactions that the batch settled or for crdit card partial refounds
 
       def refund(money, source, options={})
         post = {}
@@ -92,6 +92,8 @@ module ActiveMerchant #:nodoc:
          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
+
+      # store the credit card or check on the gateway which will return a cardknox token that can be used later 
 
       def store(source, options = {})
         post = {}
@@ -125,7 +127,7 @@ module ActiveMerchant #:nodoc:
         post[:Refnum] = reference
       end
 
-      # detrmines if the what type of transaction command to post
+      # determines what type of transaction command to post credit card or check 
 
       def transacton_action(command, source)
         if source.is_a?(Check) or (source.is_a?(String) and source.include? "check") 
@@ -147,8 +149,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_amount(post, money)
-        post[:Amount] = amount(money)
+      def add_amount(post, money, options = {})
+        post[:Tax]    = options[:tax] if options[:tax]
+        post[:Tip]    = options[:tip] if options[:tip]
+        post[:Amount] = amount(money) 
       end
 
       def expdate(credit_card)
@@ -309,7 +313,7 @@ module ActiveMerchant #:nodoc:
         :Key      => @options[:api_key],
         :Version => "4.5.4",
         :SoftwareName => 'Active Merchant',
-        :SoftwareVersion => "1.5.1",
+        :SoftwareVersion => "#{ActiveMerchant::VERSION}",
         :Command  => TRANSACTIONS[action],
       }
 

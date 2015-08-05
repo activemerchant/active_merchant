@@ -120,9 +120,9 @@ card_stream:
   login: X
   password: Y
 
-# Working credentials, no need to replace
+#Username/Password given in sign up email
 cardknox:
-  api_key: SOMECREDENTIAL
+  api_key: NOTVALID
  
 
 # Cashnet doesn't provide public testing data
