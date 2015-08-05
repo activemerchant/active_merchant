@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
         :refund => 'CCRETURN',
         :authorize => 'CCAUTHONLY',
         :capture => 'CCFORCE',
+        :capture_complete => 'CCCOMPLETE',
         :void => 'CCDELETE',
         :store => 'CCGETTOKEN',
         :update => 'CCUPDATETOKEN',
@@ -110,16 +111,22 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt>
       #   * <tt>:credit_card</tt> - The CreditCard details from the initial transaction (required).
       def capture(money, authorization, options = {})
-        requires!(options, :credit_card)
-
         form = {}
-        add_salestax(form, options)
-        add_approval_code(form, authorization)
-        add_invoice(form, options)
-        add_creditcard(form, options[:credit_card])
-        add_customer_data(form, options)
-        add_test_mode(form, options)
-        commit(:capture, money, form)
+        if options[:credit_card]
+          action = :capture
+          add_salestax(form, options)
+          add_approval_code(form, authorization)
+          add_invoice(form, options)
+          add_creditcard(form, options[:credit_card])
+          add_customer_data(form, options)
+          add_test_mode(form, options)
+        else
+          action = :capture_complete
+          add_txn_id(form, authorization)
+          add_partial_shipment_flag(form, options)
+          add_test_mode(form, options)
+        end
+        commit(action, money, form)
       end
 
       # Refund a transaction.
@@ -291,6 +298,10 @@ module ActiveMerchant #:nodoc:
 
       def add_test_mode(form, options)
         form[:test_mode] = 'TRUE' if options[:test_mode]
+      end
+
+      def add_partial_shipment_flag(form, options)
+        form[:partial_shipment_flag] = 'Y' if options[:partial_shipment_flag]
       end
 
       def message_from(response)
