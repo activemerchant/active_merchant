@@ -383,7 +383,7 @@ module ActiveMerchant #:nodoc:
         return nil unless params
 
         params.map do |key, value|
-          next if value.nil?
+          next if value != false && value.blank?
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
@@ -391,7 +391,7 @@ module ActiveMerchant #:nodoc:
             end
             post_data(h)
           elsif value.is_a?(Array)
-            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&") unless value.blank?
+            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&")
           else
             "#{key}=#{CGI.escape(value.to_s)}"
           end

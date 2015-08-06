@@ -37,6 +37,17 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "wow@example.com", response.params["metadata"]["email"]
   end
 
+  def test_successful_purchase_with_blank_referer
+    options = @options.merge({referrer: ""})
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert_equal response.authorization, response.params["id"]
+    assert response.params["paid"]
+    assert_equal "ActiveMerchant Test Purchase", response.params["description"]
+    assert_equal "wow@example.com", response.params["metadata"]["email"]
+  end
+
   def test_successful_purchase_with_recurring_flag
     custom_options = @options.merge(:eci => 'recurring')
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
