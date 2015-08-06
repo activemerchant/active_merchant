@@ -151,12 +151,13 @@ module ActiveMerchant #:nodoc:
       # Verify and reserve the specified amount on the account, without actually doing the transaction.
       def authorize(money, payment_source, options = {})
         post = {}
+        payment_source.try(:brand) == "mastercard" ? action = "PAU" : action = "RES"
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('RES', post)
+        commit(action, post)
       end
 
       # Verify and transfer the specified amount.
@@ -212,7 +213,7 @@ module ActiveMerchant #:nodoc:
         void(response.authorization) if response.success?
         response
       end
-      
+
       def supports_scrubbing?
         true
       end
