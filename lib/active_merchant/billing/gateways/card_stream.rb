@@ -147,9 +147,9 @@ module ActiveMerchant #:nodoc:
       def add_address(post, creditcard, options)
         address = options[:billing_address] || options[:address]
 
-        return if address.nil?
+        return unless address
 
-        add_pair(post, :customerAddress, (address[:address1].nil? ? "" : address[:address1]) + " " + (address[:address2].nil? ? "" : address[:address2]))
+        add_pair(post, :customerAddress, "#{address[:address1]} #{address[:address2]}".strip)
         add_pair(post, :customerPostCode, address[:zip])
       end
 
