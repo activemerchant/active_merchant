@@ -27,6 +27,7 @@
 * Ogone: Send different auth type for mastercard [anellis]
 * Cardstream: Add "type" field support [rwdaigle]
 * Cardstream: 3dsecure transaction option [rwdaigle]
+* Paystation: Map order_id to non-unique merchant reference field [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)
