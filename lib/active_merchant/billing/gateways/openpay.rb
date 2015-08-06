@@ -91,7 +91,10 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((card_number\\?":\\?")[^"\\]*)i, '\1[FILTERED]').
-          gsub(%r((cvv2\\?":\\?")[^"\\]*)i, '\1[FILTERED]')
+          gsub(%r((cvv2\\?":\\?")\d+[^"\\]*)i, '\1[FILTERED]').
+          gsub(%r((cvv2\\?":)null), '\1[BLANK]').
+          gsub(%r((cvv2\\?":\\?")\\?"), '\1[BLANK]"').
+          gsub(%r((cvv2\\?":\\?")\s+), '\1[BLANK]')
       end
       private
 
