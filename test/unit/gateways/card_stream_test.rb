@@ -118,6 +118,26 @@ class CardStreamTest < Test::Unit::TestCase
     assert_equal "CARD DECLINED", response.message
   end
 
+  def test_purchase_options
+
+    # Default
+    purchase = stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/type=1/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+
+    purchase = stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(type: 2))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/type=2/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+  end
+
   def test_hmac_signature_added_to_post
     post_params = "action=SALE&amount=10000&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")
@@ -150,7 +170,7 @@ class CardStreamTest < Test::Unit::TestCase
         :threeDSRequired => true
       )
     end
-    purchase = stub_comms do
+    stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)
     end.check_request do |endpoint, data, headers|
       assert_match(/threeDSRequired=Y/, data)
@@ -158,7 +178,7 @@ class CardStreamTest < Test::Unit::TestCase
   end
 
   def test_default_3dsecure_required
-    purchase = stub_comms do
+    stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)
     end.check_request do |endpoint, data, headers|
       assert_match(/threeDSRequired=N/, data)

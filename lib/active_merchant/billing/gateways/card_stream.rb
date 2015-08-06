@@ -64,6 +64,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :shared_secret)
+        @threeds_required = false
         if (options[:threeDSRequired])
           ActiveMerchant.deprecated(THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE)
           @threeds_required = options[:threeDSRequired]
@@ -160,7 +161,9 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
           add_pair(post, :item1GrossValue, amount(money))
         end
+
         add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
+        add_pair(post, :type, options[:type] || '1')
       end
 
       def add_creditcard(post, credit_card)
@@ -203,7 +206,6 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :merchantID => @options[:login],
           :action => action,
-          :type => '1', #Ecommerce
           :countryCode => self.supported_countries[0],
         )
         # adds a signature to the post hash/array

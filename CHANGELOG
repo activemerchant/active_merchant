@@ -25,6 +25,8 @@
 * Stripe: Add application fee only on non-EMV transactions [bizla]
 * Stripe: don't send blank, non-nil values [girasquid]
 * Ogone: Send different auth type for mastercard [anellis]
+* Cardstream: Add "type" field support [rwdaigle]
+* Cardstream: 3dsecure transaction option [rwdaigle]
 
 
 == Version 1.52.0 (July 20, 2015)
