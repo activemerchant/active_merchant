@@ -189,6 +189,16 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_empty_values_not_sent
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, referrer: "")
+    end.check_request do |method, endpoint, data, headers|
+      refute_match(/referrer/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_authorization
     @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_authorization_response)
