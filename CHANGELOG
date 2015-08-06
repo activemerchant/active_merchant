@@ -23,6 +23,7 @@
 * TNS: Rescue Errors [anellis]
 * CenPOS: Support avs_result and cvv_result [tjstankus]
 * Stripe: Add application fee only on non-EMV transactions [bizla]
+* Stripe: don't send blank, non-nil values [girasquid]
 
 
 == Version 1.52.0 (July 20, 2015)
