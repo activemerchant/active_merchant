@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
 
         return if address.nil?
 
-        add_pair(post, :customerAddress, address[:address1] + " " + (address[:address2].nil? ? "" : address[:address2]))
+        add_pair(post, :customerAddress, (address[:address1].nil? ? "" : address[:address1]) + " " + (address[:address2].nil? ? "" : address[:address2]))
         add_pair(post, :customerPostCode, address[:zip])
       end
 

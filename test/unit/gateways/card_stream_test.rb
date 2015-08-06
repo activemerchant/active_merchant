@@ -138,6 +138,21 @@ class CardStreamTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_successful_purchase_without_street_address
+    options = {
+      :billing_address => {
+      :state => "Northampton",
+      :zip => 'NN17 8YG '
+    },
+    :order_id => generate_unique_id,
+    :description => 'AM test purchase'
+    }
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert responseRefund = @gateway.purchase(142, @visacreditcard, options)
+    assert_equal 'APPROVED', responseRefund.message
+  end
+
   def test_hmac_signature_added_to_post
     post_params = "action=SALE&amount=10000&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")

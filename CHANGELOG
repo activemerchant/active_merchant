@@ -28,6 +28,7 @@
 * Cardstream: Add "type" field support [rwdaigle]
 * Cardstream: 3dsecure transaction option [rwdaigle]
 * Paystation: Map order_id to non-unique merchant reference field [anellis]
+* Cardstream: check for nil street address [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)
