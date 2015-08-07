@@ -138,18 +138,9 @@ class CardStreamTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  def test_successful_purchase_without_street_address
-    options = {
-      :billing_address => {
-      :state => "Northampton",
-      :zip => 'NN17 8YG '
-    },
-    :order_id => generate_unique_id,
-    :description => 'AM test purchase'
-    }
-
+  def test_successful_purchase_without_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert responseRefund = @gateway.purchase(142, @visacreditcard, options)
+    assert responseRefund = @gateway.purchase(142, @visacreditcard)
     assert_equal 'APPROVED', responseRefund.message
   end
 
