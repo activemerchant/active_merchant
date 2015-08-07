@@ -77,7 +77,6 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_invoice(post, creditcard, money, options)
         add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
         add_customer_data(post, options)
         commit('PREAUTH', post)
       end
@@ -87,7 +86,6 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_invoice(post, creditcard, money, options)
         add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
         add_customer_data(post, options)
         commit('SALE', post)
       end
@@ -138,19 +136,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        address = options[:billing_address] || options[:address]
-        add_pair(post, :customerPostCode, address[:zip])
         add_pair(post, :customerEmail, options[:email])
-        add_pair(post, :customerPhone, options[:phone])
-      end
-
-      def add_address(post, creditcard, options)
-        address = options[:billing_address] || options[:address]
-
-        return unless address
-
-        add_pair(post, :customerAddress, "#{address[:address1]} #{address[:address2]}".strip)
-        add_pair(post, :customerPostCode, address[:zip])
+        if (address = options[:billing_address] || options[:address])
+          add_pair(post, :customerAddress, "#{address[:address1]} #{address[:address2]}".strip)
+          add_pair(post, :customerPostCode, address[:zip])
+          add_pair(post, :customerPhone, options[:phone])
+        end
       end
 
       def add_invoice(post, credit_card, money, options)
