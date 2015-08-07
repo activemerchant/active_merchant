@@ -1,30 +1,49 @@
 require 'test_helper'
 
+
+
+
 class RemoteCardknoxTest < Test::Unit::TestCase
   def setup
     @gateway = CardknoxGateway.new(fixtures(:cardknox))
-
+     
+    
     @amount = rand(499)
     @declined_amount = 500
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220', verification_value:  '518')
-    @options = {
-      billing_address: address,
-      shipping_address: address,
-      description: 'Store Purchase'   
-    }
-      @more_options = {
+    # @options = {
+    #   billing_address: address,
+    #   shipping_address: address,
+    #   description: 'Store Purchase'   
+    # }
+       @more_options = {
       order_id: '1',
      # invoice: '2',
       name:     'Jim Smith',
       ip: "127.0.0.1",
       email: "joe@example.com",
+      tip:   2,
+    #  tax:   3,
+      nontaxable:  'false'
       
-      address: address,
-      shipping_address: address
-    }
-
+     }
+     @options = {
+      address: {
+      address1: '19 Laurel Valley Dr',  
+      address2: 'Apt 1',
+      company:  'Widgets Inc',
+      city:     'Brownsburg',
+      state:    'IN',
+      zip:      '46112',
+      country:  'US',
+      phone:    '(555)555-5555',
+      fax:      '(555)555-6666',
+      }}
   end
+     
+
+
 
   def test_successful_credit_card_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)

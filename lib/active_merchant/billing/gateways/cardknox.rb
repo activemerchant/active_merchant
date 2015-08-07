@@ -2,11 +2,11 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardknoxGateway < Gateway
       # self.test_url = 'https://x1.cardknox.com/gateway'
-      self.live_url = self.test_url = 'https://x1.cardknox.com/gateway'
+      self.live_url = self.test_url = 'https://x1.cardknox.com/gateway' 
 
       self.supported_countries = ['US','CA','GB']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
       self.homepage_url = 'https://www.cardknox.com/'
       self.display_name = 'Cardknox'
@@ -81,8 +81,13 @@ module ActiveMerchant #:nodoc:
 
       def void(source, options = {})
         post = {}
-        add_reference(post, source)   
-        commit(transacton_action("void", source), post )
+        add_reference(post, source)
+        command = (transacton_action("void", source)) 
+        if command == :check_void
+          commit(command, post)
+        else 
+          commit(options[:no_release] ? :void : :void_release, post)
+        end
       end
 
       # verify the credit card 
@@ -130,7 +135,7 @@ module ActiveMerchant #:nodoc:
       # determines what type of transaction command to post credit card or check 
 
       def transacton_action(command, source)
-        if source.is_a?(Check) or (source.is_a?(String) and source.include? "check") 
+        if (source.is_a?(String) and !source.empty? and split_auth(source).last.include?('check')) or source.is_a?(Check) 
           "check_#{command}".to_sym
         else # if source.is_a?(CreditCard) or (source.is_a?(String) and !source.empty?) 
           command.to_sym
@@ -142,16 +147,20 @@ module ActiveMerchant #:nodoc:
       def add_source(post, source)
         if source.is_a?(String) and !source.empty?
           add_cardknox_token(post, source)
-        elsif source.is_a?(Check)
+        elsif source.is_a?(Check) 
           add_check(post, source)
         elsif source.is_a?(CreditCard)
           add_credit_card(post, source)
-        end
+        else
+          raise ArgumentError, 'please use a correct payment source source'
+        end 
       end
 
+      # add amount, tip and tax the amount is inclusive of tax and tip. Subtotal + Tax + Tip = Amount.
+
       def add_amount(post, money, options = {})
-        post[:Tax]    = options[:tax] if options[:tax]
-        post[:Tip]    = options[:tip] if options[:tip]
+        post[:Tax]    = amount(options[:tax]) if options[:tax]
+        post[:Tip]    = amount(options[:tip]) if options[:tip]
         post[:Amount] = amount(money) 
       end
 
@@ -252,7 +261,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_cardknox_token(post, token)
-        _, token = split_auth(token) 
+        _, token, _ = split_auth(token) 
 
         post[:Token] = token
       end
