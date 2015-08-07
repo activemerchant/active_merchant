@@ -139,18 +139,15 @@ class CardStreamTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_without_street_address
-    options = {
-      :billing_address => {
-      :state => "Northampton",
-      :zip => 'NN17 8YG '
-    },
-    :order_id => generate_unique_id,
-    :description => 'AM test purchase'
-    }
-
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert responseRefund = @gateway.purchase(142, @visacreditcard, options)
-    assert_equal 'APPROVED', responseRefund.message
+    assert response = @gateway.purchase(142, @visacreditcard, billing_address: {state: "Northampton"})
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_successful_purchase_without_any_address
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(142, @visacreditcard)
+    assert_equal 'APPROVED', response.message
   end
 
   def test_hmac_signature_added_to_post
