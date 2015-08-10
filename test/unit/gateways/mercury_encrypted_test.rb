@@ -10,6 +10,8 @@ class MercuryEncryptedTest < Test::Unit::TestCase
     @options = {
       invoice_no: "1",
       ref_no: "1",
+      merchant: 'test',
+      lane_id: '100',
       description: "ActiveMerchant Mercury E2E Test",
     }
   end

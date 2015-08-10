@@ -94,6 +94,7 @@ module ActiveMerchant #:nodoc:
         post['Purchase'] = amount(money) if money
         post['Authorize'] = amount(options[:authorized]) if options[:authorized]
         post['Gratuity'] = amount(options[:tip]) if options[:tip]
+        post['LaneID'] = options[:lane_id] if options[:lane_id]
       end
 
       def add_payment(post, payment)
