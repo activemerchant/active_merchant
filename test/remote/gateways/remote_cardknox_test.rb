@@ -10,7 +10,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     
     @amount = SecureRandom.random_number(499)
     @declined_amount = 500
-    @credit_card = credit_card('4000100011112224')
+    @credit_card = credit_card('4000100011112224', )
     @declined_card = credit_card('4000300011112220', verification_value:  '518')
     @check = check(number: SecureRandom.random_number(100000))
     # @options = {
@@ -145,11 +145,8 @@ class RemoteCardknoxTest < Test::Unit::TestCase
   end
 
   def test_successful_credit_card_refund # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_failure refund
+    assert refund = @gateway.refund(@amount, '16212827;;check:sale')
+    assert_failure Success
     assert_equal 'Use VOID to refund an unsettled transaction', refund.message 
   end
 
@@ -260,17 +257,11 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert_equal 'Success', void.message
   end
 
-  # def test_successful_check_refund_void #
-  #   purchase = @gateway.purchase(@amount, @check, @options)
-  #   assert_success purchase
-
-  #   assert refund = @gateway.refund(@amount-1, purchase.authorization)
-  #   assert_success refund
-
-  #   assert void = @gateway.void(refund.authorization, @options)
-  #   assert_success void
-  #   assert_equal 'Success', void.message
-  # end
+  def test_successful_check_refund_void #
+    assert void = @gateway.void('16274604;;check:refund', @options)
+    assert_success void
+    assert_equal 'Success', void.message
+  end
 
   def test_failed_void     
     response = @gateway.void('')
@@ -348,11 +339,14 @@ class RemoteCardknoxTest < Test::Unit::TestCase
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
+   #   @gateway.purchase(@amount, @check, @options)
     end
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@check.account_number, transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
 

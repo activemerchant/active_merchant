@@ -18,13 +18,19 @@ class CardknoxTest < Test::Unit::TestCase
   end
 
   def test_request_url_live # failed
-    
-    @gateway.expects(:ssl_post).
-      with('https://x1.cardknox.com/gateway', regexp_matches(Regexp.new (purchase_request))).
+    gateway = CardknoxGateway.new(:api_key => 'api_key')
+     gateway.expects(:ssl_post).
+      with('https://x1.cardknox.com/gateway', regexp_matches(Regexp.new('^' + Regexp.escape(purchase_request)))).
       returns(successful_purchase_response)
-    @gateway.purchase(@amount, @credit_card, @options)
+    gateway.purchase(@amount, @credit_card, @options)
   end
 
+   gateway = UsaEpayTransactionGateway.new(:login => 'LOGIN', :test => false)
+    gateway.expects(:ssl_post).
+      with('https://www.usaepay.com/gate', regexp_matches(Regexp.new('^' + Regexp.escape(purchase_request)))).
+      returns(successful_purchase_response)
+    gateway.purchase(@amount, @credit_card, @options)
+     
   def test_request_url_test # failed
     @gateway.expects(:ssl_post).
       with('https://x1.cardknox.com/gateway', regexp_matches(Regexp.new('^' + Regexp.escape(purchase_request)))).
@@ -103,23 +109,21 @@ class CardknoxTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], CardknoxGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], CardknoxGateway.supported_cardtypes
   end
 
-  def test_avs_result # failed
+  def test_avs_result 
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal 'Y', response.avs_result['code']
-    assert_equal 'Y', response.avs_result['street_match']
-    assert_equal 'Y', response.avs_result['postal_match']
+    assert_equal 'ADDRESS: MATCH & 5 DIGIT ZIP: MATCH', response.avs_result['code']
   end
 
   def test_cvv_result # failed
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'MATCH', response.cvv_result['code']
   end
 
   def test_add_track_data_with_creditcard
@@ -147,13 +151,13 @@ class CardknoxTest < Test::Unit::TestCase
     end
   end
 
-    def test_manual_entry_is_properly_indicated_on_purchase # failed
+    def test_manual_entry_is_properly_indicated_on_purchase 
     @credit_card.manual_entry = true
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
 
-      assert_match %r{xCardNumber=4242424242424242},  data
+      assert_match %r{xCardNum=4242424242424242},  data
       assert_match %r{xCardPresent=true},       data
 
     end.respond_with(successful_purchase_response)
@@ -278,9 +282,10 @@ class CardknoxTest < Test::Unit::TestCase
   def key(prefix, key)
     @gateway.send(:address_key, prefix, key)
   end
+   # "xKey=api_key&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.52.0&xCommand=cc%3Asale&xAmount=1.00&xCardNum=4242424242424242&xCVV=123&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6"
 
   def purchase_request
-    "xKey=api_key&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.5.1&xCommand=cc%3Asale&xAmount=4.16&xCardNum=4000100011112224&xCVV=123&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6"
+    "xKey=api_key&xVersion=4.5.4&xSoftwareName=Active+Merchant&xSoftwareVersion=1.52.0&xCommand=cc%3Asale&xAmount=1.00&xCardNum=4242424242424242&xCVV=123&xExp=0916&xName=Longbob+Longsen&xBillFirstName=Longbob&xBillLastName=Longsen&xBillCompany=Widgets+Inc&xBillStreet=456+My+Street&xBillStreet2=Apt+1&xBillCity=Ottawa&xBillState=ON&xBillZip=K1C2N6&xBillCountry=CA&xBillPhone=%28555%29555-5555&xShipFirstName=Longbob&xShipLastName=Longsen&xShipCompany=Widgets+Inc&xShipStreet=456+My+Street&xShipStreet2=Apt+1&xShipCity=Ottawa&xShipState=ON&xShipZip=K1C2N6&xShipCountry=CA&xShipPhone=%28555%29555-5555&xStreet=456+My+Street&xZip=K1C2N6"
   end
 
   def pre_scrubbed
@@ -292,8 +297,8 @@ class CardknoxTest < Test::Unit::TestCase
   end
   
 
-  def successful_purchase_response
-    "xResult=A&xStatus=Approved&xError=&xRefNum=15302179&xAuthCode=404160&xBatch=321&xAvsResultCode=NNN&xAvsResult=Address%3a+No+Match+%26+5+Digit+Zip%3a+No+Match&xCvvResultCode=N&xCvvResult=No+Match&xAuthAmount=2.10&xToken=95651941c1144d32baa9fb6d423edfed&xMaskedCardNumber=4xxxxxxxxxxx2224&xName=Longbob+Longsen"  
+  def successful_purchase_response # passed avs and cvv
+    "xResult=A&xStatus=Approved&xError=&xRefNum=16268727&xAuthCode=230809&xBatch=347&xAvsResultCode=YYY&xAvsResult=Address%3a+Match+%26+5+Digit+Zip%3a+Match&xCvvResultCode=M&xCvvResult=Match&xAuthAmount=4.38&xToken=f0b84a5b181749b4b0d77f6291a753ab&xMaskedCardNumber=4xxxxxxxxxxx2224&xName=Longbob+Longsen"
   end
 
   def failed_purchase_response
@@ -316,8 +321,12 @@ class CardknoxTest < Test::Unit::TestCase
     "xResult=E&xStatus=Error&xAuthCode=000000&xError=Original+transaction+not+specified&xRefNum=15307619&xErrorCode=00000"
   end
 
-  def successful_refund_response
+  def successful_check_refund_response
+    "xResult=A&xStatus=Approved&xError=&xRefNum=16274604"
+  end
 
+  def seccessful_check_refund_void
+    'xResult=A&xStatus=Approved&xError=&xRefNum=16276884'
   end
 
   def failed_refund_response

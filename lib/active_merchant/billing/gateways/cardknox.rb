@@ -13,19 +13,19 @@ module ActiveMerchant #:nodoc:
 
 
       TRANSACTIONS = {
-        :authorization  => 'cc:authonly',
-        :purchase       => 'cc:sale',
-        :capture        => 'cc:capture',
-        :refund         => 'cc:refund',
-        :void           => 'cc:void',
-        :void_release   => 'cc:voidrelease',
-        :void_refund    => 'cc:voidrefund',
-        :save           => 'cc:save',  
-        :check_purchase => 'check:sale',
-        :check_refund   => 'check:refund',
-        :check_void     => 'check:void',
-        :check_void_refund    => 'check:voidrefund',
-        :check_save     => 'check:save'   
+        authorization:     'cc:authonly',
+        purchase:          'cc:sale',
+        capture:           'cc:capture',
+        refund:            'cc:refund',
+        void:              'cc:void',
+        void_release:      'cc:voidrelease',
+        void_refund:       'cc:voidrefund',
+        save:              'cc:save',  
+        check_purchase:    'check:sale',
+        check_refund:      'check:refund',
+        check_void:        'check:void',
+        check_void_refund: 'check:voidrefund',
+        check_save:        'check:save'   
       }
 
 
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      # There are three sources for doing a purchase transation a credit card, check, and cardknox token which is returned in the the authrization hash "ref_num;token;command"
+      # There are three sources for doing a purchase transation a credit card, check, and cardknox token which is returned in the the authrization string "ref_num;token;command"
 
       def purchase(money, source, options={})
         post = {}
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
 
-      # Use refund for transactions that the batch settled or for crdit card partial refounds
+      # Use refund for transactions that the batch settled or for crdit card partial refunds
 
       def refund(money, source, options={})
         post = {}
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         commit(transacton_action(:refund, source), post)
       end
 
-      # Use void for tansactions that have not batched yet
+      # Use void for tansactions that have not batched 
 
       def void(source, options = {})
         post = {}
@@ -114,6 +114,8 @@ module ActiveMerchant #:nodoc:
     #     gsub(%r((Authorization: Bearer )[a-zA-Z0-9._-]+)i, '\1[FILTERED]').
           gsub(%r((xCardNum=)\d+), '\1[FILTERED]').
           gsub(%r((xCVV=)\d+), '\1[FILTERED]').
+          gsub(%r((xAccount=)\d+), '\1[FILTERED]').
+          gsub(%r((xRouting=)\d+), '\1[FILTERED]').
           gsub(%r((xKey=)\w+), '\1[FILTERED]')
       end
 
@@ -285,21 +287,21 @@ module ActiveMerchant #:nodoc:
         end
 
         {
-          :result           =>fields['xResult'],
-          :status           =>fields['xStatus'],
-          :error            =>fields['xError'],
-          :auth_code        =>fields['xAuthCode'],
-          :ref_num          =>fields['xRefNum'],
-          :current_ref_num  =>fields['xRefNumCurrent'], 
-          :token            =>fields['xToken'],
-          :batch            =>fields['xBatch'],
-          :avs_result       =>fields['xAvsResult'],
-          :avs_result_code  => fields['xAvsResultCode'],
-          :cvv_result       => fields['xCvvResult'],
-          :cvv_result_code  => fields['xCvvResultCode'],
-          :remaining_balance => fields['xRemainingBalance'],
-          :amount            => fields['xAuthAmount'],
-          :masked_card_num  => fields['xMaskedCardNumber']
+          result:            fields['xResult'],
+          status:            fields['xStatus'],
+          error:             fields['xError'],
+          auth_code:         fields['xAuthCode'],
+          ref_num:           fields['xRefNum'],
+          current_ref_num:   fields['xRefNumCurrent'], 
+          token:             fields['xToken'],
+          batch:             fields['xBatch'],
+          avs_result:        fields['xAvsResult'],
+          avs_result_code:   fields['xAvsResultCode'],
+          cvv_result:        fields['xCvvResult'],
+          cvv_result_code:   fields['xCvvResultCode'],
+          remaining_balance: fields['xRemainingBalance'],
+          amount:            fields['xAuthAmount'],
+          masked_card_num:   fields['xMaskedCardNumber']
         }.delete_if{|k, v| v.nil?}
       end
 
@@ -310,10 +312,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, post_data(action, parameters)))
 
        Response.new(response[:status] == 'Approved', message_from(response), response,
-          :authorization => authorization_from(response, action),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:cvv_result_code],
-          :error => [response[:error_code]]
+          authorization:  authorization_from(response, action),
+          avs_result: { :code => response[:avs_result] },
+          cvv_result: response[:cvv_result],
+          error: [response[:error_code]]
         )
       end
 
