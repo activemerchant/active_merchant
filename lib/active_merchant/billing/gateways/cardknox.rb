@@ -19,10 +19,12 @@ module ActiveMerchant #:nodoc:
         :refund         => 'cc:refund',
         :void           => 'cc:void',
         :void_release   => 'cc:voidrelease',
+        :void_refund    => 'cc:voidrefund',
         :save           => 'cc:save',  
         :check_purchase => 'check:sale',
         :check_refund   => 'check:refund',
         :check_void     => 'check:void',
+        :check_void_refund    => 'check:voidrefund',
         :check_save     => 'check:save'   
       }
 
@@ -35,18 +37,17 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      # There are three sources for doing a purchase a credit card, check, and cardknox token which is returned in the the authrization hash "ref_num;token;command"
+      # There are three sources for doing a purchase transation a credit card, check, and cardknox token which is returned in the the authrization hash "ref_num;token;command"
 
       def purchase(money, source, options={})
         post = {}
         add_amount(post, money, options)
         add_invoice(post,options)
         add_source(post, source)
-        unless source.is_a?(CreditCard) and source.track_data.present?
-          add_address(post, source, options)
-          add_customer_data(post, options)
-        end
-        commit(transacton_action("purchase", source), post)
+        add_address(post, source, options)
+        add_customer_data(post, options)
+        add_custom_fields(post, options)
+        commit(transacton_action(:purchase, source), post)
       end
 
       def authorize(money, source, options={})
@@ -54,10 +55,9 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money,)
         add_invoice(post,options)
         add_source(post, source)
-        unless source.is_a?(CreditCard) and source.track_data.present?
-          add_address(post, source, options)
-          add_customer_data(post, options)
-        end
+        add_address(post, source, options)
+        add_customer_data(post, options)
+        add_custom_fields(post, options)
         commit(:authorization, post)
       end
 
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_reference(post, source)
         add_amount(post, money)
-        commit(transacton_action("refund", source), post)
+        commit(transacton_action(:refund, source), post)
       end
 
       # Use void for tansactions that have not batched yet
@@ -82,12 +82,7 @@ module ActiveMerchant #:nodoc:
       def void(source, options = {})
         post = {}
         add_reference(post, source)
-        command = (transacton_action("void", source)) 
-        if command == :check_void
-          commit(command, post)
-        else 
-          commit(options[:no_release] ? :void : :void_release, post)
-        end
+        commit(transacton_action(void_action(source, options),source), post)
       end
 
       # verify the credit card 
@@ -106,7 +101,8 @@ module ActiveMerchant #:nodoc:
         add_address(post, source, options)
         add_invoice(post,options)
         add_customer_data(post, options)
-        commit(transacton_action("save", source), post)
+        add_custom_fields(post, options)
+        commit(transacton_action(:save, source), post)
       end
 
       def supports_scrubbing?
@@ -115,7 +111,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-         gsub(%r((Authorization: Bearer )[a-zA-Z0-9._-]+)i, '\1[FILTERED]').
+    #     gsub(%r((Authorization: Bearer )[a-zA-Z0-9._-]+)i, '\1[FILTERED]').
           gsub(%r((xCardNum=)\d+), '\1[FILTERED]').
           gsub(%r((xCVV=)\d+), '\1[FILTERED]').
           gsub(%r((xKey=)\w+), '\1[FILTERED]')
@@ -124,7 +120,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def split_auth(string)
-        string.split(";") if !string.empty?
+        string.split(";") if string.is_a?(String) and ( !string.empty? and !string.nil?) 
       end
 
       def add_reference(post, reference)
@@ -135,31 +131,39 @@ module ActiveMerchant #:nodoc:
       # determines what type of transaction command to post credit card or check 
 
       def transacton_action(command, source)
-        if (source.is_a?(String) and !source.empty? and split_auth(source).last.include?('check')) or source.is_a?(Check) 
+        if source.is_a?(Check) or (split_auth(source) and split_auth(source).last.include?('check')) 
           "check_#{command}".to_sym
         else # if source.is_a?(CreditCard) or (source.is_a?(String) and !source.empty?) 
-          command.to_sym
+           command
         end
       end
+
+      def void_action(source, options)
+        if split_auth(source) and split_auth(source).last.include?('refund')
+          :void_refund 
+        else      
+          options[:no_release] or transacton_action(:void, source) == :check_void ? :void : :void_release
+        end  
+      end      
   
       # determines if the source is a credit card, check or cardknox token
 
       def add_source(post, source)
-        if source.is_a?(String) and !source.empty?
+        if source.is_a?(String)
           add_cardknox_token(post, source)
         elsif source.is_a?(Check) 
           add_check(post, source)
         elsif source.is_a?(CreditCard)
           add_credit_card(post, source)
         else
-          raise ArgumentError, 'please use a correct payment source source'
+          raise ArgumentError, 'please use a valid payment source'
         end 
       end
 
       # add amount, tip and tax the amount is inclusive of tax and tip. Subtotal + Tax + Tip = Amount.
 
       def add_amount(post, money, options = {})
-        post[:Tax]    = amount(options[:tax]) if options[:tax]
+        
         post[:Tip]    = amount(options[:tip]) if options[:tip]
         post[:Amount] = amount(money) 
       end
@@ -174,6 +178,8 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address] || {}
         post[:Street] = address[:address1]
         post[:Zip] = address[:zip]
+        post[:PONumber]     = options[:po_number] unless options[:po_number].blank?
+        post[:Fax] =  options[:fax] unless options[:fax].blank?
 
         if options.has_key? :email
           post[:Email] = options[:email]
@@ -233,10 +239,17 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:Invoice]      = options[:invoice] unless options[:invoice].blank?
+   
         post[:OrderID]      = options[:order_id] unless options[:order_id].blank?
-
+        post[:Comments]    = options[:comments] unless options[:comments].blank?       
         post[:Description]  = options[:description] unless options[:description].blank?
+        post[:Tax]    = amount(options[:tax]) if options[:tax]
       end
+
+      def add_custom_fields(post, options)
+         options.each{|k, v| post[k.capitalize] = v if k[0..5] == "custom" and ('01'..'20').include?(k[6..7])}
+      end
+
 
       def add_credit_card(post, credit_card)
         if credit_card.track_data.present?
@@ -253,11 +266,9 @@ module ActiveMerchant #:nodoc:
 
       def add_check(post, check)
         post[:Routing] = check.routing_number
-
         post[:Account] = check.account_number
-
         post[:Name] = check.name
-  
+        post[:CheckNum] = check.number
       end
 
       def add_cardknox_token(post, token)
@@ -274,11 +285,12 @@ module ActiveMerchant #:nodoc:
         end
 
         {
-          :result           =>fields['xResult'], 
+          :result           =>fields['xResult'],
           :status           =>fields['xStatus'],
           :error            =>fields['xError'],
           :auth_code        =>fields['xAuthCode'],
           :ref_num          =>fields['xRefNum'],
+          :current_ref_num  =>fields['xRefNumCurrent'], 
           :token            =>fields['xToken'],
           :batch            =>fields['xBatch'],
           :avs_result       =>fields['xAvsResult'],
@@ -291,6 +303,7 @@ module ActiveMerchant #:nodoc:
         }.delete_if{|k, v| v.nil?}
       end
 
+      
       def commit(action, parameters)
 
         url = (test? ? test_url : live_url)
@@ -314,7 +327,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, action)
-        "#{response[:ref_num]};#{response[:token]};#{action}"
+        "#{response[:ref_num]};#{response[:token]};#{TRANSACTIONS[action]}"
       end    
 
       def post_data(action, parameters = {}) 
