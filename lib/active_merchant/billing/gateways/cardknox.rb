@@ -14,8 +14,8 @@ module ActiveMerchant #:nodoc:
 
       TRANSACTIONS = {
         authorization:     'cc:authonly',
-        purchase:          'cc:sale',
         capture:           'cc:capture',
+        purchase:          'cc:sale',
         refund:            'cc:refund',
         void:              'cc:void',
         void_release:      'cc:voidrelease',
@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
-        requires!(options, :api_key)
+        requires!(options, :api_key) #pin?
         super
       end
 
@@ -187,41 +187,37 @@ module ActiveMerchant #:nodoc:
           post[:Email] = options[:email]
         end
 
-        if options.has_key? :customer
-          post[:custid] = options[:customer]
-        end
-
         if options.has_key? :ip
           post[:IP] = options[:ip]
         end
       end
 
-      def add_address(post, credit_card, options)
+      def add_address(post, source, options)
         billing_address = options[:billing_address] || options[:address]
 
-        add_address_for_type(:billing, post, credit_card, billing_address) if billing_address
-        add_address_for_type(:shipping, post, credit_card, options[:shipping_address]) if options[:shipping_address]
+        add_address_for_type(:billing, post, source, billing_address) if billing_address
+        add_address_for_type(:shipping, post, source, options[:shipping_address]) if options[:shipping_address]
       end
 
-      def add_address_for_type(type, post, credit_card, address)
+      def add_address_for_type(type, post, source, address)
         prefix = address_key_prefix(type)
-        if credit_card.is_a?(String)
-          post[address_key(prefix, 'FirstName')] = address[:first_name] unless address[:first_name].blank?
-          post[address_key(prefix, 'MiddleName')]  = address[:middle_name]  unless address[:middle_name].blank?
-          post[address_key(prefix, 'LastName')]  = address[:last_name]  unless address[:last_name].blank?
+        if source.is_a?(String) || source.is_a?(Check)
+          post[address_key(prefix, 'FirstName')] = address[:first_name] if address[:first_name]
+          post[address_key(prefix, 'MiddleName')]  = address[:middle_name]  if address[:middle_name]
+          post[address_key(prefix, 'LastName')]  = address[:last_name]  if address[:last_name]
         else
-          post[address_key(prefix, 'FirstName')]    = credit_card.first_name 
-          post[address_key(prefix, 'LastName')]    = credit_card.last_name 
-        end
-        post[address_key(prefix, 'Company')]  = address[:company]   unless address[:company].blank?
-        post[address_key(prefix, 'Street')]   = address[:address1]  unless address[:address1].blank?
-        post[address_key(prefix, 'Street2')]  = address[:address2]  unless address[:address2].blank?
-        post[address_key(prefix, 'City')]     = address[:city]      unless address[:city].blank?
-        post[address_key(prefix, 'State')]    = address[:state]     unless address[:state].blank?
-        post[address_key(prefix, 'Zip')]      = address[:zip]       unless address[:zip].blank?
-        post[address_key(prefix, 'Country')]  = address[:country]   unless address[:country].blank?
-        post[address_key(prefix, 'Phone')]    = address[:phone]     unless address[:phone].blank?
-        post[address_key(prefix, 'Mobile')]   = address[:mobile]    unless address[:mobile].blank?
+          post[address_key(prefix, 'FirstName')]    = source.first_name 
+          post[address_key(prefix, 'LastName')]    = source.last_name 
+        end    #shipping f name last name
+        post[address_key(prefix, 'Company')]  = address[:company]   if address[:company]
+        post[address_key(prefix, 'Street')]   = address[:address1]  if address[:address1]
+        post[address_key(prefix, 'Street2')]  = address[:address2]  if address[:address2]
+        post[address_key(prefix, 'City')]     = address[:city]      if address[:city]
+        post[address_key(prefix, 'State')]    = address[:state]     if address[:state]
+        post[address_key(prefix, 'Zip')]      = address[:zip]       if address[:zip]
+        post[address_key(prefix, 'Country')]  = address[:country]   if address[:country]
+        post[address_key(prefix, 'Phone')]    = address[:phone]     if address[:phone]
+        post[address_key(prefix, 'Mobile')]   = address[:mobile]    if address[:mobile]
       end
 
       def address_key_prefix(type)
@@ -301,7 +297,8 @@ module ActiveMerchant #:nodoc:
           cvv_result_code:   fields['xCvvResultCode'],
           remaining_balance: fields['xRemainingBalance'],
           amount:            fields['xAuthAmount'],
-          masked_card_num:   fields['xMaskedCardNumber']
+          masked_card_num:   fields['xMaskedCardNumber'],
+          masked_account_number: fields['MaskedAccountNumber']
         }.delete_if{|k, v| v.nil?}
       end
 
@@ -313,8 +310,8 @@ module ActiveMerchant #:nodoc:
 
        Response.new(response[:status] == 'Approved', message_from(response), response,
           authorization:  authorization_from(response, action),
-          avs_result: { :code => response[:avs_result] },
-          cvv_result: response[:cvv_result],
+          avs_result: { :code => response[:avs_result_code] },
+          cvv_result: response[:cvv_result_code],
           error: [response[:error_code]]
         )
       end
@@ -342,7 +339,6 @@ module ActiveMerchant #:nodoc:
       }
 
         parameters = initial_parameters.merge(parameters)
-        parameters[:Custom01] = parameters[:Invoice] || parameters[:OrderID] if parameters[:Command].to_s.include? "check"
 
         parameters.collect { |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
