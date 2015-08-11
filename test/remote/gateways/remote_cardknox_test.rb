@@ -13,6 +13,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224', )
     @declined_card = credit_card('4000300011112220', verification_value:  '518')
     @check = check(number: SecureRandom.random_number(100000))
+    @declined_check = check(routing_number: '244183602')
     # @options = {
     #   billing_address: address,
     #   shipping_address: address,
@@ -144,22 +145,25 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert_equal 'Original transaction not specified', response.message
   end
 
-  def test_successful_credit_card_refund # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
-    assert refund = @gateway.refund(@amount, '16212827;;check:sale')
+  def test_failed_credit_card_refund # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_failure Success
     assert_equal 'Use VOID to refund an unsettled transaction', refund.message 
   end
 
-  def test_successful_check_refund # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+  def test_failed_check_refund # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
     purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
-     assert_failure refund
+    assert_failure refund
     assert_equal "Transaction is in a state that cannot be refunded\nParameter name: originalReferenceNumber", refund.message 
   end
 
-  def test_partial_credit_card_purchase_refund
+  def test_credit_card_purchase_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
@@ -167,7 +171,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert_success refund
   end
 
-  def test_failed_partial_credit_card_authorize_refund
+  def test_failed_credit_card_authorize_partial_refund
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
@@ -177,7 +181,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
 
   end
 
-  def test_partial_check_refund
+  def test_failed_partial_check_refund
     purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
 
@@ -186,7 +190,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert_equal "Transaction is in a state that cannot be refunded\nParameter name: originalReferenceNumber", refund.message # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
   end
 
-  def test_partial_credit_card_capture_refund
+  def test_credit_card_capture_partial_refund
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
@@ -339,7 +343,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
-   #   @gateway.purchase(@amount, @check, @options)
+      @gateway.purchase(@amount, @check, @options)
     end
     transcript = @gateway.scrub(transcript)
 
