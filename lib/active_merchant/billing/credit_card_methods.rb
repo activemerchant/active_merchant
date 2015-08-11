@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
     module CreditCardMethods
       CARD_COMPANIES = {
-        'visa'               => /^4\d{12}(\d{3})?$/,
+        'visa'               => /^4\d{12}(\d{3})?(\d{3})?$/,
         'master'             => /^(5[1-5]\d{4}|677189)\d{10}$/,
         'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/,
         'american_express'   => /^3[47]\d{13}$/,
@@ -49,11 +49,11 @@ module ActiveMerchant #:nodoc:
       def valid_card_verification_value?(cvv, brand)
         cvv.to_s =~ /^\d{#{card_verification_value_length(brand)}}$/
       end
-      
+
       def card_verification_value_length(brand)
         brand == 'american_express' ? 4 : 3
       end
-      
+
       def valid_issue_number?(number)
         (number.to_s =~ /^\d{1,2}$/)
       end
@@ -143,16 +143,51 @@ module ActiveMerchant #:nodoc:
             %w[1 2 3 success failure error].include?(number.to_s)
         end
 
+        ODD_LUHN_VALUE = {
+          48 => 0,
+          49 => 1,
+          50 => 2,
+          51 => 3,
+          52 => 4,
+          53 => 5,
+          54 => 6,
+          55 => 7,
+          56 => 8,
+          57 => 9,
+          nil => 0
+        }.freeze
+
+        EVEN_LUHN_VALUE = {
+          48 => 0, # 0 * 2
+          49 => 2, # 1 * 2
+          50 => 4, # 2 * 2
+          51 => 6, # 3 * 2
+          52 => 8, # 4 * 2
+          53 => 1, # 5 * 2 - 9
+          54 => 3, # 6 * 2 - 9
+          55 => 5, # etc ...
+          56 => 7,
+          57 => 9,
+        }.freeze
+
         # Checks the validity of a card number by use of the Luhn Algorithm.
         # Please see http://en.wikipedia.org/wiki/Luhn_algorithm for details.
-        def valid_checksum?(number) #:nodoc:
+        # This implementation is from the luhn_checksum gem, https://github.com/zendesk/luhn_checksum.
+        def valid_checksum?(numbers) #:nodoc:
           sum = 0
-          for i in 0..number.length
-            weight = number[-1 * (i + 2), 1].to_i * (2 - (i % 2))
-            sum += (weight < 10) ? weight : weight - 9
+
+          odd = true
+          numbers.reverse.bytes.each do |number|
+            if odd
+              odd = false
+              sum += ODD_LUHN_VALUE[number]
+            else
+              odd = true
+              sum += EVEN_LUHN_VALUE[number]
+            end
           end
 
-          (number[-1,1].to_i == (10 - sum % 10) % 10)
+          sum % 10 == 0
         end
       end
     end

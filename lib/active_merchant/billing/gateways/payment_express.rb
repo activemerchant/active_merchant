@@ -122,6 +122,17 @@ module ActiveMerchant #:nodoc:
         commit(:validate, request)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<Cvc2>)\d+(</Cvc2>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def use_custom_payment_token?

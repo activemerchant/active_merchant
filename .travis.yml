@@ -1,16 +1,19 @@
+language: ruby
+script: "bundle exec rake test:units"
+sudo: false
+
 rvm:
-  - 2.1.0
-  - 2.0.0
-  - 1.9.3
+- "2.2"
+- "2.1"
+- "2.0"
 
 gemfile:
-  - Gemfile
-  - Gemfile_rails40
-
-install: "bundle install"
-script: "bundle exec rake test:units"
+- Gemfile.rails32
+- Gemfile.rails40
+- Gemfile.rails41
+- Gemfile.rails42
 
 notifications:
   email:
-    - payments-dev@shopify.com
-    - nathaniel@talbott.ws
+  - payments-dev@shopify.com
+  - nathaniel@talbott.ws

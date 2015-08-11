@@ -177,6 +177,10 @@ class LinkpointTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
   def successful_authorization_response
     '<r_csp>CSI</r_csp><r_time>Sun Jan 6 21:41:31 2008</r_time><r_ref>0004486182</r_ref><r_error/><r_ordernum>1000</r_ordernum><r_message>APPROVED</r_message><r_code>1234560004486182:NNNM:100018312899:</r_code><r_tdate>1199680890</r_tdate><r_score/><r_authresponse/><r_approved>APPROVED</r_approved><r_avs>NNNM</r_avs>'
@@ -197,4 +201,13 @@ class LinkpointTest < Test::Unit::TestCase
   def successful_recurring_response
     '<r_csp>CSI</r_csp><r_time>Sun Jan 6 21:49:00 2008</r_time><r_ref>0004486198</r_ref><r_error></r_error><r_ordernum>2206b7c9a31de5fb077913134011059d</r_ordernum><r_message>APPROVED</r_message><r_code>1234560004486198:NNNM:100018312915:</r_code><r_tdate>1199681339</r_tdate><r_score></r_score><r_authresponse></r_authresponse><r_approved>APPROVED</r_approved><r_avs>NNN</r_avs>'
   end
+
+  def transcript
+    '</orderoptions><creditcard><cardnumber>4111111111111111</cardnumber><cardexpmonth>9</cardexpmonth><cardexpyear>16</cardexpyear><cvmvalue>123</cvmvalue><cvmindicator>provided</cvmindicator></creditcard><billing><name>Jim Smith</name>'
+  end
+
+  def scrubbed_transcript
+    '</orderoptions><creditcard><cardnumber>[FILTERED]</cardnumber><cardexpmonth>9</cardexpmonth><cardexpyear>16</cardexpyear><cvmvalue>[FILTERED]</cvmvalue><cvmindicator>provided</cvmindicator></creditcard><billing><name>Jim Smith</name>'
+  end
+
 end

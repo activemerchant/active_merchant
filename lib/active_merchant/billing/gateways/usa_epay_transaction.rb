@@ -15,7 +15,27 @@ module ActiveMerchant #:nodoc:
         :purchase       => 'cc:sale',
         :capture        => 'cc:capture',
         :refund         => 'cc:refund',
-        :void           => 'cc:void'
+        :void           => 'cc:void',
+        :void_release   => 'cc:void:release'
+      }
+
+      STANDARD_ERROR_CODE_MAPPING = {
+        '00011' => STANDARD_ERROR_CODE[:incorrect_number],
+        '00012' => STANDARD_ERROR_CODE[:incorrect_number],
+        '00013' => STANDARD_ERROR_CODE[:incorrect_number],
+        '00014' => STANDARD_ERROR_CODE[:invalid_number],
+        '00015' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '00016' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '00017' => STANDARD_ERROR_CODE[:expired_card],
+        '10116' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        '10107' => STANDARD_ERROR_CODE[:incorrect_zip],
+        '10109' => STANDARD_ERROR_CODE[:incorrect_address],
+        '10110' => STANDARD_ERROR_CODE[:incorrect_address],
+        '10111' => STANDARD_ERROR_CODE[:incorrect_address],
+        '10127' => STANDARD_ERROR_CODE[:card_declined],
+        '10128' => STANDARD_ERROR_CODE[:processing_error],
+        '10132' => STANDARD_ERROR_CODE[:processing_error],
+        '00043' => STANDARD_ERROR_CODE[:call_issuer]
       }
 
       def initialize(options = {})
@@ -74,9 +94,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # Pass `no_release: true` to keep the void from immediately settling
       def void(authorization, options = {})
-        post = { :refNum => authorization }
-        commit(:void, post)
+        command = (options[:no_release] ? :void : :void_release)
+        commit(command, refNum: authorization)
       end
 
     private
@@ -157,7 +178,8 @@ module ActiveMerchant #:nodoc:
           post[:card]   = credit_card.number
           post[:cvv2]   = credit_card.verification_value if credit_card.verification_value?
           post[:expir]  = expdate(credit_card)
-          post[:name]   = credit_card.name
+          post[:name]   = credit_card.name unless credit_card.name.blank?
+          post[:cardpresent] = true if credit_card.manual_entry
         end
       end
 
@@ -207,7 +229,8 @@ module ActiveMerchant #:nodoc:
           :test           => test?,
           :authorization  => response[:ref_num],
           :cvv_result     => response[:cvv2_result_code],
-          :avs_result     => { :code => response[:avs_result_code] }
+          :avs_result     => { :code => response[:avs_result_code] },
+          :error_code     => STANDARD_ERROR_CODE_MAPPING[response[:error_code]]
         )
       end
 
@@ -225,10 +248,12 @@ module ActiveMerchant #:nodoc:
         parameters[:key]      = @options[:login]
         parameters[:software] = 'Active Merchant'
         parameters[:testmode] = (@options[:test] ? 1 : 0)
+        seed = SecureRandom.hex(32).upcase
+        hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
+        parameters[:hash] = "s/#{seed}/#{hash}/n"
 
         parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
     end
   end
 end
-

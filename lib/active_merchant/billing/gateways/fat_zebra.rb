@@ -21,8 +21,6 @@ module ActiveMerchant #:nodoc:
       # Under the Your Account section
       def initialize(options = {})
         requires!(options, :username, :token)
-        @username = options[:username]
-        @token    = options[:token]
         super
       end
 
@@ -38,10 +36,33 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         add_creditcard(post, creditcard, options)
-        post[:reference] = options[:order_id]
-        post[:customer_ip] = options[:ip]
+        add_extra_options(post, options)
+        add_order_id(post, options)
+        add_ip(post, options)
 
         commit(:post, 'purchases', post)
+      end
+
+      def authorize(money, creditcard, options = {})
+        post = {}
+
+        add_amount(post, money, options)
+        add_creditcard(post, creditcard, options)
+        add_extra_options(post, options)
+        add_order_id(post, options)
+        add_ip(post, options)
+
+        post[:capture] = false
+
+        commit(:post, 'purchases', post)
+      end
+
+      def capture(money, authorization, options = {})
+        post = {}
+        add_amount(post, money, options)
+        add_extra_options(post, options)
+
+        commit(:post, "purchases/#{CGI.escape(authorization)}/capture", post)
       end
 
       # Refund a transaction
@@ -49,12 +70,13 @@ module ActiveMerchant #:nodoc:
       # amount - Integer - the amount to refund
       # txn_id - String - the original transaction to be refunded
       # reference - String - your transaction reference
-      def refund(money, txn_id, reference)
+      def refund(money, txn_id, options={})
         post = {}
 
-        post[:amount] = money
+        add_extra_options(post, options)
+        add_amount(post, money, options)
         post[:transaction_id] = txn_id
-        post[:reference] = reference
+        add_order_id(post, options)
 
         commit(:post, "refunds", post)
       end
@@ -62,7 +84,7 @@ module ActiveMerchant #:nodoc:
       # Tokenize a credit card
       #
       # The token is returned in the Response#authorization
-      def store(creditcard)
+      def store(creditcard, options={})
         post = {}
         add_creditcard(post, creditcard)
 
@@ -73,6 +95,8 @@ module ActiveMerchant #:nodoc:
 
       # Add the money details to the request
       def add_amount(post, money, options)
+        post[:currency] = (options[:currency] || currency(money))
+        post[:currency] = post[:currency].upcase if post[:currency]
         post[:amount] = money
       end
 
@@ -93,6 +117,22 @@ module ActiveMerchant #:nodoc:
         else
           raise ArgumentError.new("Unknown credit card format #{creditcard.inspect}")
         end
+      end
+
+      def add_extra_options(post, options)
+        extra = {}
+        extra[:name] = options[:merchant] if options[:merchant]
+        extra[:location] = options[:merchant_location] if options[:merchant_location]
+        extra[:ecm] = "32" if options[:recurring]
+        post[:extra] = extra if extra.any?
+      end
+
+      def add_order_id(post, options)
+        post[:reference] = options[:order_id] || SecureRandom.hex(15)
+      end
+
+      def add_ip(post, options)
+        post[:customer_ip] = options[:ip] || "127.0.0.1"
       end
 
       # Post the data to the gateway
@@ -164,7 +204,7 @@ module ActiveMerchant #:nodoc:
       # Builds the auth and U-A headers for the request
       def headers
         {
-          "Authorization" => "Basic " + Base64.strict_encode64(@username.to_s + ":" + @token.to_s).strip,
+          "Authorization" => "Basic " + Base64.strict_encode64(@options[:username].to_s + ":" + @options[:token].to_s).strip,
           "User-Agent" => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
       end

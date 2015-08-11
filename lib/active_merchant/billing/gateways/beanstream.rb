@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/beanstream/beanstream_core'
+require 'active_merchant/billing/gateways/beanstream/beanstream_core'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -99,6 +99,10 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def success?(response)
+        response[:trnApproved] == '1' || response[:responseCode] == '1'
+      end
+
       def recurring(money, source, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
@@ -178,6 +182,18 @@ module ActiveMerchant #:nodoc:
         commit(post, true)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
+      end
+
       private
       def build_response(*args)
         Response.new(*args)
@@ -185,4 +201,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

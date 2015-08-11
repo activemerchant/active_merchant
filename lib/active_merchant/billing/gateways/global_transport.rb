@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
         currency = (options[:currency] || currency(money))
 
         post[:Amount] = localized_amount(money, currency)
-        post[:InvNum] = options[:order_id]
+        post[:InvNum] = truncate(options[:order_id], 16)
       end
 
       def add_payment_method(post, payment_method)
@@ -173,6 +173,7 @@ module ActiveMerchant #:nodoc:
           ExtData: ''
         }
       end
+
     end
   end
 end

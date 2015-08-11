@@ -266,7 +266,6 @@ module ActiveMerchant #:nodoc:
         "55" => "The 4-digit pin is invalid.",
         "75" => "Maximum number of pin retries exceeded.",
         "80" => "Card expiration date is invalid.",
-        "80" => "Card expiration date is invalid.",
         "86" => "Can't verify card pin number."
       }
       def issuer_message(code)

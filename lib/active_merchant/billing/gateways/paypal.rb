@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/paypal/paypal_common_api'
-require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
-require File.dirname(__FILE__) + '/paypal_express'
+require 'active_merchant/billing/gateways/paypal/paypal_common_api'
+require 'active_merchant/billing/gateways/paypal/paypal_recurring_api'
+require 'active_merchant/billing/gateways/paypal_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -38,6 +38,18 @@ module ActiveMerchant #:nodoc:
         @express ||= PaypalExpressGateway.new(@options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<n1:Password>).+(</n1:Password>)), '\1[FILTERED]\2').
+          gsub(%r((<n1:Username>).+(</n1:Username>)), '\1[FILTERED]\2').
+          gsub(%r((<n2:CreditCardNumber>).+(</n2:CreditCardNumber)), '\1[FILTERED]\2').
+          gsub(%r((<n2:CVV2>).+(</n2:CVV2)), '\1[FILTERED]\2')
+      end
+
       private
 
       def define_transaction_type(transaction_arg)
@@ -62,6 +74,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
+              add_descriptors(xml, options)
               add_payment_details(xml, money, currency_code, options)
               add_credit_card(xml, credit_card_or_referenced_id, billing_address, options) unless transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:IPAddress', options[:ip]
@@ -96,6 +109,11 @@ module ActiveMerchant #:nodoc:
             add_address(xml, 'n2:Address', address)
           end
         end
+      end
+
+      def add_descriptors(xml, options)
+        xml.tag! 'n2:SoftDescriptor', options[:soft_descriptor] unless options[:soft_descriptor].blank?
+        xml.tag! 'n2:SoftDescriptorCity', options[:soft_descriptor_city] unless options[:soft_descriptor_city].blank?
       end
 
       def credit_card_type(type)

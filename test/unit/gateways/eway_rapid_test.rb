@@ -4,6 +4,7 @@ class EwayRapidTest < Test::Unit::TestCase
   include CommStub
 
   def setup
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = nil
     @gateway = EwayRapidGateway.new(
       :login => "login",
       :password => "password"
@@ -78,6 +79,7 @@ class EwayRapidTest < Test::Unit::TestCase
         :redirect_url => "http://awesomesauce.com",
         :ip => "0.0.0.0",
         :application_id => "Woohoo",
+        :partner_id => "SomePartner",
         :description => "The Really Long Description More Than Sixty Four Characters Gets Truncated",
         :order_id => "orderid1",
         :currency => "INR",
@@ -110,16 +112,16 @@ class EwayRapidTest < Test::Unit::TestCase
         }
       )
     end.check_request do |endpoint, data, headers|
-      # assert_no_match(%r{#{@credit_card.number}}, data)
-
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)
       assert_match(%r{"CustomerIP":"0.0.0.0"}, data)
       assert_match(%r{"DeviceID":"Woohoo"}, data)
+      assert_match(%r{"PartnerID":"SomePartner"}, data)
 
       assert_match(%r{"TotalAmount":"200"}, data)
       assert_match(%r{"InvoiceDescription":"The Really Long Description More Than Sixty Four Characters Gets"}, data)
       assert_match(%r{"InvoiceReference":"orderid1"}, data)
+      assert_match(%r{"InvoiceNumber":"orderid1"}, data)
       assert_match(%r{"CurrencyCode":"INR"}, data)
 
       assert_match(%r{"Title":"Mr."}, data)
@@ -153,6 +155,41 @@ class EwayRapidTest < Test::Unit::TestCase
     assert_success response
     assert_equal 10440187, response.authorization
     assert response.test?
+  end
+
+  def test_partner_id_class_attribute
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
+    stub_comms do
+      @gateway.purchase(200, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"SomePartner"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_params_overrides_class_attribute
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
+    stub_comms do
+      @gateway.purchase(200, @credit_card, partner_id: 'OtherPartner')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"OtherPartner"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_is_omitted_when_not_set
+    stub_comms do
+      @gateway.purchase(200, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{"PartnerID":}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_truncates_to_50_characters
+    partner_string = "EWay Rapid PartnerID is capped at 50 characters and will truncate if it is too long."
+    stub_comms do
+      @gateway.purchase(200, @credit_card, partner_id: partner_string)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"#{partner_string.slice(0,50)}"}, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_authorize
@@ -331,6 +368,10 @@ class EwayRapidTest < Test::Unit::TestCase
     assert_equal "I", response.avs_result["code"]
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_purchase_response(options = {})
@@ -384,7 +425,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 100,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -470,7 +511,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": -100,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -529,7 +570,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount":100,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
         "CurrencyCode": "AUD"
@@ -582,7 +623,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": -100,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -689,7 +730,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -742,7 +783,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -801,7 +842,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -974,4 +1015,21 @@ class EwayRapidTest < Test::Unit::TestCase
     )
   end
 
+  def transcript
+    <<-TRANSCRIPT
+      "CardDetails":{"Name":"Longbob Longsen","Number":"4444333322221111","ExpiryMonth":"09","ExpiryYear":"2015","CVN":"123"}},"ShippingAddress"
+      \"CardDetails\":{\"Name\":\"Longbob Longsen\",\"Number\":\"4444333322221111\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"2015\",\"CVN\":\"123\"}},\"ShippingAddress\"
+      {\"CardDetails\":{\"Number\":\"444433XXXXXX1111\",\"Name\":\"Longbob Longsen\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"15\"
+      "Verification":{"CVN":0,"Address":0,"Email":0,"Mobile":0,"Phone":0},"Customer":{"CardDetails":{"Number":"444433XXXXXX1111","Name":"Longbob Longsen","ExpiryMonth":"09"
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+      "CardDetails":{"Name":"Longbob Longsen","Number":"[FILTERED]","ExpiryMonth":"09","ExpiryYear":"2015","CVN":"[FILTERED]"}},"ShippingAddress"
+      \"CardDetails\":{\"Name\":\"Longbob Longsen\",\"Number\":\"[FILTERED]\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"2015\",\"CVN\":\"[FILTERED]\"}},\"ShippingAddress\"
+      {\"CardDetails\":{\"Number\":\"[FILTERED]\",\"Name\":\"Longbob Longsen\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"15\"
+      "Verification":{"CVN":[FILTERED],"Address":0,"Email":0,"Mobile":0,"Phone":0},"Customer":{"CardDetails":{"Number":"[FILTERED]","Name":"Longbob Longsen","ExpiryMonth":"09"
+    SCRUBBED_TRANSCRIPT
+  end
 end

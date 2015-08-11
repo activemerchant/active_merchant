@@ -25,6 +25,7 @@ class RemoteConektaTest < Test::Unit::TestCase
     )
 
     @options = {
+      :device_fingerprint => "41l9l92hjco6cuekf0c7dq68v4",
       description: 'Blue clip',
       billing_address: {
         address1: "Rio Missisipi #123",
@@ -64,7 +65,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert response = @gateway.refund(@amount, "1", @options)
     assert_failure response
-    assert_equal "The resource was not found.", response.message
+    assert_equal "El recurso no ha sido encontrado.", response.message
   end
 
   def test_successful_authorize
@@ -91,7 +92,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, "1", @options)
     assert_failure response
-    assert_equal "The resource was not found.", response.message
+    assert_equal "El recurso no ha sido encontrado.", response.message
   end
 
   def test_successful_purchase_passing_more_details
@@ -136,6 +137,16 @@ class RemoteConektaTest < Test::Unit::TestCase
     gateway = ConektaGateway.new(key: 'invalid_token')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Unrecognized access key.", response.message
+    assert_equal "Acceso no autorizado.", response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 end

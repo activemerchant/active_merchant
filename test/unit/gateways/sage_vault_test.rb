@@ -19,7 +19,7 @@ class SageVaultGatewayTest < Test::Unit::TestCase
       assert_match(/<ns1:M_ID>login<\/ns1:M_ID>/, data)
       assert_match(/<ns1:M_KEY>password<\/ns1:M_KEY>/, data)
       assert_match(/<ns1:CARDNUMBER>#{credit_card.number}<\/ns1:CARDNUMBER>/, data)
-      assert_match(/<ns1:EXPIRATION_DATE>0915<\/ns1:EXPIRATION_DATE>/, data)
+      assert_match(/<ns1:EXPIRATION_DATE>#{expected_expiration_date}<\/ns1:EXPIRATION_DATE>/, data)
       assert_equal headers['SOAPAction'], 'https://www.sagepayments.net/web_services/wsVault/wsVault/INSERT_CREDIT_CARD_DATA'
     end.respond_with(successful_store_response)
 
@@ -37,7 +37,7 @@ class SageVaultGatewayTest < Test::Unit::TestCase
       assert_match(/<ns1:M_ID>login<\/ns1:M_ID>/, data)
       assert_match(/<ns1:M_KEY>password<\/ns1:M_KEY>/, data)
       assert_match(/<ns1:CARDNUMBER>#{credit_card.number}<\/ns1:CARDNUMBER>/, data)
-      assert_match(/<ns1:EXPIRATION_DATE>0915<\/ns1:EXPIRATION_DATE>/, data)
+      assert_match(/<ns1:EXPIRATION_DATE>#{expected_expiration_date}<\/ns1:EXPIRATION_DATE>/, data)
       assert_equal headers['SOAPAction'], 'https://www.sagepayments.net/web_services/wsVault/wsVault/INSERT_CREDIT_CARD_DATA'
     end.respond_with(failed_store_response)
 
@@ -81,6 +81,9 @@ class SageVaultGatewayTest < Test::Unit::TestCase
   end
 
   private
+  def expected_expiration_date
+    '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
+  end
 
   def successful_store_response
     <<-XML

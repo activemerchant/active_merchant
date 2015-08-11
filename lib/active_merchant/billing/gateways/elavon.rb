@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/viaklix'
+require 'active_merchant/billing/gateways/viaklix'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

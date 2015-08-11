@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
     #
     # == Implmenting new gateways
     #
-    # See the {ActiveMerchant Guide to Contributing}[https://github.com/Shopify/active_merchant/wiki/Contributing]
+    # See the {ActiveMerchant Guide to Contributing}[https://github.com/activemerchant/active_merchant/wiki/Contributing]
     #
     class Gateway
       include PostsData
@@ -72,6 +72,7 @@ module ActiveMerchant #:nodoc:
       # :incorrect_cvc - Secerity code was not matched by the processor
       # :incorrect_zip - Zip code is not in correct format
       # :incorrect_address - Billing address info was not matched by the processor
+      # :incorrect_pin - Card PIN is incorrect
       # :card_declined - Card number declined by processor
       # :processing_error - Processor error
       # :call_issuer - Transaction requires voice authentication, call issuer
@@ -86,6 +87,7 @@ module ActiveMerchant #:nodoc:
         :incorrect_cvc => 'incorrect_cvc',
         :incorrect_zip => 'incorrect_zip',
         :incorrect_address => 'incorrect_address',
+        :incorrect_pin => 'incorrect_pin',
         :card_declined => 'card_declined',
         :processing_error => 'processing_error',
         :call_issuer => 'call_issuer',
@@ -128,7 +130,7 @@ module ActiveMerchant #:nodoc:
 
       # The application making the calls to the gateway
       # Useful for things like the PayPal build notation (BN) id fields
-      superclass_delegating_accessor :application_id
+      class_attribute :application_id, instance_writer: false
       self.application_id = 'ActiveMerchant'
 
       attr_reader :options
@@ -181,6 +183,19 @@ module ActiveMerchant #:nodoc:
         (@options.has_key?(:test) ? @options[:test] : Base.test?)
       end
 
+      # Does this gateway know how to scrub sensitive information out of HTTP transcripts?
+      def supports_scrubbing?
+        false
+      end
+
+      def scrub(transcript)
+        raise RuntimeError.new("This gateway does not support scrubbing.")
+      end
+
+      def supports_network_tokenization?
+        false
+      end
+
       protected # :nodoc: all
 
       def normalize(field)
@@ -201,6 +216,16 @@ module ActiveMerchant #:nodoc:
           :platform => RUBY_PLATFORM,
           :publisher => 'active_merchant'
         })
+      end
+
+      def strip_invalid_xml_chars(xml)
+        begin
+          REXML::Document.new(xml)
+        rescue REXML::ParseException
+          xml = xml.gsub(/&(?!(?:[a-z]+|#[0-9]+|x[a-zA-Z0-9]+);)/, '&amp;')
+        end
+
+        xml
       end
 
       private # :nodoc: all
@@ -241,9 +266,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-
       def currency(money)
         money.respond_to?(:currency) ? money.currency : self.default_currency
+      end
+
+      def truncate(value, max_size)
+        return nil unless value
+        value.to_s[0, max_size]
       end
 
       def requires_start_date_or_issue_number?(credit_card)

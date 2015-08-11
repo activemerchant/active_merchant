@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.live_na_url = 'https://www.iatspayments.com/NetGate'
       self.live_uk_url = 'https://www.uk.iatspayments.com/NetGate'
 
-      self.supported_countries = %w(AU BR CA CH DE DK ES FI FR GR HK IE IT NL NO PT SE SG TR GB US)
+      self.supported_countries = %w(AU BR CA CH DE DK ES FI FR GR HK IE IT NL NO PT SE SG TR GB US TH ID PH BE)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
@@ -15,7 +15,9 @@ module ActiveMerchant #:nodoc:
 
       ACTIONS = {
         purchase: "ProcessCreditCardV1",
+        purchase_check: "ProcessACHEFTV1",
         refund: "ProcessCreditCardRefundWithTransactionIdV1",
+        refund_check: "ProcessACHEFTRefundWithTransactionIdV1",
         store: "CreateCreditCardCustomerCodeV1",
         unstore: "DeleteCustomerCodeV1"
       }
@@ -40,17 +42,18 @@ module ActiveMerchant #:nodoc:
         add_ip(post, options)
         add_description(post, options)
 
-        commit(:purchase, post)
+        commit((payment.is_a?(Check) ? :purchase_check : :purchase), post)
       end
 
       def refund(money, authorization, options={})
         post = {}
-        post[:transaction_id] = authorization
+        transaction_id, payment_type = split_authorization(authorization)
+        post[:transaction_id] = transaction_id
         add_invoice(post, -money, options)
         add_ip(post, options)
         add_description(post, options)
 
-        commit(:refund, post)
+        commit((payment_type == 'check' ? :refund_check : :refund), post)
       end
 
       def store(credit_card, options = {})
@@ -98,12 +101,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
+        if payment.is_a?(Check)
+          add_check(post, payment)
+        else
+          add_credit_card(post, payment)
+        end
+      end
+
+      def add_credit_card(post, payment)
         post[:first_name] = payment.first_name
         post[:last_name] = payment.last_name
         post[:credit_card_num] = payment.number
         post[:credit_card_expiry] = expdate(payment)
         post[:cvv2] = payment.verification_value if payment.verification_value?
         post[:mop] = creditcard_brand(payment.brand)
+      end
+
+      def add_check(post, payment)
+        post[:first_name] = payment.first_name
+        post[:last_name] = payment.last_name
+        post[:account_num] = "#{payment.routing_number}#{payment.account_number}"
+        post[:account_type] = payment.account_type.upcase
       end
 
       def add_store_defaults(post)
@@ -148,7 +166,9 @@ module ActiveMerchant #:nodoc:
       def endpoints
         {
           purchase: "ProcessLink.asmx",
+          purchase_check: "ProcessLink.asmx",
           refund: "ProcessLink.asmx",
+          refund_check: "ProcessLink.asmx",
           store: "CustomerLink.asmx",
           unstore: "CustomerLink.asmx"
         }
@@ -212,9 +232,15 @@ module ActiveMerchant #:nodoc:
       def authorization_from(action, response)
         if [:store, :unstore].include?(action)
           response[:customercode]
+        elsif [:purchase_check].include?(action)
+          response[:transaction_id] ? "#{response[:transaction_id]}|check" : nil
         else
           response[:transaction_id]
         end
+      end
+
+      def split_authorization(authorization)
+        authorization.split("|")
       end
 
       def envelope_namespaces

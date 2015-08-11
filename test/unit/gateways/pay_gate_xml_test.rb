@@ -8,9 +8,12 @@ class PayGateTest < Test::Unit::TestCase
     @credit_card    = credit_card('4000000000000002')
     @declined_card  = credit_card('4000000000000036')
 
+    # May need to generate a unique order id as server responds with duplicate order detected
     @options = {
-      :order_id         => 'abc123',
+      :order_id         => Time.now.getutc,
       :billing_address  => address,
+      :email           => 'john.doe@example.com',
+      :ip              => '127.0.0.1',
       :description      => 'Store Purchase',
     }
   end
@@ -38,6 +41,14 @@ class PayGateTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.refund(@amount, '16996548', @options)
+    assert_success response
+
+    assert response.test?
+  end
 
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
@@ -78,6 +89,16 @@ class PayGateTest < Test::Unit::TestCase
     <!DOCTYPE protocol SYSTEM "https://www.paygate.co.za/payxml/payxml_v4.dtd">
     <protocol ver="4.0" pgid="10011021600" pwd="test" >
       <errorrx edesc='Transaction ID Must Only Contain Digits' ecode='9'/>
+    </protocol>
+    ENDOFXML
+  end
+
+  def successful_refund_response
+    <<-ENDOFXML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE protocol SYSTEM "https://www.paygate.co.za/payxml/payxml_v4.dtd">
+    <protocol ver="4.0" pgid="10011021600" pwd="test" >
+      <refundrx tid="16996548" cref="abc123" stat="5" sdesc="Received by Paygate" res="990005" rdesc="Request for Refund Received" bno="" />
     </protocol>
     ENDOFXML
   end

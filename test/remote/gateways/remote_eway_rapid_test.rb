@@ -27,6 +27,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
       redirect_url: "http://awesomesauce.com",
       ip: "0.0.0.0",
       application_id: "Woohoo",
+      partner_id: "Woohoo",
       transaction_type: "Purchase",
       description: "Description",
       order_id: "orderid1",
@@ -103,7 +104,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@failed_amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Error   Failed", response.message
+    assert_equal "Error Failed", response.message
   end
 
   def test_failed_capture
@@ -183,5 +184,15 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "Unauthorized", response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(100, @credit_card_success, @params)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card_success.number, clean_transcript)
+    assert_scrubbed(@credit_card_success.verification_value.to_s, clean_transcript)
   end
 end
