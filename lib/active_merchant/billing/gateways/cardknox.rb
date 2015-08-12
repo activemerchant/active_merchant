@@ -99,9 +99,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_source(post, source)
         add_address(post, source, options)
- #      add_invoice(post,options)
+        add_invoice(post,options)
         add_customer_data(post, options)
- #      add_custom_fields(post, options)
+        add_custom_fields(post, options)
         commit(transacton_action(:save, source), post)
       end
 
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address] || {}
         post[:Street] = address[:address1]
         post[:Zip] = address[:zip]
-        post[:PONumber]     = options[:po_number]
+        post[:PONum]     = options[:po_number]
         post[:Fax] =  options[:fax] 
         post[:Email] = options[:email]
         post[:IP] = options[:ip]
@@ -333,10 +333,9 @@ module ActiveMerchant #:nodoc:
       }
         seed = SecureRandom.hex(32).upcase
         hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:pin]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
-        initial_parameters[:Hash] = "s/#{seed}/#{hash}/n"
-
+        initial_parameters[:Hash] = "s/#{seed}/#{hash}/n" unless @options[:pin].blank?
         parameters = initial_parameters.merge(parameters)
-
+        
         parameters.reject{|k, v| v.blank?}.collect{ |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 

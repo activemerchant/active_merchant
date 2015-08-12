@@ -57,14 +57,14 @@ class CardknoxTest < Test::Unit::TestCase
     post = {}
     @gateway.send(:add_address, post, @credit_card, @options)
     assert_address(:shipping, post)
-    assert_equal 20, post.keys.size
+    assert_equal 22, post.keys.size
   end
 
   def test_add_billing_address
     post = {}
     @gateway.send(:add_address, post, @credit_card, @options)
     assert_address(:billing, post)
-    assert_equal 20, post.keys.size
+    assert_equal 22, post.keys.size
   end
 
   def test_add_billing_and_shipping_addresses
@@ -72,7 +72,7 @@ class CardknoxTest < Test::Unit::TestCase
     @gateway.send(:add_address, post, @credit_card, @options)
     assert_address(:shipping, post)
     assert_address(:billing, post)
-    assert_equal 20, post.keys.size
+    assert_equal 22, post.keys.size
   end
 
   def test_amount_style
@@ -91,18 +91,18 @@ class CardknoxTest < Test::Unit::TestCase
     assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], CardknoxGateway.supported_cardtypes
   end
 
-  def test_avs_result 
+  def test_avs_result  #
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal 'ADDRESS: MATCH & 5 DIGIT ZIP: MATCH', response.avs_result['code']
+    assert_equal 'YYY', response.avs_result['code']
   end
 
-  def test_cvv_result
+  def test_cvv_result #
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal 'MATCH', response.cvv_result['code']
+    assert_equal 'M', response.cvv_result['code']
   end
 
   def test_add_track_data_with_creditcard

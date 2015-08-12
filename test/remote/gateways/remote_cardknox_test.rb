@@ -13,25 +13,21 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224', )
     @declined_card = credit_card('4000300011112220', verification_value:  '518')
     @check = check(number: SecureRandom.random_number(100000))
-    @declined_check = check(routing_number: '244183602')
-    # @options = {
-    #   billing_address: address,
-    #   shipping_address: address,
-    #   description: 'Store Purchase'   
-    # }
+  
     @more_options = {
       billing_address: address,
       shipping_address: address,
-      order_id: '1',
+      order_id: SecureRandom.random_number(100000),
       invoice: SecureRandom.random_number(100000),
       name:     'Jim Smith',
       ip: "127.0.0.1",
       email: "joe@example.com",
       tip:   2,
       tax:   3,
-      custom01:  'my custum',
+      custom02:  'mycustom',
       custom13:  'spelled right',
-      custom25:  'test 25'  
+      custom25:  'test 25',  
+      pin:       '312lkjasdnotvalid', 
      }
 
      @options = {
@@ -145,24 +141,6 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert_equal 'Original transaction not specified', response.message
   end
 
-  def test_failed_credit_card_refund # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_failure Success
-    assert_equal 'Use VOID to refund an unsettled transaction', refund.message 
-  end
-
-  def test_failed_check_refund # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
-    purchase = @gateway.purchase(@amount, @check, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_failure refund
-    assert_equal "Transaction is in a state that cannot be refunded\nParameter name: originalReferenceNumber", refund.message 
-  end
-
   def test_credit_card_purchase_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -181,7 +159,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
 
   end
 
-  def test_failed_partial_check_refund
+  def test_failed_partial_check_refund # the gate way does not support this transaction
     purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
 
@@ -261,12 +239,6 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert_equal 'Success', void.message
   end
 
-  def test_successful_check_refund_void #
-    assert void = @gateway.void('16274604;;check:refund', @options)
-    assert_success void
-    assert_equal 'Success', void.message
-  end
-
   def test_failed_void     
     response = @gateway.void('')
     assert_failure response
@@ -307,16 +279,6 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
-  # def test_successful_check_token_store # fail the gateway does not support updating a check store
-  #   response = @gateway.store(@check, @options)
-  #   assert_success response
-  #   assert_equal 'Success', response.message
-
-  #   assert store = @gateway.store(response.authorization)
-  #   assert_success store
-  #   assert_equal 'Success', store.message    
-  # end
-
   def test_failed_store
     response = @gateway.store('', @options)
     assert_failure response
@@ -331,14 +293,6 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert_match %r{Required: xKey}, response.message
   end
 
-  #  def test_dump_transcript
-  #   # This test will run a purchase transaction on your gateway
-  #   # and dump a transcript of the HTTP conversation so that
-  #   # you can use that transcript as a reference while
-  #   # implementing your scrubbing logic.  You can delete
-  #   # this helper after completing your scrub implementation.
-  #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
-  # end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
