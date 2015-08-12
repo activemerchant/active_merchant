@@ -114,7 +114,9 @@ module ActiveMerchant #:nodoc:
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
         post[:billing_method] = "recurring" if options[:recurring]
-        post[:dup_seconds] = options[:dup_seconds] || self.class.duplicate_window
+        if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
+          post[:dup_seconds] = dup_seconds
+        end
       end
 
       def add_payment_method(post, payment_method)
