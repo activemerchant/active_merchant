@@ -35,6 +35,7 @@
 * [POSSIBLE BREAKAGE] NMI: No longer use auth.net emulator [rwdaigle]
 * SecureNet: Add DEVELOPERID if supplied [wedy]
 * Braintree: Update country list [duff]
+* NMI: Don't include dup_seconds if nil [rwdaigle]
 
 
 == Version 1.52.0 (July 20, 2015)
