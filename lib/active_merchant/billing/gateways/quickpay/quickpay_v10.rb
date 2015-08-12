@@ -19,8 +19,12 @@ module ActiveMerchant
           r.process { create_payment(money, options) }
           r.process {
             post = authorization_params(money, credit_card, options)
-            add_autocapture(post, true)
+            add_autocapture(post, false)
             commit(synchronized_path("/payments/#{r.authorization}/authorize"), post)
+          }
+          r.process {
+            post = capture_params(money, credit_card, options)
+            commit(synchronized_path("/payments/#{r.authorization}/capture"), post)            
           }
         end
       end
@@ -45,9 +49,7 @@ module ActiveMerchant
       end
 
       def capture(money, identification, options = {})
-        post = {}
-        add_amount(post, money, options)
-        add_additional_params(:capture, post, options)
+        post = capture_params(money, identification, options)
         commit(synchronized_path("/payments/#{identification}/capture"), post)
       end
 
@@ -83,17 +85,30 @@ module ActiveMerchant
           post
         end
 
-        def create_subscription(options = {})
+        def capture_params(money, credit_card, options = {})
           post = {}
 
+          add_amount(post, money, options)
+          add_additional_params(:capture, post, options)
+
+          post
+        end
+                
+        def create_subscription(options = {})
+          requires!(options, :currency)  
+          post = {}            
+
+          add_currency(post, nil, options)
           add_subscription_invoice(post, options)
           commit('/subscriptions', post)
         end
 
         def authorize_subscription(identification, credit_card, options = {})
+          requires!(options, :amount)
           post = {}
 
-          add_credit_card(post, credit_card, options)
+          add_amount(post, nil, options)                    
+          add_credit_card(post, credit_card, options)          
           add_additional_params(:authorize_subscription, post, options)
           commit(synchronized_path("/subscriptions/#{identification}/authorize"), post)
         end
@@ -133,7 +148,7 @@ module ActiveMerchant
         end
 
         def add_amount(post, money, options)
-          post[:amount] = amount(money)
+          post[:amount] = options[:amount] || amount(money)
         end
 
         def add_autocapture(post, value)
@@ -182,13 +197,24 @@ module ActiveMerchant
 
         def successful?(response)
           has_error    = response['errors']
-          invalid_code = (response.key?('qp_status_code') and response['qp_status_code'] != "20000")
+          invalid_code = invalid_operation_code(response)
 
           !(has_error || invalid_code)
         end
 
         def message_from(success, response)
-          success ? 'OK' : (response['message'] || response['qp_status_msg'])
+          success ? 'OK' : (response['message'] || invalid_operation_message(response))
+        end
+        
+        def invalid_operation_code response
+          if response['operations']
+            operation = response['operations'].last
+            operation && operation['qp_status_code'] != "20000"
+          end
+        end
+
+        def invalid_operation_message response
+          response['operations'].last['qp_status_msg']
         end
 
         def map_address(address)

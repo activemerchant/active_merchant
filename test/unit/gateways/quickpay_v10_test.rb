@@ -32,9 +32,11 @@ class QuickpayV10Test < Test::Unit::TestCase
       parsed = parse(data)
       if parsed['order_id']
         assert_match %r{/payments}, endpoint
-      else
+      elsif !parsed['auto_capture'].nil?
         assert_match %r{/payments/\d+/authorize}, endpoint
-        assert_equal parsed['auto_capture'], true 
+        assert_equal parsed['auto_capture'], false 
+      else
+        assert_match %r{/payments/\d+/capture}, endpoint        
       end
     end.respond_with(successful_payment_response, successful_authorization_response)
   end
@@ -84,7 +86,7 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def test_successful_store
     stub_comms do 
-      assert response = @gateway.store(@credit_card, @options.merge(:description => 'test'))
+      assert response = @gateway.store(@credit_card, @options.merge(:description => 'test', :currency => 'USD', :amount => @amount))
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|
