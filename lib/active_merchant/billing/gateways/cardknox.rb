@@ -99,9 +99,9 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_source(post, source)
         add_address(post, source, options)
-        add_invoice(post,options)
+ #      add_invoice(post,options)
         add_customer_data(post, options)
-        add_custom_fields(post, options)
+ #      add_custom_fields(post, options)
         commit(transacton_action(:save, source), post)
       end
 
@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options = {})
         
-        post[:Tip]    = amount(options[:tip]) if options[:tip]
+        post[:Tip]    = amount(options[:tip]) 
         post[:Amount] = amount(money) 
       end
 
@@ -180,16 +180,10 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address] || {}
         post[:Street] = address[:address1]
         post[:Zip] = address[:zip]
-        post[:PONumber]     = options[:po_number] unless options[:po_number].blank?
-        post[:Fax] =  options[:fax] unless options[:fax].blank?
-
-        if options.has_key? :email
-          post[:Email] = options[:email]
-        end
-
-        if options.has_key? :ip
-          post[:IP] = options[:ip]
-        end
+        post[:PONumber]     = options[:po_number]
+        post[:Fax] =  options[:fax] 
+        post[:Email] = options[:email]
+        post[:IP] = options[:ip]
       end
 
       def add_address(post, source, options)
@@ -202,22 +196,22 @@ module ActiveMerchant #:nodoc:
       def add_address_for_type(type, post, source, address)
         prefix = address_key_prefix(type)
         if source.is_a?(String) || source.is_a?(Check)
-          post[address_key(prefix, 'FirstName')] = address[:first_name] if address[:first_name]
-          post[address_key(prefix, 'MiddleName')]  = address[:middle_name]  if address[:middle_name]
-          post[address_key(prefix, 'LastName')]  = address[:last_name]  if address[:last_name]
+          post[address_key(prefix, 'FirstName')] = address[:first_name] 
+          post[address_key(prefix, 'MiddleName')]  = address[:middle_name] 
+          post[address_key(prefix, 'LastName')]  = address[:last_name]  
         else
           post[address_key(prefix, 'FirstName')]    = source.first_name 
           post[address_key(prefix, 'LastName')]    = source.last_name 
-        end    #shipping f name last name
-        post[address_key(prefix, 'Company')]  = address[:company]   if address[:company]
-        post[address_key(prefix, 'Street')]   = address[:address1]  if address[:address1]
-        post[address_key(prefix, 'Street2')]  = address[:address2]  if address[:address2]
-        post[address_key(prefix, 'City')]     = address[:city]      if address[:city]
-        post[address_key(prefix, 'State')]    = address[:state]     if address[:state]
-        post[address_key(prefix, 'Zip')]      = address[:zip]       if address[:zip]
-        post[address_key(prefix, 'Country')]  = address[:country]   if address[:country]
-        post[address_key(prefix, 'Phone')]    = address[:phone]     if address[:phone]
-        post[address_key(prefix, 'Mobile')]   = address[:mobile]    if address[:mobile]
+        end    
+        post[address_key(prefix, 'Company')]  = address[:company] 
+        post[address_key(prefix, 'Street')]   = address[:address1] 
+        post[address_key(prefix, 'Street2')]  = address[:address2] 
+        post[address_key(prefix, 'City')]     = address[:city] 
+        post[address_key(prefix, 'State')]    = address[:state] 
+        post[address_key(prefix, 'Zip')]      = address[:zip] 
+        post[address_key(prefix, 'Country')]  = address[:country] 
+        post[address_key(prefix, 'Phone')]    = address[:phone] 
+        post[address_key(prefix, 'Mobile')]   = address[:mobile] 
       end
 
       def address_key_prefix(type)
@@ -236,12 +230,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:Invoice]      = options[:invoice] unless options[:invoice].blank?
-   
-        post[:OrderID]      = options[:order_id] unless options[:order_id].blank?
-        post[:Comments]    = options[:comments] unless options[:comments].blank?       
-        post[:Description]  = options[:description] unless options[:description].blank?
-        post[:Tax]    = amount(options[:tax]) if options[:tax]
+        post[:Invoice]      = options[:invoice]
+        post[:OrderID]      = options[:order_id] 
+        post[:Comments]    = options[:comments]      
+        post[:Description]  = options[:description] 
+        post[:Tax]    = amount(options[:tax])
       end
 
       def add_custom_fields(post, options)
@@ -255,9 +248,9 @@ module ActiveMerchant #:nodoc:
           post[:Cardpresent] = true
         elsif credit_card.respond_to?(:number)
           post[:CardNum]   = credit_card.number
-          post[:CVV]   = credit_card.verification_value if credit_card.verification_value?
+          post[:CVV]   = credit_card.verification_value 
           post[:Exp]  = expdate(credit_card)
-          post[:Name]   = credit_card.name unless credit_card.name.blank?
+          post[:Name]   = credit_card.name 
           post[:CardPresent] = true if credit_card.manual_entry
         end
       end
@@ -336,11 +329,15 @@ module ActiveMerchant #:nodoc:
         :SoftwareName => 'Active Merchant',
         :SoftwareVersion => "#{ActiveMerchant::VERSION}",
         :Command  => TRANSACTIONS[action],
+       
       }
+        seed = SecureRandom.hex(32).upcase
+        hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:pin]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
+        initial_parameters[:Hash] = "s/#{seed}/#{hash}/n"
 
         parameters = initial_parameters.merge(parameters)
 
-        parameters.collect { |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.reject{|k, v| v.blank?}.collect{ |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
       def error_code_from(response)
