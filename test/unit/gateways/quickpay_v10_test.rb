@@ -34,7 +34,7 @@ class QuickpayV10Test < Test::Unit::TestCase
         assert_match %r{/payments}, endpoint
       elsif !parsed['auto_capture'].nil?
         assert_match %r{/payments/\d+/authorize}, endpoint
-        assert_equal parsed['auto_capture'], false 
+        assert_equal false, parsed['auto_capture']
       else
         assert_match %r{/payments/\d+/capture}, endpoint        
       end

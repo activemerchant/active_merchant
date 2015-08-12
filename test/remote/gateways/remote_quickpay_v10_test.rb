@@ -20,7 +20,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     @invalid_address = address(:phone => '4500000002')
   end
 
-  def card_brand response
+  def card_brand(response)
     response.params['metadata']['brand']
   end
 
@@ -153,13 +153,13 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   
   def test_successful_store
     assert response = @gateway.store(@valid_card, @options.merge(:description => 'test', :currency => 'USD', :amount => @amount))
-    assert_success response  
+    assert_success response
   end
 
   def test_successful_unstore
     assert response = @gateway.store(@valid_card, @options.merge(:description => 'test', :amount => @amount, :currency => 'USD'))
-    assert_success response  
-    
+    assert_success response
+
     assert response = @gateway.unstore(response.authorization)
     assert_success response
   end

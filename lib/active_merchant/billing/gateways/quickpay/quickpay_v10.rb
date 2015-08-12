@@ -206,14 +206,14 @@ module ActiveMerchant
           success ? 'OK' : (response['message'] || invalid_operation_message(response))
         end
         
-        def invalid_operation_code response
+        def invalid_operation_code(response)
           if response['operations']
             operation = response['operations'].last
             operation && operation['qp_status_code'] != "20000"
           end
         end
 
-        def invalid_operation_message response
+        def invalid_operation_message(response)
           response['operations'].last['qp_status_msg']
         end
 
