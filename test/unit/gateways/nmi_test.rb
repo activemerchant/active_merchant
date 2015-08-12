@@ -24,6 +24,7 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/ccnumber=#{@credit_card.number}/, data)
       assert_match(/cvv=#{@credit_card.verification_value}/, data)
       assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
+      assert_not_match(/dup_seconds/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -332,7 +333,7 @@ class NmiTest < Test::Unit::TestCase
 
   def test_duplicate_window_deprecation
     assert_deprecation_warning(NmiGateway::DUP_WINDOW_DEPRECATION_MESSAGE) do
-      NmiGateway.duplicate_window = 5
+      NmiGateway.duplicate_window = nil
     end
   end
 
