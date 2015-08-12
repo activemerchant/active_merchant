@@ -12,13 +12,15 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
 
     @valid_card    = credit_card('1000000000000008')
     @invalid_card  = credit_card('1000000000000016')
-    @expeired_card = credit_card('1000000000000024')
+    @expired_card = credit_card('1000000000000024')
+    @capture_rejected_card = credit_card('1000000000000032')
+    @refund_rejected_card = credit_card('1000000000000040')
 
     @valid_address   = address(:phone => '4500000001')
     @invalid_address = address(:phone => '4500000002')
   end
 
-  def card_brand response
+  def card_brand(response)
     response.params['metadata']['brand']
   end
 
@@ -33,7 +35,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_order_id_format
-    options = @options.merge({order_id: "#1001.1"})
+    options = @options.merge({order_id: "##{Time.new.to_f}"})
     assert response = @gateway.purchase(@amount, @valid_card, options)
 
     assert_equal 'OK', response.message
@@ -54,7 +56,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_unsuccessful_purchase_with_invalid_card
     assert response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response
-    assert_match /Rejected by acquirer/, response.message
+    assert_match(/Rejected test operation/, response.message)
   end
 
   def test_successful_usd_purchase
@@ -80,7 +82,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_unsuccessful_authorize_with_invalid_card
     assert response = @gateway.authorize(@amount, @invalid_card, @options)
     assert_failure response
-    assert_match /Rejected by acquirer/, response.message
+    assert_match /Rejected test operation/, response.message
   end
 
   def test_successful_authorize_and_capture
@@ -91,6 +93,16 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'OK', capture.message
+  end
+
+  def test_unsuccessful_authorize_and_capture
+    assert auth = @gateway.authorize(@amount, @capture_rejected_card, @options)
+    assert_success auth
+    assert_equal 'OK', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_failure capture
+    assert_equal 'Rejected test operation', capture.message
   end
 
   def test_failed_capture
@@ -128,13 +140,24 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_success credit
   end
 
+  def test_unsuccessful_authorization_capture_and_credit
+    assert auth = @gateway.authorize(@amount, @refund_rejected_card, @options)
+    assert_success auth
+    assert !auth.authorization.blank?
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert refund = @gateway.refund(@amount, auth.authorization)
+    assert_failure refund
+    assert_equal 'Rejected test operation', refund.message
+  end
+  
   def test_successful_store
-    assert response = @gateway.store(@valid_card, @options.merge(:description => 'test'))
+    assert response = @gateway.store(@valid_card, @options.merge(:description => 'test', :currency => 'USD', :amount => @amount))
     assert_success response
   end
 
   def test_successful_unstore
-    assert response = @gateway.store(@valid_card, @options.merge(:description => 'test'))
+    assert response = @gateway.store(@valid_card, @options.merge(:description => 'test', :amount => @amount, :currency => 'USD'))
     assert_success response
 
     assert response = @gateway.unstore(response.authorization)
