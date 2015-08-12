@@ -34,6 +34,8 @@
 * MiGS: Allow passing in currency [alovak]
 * [POSSIBLE BREAKAGE] NMI: No longer use auth.net emulator [rwdaigle]
 * SecureNet: Add DEVELOPERID if supplied [wedy]
+* Braintree: Update country list [duff]
+
 
 == Version 1.52.0 (July 20, 2015)
 
