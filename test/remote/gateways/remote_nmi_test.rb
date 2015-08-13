@@ -176,6 +176,11 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal "Succeeded", credit.message
   end
 
+  def test_merchant_defined_fields
+    (1..20).each { |e| @options["merchant_defined_field_#{e}".to_sym] = "value #{e}" }
+    assert_success @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   def test_card_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

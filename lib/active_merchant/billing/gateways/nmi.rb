@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
+        add_merchant_defined_fields(post, options)
 
         commit("sale", post)
       end
@@ -40,6 +41,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
+        add_merchant_defined_fields(post, options)
 
         commit("auth", post)
       end
@@ -48,6 +50,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
+        add_merchant_defined_fields(post, options)
 
         commit("capture", post)
       end
@@ -80,6 +83,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
+        add_merchant_defined_fields(post, options)
 
         commit("validate", post)
       end
@@ -89,6 +93,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, nil, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
+        add_merchant_defined_fields(post, options)
 
         commit("add_customer", post)
       end
@@ -165,6 +170,13 @@ module ActiveMerchant #:nodoc:
           post[:shipping_country] = shipping_address[:country]
           post[:shipping_zip]    = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
+        end
+      end
+
+      def add_merchant_defined_fields(post, options)
+        (1..20).each do |each|
+          key = "merchant_defined_field_#{each}".to_sym
+          post[key] = options[key] if options[key]
         end
       end
 
