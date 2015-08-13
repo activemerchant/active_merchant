@@ -197,16 +197,16 @@ module ActiveMerchant
 
         def successful?(response)
           has_error    = response['errors']
-          invalid_code = invalid_operation_code(response)
+          invalid_code = invalid_operation_code?(response)
 
           !(has_error || invalid_code)
         end
 
         def message_from(success, response)
-          success ? 'OK' : (response['message'] || invalid_operation_message(response))
+          success ? 'OK' : (response['message'] || invalid_operation_message(response) || "Unknown error - please contact QuickPay")
         end
         
-        def invalid_operation_code(response)
+        def invalid_operation_code?(response)
           if response['operations']
             operation = response['operations'].last
             operation && operation['qp_status_code'] != "20000"
@@ -214,7 +214,7 @@ module ActiveMerchant
         end
 
         def invalid_operation_message(response)
-          response['operations'].last['qp_status_msg']
+          response['operations'] && response['operations'].last['qp_status_msg']
         end
 
         def map_address(address)

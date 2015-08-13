@@ -37,6 +37,7 @@
 * Braintree: Update country list [duff]
 * NMI: Don't include dup_seconds if nil [rwdaigle]
 * QuickPay: Make all operations to v10 platform synchronous [ta]
+* QuickPay: Handle issue where no operations exists on payment [ta]
 
 == Version 1.52.0 (July 20, 2015)
 
