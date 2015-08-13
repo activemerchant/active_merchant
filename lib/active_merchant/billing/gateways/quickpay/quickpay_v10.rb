@@ -214,9 +214,7 @@ module ActiveMerchant
         end
 
         def invalid_operation_message(response)
-          if response['operations']
-            response['operations'].last['qp_status_msg']
-          end
+          response['operations'] && response['operations'].last['qp_status_msg']
         end
 
         def map_address(address)
