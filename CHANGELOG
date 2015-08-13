@@ -37,6 +37,7 @@
 * Braintree: Update country list [duff]
 * NMI: Don't include dup_seconds if nil [rwdaigle]
 * QuickPay: Make all operations to v10 platform synchronous [ta]
+* USAePay: Add test mode setting via options [marquisong] 
 
 == Version 1.52.0 (July 20, 2015)
 
