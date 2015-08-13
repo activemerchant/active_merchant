@@ -108,6 +108,22 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert_match %r{/subscriptions/\d+/cancel}, endpoint
     end.respond_with({'id' => '123'}.to_json)
   end
+
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+    assert_equal "OK", response.message
+  end
+
+  def test_failed_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorization_response, {'id' => 1145}.to_json)
+    assert_failure response
+    assert_equal "Validation error", response.message
+  end
   
   def test_supported_countries
     klass = @gateway.class

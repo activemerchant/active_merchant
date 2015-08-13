@@ -150,6 +150,18 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_failure refund
     assert_equal 'Rejected test operation', refund.message
   end
+
+  def test_successful_verify
+    response = @gateway.verify(@valid_card, @options)
+    assert_success response
+    assert_match %r{OK}, response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@invalid_card, @options)
+    assert_failure response
+    assert_equal "Rejected test operation", response.message
+  end
   
   def test_successful_store
     assert response = @gateway.store(@valid_card, @options.merge(:description => 'test', :currency => 'USD', :amount => @amount))

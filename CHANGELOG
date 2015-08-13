@@ -39,6 +39,7 @@
 * QuickPay: Make all operations to v10 platform synchronous [ta]
 * QuickPay: Handle issue where no operations exists on payment [ta]
 * NMI: Support merchant_defined_fields [duff]
+* QuickpayV10: Add verify [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)
