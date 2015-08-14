@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Beanstream: Add Network Tokenization support [girasquid]
 
 == Version 1.53.0 (September 1, 2015)
 
