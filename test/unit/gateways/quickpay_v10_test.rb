@@ -140,6 +140,10 @@ class QuickpayV10Test < Test::Unit::TestCase
     assert response = @gateway.capture(100, 1124)
     assert_success response
   end
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
   
   private
   
@@ -266,6 +270,22 @@ class QuickpayV10Test < Test::Unit::TestCase
   
   def expected_expiration_date
     '%02d%02d' % [@credit_card.year.to_s[2..4], @credit_card.month]
+  end
+
+  def transcript
+    %q(
+      POST /payments/7452604/authorize?synchronized HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic OjAzNTA4ZTc3OTFiYTZjOWQwZTY4MzA3MTZlNjUwZjM1YzQzNDJjNGIzNTc2NzIzYWQ1NTZlMjM2Y2E0Yzc3ODg=\r\nUser-Agent: Quickpay-v10 ActiveMerchantBindings/1.52.0\r\nAccept: application/json\r\nAccept-Version: v10\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nConnection: close\r\nHost: api.quickpay.net\r\nContent-Length: 136
+      {\"amount\":\"100\",\"card\":{\"number\":\"1000000000000008\",\"cvd\":\"123\",\"expiration\":\"1609\",\"issued_to\":\"Longbob Longsen\"},\"auto_capture\":false}
+      D, [2015-08-17T11:44:26.710099 #75027] DEBUG -- : {"amount":"100","card":{"number":"1000000000000008","cvd":"123","expiration":"1609","issued_to":"Longbob Longsen"},"auto_capture":false}
+    )
+  end
+
+  def scrubbed_transcript
+    %q(
+      POST /payments/7452604/authorize?synchronized HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]=\r\nUser-Agent: Quickpay-v10 ActiveMerchantBindings/1.52.0\r\nAccept: application/json\r\nAccept-Version: v10\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nConnection: close\r\nHost: api.quickpay.net\r\nContent-Length: 136
+      {\"amount\":\"100\",\"card\":{\"number\":\"[FILTERED]\",\"cvd\":\"[FILTERED]\",\"expiration\":\"1609\",\"issued_to\":\"Longbob Longsen\"},\"auto_capture\":false}
+      D, [2015-08-17T11:44:26.710099 #75027] DEBUG -- : {"amount":"100","card":{"number":"[FILTERED]","cvd":"[FILTERED]","expiration":"1609","issued_to":"Longbob Longsen"},"auto_capture":false}
+    )
   end
 
 end

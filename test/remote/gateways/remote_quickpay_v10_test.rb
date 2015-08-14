@@ -183,4 +183,15 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @valid_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@valid_card.number, clean_transcript)
+    assert_scrubbed(@valid_card.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@gateway.options[:api_key], clean_transcript)
+  end
+
 end
