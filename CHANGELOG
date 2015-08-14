@@ -41,6 +41,7 @@
 * NMI: Support merchant_defined_fields [duff]
 * QuickpayV10: Add verify [anellis]
 * BraintreeBlue: Use wiredump_device for logging only if present [braintreeps]
+* QuickpayV10: Add scrubbing [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)

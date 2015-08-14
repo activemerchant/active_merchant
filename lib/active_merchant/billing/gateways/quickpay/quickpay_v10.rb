@@ -24,7 +24,7 @@ module ActiveMerchant
           }
           r.process {
             post = capture_params(money, credit_card, options)
-            commit(synchronized_path("/payments/#{r.authorization}/capture"), post)            
+            commit(synchronized_path("/payments/#{r.authorization}/capture"), post)
           }
         end
       end
@@ -80,6 +80,17 @@ module ActiveMerchant
         commit(synchronized_path "/subscriptions/#{identification}/cancel")
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("card\\?":{\\?"number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r(("cvd\\?":\\?")\d+), '\1[FILTERED]')
+      end
+
       private
 
         def authorization_params(money, credit_card, options = {})
@@ -100,10 +111,10 @@ module ActiveMerchant
 
           post
         end
-                
+
         def create_subscription(options = {})
-          requires!(options, :currency)  
-          post = {}            
+          requires!(options, :currency)
+          post = {}
 
           add_currency(post, nil, options)
           add_subscription_invoice(post, options)
@@ -114,8 +125,8 @@ module ActiveMerchant
           requires!(options, :amount)
           post = {}
 
-          add_amount(post, nil, options)                    
-          add_credit_card(post, credit_card, options)          
+          add_amount(post, nil, options)
+          add_credit_card(post, credit_card, options)
           add_additional_params(:authorize_subscription, post, options)
           commit(synchronized_path("/subscriptions/#{identification}/authorize"), post)
         end
@@ -212,7 +223,7 @@ module ActiveMerchant
         def message_from(success, response)
           success ? 'OK' : (response['message'] || invalid_operation_message(response) || "Unknown error - please contact QuickPay")
         end
-        
+
         def invalid_operation_code?(response)
           if response['operations']
             operation = response['operations'].last
