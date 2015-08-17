@@ -380,6 +380,9 @@ metrics_global:
   login: 'demo'
   password: 'password'
 
+micropayment:
+  access_key: "0b4832ca37a31e748c4490b58d743986"
+
 # Working credentials, no need to replace
 migs_capture: # MiGS gateway for auth/capture mode
   login: TESTANZTEST2
