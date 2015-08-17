@@ -48,6 +48,7 @@
 * Ogone: Refactor signature calculation [ntalbott]
 * Add Creditcall gateway [davidsantoso]
 * Redsys: Fix scrubbing for failed transactions [davidsantoso]
+* Micropayment: Support Micropayment gateway [rwdaigle]
 
 
 == Version 1.52.0 (July 20, 2015)
