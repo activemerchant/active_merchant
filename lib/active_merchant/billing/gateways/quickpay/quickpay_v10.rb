@@ -80,6 +80,17 @@ module ActiveMerchant
         commit(synchronized_path "/subscriptions/#{identification}/cancel")
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((\\?"card\\?":{\\?"number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((\\?"cvd\\?":\\?")\d+), '\1[FILTERED]')
+      end
+
       private
 
         def authorization_params(money, credit_card, options = {})
