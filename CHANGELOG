@@ -49,6 +49,7 @@
 * Add Creditcall gateway [davidsantoso]
 * Redsys: Fix scrubbing for failed transactions [davidsantoso]
 * Micropayment: Support Micropayment gateway [rwdaigle]
+* USAePay: Use names from the given billing and shipping address [marquisong]
 
 
 == Version 1.52.0 (July 20, 2015)

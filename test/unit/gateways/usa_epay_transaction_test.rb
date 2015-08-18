@@ -130,6 +130,44 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_equal 20, post.keys.size
   end
 
+  def test_add_address_with_empty_billing_and_shipping_names
+    post = {}
+    @options[:billing_address].delete(:name)
+    @options[:shipping_address][:name] = ''
+
+    @gateway.send(:add_address, post, @credit_card, @options)
+    assert_address(:shipping, post, 'Longbob', 'Longsen')
+    assert_address(:billing, post, 'Longbob', 'Longsen')
+    assert_equal 20, post.keys.size
+  end
+
+  def test_add_address_with_single_billing_and_shipping_names
+    post = {}
+    options = {
+        :billing_address  => address(:name => 'Smith'),
+        :shipping_address => address(:name => 'Longsen')
+    }
+
+    @gateway.send(:add_address, post, @credit_card, options)
+    assert_address(:billing, post, '', 'Smith')
+    assert_address(:shipping, post, '', 'Longsen')
+    assert_equal 20, post.keys.size
+  end
+
+  def test_split_names
+    assert_equal ['Longbob', 'Longsen'], @gateway.send(:split_names, 'Longbob Longsen')
+  end
+
+  def test_split_names_with_single_name
+    assert_equal ['', 'Longsen'], @gateway.send(:split_names, 'Longsen')
+  end
+
+  def test_split_names_with_empty_names
+    assert_equal [nil, nil], @gateway.send(:split_names, '')
+    assert_equal [nil, nil], @gateway.send(:split_names, nil)
+    assert_equal [nil, nil], @gateway.send(:split_names, ' ')
+  end
+
   def test_amount_style
    assert_equal '10.34', @gateway.send(:amount, 1034)
 
@@ -211,10 +249,14 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
 private
 
-  def assert_address(type, post)
+  def assert_address(type, post, expected_first_name = nil, expected_last_name = nil)
     prefix = key_prefix(type)
-    assert_equal @credit_card.first_name,               post[key(prefix, 'fname')]
-    assert_equal @credit_card.last_name,                post[key(prefix, 'lname')]
+    first_name, last_name = split_names(@options[:billing_address][:name])
+    first_name = expected_first_name if expected_first_name
+    last_name = expected_last_name if expected_last_name
+
+    assert_equal first_name,                            post[key(prefix, 'fname')]
+    assert_equal last_name,                             post[key(prefix, 'lname')]
     assert_equal @options[:billing_address][:company],  post[key(prefix, 'company')]
     assert_equal @options[:billing_address][:address1], post[key(prefix, 'street')]
     assert_equal @options[:billing_address][:address2], post[key(prefix, 'street2')]
@@ -233,8 +275,15 @@ private
     @gateway.send(:address_key, prefix, key)
   end
 
+  def split_names(full_name)
+    names = (full_name || '').split
+    last_name = names.pop
+    first_name = names.join(' ')
+    [first_name, last_name]
+  end
+
   def purchase_request
-    "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Longbob&UMbilllname=Longsen&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Longbob&UMshiplname=Longsen&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
+    "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
   end
 
   def successful_purchase_response
