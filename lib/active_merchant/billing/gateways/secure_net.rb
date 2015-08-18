@@ -208,8 +208,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_more_required_params(xml, options)
+        test_mode = options[:test_mode].nil? ? test? : options[:test_mode]
         xml.tag! 'RETAIL_LANENUM', '0'
-        xml.tag! 'TEST', 'TRUE' if test?
+        xml.tag! 'TEST', test_mode ? 'TRUE' : 'FALSE'
         xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
         xml.tag! 'TRANSACTION_SERVICE', 0
         xml.tag! 'DEVELOPERID', options[:developer_id] if options[:developer_id]
