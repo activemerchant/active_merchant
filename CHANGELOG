@@ -29,6 +29,7 @@
 * Braintree: Add nonce payment method [eric1234,cwoodcox]
 * Payflow: Allow passing of 3D Secure details via options [marquisong]
 * Elavon: Support capture via CCCOMPLETE without credit card [marquisong]
+* Securenet: Allow setting test_mode independently [wedstar]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
