@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteQuickPayV10Test < Test::Unit::TestCase
 
   def setup
-    @gateway = QuickpayGateway.new(fixtures(:quickpay_v10_api_key))
+    @gateway = QuickpayV10Gateway.new(fixtures(:quickpay_v10_api_key))
     @amount = 100
     @options = {
       :order_id => generate_unique_id[0...10],
@@ -162,7 +162,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_failure response
     assert_equal "Rejected test operation", response.message
   end
-  
+
   def test_successful_store
     assert response = @gateway.store(@valid_card, @options.merge(:description => 'test', :currency => 'USD', :amount => @amount))
     assert_success response
@@ -177,7 +177,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = QuickpayGateway.new(login: 0, api_key: '**')
+    gateway = QuickpayV10Gateway.new(api_key: '**')
     assert response = gateway.purchase(@amount, @valid_card, @options)
     assert_equal 'Invalid API key', response.message
     assert_failure response

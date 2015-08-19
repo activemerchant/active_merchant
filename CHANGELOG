@@ -42,6 +42,7 @@
 * QuickpayV10: Add verify [anellis]
 * BraintreeBlue: Use wiredump_device for logging only if present [braintreeps]
 * QuickpayV10: Add scrubbing [anellis]
+* QuickPayV10: Change tests to point to proper gateway [anellis]
 
 
 == Version 1.52.0 (July 20, 2015)
