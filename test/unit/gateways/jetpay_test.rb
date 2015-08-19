@@ -4,7 +4,7 @@ class JetpayTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = JetpayGateway.new(:login => 'login')
 

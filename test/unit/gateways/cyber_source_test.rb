@@ -4,7 +4,7 @@ class CyberSourceTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = CyberSourceGateway.new(
       :login => 'l',

@@ -38,10 +38,10 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_should_be_able_to_look_for_test_mode
-    Base.gateway_mode = :test
+    Base.mode = :test
     assert @gateway.test?
 
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_false @gateway.test?
   end
 

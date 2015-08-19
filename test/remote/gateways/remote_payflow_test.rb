@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemotePayflowTest < Test::Unit::TestCase
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = PayflowGateway.new(fixtures(:payflow))
 
