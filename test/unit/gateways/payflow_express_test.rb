@@ -12,7 +12,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW = "#{LIVE_REDIRECT_URL_MOBILE}&useraction=commit"
   
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
   
     @gateway = PayflowExpressGateway.new(
       :login => 'LOGIN',
@@ -31,7 +31,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
   
   def teardown
-    Base.gateway_mode = :test
+    Base.mode = :test
   end
   
   def test_using_test_mode
@@ -39,7 +39,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
   
   def test_overriding_test_mode
-    Base.gateway_mode = :production
+    Base.mode = :production
     
     gateway = PayflowExpressGateway.new(
       :login => 'LOGIN',
@@ -51,7 +51,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
   
   def test_using_production_mode
-    Base.gateway_mode = :production
+    Base.mode = :production
     
     gateway = PayflowExpressGateway.new(
       :login => 'LOGIN',
@@ -62,7 +62,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
   
   def test_live_redirect_url
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
     assert_equal LIVE_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
   end
@@ -73,13 +73,13 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
   
   def test_live_redirect_url_without_review
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
     assert_equal LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
   end
   
   def test_test_redirect_url_without_review
-    assert_equal :test, Base.gateway_mode
+    assert_equal :test, Base.mode
     assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
     assert_equal TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
   end

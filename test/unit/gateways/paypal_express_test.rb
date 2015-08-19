@@ -29,27 +29,27 @@ class PaypalExpressTest < Test::Unit::TestCase
                  :phone => '(555)555-5555'
                }
 
-    Base.gateway_mode = :test
+    Base.mode = :test
   end
 
   def teardown
-    Base.gateway_mode = :test
+    Base.mode = :test
   end
 
   def test_live_redirect_url
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
     assert_equal LIVE_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
   end
 
   def test_live_redirect_url_without_review
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
     assert_equal LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
   end
 
   def test_force_sandbox_redirect_url
-    Base.gateway_mode = :production
+    Base.mode = :production
 
     gateway = PaypalExpressGateway.new(
       :login => 'cody',
@@ -64,13 +64,13 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_test_redirect_url
-    assert_equal :test, Base.gateway_mode
+    assert_equal :test, Base.mode
     assert_equal TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
     assert_equal TEST_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
   end
 
   def test_test_redirect_url_without_review
-    assert_equal :test, Base.gateway_mode
+    assert_equal :test, Base.mode
     assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
     assert_equal TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
   end

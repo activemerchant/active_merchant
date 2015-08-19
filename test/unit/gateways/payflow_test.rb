@@ -108,7 +108,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_overriding_test_mode
-    Base.gateway_mode = :production
+    Base.mode = :production
 
     gateway = PayflowGateway.new(
       :login => 'LOGIN',
@@ -120,7 +120,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_using_production_mode
-    Base.gateway_mode = :production
+    Base.mode = :production
 
     gateway = PayflowGateway.new(
       :login => 'LOGIN',

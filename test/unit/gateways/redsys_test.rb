@@ -4,7 +4,7 @@ class RedsysTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
     @credentials = {
       :login      => '091952713',
       :secret_key => "qwertyasdf0123456789",
@@ -208,7 +208,7 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_overriding_options
-    Base.gateway_mode = :production
+    Base.mode = :production
     gw = RedsysGateway.new(
       :terminal => 1,
       :login => '1234',
@@ -220,7 +220,7 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_production_mode
-    Base.gateway_mode = :production
+    Base.mode = :production
     gw = RedsysGateway.new(
       :terminal => 1,
       :login => '1234',

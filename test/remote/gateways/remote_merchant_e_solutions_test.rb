@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemoteMerchantESolutionTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = MerchantESolutionsGateway.new(fixtures(:merchant_esolutions))
 
