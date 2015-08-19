@@ -1,18 +1,21 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Base
+      GATEWAY_MODE_DEPRECATION_MESSAGE = 'Base#gateway_mode is deprecated in favor of Base#mode and will be removed in a future version'
+
       # Set ActiveMerchant gateways in test mode.
       #
-      #   ActiveMerchant::Billing::Base.gateway_mode = :test
-      mattr_accessor :gateway_mode
+      #   ActiveMerchant::Billing::Base.mode = :test
+      mattr_accessor :mode
 
-      # Set both the mode of both the gateways and integrations
-      # at once
-      mattr_reader :mode
-
-      def self.mode=(mode)
+      def self.gateway_mode=(mode)
+        ActiveMerchant.deprecated(GATEWAY_MODE_DEPRECATION_MESSAGE)
         @@mode = mode
-        self.gateway_mode = mode
+      end
+
+      def self.gateway_mode
+        ActiveMerchant.deprecated(GATEWAY_MODE_DEPRECATION_MESSAGE)
+        @@mode
       end
 
       self.mode = :production
@@ -51,7 +54,7 @@ module ActiveMerchant #:nodoc:
 
       # A check to see if we're in test mode
       def self.test?
-        self.gateway_mode == :test
+        mode == :test
       end
     end
   end

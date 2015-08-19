@@ -4,7 +4,7 @@ class MercuryTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = MercuryGateway.new(fixtures(:mercury))
 

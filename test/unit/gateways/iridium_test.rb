@@ -2,7 +2,7 @@ require 'test_helper'
 
 class IridiumTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = IridiumGateway.new(:login => 'login', :password => 'password')
 

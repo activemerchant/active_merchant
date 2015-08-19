@@ -30,6 +30,7 @@
 * Payflow: Allow passing of 3D Secure details via options [marquisong]
 * Elavon: Support capture via CCCOMPLETE without credit card [marquisong]
 * Securenet: Allow setting test_mode independently [wedstar]
+* Replace Base.integration_mode and Base.gateway_mode with just Base.mode [aprofeit]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
@@ -101,6 +102,7 @@
 * Micropayment: Support Micropayment gateway [rwdaigle]
 * USAePay: Use names from the given billing and shipping address [marquisong]
 * Stripe: Add application fee on EMV authorize calls [bizla]
+* ActiveMerchant: Replace Base.integration_mode and Base.gateway_mode with just Base.mode [aprofeit]
 
 == Version 1.52.0 (July 20, 2015)
 
