@@ -4,7 +4,7 @@ class QuickpayV10Test < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = QuickpayGateway.new(:api_key => 'APIKEY', :login => 123)
+    @gateway = QuickpayV10Gateway.new(:api_key => 'APIKEY')
     @credit_card = credit_card('4242424242424242')
     @amount = 100
     @options = { :order_id => '1', :billing_address => address}
@@ -274,7 +274,7 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def transcript
     %q(
-      POST /payments/7452604/authorize?synchronized HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic OjAzNTA4ZTc3OTFiYTZjOWQwZTY4MzA3MTZlNjUwZjM1YzQzNDJjNGIzNTc2NzIzYWQ1NTZlMjM2Y2E0Yzc3ODg=\r\nUser-Agent: Quickpay-v10 ActiveMerchantBindings/1.52.0\r\nAccept: application/json\r\nAccept-Version: v10\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nConnection: close\r\nHost: api.quickpay.net\r\nContent-Length: 136
+      POST /payments/7488279/authorize?synchronized HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic OjAzNTA4ZTc3OTFiYTZjOWQwZTY4MzA3MTZlNjUwZjM1YzQzNDJjNGIzNTc2NzIzYWQ1NTZlMjM2Y2E0Yzc3ODg=\r\nUser-Agent: Quickpay-v10 ActiveMerchantBindings/1.52.0\r\nAccept: application/json\r\nAccept-Version: v10\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nConnection: close\r\nHost: api.quickpay.net\r\nContent-Length: 136\r\n\r\n
       {\"amount\":\"100\",\"card\":{\"number\":\"1000000000000008\",\"cvd\":\"123\",\"expiration\":\"1609\",\"issued_to\":\"Longbob Longsen\"},\"auto_capture\":false}
       D, [2015-08-17T11:44:26.710099 #75027] DEBUG -- : {"amount":"100","card":{"number":"1000000000000008","cvd":"123","expiration":"1609","issued_to":"Longbob Longsen"},"auto_capture":false}
     )
@@ -282,7 +282,7 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def scrubbed_transcript
     %q(
-      POST /payments/7452604/authorize?synchronized HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]=\r\nUser-Agent: Quickpay-v10 ActiveMerchantBindings/1.52.0\r\nAccept: application/json\r\nAccept-Version: v10\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nConnection: close\r\nHost: api.quickpay.net\r\nContent-Length: 136
+      POST /payments/7488279/authorize?synchronized HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]=\r\nUser-Agent: Quickpay-v10 ActiveMerchantBindings/1.52.0\r\nAccept: application/json\r\nAccept-Version: v10\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nConnection: close\r\nHost: api.quickpay.net\r\nContent-Length: 136\r\n\r\n
       {\"amount\":\"100\",\"card\":{\"number\":\"[FILTERED]\",\"cvd\":\"[FILTERED]\",\"expiration\":\"1609\",\"issued_to\":\"Longbob Longsen\"},\"auto_capture\":false}
       D, [2015-08-17T11:44:26.710099 #75027] DEBUG -- : {"amount":"100","card":{"number":"[FILTERED]","cvd":"[FILTERED]","expiration":"1609","issued_to":"Longbob Longsen"},"auto_capture":false}
     )
