@@ -33,6 +33,21 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_sans_cvv
+    @options[:recurring] = true
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success response
+  end
+
+  def test_failed_purchase_sans_ccv
+    @credit_card.verification_value = nil
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+  end
+
   def test_failed_purchase_with_token
     response = @gateway.purchase(@amount, "12345", @options)
     assert_failure response

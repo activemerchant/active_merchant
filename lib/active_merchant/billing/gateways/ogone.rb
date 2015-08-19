@@ -151,12 +151,13 @@ module ActiveMerchant #:nodoc:
       # Verify and reserve the specified amount on the account, without actually doing the transaction.
       def authorize(money, payment_source, options = {})
         post = {}
+        action = (payment_source.brand == "mastercard") ? "PAU" : "RES"
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('RES', post)
+        commit(action, post)
       end
 
       # Verify and transfer the specified amount.
@@ -211,6 +212,18 @@ module ActiveMerchant #:nodoc:
         response = authorize(@options[:store_amount] || 1, payment_source, options)
         void(response.authorization) if response.success?
         response
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+        gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+        gsub(%r((&?cardno=)[^&]*)i, '\1[FILTERED]').
+        gsub(%r((&?cvc=)[^&]*)i, '\1[FILTERED]').
+        gsub(%r((&?pswd=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -335,6 +348,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
+        add_pair parameters, 'RTIMEOUT', @options[:timeout] if @options[:timeout]
         add_pair parameters, 'PSPID',  @options[:login]
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]

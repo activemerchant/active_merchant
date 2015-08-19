@@ -10,7 +10,7 @@ class RemoteTnsTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
-      billing_address: address.merge!(country: 'USA'),
+      billing_address: address,
       description: 'Store Purchase'
     }
   end
@@ -75,8 +75,8 @@ class RemoteTnsTest < Test::Unit::TestCase
                 :userid => 'nosuch',
                 :password => 'thing'
               )
-    assert_raise(ActiveMerchant::ResponseError, 'Failed with 401 Unauthorized') do
-      gateway.authorize(@amount, @credit_card, @options)
-    end
+    response = gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal "ERROR - INVALID_REQUEST - Invalid credentials.", response.message
   end
 end

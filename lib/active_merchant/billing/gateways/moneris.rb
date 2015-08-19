@@ -51,7 +51,13 @@ module ActiveMerchant #:nodoc:
         post[:order_id]   = options[:order_id]
         post[:address]    = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        action = (post[:data_key].blank?) ? 'preauth' : 'res_preauth_cc'
+        action = if post[:cavv]
+          'cavv_preauth'
+        elsif post[:data_key].blank? 
+          'preauth'
+        else
+          'res_preauth_cc'
+        end
         commit(action, post)
       end
 
@@ -67,7 +73,13 @@ module ActiveMerchant #:nodoc:
         post[:order_id]   = options[:order_id]
         post[:address]    = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        action = (post[:data_key].blank?) ? 'purchase' : 'res_purchase_cc'
+        action = if post[:cavv]
+          'cavv_purchase'
+        elsif post[:data_key].blank?
+          'purchase'
+        else
+          'res_purchase_cc'
+        end
         commit(action, post)
       end
 
@@ -161,6 +173,7 @@ module ActiveMerchant #:nodoc:
             post[:pan]        = source.number
             post[:expdate]    = expdate(source)
             post[:cvd_value]  = source.verification_value if source.verification_value?
+            post[:cavv] = source.payment_cryptogram if source.is_a?(NetworkTokenizationCreditCard)
           end
           post[:cust_id] = options[:customer] || source.name
         end
@@ -291,8 +304,8 @@ module ActiveMerchant #:nodoc:
           "indrefund"          => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
           "completion"         => [:order_id, :comp_amount, :txn_number, :crypt_type],
           "purchasecorrection" => [:order_id, :txn_number, :crypt_type],
-          "cavvpurcha"         => [:order_id, :cust_id, :amount, :pan, :expdate, :cav],
-          "cavvpreaut"         => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
+          "cavv_preauth"       => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
+          "cavv_purchase"      => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
           "transact"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
           "Batchcloseall"      => [],
           "opentotals"         => [:ecr_number],

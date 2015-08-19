@@ -51,6 +51,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @bad_credit_card, @options)
     assert_match(/Invalid Credit Card/, response.message)
     assert_failure response
+    assert_equal response.error_code, "invalid_number"
   end
 
   def test_trans_error
@@ -59,6 +60,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options )
     assert_match(/Unable to Send Transaction/, response.message) # 42 is 'unable to send trans'
     assert_failure response
+    assert_equal response.error_code, "processing_error"
   end
 
   def test_purchase_and_credit
@@ -104,6 +106,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.verify(@bad_credit_card, @options)
     assert_failure response
     assert_match %r{Invalid Credit Card Number}, response.message
+    assert_equal response.error_code, "invalid_number"
   end
 
   def test_invalid_login

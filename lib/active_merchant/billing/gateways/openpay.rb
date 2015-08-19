@@ -83,6 +83,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((card_number\\?":\\?")[^"\\]*)i, '\1[FILTERED]').
+          gsub(%r((cvv2\\?":\\?")[^"\\]*)i, '\1[FILTERED]')
+      end
       private
 
       def create_post_for_auth_or_purchase(money, creditcard, options)
@@ -191,4 +201,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

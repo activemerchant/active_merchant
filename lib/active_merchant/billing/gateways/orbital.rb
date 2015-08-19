@@ -196,6 +196,13 @@ module ActiveMerchant #:nodoc:
         commit(order, :authorize, options[:trace_number])
       end
 
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization) }
+        end
+      end
+
       # AC – Authorization and Capture
       def purchase(money, creditcard, options = {})
         order = build_new_order_xml(AUTH_AND_CAPTURE, money, options) do |xml|

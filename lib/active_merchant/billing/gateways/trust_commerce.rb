@@ -292,6 +292,17 @@ module ActiveMerchant #:nodoc:
         commit('unstore', parameters)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?cc=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2')
+      end
+
       private
       def add_payment_source(params, source)
         if source.is_a?(String)

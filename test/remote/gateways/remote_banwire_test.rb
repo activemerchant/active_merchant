@@ -6,46 +6,12 @@ class RemoteBanwireTest < Test::Unit::TestCase
     @gateway = BanwireGateway.new(fixtures(:banwire))
 
     @amount = 100
-    @credit_card = credit_card('5204164299999999',
-                               :month => 11,
-                               :year => 2012,
-                               :verification_value => '999',
-                               :brand => 'mastercard')
-
-    @visa_credit_card = credit_card('4485814063899108',
-                                    :month => 12,
-                                    :year => 2016,
-                                    :verification_value => '434')
+    @credit_card = credit_card('5204164299999999', :verification_value => '999', :brand => 'mastercard')
+    @visa_credit_card = credit_card('4485814063899108', :verification_value => '434')
 
     @declined_card = credit_card('4000300011112220')
-
     @options = {
-      :order_id => '1',
-      :email => "test@email.com",
-      :billing_address => address,
-      :description => 'Store Purchase'
-    }
-
-    @amex_credit_card = credit_card('375932134599999',
-                                    :month => 10,
-                                    :year => 2014,
-                                    :first_name => "Banwire",
-                                    :last_name => "Test Card",
-                                    :verification_value => '9999',
-                                    :brand => 'american_express')
-
-    @amex_successful_options = {
-        :order_id => '3',
-        :email => 'test@email.com',
-        :billing_address => address(:address1 => 'Horacio', :zip => '11560'),
-        :description  => 'Store purchase amex'
-    }
-
-    @amex_options = {
-        :order_id => '2',
-        :email => 'test@email.com',
-        :billing_address => address,
-        :description  => 'Store purchase amex'
+      billing_address: address,
     }
   end
 
@@ -59,15 +25,22 @@ class RemoteBanwireTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_amex_purchase
-    assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_successful_options)
+  def test_successful_purchase_with_extra_options
+    options = {
+      order_id: '1',
+      email: "test@email.com",
+      billing_address: address,
+      description: 'Store Purchase'
+    }
+    assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
   end
+
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'denied', response.message
+    assert_equal 'Pago Denegado.', response.message
   end
 
   def test_invalid_login
@@ -80,8 +53,14 @@ class RemoteBanwireTest < Test::Unit::TestCase
     assert_equal 'ID de cuenta invalido', response.message
   end
 
-  def test_invalid_amex_address
-    assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_options)
-    assert_equal 'Error en los datos de facturación de la tarjeta, por favor inserte su dirección y código postal tal y como viene en su estado de cuenta de American Express. En caso de que persista el error, por favor comuníquese con American Express.', response.message
+def test_transcript_scrubbing
+  transcript = capture_transcript(@gateway) do
+    @gateway.purchase(@amount, @credit_card, @options)
   end
+  clean_transcript = @gateway.scrub(transcript)
+
+  assert_scrubbed(@credit_card.number, clean_transcript)
+  assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+end
+
 end

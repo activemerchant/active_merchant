@@ -104,6 +104,22 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card("41111111111111111111"), :merchant_account_id => "present")
   end
 
+  def test_service_fee_amount_can_be_specified
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(has_entries(:service_fee_amount => "2.31")).
+      returns(braintree_result)
+
+    @gateway.authorize(100, credit_card("41111111111111111111"), :service_fee_amount => "2.31")
+  end
+
+  def test_hold_in_escrow_can_be_specified
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:options][:hold_in_escrow] == true)
+    end.returns(braintree_result)
+
+    @gateway.authorize(100, credit_card("41111111111111111111"), :hold_in_escrow => true)
+  end
+
   def test_merchant_account_id_absent_if_not_provided
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       not params.has_key?(:merchant_account_id)
@@ -540,6 +556,39 @@ class BraintreeBlueTest < Test::Unit::TestCase
       (params[:descriptor][:phone] == '4443331112')
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card("41111111111111111111"), descriptor_name: 'wow*productname', descriptor_phone: '4443331112')
+  end
+
+  def test_apple_pay_card
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(
+        :amount => '1.00',
+        :order_id => '1',
+        :customer => {:id => nil, :email => nil, :first_name => 'Longbob', :last_name => 'Longsen'},
+        :options => {:store_in_vault => false, :submit_for_settlement => nil, :hold_in_escrow => nil},
+        :custom_fields => nil,
+        :apple_pay_card => {
+          :number => '4111111111111111',
+          :expiration_month => '09',
+          :expiration_year => '2016',
+          :cardholder_name => 'Longbob Longsen',
+          :cryptogram => '111111111100cryptogram'
+        }
+      ).
+      returns(braintree_result(:id => "transaction_id"))
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    response = @gateway.authorize(100, credit_card, :test => true, :order_id => '1')
+    assert_equal "transaction_id", response.authorization
+  end
+
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
   private

@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'NETbilling'
       self.homepage_url = 'http://www.netbilling.com'
       self.supported_countries = ['US']
+      self.ssl_version = :TLSv1
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
       def initialize(options = {})
@@ -102,6 +103,17 @@ module ActiveMerchant #:nodoc:
 
       def test?
         (@options[:login] == TEST_LOGIN || super)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card_number=)[^&]*), '\1[FILTERED]').
+          gsub(%r((&?card_cvv2=)[^&]*), '\1[FILTERED]')
       end
 
       private
@@ -220,4 +232,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

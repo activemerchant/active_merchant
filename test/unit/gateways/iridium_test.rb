@@ -110,6 +110,12 @@ class IridiumTest < Test::Unit::TestCase
     end
   end
 
+
+  def test_transcript_scrubbing
+    assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
+  end
+
+
   private
 
   # Place raw successful response from gateway here
@@ -250,4 +256,93 @@ class IridiumTest < Test::Unit::TestCase
         </soap:Body>
       </soap:Envelope>)
   end
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+  <?xml version="1.0" encoding="utf-8"?>
+  <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Body>
+    <CardDetailsTransaction xmlns="https://www.thepaymentgateway.net/">
+      <PaymentMessage>
+        <MerchantAuthentication MerchantID="Flamen-3258723" Password="7C03L5ON49"/>
+        <TransactionDetails Amount="100" CurrencyCode="978">
+          <MessageDetails TransactionType="SALE"/>
+          <OrderID>c7073e2a2d18b19b8dadcd0a5da3f7e1</OrderID>
+          <TransactionControl>
+            <ThreeDSecureOverridePolicy>FALSE</ThreeDSecureOverridePolicy>
+            <EchoAVSCheckResult>TRUE</EchoAVSCheckResult>
+            <EchoCV2CheckResult>TRUE</EchoCV2CheckResult>
+          </TransactionControl>
+        </TransactionDetails>
+        <CardDetails>
+          <CardName>Longbob Longsen</CardName>
+          <CV2>452</CV2>
+          <CardNumber>4976000000003436</CardNumber>
+          <ExpiryDate Month="09" Year="12"/>
+        </CardDetails>
+        <CustomerDetails>
+          <BillingAddress>
+            <Address1>32 Edward Street</Address1>
+            <Address2>Camborne</Address2>
+            <City>Ottawa</City>
+            <State>Cornwall</State>
+            <PostCode>TR14&#160;8PA</PostCode>
+            <CountryCode>826</CountryCode>
+          </BillingAddress>
+          <PhoneNumber>(555)555-5555</PhoneNumber>
+          <EmailAddress></EmailAddress>
+          <CustomerIPAddress>127.0.0.1</CustomerIPAddress>
+        </CustomerDetails>
+      </PaymentMessage>
+    </CardDetailsTransaction>
+  </soap:Body>
+  </soap:Envelope>
+  <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CardDetailsTransactionResponse xmlns="https://www.thepaymentgateway.net/"><CardDetailsTransactionResult AuthorisationAttempted="True"><StatusCode>0</StatusCode><Message>AuthCode: 608724</Message></CardDetailsTransactionResult><TransactionOutputData CrossReference="110428221508160201608724"><AuthCode>608724</AuthCode><AddressNumericCheckResult>PASSED</AddressNumericCheckResult><PostCodeCheckResult>PASSED</PostCodeCheckResult><CV2CheckResult>PASSED</CV2CheckResult><GatewayEntryPoints><GatewayEntryPoint EntryPointURL="https://gw1.iridiumcorp.net/" Metric="100" /><GatewayEntryPoint EntryPointURL="https://gw2.iridiumcorp.net/" Metric="200" /><GatewayEntryPoint EntryPointURL="https://gw3.iridiumcorp.net/" Metric="300" /></GatewayEntryPoints></TransactionOutputData></CardDetailsTransactionResponse></soap:Body></soap:Envelope>
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+  <?xml version="1.0" encoding="utf-8"?>
+  <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soap:Body>
+    <CardDetailsTransaction xmlns="https://www.thepaymentgateway.net/">
+      <PaymentMessage>
+        <MerchantAuthentication MerchantID="Flamen-3258723" Password="7C03L5ON49"/>
+        <TransactionDetails Amount="100" CurrencyCode="978">
+          <MessageDetails TransactionType="SALE"/>
+          <OrderID>c7073e2a2d18b19b8dadcd0a5da3f7e1</OrderID>
+          <TransactionControl>
+            <ThreeDSecureOverridePolicy>FALSE</ThreeDSecureOverridePolicy>
+            <EchoAVSCheckResult>TRUE</EchoAVSCheckResult>
+            <EchoCV2CheckResult>TRUE</EchoCV2CheckResult>
+          </TransactionControl>
+        </TransactionDetails>
+        <CardDetails>
+          <CardName>Longbob Longsen</CardName>
+          <CV2>[FILTERED]</CV2>
+          <CardNumber>[FILTERED]</CardNumber>
+          <ExpiryDate Month="09" Year="12"/>
+        </CardDetails>
+        <CustomerDetails>
+          <BillingAddress>
+            <Address1>32 Edward Street</Address1>
+            <Address2>Camborne</Address2>
+            <City>Ottawa</City>
+            <State>Cornwall</State>
+            <PostCode>TR14&#160;8PA</PostCode>
+            <CountryCode>826</CountryCode>
+          </BillingAddress>
+          <PhoneNumber>(555)555-5555</PhoneNumber>
+          <EmailAddress></EmailAddress>
+          <CustomerIPAddress>127.0.0.1</CustomerIPAddress>
+        </CustomerDetails>
+      </PaymentMessage>
+    </CardDetailsTransaction>
+  </soap:Body>
+  </soap:Envelope>
+  <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CardDetailsTransactionResponse xmlns="https://www.thepaymentgateway.net/"><CardDetailsTransactionResult AuthorisationAttempted="True"><StatusCode>0</StatusCode><Message>AuthCode: 608724</Message></CardDetailsTransactionResult><TransactionOutputData CrossReference="110428221508160201608724"><AuthCode>608724</AuthCode><AddressNumericCheckResult>PASSED</AddressNumericCheckResult><PostCodeCheckResult>PASSED</PostCodeCheckResult><CV2CheckResult>PASSED</CV2CheckResult><GatewayEntryPoints><GatewayEntryPoint EntryPointURL="https://gw1.iridiumcorp.net/" Metric="100" /><GatewayEntryPoint EntryPointURL="https://gw2.iridiumcorp.net/" Metric="200" /><GatewayEntryPoint EntryPointURL="https://gw3.iridiumcorp.net/" Metric="300" /></GatewayEntryPoints></TransactionOutputData></CardDetailsTransactionResponse></soap:Body></soap:Envelope>
+    POST_SCRUBBED
+  end
+
 end

@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
 
         super
 
-        if wiredump_device
+        if wiredump_device.present?
           logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
           logger.level = Logger::DEBUG
         else
@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
           :private_key       => options[:private_key],
           :environment       => (options[:environment] || (test? ? :sandbox : :production)).to_sym,
           :custom_user_agent => "ActiveMerchant #{ActiveMerchant::VERSION}",
-          :logger            => logger,
+          :logger            => options[:logger] || logger,
         )
 
         @braintree_gateway = Braintree::Gateway.new( @configuration )
@@ -168,6 +168,10 @@ module ActiveMerchant #:nodoc:
         end
       end
       alias_method :delete, :unstore
+
+      def supports_network_tokenization?
+        true
+      end
 
       private
 
@@ -335,7 +339,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def avs_code_from(transaction)
-        avs_mapping["street: #{transaction.avs_street_address_response_code}, zip: #{transaction.avs_postal_code_response_code}"]
+        transaction.avs_error_response_code ||
+          avs_mapping["street: #{transaction.avs_street_address_response_code}, zip: #{transaction.avs_postal_code_response_code}"]
       end
 
       def avs_mapping
@@ -512,12 +517,14 @@ module ActiveMerchant #:nodoc:
           },
           :options => {
             :store_in_vault => options[:store] ? true : false,
-            :submit_for_settlement => options[:submit_for_settlement]
+            :submit_for_settlement => options[:submit_for_settlement],
+            :hold_in_escrow => options[:hold_in_escrow]
           }
         }
 
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
+        parameters[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
         if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
           parameters[:merchant_account_id] = merchant_account_id
         end
@@ -537,12 +544,22 @@ module ActiveMerchant #:nodoc:
             :first_name => credit_card_or_vault_id.first_name,
             :last_name => credit_card_or_vault_id.last_name
           )
-          parameters[:credit_card] = {
-            :number => credit_card_or_vault_id.number,
-            :cvv => credit_card_or_vault_id.verification_value,
-            :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-            :expiration_year => credit_card_or_vault_id.year.to_s
-          }
+          if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
+            parameters[:apple_pay_card] = {
+              :number => credit_card_or_vault_id.number,
+              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+              :expiration_year => credit_card_or_vault_id.year.to_s,
+              :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
+              :cryptogram => credit_card_or_vault_id.payment_cryptogram
+            }
+          else
+            parameters[:credit_card] = {
+              :number => credit_card_or_vault_id.number,
+              :cvv => credit_card_or_vault_id.verification_value,
+              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+              :expiration_year => credit_card_or_vault_id.year.to_s
+            }
+          end
         end
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address] && !options[:payment_method_token]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]

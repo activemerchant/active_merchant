@@ -109,6 +109,18 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(((?:\?|&)cardno=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?cvc=)\d*(&?)), '\1[FILTERED]\2')
+      end
+
+
       private
 
       def add_amount(post, money, options)
@@ -186,7 +198,7 @@ module ActiveMerchant #:nodoc:
         # Authorize gives the response back by redirecting with the values in
         # the URL query
         if location = response['Location']
-          query = CGI::parse(URI.parse(location.gsub(' ', '%20')).query)
+          query = CGI::parse(URI.parse(location.gsub(' ', '%20').gsub('<', '%3C').gsub('>', '%3E')).query)
         else
           return {
             'accept' => '0',
