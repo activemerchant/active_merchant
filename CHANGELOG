@@ -47,6 +47,7 @@
 * Ogone: Add additional 3d-secure parameters [ntalbott]
 * Ogone: Refactor signature calculation [ntalbott]
 * Add Creditcall gateway [davidsantoso]
+* Redsys: Fix scrubbing for failed transactions [davidsantoso]
 
 
 == Version 1.52.0 (July 20, 2015)
