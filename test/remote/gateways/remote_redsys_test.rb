@@ -127,6 +127,28 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_equal "SIS0093 ERROR", response.message
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@gateway.options[:secret_key], clean_transcript)
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_transcript_scrubbing_on_failed_transactions
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @declined_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@gateway.options[:secret_key], clean_transcript)
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
   private
 
   def generate_order_id
