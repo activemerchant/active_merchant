@@ -399,18 +399,22 @@ class OgoneTest < Test::Unit::TestCase
       :accept_url => 'https://accept_url',
       :decline_url => 'https://decline_url',
       :exception_url => 'https://exception_url',
-      :paramsplus => 'params_plus',
+      :cancel_url => 'https://cancel_url',
+      :paramvar => 'param_var',
+      :paramplus => 'param_plus',
       :complus => 'com_plus',
       :language => 'fr_FR'
     })
-    assert 'HTTP_ACCEPT', "text/html"
-    assert 'HTTP_USER_AGENT', "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
-    assert 'ACCEPTURL', 'https://accept_url'
-    assert 'DECLINEURL', 'https://decline_url'
-    assert 'EXCEPTIONURL', 'https://exception_url'
-    assert 'PARAMSPLUS', 'params_plus'
-    assert 'COMPLUS', 'com_plus'
-    assert 'LANGUAGE', 'fr_FR'
+    assert_equal post['HTTP_ACCEPT'], "text/html"
+    assert_equal post['HTTP_USER_AGENT'], "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
+    assert_equal post['ACCEPTURL'], 'https://accept_url'
+    assert_equal post['DECLINEURL'], 'https://decline_url'
+    assert_equal post['EXCEPTIONURL'], 'https://exception_url'
+    assert_equal post['CANCELURL'], 'https://cancel_url'
+    assert_equal post['PARAMPLUS'], 'param_plus'
+    assert_equal post['PARAMVAR'], 'param_var'
+    assert_equal post['COMPLUS'], 'com_plus'
+    assert_equal post['LANGUAGE'], 'fr_FR'
   end
 
   def test_accessing_params_attribute_of_response
