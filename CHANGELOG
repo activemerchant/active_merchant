@@ -44,6 +44,8 @@
 * QuickpayV10: Add scrubbing [anellis]
 * QuickPayV10: Change tests to point to proper gateway [anellis]
 * Monei: Add default options argument [davidgf]
+* Ogone: Add additional 3d-secure parameters [ntalbott]
+* Ogone: Refactor signature calculation [ntalbott]
 
 
 == Version 1.52.0 (July 20, 2015)
