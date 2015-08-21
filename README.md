@@ -105,6 +105,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [CAMS: Central Account Management System](https://www.centralams.com/) - US
 * [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, GB
 * [Checkout.com](https://www.checkout.com/) - AT, BE, BG, CY, CZ, DE, DK, EE, ES, FI, FR, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MT, MU, NL, NO, PL, PT, RO, SE, SI, SK, US
+* [Clearhaus](https://www.clearhaus.com) - AD, AT, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GL, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK
 * [Commercegate](http://www.commercegate.com/) - AD, AT, AX, BE, BG, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GG, GI, GR, HR, HU, IE, IM, IS, IT, JE, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, VA
 * [Conekta](https://conekta.io) - MX
 * [CyberSource](http://www.cybersource.com) - US, BR, CA, CN, DK, FI, FR, DE, JP, MX, NO, SE, GB, SG

@@ -39,6 +39,7 @@
 * Add Transact Pro gateway [varyonic]
 * Add Payeezy gateway [huoxito]
 * USAePay: Add test mode setting via options [marquisong]
+* Add Clearhaus gateway [dinesh]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
