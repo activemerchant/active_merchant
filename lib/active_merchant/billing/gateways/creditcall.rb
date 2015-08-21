@@ -120,11 +120,11 @@ module ActiveMerchant #:nodoc:
         xml.CardDetails do
           xml.Manual(type: "cnp") do
             xml.PAN payment_method.number
-            xml.ExpiryDate(format: "yyMM"){ xml.text(format_expdate(expdate(payment_method))) }
+            xml.ExpiryDate exp_date(payment_method)
             xml.CSC payment_method.verification_value
           end
 
-          if address = options[:billing_address] || options[:address]
+          if address = options[:billing_address]
             xml.AdditionalVerification do
               xml.Address address[:address1]
               xml.Zip address[:zip]
@@ -133,8 +133,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def format_expdate(expdate)
-        expdate[2..3] << expdate[0..1]
+      def exp_date(payment_method)
+        "#{format(payment_method.year, :two_digits)}#{format(payment_method.month, :two_digits)}"
       end
 
       def parse(body)
@@ -170,7 +170,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(parameters)
-        url = (test? ? test_url : live_url)
         response = parse(ssl_post(url, parameters))
 
         Response.new(
@@ -182,6 +181,10 @@ module ActiveMerchant #:nodoc:
           cvv_result: CVVResult.new(response["some_cvv_response_key"]),
           test: test?
         )
+      end
+
+      def url
+        test? ? test_url : live_url
       end
 
       def success_from(response)
@@ -200,11 +203,6 @@ module ActiveMerchant #:nodoc:
         response["CardEaseReference"]
       end
 
-      def error_code_from(response)
-        unless success_from(response)
-          response["ErrorCode"]
-        end
-      end
     end
   end
 end
