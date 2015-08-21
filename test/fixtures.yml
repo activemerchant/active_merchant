@@ -149,6 +149,18 @@ checkout:
 checkout_v2:
   secret_key: secret_key
 
+# Working credentials, no need to replace
+clearhaus: &clearhaus
+  api_key: 526cf564-119c-4bb6-9cf8-0015eac7e4f6
+  mpi_api_key: f21d07e4-be0a-4cd3-9dcb-9461dac1c90d
+
+clearhaus_secure:
+  <<: *clearhaus
+  signing_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    -----END RSA PRIVATE KEY-----
+
+
 # Contact Support at it_support@commercegate.com for credentials and offer/site
 commercegate:
   login: "XXXXXXX"
