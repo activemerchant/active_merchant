@@ -170,19 +170,19 @@ class CreditcallTest < Test::Unit::TestCase
 
   def failed_refund_response
     %(
-<?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>0732d424-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152505</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192505</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"2101\">CardEaseReferenceInvalid</Error></Errors></Result></Response>
+    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>0732d424-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152505</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192505</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"2101\">CardEaseReferenceInvalid</Error></Errors></Result></Response>
     )
   end
 
   def successful_void_response
     %(
-<?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>170c0e63-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152646</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192646</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result></Response>
+    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>170c0e63-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152646</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192646</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result></Response>
     )
   end
 
   def failed_void_response
     %(
-<?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>e5b1b672-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152716</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192716</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"2101\">CardEaseReferenceInvalid</Error></Errors></Result></Response>
+    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>e5b1b672-ba42-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814152716</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814192716</UTC></TransactionDetails><Result><LocalResult>1</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity><Errors><Error code=\"2101\">CardEaseReferenceInvalid</Error></Errors></Result></Response>
     )
   end
 end
