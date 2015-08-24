@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MercuryEncryptedGateway < Gateway
       self.test_url = 'https://w1.mercurycert.net/PaymentsAPI'
-      self.live_url = 'https://w1.mercurypay.com/PaymentsAPI/'
+      self.live_url = 'https://w1.mercurypay.com/PaymentsAPI'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
