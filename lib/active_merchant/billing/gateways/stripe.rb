@@ -63,7 +63,11 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            post[:capture] = "false" unless emv_payment?(payment)
+            if emv_payment?(payment)
+              add_application_fee(post, options)
+            else
+              post[:capture] = "false"
+            end
             commit(:post, 'charges', post, options)
           end
         end.responses.last
