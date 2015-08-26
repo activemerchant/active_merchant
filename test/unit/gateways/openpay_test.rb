@@ -30,6 +30,19 @@ class OpenpayTest < Test::Unit::TestCase
     assert_equal 'tay1mauq3re4iuuk8bm4', response.authorization
     assert response.test?
   end
+  
+  def test_successful_purchase_with_customer
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+    @options[:email] = 'john@gmail.com'
+    @options[:name] = 'John Doe'
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'tay1mauq3re4iuuk8bm4', response.authorization
+    assert response.test?
+  end
 
   def test_unsuccessful_request
     @gateway.expects(:ssl_request).returns(failed_purchase_response)

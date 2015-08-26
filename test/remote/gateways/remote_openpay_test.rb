@@ -14,6 +14,14 @@ class RemoteOpenpayTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
   end
+  
+   def test_fraud_safe_purchase
+    @options[:fraud_safe] = 'true'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+  
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -25,6 +33,32 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'The card is not supported on online transactions', response.message
+  end
+
+  def test_successful_purchase_with_customer_info
+    @options[:email] = '%d@example.org' % Time.now
+    @options[:name] = 'Customer name'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+  
+ 
+  
+  def test_successful_purchase_with_customer_info_and_shipping_address
+    @options[:email] = '%d@example.org' % Time.now
+    @options[:name] = 'Customer name'
+    @options[:shipping_address] = {}
+    @options[:shipping_address][:name] = "shipping_address"
+    @options[:shipping_address][:address1] = "Calle"
+    @options[:shipping_address][:address2] = "Colonia"
+    @options[:shipping_address][:city] = "Querétaro"
+    @options[:shipping_address][:state] = "Querétaro"
+    @options[:shipping_address][:zip] = "76090"
+    @options[:shipping_address][:country] = "MX"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
   end
 
   def test_successful_refund
@@ -93,12 +127,13 @@ class RemoteOpenpayTest < Test::Unit::TestCase
 
     customer_stored = response_store.responses[0]
     card_stored = response_store.responses[1]
+    
+    @options[:customer] = customer_stored.authorization
     assert response = @gateway.purchase(@amount, card_stored.authorization, @options)
     assert_success response
     assert_nil response.message
 
     assert_success @gateway.unstore(customer_stored.authorization, card_stored.authorization)
-    assert_success @gateway.unstore(customer_stored.authorization)
   end
 
   def test_successful_purchase_with_device_session_id

@@ -26,30 +26,33 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
-        commit(:post, 'charges', post, options)
+        commit(:post, get_path('charges', options), post, options)
       end
 
       def authorize(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         post[:capture] = false
-        commit(:post, 'charges', post, options)
+        commit(:post, get_path('charges', options), post, options)
       end
 
       def capture(money, authorization, options = {})
         post = {}
         post[:amount] = amount(money) if money
-        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
+        resource = get_path("charges/#{CGI.escape(authorization)}/capture", options)
+        commit(:post, resource, post, options)
       end
 
       def void(identification, options = {})
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", nil, options)
+        resource = get_path("charges/#{CGI.escape(identification)}/refund", options)
+        commit(:post, resource, nil, options)
       end
 
       def refund(money, identification, options = {})
         post = {}
         post[:description] = options[:description]
         post[:amount] = amount(money)
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options)
+        resource = get_path("charges/#{CGI.escape(identification)}/refund", options)
+        commit(:post, resource, post, options)
       end
 
       def store(creditcard, options = {})
@@ -64,6 +67,7 @@ module ActiveMerchant #:nodoc:
           post = {}
           post[:name] = options[:name]
           post[:email] = options[:email]
+          post[:requires_account] = false
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, 'customers', post, options) }
 
@@ -93,6 +97,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((card_number\\?":\\?")[^"\\]*)i, '\1[FILTERED]').
           gsub(%r((cvv2\\?":\\?")[^"\\]*)i, '\1[FILTERED]')
       end
+      
       private
 
       def create_post_for_auth_or_purchase(money, creditcard, options)
@@ -100,9 +105,16 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount(money)
         post[:method] = 'card'
         post[:description] = options[:description]
+        post[:currency] = options[:currency] ? options[:currency] : "MXN"
         post[:order_id] = options[:order_id]
         post[:device_session_id] = options[:device_session_id]
+        if options[:fraud_safe].present? 
+          metadata = {}
+          metadata[:fraud_safe] = options[:fraud_safe];
+          post[:metadata] = metadata
+        end
         add_creditcard(post, creditcard, options)
+        add_customer_info(post, options)
         post
       end
 
@@ -117,12 +129,39 @@ module ActiveMerchant #:nodoc:
             cvv2: creditcard.verification_value,
             holder_name: creditcard.name
           }
-          add_address(card, options)
+          add_billing_address(card, options)
           post[:card] = card
         end
       end
+      
+      def add_customer_info(post, options) 
+        if((options[:name] && options[:email]) && !options[:customer])
+          customer = {}
+          customer[:name] = options[:name] if options[:name]
+          customer[:email] = options[:email] if options[:email]
+          customer[:phone_number] = options[:phone] if options[:phone]
+          customer[:external_id] = options[:external_id] if options[:external_id]
+          add_shipment_address(customer, options)
+  
+          post[:customer] = customer
+        end
+      end
+      
+      def add_shipment_address(post, options)
+        if(address = options[:shipping_address])
+          post[:address] = {}
+          post[:address][:line1] = address[:address1] if address[:address1]
+          post[:address][:line2] = address[:address2] if address[:address2]
+          post[:address][:line3] = address[:name] if address[:name]
+          post[:address][:postal_code] = address[:zip] if address[:zip]
+          post[:address][:state] = address[:state] if address[:state]
+          post[:address][:city] = address[:city] if address[:city]
+          post[:address][:country_code] = address[:country] if address[:country]
+          
+        end
+      end
 
-      def add_address(card, options)
+      def add_billing_address(card, options)
         return unless card.kind_of?(Hash)
         if address = (options[:billing_address] || options[:address])
           card[:address] = {
@@ -134,6 +173,14 @@ module ActiveMerchant #:nodoc:
             state: address[:state],
             country_code: address[:country]
           }
+        end
+      end
+      
+      def get_path(resource, options) 
+        if options[:customer].present?
+          "customers/#{CGI.escape(options[:customer])}/" + resource
+        else
+          resource
         end
       end
 
