@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Beanstream: Add Network Tokenization support [girasquid]
+* CenPOS: Allow order_id on void [duff]
 
 == Version 1.53.0 (September 1, 2015)
 

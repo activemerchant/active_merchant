@@ -51,6 +51,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_remembered_amount(post, authorization)
         add_tax(post, options)
+        add_order_id(post, options)
 
         commit("Void", post)
       end
@@ -95,9 +96,9 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
         post[:CurrencyCode] = options[:currency] || currency(money)
-        post[:InvoiceNumber] = options[:order_id]
         post[:InvoiceDetail] = options[:invoice_detail] if options[:invoice_detail]
         post[:CustomerCode] = options[:customer_code] if options[:customer_code]
+        add_order_id(post, options)
         add_tax(post, options)
       end
 
@@ -124,6 +125,10 @@ module ActiveMerchant #:nodoc:
       def add_void_required_elements(post)
         post[:GeoLocationInformation] = nil
         post[:IMEI] = nil
+      end
+
+      def add_order_id(post, options)
+        post[:InvoiceNumber] = options[:order_id]
       end
 
       def add_tax(post, options)
