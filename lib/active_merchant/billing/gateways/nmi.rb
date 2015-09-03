@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
           post[:firstname] = payment_method.first_name
           post[:lastname] = payment_method.last_name
           post[:ccnumber] = payment_method.number
-          post[:cvv] = payment_method.verification_value
+          post[:cvv] = payment_method.verification_value if payment_method.verification_value
           post[:ccexp] = exp_date(payment_method)
         end
       end

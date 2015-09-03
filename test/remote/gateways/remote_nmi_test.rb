@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteNmiTest < Test::Unit::TestCase
   def setup
     @gateway = NmiGateway.new(fixtures(:nmi))
-    @amount = 100
+    @amount = Random.rand(100...1000)
     @credit_card = credit_card('4111111111111111', verification_value: 917)
     @check = check(
       :routing_number => '123123123',
@@ -24,6 +24,15 @@ class RemoteNmiTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_sans_cvv
+    @credit_card.verification_value = nil
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
