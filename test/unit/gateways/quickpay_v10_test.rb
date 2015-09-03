@@ -90,13 +90,8 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|
-      body = parse(data)
-      if body['card']
-        assert_match %r{/subscriptions/\d+/authorize}, endpoint
-      else
-        assert_match %r{/subscriptions}, endpoint
-      end
-    end.respond_with(successful_subscription_response, successful_sauthorize_response)
+      assert_match %r{/card}, endpoint
+    end.respond_with(successful_store_response, successful_sauthorize_response)
   end
 
   def test_successful_unstore
@@ -105,7 +100,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|
-      assert_match %r{/subscriptions/\d+/cancel}, endpoint
+      assert_match %r{/cards/\d+/cancel}, endpoint
     end.respond_with({'id' => '123'}.to_json)
   end
 
@@ -254,7 +249,7 @@ class QuickpayV10Test < Test::Unit::TestCase
     }.to_json
   end
 
-  def successful_subscription_response
+  def successful_store_response
     {
       'id' => 834,
       'order_id' => '310affr'
