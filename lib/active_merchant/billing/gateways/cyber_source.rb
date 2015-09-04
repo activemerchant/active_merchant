@@ -262,6 +262,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_auth_service(xml, creditcard_or_reference, options)
+        optionally_add_line_item_data(xml, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
         xml.target!
       end
@@ -283,6 +284,7 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new :indent => 2
         add_purchase_data(xml, money, true, options)
+        optionally_add_line_item_data(xml, options)
         add_capture_service(xml, request_id, request_token)
         add_business_rules_data(xml, authorization, options)
         xml.target!
@@ -291,6 +293,7 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        optionally_add_line_item_data(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
         else
@@ -417,6 +420,12 @@ module ActiveMerchant #:nodoc:
           options.has_key? option_name
         end
         options_matching_key[option_name] if options_matching_key
+      end
+
+      def optionally_add_line_item_data(xml, options)
+        if options[:line_items].present?
+          add_line_item_data(xml, options)
+        end
       end
 
       def add_line_item_data(xml, options)
