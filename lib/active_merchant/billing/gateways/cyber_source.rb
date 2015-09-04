@@ -636,6 +636,7 @@ module ActiveMerchant #:nodoc:
         else
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
+          add_line_item_data(xml, options) if options[:line_items]
           add_purchase_data(xml, money, true, options)
           add_creditcard(xml, payment_method_or_reference)
         end

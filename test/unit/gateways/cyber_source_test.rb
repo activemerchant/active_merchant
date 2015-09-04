@@ -73,6 +73,16 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_credit_card_purchase_includes_line_items
+    expected_amount = "%0.2f" % (@amount / 100.0)
+    first_line_item_regexp = /<item id="0">(\\n)*\s*<unitPrice>#{expected_amount}<\//m
+    @gateway.expects(:ssl_post).
+      with(anything, regexp_matches(first_line_item_regexp), anything).
+      returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   def test_successful_check_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -170,6 +180,16 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal Response, response.class
     assert response.success?
     assert response.test?
+  end
+
+  def test_auth_includes_line_items
+    expected_amount = "%0.2f" % (@amount / 100.0)
+    first_line_item_regexp = /<item id="0">(\\n)*\s*<unitPrice>#{expected_amount}<\//m
+    @gateway.expects(:ssl_post).
+      with(anything, regexp_matches(first_line_item_regexp), anything).
+      returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.authorize(@amount, @credit_card, @options)
   end
 
   def test_successful_credit_card_tax_request
