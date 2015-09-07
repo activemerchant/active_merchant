@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:CreditCardNumber', credit_card.number
           xml.tag! 'n2:ExpMonth', format(credit_card.month, :two_digits)
           xml.tag! 'n2:ExpYear', format(credit_card.year, :four_digits)
-          xml.tag! 'n2:CVV2', credit_card.verification_value if credit_card.verification_value
+          xml.tag! 'n2:CVV2', credit_card.verification_value unless credit_card.verification_value.blank?
 
           if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
             xml.tag! 'n2:StartMonth', format(credit_card.start_month, :two_digits) unless credit_card.start_month.blank?
