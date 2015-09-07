@@ -324,6 +324,30 @@ class NmiTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_includes_cvv_tag
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{cvv}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_blank_cvv_not_sent
+    @credit_card.verification_value = nil
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{cvv}, data)
+    end.respond_with(successful_purchase_response)
+
+    @credit_card.verification_value = "  "
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{cvv}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_supported_countries
     assert_equal 1,
       (['US'] | NmiGateway.supported_countries).size

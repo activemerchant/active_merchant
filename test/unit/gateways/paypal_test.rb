@@ -550,6 +550,31 @@ class PaypalTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
   end
 
+  def test_includes_cvv_tag
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{CVV2}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_blank_cvv_not_sent
+    @credit_card.verification_value = nil
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{CVV2}, data)
+    end.respond_with(successful_purchase_response)
+
+    @credit_card.verification_value = "  "
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{CVV2}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+
   private
 
   def pre_scrubbed
