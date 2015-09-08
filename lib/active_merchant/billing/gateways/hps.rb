@@ -132,6 +132,10 @@ module ActiveMerchant #:nodoc:
           end
           xml.hps :TokenRequest, (options[:store] ? 'Y' : 'N')
         end
+
+        if options[:descriptor_name]
+          xml.hps :TxnDescriptor, options[:descriptor_name]
+        end
       end
 
       def add_details(xml, options)
