@@ -205,6 +205,18 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, credit.message
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "The transaction was successful", response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal "No brand", response.message
+  end
+
   def test_reference_transactions
     # Setting an alias
     assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
