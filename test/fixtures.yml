@@ -946,6 +946,11 @@ wirecard_checkout_page:
   shop_id: ''
   paymenttype: IDL
 
+# Working credentials, no need to replace
+world_net:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
