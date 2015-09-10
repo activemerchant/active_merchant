@@ -1048,6 +1048,11 @@ wirecard_checkout_page:
   shop_id: ''
   paymenttype: IDL
 
+# Working credentials, no need to replace
+world_net:
+  terminal_id: '6001'
+  secret: 'sandboxEUR'
+
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
