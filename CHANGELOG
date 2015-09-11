@@ -5,7 +5,7 @@
 * Provide better insight to CVV usage in requests [davidsantoso]
 * Ogone: Add verify [duff]
 * Beanstream: Add verify [mrezentes]
-
+* PayPal: Map standard error codes [JakeCataford]
 
 == Version 1.53.0 (September 1, 2015)
 
