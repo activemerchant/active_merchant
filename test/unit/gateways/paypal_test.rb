@@ -584,11 +584,11 @@ class PaypalTest < Test::Unit::TestCase
     end
   end
 
-  def test_unmapped_error_returns_original_error_code
+  def test_error_code_with_no_mapping_returns_standardized_processing_error
     @gateway.expects(:ssl_request).returns(response_with_error_code("999999"))
 
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal("999999", response.error_code)
+    assert_equal(:processing_error, response.error_code)
   end
 
   private

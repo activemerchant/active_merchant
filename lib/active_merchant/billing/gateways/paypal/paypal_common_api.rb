@@ -53,6 +53,8 @@ module ActiveMerchant #:nodoc:
         '11084' => :card_declined
       }
 
+      DEFAULT_ERROR_CODE = :processing_error
+
       def self.included(base)
         base.default_currency = 'USD'
         base.cattr_accessor :pem_file
@@ -650,14 +652,19 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => authorization_from(response),
           :fraud_review => fraud_review?(response),
-          :error_code => error_code(response),
+          :error_code => standardized_error_code(response),
           :avs_result => { :code => response[:avs_code] },
           :cvv_result => response[:cvv2_code]
         )
       end
 
-      def error_code(response)
-        STANDARD_ERROR_CODE_MAPPING[response[:error_codes]] || response[:error_codes]
+      def standardized_error_code(response)
+        STANDARD_ERROR_CODE_MAPPING[error_codes(response).first] || DEFAULT_ERROR_CODE
+      end
+
+      def error_codes(response)
+        return [] unless response.has_key?(:error_codes)
+        response[:error_codes].split(',')
       end
 
       def fraud_review?(response)
