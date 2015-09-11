@@ -948,8 +948,8 @@ wirecard_checkout_page:
 
 # Working credentials, no need to replace
 world_net:
-  some_credential: SOMECREDENTIAL
-  another_credential: ANOTHERCREDENTIAL
+  terminal_id: '6001'
+  secret: 'sandboxEUR'
 
 world_pay_gateway:
   login: LOGIN
