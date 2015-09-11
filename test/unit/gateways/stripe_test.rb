@@ -570,7 +570,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
+      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :receipt_email => "receipt-receiver@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
@@ -580,6 +580,7 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
       assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
       assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/receipt_email=receipt-receiver\%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
     end.respond_with(successful_purchase_response)
   end
