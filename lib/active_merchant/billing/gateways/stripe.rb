@@ -368,7 +368,7 @@ module ActiveMerchant #:nodoc:
 
       def add_metadata(post, options = {})
         post[:metadata] = options[:metadata] || {}
-        post[:metadata][:email] = options[:email] if options[:email]
+        post[:metadata][:email] = post[:receipt_email] = options[:email] if options[:email]
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
         post.delete(:metadata) if post[:metadata].empty?
       end

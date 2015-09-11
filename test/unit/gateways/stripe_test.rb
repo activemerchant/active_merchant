@@ -580,6 +580,7 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
       assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
       assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/receipt_email=foo\%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
     end.respond_with(successful_purchase_response)
   end
