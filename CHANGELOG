@@ -8,7 +8,7 @@
 * PayPal: Map standard error codes [JakeCataford]
 * Checkout.com: Fix an issue with empty phone numbers. [anotherjosmith]
 * Quickpay: Edit store and add ability to purchase with stored card [anellis]
-
+* Stripe: Set `receipt_email` to Stripe request if receipt delivery is requested [miccheng]
 
 == Version 1.53.0 (September 1, 2015)
 
