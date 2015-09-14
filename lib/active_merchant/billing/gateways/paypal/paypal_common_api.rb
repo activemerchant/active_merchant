@@ -43,17 +43,16 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {
         '15005' => :card_declined,
         '10754' => :card_declined,
-        '10756' => :card_declined,
         '10752' => :card_declined,
         '10759' => :card_declined,
         '10761' => :card_declined,
-        '10762' => :card_declined,
         '15002' => :card_declined,
-        '15004' => :card_declined,
-        '11084' => :card_declined
+        '11084' => :card_declined,
+        '15004' => :incorrect_cvc,
+        '10762' => :invalid_cvc,
       }
 
-      DEFAULT_ERROR_CODE = :processing_error
+      STANDARD_ERROR_CODE_MAPPING.default = :processing_error
 
       def self.included(base)
         base.default_currency = 'USD'
@@ -659,7 +658,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def standardized_error_code(response)
-        STANDARD_ERROR_CODE_MAPPING[error_codes(response).first] || DEFAULT_ERROR_CODE
+        STANDARD_ERROR_CODE_MAPPING[error_codes(response).first]
       end
 
       def error_codes(response)

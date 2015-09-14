@@ -575,12 +575,32 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_card_declined
-    ["15005", "10754", "10756", "10752", "10759", "10761", "10762", "15002", "15004", "11084"].each do |error_code|
+    ["15005", "10754", "10752", "10759", "10761", "15002", "11084"].each do |error_code|
       @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)
       assertion_failed_message = "error_code #{error_code} should have been translated to :card_declined"
       assert_equal(:card_declined, response.error_code, assertion_failed_message)
+    end
+  end
+
+  def test_incorrect_cvc
+    ["15004"].each do |error_code|
+      @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
+
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assertion_failed_message = "error_code #{error_code} should have been translated to :card_declined"
+      assert_equal(:incorrect_cvc, response.error_code, assertion_failed_message)
+    end
+  end
+
+  def test_invalid_cvc
+    ["10762"].each do |error_code|
+      @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
+
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assertion_failed_message = "error_code #{error_code} should have been translated to :card_declined"
+      assert_equal(:invalid_cvc, response.error_code, assertion_failed_message)
     end
   end
 
