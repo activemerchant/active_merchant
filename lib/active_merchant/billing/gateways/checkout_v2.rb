@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
           post[:card][:billingDetails][:state] = address[:state]
           post[:card][:billingDetails][:country] = address[:country]
           post[:card][:billingDetails][:postcode] = address[:zip]
-          post[:card][:billingDetails][:phone] = { number: address[:phone] }
+          post[:card][:billingDetails][:phone] = { number: address[:phone] } unless address[:phone].blank?
         end
       end
 
