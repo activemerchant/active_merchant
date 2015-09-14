@@ -38,6 +38,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_without_phone_number
+    response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(phone: ''))
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
