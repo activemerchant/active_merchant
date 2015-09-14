@@ -6,6 +6,7 @@
 * Ogone: Add verify [duff]
 * Beanstream: Add verify [mrezentes]
 * PayPal: Map standard error codes [JakeCataford]
+* Checkout.com: Fix an issue with empty phone numbers. [anotherjosmith]
 
 == Version 1.53.0 (September 1, 2015)
 
