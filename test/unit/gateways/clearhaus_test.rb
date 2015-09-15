@@ -247,25 +247,14 @@ class ClearhausTest < Test::Unit::TestCase
     end.check_request do |method, endpoint, data, headers|
       assert headers["Signature"]
       assert_match %r{test_key RS256-hex}, headers["Signature"]
-      assert_match /02f56ed1f6c60cdefd$/, headers["Signature"]
+      assert_match %r{02f56ed1f6c60cdefd$}, headers["Signature"]
     end.respond_with(successful_authorize_response)
   end
-
 
   private
 
   def test_private_signing_key
-%Q{-----BEGIN RSA PRIVATE KEY-----
-MIIBOwIBAAJBALYK0zmwuYkH3YWcFNLLddx5cwDxEY7Gi1xITuQqRrU4yD3uSw+J
-WYKknb4Tbndb6iEHY+e6gIGD+49TojnNeIUCAwEAAQJARyuYRRe4kcBHdPL+mSL+
-Y0IAGkAlUyKAXYXPghidKD/v/oLrFaZWALGM2clv6UoYYpPnInSgbcud4sTcfeUm
-QQIhAN2JZ2qv0WGcbIopBpwpQ5jDxMGVkmkVVUEWWABGF8+pAiEA0lySxTELZm8b
-Gx9UEDRghN+Qv/OuIKFldu1Ba4f8W30CIQCaQFIBtunTTVdF28r+cLzgYW9eWwbW
-pEP4TdZ4WlW6AQIhAMDCTUdeUpjxlH/87BXROORozAXocBW8bvJUI486U5ctAiAd
-InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
------END RSA PRIVATE KEY-----
-}
-
+    %Q{-----BEGIN RSA PRIVATE KEY-----\nMIIBOwIBAAJBALYK0zmwuYkH3YWcFNLLddx5cwDxEY7Gi1xITuQqRrU4yD3uSw+J\nWYKknb4Tbndb6iEHY+e6gIGD+49TojnNeIUCAwEAAQJARyuYRRe4kcBHdPL+mSL+\nY0IAGkAlUyKAXYXPghidKD/v/oLrFaZWALGM2clv6UoYYpPnInSgbcud4sTcfeUm\nQQIhAN2JZ2qv0WGcbIopBpwpQ5jDxMGVkmkVVUEWWABGF8+pAiEA0lySxTELZm8b\nGx9UEDRghN+Qv/OuIKFldu1Ba4f8W30CIQCaQFIBtunTTVdF28r+cLzgYW9eWwbW\npEP4TdZ4WlW6AQIhAMDCTUdeUpjxlH/87BXROORozAXocBW8bvJUI486U5ctAiAd\nInviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==\n-----END RSA PRIVATE KEY-----}
   end
 
   def failed_purchase_response
@@ -293,13 +282,13 @@ InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
 
   def successful_authorize_response
     {
-      "id" => "84412a34-fa29-4369-a098-0165a80e8fda",
+      "id"     => "84412a34-fa29-4369-a098-0165a80e8fda",
       "status" => {
           "code" => 20000
       },
       "processed_at" => "2014-07-09T09:53:41+00:00",
       "_links" => {
-          "captures" => { "href": "/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/captures" }
+          "captures" => { "href" => "/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/captures" }
       }
     }.to_json
   end
@@ -340,7 +329,7 @@ InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
       "processed_at" => "2014-07-09T11:57:58+00:00",
       "amount" => 500,
       "_links" => {
-          "authorization" => { "href": "/authorizations/84412a34-fa29-4369-a098-0165a80e8fda" }
+          "authorization" => { "href" => "/authorizations/84412a34-fa29-4369-a098-0165a80e8fda" }
       }
     }.to_json
   end
@@ -366,8 +355,8 @@ InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
         "captures" => {
           "href" => "/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/captures"
         },
-        "voids":{"href":"/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/voids"},
-        "refunds":{"href":"/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/refunds"}
+        "voids" => { "href" => "/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/voids"},
+        "refunds" => { "href" => "/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/refunds"}
       }
     }
   end
