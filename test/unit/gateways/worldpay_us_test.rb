@@ -11,6 +11,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @check = check
     @amount = 100
 
     @options = {
@@ -35,6 +36,24 @@ class WorldpayUsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+  end
+
+  def test_successful_echeck_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @check)
+    end.respond_with(successful_echeck_purchase_response)
+
+    assert_success response
+
+    assert_equal "421414035|306588394", response.authorization
+    assert response.test?
+  end
+
+  def test_failed_echeck_purchase
+    @gateway.expects(:ssl_post).returns(failed_echeck_purchase_response)
+
+    response = @gateway.purchase(@amount, @check, @options)
     assert_failure response
   end
 
@@ -265,6 +284,51 @@ TRANSGUID=561a665f-12d2-4416-a153-c0def07b13c5:265
 transid=23067552
 transresult=APPROVED
     )
+  end
+
+  def successful_echeck_purchase_response
+    %(
+<html><body><plaintext>
+Accepted=CHECKAUTH:421414035:::421414035:::
+historyid=421414035
+orderid=306588394
+Accepted=CHECKAUTH:421414035:::421414035:::
+ACCOUNTNUMBER=****8535
+authcode=421414035
+AuthNo=CHECKAUTH:421414035:::421414035:::
+ENTRYMETHOD=KEYED
+historyid=421414035
+MERCHANTORDERNUMBER=691831d72f862d0fe24c52420f7f6963
+orderid=306588394
+PAYTYPE=Check
+recurid=0
+refcode=421414035-421414035
+result=1
+Status=Accepted
+transid=0
+      )
+  end
+
+  def failed_echeck_purchase_response
+    %(
+<html><body><plaintext>
+Declined=DECLINED:1102780001:Invalid Bank:
+historyid=421428338
+orderid=306594834
+ACCOUNTNUMBER=****8535
+Declined=DECLINED:1102780001:Invalid Bank:
+ENTRYMETHOD=KEYED
+historyid=421428338
+MERCHANTORDERNUMBER=5e9e7e04267187992c959eb9a55c4017
+orderid=306594834
+PAYTYPE=Check
+rcode=1102780001
+Reason=DECLINED:1102780001:Invalid Bank:
+recurid=0
+result=0
+Status=Declined
+transid=0
+      )
   end
 
   def failed_authorize_response
