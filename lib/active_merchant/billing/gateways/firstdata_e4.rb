@@ -172,6 +172,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(xml, options)
         add_invoice(xml, options)
         add_card_authentication_data(xml, options)
+        add_level_3(xml, options)
 
         xml.target!
       end
@@ -299,6 +300,12 @@ module ActiveMerchant #:nodoc:
       def add_invoice(xml, options)
         xml.tag! "Reference_No", options[:order_id]
         xml.tag! "Reference_3",  options[:description] if options[:description]
+      end
+
+      def add_level_3(xml, options)
+        if options[:level_3]
+          xml.level3 { |x| x << options[:level_3] }
+        end
       end
 
       def expdate(credit_card)
