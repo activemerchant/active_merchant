@@ -916,6 +916,11 @@ vanco:
   client_id: SPREEDLY
 
 # Working credentials, no need to replace
+# velocity:
+#   some_credential: SOMECREDENTIAL
+#   another_credential: ANOTHERCREDENTIAL
+
+# Working credentials, no need to replace
 verify:
   login: 'demo'
   password: 'password'
