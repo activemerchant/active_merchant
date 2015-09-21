@@ -170,6 +170,7 @@ module ActiveMerchant #:nodoc:
         end
 
         add_customer_data(xml, options)
+        add_address_data(xml, options)
         add_invoice(xml, options)
         add_card_authentication_data(xml, options)
 
@@ -292,14 +293,20 @@ module ActiveMerchant #:nodoc:
         xml.tag! "TPPID", options[:tpp_id] if options[:tpp_id]
       end
 
-      def add_address(xml, options)
+      def add_address_data(xml, options)
         if address = (options[:billing_address] || options[:address])
-          xml.tag! "ZipCode", address[:zip]
+          xml.tag!("Address") do
+            xml.tag! "Address1", address[:address1]
+            xml.tag! "City", address[:city]
+            xml.tag! "State", address[:state]
+            xml.tag! "CountryCode", address[:country]
+            xml.tag! "Zip", address[:zip]
+          end
         end
       end
 
       def add_invoice(xml, options)
-        xml.tag! "Reference_No", options[:order_id]
+        xml.tag!"Reference_No", options[:order_id]
         xml.tag! "Reference_3",  options[:description] if options[:description]
       end
 
