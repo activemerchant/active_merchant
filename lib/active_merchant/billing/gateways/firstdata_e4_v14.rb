@@ -288,6 +288,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! "Customer_Ref", options[:customer] if options[:customer]
         xml.tag! "Client_IP", options[:ip] if options[:ip]
         xml.tag! "Client_Email", options[:email] if options[:email]
+        xml.tag! "TPPID", options[:tpp_id] if options[:tpp_id]
       end
 
       def add_address(xml, options)
