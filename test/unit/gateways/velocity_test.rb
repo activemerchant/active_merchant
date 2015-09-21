@@ -4,179 +4,115 @@ class VelocityTest < Test::Unit::TestCase
 
   def setup
    @gateway = VelocityGateway.new("PHNhbWw6QXNzZXJ0aW9uIE1ham9yVmVyc2lvbj0iMSIgTWlub3JWZXJzaW9uPSIxIiBBc3NlcnRpb25JRD0iXzdlMDhiNzdjLTUzZWEtNDEwZC1hNmJiLTAyYjJmMTAzMzEwYyIgSXNzdWVyPSJJcGNBdXRoZW50aWNhdGlvbiIgSXNzdWVJbnN0YW50PSIyMDE0LTEwLTEwVDIwOjM2OjE4LjM3OVoiIHhtbG5zOnNhbWw9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjEuMDphc3NlcnRpb24iPjxzYW1sOkNvbmRpdGlvbnMgTm90QmVmb3JlPSIyMDE0LTEwLTEwVDIwOjM2OjE4LjM3OVoiIE5vdE9uT3JBZnRlcj0iMjA0NC0xMC0xMFQyMDozNjoxOC4zNzlaIj48L3NhbWw6Q29uZGl0aW9ucz48c2FtbDpBZHZpY2U+PC9zYW1sOkFkdmljZT48c2FtbDpBdHRyaWJ1dGVTdGF0ZW1lbnQ+PHNhbWw6U3ViamVjdD48c2FtbDpOYW1lSWRlbnRpZmllcj5GRjNCQjZEQzU4MzAwMDAxPC9zYW1sOk5hbWVJZGVudGlmaWVyPjwvc2FtbDpTdWJqZWN0PjxzYW1sOkF0dHJpYnV0ZSBBdHRyaWJ1dGVOYW1lPSJTQUsiIEF0dHJpYnV0ZU5hbWVzcGFjZT0iaHR0cDovL3NjaGVtYXMuaXBjb21tZXJjZS5jb20vSWRlbnRpdHkiPjxzYW1sOkF0dHJpYnV0ZVZhbHVlPkZGM0JCNkRDNTgzMDAwMDE8L3NhbWw6QXR0cmlidXRlVmFsdWU+PC9zYW1sOkF0dHJpYnV0ZT48c2FtbDpBdHRyaWJ1dGUgQXR0cmlidXRlTmFtZT0iU2VyaWFsIiBBdHRyaWJ1dGVOYW1lc3BhY2U9Imh0dHA6Ly9zY2hlbWFzLmlwY29tbWVyY2UuY29tL0lkZW50aXR5Ij48c2FtbDpBdHRyaWJ1dGVWYWx1ZT5iMTVlMTA4MS00ZGY2LTQwMTYtODM3Mi02NzhkYzdmZDQzNTc8L3NhbWw6QXR0cmlidXRlVmFsdWU+PC9zYW1sOkF0dHJpYnV0ZT48c2FtbDpBdHRyaWJ1dGUgQXR0cmlidXRlTmFtZT0ibmFtZSIgQXR0cmlidXRlTmFtZXNwYWNlPSJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcyI+PHNhbWw6QXR0cmlidXRlVmFsdWU+RkYzQkI2REM1ODMwMDAwMTwvc2FtbDpBdHRyaWJ1dGVWYWx1ZT48L3NhbWw6QXR0cmlidXRlPjwvc2FtbDpBdHRyaWJ1dGVTdGF0ZW1lbnQ+PFNpZ25hdHVyZSB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI+PFNpZ25lZEluZm8+PENhbm9uaWNhbGl6YXRpb25NZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiPjwvQ2Fub25pY2FsaXphdGlvbk1ldGhvZD48U2lnbmF0dXJlTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnI3JzYS1zaGExIj48L1NpZ25hdHVyZU1ldGhvZD48UmVmZXJlbmNlIFVSST0iI183ZTA4Yjc3Yy01M2VhLTQxMGQtYTZiYi0wMmIyZjEwMzMxMGMiPjxUcmFuc2Zvcm1zPjxUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjZW52ZWxvcGVkLXNpZ25hdHVyZSI+PC9UcmFuc2Zvcm0+PFRyYW5zZm9ybSBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMTAveG1sLWV4Yy1jMTRuIyI+PC9UcmFuc2Zvcm0+PC9UcmFuc2Zvcm1zPjxEaWdlc3RNZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjc2hhMSI+PC9EaWdlc3RNZXRob2Q+PERpZ2VzdFZhbHVlPnl3NVZxWHlUTUh5NUNjdmRXN01TV2RhMDZMTT08L0RpZ2VzdFZhbHVlPjwvUmVmZXJlbmNlPjwvU2lnbmVkSW5mbz48U2lnbmF0dXJlVmFsdWU+WG9ZcURQaUorYy9IMlRFRjNQMWpQdVBUZ0VDVHp1cFVlRXpESERwMlE2ZW92T2lhN0pkVjI1bzZjTk1vczBTTzRISStSUGRUR3hJUW9xa0paeEtoTzZHcWZ2WHFDa2NNb2JCemxYbW83NUFSWU5jMHdlZ1hiQUVVQVFCcVNmeGwxc3huSlc1ZHZjclpuUytkSThoc2lZZW4vT0VTOUdtZUpsZVd1WUR4U0xmQjZJZnd6dk5LQ0xlS0FXenBkTk9NYmpQTjJyNUJWQUhQZEJ6WmtiSGZwdUlablp1Q2l5OENvaEo1bHU3WGZDbXpHdW96VDVqVE0wU3F6bHlzeUpWWVNSbVFUQW5WMVVGMGovbEx6SU14MVJmdWltWHNXaVk4c2RvQ2IrZXpBcVJnbk5EVSs3NlVYOEZFSEN3Q2c5a0tLSzQwMXdYNXpLd2FPRGJJUFpEYitBPT08L1NpZ25hdHVyZVZhbHVlPjxLZXlJbmZvPjxvOlNlY3VyaXR5VG9rZW5SZWZlcmVuY2UgeG1sbnM6bz0iaHR0cDovL2RvY3Mub2FzaXMtb3Blbi5vcmcvd3NzLzIwMDQvMDEvb2FzaXMtMjAwNDAxLXdzcy13c3NlY3VyaXR5LXNlY2V4dC0xLjAueHNkIj48bzpLZXlJZGVudGlmaWVyIFZhbHVlVHlwZT0iaHR0cDovL2RvY3Mub2FzaXMtb3Blbi5vcmcvd3NzL29hc2lzLXdzcy1zb2FwLW1lc3NhZ2Utc2VjdXJpdHktMS4xI1RodW1icHJpbnRTSEExIj5ZREJlRFNGM0Z4R2dmd3pSLzBwck11OTZoQ2M9PC9vOktleUlkZW50aWZpZXI+PC9vOlNlY3VyaXR5VG9rZW5SZWZlcmVuY2U+PC9LZXlJbmZvPjwvU2lnbmF0dXJlPjwvc2FtbDpBc3NlcnRpb24+", "2317000001", "14560" , "PrestaShop Global HC")
+   @creditcard =  ActiveMerchant::Billing::CreditCard.new(brand: 'visa', verification_value: "123", month:"06", year: '2020', number:'4012888812348882', name: 'John Doe')
+   @creditcard_without_pan =  ActiveMerchant::Billing::CreditCard.new(brand: 'visa', verification_value: "123", month:"06", year: '2020', number:'', name: 'John Doe')
   end
 
   def test_successful_verify
-    @gateway.expects(:signOn).returns(token)
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(successful_verify_response)
-    assert response = @gateway.verify({CardholderName: 'John Doe',Street: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',Amount: '10.00',CardType: 'Visa', CVData: '123',IndustryType: 'Ecommerce',Track2Data: '4012000033330026=09041011000012345678',EntryMode: 'TrackDataFromMSR'})
+    assert response = @gateway.verify(10.00, @creditcard, {:address => {Street: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'},Track2Data: '4012000033330026=09041011000012345678',EntryMode: 'TrackDataFromMSR', :IndustryType=>"Ecommerce"})
     assert_instance_of Response, response
     assert_success response
     assert_equal 'The Transaction was Successful', response.message
   end
 
   def test_successful_authorize
-    @gateway.expects(:signOn).returns(token)
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(successful_authorize_response)
-    assert response = @gateway.authorize({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '10.00',CardType: 'Visa',CVData: '123',PAN: '4012888812348882',Expire: '0320', EntryMode: 'Keyed'})
+    assert response = @gateway.authorize(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
     assert_instance_of Response, response
     assert_success response
     assert_equal 'The Transaction was Successful', response.message
   end
 
   def test_failed_authorize_with_pan
-    @gateway.expects(:signOn).returns(token)    
+    @gateway.expects(:sign_on).returns(token)    
     @gateway.expects(:raw_ssl_request).returns(failed_authorize_response_with_pan)
-    assert response = @gateway.authorize({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '10.00',CardType: 'Visa',CVData: '123',PAN: '',Expire: '0320', EntryMode: 'Keyed'})
+    assert response = @gateway.authorize(10.00, @creditcard_without_pan, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
     assert_instance_of Response, response
     assert_failure response
     assert_equal 'Validation Errors Occurred', response.message.to_s
   end
 
-  def test_failed_authorize_with_amount
-    @gateway.expects(:signOn).returns(token)    
-    @gateway.expects(:raw_ssl_request).returns(failed_authorize_response_with_amount)
-    assert response = @gateway.authorize({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '',CardType: 'Visa',CVData: '123',PAN: '4012888812348882',Expire: '0320', EntryMode: 'Keyed'})
-    assert_instance_of Response, response
-    assert_failure response
-    assert_equal 'The Transaction was Failure', response.message  
-  end
-
-  def test_successful_authorize_and_capture
-    @gateway.expects(:signOn).returns(token)
+  def test_successful_purchase
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(successful_authorize_and_capture_response)
-    assert response = @gateway.authorize_and_capture({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '10.00',CardType: 'Visa',CVData: '123',PAN: '4012888812348882',Expire: '0320',EntryMode: 'Keyed'})
+    assert response = @gateway.purchase(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802',Phone: '9540123123',Email: 'najeers@chetu.com'})
     assert_instance_of Response, response
     assert_success response
     assert_equal 'The Transaction was Successful', response.message
   end
 
-  def test_failed_authorize_and_capture_with_pan
-    @gateway.expects(:signOn).returns(token)
+  def test_failed_purchase_with_pan
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(failed_authorize_and_capture_response_with_pan)
-    assert response = @gateway.authorize_and_capture({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '10.00',CardType: 'Visa',CVData: '123',PAN: '',Expire: '0320',EntryMode: 'Keyed'})
+    assert response = @gateway.purchase(10.00, @creditcard_without_pan, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802',Phone: '9540123123',Email: 'najeers@chetu.com'})
     assert_instance_of Response, response
     assert_failure response
     assert_equal 'Validation Errors Occurred'.to_s, response.message.to_s
   end
 
-  def test_failed_authorize_and_capture_with_amount
-    @gateway.expects(:signOn).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_authorize_and_capture_response_with_amount)
-    assert response = @gateway.authorize_and_capture({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '',CardType: 'Visa',CVData: '123',PAN: '4012888812348882',Expire: '0320',EntryMode: 'Keyed'})
-    assert_instance_of Response, response
-    assert_failure response
-    assert_equal 'The Transaction was Failure', response.message  
-  end
-
   def test_successful_capture
-    @gateway.expects(:signOn).returns(token)
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(successful_capture_response)
-    assert response = @gateway.capture({TransactionId: '2DD3C8E30C784CA781B8334B257C5804',Amount: '10.00'})
+    assert response = @gateway.capture(10.00,'A34E09B69D6D4B039F59CA7701F818D4')
     assert_instance_of Response, response
     assert_success response
     assert_equal 'The Transaction was Successful', response.message
   end
 
   def test_failed_capture
-    @gateway.expects(:signOn).returns(token)
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(failed_capture_response)
-    assert response = @gateway.authorize_and_capture({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '10.00',CardType: 'Visa',CVData: '123',PAN: '',Expire: '0320',EntryMode: 'Keyed'})
+    assert response = @gateway.capture(10.00,'A34E09B69D6D4B039F59CA7701F818D4')
     assert_instance_of Response, response
     assert_failure response
     assert_equal 'Transaction no longer active due to Capture', response.message.to_s
   end
 
-  def test_successful_return_by_id
-    @gateway.expects(:signOn).returns(token)
+  def test_successful_refund
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(successful_returnByid_response)
-    assert response = @gateway.return_by_id({TransactionId: 'E78EC05C343D4377B2422691B07783A3',Amount: '10.00'})
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal 'The Transaction was Successful', response.message
-  end
-
-  def test_failed_return_by_id
-    @gateway.expects(:signOn).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_returnByid_response)
-    assert response = @gateway.return_by_id({TransactionId: 'C37A4ACDCA1340E2B458FBA7CDA76785',Amount: '10.00'})
-    assert_instance_of Response, response
-    assert_failure response
-    assert_equal 'Transaction cannot be Returned as it has not been Captured.  Use Undo instead.', response.message.to_s
-  end
-
-  def test_failed_return_by_id_due_adjust
-    @gateway.expects(:signOn).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_returnByid_due_adjust_response)
-    assert response = @gateway.return_by_id({TransactionId: "C37A4ACDCA1340E2B458FBA7CDA76785", Amount: '10.00'})
-    assert_instance_of Response, response
-    assert_failure response
-    assert_equal 'Transaction has been adjusted, return last adjusted transaction.', response.message.to_s
-  end
-
-  def test_successful_undo
-    @gateway.expects(:signOn).returns(token)    
+    assert response_purchase = @gateway.purchase(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(successful_undo_response)
-    assert response = @gateway.undo({TransactionId: 'E78EC05C343D4377B2422691B07783A3'})
+    assert response = @gateway.refund(10.00,response_purchase.params["transction_id"])
     assert_instance_of Response, response
     assert_success response
     assert_equal 'The Transaction was Successful', response.message
   end
 
-  def test_failed_undo
-    @gateway.expects(:signOn).returns(token)
+  def test_failed_refund_due_to_capture
+    @gateway.expects(:sign_on).returns(token)
+    @gateway.expects(:raw_ssl_request).returns(failed_returnByid_response)
+    assert response_purchase = @gateway.purchase(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
+    @gateway.expects(:sign_on).returns(token)
     @gateway.expects(:raw_ssl_request).returns(failed_undo_response)
-    assert response = @gateway.undo({TransactionId: 'C37A4ACDCA1340E2B458FBA7CDA76785'})
+    assert response = @gateway.refund(10.00,'882D997379344C01B19A26584A60B930')
     assert_instance_of Response, response
     assert_failure response
     assert_equal 'Transaction no longer active due to Capture.  Use Return instead.', response.message.to_s
   end
 
-  def test_successful_adjust
-    @gateway.expects(:signOn).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(successful_adjust_response)
-    assert response = @gateway.adjust({TransactionId: 'E78EC05C343D4377B2422691B07783A3',Amount: '10.00'})
+  def test_successful_void
+    @gateway.expects(:sign_on).returns(token)    
+    @gateway.expects(:raw_ssl_request).returns(successful_undo_response)
+    assert response = @gateway.void('C37A4ACDCA1340E2B458FBA7CDA76785')
     assert_instance_of Response, response
     assert_success response
     assert_equal 'The Transaction was Successful', response.message
   end
 
-  def test_failed_adjust
-    @gateway.expects(:signOn).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_adjust_response)
-    assert response = @gateway.adjust({TransactionId: 'C37A4ACDCA1340E2B458FBA7CDA76785', Amount: '10.00'})
+  def test_failed_void
+    @gateway.expects(:sign_on).returns(token)
+    @gateway.expects(:raw_ssl_request).returns(failed_undo_response)
+    assert response = @gateway.void('C37A4ACDCA1340E2B458FBA7CDA76785')
     assert_instance_of Response, response
     assert_failure response
-    assert_equal 'Transaction no longer active due to Capture', response.message.to_s
+    assert_equal 'Transaction no longer active due to Capture.  Use Return instead.', response.message.to_s
   end
 
-  def test_successful_return_unlinked
-    @gateway.expects(:signOn).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(successful_return_unlinked_response)
-    assert response = @gateway.return_unlinked({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '10.00', CardType: 'Visa',CVData: '123',PAN: '4012888812348882',Expire: '0320',EntryMode: 'Keyed'})
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal 'The Transaction was Successful', response.message
-  end
-
-  def test_failed_return_unlinked_with_pan
-    @gateway.expects(:signOn).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_return_unlinked_response_with_pan)
-    assert response = @gateway.return_unlinked({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '10.00', CardType: 'Visa',CVData: '123',PAN: '',Expire: '0320',EntryMode: 'Keyed'})
-    assert_instance_of Response, response
-    assert_failure response
-    assert_equal 'Validation Errors Occurred', response.message.to_s
-  end
-
-
-  def test_failed_return_unlinked_with_amount
-    @gateway.expects(:signOn).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_return_unlinked_response_with_amount)
-    assert response = @gateway.return_unlinked({Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329',Phone: '9540123123',Email: 'najeers@chetu.com',IndustryType: 'Ecommerce',InvoiceNumber: '802',OrderNumber: '629203',Amount: '', CardType: 'Visa',CVData: '123',PAN: '4012888812348882',Expire: '0320',EntryMode: 'Keyed'})
-    assert_instance_of Response, response
-    assert_failure response
-    assert_equal 'The Transaction was Failure', response.message.to_s
-  end
 
 
   private
@@ -248,19 +184,7 @@ class VelocityTest < Test::Unit::TestCase
   def failed_adjust_response
     MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction no longer active due to Capture</a:string></Messages><Operation>Adjust</Operation><Reason>Transaction no longer active due to Capture</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
   end
-
-  def successful_return_unlinked_response
-    MockResponse.succeeded("<BankcardTransactionResponsePro xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard/Pro\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><Status xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Successful</Status><StatusCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>000</StatusCode><StatusMessage xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>AP</StatusMessage><TransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>C42A613533084231B64F667C09D0E8EE</TransactionId><OriginatorTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>41658</OriginatorTransactionId><ServiceTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><ServiceTransactionDateTime xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'><Date>2013-04-03</Date><Time>13:50:16.000</Time><TimeZone>-06:00</TimeZone></ServiceTransactionDateTime><Addendum i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><CaptureState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Captured</CaptureState><TransactionState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Returned</TransactionState><IsAcknowledged xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>false</IsAcknowledged><Reference xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>xyt</Reference><Amount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>10.00</Amount><CardType xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Visa</CardType><FeeAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FeeAmount><ApprovalCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>C20244</ApprovalCode><AVSResult i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><BatchId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0801</BatchId><CVResult xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</CVResult><CardLevel xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><DowngradeCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><MaskedPAN xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>401288XXXXXX8882</MaskedPAN><PaymentAccountDataToken xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>c42a6135-3308-4231-b64f-667c09d0e8ee906da023-f6fd-4331-ac0d-3046bf0f7c48</PaymentAccountDataToken><RetrievalReferenceNumber xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><Resubmit xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Unspecified</Resubmit><SettlementDate xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0001-01-01T00:00:00</SettlementDate><FinalBalance xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FinalBalance><OrderId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>36048</OrderId><CashBackAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0.00</CashBackAmount><PrepaidCard xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</PrepaidCard><AdviceResponse>NotSet</AdviceResponse><CommercialCardResponse>NotSet</CommercialCardResponse><ReturnedACI>NotSet</ReturnedACI></BankcardTransactionResponsePro>", "application/xml")
-  end
-
-  def failed_return_unlinked_response_with_pan
-    MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>0</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string i:nil=\'true\'/></Messages><Operation>ReturnUnlinked</Operation><Reason>Validation Errors Occurred</Reason><ValidationErrors><ValidationError><RuleKey>TenderData.CardData.PAN</RuleKey><RuleLocationKey>ppreq:CREDIT/ppreq:RETURN/TenderData/CardData/PAN</RuleLocationKey><RuleMessage>Property \'PAN\' is required.</RuleMessage><TransactionId>445EF31DB7BF44338E08DDD4DBC4D2D7</TransactionId></ValidationError></ValidationErrors></ErrorResponse>", "application/xml")
-  end
-
-  def failed_return_unlinked_response_with_amount
-    MockResponse.succeeded("<BankcardTransactionResponsePro xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard/Pro\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><Status xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Failure</Status><StatusCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>013</StatusCode><StatusMessage xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>INVLD AMOUNT</StatusMessage><TransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>5BCCFC86DAC04CD6822D682DB1E527CA</TransactionId><OriginatorTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>41660</OriginatorTransactionId><ServiceTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><ServiceTransactionDateTime xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'><Date>2013-04-03</Date><Time>13:50:16.000</Time><TimeZone>-06:00</TimeZone></ServiceTransactionDateTime><Addendum i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><CaptureState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>CannotCapture</CaptureState><TransactionState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Declined</TransactionState><IsAcknowledged xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>false</IsAcknowledged><Reference xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>xyt</Reference><Amount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</Amount><CardType xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Visa</CardType><FeeAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FeeAmount><ApprovalCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><AVSResult i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><BatchId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><CVResult xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</CVResult><CardLevel xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><DowngradeCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><MaskedPAN xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>401288XXXXXX8882</MaskedPAN><PaymentAccountDataToken xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><RetrievalReferenceNumber xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><Resubmit xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Unspecified</Resubmit><SettlementDate xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0001-01-01T00:00:00</SettlementDate><FinalBalance xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FinalBalance><OrderId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>36050</OrderId><CashBackAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0.00</CashBackAmount><PrepaidCard xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</PrepaidCard><AdviceResponse>NotSet</AdviceResponse><CommercialCardResponse>NotSet</CommercialCardResponse><ReturnedACI>NotSet</ReturnedACI></BankcardTransactionResponsePro>", "application/xml")
-  end
-
+  
   class MockResponse
     attr_reader :code, :body, :content_type
     def self.succeeded(xml, content_type)
