@@ -24,7 +24,7 @@ class RemoteVelocityTest < Test::Unit::TestCase
 
   def test_failed_authorize_with_pan
     assert response = @gateway.authorize(10.00, @creditcard_without_pan, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
-    assert_equal 'Validation Errors Occurred'.to_s, response.message.to_s
+    assert_equal 'Validation Errors Occurred', response.message.to_s
     assert_equal Response, response.class
     assert_failure response
   end
@@ -38,7 +38,7 @@ class RemoteVelocityTest < Test::Unit::TestCase
 
   def test_failed_purchase_with_pan
     assert response = @gateway.purchase(10.00, @creditcard_without_pan, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802',Phone: '9540123123',Email: 'najeers@chetu.com'})
-    assert_equal 'Validation Errors Occurred'.to_s, response.message.to_s
+    assert_equal 'Validation Errors Occurred', response.message.to_s
     assert_equal Response, response.class
     assert_failure response
   end
@@ -54,7 +54,7 @@ class RemoteVelocityTest < Test::Unit::TestCase
 
   def test_failed_capture
     assert response = @gateway.capture(10.00,'A34E09B69D6D4B039F59CA7701F818D4')
-    assert_equal 'Transaction no longer active due to Capture'.to_s, response.message.to_s
+    assert_equal 'Transaction no longer active due to Capture', response.message.to_s
     assert_equal Response, response.class
     assert_failure response
   end
@@ -74,15 +74,27 @@ class RemoteVelocityTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_failed_refund_due_to_capture
-    assert response = @gateway.refund(10.00,'81C3BB4C265749099D6B930ACB65116F')
+  def test_failed_refund_due_to_autorize_no_capture
+    assert response_auth = @gateway.authorize(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
+    assert response = @gateway.refund(10.00,response_auth.params["transction_id"])
     assert_instance_of Response, response
     assert_failure response
     assert_equal 'Transaction cannot be Returned as it has not been Captured.  Use Undo instead.', response.message.to_s
   end
 
-  def test_failed_refund_due_to_undo
-    assert response = @gateway.refund(10.00,'3E45D9DFD0C24E1C9224AE0E23B0DAED')
+  def test_failed_refund_due_to_using_same_auth_id_after_capture
+    assert response_auth = @gateway.authorize(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
+    assert response_capture = @gateway.capture(10.00,response_auth.params["transction_id"])
+    assert response = @gateway.refund(10.00,response_auth.params["transction_id"])
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal 'Transaction cannot be Returned as it has been Captured.  Return the Captured transaction instead.', response.message.to_s
+  end
+
+  def test_failed_refund_due_to_void
+    assert response_purchase = @gateway.purchase(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802',Phone: '9540123123',Email: 'najeers@chetu.com'})
+    assert response_void = @gateway.void(response_purchase.params["transction_id"])
+    assert response = @gateway.refund(10.00,response_purchase.params["transction_id"])
     assert_instance_of Response, response
     assert_failure response
     assert_equal 'Transaction no longer active due to Undo', response.message.to_s
@@ -96,16 +108,16 @@ class RemoteVelocityTest < Test::Unit::TestCase
     assert_success response_void
   end
 
-  def test_failed_undo_due_to_capture
+  def test_failed_void
     assert response = @gateway.void('C37A4ACDCA1340E2B458FBA7CDA76785')
-    assert_equal 'Transaction no longer active due to Capture.  Use Return instead.'.to_s, response.message.to_s
+    assert_equal 'Transaction no longer active due to Capture.  Use Return instead.', response.message.to_s
     assert_equal Response, response.class
     assert_failure response
   end
 
-  def test_failed_undo_due_to_undone
+  def test_failed_void_already_undone
     assert response = @gateway.void('3E45D9DFD0C24E1C9224AE0E23B0DAED')
-    assert_equal 'Transaction has already been Undone.'.to_s, response.message.to_s
+    assert_equal 'Transaction has already been Undone.', response.message.to_s
     assert_equal Response, response.class
     assert_failure response
   end   

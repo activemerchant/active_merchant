@@ -37,7 +37,7 @@ class VelocityTest < Test::Unit::TestCase
 
   def test_successful_purchase
     @gateway.expects(:sign_on).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(successful_authorize_and_capture_response)
+    @gateway.expects(:raw_ssl_request).returns(successful_purchase_response)
     assert response = @gateway.purchase(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802',Phone: '9540123123',Email: 'najeers@chetu.com'})
     assert_instance_of Response, response
     assert_success response
@@ -46,11 +46,11 @@ class VelocityTest < Test::Unit::TestCase
 
   def test_failed_purchase_with_pan
     @gateway.expects(:sign_on).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_authorize_and_capture_response_with_pan)
+    @gateway.expects(:raw_ssl_request).returns(failed_purchase_response_with_pan)
     assert response = @gateway.purchase(10.00, @creditcard_without_pan, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802',Phone: '9540123123',Email: 'najeers@chetu.com'})
     assert_instance_of Response, response
     assert_failure response
-    assert_equal 'Validation Errors Occurred'.to_s, response.message.to_s
+    assert_equal 'Validation Errors Occurred', response.message.to_s
   end
 
   def test_successful_capture
@@ -73,31 +73,52 @@ class VelocityTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:sign_on).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(successful_returnByid_response)
-    assert response_purchase = @gateway.purchase(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
-    @gateway.expects(:sign_on).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(successful_undo_response)
-    assert response = @gateway.refund(10.00,response_purchase.params["transction_id"])
+    @gateway.expects(:raw_ssl_request).returns(successful_refund_response)
+    assert response = @gateway.refund(10.00,'882D997379344C01B19A26584A60B930')
     assert_instance_of Response, response
     assert_success response
     assert_equal 'The Transaction was Successful', response.message
   end
 
-  def test_failed_refund_due_to_capture
+  def test_failed_refund
     @gateway.expects(:sign_on).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_returnByid_response)
-    assert response_purchase = @gateway.purchase(10.00, @creditcard, {:address => {Street1: '4 corporate sq',City: 'dever',CountryCode: 'USA',PostalCode: '30329'}, :OrderNumber=>"629203", :EntryMode=>"Keyed", :IndustryType=>"Ecommerce",InvoiceNumber: '802'})
-    @gateway.expects(:sign_on).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_undo_response)
+    @gateway.expects(:raw_ssl_request).returns(failed_refund_response)
     assert response = @gateway.refund(10.00,'882D997379344C01B19A26584A60B930')
     assert_instance_of Response, response
     assert_failure response
-    assert_equal 'Transaction no longer active due to Capture.  Use Return instead.', response.message.to_s
+    assert_equal 'Attempt to return more than original authorization.', response.message.to_s
+  end
+
+  def test_failed_refund_due_to_void
+    @gateway.expects(:sign_on).returns(token)
+    @gateway.expects(:raw_ssl_request).returns(failed_refund_due_to_void_response)
+    assert response = @gateway.refund(10.00,'882D997379344C01B19A26584A60B930')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal 'Transaction no longer active due to Undo', response.message.to_s
+  end
+
+  def test_failed_refund_due_to_autorize_no_capture
+    @gateway.expects(:sign_on).returns(token)
+    @gateway.expects(:raw_ssl_request).returns(failed_refund_due_to_autorize_no_capture_response)
+    assert response = @gateway.refund(10.00,'882D997379344C01B19A26584A60B930')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal 'Transaction cannot be Returned as it has not been Captured.  Use Undo instead.', response.message.to_s
+  end
+
+  def test_failed_refund_due_to_using_same_auth_id_after_capture
+    @gateway.expects(:sign_on).returns(token)
+    @gateway.expects(:raw_ssl_request).returns(failed_refund_due_to_using_same_auth_id_after_capture)
+    assert response = @gateway.refund(10.00,'E8A1C4B22F9448CCA0E6C85FDFA4DA09')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal 'Transaction cannot be Returned as it has been Captured.  Return the Captured transaction instead.', response.message.to_s
   end
 
   def test_successful_void
     @gateway.expects(:sign_on).returns(token)    
-    @gateway.expects(:raw_ssl_request).returns(successful_undo_response)
+    @gateway.expects(:raw_ssl_request).returns(successful_void_response)
     assert response = @gateway.void('C37A4ACDCA1340E2B458FBA7CDA76785')
     assert_instance_of Response, response
     assert_success response
@@ -106,13 +127,21 @@ class VelocityTest < Test::Unit::TestCase
 
   def test_failed_void
     @gateway.expects(:sign_on).returns(token)
-    @gateway.expects(:raw_ssl_request).returns(failed_undo_response)
+    @gateway.expects(:raw_ssl_request).returns(failed_void_response)
     assert response = @gateway.void('C37A4ACDCA1340E2B458FBA7CDA76785')
     assert_instance_of Response, response
     assert_failure response
     assert_equal 'Transaction no longer active due to Capture.  Use Return instead.', response.message.to_s
   end
-
+  
+  def test_failed_void_already_undone
+    @gateway.expects(:sign_on).returns(token)
+    @gateway.expects(:raw_ssl_request).returns(failed_void_already_undone_response)
+    assert response = @gateway.void('3E45D9DFD0C24E1C9224AE0E23B0DAED')
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal 'Transaction has already been Undone.', response.message.to_s
+  end
 
 
   private
@@ -133,20 +162,12 @@ class VelocityTest < Test::Unit::TestCase
     MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>0</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string i:nil=\'true\'/></Messages><Operation>Authorize</Operation><Reason>Validation Errors Occurred</Reason><ValidationErrors><ValidationError><RuleKey>TenderData.CardData.PAN</RuleKey><RuleLocationKey>ppreq:CREDIT/ppreq:AUTHONLY/TenderData/CardData/PAN</RuleLocationKey><RuleMessage>Property \'PAN\' is required.</RuleMessage><TransactionId>BD4E88F1913048909CE93A2A7E4A93F3</TransactionId></ValidationError></ValidationErrors></ErrorResponse>","application/xml")
   end
 
-  def failed_authorize_response_with_amount
-    MockResponse.succeeded("<BankcardTransactionResponsePro xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard/Pro\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><Status xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Failure</Status><StatusCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>013</StatusCode><StatusMessage xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>INVLD AMOUNT</StatusMessage><TransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>A718467F9CAE4681A85B6AA72377A443</TransactionId><OriginatorTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>41651</OriginatorTransactionId><ServiceTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><ServiceTransactionDateTime xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'><Date>2013-04-03</Date><Time>13:50:16.000</Time><TimeZone>-06:00</TimeZone></ServiceTransactionDateTime><Addendum i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><CaptureState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>CannotCapture</CaptureState><TransactionState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Declined</TransactionState><IsAcknowledged xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>false</IsAcknowledged><Reference xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>xyt</Reference><Amount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</Amount><CardType xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Visa</CardType><FeeAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FeeAmount><ApprovalCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><AVSResult i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><BatchId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><CVResult xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</CVResult><CardLevel xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><DowngradeCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><MaskedPAN xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>401288XXXXXX8882</MaskedPAN><PaymentAccountDataToken xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><RetrievalReferenceNumber xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><Resubmit xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Unspecified</Resubmit><SettlementDate xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0001-01-01T00:00:00</SettlementDate><FinalBalance xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FinalBalance><OrderId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>36043</OrderId><CashBackAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0.00</CashBackAmount><PrepaidCard xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</PrepaidCard><AdviceResponse>NotSet</AdviceResponse><CommercialCardResponse>NotSet</CommercialCardResponse><ReturnedACI>Y</ReturnedACI></BankcardTransactionResponsePro>", "application/xml")
-  end
-
-  def successful_authorize_and_capture_response
+  def successful_purchase_response
     MockResponse.succeeded("<BankcardTransactionResponsePro xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard/Pro\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><Status xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Successful</Status><StatusCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>000</StatusCode><StatusMessage xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>AP</StatusMessage><TransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>CCED01ACF1F44E5A8DAE8E956EFD1DE5</TransactionId><OriginatorTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>41617</OriginatorTransactionId><ServiceTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>015254170005055</ServiceTransactionId><ServiceTransactionDateTime xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'><Date>2013-04-03</Date><Time>13:50:16.000</Time><TimeZone>-06:00</TimeZone></ServiceTransactionDateTime><Addendum i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><CaptureState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Captured</CaptureState><TransactionState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Captured</TransactionState><IsAcknowledged xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>false</IsAcknowledged><Reference xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>xyt</Reference><Amount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>10.00</Amount><CardType xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Visa</CardType><FeeAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FeeAmount><ApprovalCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>VI1000</ApprovalCode><AVSResult i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><BatchId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0801</BatchId><CVResult xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</CVResult><CardLevel xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><DowngradeCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>00</DowngradeCode><MaskedPAN xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>401288XXXXXX8882</MaskedPAN><PaymentAccountDataToken xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>cced01ac-f1f4-4e5a-8dae-8e956efd1de559486bc5-88e7-4f08-a9b1-a80d2f728014</PaymentAccountDataToken><RetrievalReferenceNumber xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><Resubmit xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Unspecified</Resubmit><SettlementDate xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0001-01-01T00:00:00</SettlementDate><FinalBalance xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FinalBalance><OrderId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>36017</OrderId><CashBackAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0.00</CashBackAmount><PrepaidCard xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</PrepaidCard><AdviceResponse>NotSet</AdviceResponse><CommercialCardResponse>NotSet</CommercialCardResponse><ReturnedACI>N</ReturnedACI></BankcardTransactionResponsePro>", "application/xml")
   end
 
-  def failed_authorize_and_capture_response_with_pan
+  def failed_purchase_response_with_pan
     MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>0</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string i:nil=\'true\'/></Messages><Operation>AuthorizeAndCapture</Operation><Reason>Validation Errors Occurred</Reason><ValidationErrors><ValidationError><RuleKey>TenderData.CardData.PAN</RuleKey><RuleLocationKey>ppreq:CREDIT/ppreq:AUTH/TenderData/CardData/PAN</RuleLocationKey><RuleMessage>Property \'PAN\' is required.</RuleMessage><TransactionId>EBC8B4BC01DE4FD9BDB8DD3A6C69ECCD</TransactionId></ValidationError></ValidationErrors></ErrorResponse>", "application/xml")
-  end
-
-  def failed_authorize_and_capture_response_with_amount
-    MockResponse.succeeded("<BankcardTransactionResponsePro xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard/Pro\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><Status xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Failure</Status><StatusCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>013</StatusCode><StatusMessage xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>INVLD AMOUNT</StatusMessage><TransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>5EED2A04394D425DB6483B341506E55E</TransactionId><OriginatorTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>41619</OriginatorTransactionId><ServiceTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><ServiceTransactionDateTime xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'><Date>2013-04-03</Date><Time>13:50:16.000</Time><TimeZone>-06:00</TimeZone></ServiceTransactionDateTime><Addendum i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><CaptureState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>CaptureDeclined</CaptureState><TransactionState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>CaptureDeclined</TransactionState><IsAcknowledged xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>false</IsAcknowledged><Reference xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>xyt</Reference><Amount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</Amount><CardType xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Visa</CardType><FeeAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FeeAmount><ApprovalCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><AVSResult i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><BatchId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><CVResult xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</CVResult><CardLevel xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><DowngradeCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><MaskedPAN xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>401288XXXXXX8882</MaskedPAN><PaymentAccountDataToken xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><RetrievalReferenceNumber xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><Resubmit xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Unspecified</Resubmit><SettlementDate xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0001-01-01T00:00:00</SettlementDate><FinalBalance xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FinalBalance><OrderId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>36019</OrderId><CashBackAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0.00</CashBackAmount><PrepaidCard xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</PrepaidCard><AdviceResponse>NotSet</AdviceResponse><CommercialCardResponse>NotSet</CommercialCardResponse><ReturnedACI>Y</ReturnedACI></BankcardTransactionResponsePro>", "application/xml")
   end
 
   def successful_capture_response
@@ -157,32 +178,36 @@ class VelocityTest < Test::Unit::TestCase
     MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction no longer active due to Capture</a:string></Messages><Operation>Capture</Operation><Reason>Transaction no longer active due to Capture</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
   end
 
-  def successful_returnByid_response
+  def successful_refund_response
     MockResponse.succeeded("<BankcardTransactionResponsePro xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard/Pro\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><Status xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Successful</Status><StatusCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>000</StatusCode><StatusMessage xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>AP</StatusMessage><TransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>E78EC05C343D4377B2422691B07783A3</TransactionId><OriginatorTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>41639</OriginatorTransactionId><ServiceTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><ServiceTransactionDateTime xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'><Date>2015-09-11</Date><Time>07:56:53</Time><TimeZone i:nil=\'true\'/></ServiceTransactionDateTime><Addendum i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><CaptureState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Captured</CaptureState><TransactionState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Returned</TransactionState><IsAcknowledged xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>false</IsAcknowledged><Reference xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>xyt</Reference><Amount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>10.00</Amount><CardType xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Visa</CardType><FeeAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FeeAmount><ApprovalCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>C73494</ApprovalCode><AVSResult i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><BatchId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0801</BatchId><CVResult xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</CVResult><CardLevel xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><DowngradeCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><MaskedPAN xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>401288XXXXXX8882</MaskedPAN><PaymentAccountDataToken xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>5dd122cd-c033-4d26-9af0-dd7a29a564c20e79cd0f-baaa-48ed-8ab0-9249bb26f343</PaymentAccountDataToken><RetrievalReferenceNumber xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><Resubmit xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Unspecified</Resubmit><SettlementDate xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0001-01-01T00:00:00</SettlementDate><FinalBalance xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FinalBalance><OrderId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>36033</OrderId><CashBackAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0.00</CashBackAmount><PrepaidCard xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</PrepaidCard><AdviceResponse>NotSet</AdviceResponse><CommercialCardResponse>NotSet</CommercialCardResponse><ReturnedACI>NotSet</ReturnedACI></BankcardTransactionResponsePro>", "application/xml")
   end
 
-  def failed_returnByid_response
+  def failed_refund_response
+    MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Attempt to return more than original authorization.</a:string></Messages><Operation>ReturnById</Operation><Reason>Attempt to return more than original authorization.</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
+  end
+
+  def failed_refund_due_to_void_response
+    MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction no longer active due to Undo</a:string></Messages><Operation>ReturnById</Operation><Reason>Transaction no longer active due to Undo</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
+  end
+
+  def failed_refund_due_to_autorize_no_capture_response
     MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction cannot be Returned as it has not been Captured.  Use Undo instead.</a:string></Messages><Operation>ReturnById</Operation><Reason>Transaction cannot be Returned as it has not been Captured.  Use Undo instead.</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
   end
 
-  def failed_returnByid_due_adjust_response
-    MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction has been adjusted, return last adjusted transaction.</a:string></Messages><Operation>ReturnById</Operation><Reason>Transaction has been adjusted, return last adjusted transaction.</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
+  def failed_refund_due_to_using_same_auth_id_after_capture
+    MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction cannot be Returned as it has been Captured.  Return the Captured transaction instead.</a:string></Messages><Operation>ReturnById</Operation><Reason>Transaction cannot be Returned as it has been Captured.  Return the Captured transaction instead.</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
   end
 
-  def successful_undo_response
+  def successful_void_response
     MockResponse.succeeded("<BankcardTransactionResponsePro xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard/Pro\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><Status xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Successful</Status><StatusCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>006</StatusCode><StatusMessage xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>REVERSED</StatusMessage><TransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>7E9AD36BC5A2445AAAA2034B2609C7F0</TransactionId><OriginatorTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>41641</OriginatorTransactionId><ServiceTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><ServiceTransactionDateTime xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'><Date>2013-04-03</Date><Time>13:50:16.000</Time><TimeZone>-06:00</TimeZone></ServiceTransactionDateTime><Addendum i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><CaptureState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>CannotCapture</CaptureState><TransactionState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Undone</TransactionState><IsAcknowledged xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>false</IsAcknowledged><Reference xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>xyt</Reference><Amount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>10.00</Amount><CardType xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Visa</CardType><FeeAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FeeAmount><ApprovalCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><AVSResult i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><BatchId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><CVResult xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</CVResult><CardLevel xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><DowngradeCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>00</DowngradeCode><MaskedPAN xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>401288XXXXXX8882</MaskedPAN><PaymentAccountDataToken xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>d319259d-8b5e-4702-9d18-060240d1fed964fe60e2-2529-4ca3-88db-adcc55f811f5</PaymentAccountDataToken><RetrievalReferenceNumber xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><Resubmit xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Unspecified</Resubmit><SettlementDate xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0001-01-01T00:00:00</SettlementDate><FinalBalance xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FinalBalance><OrderId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>36036</OrderId><CashBackAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0.00</CashBackAmount><PrepaidCard xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</PrepaidCard><AdviceResponse>NotSet</AdviceResponse><CommercialCardResponse>NotSet</CommercialCardResponse><ReturnedACI>N</ReturnedACI></BankcardTransactionResponsePro>", "application/xml")
   end
 
-  def failed_undo_response
+  def failed_void_response
     MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction no longer active due to Capture.  Use Return instead.</a:string></Messages><Operation>Undo</Operation><Reason>Transaction no longer active due to Capture.  Use Return instead.</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
   end
 
-  def successful_adjust_response
-    MockResponse.succeeded("<BankcardTransactionResponsePro xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard/Pro\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><Status xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Successful</Status><StatusCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>000</StatusCode><StatusMessage xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>AP</StatusMessage><TransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>972B41964AAD476F836FF3A73E8B8CCC</TransactionId><OriginatorTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>41643</OriginatorTransactionId><ServiceTransactionId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>015254170001247</ServiceTransactionId><ServiceTransactionDateTime xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'><Date>2013-04-03</Date><Time>13:50:16.000</Time><TimeZone>-06:00</TimeZone></ServiceTransactionDateTime><Addendum i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'/><CaptureState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Captured</CaptureState><TransactionState xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>Adjusted</TransactionState><IsAcknowledged xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>false</IsAcknowledged><Reference xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions\'>xyt</Reference><Amount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>20.00</Amount><CardType xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Visa</CardType><FeeAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FeeAmount><ApprovalCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>VI1000</ApprovalCode><AVSResult i:nil=\'true\' xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><BatchId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0801</BatchId><CVResult xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</CVResult><CardLevel xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><DowngradeCode xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>00</DowngradeCode><MaskedPAN xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>401288XXXXXX8882</MaskedPAN><PaymentAccountDataToken xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>86bec791-1051-42c0-bdda-23ba8237f1e0bcd89c9f-2d12-4dfd-a06b-c2d658fefc92</PaymentAccountDataToken><RetrievalReferenceNumber xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'/><Resubmit xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>Unspecified</Resubmit><SettlementDate xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0001-01-01T00:00:00</SettlementDate><FinalBalance xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0</FinalBalance><OrderId xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>36037</OrderId><CashBackAmount xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>0.00</CashBackAmount><PrepaidCard xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard\'>NotSet</PrepaidCard><AdviceResponse>NotSet</AdviceResponse><CommercialCardResponse>NotSet</CommercialCardResponse><ReturnedACI>N</ReturnedACI></BankcardTransactionResponsePro>", "application/xml")
-  end
-
-  def failed_adjust_response
-    MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction no longer active due to Capture</a:string></Messages><Operation>Adjust</Operation><Reason>Transaction no longer active due to Capture</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
+  def failed_void_already_undone_response
+    MockResponse.failed("<ErrorResponse xmlns=\'http://schemas.ipcommerce.com/CWS/v2.0/Rest\' xmlns:i=\'http://www.w3.org/2001/XMLSchema-instance\'><ErrorId>326</ErrorId><HelpUrl>http://docs.nabvelocity.com/hc/en-us/articles/203497757-REST-Information</HelpUrl><Messages xmlns:a=\'http://schemas.microsoft.com/2003/10/Serialization/Arrays\'><a:string>Transaction has already been Undone.</a:string></Messages><Operation>Undo</Operation><Reason>Transaction has already been Undone.</Reason><ValidationErrors/></ErrorResponse>", "application/xml")
   end
   
   class MockResponse
