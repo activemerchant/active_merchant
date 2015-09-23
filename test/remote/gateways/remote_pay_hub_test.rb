@@ -5,7 +5,8 @@ class RemotePayHubTest < Test::Unit::TestCase
     @gateway = PayHubGateway.new(fixtures(:pay_hub))
     @amount = 100
     @credit_card = credit_card('5466410004374507', verification_value: "998")
-    @invalid_card = credit_card('371449635398431', verification_value: "9997")
+    @invalid_card = credit_card('3714496353984', verification_value: "9997")
+    @invalid_transaction_id = "10809"
     @options = {
       :first_name => 'Garrya',
       :last_name => 'Barrya',
@@ -15,68 +16,62 @@ class RemotePayHubTest < Test::Unit::TestCase
         :city => 'Happya City',
         :state => 'CA',
         :zip => '94901'
+      },
+      :record_format => "CREDIT_CARD",
+      :schedule => {
+        :schedule_type => 'S',
+        :specific_dates_schedule => {
+        :specific_dates => [
+          (Date.today + 1.month).to_s,
+          (Date.today + 2.month).to_s
+          ]
+        }
       }
     }
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
-
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
 
   def test_unsuccessful_purchase
-    amount = 20
-    response = @gateway.purchase(amount, @invalid_card, @options)
+    response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response
-    assert_equal 'DECLINE', response.message
+    assert_equal "DECLINE", response.message
   end
-
-  def test_successful_auth
-    response = @gateway.authorize(@amount, @credit_card, @options)
-
+  
+  def test_successful_recurring
+    response = @gateway.recurring(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
-
-  def test_unsuccessful_auth
-    response = @gateway.authorize(20, @invalid_card, @options)
+  
+  def test_unsuccessful_recurring
+    @options[:schedule][:specific_dates_schedule][:specific_dates] = [(Date.today - 1.month).to_s]
+    response =  @gateway.recurring(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'DECLINE', response.message
-  end
-
-  def test_unsuccessful_capture
-    assert_failure @gateway.capture(@amount, "bogus")
-  end
-
-  def test_partial_capture
-    auth_response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth_response
-
-    response = @gateway.capture(10, auth_response.authorization)
-    assert_success response
-    assert_equal 'TRANSACTION CAPTURED SUCCESSFULLY', response.message
-  end
-
-  def test_successful_refund
-    response = @gateway.purchase(@amount, @credit_card)
-    assert_success response
-
-    response = @gateway.refund(nil, response.authorization)
-    assert_success response
-    assert_equal 'SUCCESS', response.message
+    assert_equal "DECLINE", response.message
   end
 
   def test_unsuccessful_refund
-    assert_failure @gateway.refund(@amount, "bogus")
+    response = @gateway.refund(@invalid_transaction_id, @options )
+    assert_failure response
+    assert_equal "DECLINE", response.message
+  end
+  
+  def test_successful_void
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.void(purchase_response.params["saleId"], @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 
-  def test_successful_verify
-    assert_success @gateway.verify(@credit_card)
+  def test_unsuccessful_void
+    response = @gateway.void(@invalid_transaction_id, @options )
+    assert_failure response
+    assert_equal "DECLINE", response.message
   end
-
-  def test_failed_verify
-    assert_failure @gateway.verify(credit_card("4111111111111111"))
-  end
+  
 end
