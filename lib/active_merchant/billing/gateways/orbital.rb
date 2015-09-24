@@ -180,69 +180,74 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :merchant_id)
         requires!(options, :login, :password) unless options[:ip_authentication]
-        super
+        # optional options:
+        # :customer_profiles
+        # :retry_logic
+        # :ip_authentication
+        # :bin
+        super # super sets @options
       end
 
       # A – Authorization request
-      def authorize(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_ONLY, money, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency])
-          add_address(xml, creditcard, options)
+      def authorize(money, creditcard, parameters = {})
+        order = build_new_order_xml(AUTH_ONLY, money, parameters) do |xml|
+          add_creditcard(xml, creditcard, parameters[:currency])
+          add_address(xml, creditcard, parameters)
           if @options[:customer_profiles]
-            add_customer_data(xml, creditcard, options)
-            add_managed_billing(xml, options)
+            add_customer_data(xml, creditcard, parameters)
+            add_managed_billing(xml, parameters)
           end
         end
-        commit(order, :authorize, options[:trace_number])
+        commit(order, :authorize, parameters[:trace_number])
       end
 
-      def verify(creditcard, options = {})
+      def verify(creditcard, parameters = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, creditcard, options) }
+          r.process { authorize(100, creditcard, parameters) }
           r.process(:ignore_result) { void(r.authorization) }
         end
       end
 
       # AC – Authorization and Capture
-      def purchase(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_AND_CAPTURE, money, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency])
-          add_address(xml, creditcard, options)
+      def purchase(money, creditcard, parameters = {})
+        order = build_new_order_xml(AUTH_AND_CAPTURE, money, parameters) do |xml|
+          add_creditcard(xml, creditcard, parameters[:currency])
+          add_address(xml, creditcard, parameters)
           if @options[:customer_profiles]
-            add_customer_data(xml, creditcard, options)
-            add_managed_billing(xml, options)
+            add_customer_data(xml, creditcard, parameters)
+            add_managed_billing(xml, parameters)
           end
         end
-        commit(order, :purchase, options[:trace_number])
+        commit(order, :purchase, parameters[:trace_number])
       end
 
       # MFC - Mark For Capture
-      def capture(money, authorization, options = {})
-        commit(build_mark_for_capture_xml(money, authorization, options), :capture)
+      def capture(money, authorization, parameters = {})
+        commit(build_mark_for_capture_xml(money, authorization, parameters), :capture)
       end
 
       # R – Refund request
-      def refund(money, authorization, options = {})
-        order = build_new_order_xml(REFUND, money, options.merge(:authorization => authorization)) do |xml|
-          add_refund(xml, options[:currency])
-          xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
+      def refund(money, authorization, parameters = {})
+        order = build_new_order_xml(REFUND, money, parameters.merge(:authorization => authorization)) do |xml|
+          add_refund(xml, parameters[:currency])
+          xml.tag! :CustomerRefNum, parameters[:customer_ref_num] if @options[:customer_profiles] && parameters[:profile_txn]
         end
-        commit(order, :refund, options[:trace_number])
+        commit(order, :refund, parameters[:trace_number])
       end
 
-      def credit(money, authorization, options= {})
+      def credit(money, authorization, parameters = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, authorization, options)
+        refund(money, authorization, parameters)
       end
 
-      def void(authorization, options = {}, deprecated = {})
-        if(!options.kind_of?(Hash))
+      def void(authorization, parameters = {}, deprecated = {})
+        if(!parameters.kind_of?(Hash))
           ActiveMerchant.deprecated("Calling the void method with an amount parameter is deprecated and will be removed in a future version.")
-          return void(options, deprecated.merge(:amount => authorization))
+          return void(parameters, deprecated.merge(:amount => authorization))
         end
 
-        order = build_void_request_xml(authorization, options)
-        commit(order, :void, options[:trace_number])
+        order = build_void_request_xml(authorization, parameters)
+        commit(order, :void, parameters[:trace_number])
       end
 
 
@@ -267,27 +272,27 @@ module ActiveMerchant #:nodoc:
       #   'I' - Inactive
       #   'MS'  - Manual Suspend
 
-      def add_customer_profile(creditcard, options = {})
-        options.merge!(:customer_profile_action => CREATE)
-        order = build_customer_request_xml(creditcard, options)
+      def add_customer_profile(creditcard, parameters = {})
+        parameters.merge!(:customer_profile_action => CREATE)
+        order = build_customer_request_xml(creditcard, parameters)
         commit(order, :add_customer_profile)
       end
 
-      def update_customer_profile(creditcard, options = {})
-        options.merge!(:customer_profile_action => UPDATE)
-        order = build_customer_request_xml(creditcard, options)
+      def update_customer_profile(creditcard, parameters = {})
+        parameters.merge!(:customer_profile_action => UPDATE)
+        order = build_customer_request_xml(creditcard, parameters)
         commit(order, :update_customer_profile)
       end
 
       def retrieve_customer_profile(customer_ref_num)
-        options = {:customer_profile_action => RETRIEVE, :customer_ref_num => customer_ref_num}
-        order = build_customer_request_xml(nil, options)
+        parameters = {:customer_profile_action => RETRIEVE, :customer_ref_num => customer_ref_num}
+        order = build_customer_request_xml(nil, parameters)
         commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
-        options = {:customer_profile_action => DELETE, :customer_ref_num => customer_ref_num}
-        order = build_customer_request_xml(nil, options)
+        parameters = {:customer_profile_action => DELETE, :customer_ref_num => customer_ref_num}
+        order = build_customer_request_xml(nil, parameters)
         commit(order, :delete_customer_profile)
       end
 
@@ -301,19 +306,19 @@ module ActiveMerchant #:nodoc:
         authorization.split(';')
       end
 
-      def add_customer_data(xml, creditcard, options)
-        if options[:profile_txn]
-          xml.tag! :CustomerRefNum, options[:customer_ref_num]
+      def add_customer_data(xml, creditcard, parameters)
+        if parameters[:profile_txn]
+          xml.tag! :CustomerRefNum, parameters[:customer_ref_num]
         else
-          if options[:customer_ref_num]
+          if parameters[:customer_ref_num]
             if creditcard
               xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM
             end
-            xml.tag! :CustomerRefNum, options[:customer_ref_num]
+            xml.tag! :CustomerRefNum, parameters[:customer_ref_num]
           else
             xml.tag! :CustomerProfileFromOrderInd, AUTO_GENERATE
           end
-          xml.tag! :CustomerProfileOrderOverrideInd, options[:customer_profile_order_override_ind] || NO_MAPPING_TO_ORDER_DATA
+          xml.tag! :CustomerProfileOrderOverrideInd, parameters[:customer_profile_order_override_ind] || NO_MAPPING_TO_ORDER_DATA
         end
       end
 
@@ -326,8 +331,8 @@ module ActiveMerchant #:nodoc:
         xml.tag! :SDMerchantEmail, soft_desc.merchant_email           if soft_desc.merchant_email
       end
 
-      def add_address(xml, creditcard, options)
-        if(address = (options[:billing_address] || options[:address]))
+      def add_address(xml, creditcard, parameters)
+        if(address = (parameters[:billing_address] || parameters[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
 
           if avs_supported
@@ -364,8 +369,8 @@ module ActiveMerchant #:nodoc:
       end
 
       # For Profile requests
-      def add_customer_address(xml, options)
-        if(address = (options[:billing_address] || options[:address]))
+      def add_customer_address(xml, parameters)
+        if(address = (parameters[:billing_address] || parameters[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
 
           xml.tag! :CustomerAddress1, byte_limit(format_address_field(address[:address1]), 30)
@@ -412,8 +417,8 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CurrencyExponent, currency_exponents(currency)
       end
 
-      def add_managed_billing(xml, options)
-        if mb = options[:managed_billing]
+      def add_managed_billing(xml, parameters)
+        if mb = parameters[:managed_billing]
           ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
           # default to recurring (R).  Other option is deferred (D).
@@ -667,7 +672,7 @@ module ActiveMerchant #:nodoc:
         limited_value
       end
 
-      def build_customer_request_xml(creditcard, options = {})
+      def build_customer_request_xml(creditcard, parameters = {})
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Profile do
@@ -676,38 +681,38 @@ module ActiveMerchant #:nodoc:
             xml.tag! :CustomerBin, bin
             xml.tag! :CustomerMerchantID, @options[:merchant_id]
             xml.tag! :CustomerName, creditcard.name if creditcard
-            xml.tag! :CustomerRefNum, options[:customer_ref_num] if options[:customer_ref_num]
+            xml.tag! :CustomerRefNum, parameters[:customer_ref_num] if parameters[:customer_ref_num]
 
-            add_customer_address(xml, options)
+            add_customer_address(xml, parameters)
 
-            xml.tag! :CustomerProfileAction, options[:customer_profile_action] # C, R, U, D
+            xml.tag! :CustomerProfileAction, parameters[:customer_profile_action] # C, R, U, D
             # NO No mapping to order data
             # OI Use <CustomerRefNum> for <OrderID>
             # OD Use <CustomerReferNum> for <Comments>
             # OA Use <CustomerRefNum> for <OrderID> and <Comments>
-            xml.tag! :CustomerProfileOrderOverrideInd, options[:customer_profile_order_override_ind] || NO_MAPPING_TO_ORDER_DATA
+            xml.tag! :CustomerProfileOrderOverrideInd, parameters[:customer_profile_order_override_ind] || NO_MAPPING_TO_ORDER_DATA
 
-            if options[:customer_profile_action] == CREATE
+            if parameters[:customer_profile_action] == CREATE
               # A Auto-Generate the CustomerRefNum
               # S Use CustomerRefNum field
               # O Use OrderID field
               # D Use Comments field
-              xml.tag! :CustomerProfileFromOrderInd, (options[:customer_ref_num] ? USE_CUSTOMER_REF_NUM : AUTO_GENERATE)
+              xml.tag! :CustomerProfileFromOrderInd, (parameters[:customer_ref_num] ? USE_CUSTOMER_REF_NUM : AUTO_GENERATE)
             end
 
-            xml.tag! :OrderDefaultDescription, options[:order_default_description][0..63] if options[:order_default_description]
-            xml.tag! :OrderDefaultAmount, options[:order_default_amount] if options[:order_default_amount]
+            xml.tag! :OrderDefaultDescription, parameters[:order_default_description][0..63] if parameters[:order_default_description]
+            xml.tag! :OrderDefaultAmount, parameters[:order_default_amount] if parameters[:order_default_amount]
 
-            if [CREATE, UPDATE].include? options[:customer_profile_action]
+            if [CREATE, UPDATE].include? parameters[:customer_profile_action]
               xml.tag! :CustomerAccountType, 'CC' # Only credit card supported
-              xml.tag! :Status, options[:status] || ACTIVE # Active
+              xml.tag! :Status, parameters[:status] || ACTIVE # Active
             end
 
             xml.tag! :CCAccountNum, creditcard.number if creditcard
             xml.tag! :CCExpireDate, creditcard.expiry_date.expiration.strftime("%m%y") if creditcard
 
             # This has to come after CCExpireDate.
-            add_managed_billing(xml, options)
+            add_managed_billing(xml, parameters)
           end
         end
         xml.target!
