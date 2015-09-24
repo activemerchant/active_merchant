@@ -41,6 +41,7 @@
 * USAePay: Add test mode setting via options [marquisong]
 * Add Clearhaus gateway [dinesh]
 * WorldpayOnlinePayments: Fix logic to determine success [ao]
+* Paymill: store order_id in description field [nikoloff]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
