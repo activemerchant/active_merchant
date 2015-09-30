@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
       #
       # To finish setting up, create the active_merchant object you will be using, with the Velocity gateway.
       # 
-      #   gateway = ActiveMerchant::Billing::VelocityGateway.new(:identity_token => "PHNhbWw6QXNzZXJ0aW9uIE1ham9yVmVyc2lvbj0iMSIgTWlub3JWZXJzaW9uPSIxIiBBc3NlcnRpb25JRD0iXzdlMDhiNzdjLTUzZWEtNDEwZC1hNmJiLTAyYjJmMTAzMzEwYyIgSXNzdWVyPSJJcGNBdXRoZW50aWNhdGlvbiIgSXNzdWVJbnN0YW50PSIyMDE0LTEwLTEwVDIwOjM2OjE4LjM3OVoiIHhtbG5zOnNhbWw9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjEuMDphc3NlcnRpb24iPjxzYW1sOkNvbmRpdGlvbnMgTm90QmVmb3JlPSIyMDE0LTEwLTEwVDIwOjM2OjE4LjM3OVoiIE5vdE9uT3JBZnRlcj0iMjA0NC0xMC0xMFQyMDozNjoxOC4zNzlaIj48L3NhbWw6Q29uZGl0aW9ucz48c2FtbDpBZHZpY2U+PC9zYW1sOkFkdmljZT48c2FtbDpBdHRyaWJ1dGVTdGF0ZW1lbnQ+PHNhbWw6U3ViamVjdD48c2FtbDpOYW1lSWRlbnRpZmllcj5GRjNCQjZEQzU4MzAwMDAxPC9zYW1sOk5hbWVJZGVudGlmaWVyPjwvc2FtbDpTdWJqZWN0PjxzYW1sOkF0dHJpYnV0ZSBBdHRyaWJ1dGVOYW1lPSJTQUsiIEF0dHJpYnV0ZU5hbWVzcGFjZT0iaHR0cDovL3NjaGVtYXMuaXBjb21tZXJjZS5jb20vSWRlbnRpdHkiPjxzYW1sOkF0dHJpYnV0ZVZhbHVlPkZGM0JCNkRDNTgzMDAwMDE8L3NhbWw6QXR0cmlidXRlVmFsdWU+PC9zYW1sOkF0dHJpYnV0ZT48c2FtbDpBdHRyaWJ1dGUgQXR0cmlidXRlTmFtZT0iU2VyaWFsIiBBdHRyaWJ1dGVOYW1lc3BhY2U9Imh0dHA6Ly9zY2hlbWFzLmlwY29tbWVyY2UuY29tL0lkZW50aXR5Ij48c2FtbDpBdHRyaWJ1dGVWYWx1ZT5iMTVlMTA4MS00ZGY2LTQwMTYtODM3Mi02NzhkYzdmZDQzNTc8L3NhbWw6QXR0cmlidXRlVmFsdWU+PC9zYW1sOkF0dHJpYnV0ZT48c2FtbDpBdHRyaWJ1dGUgQXR0cmlidXRlTmFtZT0ibmFtZSIgQXR0cmlidXRlTmFtZXNwYWNlPSJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcyI+PHNhbWw6QXR0cmlidXRlVmFsdWU+RkYzQkI2REM1ODMwMDAwMTwvc2FtbDpBdHRyaWJ1dGVWYWx1ZT48L3NhbWw6QXR0cmlidXRlPjwvc2FtbDpBdHRyaWJ1dGVTdGF0ZW1lbnQ+PFNpZ25hdHVyZSB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI+PFNpZ25lZEluZm8+PENhbm9uaWNhbGl6YXRpb25NZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiPjwvQ2Fub25pY2FsaXphdGlvbk1ldGhvZD48U2lnbmF0dXJlTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnI3JzYS1zaGExIj48L1NpZ25hdHVyZU1ldGhvZD48UmVmZXJlbmNlIFVSST0iI183ZTA4Yjc3Yy01M2VhLTQxMGQtYTZiYi0wMmIyZjEwMzMxMGMiPjxUcmFuc2Zvcm1zPjxUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjZW52ZWxvcGVkLXNpZ25hdHVyZSI+PC9UcmFuc2Zvcm0+PFRyYW5zZm9ybSBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMTAveG1sLWV4Yy1jMTRuIyI+PC9UcmFuc2Zvcm0+PC9UcmFuc2Zvcm1zPjxEaWdlc3RNZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjc2hhMSI+PC9EaWdlc3RNZXRob2Q+PERpZ2VzdFZhbHVlPnl3NVZxWHlUTUh5NUNjdmRXN01TV2RhMDZMTT08L0RpZ2VzdFZhbHVlPjwvUmVmZXJlbmNlPjwvU2lnbmVkSW5mbz48U2lnbmF0dXJlVmFsdWU+WG9ZcURQaUorYy9IMlRFRjNQMWpQdVBUZ0VDVHp1cFVlRXpESERwMlE2ZW92T2lhN0pkVjI1bzZjTk1vczBTTzRISStSUGRUR3hJUW9xa0paeEtoTzZHcWZ2WHFDa2NNb2JCemxYbW83NUFSWU5jMHdlZ1hiQUVVQVFCcVNmeGwxc3huSlc1ZHZjclpuUytkSThoc2lZZW4vT0VTOUdtZUpsZVd1WUR4U0xmQjZJZnd6dk5LQ0xlS0FXenBkTk9NYmpQTjJyNUJWQUhQZEJ6WmtiSGZwdUlablp1Q2l5OENvaEo1bHU3WGZDbXpHdW96VDVqVE0wU3F6bHlzeUpWWVNSbVFUQW5WMVVGMGovbEx6SU14MVJmdWltWHNXaVk4c2RvQ2IrZXpBcVJnbk5EVSs3NlVYOEZFSEN3Q2c5a0tLSzQwMXdYNXpLd2FPRGJJUFpEYitBPT08L1NpZ25hdHVyZVZhbHVlPjxLZXlJbmZvPjxvOlNlY3VyaXR5VG9rZW5SZWZlcmVuY2UgeG1sbnM6bz0iaHR0cDovL2RvY3Mub2FzaXMtb3Blbi5vcmcvd3NzLzIwMDQvMDEvb2FzaXMtMjAwNDAxLXdzcy13c3NlY3VyaXR5LXNlY2V4dC0xLjAueHNkIj48bzpLZXlJZGVudGlmaWVyIFZhbHVlVHlwZT0iaHR0cDovL2RvY3Mub2FzaXMtb3Blbi5vcmcvd3NzL29hc2lzLXdzcy1zb2FwLW1lc3NhZ2Utc2VjdXJpdHktMS4xI1RodW1icHJpbnRTSEExIj5ZREJlRFNGM0Z4R2dmd3pSLzBwck11OTZoQ2M9PC9vOktleUlkZW50aWZpZXI+PC9vOlNlY3VyaXR5VG9rZW5SZWZlcmVuY2U+PC9LZXlJbmZvPjwvU2lnbmF0dXJlPjwvc2FtbDpBc3NlcnRpb24+", :work_flow_id => "2317000001", :application_profile_id => "14644" , :merchant_profile_id => "PrestaShop Global HC")
+      #  gateway = ActiveMerchant::Billing::VelocityGateway.new(:identity_token => "PHNhbWw6QXNzZXJ0aW9uIE1ham9yVmVyc2lvbj0iMSIgTWlub3JWZXJzaW9uPSIxIiBBc3NlcnRpb25JRD0iXzdlMDhiNzdjLTUzZWEtNDEwZC1hNmJiLTAyYjJmMTAzMzEwYyIgSXNzdWVyPSJJcGNBdXRoZW50aWNhdGlvbiIgSXNzdWVJbnN0YW50PSIyMDE0LTEwLTEwVDIwOjM2OjE4LjM3OVoiIHhtbG5zOnNhbWw9InVybjpvYXNpczpuYW1lczp0YzpTQU1MOjEuMDphc3NlcnRpb24iPjxzYW1sOkNvbmRpdGlvbnMgTm90QmVmb3JlPSIyMDE0LTEwLTEwVDIwOjM2OjE4LjM3OVoiIE5vdE9uT3JBZnRlcj0iMjA0NC0xMC0xMFQyMDozNjoxOC4zNzlaIj48L3NhbWw6Q29uZGl0aW9ucz48c2FtbDpBZHZpY2U+PC9zYW1sOkFkdmljZT48c2FtbDpBdHRyaWJ1dGVTdGF0ZW1lbnQ+PHNhbWw6U3ViamVjdD48c2FtbDpOYW1lSWRlbnRpZmllcj5GRjNCQjZEQzU4MzAwMDAxPC9zYW1sOk5hbWVJZGVudGlmaWVyPjwvc2FtbDpTdWJqZWN0PjxzYW1sOkF0dHJpYnV0ZSBBdHRyaWJ1dGVOYW1lPSJTQUsiIEF0dHJpYnV0ZU5hbWVzcGFjZT0iaHR0cDovL3NjaGVtYXMuaXBjb21tZXJjZS5jb20vSWRlbnRpdHkiPjxzYW1sOkF0dHJpYnV0ZVZhbHVlPkZGM0JCNkRDNTgzMDAwMDE8L3NhbWw6QXR0cmlidXRlVmFsdWU+PC9zYW1sOkF0dHJpYnV0ZT48c2FtbDpBdHRyaWJ1dGUgQXR0cmlidXRlTmFtZT0iU2VyaWFsIiBBdHRyaWJ1dGVOYW1lc3BhY2U9Imh0dHA6Ly9zY2hlbWFzLmlwY29tbWVyY2UuY29tL0lkZW50aXR5Ij48c2FtbDpBdHRyaWJ1dGVWYWx1ZT5iMTVlMTA4MS00ZGY2LTQwMTYtODM3Mi02NzhkYzdmZDQzNTc8L3NhbWw6QXR0cmlidXRlVmFsdWU+PC9zYW1sOkF0dHJpYnV0ZT48c2FtbDpBdHRyaWJ1dGUgQXR0cmlidXRlTmFtZT0ibmFtZSIgQXR0cmlidXRlTmFtZXNwYWNlPSJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcyI+PHNhbWw6QXR0cmlidXRlVmFsdWU+RkYzQkI2REM1ODMwMDAwMTwvc2FtbDpBdHRyaWJ1dGVWYWx1ZT48L3NhbWw6QXR0cmlidXRlPjwvc2FtbDpBdHRyaWJ1dGVTdGF0ZW1lbnQ+PFNpZ25hdHVyZSB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnIyI+PFNpZ25lZEluZm8+PENhbm9uaWNhbGl6YXRpb25NZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzEwL3htbC1leGMtYzE0biMiPjwvQ2Fub25pY2FsaXphdGlvbk1ldGhvZD48U2lnbmF0dXJlTWV0aG9kIEFsZ29yaXRobT0iaHR0cDovL3d3dy53My5vcmcvMjAwMC8wOS94bWxkc2lnI3JzYS1zaGExIj48L1NpZ25hdHVyZU1ldGhvZD48UmVmZXJlbmNlIFVSST0iI183ZTA4Yjc3Yy01M2VhLTQxMGQtYTZiYi0wMmIyZjEwMzMxMGMiPjxUcmFuc2Zvcm1zPjxUcmFuc2Zvcm0gQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjZW52ZWxvcGVkLXNpZ25hdHVyZSI+PC9UcmFuc2Zvcm0+PFRyYW5zZm9ybSBBbGdvcml0aG09Imh0dHA6Ly93d3cudzMub3JnLzIwMDEvMTAveG1sLWV4Yy1jMTRuIyI+PC9UcmFuc2Zvcm0+PC9UcmFuc2Zvcm1zPjxEaWdlc3RNZXRob2QgQWxnb3JpdGhtPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwLzA5L3htbGRzaWcjc2hhMSI+PC9EaWdlc3RNZXRob2Q+PERpZ2VzdFZhbHVlPnl3NVZxWHlUTUh5NUNjdmRXN01TV2RhMDZMTT08L0RpZ2VzdFZhbHVlPjwvUmVmZXJlbmNlPjwvU2lnbmVkSW5mbz48U2lnbmF0dXJlVmFsdWU+WG9ZcURQaUorYy9IMlRFRjNQMWpQdVBUZ0VDVHp1cFVlRXpESERwMlE2ZW92T2lhN0pkVjI1bzZjTk1vczBTTzRISStSUGRUR3hJUW9xa0paeEtoTzZHcWZ2WHFDa2NNb2JCemxYbW83NUFSWU5jMHdlZ1hiQUVVQVFCcVNmeGwxc3huSlc1ZHZjclpuUytkSThoc2lZZW4vT0VTOUdtZUpsZVd1WUR4U0xmQjZJZnd6dk5LQ0xlS0FXenBkTk9NYmpQTjJyNUJWQUhQZEJ6WmtiSGZwdUlablp1Q2l5OENvaEo1bHU3WGZDbXpHdW96VDVqVE0wU3F6bHlzeUpWWVNSbVFUQW5WMVVGMGovbEx6SU14MVJmdWltWHNXaVk4c2RvQ2IrZXpBcVJnbk5EVSs3NlVYOEZFSEN3Q2c5a0tLSzQwMXdYNXpLd2FPRGJJUFpEYitBPT08L1NpZ25hdHVyZVZhbHVlPjxLZXlJbmZvPjxvOlNlY3VyaXR5VG9rZW5SZWZlcmVuY2UgeG1sbnM6bz0iaHR0cDovL2RvY3Mub2FzaXMtb3Blbi5vcmcvd3NzLzIwMDQvMDEvb2FzaXMtMjAwNDAxLXdzcy13c3NlY3VyaXR5LXNlY2V4dC0xLjAueHNkIj48bzpLZXlJZGVudGlmaWVyIFZhbHVlVHlwZT0iaHR0cDovL2RvY3Mub2FzaXMtb3Blbi5vcmcvd3NzL29hc2lzLXdzcy1zb2FwLW1lc3NhZ2Utc2VjdXJpdHktMS4xI1RodW1icHJpbnRTSEExIj5ZREJlRFNGM0Z4R2dmd3pSLzBwck11OTZoQ2M9PC9vOktleUlkZW50aWZpZXI+PC9vOlNlY3VyaXR5VG9rZW5SZWZlcmVuY2U+PC9LZXlJbmZvPjwvU2lnbmF0dXJlPjwvc2FtbDpBc3NlcnRpb24+", :work_flow_id => "2317000001", :application_profile_id => "14644" , :merchant_profile_id => "PrestaShop Global HC")
       #
       # Next, create a credit card object using a Velocity approved test card.
       #
@@ -177,32 +177,32 @@ module ActiveMerchant #:nodoc:
           msg = REXML::Document.new(body)
           if msg.elements['ErrorResponse'].nil? &&  !["400", "500", "5000"].include?(code)
             unless msg.elements['BankcardCaptureResponse'].nil?
-                results[:status] = REXML::XPath.first(msg, "/BankcardCaptureResponse/Status/text()")
-                results[:transction_id] = REXML::XPath.first(msg, "/BankcardCaptureResponse/TransactionId/text()")
-                results[:StatusMessage] = REXML::XPath.first(msg, "/BankcardCaptureResponse/StatusMessage/text()")
-                results[:OriginatorTransactionId] = REXML::XPath.first(msg, "/BankcardCaptureResponse/OriginatorTransactionId/text()")
-                results[:StatusCode] = REXML::XPath.first(msg, "/BankcardCaptureResponse/StatusCode/text()")
-                results[:TransactionState] = REXML::XPath.first(msg, "/BankcardCaptureResponse/TransactionState/text()")
+              results[:status] = REXML::XPath.first(msg, "/BankcardCaptureResponse/Status/text()")
+              results[:transction_id] = REXML::XPath.first(msg, "/BankcardCaptureResponse/TransactionId/text()")
+              results[:StatusMessage] = REXML::XPath.first(msg, "/BankcardCaptureResponse/StatusMessage/text()")
+              results[:OriginatorTransactionId] = REXML::XPath.first(msg, "/BankcardCaptureResponse/OriginatorTransactionId/text()")
+              results[:StatusCode] = REXML::XPath.first(msg, "/BankcardCaptureResponse/StatusCode/text()")
+              results[:TransactionState] = REXML::XPath.first(msg, "/BankcardCaptureResponse/TransactionState/text()")
             else
-                results[:status] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/Status/text()")
-                results[:transction_id] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/TransactionId/text()")
-                results[:StatusMessage] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/StatusMessage/text()")
-                results[:OriginatorTransactionId] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/OriginatorTransactionId/text()")
-                results[:StatusCode] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/StatusCode/text()")
-                results[:TransactionState] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/TransactionState/text()")
+              results[:status] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/Status/text()")
+              results[:transction_id] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/TransactionId/text()")
+              results[:StatusMessage] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/StatusMessage/text()")
+              results[:OriginatorTransactionId] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/OriginatorTransactionId/text()")
+              results[:StatusCode] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/StatusCode/text()")
+              results[:TransactionState] = REXML::XPath.first(msg, "/BankcardTransactionResponsePro/TransactionState/text()")
             end
             if results[:status] == "Failure"
-               results[:status] = (REXML::XPath.first(msg, "/BankcardCaptureResponse/Status/text()")) || (REXML::XPath.first(msg, "/BankcardTransactionResponsePro/Status/text()"))
-               results[:StatusMessage] = (REXML::XPath.first(msg, "/BankcardCaptureResponse/StatusMessage/text()")) || (REXML::XPath.first(msg, "/BankcardTransactionResponsePro/StatusMessage/text()"))
+              results[:status] = (REXML::XPath.first(msg, "/BankcardCaptureResponse/Status/text()")) || (REXML::XPath.first(msg, "/BankcardTransactionResponsePro/Status/text()"))
+              results[:StatusMessage] = (REXML::XPath.first(msg, "/BankcardCaptureResponse/StatusMessage/text()")) || (REXML::XPath.first(msg, "/BankcardTransactionResponsePro/StatusMessage/text()"))
             end
           else
             unless msg.elements['ErrorResponse'].nil?
-                results[:ErrorId] = REXML::XPath.first(msg, "/ErrorResponse/ErrorId/text()")
-                results[:Operation] = REXML::XPath.first(msg, "/ErrorResponse/Operation/text()")
-                results[:Error] = REXML::XPath.first(msg, "/ErrorResponse/Reason/text()")
-                if results[:Error] == "Validation Errors Occurred"  
-                   results[:RuleMessage] = REXML::XPath.first(msg, "/ErrorResponse/ValidationErrors/ValidationError/RuleMessage/text()")
-                end
+              results[:ErrorId] = REXML::XPath.first(msg, "/ErrorResponse/ErrorId/text()")
+              results[:Operation] = REXML::XPath.first(msg, "/ErrorResponse/Operation/text()")
+              results[:Error] = REXML::XPath.first(msg, "/ErrorResponse/Reason/text()")
+              if results[:Error] == "Validation Errors Occurred"  
+                 results[:RuleMessage] = REXML::XPath.first(msg, "/ErrorResponse/ValidationErrors/ValidationError/RuleMessage/text()")
+              end
             else 
               results[:Error] = " Bad Request" 
             end
@@ -240,16 +240,8 @@ module ActiveMerchant #:nodoc:
                   xml['ns1'].EcommerceSecurityData('i:nil' =>"true")
                 }
                 xml['ns1'].TransactionData{
-                  if params[:Amount] != ''
-                    xml['ns8'].Amount('xmlns:ns8' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:Amount])
-                  else
-                    xml['ns8'].Amount('xmlns:ns8' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text('0.00')
-                  end
-                  xml['ns9'].CurrencyCode('xmlns:ns9' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text('USD')
-                  xml['ns10'].TransactionDateTime('xmlns:ns10' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text('2014-04-03T13:50:16') 
-                  xml['ns1'].AccountType 'NotSet'
-                  xml['ns1'].CustomerPresent 'Present'
-                  xml['ns1'].EmployeeId '11'
+                  add_transaction_amount_xml(xml, params)
+                  add_other_transaction_xml(xml, params)
                   if !params[:Track2Data].nil? || !params[:Track1Data].nil?
                     xml['ns1'].EntryMode params[:EntryMode]
                   else
@@ -271,42 +263,7 @@ module ActiveMerchant #:nodoc:
               add_merchant_id_and_application_id_to_xml(xml)
               xml.Transaction('xmlns:ns1' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard",'i:type' => "ns1:BankcardTransaction" ){
                 xml['ns1'].TenderData{
-                if !params[:SwipeStatus].nil? && !params[:IdentificationInformation].nil? && !params[:SecurePaymentAccountData].nil? && !params[:EncryptionKeyId].nil?
-                   xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SecurePaymentAccountData])
-                   xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:EncryptionKeyId])
-                   xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SwipeStatus])
-                   xml['ns1'].CardSecurityData{
-                    xml['ns1'].IdentificationInformation params[:IdentificationInformation]
-                   }
-                   xml['ns1'].CardData('i:nil' =>"true")
-                elsif !params[:SecurePaymentAccountData].nil? && !params[:EncryptionKeyId].nil? 
-                   xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SecurePaymentAccountData])
-                   xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:EncryptionKeyId])
-                   xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true") 
-                   xml['ns1'].CardSecurityData{
-                    xml['ns1'].IdentificationInformation('i:nil' =>"true")
-                   }
-                   xml['ns1'].CardData('i:nil' =>"true")
-                   xml['ns1'].EcommerceSecurityData('i:nil' =>"true")   
-                elsif !params[:PaymentAccountDataToken].nil?
-                  xml['ns4'].PaymentAccountDataToken('xmlns:ns4' =>
-                                  "http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:PaymentAccountDataToken])
-                  xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true") 
-                  xml['ns1'].CardData('i:nil' =>"true")
-                  xml['ns1'].EcommerceSecurityData('i:nil' =>"true")           
-                else 
-                  xml['ns4'].PaymentAccountDataToken('xmlns:ns4' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions", 'i:nil' =>"true")
-                  xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns1'].CardData{
-                    xml['ns1'].CardType params[:CardType] 
-                    add_card_details_xml(xml, params)        
-                  }
-                  xml['ns1'].EcommerceSecurityData('i:nil' =>"true")             
-                end
+                  payment_data_xml(xml,params)
                 }
                 add_data_xml(xml, params)
               }
@@ -320,41 +277,7 @@ module ActiveMerchant #:nodoc:
               add_merchant_id_and_application_id_to_xml(xml)
               xml.Transaction('xmlns:ns1' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard",'i:type' => "ns1:BankcardTransaction" ){
                 xml['ns1'].TenderData{
-                if !params[:SwipeStatus].nil? && !params[:IdentificationInformation].nil? && !params[:SecurePaymentAccountData].nil? && !params[:EncryptionKeyId].nil?
-                   xml['ns5'].SecurePaymentAccountData('xmlns:ns5' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SecurePaymentAccountData])
-                   xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:EncryptionKeyId])
-                   xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SwipeStatus])
-                   xml['ns1'].CardSecurityData{
-                    xml['ns1'].IdentificationInformation params[:IdentificationInformation]
-                   }
-                   xml['ns1'].CardData('i:nil' =>"true")
-                elsif !params[:SecurePaymentAccountData].nil? && !params[:EncryptionKeyId].nil? 
-                   xml['ns5'].SecurePaymentAccountData('xmlns:ns5' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SecurePaymentAccountData])
-                   xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:EncryptionKeyId])
-                   xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true") 
-                   xml['ns1'].CardSecurityData{
-                    xml['ns1'].IdentificationInformation('i:nil' =>"true")
-                   }
-                   xml['ns1'].CardData('i:nil' =>"true")
-                   xml['ns1'].EcommerceSecurityData('i:nil' =>"true")   
-                elsif !params[:PaymentAccountDataToken].nil?
-                  xml['ns4'].PaymentAccountDataToken('xmlns:ns4' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:PaymentAccountDataToken])
-                  xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true") 
-                  xml['ns1'].CardData('i:nil' =>"true")
-                  xml['ns1'].EcommerceSecurityData('i:nil' =>"true")           
-                else 
-                  xml['ns4'].PaymentAccountDataToken('xmlns:ns4' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions", 'i:nil' =>"true")
-                  xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
-                  xml['ns1'].CardData{
-                    xml['ns1'].CardType params[:CardType]    
-                    add_card_details_xml(xml, params)        
-                  }
-                  xml['ns1'].EcommerceSecurityData('i:nil' =>"true")             
-                end
+                  payment_data_xml(xml,params)
                 }
                 add_data_xml(xml, params)
               }
@@ -367,7 +290,7 @@ module ActiveMerchant #:nodoc:
             xml.ChangeTransaction('xmlns:i' => 'http://www.w3.org/2001/XMLSchema-instance','xmlns' => 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Rest','i:type' =>"Capture" ) {
               xml.ApplicationProfileId @options[:application_profile_id] #'14644'
                 xml.DifferenceData('xmlns:d2p1' => 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions','xmlns:d2p2' => 'http://schemas.ipcommerce.com/CWS/v2.0/Transactions/Bankcard', 'xmlns:d2p3' => 'http://schemas.ipcommerce.com/CWS/v2.0/TransactionProcessing','i:type' => "d2p2:BankcardCapture"){
-                xml['d2p1'].TransactionId params[:TransactionId]#'760CBDD65E4642E49A3CD2E2F3257A10'
+                xml['d2p1'].TransactionId params[:TransactionId]
                 if params[:Amount] != ''
                    xml['d2p2'].Amount params[:Amount]
                 else
@@ -458,20 +381,12 @@ module ActiveMerchant #:nodoc:
             xml['ns3'].Reference '001'
           }
           xml['ns1'].TransactionData{
-            if params[:Amount] != ''
-              xml['ns8'].Amount('xmlns:ns8' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:Amount])
-            else
-              xml['ns8'].Amount('xmlns:ns8' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text('0.00')
-            end
-            xml['ns9'].CurrencyCode('xmlns:ns9' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text('USD') 
-            xml['ns10'].TransactionDateTime('xmlns:ns10' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(Time.current.strftime("%FT%R:%S"))
+            add_transaction_amount_xml(xml, params)
+            add_other_transaction_xml(xml, params)
             xml['ns11'].CampaignId('xmlns:ns11' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
             xml['ns12'].Reference('xmlns:ns12' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text('xyt')
-            xml['ns1'].AccountType 'NotSet'
             xml['ns1'].ApprovalCode('i:nil' =>"true")
             xml['ns1'].CashBackAmount '0.0'
-            xml['ns1'].CustomerPresent 'Present'
-            xml['ns1'].EmployeeId '11'
             xml['ns1'].EntryMode params[:EntryMode]
             xml['ns1'].GoodsType 'NotSet'
             xml['ns1'].IndustryType params[:IndustryType]
@@ -490,6 +405,61 @@ module ActiveMerchant #:nodoc:
             xml['ns1'].IsQuasiCash 'false'
           }
         end
+
+        def payment_data_xml(xml,params)
+          if !params[:SwipeStatus].nil? && !params[:IdentificationInformation].nil? && !params[:SecurePaymentAccountData].nil? && !params[:EncryptionKeyId].nil?
+            xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SecurePaymentAccountData])
+            xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:EncryptionKeyId])
+            xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SwipeStatus])
+            xml['ns1'].CardSecurityData{
+              xml['ns1'].IdentificationInformation params[:IdentificationInformation]
+            }
+            xml['ns1'].CardData('i:nil' =>"true")
+          elsif !params[:SecurePaymentAccountData].nil? && !params[:EncryptionKeyId].nil? 
+            xml['ns5'].SecurePaymentAccountData('xmlns:ns5' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:SecurePaymentAccountData])
+            xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:EncryptionKeyId])
+            xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true") 
+            xml['ns1'].CardSecurityData{
+              xml['ns1'].IdentificationInformation('i:nil' =>"true")
+            }
+            xml['ns1'].CardData('i:nil' =>"true")
+            xml['ns1'].EcommerceSecurityData('i:nil' =>"true") 
+          elsif !params[:PaymentAccountDataToken].nil?
+            xml['ns4'].PaymentAccountDataToken('xmlns:ns4' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:PaymentAccountDataToken])
+            xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
+            xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
+            xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true") 
+            xml['ns1'].CardData('i:nil' =>"true")
+            xml['ns1'].EcommerceSecurityData('i:nil' =>"true")           
+          else 
+            xml['ns4'].PaymentAccountDataToken('xmlns:ns4' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions", 'i:nil' =>"true")
+            xml['ns5'].SecurePaymentAccountData('xmlns:ns5' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
+            xml['ns6'].EncryptionKeyId('xmlns:ns6' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
+            xml['ns7'].SwipeStatus('xmlns:ns7' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions",'i:nil' =>"true")
+            xml['ns1'].CardData{
+              xml['ns1'].CardType params[:CardType] 
+              add_card_details_xml(xml, params)        
+            }
+            xml['ns1'].EcommerceSecurityData('i:nil' =>"true")             
+          end
+        end
+
+        def add_transaction_amount_xml(xml, params)
+          if params[:Amount] != ''
+            xml['ns8'].Amount('xmlns:ns8' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(params[:Amount])
+          else
+            xml['ns8'].Amount('xmlns:ns8' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text('0.00')
+          end
+        end
+
+        def add_other_transaction_xml(xml, params)
+          xml['ns9'].CurrencyCode('xmlns:ns9' =>"http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text('USD')
+          xml['ns10'].TransactionDateTime('xmlns:ns10' => "http://schemas.ipcommerce.com/CWS/v2.0/Transactions").text(Time.current.strftime("%FT%R:%S")) 
+          xml['ns1'].AccountType 'NotSet'
+          xml['ns1'].CustomerPresent 'Present'
+          xml['ns1'].EmployeeId '11'
+        end
+
     end
   end
 end
