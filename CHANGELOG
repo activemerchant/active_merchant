@@ -12,7 +12,7 @@
 * Worldpay US: Add eCheck support [mrezentes]
 * FirstData_e4: add level_3 data [mrezentes]
 * Vanco: Support passing ip address [duff]
-
+* Paybox Direct: Currency parsing fix [ivanfer]
 
 == Version 1.53.0 (September 1, 2015)
 
