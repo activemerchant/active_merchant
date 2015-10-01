@@ -113,7 +113,6 @@ module ActiveMerchant
         end
 
         def create_store(options = {})
-          requires!(options, :currency)
           post = {}
           commit('/cards', post)
         end
