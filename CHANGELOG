@@ -45,7 +45,7 @@
 * TWD isn't a zero decimal currency [duff]
 * PaypalExpress: Use custom zero decimal currencies [duff]
 * Stripe: Migrate from /refund to /refunds [matthelm]
-
+* Bogus: Adding basic EMV support [ryanbalsdon]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
