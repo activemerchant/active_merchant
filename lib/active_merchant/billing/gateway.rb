@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
     # * <tt>:zip</tt> - The zip or postal code of the customer.
     # * <tt>:phone</tt> - The phone number of the customer.
     #
-    # == Implmenting new gateways
+    # == Implementing new gateways
     #
     # See the {ActiveMerchant Guide to Contributing}[https://github.com/activemerchant/active_merchant/wiki/Contributing]
     #

@@ -72,7 +72,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
 
     # This is a dubious test. Basically testing that the refund failed b/c
-    # the original purchase hadn't yet cleared. No way to test immmediate failure
+    # the original purchase hadn't yet cleared. No way to test immediate failure
     # due to the delay in original tx processing, even for text txs.
     assert_failure refund
     assert_equal "REJECT: 3", refund.message
