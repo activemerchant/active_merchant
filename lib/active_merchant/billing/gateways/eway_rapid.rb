@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         # Note: TransactionID is always null for store requests, but TokenCustomerID is also sent back for purchase from
-        # stored card transactions so we give precendence to TransactionID
+        # stored card transactions so we give precedence to TransactionID
         response['TransactionID'] || response['Customer']['TokenCustomerID']
       end
 
