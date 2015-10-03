@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
         pairs = body.split("&")
         pairs.each do |pair|
           a = pair.split("=")
-          # because some values pairs dont have a value
+          # because some value pairs don't have a value
           result[a[0].to_sym] = a[1] == nil ? '' : CGI.unescape(a[1])
         end
         result

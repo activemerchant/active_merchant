@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = API_URL
 
       # Currency supported by Omise
-      # * Thai Baht with Satang, ie. 9000 => 90 THB
+      # * Thai Baht with Satang, i.e. 9000 => 90 THB
       self.default_currency = 'THB'
       self.money_format     = :cents
 
@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "customers/#{CGI.escape(customer_id)}")
       end
 
-      # Enable scrubbling sensitive information
+      # Enable scrubbing sensitive information
       def supports_scrubbing?
         true
       end
