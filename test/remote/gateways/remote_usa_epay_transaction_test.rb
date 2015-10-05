@@ -6,7 +6,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
-    @options = { :billing_address => address(:zip => "27614", :state => "NC")}
+    @options = { :billing_address => address(:zip => "27614", :state => "NC"), :shipping_address => address }
     @amount = 100
   end
 

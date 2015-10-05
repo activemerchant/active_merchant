@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
 
-      self.supported_countries = %w(HK US GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
+      self.supported_countries = %w(HK US GB BE CH CZ DE DK ES FI FR GR HU IE IT LU MT NL NO PL PT SE SG TR)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser, :switch]
 
       self.homepage_url = 'http://online.worldpay.com'
@@ -22,7 +22,6 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, credit_card, options={})
         response = create_token(true, credit_card.first_name+' '+credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
-
         if response.success?
           options[:authorizeOnly] = true
           post = create_post_for_auth_or_purchase(response.authorization, money, options)
@@ -95,7 +94,7 @@ module ActiveMerchant #:nodoc:
       def create_post_for_auth_or_purchase(token, money, options)
       {
         "token" => token,
-        "orderDescription" => options[:description],
+        "orderDescription" => options[:description] || 'Worldpay Order',
         "amount" => money,
         "currencyCode" => options[:currency] || default_currency,
         "name" => options[:billing_address]&&options[:billing_address][:name] ? options[:billing_address][:name] : '',

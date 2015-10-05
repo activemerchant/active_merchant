@@ -132,6 +132,7 @@ module ActiveMerchant
               add_client_id(doc)
               add_amount(doc, money, options)
               add_payment_method(doc, payment_method, options)
+              add_options(doc, options)
               add_purchase_noise(doc)
             end
           end
@@ -223,7 +224,7 @@ module ActiveMerchant
         doc.CustomerName("#{echeck.last_name}, #{echeck.first_name}")
         doc.AccountNumber(echeck.account_number)
         doc.RoutingNumber(echeck.routing_number)
-        doc.TransactionTypeCode("TEL")
+        doc.TransactionTypeCode("WEB")
       end
 
       def add_purchase_noise(doc)
@@ -236,6 +237,10 @@ module ActiveMerchant
         doc.ContactPhone("1234567890")
         doc.ContactExtension("None")
         doc.ReasonForCredit("Refund requested")
+      end
+
+      def add_options(doc, options)
+        doc.CustomerIPAddress(options[:ip]) if options[:ip]
       end
 
       def add_client_id(doc)

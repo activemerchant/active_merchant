@@ -38,23 +38,31 @@ module ActiveMerchant #:nodoc:
       self.display_name        = "Redsys"
 
       CURRENCY_CODES = {
-        "ARS" => '032',
-        "AUD" => '036',
+        "AED" => '784',
+        "ARS" => '32',
+        "AUD" => '36',
         "BRL" => '986',
-        "BOB" => '068',
+        "BOB" => '68',
         "CAD" => '124',
         "CHF" => '756',
         "CLP" => '152',
         "COP" => '170',
+        "CZK" => '203',
         "EUR" => '978',
         "GBP" => '826',
         "GTQ" => '320',
+        "HUF" => '348',
         "JPY" => '392',
+        "MYR" => '458',
         "MXN" => '484',
+        "NOK" => '578',
         "NZD" => '554',
         "PEN" => '604',
+        "PLN" => '616',
         "RUB" => '643',
+        "SEK" => '752',
         "SGD" => '702',
+        "THB" => '764',
         "USD" => '840',
         "UYU" => '858'
       }
@@ -225,6 +233,24 @@ module ActiveMerchant #:nodoc:
           r.process { authorize(100, creditcard, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((%3CDS_MERCHANT_PAN%3E)\d+(%3C%2FDS_MERCHANT_PAN%3E))i, '\1[FILTERED]\2').
+          gsub(%r((%3CDS_MERCHANT_CVV2%3E)\d+(%3C%2FDS_MERCHANT_CVV2%3E))i, '\1[FILTERED]\2').
+          gsub(%r((<DS_MERCHANT_PAN>)\d+(</DS_MERCHANT_PAN>))i, '\1[FILTERED]\2').
+          gsub(%r((<DS_MERCHANT_CVV2>)\d+(</DS_MERCHANT_CVV2>))i, '\1[FILTERED]\2').
+          gsub(%r((DS_MERCHANT_CVV2)%2F%3E%0A%3C%2F)i, '\1[BLANK]').
+          gsub(%r((DS_MERCHANT_CVV2%3E)(%3C%2FDS_MERCHANT_CVV2))i, '\1[BLANK]\2').
+          gsub(%r((<DS_MERCHANT_CVV2>)(</DS_MERCHANT_CVV2>))i, '\1[BLANK]\2').
+          gsub(%r((DS_MERCHANT_CVV2%3E)\++(%3C%2FDS_MERCHANT_CVV2))i, '\1[BLANK]\2').
+          gsub(%r((<DS_MERCHANT_CVV2>)\s+(</DS_MERCHANT_CVV2>))i, '\1[BLANK]\2')
       end
 
       private

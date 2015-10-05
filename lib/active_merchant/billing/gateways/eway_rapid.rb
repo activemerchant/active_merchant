@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = "https://api.ewaypayments.com/"
 
       self.money_format = :cents
-      self.supported_countries = ['AU', 'NZ', 'GB', 'SG']
+      self.supported_countries = ['AU', 'NZ', 'GB', 'SG', 'MY', 'HK']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
       self.homepage_url = "http://www.eway.com.au/"
       self.display_name = "eWAY Rapid 3.1"
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
       def purchase(amount, payment_method, options={})
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object
       def refund(amount, identification, options = {})
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where the authorization is the customer_token on success
       def store(payment_method, options = {})
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where the authorization is the customer_token on success
       def update(customer_token, payment_method, options = {})
@@ -167,6 +167,17 @@ module ActiveMerchant #:nodoc:
         add_customer_token(params, customer_token)
         params['Method'] = 'UpdateTokenCustomer'
         commit(url_for("Transaction"), params)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("Number\\?":\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("CVN\\?":\\?"?)[^",]*)i, '\1[FILTERED]')
       end
 
       private

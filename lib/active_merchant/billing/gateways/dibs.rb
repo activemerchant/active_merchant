@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         post[:cardNumber] = payment_method.number
-        post[:cvc] = payment_method.verification_value
+        post[:cvc] = payment_method.verification_value if payment_method.verification_value
         post[:expYear] = format(payment_method.year, :two_digits)
         post[:expMonth] = payment_method.month
 

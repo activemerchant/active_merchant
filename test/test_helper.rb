@@ -122,7 +122,7 @@ module ActiveMerchant
     end
 
     def assert_scrubbed(unexpected_value, transcript)
-      refute transcript.include?(unexpected_value), "Expected #{unexpected_value} to be scrubbed out of transcript"
+      refute transcript.include?(unexpected_value.to_s), "Expected #{unexpected_value} to be scrubbed out of transcript"
     end
 
     private
@@ -151,7 +151,7 @@ module ActiveMerchant
         :year => default_expiration_date.year,
         :first_name => 'Longbob',
         :last_name => 'Longsen',
-        :verification_value => '123',
+        :verification_value => options[:verification_value] || '123',
         :brand => 'visa'
       }.update(options)
 

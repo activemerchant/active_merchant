@@ -76,7 +76,10 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Bearer )[a-zA-Z0-9._-]+)i, '\1[FILTERED]').
           gsub(%r(("cardNumber\\?":\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("cVVCode\\?":\\?")[^"]*)i, '\1[FILTERED]')
+          gsub(%r(("cVVCode\\?":\\?")\d+[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cVVCode\\?":)null), '\1[BLANK]').
+          gsub(%r(("cVVCode\\?":\\?")\\?"), '\1[BLANK]"').
+          gsub(%r(("cVVCode\\?":\\?")\s+), '\1[BLANK]"')
       end
 
       private

@@ -19,6 +19,7 @@ module ActiveMerchant #:nodoc:
         'capture'   => 'CC.CP',
         'refund'    => 'CC.RF',
         'void'      => 'CC.RV',
+        'store'     => 'CC.RG'
       }
 
       def initialize(options={})
@@ -31,6 +32,7 @@ module ActiveMerchant #:nodoc:
           add_payment(xml, money, 'sale', options)
           add_account(xml, payment)
           add_customer(xml, payment, options)
+          add_recurrence_mode(xml, options)
         end
 
         commit(request)
@@ -50,6 +52,7 @@ module ActiveMerchant #:nodoc:
           add_payment(xml, money, 'authonly', options)
           add_account(xml, payment)
           add_customer(xml, payment, options)
+          add_recurrence_mode(xml, options)
         end
 
         commit(request)
@@ -73,6 +76,17 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
+      def store(payment, options = {})
+        request = build_xml_request do |xml|
+          xml.Payment(code: SUPPORTED_TRANSACTIONS["store"])
+          add_account(xml, payment)
+          add_customer(xml, payment, options)
+          add_recurrence_mode(xml, options)
+        end
+
+        commit(request)
+      end
+
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
@@ -80,15 +94,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+
       def supports_scrubbing?
         true
       end
 
       def scrub(transcript)
         transcript.
-          gsub(%r((pwd=).+(/>))i, '\1[FILTERED]\2').
-          gsub(%r((<Number>).+(</Number>))i, '\1[FILTERED]\2').
-          gsub(%r((<Verification>).+(</Verification>))i, '\1[FILTERED]\2')
+          gsub(%r((pwd=).+?(/>))i, '\1[FILTERED]\2').
+          gsub(%r((<Number>).+?(</Number>))i, '\1[FILTERED]\2').
+          gsub(%r((<Verification>).+?(</Verification>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -110,17 +125,22 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_account(xml, creditcard)
-        xml.Account do
-          xml.Number        creditcard.number
-          xml.Holder        "#{creditcard.first_name} #{creditcard.last_name}"
-          xml.Brand         creditcard.brand
-          xml.Expiry(year: creditcard.year, month: creditcard.month)
-          xml.Verification  creditcard.verification_value
+      def add_account(xml, payment_method)
+        if !payment_method.respond_to?(:number)
+          xml.Account(registration: payment_method)
+        else
+          xml.Account do
+            xml.Number        payment_method.number
+            xml.Holder        "#{payment_method.first_name} #{payment_method.last_name}"
+            xml.Brand         payment_method.brand
+            xml.Expiry(year: payment_method.year, month: payment_method.month)
+            xml.Verification  payment_method.verification_value
+          end
         end
       end
 
       def add_customer(xml, creditcard, options)
+        return unless creditcard.respond_to?(:number)
         address = options[:billing_address]
         xml.Customer do
           xml.Contact do
@@ -146,6 +166,14 @@ module ActiveMerchant #:nodoc:
           xml.City       address[:city]
           xml.State      address[:state]
           xml.Country    address[:country]
+        end
+      end
+
+      def add_recurrence_mode(xml, options)
+        if options[:recurring] == true
+          xml.Recurrence(mode: "REPEATED")
+        else
+          xml.Recurrence(mode: "INITIAL")
         end
       end
 

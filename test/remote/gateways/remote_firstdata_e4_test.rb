@@ -31,6 +31,13 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_level_3
+    level_3_xml = "<TaxAmount>8.84</TaxAmount><TaxRate>7.25</TaxRate>"
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_3: level_3_xml))
+    assert_success response
+    assert_equal "Transaction Normal - Approved", response.message
+  end
+
   def test_successful_purchase_with_card_authentication
     assert response = @gateway.purchase(@amount, @credit_card, @options_with_authentication_data)
     assert_equal response.params["cavv"], @options_with_authentication_data[:cavv]

@@ -32,6 +32,16 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
+  def test_successful_purchase_cvv_result
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal "M", response.cvv_result["code"]
+  end
+
+  def test_successful_purchase_avs_result
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal "D", response.avs_result["code"]
+  end
+
   def test_successful_purchase_with_invoice_detail
     response = @gateway.purchase(@amount, @credit_card, @options.merge(invoice_detail: "<xml><description/></xml>"))
     assert_success response
@@ -44,11 +54,31 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
+  def test_successful_purchase_with_currency
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: "EUR"))
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal "Decline transaction", response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+  end
+
+  def test_failed_purchase_cvv_result
+    response = @gateway.purchase(@amount, @declined_card, @options)
+    %w(code message).each do |key|
+      assert_equal nil, response.cvv_result[key]
+    end
+  end
+
+  def test_failed_purchase_avs_result
+    response = @gateway.purchase(@amount, @declined_card, @options)
+    %w(code message).each do |key|
+      assert_equal nil, response.avs_result[key]
+    end
   end
 
   def test_successful_authorize_and_capture
@@ -74,8 +104,8 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_success response
     assert_equal "Succeeded", response.message
 
-    capture = @gateway.capture(@amount + 200, response.authorization)
-    capture = @gateway.capture(@amount + 200, response.authorization)
+    capture = @gateway.capture(@amount, response.authorization)
+    capture = @gateway.capture(@amount, response.authorization)
     assert_failure capture
     assert_equal "Duplicated transaction", capture.message
   end
@@ -85,6 +115,15 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_success response
 
     void = @gateway.void(response.authorization)
+    assert_success void
+    assert_equal "Succeeded", void.message
+  end
+
+  def test_void_can_receive_order_id
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    void = @gateway.void(response.authorization, order_id: SecureRandom.random_number(1000000))
     assert_success void
     assert_equal "Succeeded", void.message
   end

@@ -185,4 +185,14 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "Unauthorized", response.message
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(100, @credit_card_success, @params)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card_success.number, clean_transcript)
+    assert_scrubbed(@credit_card_success.verification_value.to_s, clean_transcript)
+  end
 end

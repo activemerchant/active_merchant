@@ -139,4 +139,14 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "Acceso no autorizado.", response.message
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
 end
