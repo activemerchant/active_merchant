@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
           card_address[:country] = address[:country]
           card_address[:postalCode] = address[:zip] if address[:zip]
         end
-        post[:card][:address] = card_address
+        post[:card][:address] = card_address unless card_address.empty?
       end
 
       def add_amount(post, money, options = {})
