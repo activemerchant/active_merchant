@@ -488,10 +488,10 @@ optimal_payment:
   password: test
   account_number: ACCOUNTNUMBER
 
-orbital_gateway:
+orbital:
   login: LOGIN
   password: PASSWORD
-  merchant_id: MERCHANTID
+  merchant_id: "MERCHANTID"
 
 # Working credentials, no need to replace
 pago_facil:
