@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
               :Portador => {
                   :Nome =>           creditcard_or_vault.name,
                   :Telefone =>       options[:phone],
-                  :Identidade =>     options[:identity_document],
+                  :Identidade =>     options[:buyer_cpf],
                   :DataNascimento => options[:birthday]
               }
           }
