@@ -30,10 +30,11 @@ class MoipTest < Test::Unit::TestCase
             :phone        => '1131654020'
         },
         :creditcard => {
-            :installments      => 1,
-            :birthday          => '01/01/1990',
-            :phone             => '1131654020',
-            :identity_document => '52211670695',
+            :installments       => 1,
+            :birthday           => '01/01/1990',
+            :phone              => '1131654020',
+            :identity_document  => '52211670695',
+            :buyer_cpf          => '23725576025'
         }
     }
   end
