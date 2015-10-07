@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * CyberSource: send customer IP address when provided [fastjames]
+* Braintree: Simplify Braintree scrubbing when no transcript [duff]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
