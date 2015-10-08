@@ -2,13 +2,13 @@ require 'test_helper'
 
 class RemotePaymillTest < Test::Unit::TestCase
   def setup
-    @gateway = PaymillGateway.new( public_key: ENV['PAYMILL_API_TEST_PUBLIC_KEY'], private_key: ENV['PAYMILL_API_TEST_PRIVATE_KEY'] )
+    @gateway = PaymillGateway.new( fixtures(:paymill) )
 
     @amount = 100
     @credit_card = credit_card('5500000000000004')
     @declined_card = credit_card('5105105105105100', month: 5, year: 2020)
 
-    uri = URI.parse("https://test-token.paymill.com?transaction.mode=CONNECTOR_TEST&channel.id=#{ENV['PAYMILL_API_TEST_PUBLIC_KEY']}&jsonPFunction=paymilljstests&account.number=4111111111111111&account.expiry.month=12&account.expiry.year=2015&account.verification=123&account.holder=John%20Rambo&presentation.amount3D=#{@amount}&presentation.currency3D=EUR")
+    uri = URI.parse("https://test-token.paymill.com?transaction.mode=CONNECTOR_TEST&channel.id=#{@gateway.options[:public_key]}&jsonPFunction=paymilljstests&account.number=4111111111111111&account.expiry.month=12&account.expiry.year=2015&account.verification=123&account.holder=John%20Rambo&presentation.amount3D=#{@amount}&presentation.currency3D=EUR")
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
     request = Net::HTTP::Get.new(uri.request_uri)
@@ -121,7 +121,7 @@ class RemotePaymillTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PaymillGateway.new( public_key: ENV['PAYMILL_API_TEST_PUBLIC_KEY'], private_key: "SomeBogusValue" )
+    gateway = PaymillGateway.new( fixtures(:paymill).merge(:private_key => "SomeBogusValue") )
     response = gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal 'Access Denied', response.message
