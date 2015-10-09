@@ -433,14 +433,18 @@ module ActiveMerchant #:nodoc:
         return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
         if valid_track_data
           xml.retail do
-            xml.marketType(MARKET_TYPE[:retail])
-
-            device_type = options[:device_type] || DEVICE_TYPE[:wireless_pos]
-            xml.deviceType(device_type)
+            xml.marketType(options[:market_type] || MARKET_TYPE[:retail])
+            xml.deviceType(options[:device_type] || DEVICE_TYPE[:wireless_pos])
           end
         elsif payment.manual_entry
           xml.retail do
-            xml.marketType(MARKET_TYPE[:moto])
+            xml.marketType(options[:market_type] || MARKET_TYPE[:moto])
+          end
+        else
+          if options[:market_type]
+            xml.retail do
+              xml.marketType(options[:market_type])
+            end
           end
         end
       end
