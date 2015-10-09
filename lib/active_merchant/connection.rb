@@ -30,8 +30,7 @@ module ActiveMerchant
     attr_accessor :tag
     attr_accessor :ignore_http_status
     attr_accessor :max_retries
-    attr_accessor :proxy_address
-    attr_accessor :proxy_port
+    attr_reader :proxy
 
     def initialize(endpoint)
       @endpoint     = endpoint.is_a?(URI) ? endpoint : URI.parse(endpoint)
@@ -44,8 +43,7 @@ module ActiveMerchant
       @max_retries  = MAX_RETRIES
       @ignore_http_status = false
       @ssl_version = nil
-      @proxy_address = nil
-      @proxy_port = nil
+      @proxy = nil
     end
 
     def request(method, body, headers = {})
@@ -92,9 +90,13 @@ module ActiveMerchant
       info "connection_request_total_time=%.4fs" % [Time.now.to_f - request_start], tag
     end
 
+    def proxy=(proxy)
+      @proxy = URI.parse(proxy) if proxy
+    end
+
     private
     def http
-      http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
+      http = new_http_agent(endpoint, proxy)
       configure_debugging(http)
       configure_timeouts(http)
       configure_ssl(http)
@@ -167,6 +169,12 @@ module ActiveMerchant
     def log(level, message, tag)
       message = "[#{tag}] #{message}" if tag
       logger.send(level, message) if logger
+    end
+
+    def new_http_agent(endpoint, proxy)
+      args = [endpoint.host, endpoint.port]
+      args += [proxy.host, proxy.port, proxy.user, proxy.password] if proxy
+      Net::HTTP.new(*args)
     end
   end
 end
