@@ -3,6 +3,8 @@
 * CyberSource: send customer IP address when provided [fastjames]
 * Braintree: Simplify Braintree scrubbing when no transcript [duff]
 * AuthorizeNet: Allow market_type override [duff]
+* FirstData_e4: Support level_2 data [duff]
+
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
