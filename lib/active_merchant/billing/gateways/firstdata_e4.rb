@@ -303,8 +303,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_level_2_and_3(xml, options)
-        xml.level2 { |x| x << options[:level_2] } if options[:level_2]
-        xml.level3 { |x| x << options[:level_3] } if options[:level_3]
+        xml.tag!("Level2") { |x| x << options[:level_2] } if options[:level_2]
+        xml.tag!("Level3") { |x| x << options[:level_3] } if options[:level_3]
       end
 
       def expdate(credit_card)
