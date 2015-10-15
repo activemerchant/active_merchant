@@ -17,12 +17,15 @@ module ActiveMerchant
       end
 
       def redirect_url_for(token, options = {})
-        options = {:review => true, :mobile => false}.update(options)
+        options = {:review => true, :mobile => false, :in_context => :false}.update(options)
 
-        cmd  = options[:mobile] ? '_express-checkout-mobile' : '_express-checkout'
-        url  = "#{redirect_url}?cmd=#{cmd}&token=#{token}"
-        url += '&useraction=commit' unless options[:review]
-
+        if options[:in_context] 
+          url = "https://www.sandbox.paypal.com/checkoutnow?token=#{token}"
+        else
+          cmd  = options[:mobile]  ? '_express-checkout-mobile' : '_express-checkout'
+          url  = "#{redirect_url}?cmd=#{cmd}&token=#{token}"
+          url += '&useraction=commit' unless options[:review]
+        end
         url
       end
     end
