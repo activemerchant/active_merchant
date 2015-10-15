@@ -4,6 +4,7 @@
 * Braintree: Simplify Braintree scrubbing when no transcript [duff]
 * AuthorizeNet: Allow market_type override [duff]
 * FirstData_e4: Support level_2 data [duff]
+* FirstData_e4: Fix level_2 and level_3 [duff]
 
 
 == Version 1.54.0 (October 2, 2015)
