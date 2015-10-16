@@ -6,6 +6,7 @@
 * FirstData_e4: Support level_2 data [duff]
 * FirstData_e4: Fix level_2 and level_3 [duff]
 * MerchantWareFour: Use Void not PreAuthorizationVoid [duff]
+* JetPay: Allow partial captures [duff]
 
 
 == Version 1.54.0 (October 2, 2015)

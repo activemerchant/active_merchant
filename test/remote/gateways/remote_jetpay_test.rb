@@ -9,7 +9,6 @@ class RemoteJetpayTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300020001000')
 
     @options = {
-      :order_id => '1',
       :billing_address => address(:country => 'US', :zip => '75008'),
       :shipping_address => address(:country => 'US'),
       :email => 'test@test.com',
@@ -43,6 +42,18 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert capture = @gateway.capture(9900, auth.authorization)
     assert_success capture
   end
+
+  def test_partial_capture
+    assert auth = @gateway.authorize(9900, @credit_card, @options)
+    assert_success auth
+    assert_equal 'APPROVED', auth.message
+    assert_not_nil auth.authorization
+    assert_not_nil auth.params["approval"]
+
+    assert capture = @gateway.capture(4400, auth.authorization)
+    assert_success capture
+  end
+
 
   def test_void
     # must void a valid auth
