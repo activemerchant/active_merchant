@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CreditcallGateway < Gateway
       self.test_url = 'https://test.cardeasexml.com/generic.cex'
-      self.live_url = 'https://live.cardeasexml.com/'
+      self.live_url = 'https://live.cardeasexml.com/generic.cex'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
