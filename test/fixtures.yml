@@ -552,10 +552,7 @@ payment_express:
 paymill:
   private_key: PRIVATE_KEY
   public_key: PUBLIC_KEY
-
-paymill_tokenization_url: https://test-token.paymill.com
-
-paymill_tokenization_params:
+  tokenization.url: https://test-token.paymill.com
   transaction.mode: CONNECTOR_TEST
   channel.id:
   jsonPFunction: paymilljstests

@@ -2,17 +2,17 @@ require 'test_helper'
 
 class RemotePaymillTest < Test::Unit::TestCase
   def setup
-    @gateway = PaymillGateway.new(fixtures(:paymill))
+    params = fixtures(:paymill)
+    @gateway = PaymillGateway.new(public_key: params.delete(:public_key), private_key: params.delete(:private_key))
 
     @amount = 100
     @credit_card = credit_card('5500000000000004')
     @declined_card = credit_card('5105105105105100', month: 5, year: 2020)
 
-    params = fixtures(:paymill_tokenization_params)
     params['presentation.amount3D'.intern] = @amount
     params['channel.id'.intern] = @gateway.options[:public_key]
 
-    uri = URI.parse("#{fixtures(:paymill_tokenization_url)}?#{params.to_a.map{ |param| param.join('=') }.join('&')}")
+    uri = URI.parse("#{params.delete('tokenization.url'.intern)}?#{params.to_a.map{ |param| param.join('=') }.join('&')}")
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
     request = Net::HTTP::Get.new(uri.request_uri)
@@ -125,7 +125,7 @@ class RemotePaymillTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PaymillGateway.new(fixtures(:paymill).merge(private_key: "SomeBogusValue"))
+    gateway = PaymillGateway.new(public_key: fixtures(:paymill)[:public_key], private_key: "SomeBogusValue")
     response = gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal 'Access Denied', response.message
