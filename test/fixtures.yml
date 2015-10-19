@@ -553,6 +553,20 @@ paymill:
   private_key: PRIVATE_KEY
   public_key: PUBLIC_KEY
 
+paymill_tokenization_url: https://test-token.paymill.com
+
+paymill_tokenization_params:
+  transaction.mode: CONNECTOR_TEST
+  channel.id:
+  jsonPFunction: paymilljstests
+  account.number: 4111111111111111
+  account.expiry.month: 12
+  account.expiry.year: 2018
+  account.verification: 123
+  account.holder: John%20Rambo
+  presentation.amount3D:
+  presentation.currency3D: EUR
+
 paypal_certificate:
   login: activemerchant-cert-test_api1.example.com
   password: ERDD3JRFU5H5DQXS
