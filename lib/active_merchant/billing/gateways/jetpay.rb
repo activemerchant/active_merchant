@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, reference, options = {})
-        commit(money, build_capture_request('CAPT', reference.split(";").first))
+        commit(money, build_capture_request(reference.split(";").first, money))
       end
 
       def void(reference, options = {})
@@ -152,8 +152,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_capture_request(transaction_type, transaction_id)
-        build_xml_request(transaction_type, transaction_id)
+      def build_capture_request(transaction_id, money)
+        build_xml_request('CAPT', transaction_id) do |xml|
+          xml.tag! 'TotalAmount', amount(money)
+        end
       end
 
       def build_void_request(money, transaction_id, approval)
