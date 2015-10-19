@@ -349,7 +349,7 @@ module ActiveMerchant #:nodoc:
           [
             response[:authorization_num],
             response[:transaction_tag],
-            (response[:dollar_amount].to_f * 100).to_i
+            response[:dollar_amount].sub(".", "")
           ].join(";")
         else
           ""
@@ -373,7 +373,7 @@ module ActiveMerchant #:nodoc:
 
       def money_from_authorization(auth)
         _, _, amount = auth.split(/;/, 3)
-        amount.to_i # return the # of cents, no need to divide
+        amount.to_i
       end
 
       def message_from(response)

@@ -88,8 +88,9 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_purchase_and_void
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert purchase = @gateway.purchase(29234, @credit_card, @options)
     assert_success purchase
+
     assert purchase.authorization
     assert void = @gateway.void(purchase.authorization)
     assert_success void
