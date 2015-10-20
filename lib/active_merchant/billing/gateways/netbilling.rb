@@ -46,6 +46,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, payment_source)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
+        add_user_data(post, options)
 
         commit(:authorization, post)
       end
@@ -57,6 +58,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, payment_source)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
+        add_user_data(post, options)
 
         commit(:purchase, post)
       end
@@ -81,6 +83,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, credit_card, options)
         add_customer_data(post, options)
+        add_user_data(post, options)
 
         commit(:credit, post)
       end
@@ -163,6 +166,12 @@ module ActiveMerchant #:nodoc:
           add_transaction_id(params, source)
         else
           add_credit_card(params, source)
+        end
+      end
+
+      def add_user_data(post, options)
+        if options[:order_id]
+          post[:user_data] = "order_id:#{options[:order_id]}"
         end
       end
 
