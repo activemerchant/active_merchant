@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BluePayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.mode = :test
 
@@ -178,5 +180,17 @@ class BluePayTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_custom_id2_option
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(custom_id2: 'ABC123'))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match('CUSTOM_ID2=ABC123', data)
+    end.respond_with(success_purchase_response)
+  end
+
+  def success_purchase_response
+    'AUTH_CODE=VBLEI&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=SALE&REBID=&STATUS=1&AVS=_&TRANS_ID=100267510339&CVV2=_&MESSAGE=Approved%20Sale'
   end
 end
