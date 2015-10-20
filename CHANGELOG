@@ -9,6 +9,7 @@
 * JetPay: Allow partial captures [duff]
 * Creditcall: Fix production url [duff]
 * FirstData_e4: Fix float error in Void [duff]
+* Micropayment: Upgrade to new API [mrezentes]
 
 
 == Version 1.54.0 (October 2, 2015)
