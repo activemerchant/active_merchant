@@ -34,7 +34,7 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture
-    response = @gateway.authorize(@amount, @credit_card,  @options.merge(recurring: false))
+    response = @gateway.authorize(@amount, @credit_card)
     assert_success response
     assert_equal "Succeeded", response.message
     assert_match %r(^\w+\|.+$), response.authorization
@@ -44,7 +44,8 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
     assert_equal "Succeeded", capture.message
   end
 
-    def test_successful_authorize_and_capture_with_recurring
+  def test_successful_authorize_and_capture_with_recurring
+    @credit_card.verification_value = ""
     response = @gateway.authorize(@amount, @credit_card, @options.merge(recurring: true))
     assert_success response
     assert_equal "Succeeded", response.message
@@ -93,8 +94,6 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
     assert_match %r(^\w+\|.+$), response.authorization
 
     capture = @gateway.capture(@amount, response.authorization)
-    puts response.authorization
-    puts capture.authorization
     assert_success capture
     assert_equal "Succeeded", capture.message
 
