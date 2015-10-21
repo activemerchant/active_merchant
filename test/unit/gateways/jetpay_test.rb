@@ -27,7 +27,7 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '707a4f1750d8dc03bd;TEST47;100', response.authorization
+    assert_equal '707a4f1750d8dc03bd;TEST47;100;;', response.authorization
     assert_equal('TEST47', response.params["approval"])
     assert response.test?
   end
@@ -37,7 +37,7 @@ class JetpayTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal('7605f7c5d6e8f74deb;;100', response.authorization)
+    assert_equal('7605f7c5d6e8f74deb;;100;;', response.authorization)
     assert response.test?
   end
 
@@ -47,7 +47,7 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal('010327153017T10018;502F6B;100', response.authorization)
+    assert_equal('010327153017T10018;502F6B;100;;', response.authorization)
     assert_equal('502F6B', response.params["approval"])
     assert response.test?
   end
@@ -58,7 +58,7 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.capture(1111, "010327153017T10018;502F7B;1111")
     assert_success response
 
-    assert_equal('010327153017T10018;502F6B;1111', response.authorization)
+    assert_equal('010327153017T10018;502F6B;1111;;', response.authorization)
     assert_equal('502F6B', response.params["approval"])
     assert response.test?
   end
@@ -69,39 +69,9 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.void('010327153x17T10418;502F7B;500')
     assert_success response
 
-    assert_equal('010327153x17T10418;502F7B;500', response.authorization)
+    assert_equal('010327153x17T10418;502F7B;500;;', response.authorization)
     assert_equal('502F7B', response.params["approval"])
     assert response.test?
-  end
-
-  def test_successful_credit
-    # no need for csv
-    card = credit_card('4242424242424242', :verification_value => nil)
-
-    @gateway.expects(:ssl_post).returns(successful_credit_response)
-
-    # linked credit
-    assert response = @gateway.refund(9900, '010327153017T10017')
-    assert_success response
-
-    assert_equal('010327153017T10017;002F6B;9900', response.authorization)
-    assert_equal('002F6B', response.params['approval'])
-    assert response.test?
-
-    # unlinked credit
-    @gateway.expects(:ssl_post).returns(successful_credit_response)
-
-    assert response = @gateway.credit(9900, card)
-    assert_success response
-  end
-
-  def test_deprecated_credit
-    @gateway.expects(:ssl_post).returns(successful_credit_response)
-
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      assert response = @gateway.credit(9900, '010327153017T10017')
-      assert_success response
-    end
   end
 
   def test_successful_refund
@@ -111,7 +81,7 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.refund(9900, '010327153017T10017')
     assert_success response
 
-    assert_equal('010327153017T10017;002F6B;9900', response.authorization)
+    assert_equal('010327153017T10017;002F6B;9900;;', response.authorization)
     assert_equal('002F6B', response.params['approval'])
     assert response.test?
   end

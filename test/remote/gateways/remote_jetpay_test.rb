@@ -68,32 +68,21 @@ class RemoteJetpayTest < Test::Unit::TestCase
   end
 
   def test_refund
-    # no need for csv
-    card = credit_card('4242424242424242', :verification_value => nil)
-
-    assert response = @gateway.purchase(9900, card, @options)
+    assert response = @gateway.purchase(9900, @credit_card, @options)
     assert_success response
     assert_equal "APPROVED", response.message
     assert_not_nil response.authorization
     assert_not_nil response.params["approval"]
 
-    # linked to a specific transaction_id
-    assert credit = @gateway.refund(9900, response.authorization, :credit_card => card)
-    assert_success credit
-    assert_not_nil(credit.authorization)
-    assert_not_nil(response.params["approval"])
-    assert_equal [response.params['transaction_id'], response.params["approval"], 9900].join(";"), response.authorization
+    assert refund = @gateway.refund(2000, response.authorization)
+    assert_success refund
+    assert_not_nil(refund.authorization)
+    assert_not_nil(refund.params["approval"])
   end
 
-  def test_credit
-    # no need for csv
-    card = credit_card('4242424242424242', :verification_value => nil)
-
-    # no link to a specific transaction_id
-    assert credit = @gateway.credit(9900, card)
-    assert_success credit
-    assert_not_nil(credit.authorization)
-    assert_not_nil(credit.params["approval"])
+    def test_failed_refund
+    assert refund = @gateway.refund(1000, 'AAAAAABBBBBBCCCCCC')
+    assert_failure refund
   end
 
   def test_failed_capture
@@ -107,7 +96,7 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert response = gateway.purchase(9900, @credit_card, @options)
     assert_failure response
 
-    assert_equal 'Terminal ID Not Found.', response.message
+    assert_equal 'Bad Terminal ID.', response.message
   end
 
   def test_missing_login
@@ -121,7 +110,7 @@ class RemoteJetpayTest < Test::Unit::TestCase
   def test_transcript_scrubbing
     @credit_card.verification_value = "421"
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(9900, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
 
