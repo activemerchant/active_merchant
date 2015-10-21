@@ -862,10 +862,12 @@ module ActiveMerchant #:nodoc:
         success = response_params['messages']['result_code'] == 'Ok'
         response_params['direct_response'] = parse_direct_response(response_params['direct_response']) if response_params['direct_response']
         transaction_id = response_params['direct_response']['transaction_id'] if response_params['direct_response']
+        avs_response = response_params['direct_response']['avs_response'] if response_params['direct_response']
 
         Response.new(success, message, response_params,
           :test => test_mode,
-          :authorization => transaction_id || response_params['customer_profile_id'] || (response_params['profile'] ? response_params['profile']['customer_profile_id'] : nil)
+          :authorization => transaction_id || response_params['customer_profile_id'] || (response_params['profile'] ? response_params['profile']['customer_profile_id'] : nil),
+          :avs_result => { :code => avs_response }
         )
       end
 
