@@ -808,6 +808,10 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_with_track_data), post_scrubbed_with_track_data
   end
 
+  def test_scrubs_emv_data
+    assert_equal @gateway.scrub(pre_scrubbed_with_emv_data), post_scrubbed_with_emv_data
+  end
+
   def test_supports_scrubbing?
     assert @gateway.supports_scrubbing?
   end
@@ -941,6 +945,64 @@ class StripeTest < Test::Unit::TestCase
       read 1446 bytes
       Conn close
     PRE_SCRUBBED
+  end
+
+  def pre_scrubbed_with_emv_data
+    <<-PRE_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF8zT0Q0VGRLU0lPaERPTDIxNDZKSmNDNzk6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.54.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.1 p76 (2014-02-24)\",\"platform\":\"x86_64-darwin12.0\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 713\r\n\r\n"
+      <- "card[emv_auth_data]=500B56495341204352454449545F201A56495341204143515549524552205445535420434152442030315F24031512315F280208405F2A0208265F300202015F34010182025C008407A0000000031010950502000080009A031408259B02E8009C01009F02060000000734499F03060000000000009F0607A00000000310109F0902008C9F100706010A03A080009F120F4352454449544F20444520564953419F1A0208269F1C0831373030303437309F1E0831373030303437309F2608EB2EC0F472BEA0A49F2701809F3303E0B8C89F34031E03009F3501229F360200C39F37040A27296F9F4104000001319F4502DAC5DFAE5711476173FFFFFF0119D15122011758989389DFAE5A08476173FFFFFF011957114761739001010119D151220117589893895A084761739001010119&card[encrypted_pin]=8b68af72199529b8&card[encrypted_pin_key_id]=ffff0102628d12000001"
+      -> "HTTP/1.1 402 Payment Required\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Wed, 21 Oct 2015 17:39:02 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 195\r\n"
+      -> "Connection: close\r\n"
+      -> "Access-Control-Allow-Credentials: true\r\n"
+      -> "Access-Control-Allow-Methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "Access-Control-Max-Age: 300\r\n"
+      -> "Cache-Control: no-cache, no-store\r\n"
+      -> "Request-Id: req_7CqEdcyzeRNGQO\r\n"
+      -> "Stripe-Version: 2015-04-07\r\n"
+      -> "\r\n"
+      reading 195 bytes...
+      -> "{\n  \"error\": {\n    \"message\": \"Your card was declined.\",\n    \"type\": \"card_error\",\n    \"code\": \"card_declined\",\n    \"charge\": \"ch_16yQYEAWOtgoysogscsBRQwg\",\n    \"emv_auth_data\": \"8A023035\"\n  }\n}\n"
+      read 195 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed_with_emv_data
+    <<-POST_SCRUBBED
+      opening connection to api.stripe.com:443...
+      opened
+      starting SSL for api.stripe.com:443...
+      SSL established
+      <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.54.0\r\nStripe-Version: 2015-04-07\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.54.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.1 p76 (2014-02-24)\",\"platform\":\"x86_64-darwin12.0\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 713\r\n\r\n"
+      <- "card[emv_auth_data]=[FILTERED]&card[encrypted_pin]=[FILTERED]&card[encrypted_pin_key_id]=[FILTERED]"
+      -> "HTTP/1.1 402 Payment Required\r\n"
+      -> "Server: nginx\r\n"
+      -> "Date: Wed, 21 Oct 2015 17:39:02 GMT\r\n"
+      -> "Content-Type: application/json\r\n"
+      -> "Content-Length: 195\r\n"
+      -> "Connection: close\r\n"
+      -> "Access-Control-Allow-Credentials: true\r\n"
+      -> "Access-Control-Allow-Methods: GET, POST, HEAD, OPTIONS, DELETE\r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "Access-Control-Max-Age: 300\r\n"
+      -> "Cache-Control: no-cache, no-store\r\n"
+      -> "Request-Id: req_7CqEdcyzeRNGQO\r\n"
+      -> "Stripe-Version: 2015-04-07\r\n"
+      -> "\r\n"
+      reading 195 bytes...
+      -> "{\n  \"error\": {\n    \"message\": \"Your card was declined.\",\n    \"type\": \"card_error\",\n    \"code\": \"card_declined\",\n    \"charge\": \"ch_16yQYEAWOtgoysogscsBRQwg\",\n    \"emv_auth_data\": \"8A023035\"\n  }\n}\n"
+      read 195 bytes
+      Conn close
+    POST_SCRUBBED
   end
 
   def post_scrubbed_with_track_data
