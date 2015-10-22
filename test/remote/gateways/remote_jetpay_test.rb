@@ -63,11 +63,28 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_not_nil auth.authorization
     assert_not_nil auth.params["approval"]
 
+
     assert void = @gateway.void(auth.authorization)
     assert_success void
   end
 
-  def test_refund
+  def test_refund_with_token
+
+    assert response = @gateway.purchase(9900, @credit_card, @options)
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert_not_nil response.authorization
+    assert_not_nil response.params["approval"]
+
+    # linked to a specific transaction_id
+    assert credit = @gateway.refund(9900, response.authorization)
+    assert_success credit
+    assert_not_nil(credit.authorization)
+    assert_not_nil(response.params["approval"])
+    assert_equal [response.params['transaction_id'], response.params["approval"], 9900, response.params["token"]].join(";"), response.authorization
+  end
+
+  def test_refund_backwards_compatible
     # no need for csv
     card = credit_card('4242424242424242', :verification_value => nil)
 
@@ -77,12 +94,14 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_not_nil response.authorization
     assert_not_nil response.params["approval"]
 
+    old_authorization = [response.params['transaction_id'], response.params["approval"], 9900].join(";")
+
     # linked to a specific transaction_id
-    assert credit = @gateway.refund(9900, response.authorization, :credit_card => card)
+    assert credit = @gateway.refund(9900, old_authorization, :credit_card => card)
     assert_success credit
     assert_not_nil(credit.authorization)
     assert_not_nil(response.params["approval"])
-    assert_equal [response.params['transaction_id'], response.params["approval"], 9900].join(";"), response.authorization
+    assert_equal [response.params['transaction_id'], response.params["approval"], 9900, response.params["token"]].join(";"), response.authorization
   end
 
   def test_credit
@@ -107,7 +126,7 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert response = gateway.purchase(9900, @credit_card, @options)
     assert_failure response
 
-    assert_equal 'Terminal ID Not Found.', response.message
+    assert_equal 'Bad Terminal ID.', response.message
   end
 
   def test_missing_login
@@ -119,6 +138,7 @@ class RemoteJetpayTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
+    @amount = 9900
     @credit_card.verification_value = "421"
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
