@@ -535,6 +535,11 @@ payex:
   encryption_key: ENCRYPTION_KEY
 
 # Working credentials, no need to replace
+payfirma:
+  login: 99f761cd03
+  password: 5cd128f3b9837538e3a918434d09077ddb392abe
+
+# Working credentials, no need to replace
 payflow:
   login: spreedly
   password: 'ibB4Z8=d;G'
