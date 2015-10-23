@@ -42,15 +42,6 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
     assert_not_equal 'SUCCESS', response.message
   end
 
-  # def test_failed_address_purchase
-  #   @options[:billing_address][:zip] = 'JJJJ'
-  #   response = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_failure response
-  #   assert_not_equal 'SUCCESS', response.message
-  # end
-
-
-
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

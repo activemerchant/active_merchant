@@ -156,7 +156,6 @@ module ActiveMerchant #:nodoc:
                 end
               end
 
-              # success = !response.key?("httpStatusCode")
             end
 
           else
