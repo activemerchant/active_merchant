@@ -189,6 +189,16 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_empty_values_not_sent
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, referrer: "")
+    end.check_request do |method, endpoint, data, headers|
+      refute_match(/referrer/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_authorization
     @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_authorization_response)
@@ -560,7 +570,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
+      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :receipt_email => "receipt-receiver@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
@@ -570,6 +580,7 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
       assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
       assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/receipt_email=receipt-receiver\%40wonderfullyfakedomain\.com/, data)
       assert_match(/metadata\[order_id\]=42/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -839,6 +850,26 @@ class StripeTest < Test::Unit::TestCase
 
   def test_supports_network_tokenization
     assert_instance_of TrueClass, @gateway.supports_network_tokenization?
+  end
+
+  def test_emv_capture_application_fee_ignored
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, "ch_test_charge", application_fee: 100, icc_data: @emv_credit_card.icc_data)
+    end.check_request do |method, endpoint, data, headers|
+      assert data !~ /application_fee/, "request should not include application_fee"
+    end.respond_with(successful_capture_response_with_icc_data)
+
+    assert_success response
+  end
+
+  def test_authorization_with_emv_payment_application_fee_included
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, "ch_test_charge", application_fee: 100, icc_data: @emv_credit_card.icc_data)
+    end.check_request do |method, endpoint, data, headers|
+      assert data =~ /application_fee/, "request should include application_fee"
+    end.respond_with(successful_capture_response_with_icc_data)
+
+    assert_success response
   end
 
   private

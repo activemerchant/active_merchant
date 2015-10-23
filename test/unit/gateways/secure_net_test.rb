@@ -150,6 +150,21 @@ class SecureNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passes_with_no_developer_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{DEVELOPERID}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_with_developer_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, developer_id: '1234')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{DEVELOPERID}, data)
+    end.respond_with(successful_purchase_response)
+  end
 
   private
 

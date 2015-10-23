@@ -40,6 +40,20 @@ module ActiveMerchant #:nodoc:
 
       FRAUD_REVIEW_CODE = "11610"
 
+      STANDARD_ERROR_CODE_MAPPING = {
+        '15005' => :card_declined,
+        '10754' => :card_declined,
+        '10752' => :card_declined,
+        '10759' => :card_declined,
+        '10761' => :card_declined,
+        '15002' => :card_declined,
+        '11084' => :card_declined,
+        '15004' => :incorrect_cvc,
+        '10762' => :invalid_cvc,
+      }
+
+      STANDARD_ERROR_CODE_MAPPING.default = :processing_error
+
       def self.included(base)
         base.default_currency = 'USD'
         base.cattr_accessor :pem_file
@@ -637,9 +651,19 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => authorization_from(response),
           :fraud_review => fraud_review?(response),
+          :error_code => standardized_error_code(response),
           :avs_result => { :code => response[:avs_code] },
           :cvv_result => response[:cvv2_code]
         )
+      end
+
+      def standardized_error_code(response)
+        STANDARD_ERROR_CODE_MAPPING[error_codes(response).first]
+      end
+
+      def error_codes(response)
+        return [] unless response.has_key?(:error_codes)
+        response[:error_codes].split(',')
       end
 
       def fraud_review?(response)

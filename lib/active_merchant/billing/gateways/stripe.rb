@@ -63,7 +63,11 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            post[:capture] = "false" unless emv_payment?(payment)
+            if emv_payment?(payment)
+              add_application_fee(post, options)
+            else
+              post[:capture] = "false"
+            end
             commit(:post, 'charges', post, options)
           end
         end.responses.last
@@ -92,12 +96,11 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
 
-        add_application_fee(post, options)
-
         if emv_tc_response = options.delete(:icc_data)
           post[:card] = { emv_approval_data: emv_tc_response }
           commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
         else
+          add_application_fee(post, options)
           add_amount(post, money, options)
           commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
         end
@@ -251,6 +254,7 @@ module ActiveMerchant #:nodoc:
           add_metadata(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
+          post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
           add_customer(post, payment, options)
           add_flags(post, options)
         end
@@ -384,7 +388,7 @@ module ActiveMerchant #:nodoc:
         return nil unless params
 
         params.map do |key, value|
-          next if value.nil?
+          next if value != false && value.blank?
           if value.is_a?(Hash)
             h = {}
             value.each do |k, v|
@@ -392,7 +396,7 @@ module ActiveMerchant #:nodoc:
             end
             post_data(h)
           elsif value.is_a?(Array)
-            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&") unless value.blank?
+            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&")
           else
             "#{key}=#{CGI.escape(value.to_s)}"
           end

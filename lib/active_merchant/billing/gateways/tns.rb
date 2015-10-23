@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
           billing[:address][:city]          = billing_address[:city]
           billing[:address][:stateProvince] = billing_address[:state]
           billing[:address][:postcodeZip]   = billing_address[:zip]
-          billing[:address][:country]       = billing_address[:country]
+          billing[:address][:country]       = country_code(billing_address[:country])
           billing[:phone]                   = billing_address[:phone]
 
           customer[:email]                  = options[:email] if options[:email]
@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
           shipping[:address][:city]          = shipping_address[:city]
           shipping[:address][:stateProvince] = shipping_address[:state]
           shipping[:address][:postcodeZip]   = shipping_address[:zip]
-          shipping[:address][:shipcountry]   = shipping_address[:country]
+          shipping[:address][:shipcountry]   = country_code(shipping_address[:country])
 
           last_name, first_middle_names = split_name(shipping_address[:name])
           shipping[:firstName]  = first_middle_names if first_middle_names
@@ -143,6 +143,14 @@ module ActiveMerchant #:nodoc:
         post[:customer].merge!(customer)
       end
 
+      def country_code(country)
+        if country
+          country = ActiveMerchant::Country.find(country)
+          country.code(:alpha3).value
+        end
+      rescue InvalidCountryCodeError
+      end
+
       def commit(action, post)
         url = build_url(post.delete(:orderid), post.delete(:transactionid))
         headers = {
@@ -150,8 +158,11 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'application/json',
         }
         post[:apiOperation] = action.upcase
-        raw = parse(ssl_request(:put, url, build_request(post), headers))
-
+        begin
+          raw = parse(ssl_request(:put, url, build_request(post), headers))
+        rescue ResponseError => e
+          raw = parse(e.response.body)
+        end
         succeeded = success_from(raw['result'])
         Response.new(
           succeeded,

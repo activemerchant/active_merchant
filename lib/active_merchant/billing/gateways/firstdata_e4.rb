@@ -172,6 +172,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(xml, options)
         add_invoice(xml, options)
         add_card_authentication_data(xml, options)
+        add_level_2_and_3(xml, options)
 
         xml.target!
       end
@@ -301,6 +302,11 @@ module ActiveMerchant #:nodoc:
         xml.tag! "Reference_3",  options[:description] if options[:description]
       end
 
+      def add_level_2_and_3(xml, options)
+        xml.tag!("Level2") { |x| x << options[:level_2] } if options[:level_2]
+        xml.tag!("Level3") { |x| x << options[:level_3] } if options[:level_3]
+      end
+
       def expdate(credit_card)
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
       end
@@ -343,7 +349,7 @@ module ActiveMerchant #:nodoc:
           [
             response[:authorization_num],
             response[:transaction_tag],
-            (response[:dollar_amount].to_f * 100).to_i
+            response[:dollar_amount].sub(".", "")
           ].join(";")
         else
           ""
@@ -367,7 +373,7 @@ module ActiveMerchant #:nodoc:
 
       def money_from_authorization(auth)
         _, _, amount = auth.split(/;/, 3)
-        amount.to_i # return the # of cents, no need to divide
+        amount.to_i
       end
 
       def message_from(response)

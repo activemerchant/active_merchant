@@ -99,6 +99,13 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def verify(source, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, source, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def success?(response)
         response[:trnApproved] == '1' || response[:responseCode] == '1'
       end

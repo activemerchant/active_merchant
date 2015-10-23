@@ -1,29 +1,16 @@
 require 'test_helper'
 
-class RemoteCheckoutV2Test < Test::Unit::TestCase
+class RemoteCreditcallTest < Test::Unit::TestCase
   def setup
-    @gateway = CheckoutV2Gateway.new(fixtures(:checkout_v2))
+    @gateway = CreditcallGateway.new(fixtures(:creditcall))
 
-    @amount = 200
-    @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2018')
+    @amount = 100
+    @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
-
     @options = {
-      order_id: '1',
       billing_address: address,
-      description: 'Purchase',
-      email: "longbob.longsen@example.com"
+      description: 'Store Purchase'
     }
-  end
-
-  def test_transcript_scrubbing
-    transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @declined_card, @options)
-    end
-    transcript = @gateway.scrub(transcript)
-    assert_scrubbed(@declined_card.number, transcript)
-    assert_scrubbed(@declined_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:secret_key], transcript)
   end
 
   def test_successful_purchase
@@ -32,35 +19,51 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
-  def test_successful_purchase_with_minimal_options
-    response = @gateway.purchase(@amount, @credit_card, billing_address: address)
+  def test_successful_purchase_sans_options
+    response = @gateway.purchase(@amount, @credit_card)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
 
-  def test_successful_purchase_without_phone_number
-    response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(phone: ''))
+  def test_successful_purchase_with_more_options
+    options = {
+      order_id: '1',
+      ip: "127.0.0.1",
+      email: "joe@example.com"
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
 
   def test_failed_purchase
+    @amount = 1001
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Invalid Card Number', response.message
+    assert_equal 'ExpiredCard', response.message
+  end
+
+  def test_successful_authorize
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Succeeded', auth.message
   end
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(nil, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
+    assert_equal 'Succeeded', capture.message
   end
 
   def test_failed_authorize
+    @amount = 1001
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
+    assert_equal 'ExpiredCard', response.message
   end
 
   def test_partial_capture
@@ -72,8 +75,9 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(nil, '')
+    response = @gateway.capture(@amount, '')
     assert_failure response
+    assert_equal 'CardEaseReferenceInvalid', response.message
   end
 
   def test_successful_refund
@@ -82,6 +86,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
+    assert_equal 'Succeeded', refund.message
   end
 
   def test_partial_refund
@@ -93,8 +98,9 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, '')
-    assert_failure response
+    assert refund = @gateway.refund(@amount, '')
+    assert_failure refund
+    assert_equal 'CardEaseReferenceInvalid', refund.message
   end
 
   def test_successful_void
@@ -103,11 +109,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
+    assert_equal 'Succeeded', void.message
   end
 
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
+    assert_equal 'CardEaseReferenceInvalid', response.message
   end
 
   def test_successful_verify
@@ -117,9 +125,29 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_verify
+    @declined_card.number = ""
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{Invalid Card Number}, response.message
-    assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+    assert_match %r{PAN Must be >= 13 Digits}, response.message
+  end
+
+  def test_invalid_login
+    gateway = CreditcallGateway.new(terminal_id: '', transaction_key: '')
+
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match %r{Invalid TerminalID - Must be 8 digit number}, response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:transaction_key], transcript)
+
   end
 end

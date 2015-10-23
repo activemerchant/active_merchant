@@ -31,6 +31,22 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_level_2_and_level_3
+    level_2_xml = "<TaxAmount>88</TaxAmount><CustomerRef>TheRef</CustomerRef>"
+    level_3_xml = <<-LEVEL3
+        <LineItem>
+          <LineItemTotal>107.20</LineItemTotal>
+          <Quantity>3</Quantity>
+          <Description>The Description</Description>
+          <UnitCost>2.33</UnitCost>
+        </LineItem>
+    LEVEL3
+
+    response = @gateway.purchase(500, @credit_card, @options.merge(level_2: level_2_xml, level_3: level_3_xml))
+    assert_success response
+    assert_equal "Transaction Normal - Approved", response.message
+  end
+
   def test_successful_purchase_with_card_authentication
     assert response = @gateway.purchase(@amount, @credit_card, @options_with_authentication_data)
     assert_equal response.params["cavv"], @options_with_authentication_data[:cavv]
@@ -72,8 +88,9 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_purchase_and_void
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert purchase = @gateway.purchase(29234, @credit_card, @options)
     assert_success purchase
+
     assert purchase.authorization
     assert void = @gateway.void(purchase.authorization)
     assert_success void
