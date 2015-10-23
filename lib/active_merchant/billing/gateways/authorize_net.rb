@@ -317,7 +317,6 @@ module ActiveMerchant #:nodoc:
           xml.transactionRequest do
             xml.transactionType('voidTransaction')
             xml.refTransId(transaction_id_from(authorization))
-            add_user_fields(xml, nil, options)
           end
         end
       end
