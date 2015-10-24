@@ -17,11 +17,6 @@ module ActiveMerchant #:nodoc:
       self.display_name        = 'Zeus Credit Payment Service'
 
       STANDARD_ERRORS                = ['failure_order', 'Invalid', 'maintenance', 'connect error', 'failer_order']
-      QUICKCHARGE_CARD_WITH_TELNO    = '8888888888888888'
-      QUICKCHARGE_CARD_WITHOUT_TELNO = '8888888888888882'
-
-      # Used when quickcharge is used without telno.
-      DUMMY_TELNO                    = '0000000000'
 
       # clientip: IP code assigned to the merchant by Zeus (10 Digit).
       def initialize(options = {})
@@ -60,17 +55,6 @@ module ActiveMerchant #:nodoc:
 
       def refund(ordd)
         commit('refund', build_refund_request(ordd))
-      end
-
-      # Options:
-      # => sendid: Required Field. sendid is specific to a customer and is used for customer search when quickcharge is used.
-      # => If telnocheck=yes is passed, then email is sent out in English, otherwise, in Japanese.
-      # => telno: if provided, then member search at Zeus uses Clientip + telno + sendid. Card: QUICKCHARGE_CARD_WITH_TELNO
-      # =>      : else member search at Zeus uses Clientip + DUMMY_TELNO + sendid. Card: QUICKCHARGE_CARD_WITHOUT_TELNO
-      # => seccode should not be passed for quickcharge.
-      def quickcharge(money, options)
-        requires!(options, :sendid)
-        commit('sale', build_quickcharge_request(money, options))
       end
 
       private
@@ -116,18 +100,6 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def build_quickcharge_request(money, options)
-        post = Hash[:send, 'mall']
-
-        add_clientip(post)
-        add_invoice(post, money, options)
-        add_payment_for_quickcharge(post, options)
-        add_customer_data(post, options)
-        add_extra_data(post, options)
-        post[:telno] ||= DUMMY_TELNO
-        post
-      end
-
       def add_refund_data(post, ordd)
         post[:ordd]   = ordd
         post[:return] = 'yes'
@@ -162,16 +134,6 @@ module ActiveMerchant #:nodoc:
 
       def add_clientip(post)
         post[:clientip] = self.options[:clientip]
-      end
-
-      def add_payment_for_quickcharge(post, options)
-        if options[:telno]
-          post[:cardnumber] = QUICKCHARGE_CARD_WITH_TELNO
-        else
-          post[:cardnumber] = QUICKCHARGE_CARD_WITHOUT_TELNO
-        end
-        post[:expmm]      = '00'
-        post[:expyy]      = '00'
       end
 
       def parse_sale(body)

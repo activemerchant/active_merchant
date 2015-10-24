@@ -34,22 +34,6 @@ class RemoteZeusTest < Test::Unit::TestCase
     assert_equal false, response.authorization.nil?
   end
 
-  def test_successful_quickcharge
-    response = @gateway.quickcharge(@amount, @options)
-
-    assert_success response
-    assert_equal 'Success_order', response.message[:status]
-    assert_equal false, response.authorization.nil?
-  end
-
-  def test_failed_quickcharge
-    response = @gateway.quickcharge(@amount, @options.merge(sendid: 'fail_send_id'))
-
-    assert_failure response
-    assert_equal 'failure_order', response.message[:status]
-    assert_equal false, response.authorization.nil?
-  end
-
   def test_successful_authorize
     initial_auth = @gateway.purchase(0, @credit_card, @options)
     response = @gateway.authorize(@amount, initial_auth.authorization, Date.today.to_s.gsub('-', ''))

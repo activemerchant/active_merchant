@@ -115,46 +115,6 @@ class ZeusTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_quickcharge
-    @gateway.expects(:ssl_post).returns(successful_quickcharge_response)
-    response = @gateway.quickcharge(@amount, @options)
-
-    assert_success response
-    assert_equal nil, response.authorization
-    assert_equal nil, response.error_code
-    assert response.test?
-  end
-
-  def test_successful_quickcharge_with_order
-    @gateway.expects(:ssl_post).returns(successful_quickcharge_response_with_order)
-    response = @gateway.quickcharge(@amount, @options)
-
-    assert_success response
-    assert_equal 'TEST-Fake-Order-1', response.authorization
-    assert_equal nil, response.error_code
-    assert response.test?
-  end
-
-  def test_failed_quickcharge
-    @gateway.expects(:ssl_post).returns(failed_quickcharge_response)
-    response = @gateway.quickcharge(@amount, @options)
-
-    assert_failure response
-    assert_equal nil, response.authorization
-    assert_equal 'failure_order', response.error_code
-    assert response.test?
-  end
-
-  def test_failed_quickcharge_with_order
-    @gateway.expects(:ssl_post).returns(failed_quickcharge_response_with_order)
-    response = @gateway.quickcharge(@amount, @options)
-
-    assert_failure response
-    assert_equal 'TEST-Fake-order-2', response.authorization
-    assert_equal 'failure_order', response.error_code
-    assert response.test?
-  end
-
   private
 
     def successful_purchase_response
@@ -195,22 +155,6 @@ class ZeusTest < Test::Unit::TestCase
 
     def failed_refund_response
       "0 1\n\nfailure_order\n\n"
-    end
-
-    def successful_quickcharge_response
-      'Success_order'
-    end
-
-    def successful_quickcharge_response_with_order
-      "Success_order\nTEST-Fake-Order-1"
-    end
-
-    def failed_quickcharge_response
-      'failure_order'
-    end
-
-    def failed_quickcharge_response_with_order
-      "failure_order\nTEST-Fake-order-2"
     end
 
 end
