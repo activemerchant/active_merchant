@@ -80,6 +80,7 @@ module ActiveMerchant #:nodoc:
           post[:amount] = amount(money)
           post[:currency] = options[:currency] || currency(money)
         end
+        post[:project] = options[:project] if options[:project]
       end
 
       def add_payment_method(post, payment_method, options={})

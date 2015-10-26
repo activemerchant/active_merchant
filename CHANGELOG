@@ -31,6 +31,8 @@
 * Elavon: Support capture via CCCOMPLETE without credit card [marquisong]
 * Securenet: Allow setting test_mode independently [wedstar]
 * Replace Base.integration_mode and Base.gateway_mode with just Base.mode [aprofeit]
+* Micropayment: Allow specification of a project [duff]
+
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
