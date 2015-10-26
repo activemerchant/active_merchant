@@ -143,14 +143,14 @@ module ActiveMerchant #:nodoc:
             response = parse(raw_response)
             if type=='token'
               success = response.key?("token")
-            elsif
+            else
               if response.key?("httpStatusCode")
                 success = false
               elsif
-                if type=='authorize'
-                  success = response["paymentStatus"]=="AUTHORIZED" ? true: false
-                elsif type=='purchase'
-                  success = response["paymentStatus"]=="SUCCESS" ? true: false
+                if type=='authorize' && response["paymentStatus"]=="AUTHORIZED"
+                  success = true
+                elsif type=='purchase' && response["paymentStatus"]=="SUCCESS"
+                  success = true
                 elsif type=='capture' || type=='refund' || type=='void'
                   success = true
                 end
