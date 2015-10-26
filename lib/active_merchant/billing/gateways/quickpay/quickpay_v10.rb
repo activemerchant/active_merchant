@@ -259,7 +259,7 @@ module ActiveMerchant
         end
 
         def format_order_id(order_id)
-          order_id.to_s.gsub(/#/, '')
+          truncate(order_id.to_s.gsub(/#/, ''), 20)
         end
 
         def headers
