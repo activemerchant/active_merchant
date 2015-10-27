@@ -134,8 +134,8 @@ module ActiveMerchant #:nodoc:
           shipping[:address][:postcodeZip]   = shipping_address[:zip]
           shipping[:address][:shipcountry]   = country_code(shipping_address[:country])
 
-          last_name, first_middle_names = split_name(shipping_address[:name])
-          shipping[:firstName]  = first_middle_names if first_middle_names
+          first_name, last_name = split_names(shipping_address[:name])
+          shipping[:firstName]  = first_name if first_name
           shipping[:lastName]   = last_name if last_name
         end
         post[:billing].merge!(billing)
@@ -226,12 +226,6 @@ module ActiveMerchant #:nodoc:
         orderid, prev_transactionid = split_authorization(authorization)
         next_transactionid = SecureRandom.uuid
         [orderid, next_transactionid, prev_transactionid]
-      end
-
-      def split_name(full_name)
-        return nil unless full_name
-        names = full_name.split
-        [names.pop, names.join(' ')]
       end
     end
   end

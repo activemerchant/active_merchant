@@ -155,15 +155,6 @@ module ActiveMerchant #:nodoc:
         post[address_key(prefix, 'phone')]    = address[:phone]     unless address[:phone].blank?
       end
 
-      def split_names(full_name)
-        names = (full_name || '').split
-        return [nil, nil] if names.size == 0
-
-        last_name = names.pop
-        first_name = names.join(' ')
-        [first_name, last_name]
-      end
-
       def address_key_prefix(type)
         case type
         when :shipping then 'ship'

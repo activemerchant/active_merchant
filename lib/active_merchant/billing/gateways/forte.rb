@@ -244,13 +244,6 @@ module ActiveMerchant #:nodoc:
         transaction_id, _ = split_authorization(authorization)
         transaction_id
       end
-
-      def split_names(full_name)
-        names = full_name.split
-        last_name  = names.pop
-        first_name = names.join(" ")
-        [first_name, last_name]
-      end
     end
   end
 end

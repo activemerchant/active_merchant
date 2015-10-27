@@ -154,20 +154,6 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_equal 20, post.keys.size
   end
 
-  def test_split_names
-    assert_equal ['Longbob', 'Longsen'], @gateway.send(:split_names, 'Longbob Longsen')
-  end
-
-  def test_split_names_with_single_name
-    assert_equal ['', 'Longsen'], @gateway.send(:split_names, 'Longsen')
-  end
-
-  def test_split_names_with_empty_names
-    assert_equal [nil, nil], @gateway.send(:split_names, '')
-    assert_equal [nil, nil], @gateway.send(:split_names, nil)
-    assert_equal [nil, nil], @gateway.send(:split_names, ' ')
-  end
-
   def test_amount_style
    assert_equal '10.34', @gateway.send(:amount, 1034)
 

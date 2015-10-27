@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         post[:email] = options[:email] || "unspecified@example.com"
         post[:iPAddress] = options[:ip]
         if (billing_address = options[:billing_address])
-          post[:firstName], post[:lastName] = billing_address[:name].split
+          post[:firstName], post[:lastName] = split_names(billing_address[:name])
           post[:addressLine1] = billing_address[:address1]
           post[:addressLine2] = billing_address[:address2]
           post[:city] = billing_address[:city]
