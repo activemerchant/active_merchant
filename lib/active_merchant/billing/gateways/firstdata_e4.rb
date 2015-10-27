@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(xml, options)
         add_invoice(xml, options)
         add_card_authentication_data(xml, options)
-        add_level_2(xml, options)
+        add_tax_fields(xml, options)
         add_level_3(xml, options)
 
         xml.target!
@@ -305,9 +305,8 @@ module ActiveMerchant #:nodoc:
         xml.tag! "Reference_3",  options[:description] if options[:description]
       end
 
-      def add_level_2(xml, options)
+      def add_tax_fields(xml, options)
         xml.tag! "Tax1Amount",  options[:tax1_amount] if options[:tax1_amount]
-        xml.tag! "Customer_Ref",  options[:customer_ref] if options[:customer_ref]
       end
 
       def add_level_3(xml, options)
