@@ -3,6 +3,8 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ForteGateway < Gateway
+      include Empty
+
       self.test_url = 'https://sandbox.forte.net/api/v2'
       self.live_url = 'https://api.forte.net/v2'
 
@@ -100,8 +102,9 @@ module ActiveMerchant #:nodoc:
       def add_billing_address(post, payment, options)
         post[:billing_address] = {}
         if address = options[:billing_address] || options[:address]
-          post[:billing_address][:first_name] = address[:name].split(" ").first if address[:name]
-          post[:billing_address][:last_name] = address[:name].split(" ").last if address[:name]
+          first_name, last_name = split_names(address[:name])
+          post[:billing_address][:first_name] = first_name if first_name
+          post[:billing_address][:last_name] = last_name if last_name
           post[:billing_address][:physical_address] = {}
           post[:billing_address][:physical_address][:street_line1] = address[:address1] if address[:address1]
           post[:billing_address][:physical_address][:street_line2] = address[:address2] if address[:address2]
@@ -109,11 +112,13 @@ module ActiveMerchant #:nodoc:
           post[:billing_address][:physical_address][:region] = address[:state] if address[:state]
           post[:billing_address][:physical_address][:locality] = address[:city] if address[:city]
         end
-        unless post[:billing_address][:first_name] && post[:billing_address][:first_name] != ''
-          post[:billing_address][:first_name] = payment.first_name if payment.first_name
+
+        if empty?(post[:billing_address][:first_name] && payment.first_name)
+          post[:billing_address][:first_name] = payment.first_name
         end
-        unless post[:billing_address][:last_name] && post[:billing_address][:last_name] != ''
-          post[:billing_address][:first_name] = payment.last_name if payment.last_name
+
+        if empty?(post[:billing_address][:last_name] && payment.last_name)
+          post[:billing_address][:last_name] = payment.last_name
         end
       end
 
@@ -122,8 +127,9 @@ module ActiveMerchant #:nodoc:
         address = options[:shipping_address]
 
         post[:shipping_address] = {}
-        post[:shipping_address][:first_name] = address[:name].split(" ").first if address[:name]
-        post[:shipping_address][:last_name] = address[:name].split(" ").last if address[:name]
+        first_name, last_name = split_names(address[:name])
+        post[:shipping_address][:first_name] = first_name if first_name
+        post[:shipping_address][:last_name] = last_name if last_name
         post[:shipping_address][:physical_address][:street_line1] = address[:address1] if address[:address1]
         post[:shipping_address][:physical_address][:street_line2] = address[:address2] if address[:address2]
         post[:shipping_address][:physical_address][:postal_code] = address[:zip] if address[:zip]
@@ -237,6 +243,13 @@ module ActiveMerchant #:nodoc:
       def transaction_id_from(authorization)
         transaction_id, _ = split_authorization(authorization)
         transaction_id
+      end
+
+      def split_names(full_name)
+        names = full_name.split
+        last_name  = names.pop
+        first_name = names.join(" ")
+        [first_name, last_name]
       end
     end
   end
