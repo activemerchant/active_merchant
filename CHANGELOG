@@ -33,6 +33,7 @@
 * Replace Base.integration_mode and Base.gateway_mode with just Base.mode [aprofeit]
 * Micropayment: Allow specification of a project [duff]
 * QuickpayV10: Truncate order_id [duff]
+* FirstData_e4: Fix Level 2 data [duff]
 
 
 == Version 1.54.0 (October 2, 2015)
