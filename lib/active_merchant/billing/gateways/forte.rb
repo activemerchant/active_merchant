@@ -110,10 +110,10 @@ module ActiveMerchant #:nodoc:
           post[:billing_address][:physical_address][:locality] = address[:city] if address[:city]
         end
         unless post[:billing_address][:first_name] && post[:billing_address][:first_name] != ''
-          post[:billing_address][:first_name] = payment.name.split(" ").first if payment.name
+          post[:billing_address][:first_name] = payment.first_name if payment.first_name
         end
         unless post[:billing_address][:last_name] && post[:billing_address][:last_name] != ''
-          post[:billing_address][:first_name] = payment.name.split(" ").last if payment.name
+          post[:billing_address][:first_name] = payment.last_name if payment.last_name
         end
       end
 
