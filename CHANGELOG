@@ -34,6 +34,7 @@
 * Micropayment: Allow specification of a project [duff]
 * QuickpayV10: Truncate order_id [duff]
 * FirstData_e4: Fix Level 2 data [duff]
+* Remove some duplication around name handling [duff]
 
 
 == Version 1.54.0 (October 2, 2015)

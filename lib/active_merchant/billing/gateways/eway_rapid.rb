@@ -222,11 +222,7 @@ module ActiveMerchant #:nodoc:
       def add_address(params, address, options={})
         return unless address
 
-        if address[:name]
-          parts = address[:name].split(/\s+/)
-          params['FirstName'] = parts.shift if parts.size > 1
-          params['LastName'] = parts.join(" ")
-        end
+        params['FirstName'], params['LastName'] = split_names(address[:name])
         params['Title'] = address[:title]
         params['CompanyName'] = address[:company] unless options[:skip_company]
         params['Street1'] = truncate(address[:address1], 50)

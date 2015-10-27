@@ -145,10 +145,7 @@ module ActiveMerchant #:nodoc:
         end
 
        if shipping_address = options[:shipping_address]
-         first_name, last_name = parse_first_and_last_name(shipping_address[:name])
-
-         post[:ship_name1]      = first_name
-         post[:ship_name2]      = last_name
+         post[:ship_name1], post[:ship_name2] = split_names(shipping_address[:name])
          post[:ship_street]     = shipping_address[:address1]
          post[:ship_zip]        = shipping_address[:zip]
          post[:ship_city]       = shipping_address[:city]
@@ -231,13 +228,6 @@ module ActiveMerchant #:nodoc:
         parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
-      def parse_first_and_last_name(value)
-        name = value.to_s.split(' ')
-
-        last_name = name.pop || ''
-        first_name = name.join(' ')
-        [ first_name, last_name ]
-      end
     end
   end
 end

@@ -547,13 +547,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def split_names(full_name)
-        names = (full_name || "").split
-        last_name = names.pop
-        first_name = names.join(" ")
-        [first_name, last_name]
-      end
-
       def headers
         { 'Content-Type' => 'text/xml' }
       end

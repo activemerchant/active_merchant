@@ -163,9 +163,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'COUNTRY', address[:country].to_s
 
             if address[:name]
-              names = address[:name].split
-              last_name = names.pop
-              first_name = names.join(" ")
+              first_name, last_name = split_names(address[:name])
               xml.tag! 'FIRSTNAME', first_name
               xml.tag! 'LASTNAME', last_name
             else
