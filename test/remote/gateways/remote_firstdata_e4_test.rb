@@ -54,10 +54,15 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_equal "Transaction Normal - Approved", response.message
   end
 
-  def test_successful_purchase_with_level_2
-    response = @gateway.purchase(500, @credit_card, @options.merge(tax1_amount: 50, customer_ref: "267"))
+  def test_successful_purchase_with_tax_fields
+    response = @gateway.purchase(500, @credit_card, @options.merge(tax1_amount: 50))
     assert_success response
     assert_equal "50.0", response.params["tax1_amount"]
+  end
+
+  def test_successful_purchase_with_customer_ref
+    response = @gateway.purchase(500, @credit_card, @options.merge(customer: "267"))
+    assert_success response
     assert_equal "267", response.params["customer_ref"]
   end
 
