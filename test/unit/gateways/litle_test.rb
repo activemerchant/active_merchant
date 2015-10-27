@@ -13,6 +13,14 @@ class LitleTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        month: '01',
+        year: '2012',
+        brand: "visa",
+        number:  "44444444400009",
+        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+      })
     @amount = 100
     @options = {}
   end
@@ -59,7 +67,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/<billToAddress>.*Widgets.*1234.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+      assert_match(/<billToAddress>.*Widgets.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -67,7 +75,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, shipping_address: address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/<shipToAddress>.*Widgets.*1234.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+      assert_match(/<shipToAddress>.*Widgets.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -81,6 +89,31 @@ class LitleTest < Test::Unit::TestCase
       assert_match(%r(<customBilling>.*<phone>Phone<)m, data)
     end.respond_with(successful_authorize_response)
   end
+
+  def test_passing_debt_repayment
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, { debt_repayment: true })
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<debtRepayment>true</debtRepayment>), data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_passing_payment_cryptogram
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_apple_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/BwABBJQ1AgAAAAAgJDUCAAAAAAA=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_add_applepay_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_apple_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>applepay</orderSource>", data
+    end.respond_with(successful_purchase_response)
+  end
+
 
   def test_successful_authorize_and_capture
     response = stub_comms do
@@ -211,6 +244,15 @@ class LitleTest < Test::Unit::TestCase
     assert_equal "1111222233330123", response.authorization
   end
 
+  def test_successful_store_with_paypage_registration_id
+    response = stub_comms do
+      @gateway.store("cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=")
+    end.respond_with(successful_store_paypage_response)
+
+    assert_success response
+    assert_equal "1111222233334444", response.authorization
+  end
+
   def test_failed_store
     response = stub_comms do
       @gateway.store(@credit_card)
@@ -271,6 +313,16 @@ class LitleTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match "<orderSource>recurring</orderSource>", data
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_unsuccessful_xml_schema_validation
+    response = stub_comms do
+      @gateway.store(@credit_card)
+    end.respond_with(unsuccessful_xml_schema_validation_response)
+
+    assert_failure response
+    assert_match(/^Error validating xml data against the schema/, response.message)
+    assert_equal "1", response.params["response"]
   end
 
   private
@@ -472,6 +524,21 @@ class LitleTest < Test::Unit::TestCase
     )
   end
 
+  def successful_store_paypage_response
+    %(
+      <litleOnlineResponse version='8.2' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <registerTokenResponse id='99999' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>222358384397377801</litleTxnId>
+          <orderId>F12345</orderId>
+          <litleToken>1111222233334444</litleToken>
+          <response>801</response>
+          <responseTime>2015-05-20T14:37:22</responseTime>
+          <message>Account number was successfully registered</message>
+        </registerTokenResponse>
+      </litleOnlineResponse>
+    )
+  end
+
   def failed_store_response
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
@@ -483,6 +550,15 @@ class LitleTest < Test::Unit::TestCase
           <message>Credit card number was invalid</message>
         </registerTokenResponse>
       </litleOnlineResponse>
+    )
+  end
+
+  def unsuccessful_xml_schema_validation_response
+    %(
+    <litleOnlineResponse version='8.29' xmlns='http://www.litle.com/schema'
+                     response='1'
+                     message='Error validating xml data against the schema on line 8\nthe length of the value is 10, but the required minimum is 13.'/>
+
     )
   end
 

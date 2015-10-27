@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
     # * To process pinless debit cards through the pinless debit card
     #   network, your Cybersource merchant account must accept pinless
     #   debit card payments.
-    # * The order of the XML elements does matter, make sure to follow the order in 
+    # * The order of the XML elements does matter, make sure to follow the order in
     #   the documentation exactly.
     class CyberSourceGateway < Gateway
       self.test_url = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
@@ -229,6 +229,24 @@ module ActiveMerchant #:nodoc:
       def validate_pinless_debit_card(creditcard, options = {})
         requires!(options, :order_id)
         commit(build_validate_pinless_debit_request(creditcard,options), options)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<wsse:Password [^>]*>)[^<]*(</wsse:Password>))i, '\1[FILTERED]\2').
+          gsub(%r((<accountNumber>)[^<]*(</accountNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<cvNumber>)[^<]*(</cvNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<cavv>)[^<]*(</cavv>))i, '\1[FILTERED]\2').
+          gsub(%r((<xid>)[^<]*(</xid>))i, '\1[FILTERED]\2').
+          gsub(%r((<authenticationData>)[^<]*(</authenticationData>))i, '\1[FILTERED]\2')
+      end
+
+      def supports_network_tokenization?
+        true
       end
 
       private
@@ -442,6 +460,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
           xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
           xml.tag! 'email',                 options[:email]
+          xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
         end

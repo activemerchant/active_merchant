@@ -46,6 +46,14 @@ class RemoteLitleTest < Test::Unit::TestCase
       number: "4488282659650110",
       verification_value: "992"
     )
+    @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        month: '01',
+        year: '2012',
+        brand: "visa",
+        number:  "44444444400009",
+        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+      })
   end
 
   def test_successful_authorization
@@ -91,6 +99,18 @@ class RemoteLitleTest < Test::Unit::TestCase
       billing_address: {
       }
     })
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_debt_repayment_flag
+    assert response = @gateway.purchase(10010, @credit_card1, @options.merge(debt_repayment: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay
+    assert response = @gateway.purchase(10010, @decrypted_apple_pay)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -212,6 +232,16 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal '1111222233330123', store_response.params['litleToken']
   end
 
+  def test_store_with_paypage_registration_id_successful
+    paypage_registration_id = "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg="
+    assert store_response = @gateway.store(paypage_registration_id, :order_id => '50')
+
+    assert_success store_response
+    assert_equal 'Account number was successfully registered', store_response.message
+    assert_equal '801', store_response.params['response']
+    assert_equal '1111222233334444', store_response.params['litleToken']
+  end
+
   def test_store_unsuccessful
     credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4457119999999999'))
     assert store_response = @gateway.store(credit_card, :order_id => '51')
@@ -254,6 +284,15 @@ class RemoteLitleTest < Test::Unit::TestCase
     ))
     assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_xml_schema_validation
+    credit_card = CreditCard.new(@credit_card_hash.merge(:number => '123456'))
+    assert store_response = @gateway.store(credit_card, :order_id => '51')
+
+    assert_failure store_response
+    assert_match(/^Error validating xml data against the schema/, store_response.message)
+    assert_equal '1', store_response.params['response']
   end
 
 end

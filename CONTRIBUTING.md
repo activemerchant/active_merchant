@@ -9,13 +9,13 @@ We gladly accept new gateways or bugfixes to this library. Please read the guide
 
 ### Pull request guidelines
 
-1. [Fork it](http://github.com/Shopify/active_merchant/fork) and clone your new repo
+1. [Fork it](http://github.com/activemerchant/active_merchant/fork) and clone your new repo
 2. Create a branch (`git checkout -b my_awesome_feature`)
 3. Commit your changes (`git add my/awesome/file.rb; git commit -m "Added my awesome feature"`)
 4. Push your changes to your fork (`git push origin my_awesome_feature`)
-5. Open a [Pull Request](https://github.com/shopify/active_merchant/pulls)
+5. Open a [Pull Request](https://github.com/activemerchant/active_merchant/pulls)
 
-Please see the [ActiveMerchant Guide to Contributing](https://github.com/Shopify/active_merchant/wiki/contributing) for information on adding a new gateway to ActiveMerchant.
+Please see the [ActiveMerchant Guide to Contributing](https://github.com/activemerchant/active_merchant/wiki/contributing) for information on adding a new gateway to ActiveMerchant.
 
 The most important guidelines:
 

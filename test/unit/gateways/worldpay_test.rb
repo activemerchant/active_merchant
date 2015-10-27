@@ -195,7 +195,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
-      assert_match %r(<address1>1234 My Street</address1>), data
+      assert_match %r(<address1>456 My Street</address1>), data
       assert_match %r(<address2>Apt 1</address2>), data
       assert_match %r(<postalCode>K1C2N6</postalCode>), data
       assert_match %r(<city>Ottawa</city>), data
@@ -209,7 +209,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
-      assert_match %r(<address1>1234 My Street</address1>), data
+      assert_match %r(<address1>456 My Street</address1>), data
       assert_match %r(<address2>Apt 1</address2>), data
       assert_match %r(<postalCode>K1C2N6</postalCode>), data
       assert_match %r(<city>Ottawa</city>), data
@@ -223,7 +223,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
-      assert_match %r(<address1>1234 My Street</address1>), data
+      assert_match %r(<address1>456 My Street</address1>), data
       assert_match %r(<address2>Apt 1</address2>), data
       assert_match %r(<postalCode>K1C2N6</postalCode>), data
       assert_match %r(<city>Ottawa</city>), data
@@ -383,6 +383,10 @@ class WorldpayTest < Test::Unit::TestCase
     attributes.each do |attribute, value|
       assert_match %r(#{attribute}="#{value}"), m[1]
     end
+  end
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
   private
@@ -639,7 +643,7 @@ class WorldpayTest < Test::Unit::TestCase
                 <address>
                   <firstName>Jim</firstName>
                   <lastName>Smith</lastName>
-                  <street>1234 My Street</street>
+                  <street>456 My Street</street>
                   <houseName>Apt 1</houseName>
                   <postalCode>K1C2N6</postalCode>
                   <city>Ottawa</city>
@@ -661,5 +665,75 @@ class WorldpayTest < Test::Unit::TestCase
       </submit>
       </paymentService>
     REQUEST
+  end
+
+  def transcript
+    <<-TRANSCRIPT
+    <paymentService version="1.4" merchantCode="CHARGEBEEM1">
+      <submit>
+        <order orderCode="4efd348dbe6708b9ec9c118322e0954f">
+          <description>Purchase</description>
+          <amount value="100" currencyCode="GBP" exponent="2"/>
+          <paymentDetails>
+            <VISA-SSL>
+              <cardNumber>4111111111111111</cardNumber>
+              <expiryDate>
+                <date month="09" year="2016"/>
+              </expiryDate>
+              <cardHolderName>Longbob Longsen</cardHolderName>
+              <cvc>123</cvc>
+              <cardAddress>
+                <address>
+                  <address1>N/A</address1>
+                  <postalCode>0000</postalCode>
+                  <city>N/A</city>
+                  <state>N/A</state>
+                  <countryCode>US</countryCode>
+                </address>
+              </cardAddress>
+            </VISA-SSL>
+          </paymentDetails>
+          <shopper>
+            <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+          </shopper>
+        </order>
+      </submit>
+    </paymentService>
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-TRANSCRIPT
+    <paymentService version="1.4" merchantCode="CHARGEBEEM1">
+      <submit>
+        <order orderCode="4efd348dbe6708b9ec9c118322e0954f">
+          <description>Purchase</description>
+          <amount value="100" currencyCode="GBP" exponent="2"/>
+          <paymentDetails>
+            <VISA-SSL>
+              <cardNumber>[FILTERED]</cardNumber>
+              <expiryDate>
+                <date month="09" year="2016"/>
+              </expiryDate>
+              <cardHolderName>Longbob Longsen</cardHolderName>
+              <cvc>[FILTERED]</cvc>
+              <cardAddress>
+                <address>
+                  <address1>N/A</address1>
+                  <postalCode>0000</postalCode>
+                  <city>N/A</city>
+                  <state>N/A</state>
+                  <countryCode>US</countryCode>
+                </address>
+              </cardAddress>
+            </VISA-SSL>
+          </paymentDetails>
+          <shopper>
+            <shopperEmailAddress>wow@example.com</shopperEmailAddress>
+          </shopper>
+        </order>
+      </submit>
+    </paymentService>
+    TRANSCRIPT
   end
 end

@@ -13,6 +13,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       :merchant_id => 'merchant_id'
     )
     @customer_ref_num = "ABC"
+
+    @options = { :order_id => '1'}
   end
 
   def test_successful_purchase
@@ -180,7 +182,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_address_format
     address_with_invalid_chars = address(
-      :address1 =>      '1234% M|a^in \\S/treet',
+      :address1 =>      '456% M|a^in \\S/treet',
       :address2 =>      '|Apt. ^Num\\ber /One%',
       :city =>          'R^ise o\\f /th%e P|hoenix',
       :state =>         '%O|H\\I/O',
@@ -195,7 +197,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, credit_card, :order_id => 1,
         :billing_address => address_with_invalid_chars)
     end.check_request do |endpoint, data, headers|
-      assert_match(/1234 Main Street</, data)
+      assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
       assert_match(/Rise of the Phoenix</, data)
       assert_match(/OH</, data)
@@ -207,10 +209,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
 
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card,
-        :billing_address => address_with_invalid_chars)
+      assert_deprecation_warning do
+        @gateway.add_customer_profile(credit_card,
+          :billing_address => address_with_invalid_chars)
+      end
     end.check_request do |endpoint, data, headers|
-      assert_match(/1234 Main Street</, data)
+      assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
       assert_match(/Rise of the Phoenix</, data)
     end.respond_with(successful_profile_response)
@@ -223,7 +227,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
                        :last_name => 'Jacob Jingleheimer Smith-Jones')
 
     long_address = address(
-      :address1 =>      '1234 Stréêt Name is Really Long',
+      :address1 =>      '456 Stréêt Name is Really Long',
       :address2 =>      'Apårtmeñt 123456789012345678901',
       :city =>          '¡Vancouver-by-the-sea!',
       :state =>         'ßC',
@@ -240,7 +244,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, card, :order_id => 1,
         :billing_address => long_address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/1234 Stréêt Name is Really L</, data)
+      assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
       assert_match(/¡Vancouver-by-the-s</, data)
       assert_match(/ß</, data)
@@ -255,10 +259,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
 
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card,
-        :billing_address => long_address)
+      assert_deprecation_warning do
+        @gateway.add_customer_profile(credit_card,
+          :billing_address => long_address)
+      end
     end.check_request do |endpoint, data, headers|
-      assert_match(/1234 Stréêt Name is Really L</, data)
+      assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
       assert_match(/¡Vancouver-by-the-s</, data)
       assert_match(/ß</, data)
@@ -288,7 +294,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_dest_address
     billing_address = address(
       :dest_zip      => '90001',
-      :dest_address1 => '123 Main St.',
+      :dest_address1 => '456 Main St.',
       :dest_city     => 'Somewhere',
       :dest_state    => 'CA',
       :dest_name     => 'Joan Smith',
@@ -300,7 +306,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         :billing_address => billing_address)
     end.check_request do |endpoint, data, headers|
       assert_match(/<AVSDestzip>90001/, data)
-      assert_match(/<AVSDestaddress1>123 Main St./, data)
+      assert_match(/<AVSDestaddress1>456 Main St./, data)
       assert_match(/<AVSDestaddress2/, data)
       assert_match(/<AVSDestcity>Somewhere/, data)
       assert_match(/<AVSDeststate>CA/, data)
@@ -323,7 +329,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_default_managed_billing
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-        @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014" })
+        assert_deprecation_warning do
+          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014" })
+        end
       end
     end.check_request do |endpoint, data, headers|
       assert_match(/<MBType>R/, data)
@@ -337,10 +345,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_managed_billing
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-        @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014",
-                :end_date => "10-10-2015",
-                :max_dollar_value => 1500,
-                :max_transactions => 12})
+        assert_deprecation_warning do
+          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014",
+                  :end_date => "10-10-2015",
+                  :max_dollar_value => 1500,
+                  :max_transactions => 12})
+        end
       end
     end.check_request do |endpoint, data, headers|
       assert_match(/<MBType>R/, data)
@@ -358,7 +368,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, credit_card, :order_id => 1)
     end.check_request do |endpoint, data, headers|
       assert_no_match(/<CustomerRefNum>K1C2N6/, data)
-      assert_no_match(/<CustomerProfileFromOrderInd>1234 My Street/, data)
+      assert_no_match(/<CustomerProfileFromOrderInd>456 My Street/, data)
       assert_no_match(/<CustomerProfileOrderOverrideInd>Apt 1/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -432,7 +442,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   #   <AVSzip>K1C2N6</AVSzip>
-  #   <AVSaddress1>1234 My Street</AVSaddress1>
+  #   <AVSaddress1>456 My Street</AVSaddress1>
   #   <AVSaddress2>Apt 1</AVSaddress2>
   #   <AVScity>Ottawa</AVScity>
   #   <AVSstate>ON</AVSstate>
@@ -444,7 +454,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address)
     end.check_request do |endpoint, data, headers|
       assert_match(/<AVSzip>K1C2N6/, data)
-      assert_match(/<AVSaddress1>1234 My Street/, data)
+      assert_match(/<AVSaddress1>456 My Street/, data)
       assert_match(/<AVSaddress2>Apt 1/, data)
       assert_match(/<AVScity>Ottawa/, data)
       assert_match(/<AVSstate>ON/, data)
@@ -462,7 +472,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:country => 'DE'))
     end.check_request do |endpoint, data, headers|
       assert_no_match(/<AVSzip>K1C2N6/, data)
-      assert_no_match(/<AVSaddress1>1234 My Street/, data)
+      assert_no_match(/<AVSaddress1>456 My Street/, data)
       assert_no_match(/<AVSaddress2>Apt 1/, data)
       assert_no_match(/<AVScity>Ottawa/, data)
       assert_no_match(/<AVSstate>ON/, data)
@@ -499,7 +509,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_add_customer_profile
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card)
+      assert_deprecation_warning do
+        @gateway.add_customer_profile(credit_card)
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>C/, data)
       assert_match(/<CustomerName>Longbob Longsen/, data)
@@ -509,7 +521,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_add_customer_profile_with_email
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card, { :billing_address => { :email => 'xiaobozzz@example.com' } })
+      assert_deprecation_warning do
+        @gateway.add_customer_profile(credit_card, { :billing_address => { :email => 'xiaobozzz@example.com' } })
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>C/, data)
       assert_match(/<CustomerEmail>xiaobozzz@example.com/, data)
@@ -519,7 +533,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_update_customer_profile
     response = stub_comms do
-      @gateway.update_customer_profile(credit_card)
+      assert_deprecation_warning do
+        @gateway.update_customer_profile(credit_card)
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>U/, data)
       assert_match(/<CustomerName>Longbob Longsen/, data)
@@ -529,7 +545,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_retrieve_customer_profile
     response = stub_comms do
-      @gateway.retrieve_customer_profile(@customer_ref_num)
+      assert_deprecation_warning do
+        @gateway.retrieve_customer_profile(@customer_ref_num)
+      end
     end.check_request do |endpoint, data, headers|
       assert_no_match(/<CustomerName>Longbob Longsen/, data)
       assert_match(/<CustomerProfileAction>R/, data)
@@ -540,7 +558,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_delete_customer_profile
     response = stub_comms do
-      @gateway.delete_customer_profile(@customer_ref_num)
+      assert_deprecation_warning do
+        @gateway.delete_customer_profile(@customer_ref_num)
+      end
     end.check_request do |endpoint, data, headers|
       assert_no_match(/<CustomerName>Longbob Longsen/, data)
       assert_match(/<CustomerProfileAction>D/, data)
@@ -597,6 +617,32 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_nil response.params['account_num']
+  end
+
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, successful_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal "Approved", response.message
+  end
+
+  def test_successful_verify_and_failed_void
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, failed_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal "Approved", response.message
+  end
+
+  def test_failed_verify
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(failed_purchase_response, failed_purchase_response)
+    assert_failure response
+    assert_equal "AUTH DECLINED                   12001", response.message
   end
 
   private

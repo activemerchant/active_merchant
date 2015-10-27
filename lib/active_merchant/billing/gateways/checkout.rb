@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.money_format = :decimals
 
-      self.supported_countries = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'MU', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'US']
+      self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
       self.homepage_url = 'https://www.checkout.com/'
@@ -31,12 +31,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options)
-        requires!(options, :order_id)
-
         commit('purchase', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
-          add_track_id(xml, options[:order_id])
+          add_track_id(xml, options[:order_id] || generate_unique_id)
           add_payment_method(xml, payment_method)
           add_billing_info(xml, options)
           add_shipping_info(xml, options)
@@ -46,12 +44,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, payment_method, options)
-        requires!(options, :order_id)
-
         commit('authorize', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
-          add_track_id(xml, options[:order_id])
+          add_track_id(xml, options[:order_id] || generate_unique_id)
           add_payment_method(xml, payment_method)
           add_billing_info(xml, options)
           add_shipping_info(xml, options)
@@ -151,6 +147,8 @@ module ActiveMerchant #:nodoc:
         xml.bill_email_   options[:email]
         xml.bill_customerip_ options[:ip]
         xml.merchantcustomerid_ options[:customer]
+        xml.descriptor_name options[:descriptor_name]
+        xml.descriptor_city options[:descriptor_city]
       end
 
       def add_reference(xml, authorization)

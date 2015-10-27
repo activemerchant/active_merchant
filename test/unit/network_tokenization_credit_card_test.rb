@@ -15,6 +15,6 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
   end
 
   def test_optional_validations
-    assert @tokenized_card.valid?, "Network tokenization card should not require name or verification value"
+    assert_valid @tokenized_card, "Network tokenization card should not require name or verification value"
   end
 end

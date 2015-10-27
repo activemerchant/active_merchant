@@ -225,6 +225,12 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_purchase_with_apply_avscv2_field
+    response = @gateway.purchase(@amount, @visa, @options.merge({apply_avscv2: 1}))
+    assert_success response
+    assert_equal "Y", response.cvv_result['code']
+  end
+
   def test_invalid_login
     message = SagePayGateway.simulate ? 'VSP Simulator cannot find your vendor name.  Ensure you have have supplied a Vendor field with your VSP Vendor name assigned to it.' : '3034 : The Vendor or VendorName value is required.'
 
@@ -270,6 +276,28 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert !response.authorization.blank?
     assert unstore = @gateway.unstore(response.authorization)
     assert_success unstore
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@visa, @options)
+    assert_success response
+    assert_equal "Success", response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match(/Card Range not supported/, response.message)
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visa, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@visa.number, clean_transcript)
+    assert_scrubbed(@visa.verification_value.to_s, clean_transcript)
   end
 
   private

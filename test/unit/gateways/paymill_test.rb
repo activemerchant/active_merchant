@@ -212,6 +212,10 @@ class PaymillTest < Test::Unit::TestCase
     assert_nil response.cvv_result["message"]
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
   def successful_store_response
     MockResponse.new 200, %[jsonPFunction({"transaction":{"mode":"CONNECTOR_TEST","channel":"57313835619696ac361dc591bc973626","response":"SYNC","payment":{"code":"CC.DB"},"processing":{"code":"CC.DB.90.00","reason":{"code":"00","message":"Successful Processing"},"result":"ACK","return":{"code":"000.100.112","message":"Request successfully processed in 'Merchant in Connector Test Mode'"},"timestamp":"2013-02-12 21:33:43"},"identification":{"shortId":"1998.1832.1612","uniqueId":"tok_4f9a571b39bd8d0b4db5"}}})]
@@ -733,6 +737,14 @@ class PaymillTest < Test::Unit::TestCase
 
   def failed_capture_response
     MockResponse.new 409, %[{"error":"Preauthorization has already been used","exception":"preauthorization_already_used"}]
+  end
+
+  def transcript
+    "connection_uri=https://test-token.paymill.com?account.number=5500000000000004&account.expiry.month=09&account.expiry.year=2016&account.verification=123"
+  end
+
+  def scrubbed_transcript
+    "connection_uri=https://test-token.paymill.com?account.number=[FILTERED]&account.expiry.month=09&account.expiry.year=2016&account.verification=[FILTERED]"
   end
 
   class MockResponse

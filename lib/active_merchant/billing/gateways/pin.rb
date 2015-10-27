@@ -59,10 +59,10 @@ module ActiveMerchant #:nodoc:
         purchase(money, creditcard, options)
       end
 
-      # Captures a previously authorized charge. Capturing a certin amount of the original
+      # Captures a previously authorized charge. Capturing only part of the original
       # authorization is currently not supported.
       def capture(money, token, options = {})
-        commit(:put, "charges/#{CGI.escape(token)}/capture", {}, options)
+        commit(:put, "charges/#{CGI.escape(token)}/capture", { :amount => amount(money) }, options)
       end
 
       # Updates the credit card for the customer.
@@ -75,6 +75,16 @@ module ActiveMerchant #:nodoc:
         commit(:put, "customers/#{CGI.escape(token)}", post, options)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(number\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(cvc\\?":\\?")(\d*)/, '\1[FILTERED]')
+      end
       private
 
       def add_amount(post, money, options)
