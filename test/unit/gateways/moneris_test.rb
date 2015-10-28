@@ -13,6 +13,8 @@ class MonerisTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
+    @temp_token = 'ot-Vj6uTLxeKkAWuY0zmrppMTjf2'
+    @permanent_token = 'TwF4lyr3Az9fmypeVOztWR1t2'
     @options = { :order_id => '1', :customer => '1', :billing_address => address}
   end
 
@@ -126,6 +128,15 @@ class MonerisTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_store_with_token
+    @gateway.expects(:ssl_post).returns(successful_store_response_with_token)
+    assert response = @gateway.store(@temp_token)
+    assert_success response
+    assert_equal "Successfully registered cc details", response.message
+    assert response.params["data_key"].present?
+    @data_key = response.params["data_key"]
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
     assert response = @gateway.store(@credit_card)
@@ -139,6 +150,15 @@ class MonerisTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_unstore_response)
     test_successful_store
     assert response = @gateway.unstore(@data_key)
+    assert_success response
+    assert_equal "Successfully deleted cc details", response.message
+    assert response.params["data_key"].present?
+  end
+
+  def test_successful_unstore_with_token
+    @gateway.expects(:ssl_post).returns(successful_unstore_response_with_token)
+    test_successful_store
+    assert response = @gateway.unstore(@permanent_token)
     assert_success response
     assert_equal "Successfully deleted cc details", response.message
     assert response.params["data_key"].present?
@@ -457,6 +477,47 @@ class MonerisTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_store_response_with_token
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <DataKey>TwF4lyr3Az9fmypeVOztWR1t2</DataKey>
+    <ReceiptId>null</ReceiptId>
+    <ReferenceNum>null</ReferenceNum>
+    <ResponseCode>001</ResponseCode>
+    <ISO>null</ISO>
+    <AuthCode>null</AuthCode>
+    <Message>Successfully registered CC details.</Message>
+    <TransTime>12:44:59</TransTime>
+    <TransDate>2015-10-27</TransDate>
+    <TransType>null</TransType>
+    <Complete>true</Complete>
+    <TransAmount>null</TransAmount>
+    <CardType>null</CardType>
+    <TransID>null</TransID>
+    <TimedOut>false</TimedOut>
+    <CorporateCard>null</CorporateCard>
+    <RecurSuccess>null</RecurSuccess>
+    <AvsResultCode>null</AvsResultCode>
+    <CvdResultCode>null</CvdResultCode>
+    <ResSuccess>true</ResSuccess>
+    <PaymentType>cc</PaymentType>
+    <IsVisaDebit>null</IsVisaDebit>
+    <ResolveData>
+      <cust_id/>
+      <phone/>
+      <email/>
+      <note/>
+      <crypt_type>1</crypt_type>
+      <masked_pan>4242***4242</masked_pan>
+      <expdate>0116</expdate>
+    </ResolveData>
+  </receipt>
+</response>
+    RESPONSE
+  end
+
   def successful_store_response
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -480,6 +541,47 @@ class MonerisTest < Test::Unit::TestCase
     <ResponseCode>027</ResponseCode>
     <Complete>true</Complete>
     <Message>Successfully deleted cc details * =</Message>
+  </receipt>
+</response>
+    RESPONSE
+  end
+
+  def successful_unstore_response_with_token
+    <<-RESPONSE
+<?xml version=\"1.0\"?>
+<response>
+  <receipt>
+    <DataKey>TwF4lyr3Az9fmypeVOztWR1t2</DataKey>
+    <ReceiptId>null</ReceiptId>
+    <ReferenceNum>null</ReferenceNum>
+    <ResponseCode>001</ResponseCode>
+    <ISO>null</ISO>
+    <AuthCode>null</AuthCode>
+    <Message>Successfully deleted CC details.</Message>
+    <TransTime>12:48:51</TransTime>
+    <TransDate>2015-10-27</TransDate>
+    <TransType>null</TransType>
+    <Complete>true</Complete>
+    <TransAmount>null</TransAmount>
+    <CardType>null</CardType>
+    <TransID>null</TransID>
+    <TimedOut>false</TimedOut>
+    <CorporateCard>null</CorporateCard>
+    <RecurSuccess>null</RecurSuccess>
+    <AvsResultCode>null</AvsResultCode>
+    <CvdResultCode>null</CvdResultCode>
+    <ResSuccess>true</ResSuccess>
+    <PaymentType>cc</PaymentType>
+    <IsVisaDebit>null</IsVisaDebit>
+    <ResolveData>
+      <cust_id/>
+      <phone/>
+      <email/>
+      <note/>
+      <expdate>0116</expdate>
+      <masked_pan>4242***4242</masked_pan>
+      <crypt_type>1</crypt_type>
+    </ResolveData>
   </receipt>
 </response>
     RESPONSE
