@@ -35,6 +35,7 @@
 * QuickpayV10: Truncate order_id [duff]
 * FirstData_e4: Fix Level 2 data [duff]
 * Remove some duplication around name handling [duff]
+* FirstData_e4: Support Tax1Number [duff]
 
 
 == Version 1.54.0 (October 2, 2015)
