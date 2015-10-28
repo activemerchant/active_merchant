@@ -537,6 +537,11 @@ paybox_direct:
   login: 199988899
   password: 1999888I
 
+payeezy:
+  apikey: apikey
+  apisecret: apisecret
+  token: token
+
 payex:
   account: ACCOUNT
   # encryption key is generated via the PayEx Admin console
