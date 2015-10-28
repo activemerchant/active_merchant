@@ -307,6 +307,7 @@ module ActiveMerchant #:nodoc:
 
       def add_tax_fields(xml, options)
         xml.tag! "Tax1Amount",  options[:tax1_amount] if options[:tax1_amount]
+        xml.tag! "Tax1Number",  options[:tax1_number] if options[:tax1_number]
       end
 
       def add_level_3(xml, options)

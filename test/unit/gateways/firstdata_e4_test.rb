@@ -164,6 +164,23 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_tax_fields_are_sent
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(tax1_amount: 830, tax1_number: "Br59a"))
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Tax1Amount>830", data
+      assert_match "<Tax1Number>Br59a", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_customer_ref_is_sent
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer: "932"))
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Customer_Ref>932", data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_network_tokenization_requests_with_visa
     stub_comms do
       credit_card = network_tokenization_credit_card('4111111111111111',

@@ -55,9 +55,10 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_tax_fields
-    response = @gateway.purchase(500, @credit_card, @options.merge(tax1_amount: 50))
+    response = @gateway.purchase(500, @credit_card, @options.merge(tax1_amount: 50, tax1_number: "A458"))
     assert_success response
     assert_equal "50.0", response.params["tax1_amount"]
+    assert_equal "", response.params["tax1_number"], "E4 blanks this out in the response"
   end
 
   def test_successful_purchase_with_customer_ref
