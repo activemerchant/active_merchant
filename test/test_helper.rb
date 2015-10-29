@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 $:.unshift File.expand_path('../../lib', __FILE__)
 
+require 'ruby-debug'
 require 'bundler/setup'
 
 require 'test/unit'
@@ -9,7 +10,7 @@ require 'mocha/test_unit'
 require 'yaml'
 require 'json'
 require 'active_merchant'
-require 'comm_stub'
+require_relative 'comm_stub'
 
 require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'

@@ -1,4 +1,4 @@
-require 'test_helper'
+require_relative '../../test_helper'
 
 class UsaEpayTransactionTest < Test::Unit::TestCase
   include CommStub
@@ -90,6 +90,21 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       assert_match %r{UM03description=Third\+payee},  data
 
       assert_match %r{UMonError=Void},                data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_split_payment_with_custom_response_format
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :split_payments => [
+          { :key => 'abc123', :amount => 199, :description => 'Second payee' },
+          { :key => 'def456', :amount => 911, :description => 'Third payee' },
+          { :key => 'aaa111', :amount => 143, :description => 'Fourth payee' },
+        ]
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{:split_payments => [:UM02 => { :key => 'abc123', :amount => 199, :description => 'Second payee' },:UM03 => { :key => 'def456', :amount => 911, :description => 'Third payee' },:UM04 => { :key => 'aaa111', :amount => 143, :description => 'Fourth payee' }]},data
     end.respond_with(successful_purchase_response)
     assert_success response
   end
