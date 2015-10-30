@@ -112,17 +112,17 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     result = @gateway.send(:parse, body_with_split_payment_response_data)
     refute_nil (splits = result[:splits])
     refute_nil (um02 = splits["UM02"])
-    assert_equal 2.22, um02["amount"]
+    assert_equal "2.22", um02["amount"]
     assert_equal "description", um02["description"]
     assert_equal "aaaa", um02["auth_key"]
 
     refute_nil (um03 = splits["UM03"])
-    assert_equal 3.33, um02["amount"]
+    assert_equal "3.33", um02["amount"]
     assert_equal "description", um02["description"]
     assert_equal "bbbb", um02["auth_key"]
 
     refute_nil (um04 = splits["UM04"])
-    assert_equal 4.44, um02["amount"]
+    assert_equal "4.44", um02["amount"]
     assert_equal "description", um02["description"]
     assert_equal "cccc", um02["auth_key"]
 
