@@ -214,7 +214,7 @@ module ActiveMerchant #:nodoc:
         for line in body.split('&')
           key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
           fields[key] = CGI.unescape(value.to_s)
-          if !(split_key = key.match(/UM\d+/)).nil?
+          if !key.nil? && !(split_key = key.match(/UM\d+/)).nil?
             splits[split_key.to_s] = {} if splits[split_key.to_s].nil?
             splits[split_key.to_s][key.sub(/UM\d+/,'').gsub(/\B[A-Z]/, '_\&').downcase] = CGI.unescape(value.to_s)
           end
