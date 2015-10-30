@@ -1,4 +1,4 @@
-require_relative '../../test_helper'
+require 'test_helper'
 
 class UsaEpayTransactionTest < Test::Unit::TestCase
   include CommStub
@@ -111,20 +111,20 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_parse_split_payment_response_data
     result = @gateway.send(:parse, body_with_split_payment_response_data)
     refute_nil (splits = result[:splits])
-    refute_nil (um02 = splits["UM02"])
-    assert_equal "2.22", um02["amount"]
-    assert_equal "description", um02["description"]
-    assert_equal "aaaa", um02["auth_key"]
+    refute_nil (um02 = splits[:um02])
+    assert_equal "2.22", um02[:amount]
+    assert_equal "description", um02[:description]
+    assert_equal "aaaa", um02[:auth_key]
 
-    refute_nil (um03 = splits["UM03"])
-    assert_equal "3.33", um03["amount"]
-    assert_equal "description", um03["description"]
-    assert_equal "bbbb", um03["auth_key"]
+    refute_nil (um03 = splits[:um03])
+    assert_equal "3.33", um03[:amount]
+    assert_equal "description", um03[:description]
+    assert_equal "bbbb", um03[:auth_key]
 
-    refute_nil (um04 = splits["UM04"])
-    assert_equal "4.44", um04["amount"]
-    assert_equal "description", um04["description"]
-    assert_equal "cccc", um04["auth_key"]
+    refute_nil (um04 = splits[:um04])
+    assert_equal "4.44", um04[:amount]
+    assert_equal "description", um04[:description]
+    assert_equal "cccc", um04[:auth_key]
 
   end
 
