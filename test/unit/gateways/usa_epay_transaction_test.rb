@@ -94,21 +94,6 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_purchase_split_payment_with_custom_response_format
-    response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(
-        :split_payments => [
-          { :key => 'abc123', :amount => 199, :description => 'Second payee' },
-          { :key => 'def456', :amount => 911, :description => 'Third payee' },
-          { :key => 'aaa111', :amount => 143, :description => 'Fourth payee' },
-        ]
-      ))
-    end.check_request do |endpoint, data, headers|
-      assert_match %r{:split_payments => [:UM02 => { :key => 'abc123', :amount => 199, :description => 'Second payee' },:UM03 => { :key => 'def456', :amount => 911, :description => 'Third payee' },:UM04 => { :key => 'aaa111', :amount => 143, :description => 'Fourth payee' }]},data
-    end.respond_with(successful_purchase_response)
-    assert_success response
-  end
-
   def test_successful_purchase_split_payment_with_custom_on_error
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(
@@ -121,6 +106,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       assert_match %r{UMonError=Continue}, data
     end.respond_with(successful_purchase_response)
     assert_success response
+  end
+
+  def test_parse_split_payment_response_data
+    result = @gateway.send(:parse, body_with_split_payment_response_data)
+    assert_not_nil result[:splits]
   end
 
   def test_successful_authorize_request
@@ -426,6 +416,10 @@ private
 
   def purchase_request
     "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
+  end
+
+  def body_with_split_payment_response_data
+     "UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled&UM02key=aaaa&UM02amount=1.43&UM02description=description&UM03key=bbbb&UM03amount=1.11&UM03description=description&UM04key=cccc&UM04amount=1.21&UM04description=description"
   end
 
   def successful_purchase_response
