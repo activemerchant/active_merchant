@@ -210,9 +210,14 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         fields = {}
+        splits = {}
         for line in body.split('&')
           key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
           fields[key] = CGI.unescape(value.to_s)
+          if !(split_key = key.match(/UM\d+/)).nil?
+            splits[split_key.to_s] = {} if splits[split_key.to_s].nil?
+            splits[split_key.to_s][key.sub(/UM\d+/,'').gsub(/\B[A-Z]/, '_\&').downcase] = CGI.unescape(value.to_s)
+          end
         end
 
         {
@@ -229,7 +234,8 @@ module ActiveMerchant #:nodoc:
           :error            => fields['UMerror'],
           :error_code       => fields['UMerrorcode'],
           :acs_url          => fields['UMacsurl'],
-          :payload          => fields['UMpayload']
+          :payload          => fields['UMpayload'],
+          :splits           => splits
         }.delete_if{|k, v| v.nil?}
       end
 
