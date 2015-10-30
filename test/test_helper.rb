@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 $:.unshift File.expand_path('../../lib', __FILE__)
 
-require 'ruby-debug'
 require 'bundler/setup'
 
 require 'test/unit'
