@@ -110,10 +110,22 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_parse_split_payment_response_data
     result = @gateway.send(:parse, body_with_split_payment_response_data)
-    refute result[:splits].nil?
-    refute result[:splits]["UM02"].nil?
-    refute result[:splits]["UM03"].nil?
-    refute result[:splits]["UM04"].nil?
+    refute_nil (splits = result[:splits])
+    refute_nil (um02 = splits["UM02"])
+    assert_equal 2.22, um02["amount"]
+    assert_equal "description", um02["description"]
+    assert_equal "aaaa", um02["auth_key"]
+
+    refute_nil (um03 = splits["UM03"])
+    assert_equal 3.33, um02["amount"]
+    assert_equal "description", um02["description"]
+    assert_equal "bbbb", um02["auth_key"]
+
+    refute_nil (um04 = splits["UM04"])
+    assert_equal 4.44, um02["amount"]
+    assert_equal "description", um02["description"]
+    assert_equal "cccc", um02["auth_key"]
+
   end
 
   def test_successful_authorize_request
@@ -422,7 +434,7 @@ private
   end
 
   def body_with_split_payment_response_data
-     "UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled&UM02key=aaaa&UM02amount=1.43&UM02description=description&UM03key=bbbb&UM03amount=1.11&UM03description=description&UM04key=cccc&UM04amount=1.21&UM04description=description"
+     "UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled&UM02authKey=aaaa&UM02amount=2.22&UM02description=description&UM03authKey=bbbb&UM03amount=3.33&UM03description=description&UM04authKey=cccc&UM04amount=4.44&UM04description=description"
   end
 
   def successful_purchase_response
