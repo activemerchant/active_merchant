@@ -110,7 +110,10 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_parse_split_payment_response_data
     result = @gateway.send(:parse, body_with_split_payment_response_data)
-    assert_not_nil result[:splits]
+    refute result[:splits].nil?
+    refute result[:splits]["UM02"].nil?
+    refute result[:splits]["UM03"].nil?
+    refute result[:splits]["UM04"].nil?
   end
 
   def test_successful_authorize_request
