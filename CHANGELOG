@@ -44,6 +44,7 @@
 * Paymill: store order_id in description field [nikoloff]
 * TWD isn't a zero decimal currency [duff]
 * PaypalExpress: Use custom zero decimal currencies [duff]
+* Stripe: Migrate from /refund to /refunds [matthelm]
 
 
 == Version 1.54.0 (October 2, 2015)

@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(identification, options = {})
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", {}, options)
+        commit(:post, "charges/#{CGI.escape(identification)}/refunds", {}, options)
       end
 
       def refund(money, identification, options = {})
@@ -114,9 +114,10 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         post[:refund_application_fee] = true if options[:refund_application_fee]
         post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
+        post[:metadata] = options[:metadata] if options[:metadata]
 
         MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
+          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options) }
 
           return r unless options[:refund_fee_amount]
 
@@ -468,8 +469,6 @@ module ActiveMerchant #:nodoc:
           [response["id"], response["sources"]["data"].first["id"]].join("|")
         elsif method == :post && url.match(/customers\/.*\/cards/)
           [response["customer"], response["id"]].join("|")
-        elsif url.include?("refund") && response["refunds"]
-          response["refunds"]["data"].first["id"]
         else
           response["id"]
         end
