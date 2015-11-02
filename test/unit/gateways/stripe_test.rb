@@ -342,8 +342,7 @@ class StripeTest < Test::Unit::TestCase
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
     assert_success response
 
-    assert_equal 'ch_test_charge', response.authorization
-    assert response.test?
+    assert_equal 're_test_refund', response.authorization
   end
 
   def test_unsuccessful_refund
@@ -359,6 +358,15 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_application_fee => true)
+    assert_success response
+  end
+
+  def test_successful_refund_with_metadata
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      post.include?("metadata[first_value]=true")
+    end.returns(successful_partially_refunded_response)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', {metadata: {first_value: true}})
     assert_success response
   end
 
@@ -388,7 +396,7 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
     assert_success response
-    assert_equal 'ch_test_charge', response.authorization
+    assert_equal 're_test_refund', response.authorization
   end
 
   def test_unsuccessful_refund_with_refund_fee_amount_when_application_fee_id_not_found
@@ -1371,24 +1379,16 @@ class StripeTest < Test::Unit::TestCase
     options = {:livemode=>false}.merge!(options)
     <<-RESPONSE
     {
-      "amount": 400,
-      "amount_refunded": 200,
-      "created": 1309131571,
+      "id": "re_test_refund",
+      "object": "refund",
+      "amount": 80,
+      "balance_transaction": "txn_1737ZdAWOtgoysogRvA3jg6b",
+      "charge": "ch_1737ZcAWOtgoysogGRRsFjN9",
+      "created": 1446567833,
       "currency": "usd",
-      "description": "Test Purchase",
-      "id": "ch_test_charge",
-      "livemode": #{options[:livemode]},
-      "object": "charge",
-      "paid": true,
-      "refunded": true,
-      "card": {
-        "country": "US",
-        "exp_month": 9,
-        "exp_year": #{Time.now.year + 1},
-        "last4": "4242",
-        "object": "card",
-        "type": "Visa"
-      }
+      "metadata": {},
+      "reason": null,
+      "receipt_number": null
     }
     RESPONSE
   end
@@ -1396,44 +1396,16 @@ class StripeTest < Test::Unit::TestCase
   def successful_void_response
     <<-RESPONSE
     {
-      "id": "ch_4IrhQMqukqu7C2",
-      "object": "charge",
-      "created": 1403816613,
-      "livemode": false,
-      "paid": true,
-      "amount": 50,
+      "id": "re_173VMpAWOtgoysogOSE7Hzss",
+      "object": "refund",
+      "amount": 100,
+      "balance_transaction": "txn_173VMpAWOtgoysog3QNrt0xD",
+      "charge": "ch_173VMpAWOtgoysogrTPZT1YP",
+      "created": 1446659295,
       "currency": "usd",
-      "refunded": true,
-      "card": {
-        "id": "card_4IKht2vQlbJms9",
-        "object": "card",
-        "last4": "4242",
-        "brand": "Visa",
-        "funding": "credit",
-        "exp_month": 9,
-        "exp_year": 2015,
-        "fingerprint": "6nTaMxIBAdBvfy2i",
-        "country": "US",
-        "name": "Longbob Longsen",
-        "address_city": null,
-        "cvc_check": "pass",
-        "customer": null,
-        "type": "Visa"
-      },
-      "captured": false,
-      "balance_transaction": null,
-      "failure_code": null,
-      "description": "ActiveMerchant Test Purchase",
-      "dispute": null,
-      "metadata": {
-        "email": "wow@example.com"
-      },
-      "statement_description": null,
-      "receipt_email": null,
-      "fee": 0,
-      "fee_details": [],
-      "uncaptured": true,
-      "disputed": false
+      "metadata": {},
+      "reason": null,
+      "receipt_number": null
     }
     RESPONSE
   end
@@ -1443,7 +1415,7 @@ class StripeTest < Test::Unit::TestCase
     {
       "error": {
         "type": "invalid_request_error",
-        "message": "Charge ch_4IL0vZWdcx45qO has already been refunded."
+        "message": "Charge ch_173VPSAWOtgoysoggGxIDRIq has already been refunded."
       }
     }
     RESPONSE
