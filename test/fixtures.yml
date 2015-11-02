@@ -259,8 +259,8 @@ flo2cash_simple:
 
 garanti:
   login: "PROVAUT"
-  terminal_id: 111995
-  merchant_id: 600218
+  terminal_id: 30691300
+  merchant_id: 7000679
   password: "123qweASD"
 
 global_transport:
