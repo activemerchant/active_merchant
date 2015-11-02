@@ -6,7 +6,7 @@
 * Mercury: Strip start and end sentinels on track 2 [ryanbalsdon]
 * Redsys: Support new SHA256 authentication method [davidsantoso]
 * Cashnet: Allow custcode override [duff]
-
+* Add Rails 5 support [rafaelfranca]
 
 == Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]
