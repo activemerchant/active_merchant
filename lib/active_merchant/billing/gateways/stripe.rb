@@ -115,9 +115,10 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         post[:refund_application_fee] = true if options[:refund_application_fee]
         post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
+        post[:metadata] = options[:metadata] if options[:metadata]
 
         MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
+          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options) }
 
           return r unless options[:refund_fee_amount]
 
