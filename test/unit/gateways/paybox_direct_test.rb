@@ -63,7 +63,11 @@ class PayboxDirectTest < Test::Unit::TestCase
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/NUMAPPEL=transid/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything) do |_, body|
+      body.include?('NUMAPPEL=transid')
+      body.include?('MONTANT=0000000100&DEVISE=97')
+    end.returns("")
+
     @gateway.expects(:parse).returns({})
     @gateway.refund(@amount, "transid", @options)
   end
