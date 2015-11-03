@@ -113,6 +113,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_reference(post, identification)
+        add_amount(post, money, options)
         commit('refund', money, post)
       end
 
