@@ -21,8 +21,7 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      # Source: https://support.stripe.com/questions/which-zero-decimal-currencies-does-stripe-support
-      CURRENCIES_WITHOUT_FRACTIONS = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'VUV', 'XAF', 'XOF', 'XPF']
+      CURRENCIES_WITHOUT_FRACTIONS = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF)
 
       self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE US)
       self.default_currency = 'USD'
