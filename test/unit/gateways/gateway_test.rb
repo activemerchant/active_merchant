@@ -90,11 +90,6 @@ class GatewayTest < Test::Unit::TestCase
     assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
   end
 
-  def test_non_fractional_currencies_accessor
-    assert Gateway.non_fractional_currency?('JPY')
-    refute Gateway.non_fractional_currency?('CAD')
-  end
-
   def test_split_names
     assert_equal ["Longbob", "Longsen"], @gateway.send(:split_names, "Longbob Longsen")
   end
