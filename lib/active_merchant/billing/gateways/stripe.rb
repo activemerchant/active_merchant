@@ -224,7 +224,11 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
           gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
-          gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2')
+          gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2').
+          gsub(%r((card\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\2').
+          gsub(%r((card\[encrypted_pin\]=)[^&]+(&?)), '\1[FILTERED]\2').
+          gsub(%r((card\[encrypted_pin_key_id\]=)[\w=]+(&?)), '\1[FILTERED]\2').
+          gsub(%r((card\[emv_auth_data\]=)[^&]+(&?)), '\1[FILTERED]\2')
       end
 
       def supports_network_tokenization?

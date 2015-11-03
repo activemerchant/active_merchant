@@ -91,7 +91,8 @@ module ActiveMerchant #:nodoc:
         :card_declined => 'card_declined',
         :processing_error => 'processing_error',
         :call_issuer => 'call_issuer',
-        :pickup_card => 'pick_up_card'
+        :pickup_card => 'pick_up_card',
+        :config_error => 'config_error'
       }
 
       cattr_reader :implementations
@@ -273,6 +274,15 @@ module ActiveMerchant #:nodoc:
       def truncate(value, max_size)
         return nil unless value
         value.to_s[0, max_size]
+      end
+
+      def split_names(full_name)
+        names = (full_name || "").split
+        return [nil, nil] if names.size == 0
+
+        last_name  = names.pop
+        first_name = names.join(" ")
+        [first_name, last_name]
       end
 
       def requires_start_date_or_issue_number?(credit_card)

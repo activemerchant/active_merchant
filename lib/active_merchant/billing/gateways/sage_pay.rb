@@ -209,9 +209,9 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if billing_address = options[:billing_address] || options[:address]
-          first_name, last_name = parse_first_and_last_name(billing_address[:name])
-          add_pair(post, :BillingSurname, last_name)
-          add_pair(post, :BillingFirstnames, first_name)
+          first_name, last_name = split_names(billing_address[:name])
+          add_pair(post, :BillingSurname, truncate(last_name, 20))
+          add_pair(post, :BillingFirstnames, truncate(first_name, 20))
           add_pair(post, :BillingAddress1, truncate(billing_address[:address1], 100))
           add_pair(post, :BillingAddress2, truncate(billing_address[:address2], 100))
           add_pair(post, :BillingCity, truncate(billing_address[:city], 40))
@@ -222,9 +222,9 @@ module ActiveMerchant #:nodoc:
         end
 
         if shipping_address = options[:shipping_address] || billing_address
-          first_name, last_name = parse_first_and_last_name(shipping_address[:name])
-          add_pair(post, :DeliverySurname, last_name)
-          add_pair(post, :DeliveryFirstnames, first_name)
+          first_name, last_name = split_names(shipping_address[:name])
+          add_pair(post, :DeliverySurname, truncate(last_name, 20))
+          add_pair(post, :DeliveryFirstnames, truncate(first_name, 20))
           add_pair(post, :DeliveryAddress1, truncate(shipping_address[:address1], 100))
           add_pair(post, :DeliveryAddress2, truncate(shipping_address[:address2], 100))
           add_pair(post, :DeliveryCity, truncate(shipping_address[:city], 40))
@@ -391,14 +391,6 @@ module ActiveMerchant #:nodoc:
 
       def add_pair(post, key, value, options = {})
         post[key] = value if !value.blank? || options[:required]
-      end
-
-      def parse_first_and_last_name(value)
-        name = value.to_s.split(' ')
-
-        last_name = name.pop || ''
-        first_name = name.join(' ')
-        [ truncate(first_name, 20), truncate(last_name, 20) ]
       end
 
       def localized_amount(money, currency)

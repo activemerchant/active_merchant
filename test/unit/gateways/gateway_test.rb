@@ -38,10 +38,10 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_should_be_able_to_look_for_test_mode
-    Base.gateway_mode = :test
+    Base.mode = :test
     assert @gateway.test?
 
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_false @gateway.test?
   end
 
@@ -94,6 +94,21 @@ class GatewayTest < Test::Unit::TestCase
     assert Gateway.non_fractional_currency?('JPY')
     refute Gateway.non_fractional_currency?('CAD')
   end
+
+  def test_split_names
+    assert_equal ["Longbob", "Longsen"], @gateway.send(:split_names, "Longbob Longsen")
+  end
+
+  def test_split_names_with_single_name
+    assert_equal ["", "Prince"], @gateway.send(:split_names, "Prince")
+  end
+
+  def test_split_names_with_empty_names
+    assert_equal [nil, nil], @gateway.send(:split_names, "")
+    assert_equal [nil, nil], @gateway.send(:split_names, nil)
+    assert_equal [nil, nil], @gateway.send(:split_names, " ")
+  end
+
 
   def test_supports_scrubbing?
     gateway = Gateway.new

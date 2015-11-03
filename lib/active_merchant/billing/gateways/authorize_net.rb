@@ -32,7 +32,9 @@ module ActiveMerchant #:nodoc:
         '23' => STANDARD_ERROR_CODE[:card_declined],
         '3153' => STANDARD_ERROR_CODE[:processing_error],
         '235' => STANDARD_ERROR_CODE[:processing_error],
-        '24' => STANDARD_ERROR_CODE[:pickup_card]
+        '24' => STANDARD_ERROR_CODE[:pickup_card],
+        '300' => STANDARD_ERROR_CODE[:config_error],
+        '384' => STANDARD_ERROR_CODE[:config_error]
       }
 
       MARKET_TYPE = {
@@ -317,7 +319,6 @@ module ActiveMerchant #:nodoc:
           xml.transactionRequest do
             xml.transactionType('voidTransaction')
             xml.refTransId(transaction_id_from(authorization))
-            add_user_fields(xml, nil, options)
           end
         end
       end
@@ -544,13 +545,6 @@ module ActiveMerchant #:nodoc:
         else
           [options[:first_name], options[:last_name]]
         end
-      end
-
-      def split_names(full_name)
-        names = (full_name || "").split
-        last_name = names.pop
-        first_name = names.join(" ")
-        [first_name, last_name]
       end
 
       def headers

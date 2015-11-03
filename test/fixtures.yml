@@ -111,6 +111,11 @@ bridge_pay:
   user_name: Spre3676
   password: H3392nc5
 
+# Working credentials, no need to replace
+cams:
+  username: testintegrationc
+  password: password9
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
@@ -148,6 +153,18 @@ checkout:
 
 checkout_v2:
   secret_key: secret_key
+
+# Working credentials, no need to replace
+clearhaus: &clearhaus
+  api_key: 526cf564-119c-4bb6-9cf8-0015eac7e4f6
+  mpi_api_key: f21d07e4-be0a-4cd3-9dcb-9461dac1c90d
+
+clearhaus_secure:
+  <<: *clearhaus
+  signing_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    -----END RSA PRIVATE KEY-----
+
 
 # Contact Support at it_support@commercegate.com for credentials and offer/site
 commercegate:
@@ -325,6 +342,9 @@ itransact:
 
 jetpay:
   login: TESTTERMINAL
+
+komoju:
+  login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3
 
 linkpoint:
   login: STOREID
@@ -528,6 +548,12 @@ pay_secure:
 paybox_direct:
   login: 199988899
   password: 1999888I
+
+# Working credentials, no need to replace
+payeezy:
+  apikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT
+  apisecret: 36ef1fc3b908b7a79ad2c29de931d2ccff26fcec35602c709a9e34318e936683
+  token: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6
 
 payex:
   account: ACCOUNT
@@ -850,6 +876,9 @@ secure_pay_tech:
   login: TESTDIGISPL1
   password: d557591484cb2cd12bba445aba420d2c69cd6a88
 
+securion_pay:
+  secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
+
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
   login: X
@@ -896,6 +925,16 @@ tns:
 trans_first:
   login: LOGIN
   password: PASSWORD
+
+# Transact Pro doesn't provide public testing data
+transact_pro:
+  guid: GUID
+  password: PASSWORD
+  terminal: TERMINALID
+  card_number: "TESTCARDNUMBER"
+  verification_value: "TESTCARDCVV"
+  month: "TESTCARDMONTH"
+  year: "TESTCARDYEAR"
 
 transax:
   login: transaxdemo
