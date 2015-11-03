@@ -16,7 +16,7 @@ class RemotePaymillTest < Test::Unit::TestCase
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
     request = Net::HTTP::Get.new(uri.request_uri)
-    request.basic_auth(@gateway.options[:private_key], "")
+    request.basic_auth(@gateway.options[:private_key], '')
     response = https.request(request)
     @token = response.body.match('tok_[a-z|0-9]+')[0]
   end
@@ -28,7 +28,7 @@ class RemotePaymillTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
-    assert response = @gateway.purchase(@amount, @token, { description: 'from active merchant' } )
+    assert response = @gateway.purchase(@amount, @token)
     assert_success response
     assert_equal 'Operation successful', response.message
   end
@@ -63,13 +63,13 @@ class RemotePaymillTest < Test::Unit::TestCase
     assert_equal 'Operation successful', response.message
     assert response.authorization
 
-    assert capture_response = @gateway.capture(@amount, response.authorization, { description: 'from active merchant' })
+    assert capture_response = @gateway.capture(@amount, response.authorization)
     assert_success capture_response
     assert_equal 'Operation successful', capture_response.message
   end
 
   def test_successful_authorize_with_token
-    assert response = @gateway.authorize(@amount, @token, { description: 'from active merchant' })
+    assert response = @gateway.authorize(@amount, @token)
     assert_success response
     assert_equal 'Operation successful', response.message
     assert response.authorization
