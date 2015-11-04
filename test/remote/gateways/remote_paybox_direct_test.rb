@@ -55,7 +55,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '', :order_id => '1')
     assert_failure response
-    assert_equal "Mandatory values missing keyword:13 Type:1", response.message
+    assert_equal "Invalid data", response.message
   end
   
   def test_purchase_and_partial_credit
@@ -71,11 +71,22 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = PayboxDirectGateway.new(
-                :login => '199988899',
-                :password => '1999888F'
+                login: '199988899',
+                password: '1999888F',
+                rang: 100
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "PAYBOX : Accès refusé ou site/rang/clé invalide", response.message
+    assert_equal "Non autorise", response.message
+  end
+
+  def test_invalid_login_without_rang
+    gateway = PayboxDirectGateway.new(
+                login: '199988899',
+                password: '1999888F',
+              )
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal "Non autorise", response.message
   end
 end
