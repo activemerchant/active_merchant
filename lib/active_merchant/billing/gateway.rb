@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       include CreditCardFormatting
 
       DEBIT_CARDS = [ :switch, :solo ]
-      CURRENCIES_WITHOUT_FRACTIONS = %w(BIF BYR CLP CVE DJF GNF HUF ISK JPY KMF KRW PYG RWF TWD UGX VND VUV XAF XOF XPF)
+      CURRENCIES_WITHOUT_FRACTIONS = %w(BIF BYR CLP CVE DJF GNF HUF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
 
       CREDIT_DEPRECATION_MESSAGE = "Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead."
       RECURRING_DEPRECATION_MESSAGE = "Recurring functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it."
