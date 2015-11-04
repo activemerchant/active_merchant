@@ -10,6 +10,7 @@
 * Set required Ruby version for install to 2 or greater [rafaelfranca]
 * JetPay: Pass ud_fields in capture too [duff]
 * Stripe: Correctly detect test mode refunds [aprofeit]
+* Fix variables in remote gateways test template [sdball]
 
 == Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]
