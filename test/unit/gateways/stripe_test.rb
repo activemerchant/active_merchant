@@ -1396,44 +1396,16 @@ class StripeTest < Test::Unit::TestCase
   def successful_void_response
     <<-RESPONSE
     {
-      "id": "ch_4IrhQMqukqu7C2",
-      "object": "charge",
-      "created": 1403816613,
-      "livemode": false,
-      "paid": true,
-      "amount": 50,
+      "id": "re_173VMpAWOtgoysogOSE7Hzss",
+      "object": "refund",
+      "amount": 100,
+      "balance_transaction": "txn_173VMpAWOtgoysog3QNrt0xD",
+      "charge": "ch_173VMpAWOtgoysogrTPZT1YP",
+      "created": 1446659295,
       "currency": "usd",
-      "refunded": true,
-      "card": {
-        "id": "card_4IKht2vQlbJms9",
-        "object": "card",
-        "last4": "4242",
-        "brand": "Visa",
-        "funding": "credit",
-        "exp_month": 9,
-        "exp_year": 2015,
-        "fingerprint": "6nTaMxIBAdBvfy2i",
-        "country": "US",
-        "name": "Longbob Longsen",
-        "address_city": null,
-        "cvc_check": "pass",
-        "customer": null,
-        "type": "Visa"
-      },
-      "captured": false,
-      "balance_transaction": null,
-      "failure_code": null,
-      "description": "ActiveMerchant Test Purchase",
-      "dispute": null,
-      "metadata": {
-        "email": "wow@example.com"
-      },
-      "statement_description": null,
-      "receipt_email": null,
-      "fee": 0,
-      "fee_details": [],
-      "uncaptured": true,
-      "disputed": false
+      "metadata": {},
+      "reason": null,
+      "receipt_number": null
     }
     RESPONSE
   end
@@ -1443,7 +1415,7 @@ class StripeTest < Test::Unit::TestCase
     {
       "error": {
         "type": "invalid_request_error",
-        "message": "Charge ch_4IL0vZWdcx45qO has already been refunded."
+        "message": "Charge ch_173VPSAWOtgoysoggGxIDRIq has already been refunded."
       }
     }
     RESPONSE

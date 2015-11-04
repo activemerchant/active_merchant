@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(identification, options = {})
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", {}, options)
+        commit(:post, "charges/#{CGI.escape(identification)}/refunds", {}, options)
       end
 
       def refund(money, identification, options = {})
@@ -470,8 +470,6 @@ module ActiveMerchant #:nodoc:
           [response["id"], response["sources"]["data"].first["id"]].join("|")
         elsif method == :post && url.match(/customers\/.*\/cards/)
           [response["customer"], response["id"]].join("|")
-        elsif url.include?("refund") && response["refunds"]
-          response["refunds"]["data"].first["id"]
         else
           response["id"]
         end

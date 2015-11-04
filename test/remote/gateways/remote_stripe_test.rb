@@ -134,7 +134,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "wow@example.com", response.params["metadata"]["email"]
     assert_equal "charge", response.params["object"]
     assert_success response.responses.last, "The void should succeed"
-    assert response.responses.last.params["refunded"]
+    assert_equal "refund", response.responses.last.params["object"]
   end
 
   def test_unsuccessful_verify
