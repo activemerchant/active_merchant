@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
           end
         end
         params ||= {}
-        params[:splits] = splits if splits.present?
+        params[:split_payments] = splits if splits.present?
         params
       end
 
