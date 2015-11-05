@@ -28,7 +28,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "PAYBOX : Numéro de porteur invalide", response.message
+    assert_equal "PAYBOX : Num\xE9ro de porteur invalide".force_encoding('ASCII-8BIT'), response.message
   end
 
   def test_authorize_and_capture
