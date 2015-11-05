@@ -4,7 +4,7 @@ class MercuryTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
@@ -31,6 +31,16 @@ class MercuryTest < Test::Unit::TestCase
 
     assert_equal '1;0194;000011;KbMCC0742510421  ;|17|410100700000;;100', response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_with_allow_partial_auth
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(allow_partial_auth: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/PartialAuth>Allow</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_unsuccessful_request

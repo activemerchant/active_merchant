@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
       #               :currency         Sale currency to override money object or default (optional)
       #
       # Returns Active Merchant response object
-      def purchase(money, credit_card, options)
+      def purchase(money, credit_card, options={})
         execute_new_order(:purchase, money, credit_card, options)
       end
 
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
 
-      # Private: Execute operation that depends on athorization code from previous purchase or authorize operation
+      # Private: Execute operation that depends on authorization code from previous purchase or authorize operation
       def execute_dependant(action, money, authorization, options)
         request = build_request do |xml|
           add_identification_authorization(xml, authorization, options)

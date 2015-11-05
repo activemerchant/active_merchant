@@ -206,6 +206,11 @@ module ActiveMerchant #:nodoc:
           post[:trnExpMonth] = format(credit_card.month, :two_digits)
           post[:trnExpYear] = format(credit_card.year, :two_digits)
           post[:trnCardCvd] = credit_card.verification_value
+          if credit_card.is_a?(NetworkTokenizationCreditCard)
+            post[:"3DSecureXID"] = credit_card.transaction_id
+            post[:"3DSecureECI"] = credit_card.eci
+            post[:"3DSecureCAVV"] = credit_card.payment_cryptogram
+          end
         end
       end
 
@@ -349,10 +354,6 @@ module ActiveMerchant #:nodoc:
 
       def recurring_message_from(response)
         response[:message]
-      end
-
-      def success?(response)
-        response[:responseType] == 'R' || response[:trnApproved] == '1' || response[:responseCode] == '1'
       end
 
       def recurring_success?(response)

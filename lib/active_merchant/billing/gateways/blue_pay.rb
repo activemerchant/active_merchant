@@ -298,6 +298,19 @@ module ActiveMerchant #:nodoc:
         commit('rebill', 'nil', post)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card_num=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?CARD_CVV2=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?PAYMENT_ACCOUNT=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?TAMPER_PROOF_SEAL=)[^&"]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def commit(action, money, fields)

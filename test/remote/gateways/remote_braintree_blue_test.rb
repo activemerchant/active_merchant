@@ -51,6 +51,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '123', response.params["braintree_transaction"]["order_id"]
   end
 
+  def test_successful_purchase_with_hold_in_escrow
+    @options.merge({:merchant_account_id => fixtures(:braintree_blue)[:merchant_account_id], :hold_in_escrow => true})
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+  end
+
   def test_successful_purchase_using_vault_id
     assert response = @gateway.store(@credit_card)
     assert_success response
@@ -217,6 +224,9 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_avs("", "20000", "C")
     assert_avs("", "20001", "I")
     assert_avs("", "", "I")
+
+    assert_avs("1 Elm", "30000", "E")
+    assert_avs("1 Elm", "30001", "S")
   end
 
   def test_cvv_match
@@ -592,6 +602,15 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'OK', response.message
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
 
   private
   def assert_avs(address1, zip, expected_avs_code)

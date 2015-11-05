@@ -269,20 +269,23 @@ module ActiveMerchant #:nodoc:
       def build_billing_details(xml, opts)
         xml.tag! 'billingDetails' do
           xml.tag! 'cardPayMethod', 'WEB'
-          build_address(xml, opts[:billing_address], opts[:email])
+          build_address(xml, opts[:billing_address]) if opts[:billing_address]
+          xml.tag! 'email', opts[:email] if opts[:email]
         end
       end
 
       def build_shipping_details(xml, opts)
         xml.tag! 'shippingDetails' do
-          build_address(xml, opts[:shipping_address], opts[:email])
+          build_address(xml, opts[:shipping_address])
+          xml.tag! 'email', opts[:email] if opts[:email]
         end if opts[:shipping_address].present?
       end
 
-      def build_address(xml, addr, email=nil)
+      def build_address(xml, addr)
         if addr[:name]
-          xml.tag! 'firstName', addr[:name].split(' ').first
-          xml.tag! 'lastName' , addr[:name].split(' ').last
+          first_name, last_name = split_names(addr[:name])
+          xml.tag! 'firstName', first_name
+          xml.tag! 'lastName' , last_name
         end
         xml.tag! 'street' , addr[:address1] if addr[:address1].present?
         xml.tag! 'street2', addr[:address2] if addr[:address2].present?
@@ -294,7 +297,6 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'country', addr[:country]  if addr[:country].present?
         xml.tag! 'zip'    , addr[:zip]      if addr[:zip].present?
         xml.tag! 'phone'  , addr[:phone]    if addr[:phone].present?
-        xml.tag! 'email', email if email
       end
 
       def card_type(key)

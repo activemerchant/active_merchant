@@ -58,6 +58,16 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
+      assert_match(/UMtestmode=0/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_passing_extra_test_mode
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(:test_mode => true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMtestmode=1/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -98,6 +108,119 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_request
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '65074409', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_passing_extra_info
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => "1337", :description => "socool"))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMinvoice=1337/, data)
+      assert_match(/UMdescription=socool/, data)
+      assert_match(/UMtestmode=0/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_authorize_passing_extra_test_mode
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(:test_mode => true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMtestmode=1/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_successful_capture_request
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    response = @gateway.capture(@amount, '65074409', @options)
+    assert_success response
+    assert_equal '65074409', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture_passing_extra_info
+    response = stub_comms do
+      @gateway.capture(@amount, '65074409', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMamount=1.00/, data)
+      assert_match(/UMtestmode=0/, data)
+    end.respond_with(successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_capture_passing_extra_test_mode
+    response = stub_comms do
+      @gateway.capture(@amount, '65074409', @options.merge(:test_mode => true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMtestmode=1/, data)
+    end.respond_with(successful_capture_response)
+    assert_success response
+  end
+
+  def test_successful_refund_request
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    response = @gateway.refund(@amount, '65074409', @options)
+    assert_success response
+    assert_equal '63813138', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_refund_passing_extra_info
+    response = stub_comms do
+      @gateway.refund(@amount, '65074409', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMamount=1.00/, data)
+      assert_match(/UMtestmode=0/, data)
+    end.respond_with(successful_refund_response)
+    assert_success response
+  end
+
+  def test_successful_refund_passing_extra_test_mode
+    response = stub_comms do
+      @gateway.refund(@amount, '65074409', @options.merge(:test_mode => true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMtestmode=1/, data)
+    end.respond_with(successful_refund_response)
+    assert_success response
+  end
+
+  def test_successful_void_request
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    response = @gateway.void('65074409', @options)
+    assert_success response
+    assert_equal '63812270', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_void_passing_extra_info
+    response = stub_comms do
+      @gateway.void('65074409', @options.merge(:no_release => true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMcommand=cc%3Avoid/, data)
+      assert_match(/UMtestmode=0/, data)
+    end.respond_with(successful_void_response)
+    assert_success response
+  end
+
+  def test_successful_void_passing_extra_test_mode
+    response = stub_comms do
+      @gateway.refund(@amount, '65074409', @options.merge(:test_mode => true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMtestmode=1/, data)
+    end.respond_with(successful_void_response)
+    assert_success response
+  end
+
   def test_address_key_prefix
     assert_equal 'bill', @gateway.send(:address_key_prefix, :billing)
     assert_equal 'ship', @gateway.send(:address_key_prefix, :shipping)
@@ -128,6 +251,48 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_address(:shipping, post)
     assert_address(:billing, post)
     assert_equal 20, post.keys.size
+  end
+
+  def test_add_address_with_empty_billing_and_shipping_names
+    post = {}
+    @options[:billing_address].delete(:name)
+    @options[:shipping_address][:name] = ''
+
+    @gateway.send(:add_address, post, @credit_card, @options)
+    assert_address(:shipping, post, 'Longbob', 'Longsen')
+    assert_address(:billing, post, 'Longbob', 'Longsen')
+    assert_equal 20, post.keys.size
+  end
+
+  def test_add_address_with_single_billing_and_shipping_names
+    post = {}
+    options = {
+        :billing_address  => address(:name => 'Smith'),
+        :shipping_address => address(:name => 'Longsen')
+    }
+
+    @gateway.send(:add_address, post, @credit_card, options)
+    assert_address(:billing, post, '', 'Smith')
+    assert_address(:shipping, post, '', 'Longsen')
+    assert_equal 20, post.keys.size
+  end
+
+  def test_add_test_mode_without_test_mode_option
+    post = {}
+    @gateway.send(:add_test_mode, post, {})
+    assert_nil post[:testmode]
+  end
+
+  def test_add_test_mode_with_true_test_mode_option
+    post = {}
+    @gateway.send(:add_test_mode, post, :test_mode => true)
+    assert_equal 1, post[:testmode]
+  end
+
+  def test_add_test_mode_with_false_test_mode_option
+    post = {}
+    @gateway.send(:add_test_mode, post, :test_mode => false)
+    assert_equal 0, post[:testmode]
   end
 
   def test_amount_style
@@ -187,6 +352,20 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     end
   end
 
+  def test_manual_entry_is_properly_indicated_on_purchase
+    @credit_card.manual_entry = true
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+
+      assert_match %r{UMcard=4242424242424242},  data
+      assert_match %r{UMcardpresent=true},       data
+
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_does_not_raise_error_on_missing_values
     @gateway.expects(:ssl_post).returns("status")
     assert_nothing_raised do
@@ -197,10 +376,14 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
 private
 
-  def assert_address(type, post)
+  def assert_address(type, post, expected_first_name = nil, expected_last_name = nil)
     prefix = key_prefix(type)
-    assert_equal @credit_card.first_name,               post[key(prefix, 'fname')]
-    assert_equal @credit_card.last_name,                post[key(prefix, 'lname')]
+    first_name, last_name = split_names(@options[:billing_address][:name])
+    first_name = expected_first_name if expected_first_name
+    last_name = expected_last_name if expected_last_name
+
+    assert_equal first_name,                            post[key(prefix, 'fname')]
+    assert_equal last_name,                             post[key(prefix, 'lname')]
     assert_equal @options[:billing_address][:company],  post[key(prefix, 'company')]
     assert_equal @options[:billing_address][:address1], post[key(prefix, 'street')]
     assert_equal @options[:billing_address][:address2], post[key(prefix, 'street2')]
@@ -219,8 +402,15 @@ private
     @gateway.send(:address_key, prefix, key)
   end
 
+  def split_names(full_name)
+    names = (full_name || '').split
+    last_name = names.pop
+    first_name = names.join(' ')
+    [first_name, last_name]
+  end
+
   def purchase_request
-    "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Longbob&UMbilllname=Longsen&UMbillcompany=Widgets+Inc&UMbillstreet=1234+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Longbob&UMshiplname=Longsen&UMshipcompany=Widgets+Inc&UMshipstreet=1234+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=1234+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
+    "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
   end
 
   def successful_purchase_response
@@ -229,5 +419,21 @@ private
 
   def unsuccessful_purchase_response
     "UMversion=2.9&UMstatus=Declined&UMauthCode=000000&UMrefNum=55076060&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Not%20Processed&UMcvv2ResultCode=P&UMvpasResultCode=&UMresult=D&UMerror=Card%20Declined&UMerrorcode=10127&UMbatch=596&UMfiller=filled"
+  end
+
+  def successful_authorize_response
+    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled"
+  end
+
+  def successful_capture_response
+    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+  end
+
+  def successful_refund_response
+    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=63813138&UMavsResult=Unmapped%20AVS%20response%20%28%20%20%20%29&UMavsResultCode=%20%20%20&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=1.00&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+  end
+
+  def successful_void_response
+    "UMversion=2.9&UMstatus=Approved&UMauthCode=&UMrefNum=63812270&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Transaction%20Voided%20Successfully&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
   end
 end

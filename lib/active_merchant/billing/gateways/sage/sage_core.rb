@@ -20,7 +20,8 @@ module ActiveMerchant #:nodoc:
         :authorization      => '02',
         :capture            => '11',
         :void               => '04',
-        :credit             => '06'
+        :credit             => '06',
+        :refund             => '10'
       }
 
       def initialize(options = {})
@@ -30,7 +31,7 @@ module ActiveMerchant #:nodoc:
 
       private
       def add_invoice(post, options)
-        post[:T_ordernum] = options[:order_id].slice(0, 20)
+        post[:T_ordernum] = (options[:order_id] || generate_unique_id).slice(0, 20)
         post[:T_tax] = amount(options[:tax]) unless options[:tax].blank?
         post[:T_shipping] = amount(options[:shipping]) unless options[:shipping].blank?
       end

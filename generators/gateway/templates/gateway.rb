@@ -94,7 +94,10 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response),
-          test: test?
+          avs_result: AVSResult.new(code: response["some_avs_response_key"]),
+          cvv_result: CVVResult.new(response["some_cvv_response_key"]),
+          test: test?,
+          error_code: error_code_from(response)
         )
       end
 
@@ -108,6 +111,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
+      end
+
+      def error_code_from(response)
+        unless success_from(response)
+          # TODO: lookup error code for this response
+        end
       end
     end
   end

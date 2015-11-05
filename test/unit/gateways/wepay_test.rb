@@ -139,6 +139,14 @@ class WepayTest < Test::Unit::TestCase
     assert_equal "Invalid credit card number", response.message
   end
 
+  def test_invalid_json_response
+    @gateway.expects(:ssl_post).returns(invalid_json_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/Invalid JSON response received from WePay/, response.message)
+  end
+
   private
 
   def successful_store_response
@@ -187,6 +195,10 @@ class WepayTest < Test::Unit::TestCase
 
   def failed_capture_response
     %({"error":"invalid_request","error_description":"Checkout object must be in state 'Reserved' to capture. Currently it is in state captured","error_code":4004})
+  end
+
+  def invalid_json_response
+    %({"checkout_id"=1852898602,"state":"captured")
   end
 
 end
