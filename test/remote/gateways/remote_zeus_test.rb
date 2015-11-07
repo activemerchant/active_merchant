@@ -36,7 +36,7 @@ class RemoteZeusTest < Test::Unit::TestCase
 
   def test_successful_authorize
     initial_auth = @gateway.purchase(0, @credit_card, @options)
-    response = @gateway.authorize(@amount, initial_auth.authorization, Date.today.to_s.gsub('-', ''))
+    response = @gateway.authorize(@amount, initial_auth.authorization, (Date.today + 2.days).to_s.gsub('-', ''))
 
     assert_success initial_auth
     assert_success response
@@ -54,8 +54,8 @@ class RemoteZeusTest < Test::Unit::TestCase
 
   def test_successful_capture
     initial_auth = @gateway.purchase(0, @credit_card, @options)
-    auth = @gateway.authorize(@amount, initial_auth.authorization, Date.today.to_s.gsub('-', ''))
-    response = @gateway.capture(@amount, initial_auth.authorization, Date.today.to_s.gsub('-', ''))
+    auth = @gateway.authorize(@amount, initial_auth.authorization, (Date.today + 2.days).to_s.gsub('-', ''))
+    response = @gateway.capture(@amount, initial_auth.authorization, (Date.today + 2.days).to_s.gsub('-', ''))
 
     assert_success initial_auth
     assert_success auth
@@ -65,7 +65,7 @@ class RemoteZeusTest < Test::Unit::TestCase
 
   def test_failed_capture
     initial_auth = @gateway.purchase(0, @credit_card, @options)
-    auth = @gateway.authorize(@amount, initial_auth.authorization, Date.today.to_s.gsub('-', ''))
+    auth = @gateway.authorize(@amount, initial_auth.authorization, (Date.today + 2.days).to_s.gsub('-', ''))
     response = @gateway.capture(@amount, initial_auth.authorization, (Date.today - 1.day).to_s.gsub('-', ''))
 
     assert_success initial_auth
