@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+
+== Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]
 * Braintree: Simplify Braintree scrubbing when no transcript [duff]
 * AuthorizeNet: Allow market_type override [duff]
