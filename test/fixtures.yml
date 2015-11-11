@@ -501,6 +501,7 @@ ogone:
 omise:
   public_key: pkey_test_4zt0fss8gs0z6b4zlsq
   secret_key: skey_test_4zt0fss8eklsj88dx9l
+  api_version: '2015-11-17'
 
 # Working credentials, no need to replace
 openpay:
