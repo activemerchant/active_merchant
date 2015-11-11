@@ -4,6 +4,7 @@
 * Mercury: Add support for card present track 2 [ryanbalsdon]
 * Cardstream: Improve default currency handling [duff]
 * Mercury: Strip start and end sentinels on track 2 [ryanbalsdon]
+* Redsys: Support new SHA256 authentication method [davidsantoso]
 
 
 == Version 1.55.0 (November 9, 2015)
