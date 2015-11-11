@@ -16,6 +16,7 @@
 * Stripe: Correctly detect test mode voids [methodmissing]
 * Garanti: Add test mode URL and update remote test credentials [cbilgili]
 * Cashnet: Allow custcode override on refund [duff]
+* Omise: Add a new optional api_version config [zdk]
 
 
 == Version 1.55.0 (November 9, 2015)

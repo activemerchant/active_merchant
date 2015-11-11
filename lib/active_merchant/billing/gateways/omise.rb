@@ -3,7 +3,6 @@ require 'active_merchant/billing/rails'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OmiseGateway < Gateway
-      API_VERSION = '1.0'
       API_URL     = 'https://api.omise.co/'
       VAULT_URL   = 'https://vault.omise.co/'
 
@@ -45,8 +44,9 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         requires!(options, :public_key, :secret_key)
-        @public_key = options[:public_key]
-        @secret_key = options[:secret_key]
+        @public_key  = options[:public_key]
+        @secret_key  = options[:secret_key]
+        @api_version = options[:api_version]
         super
       end
 
@@ -178,7 +178,8 @@ module ActiveMerchant #:nodoc:
         key = options[:key] || @secret_key
         {
           'Content-Type'    => 'application/json;utf-8',
-          'User-Agent'      => "Omise/v#{API_VERSION} ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'Omise-Version'   => @api_version || "2014-07-27",
+          'User-Agent'      => "ActiveMerchantBindings/#{ActiveMerchant::VERSION} Ruby/#{RUBY_VERSION}",
           'Authorization'   => 'Basic ' + Base64.encode64(key.to_s + ':').strip,
           'Accept-Encoding' => 'utf-8'
         }
