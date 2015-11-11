@@ -842,6 +842,11 @@ redsys:
   login: MERCHANT CODE
   secret_key: SECRET KEY
 
+redsys_sha256:
+  login: MERCHANT CODE
+  secret_key: SECRET KEY
+  signature_algorithm: 'sha256'
+
 # Working credentials, no need to replace
 s5:
   mode: CONNECTOR_TEST
