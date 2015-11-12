@@ -14,6 +14,7 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_CODES = {
         "AUD" => '036',
+        "BRL" => '986',
         "CAD" => '124',
         "CZK" => '203',
         "DKK" => '208',
@@ -132,7 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         add_pair(post, :amount, amount(money), :required => true)
-        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)) || currency_code(self.default_currency))
+        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)))
       end
 
       def add_customer_data(post, options)
