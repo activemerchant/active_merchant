@@ -27,7 +27,7 @@ module ActiveMerchant
         options = {:review => true, :mobile => false, :in_context => false}.update(options)
 
         if options[:in_context] 
-          url  = "#{redirect_url(true)}?cmd=#{cmd}&token=#{token}"
+          url  = "#{redirect_url(true)}?token=#{token}"
         else
           cmd  = options[:mobile]  ? '_express-checkout-mobile' : '_express-checkout'
           url  = "#{redirect_url}?cmd=#{cmd}&token=#{token}"
