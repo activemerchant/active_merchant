@@ -5,10 +5,12 @@ module ActiveMerchant
         if base.respond_to?(:class_attribute)
           base.class_attribute :test_redirect_url
           base.class_attribute :in_context_test_redirect_url
+          base.class_attribute :in_context_live_redirect_url
           base.class_attribute :live_redirect_url
         else
           base.class_inheritable_accessor :test_redirect_url
           base.class_inheritable_accessor :in_context_test_redirect_url
+          base.class_inheritable_accessor :in_context_live_redirect_url
           base.class_inheritable_accessor :live_redirect_url
         end
         base.live_redirect_url = 'https://www.paypal.com/cgi-bin/webscr'
