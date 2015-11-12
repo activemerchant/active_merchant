@@ -113,6 +113,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_reference(post, identification)
+        add_amount(post, money, options)
         commit('refund', money, post)
       end
 
@@ -180,7 +181,7 @@ module ActiveMerchant #:nodoc:
           :dateq => Time.now.strftime('%d%m%Y%H%M%S'),
           :numquestion => unique_id(parameters[:order_id]),
           :site => @options[:login].to_s[0,7],
-          :rang => @options[:login].to_s[7..-1],
+          :rang => @options[:rang] || @options[:login].to_s[7..-1],
           :cle => @options[:password],
           :pays => '',
           :archivage => parameters[:order_id]

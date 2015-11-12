@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class CreditcallTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = CreditcallGateway.new(terminal_id: 'login', transaction_key: 'password')
     @credit_card = credit_card
@@ -105,6 +107,23 @@ class CreditcallTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
+  end
+
+  def test_verification_value_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<CSC>123</CSC>)m, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_verification_value_not_sent
+    @credit_card.verification_value = "  "
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/CSC/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_scrub

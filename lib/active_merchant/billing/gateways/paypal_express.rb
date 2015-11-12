@@ -26,6 +26,8 @@ module ActiveMerchant #:nodoc:
         'TW' => 'zh_TW'
       }
 
+      CURRENCIES_WITHOUT_FRACTIONS = %w(BRL HUF JPY MYR TWD TRY)
+
       self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr'
       self.supported_countries = ['US']
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
@@ -84,6 +86,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      def non_fractional_currency?(currency)
+        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
+      end
+
       def build_get_details_request(token)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'GetExpressCheckoutDetailsReq', 'xmlns' => PAYPAL_NAMESPACE do

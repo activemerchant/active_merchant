@@ -430,8 +430,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-          post[:EMAIL]     = options[:email]
-          post[:CUSTOM_ID] = options[:customer]
+        post[:EMAIL]     = options[:email]
+        post[:CUSTOM_ID] = options[:customer]
+        post[:CUSTOM_ID2] = options[:custom_id2]
       end
 
       def add_duplicate_override(post, options)

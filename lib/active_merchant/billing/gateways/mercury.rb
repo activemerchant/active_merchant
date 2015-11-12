@@ -195,7 +195,14 @@ module ActiveMerchant #:nodoc:
       def add_credit_card(xml, credit_card, action)
         xml.tag! 'Account' do
           if credit_card.track_data.present?
-            xml.tag! 'Track1', credit_card.track_data
+            # Track 1 has a start sentinel (STX) of '%' and track 2 is ';'
+            # If the track has no STX or is corrupt, we send it as track 1, to let Mercury
+            #handle with the validation error as it sees fit.
+            if credit_card.track_data[0] == ';' # track 2 start sentinel (STX)
+              xml.tag! 'Track2', credit_card.track_data
+            else # track 1 or a corrupt track
+              xml.tag! 'Track1', credit_card.track_data
+            end
           else
             xml.tag! 'AcctNo', credit_card.number
             xml.tag! 'ExpDate', expdate(credit_card)

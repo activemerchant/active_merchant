@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+* Add Cardknox gateway [dlehren]
+* Mercury: Add support for card present track 2 [ryanbalsdon]
+
+== Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]
 * Braintree: Simplify Braintree scrubbing when no transcript [duff]
 * AuthorizeNet: Allow market_type override [duff]
@@ -42,6 +46,15 @@
 * Add Clearhaus gateway [dinesh]
 * WorldpayOnlinePayments: Fix logic to determine success [ao]
 * Paymill: store order_id in description field [nikoloff]
+* TWD isn't a zero decimal currency [duff]
+* PaypalExpress: Use custom zero decimal currencies [duff]
+* Stripe: Migrate from /refund to /refunds [matthelm]
+* Bogus: Adding basic EMV support [ryanbalsdon]
+* PayBox Direct: Refunds and working test credentials [ivanfer]
+* Vanco: Handle case of no billing_address [duff]
+* BluePay: Add support for CUSTOM_ID2 field [ajporterfield]
+* Creditcall: Handle no verification_value [duff]
+
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]

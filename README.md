@@ -97,6 +97,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [Borgun](https://www.borgun.is/) - IS
 * [Braintree](http://www.braintreepaymentsolutions.com) - US, CA, AU, AD, AT, BE, BG, CY, CZ, DK, EE, FI, FR, GI, DE, GR, HU, IS, IM, IE, IT, LV, LI, LT, LU, MT, MC, NL, NO, PL, PT, RO, SM, SK, SI, ES, SE, CH, TR, GB
 * [BridgePay](http://www.bridgepaynetwork.com/) - CA, US
+* [Cardknox](https://www.cardknox.com/) - US, CA, GB
 * [CardSave](http://www.cardsave.net/) - GB
 * [CardStream](http://www.cardstream.com/) - GB
 * [Cashnet](http://www.higherone.com/) - US
