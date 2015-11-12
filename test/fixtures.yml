@@ -1004,5 +1004,5 @@ worldpay_us:
   merchantpin: "1234567890"
 
 worldpay_online_payments:
-  client_key: "T_C_fba10c60-5581-414c-aee7-358f150e6104"
-  service_key: "T_S_e19c5313-e249-4beb-a6de-1f788882476c"
+  client_key: "T_C_b9f629e7-cea7-4edb-8206-24bbe351d699"
+  service_key: "T_S_eea7c405-25a9-4428-918f-27a9d63fe64f"

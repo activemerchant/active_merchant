@@ -160,4 +160,38 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
     response = badgateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
+
+  def test_3ds_card_pass
+    @options[:is3DSOrder] = true
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_true response.params['is3DSOrder'] && response.params['paymentStatus']=='PRE_AUTHORIZED'
+
+=begin
+    # Use the below to test 3DS
+    bin = "x7thpmx7"
+    File.open("3ds.html", "w") do |f|
+      f.puts %(
+        <html>
+        <body>
+          <form action="#{response.params["redirectURL"]}" method="POST">
+            <input type="hidden" name="PaReq" value="#{response.params["oneTime3DsToken"]}" />
+            <input type="hidden" name="TermUrl" value="http://requestb.in/#{bin}" />
+            <input type="submit" />
+          </form>
+        </body>
+        </html>
+      )
+    end
+    puts "Test 3D-secure via `open 3ds.html`"
+    puts "View results at http://requestb.in/#{bin}?inspect"
+    puts "Finalize with: `curl -v -d PaRes='' '#{response.params["redirectURL"]}'`"
+=end
+  end
+
+  def test_3ds_card_fails
+    @options[:is3DSOrder] = 'cheese'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_false response.params['is3DSOrder'] && response.params['paymentStatus']=='PRE_AUTHORIZED'
+  end
+
 end
