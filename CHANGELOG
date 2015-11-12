@@ -2,6 +2,7 @@
 
 * Add Cardknox gateway [dlehren]
 * Mercury: Add support for card present track 2 [ryanbalsdon]
+* Cardstream: Improve default currency handling [duff]
 
 == Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]
