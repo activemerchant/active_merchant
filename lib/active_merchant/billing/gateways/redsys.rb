@@ -47,8 +47,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url        = "http://www.redsys.es/"
       self.display_name        = "Redsys"
 
-      SHA256_SIGNATURE_VERSION = 'HMAC_SHA256_V1'
-
       CURRENCY_CODES = {
         "AED" => '784',
         "ARS" => '32',
@@ -304,16 +302,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(data)
-        headers = {
+        parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data))}", headers))
+      end
+
+      def headers
+        {
           'Content-Type' => 'application/x-www-form-urlencoded'
         }
-        xml = if sha256_authentication?
-                build_sha256_xml_request(data)
-              else
-                build_sha1_xml_request(data)
-              end
+      end
 
-        parse(ssl_post(url, "entrada=#{CGI.escape(xml)}", headers))
+      def xml_request_from(data)
+        if sha256_authentication?
+          build_sha256_xml_request(data)
+        else
+          build_sha1_xml_request(data)
+        end
       end
 
       def build_signature(data)
@@ -343,7 +346,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.REQUEST do
           build_merchant_data(xml, data)
-          xml.DS_SIGNATUREVERSION SHA256_SIGNATURE_VERSION
+          xml.DS_SIGNATUREVERSION 'HMAC_SHA256_V1'
           xml.DS_SIGNATURE sign_request(merchant_data_xml(data), data[:order_id])
         end
         xml.target!
@@ -473,10 +476,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # *****************************************************
-      # SHA256 Specific Authentication/Validation Helpers
-      # *****************************************************
-
       def sha256_authentication?
         @options[:signature_algorithm] == "sha256"
       end
@@ -495,7 +494,6 @@ module ActiveMerchant #:nodoc:
         # The OpenSSL default of an all-zeroes ("\\0") IV is used.
         cipher.padding = 0
 
-        # Padding must be done with zeros
         order_id += "\0" until order_id.bytesize % block_length == 0 # Pad with zeros
 
         output = cipher.update(order_id) + cipher.final
