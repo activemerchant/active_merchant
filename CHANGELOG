@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * AuthorizeNetCim: Add unmaskExpirationDate option [RamilGilmanov]
+* Element: Add gateway support [davidsantoso]
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
