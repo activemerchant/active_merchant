@@ -214,6 +214,14 @@ elavon:
   password: PASSWORD
   user: USER (often the same as LOGIN)
 
+element:
+  account_id: "1013963"
+  account_token: "683EED8A1A357EB91575A168E74482A74836FD72B1AD11B41B29B473CA9D65B9FE067701"
+  application_id: "5211"
+  acceptor_id: "3928907"
+  application_name: "Spreedly"
+  application_version: "1"
+
 # login: merchant number
 # password: referrer url (for authorize authentication)
 epay:
