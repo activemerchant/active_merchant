@@ -10,6 +10,7 @@ gemfile:
 - Gemfile.rails40
 - Gemfile.rails41
 - Gemfile.rails42
+- Gemfile.rails5
 
 matrix:
   include:
@@ -17,6 +18,8 @@ matrix:
       gemfile: Gemfile.rails32
     - rvm: "2.2"
       gemfile: Gemfile.rails32
+    - rvm: "2.2.3"
+      gemfile: Gemfile.rails5
 
 notifications:
   email:
