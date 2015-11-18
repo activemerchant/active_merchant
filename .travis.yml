@@ -1,9 +1,12 @@
 language: ruby
 script: "bundle exec rake test:units"
 sudo: false
+cache: bundler
 
 rvm:
-- "2.0"
+- 2.0
+- 2.1
+- 2.2.3
 
 gemfile:
 - Gemfile.rails32
@@ -13,12 +16,10 @@ gemfile:
 - Gemfile.rails5
 
 matrix:
-  include:
-    - rvm: "2.1"
-      gemfile: Gemfile.rails32
-    - rvm: "2.2"
-      gemfile: Gemfile.rails32
-    - rvm: "2.2.3"
+  exclude:
+    - rvm: 2.0
+      gemfile: Gemfile.rails5
+    - rvm: 2.1
       gemfile: Gemfile.rails5
 
 notifications:
