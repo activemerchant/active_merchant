@@ -8,6 +8,7 @@
 * Cashnet: Allow custcode override [duff]
 * Add Rails 5 support [rafaelfranca]
 * Set required Ruby version for install to 2 or greater [rafaelfranca]
+* JetPay: Pass ud_fields in capture too [duff]
 
 == Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]

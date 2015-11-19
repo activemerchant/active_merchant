@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, reference, options = {})
-        commit(money, build_capture_request(reference.split(";").first, money))
+        commit(money, build_capture_request(reference.split(";").first, money, options))
       end
 
       def void(reference, options = {})
@@ -242,9 +242,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_capture_request(transaction_id, money)
+      def build_capture_request(transaction_id, money, options)
         build_xml_request('CAPT', transaction_id) do |xml|
           xml.tag! 'TotalAmount', amount(money)
+          add_user_defined_fields(xml, options)
         end
       end
 
