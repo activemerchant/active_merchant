@@ -54,6 +54,19 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_ud_fields_on_purchase
+    assert response = @gateway.purchase(9900, @credit_card, @options.merge(ud_field_1: "Value1", ud_field_2: "Value2", ud_field3: "Value3"))
+    assert_success response
+  end
+
+  def test_ud_fields_on_capture
+    assert auth = @gateway.authorize(9900, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(9900, auth.authorization, @options.merge(ud_field_1: "Value1", ud_field_2: "Value2", ud_field3: "Value3"))
+    assert_success capture
+  end
+
 
   def test_void
     # must void a valid auth
