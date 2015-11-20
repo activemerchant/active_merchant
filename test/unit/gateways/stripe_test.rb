@@ -361,6 +361,35 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_refund_contains_charge_expand
+    @gateway.expects(:ssl_request).with do |_, _, post, _|
+      post.include?("expand[]=charge")
+    end.returns(successful_partially_refunded_response)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
+    assert_success response
+  end
+
+  def test_refund_with_additional_expand_contains_two_expands
+    @gateway.expects(:ssl_request).with do |_, _, post, _|
+      parsed = CGI.parse(post)
+      parsed['expand[]'].sort == ['balance_transaction', 'charge'].sort
+    end.returns(successful_partially_refunded_response)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', expand: :balance_transaction)
+    assert_success response
+  end
+
+  def test_refund_with_expand_charge_only_sends_one_charge_expand
+    @gateway.expects(:ssl_request).with do |_, _, post, _|
+      parsed = CGI.parse(post)
+      parsed["expand[]"] == ['charge']
+    end.returns(successful_partially_refunded_response)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', expand: ['charge'])
+    assert_success response
+  end
+
   def test_successful_refund_with_metadata
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
       post.include?("metadata[first_value]=true")

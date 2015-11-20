@@ -105,6 +105,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     assert refund = @gateway.refund(@amount - 20, response.authorization)
+    assert refund.test?
     refund_id = refund.params["id"]
     assert_equal refund.authorization, refund_id
     assert_success refund
