@@ -115,6 +115,7 @@ module ActiveMerchant #:nodoc:
         post[:refund_application_fee] = true if options[:refund_application_fee]
         post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
         post[:metadata] = options[:metadata] if options[:metadata]
+        post[:expand] = [:charge]
 
         MultiResponse.run(:first) do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options) }
@@ -283,7 +284,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_expand_parameters(post, options)
-        post[:expand] = Array.wrap(options[:expand])
+        post[:expand] ||= []
+        post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
       end
 
       def add_customer_data(post, options)
@@ -453,7 +455,7 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? "Transaction approved" : response["error"]["message"],
           response,
-          :test => response.has_key?("livemode") ? !response["livemode"] : false,
+          :test => response_is_test?(response),
           :authorization => authorization_from(success, url, method, response),
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code,
@@ -490,6 +492,16 @@ module ActiveMerchant #:nodoc:
             "message" => msg
           }
         }
+      end
+
+      def response_is_test?(response)
+        if response.has_key?('livemode')
+          !response['livemode']
+        elsif response['charge'].is_a?(Hash) && response['charge'].has_key?('livemode')
+          !response['charge']['livemode']
+        else
+          false
+        end
       end
 
       def non_fractional_currency?(currency)
