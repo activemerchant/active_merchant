@@ -923,8 +923,8 @@ tns:
   password: 3f34fe50334fbe6cbe04c283411a5860
 
 trans_first:
-  login: LOGIN
-  password: PASSWORD
+  login: 45567
+  password: TNYYKYMFZ59HSN7Q
 
 # Transact Pro doesn't provide public testing data
 transact_pro:
