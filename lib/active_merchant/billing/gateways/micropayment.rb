@@ -23,6 +23,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_address(post, options)
         commit("purchase", post)
       end
 
@@ -31,6 +32,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_address(post, options)
         commit("authorize", post)
       end
 
@@ -81,22 +83,34 @@ module ActiveMerchant #:nodoc:
           post[:currency] = options[:currency] || currency(money)
         end
         post[:project] = options[:project] if options[:project]
+        post["params[title]"] = options[:description] if options[:description]
       end
 
       def add_payment_method(post, payment_method, options={})
-        post[:firstname] = payment_method.first_name
-        post[:surname] = payment_method.last_name
         post[:number] = payment_method.number
         post[:recurring] = 1 if options[:recurring] == true
         post[:cvc2] = payment_method.verification_value
         post[:expiryYear] = format(payment_method.year, :four_digits)
         post[:expiryMonth] = format(payment_method.month, :two_digits)
+
+        post["params[firstname]"] = payment_method.first_name
+        post["params[surname]"] = payment_method.last_name
       end
 
       def add_customer_data(post, options)
-        post[:email] = options[:email] if options[:email]
-        post[:ip] = options[:ip] || "1.1.1.1"
-        post[:sendMail] = options[:send_mail] || 'false'
+        post["params[email]"] = options[:email] if options[:email]
+        post["params[ip]"] = options[:ip] || "1.1.1.1"
+        post["params[sendMail]"] = options[:send_mail] || 'false'
+      end
+
+      def add_address(post, options)
+        address = options[:billing_address]
+        return unless address
+
+        post["params[address]"] = address[:address1] if address[:address1]
+        post["params[zipcode]"] = address[:zip] if address[:zip]
+        post["params[town]"] = address[:city] if address[:city]
+        post["params[country]"] = address[:country] if address[:country]
       end
 
       def add_reference(post, authorization)
@@ -128,7 +142,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, params)
-        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        params.map {|k, v| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
       end
 
       def url(action)

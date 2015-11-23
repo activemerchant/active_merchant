@@ -10,6 +10,7 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
+      description: "Eggcellent",
       billing_address: address
     }
   end
