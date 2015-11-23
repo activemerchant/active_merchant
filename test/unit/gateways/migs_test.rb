@@ -70,6 +70,14 @@ class MigsTest < Test::Unit::TestCase
     assert_raise(SecurityError){@gateway.purchase_offsite_response(tampered_response2)}
   end
 
+  def test_scrub
+    assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
+
   private
   
   # Place raw successful response from gateway here
@@ -90,5 +98,55 @@ class MigsTest < Test::Unit::TestCase
   
   def build_response(options)
     options.collect { |key, value| "vpc_#{key}=#{CGI.escape(value.to_s)}"}.join('&')
+  end
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      opening connection to migs.mastercard.com.au:443...
+      opened
+      starting SSL for migs.mastercard.com.au:443...
+      SSL established
+      <- "POST /vpcdps HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUse
+      r-Agent: Ruby\r\nConnection: close\r\nHost: migs.mastercard.com.au\r\nContent-Length: 247\r\n\r\n"
+      <- "vpc_Amount=100&vpc_Currency=USD&vpc_OrderInfo=1&vpc_CardNum=4005550000000001&vpc_CardSecurityCode=123&vpc_CardExp=1705&vpc_Version=1&vpc_Merchant=TESTANZT
+      EST3&vpc_AccessCode=6447E199&vpc_Command=pay&vpc_MerchTxnRef=40a11adade08d908b5fa177cf836b859"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 23 Nov 2015 15:25:27 GMT\r\n"
+      -> "Expires: Sun, 15 Jul 1990 00:00:00 GMT\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Cache-Control: no-cache\r\n"
+      -> "Content-Length: 239\r\n"
+      -> "P3P: CP=\"NOI DSP COR CURa ADMa TA1a OUR BUS IND UNI COM NAV INT\"\r\n"
+      -> "Content-Type: text/plain;charset=iso-8859-1\r\n"
+      -> "Connection: close\r\n"
+      -> "Set-Cookie: TS0152bea3=01fb8d8de263e558e41015064dff5d113e343478b105102b3bc3774803917cbecf6200ca8f; Path=/; Secure\r\n"
+      -> "\r\n"
+      reading 239 bytes...
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+      opening connection to migs.mastercard.com.au:443...
+      opened
+      starting SSL for migs.mastercard.com.au:443...
+      SSL established
+      <- "POST /vpcdps HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUse
+      r-Agent: Ruby\r\nConnection: close\r\nHost: migs.mastercard.com.au\r\nContent-Length: 247\r\n\r\n"
+      <- "vpc_Amount=100&vpc_Currency=USD&vpc_OrderInfo=1&vpc_CardNum=4[FILTERED]0001&vpc_CardSecurityCode=[FILTERED]&vpc_CardExp=1705&vpc_Version=1&vpc_Merchant=TESTANZT
+      EST3&vpc_AccessCode=[FILTERED]&vpc_Command=pay&vpc_MerchTxnRef=40a11adade08d908b5fa177cf836b859"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 23 Nov 2015 15:25:27 GMT\r\n"
+      -> "Expires: Sun, 15 Jul 1990 00:00:00 GMT\r\n"
+      -> "Pragma: no-cache\r\n"
+      -> "Cache-Control: no-cache\r\n"
+      -> "Content-Length: 239\r\n"
+      -> "P3P: CP=\"NOI DSP COR CURa ADMa TA1a OUR BUS IND UNI COM NAV INT\"\r\n"
+      -> "Content-Type: text/plain;charset=iso-8859-1\r\n"
+      -> "Connection: close\r\n"
+      -> "Set-Cookie: TS0152bea3=01fb8d8de263e558e41015064dff5d113e343478b105102b3bc3774803917cbecf6200ca8f; Path=/; Secure\r\n"
+      -> "\r\n"
+      reading 239 bytes...
+    POST_SCRUBBED
   end
 end
