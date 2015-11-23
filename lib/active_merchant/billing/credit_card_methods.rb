@@ -174,6 +174,7 @@ module ActiveMerchant #:nodoc:
         # Please see http://en.wikipedia.org/wiki/Luhn_algorithm for details.
         # This implementation is from the luhn_checksum gem, https://github.com/zendesk/luhn_checksum.
         def valid_checksum?(numbers) #:nodoc:
+          return false if numbers.to_s.match(/\D/)
           sum = 0
 
           odd = true
