@@ -91,6 +91,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     assert void = @gateway.void(response.authorization)
+    assert void.test?
     assert_success void
   end
 

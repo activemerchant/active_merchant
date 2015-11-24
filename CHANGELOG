@@ -13,6 +13,7 @@
 * Fix variables in remote gateways test template [sdball]
 * Micropayment: Update fieldnames for new API [duff]
 * Fix CreditCard#valid_number? erroring on non-digit characters [PatrickTulskie]
+* Stripe: Correctly detect test mode voids [methodmissing]
 
 == Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]
