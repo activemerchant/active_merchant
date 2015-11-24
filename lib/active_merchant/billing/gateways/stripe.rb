@@ -106,7 +106,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(identification, options = {})
-        commit(:post, "charges/#{CGI.escape(identification)}/refunds", {}, options)
+        post = {}
+        post[:expand] = [:charge]
+        commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options)
       end
 
       def refund(money, identification, options = {})
