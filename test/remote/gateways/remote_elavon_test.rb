@@ -10,7 +10,8 @@ class RemoteElavonTest < Test::Unit::TestCase
     @options = {
       :email => "paul@domain.com",
       :description => 'Test Transaction',
-      :billing_address => address
+      :billing_address => address,
+      :ip => '203.0.113.0'
     }
     @amount = 100
   end
