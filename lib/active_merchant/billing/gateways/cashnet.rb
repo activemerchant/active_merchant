@@ -49,6 +49,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:origtx]  = identification
         add_invoice(post, options)
+        add_customer_data(post, options)
         commit('REFUND', money, post)
       end
 
