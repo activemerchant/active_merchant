@@ -10,6 +10,8 @@ module ActiveMerchant #:nodoc:
       include MaxipagoRecurringAPI
       include MaxipagoBoletoAPI
 
+      # TODO: Tests, Docs and OnlineDebit
+
       def purchase(money, creditcard, options = {})
         post = {}
         add_aux_data(post, options)
