@@ -176,14 +176,13 @@ module ActiveMerchant #:nodoc:
 
       def headers(options={})
         key = options[:key] || @secret_key
-        h = {
+        {
           'Content-Type'    => 'application/json;utf-8',
+          'Omise-Version'   => @api_version || "2014-07-27",
           'User-Agent'      => "ActiveMerchantBindings/#{ActiveMerchant::VERSION} Ruby/#{RUBY_VERSION}",
           'Authorization'   => 'Basic ' + Base64.encode64(key.to_s + ':').strip,
           'Accept-Encoding' => 'utf-8'
         }
-        h['Omise-Version'] = @api_version if @api_version
-        h
       end
 
       def url_for(endpoint)
