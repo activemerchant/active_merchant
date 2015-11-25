@@ -75,7 +75,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_aux_data(post, options)
-        post[:processorID] = (test? ? 1 : 4) # test: 1, redecard: 2, cielo: 4
+        processor_id = options[:processor_id] || 4 # test: 1, redecard: 2, cielo: 4
+        post[:processorID]  = (test? ? 1 : processor_id) 
         post[:referenceNum] = options[:order_id]
         post[:installments] = options[:installments] if options.has_key?(:installments) && options[:installments] > 1 # only send installments if it is a deferred payment
       end
@@ -194,4 +195,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
