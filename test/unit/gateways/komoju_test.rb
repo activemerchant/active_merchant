@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class KomojuTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = KomojuGateway.new(:login => 'login')
 
@@ -27,6 +29,14 @@ class KomojuTest < Test::Unit::TestCase
 
     assert_equal successful_response["id"], response.authorization
     assert response.test?
+  end
+
+  def test_successful_credit_card_purchase_with_token
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "tok_xxx", @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match('"payment_details":"tok_xxx"', data)
+    end.respond_with(JSON.generate(successful_credit_card_purchase_response))
   end
 
   def test_failed_purchase
