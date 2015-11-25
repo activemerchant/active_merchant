@@ -21,17 +21,17 @@ class RemotePinTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal response.params['response']['captured'], true
+    assert_equal true, response.params['response']['captured']
   end
 
   def test_successful_authorize_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    assert_equal authorization.params['response']['captured'], false
+    assert_equal false, authorization.params['response']['captured']
 
     response = @gateway.capture(@amount, authorization.authorization, @options)
     assert_success response
-    assert_equal response.params['response']['captured'], true
+    assert_equal true, response.params['response']['captured']
   end
 
   def test_failed_authorize
@@ -39,9 +39,19 @@ class RemotePinTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_failed_capture
+  def test_failed_capture_due_to_invalid_token
     response = @gateway.capture(@amount, "bogus", @options)
     assert_failure response
+  end
+
+  def test_failed_capture_due_to_invalid_amount
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert_equal authorization.params['response']['captured'], false
+
+    response = @gateway.capture(@amount - 1, authorization.authorization, @options)
+    assert_failure response
+    assert_equal 'invalid_capture_amount', response.params['error']
   end
 
   def test_successful_purchase_without_description
@@ -110,12 +120,12 @@ class RemotePinTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_not_nil response.authorization
-    assert_equal response.params['response']['card']['expiry_year'], @credit_card.year
+    assert_equal @credit_card.year, response.params['response']['card']['expiry_year']
 
     response = @gateway.update(response.authorization, @visa_credit_card, :address => address)
     assert_success response
     assert_not_nil response.authorization
-    assert_equal response.params['response']['card']['expiry_year'], @visa_credit_card.year
+    assert_equal @visa_credit_card.year, response.params['response']['card']['expiry_year']
   end
 
   def test_refund
@@ -145,5 +155,15 @@ class RemotePinTest < Test::Unit::TestCase
     gateway = PinGateway.new(:api_key => '')
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+    
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 end

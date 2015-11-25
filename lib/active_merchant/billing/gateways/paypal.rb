@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<n1:Password>).+(</n1:Password>)), '\1[FILTERED]\2').
           gsub(%r((<n1:Username>).+(</n1:Username>)), '\1[FILTERED]\2').
           gsub(%r((<n2:CreditCardNumber>).+(</n2:CreditCardNumber)), '\1[FILTERED]\2').
-          gsub(%r((<n2:CVV2>).+(</n2:CVV2)), '\1[FILTERED]\2')
+          gsub(%r((<n2:CVV2>)\d+(</n2:CVV2)), '\1[FILTERED]\2')
       end
 
       private
@@ -74,6 +74,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
+              add_descriptors(xml, options)
               add_payment_details(xml, money, currency_code, options)
               add_credit_card(xml, credit_card_or_referenced_id, billing_address, options) unless transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:IPAddress', options[:ip]
@@ -90,7 +91,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:CreditCardNumber', credit_card.number
           xml.tag! 'n2:ExpMonth', format(credit_card.month, :two_digits)
           xml.tag! 'n2:ExpYear', format(credit_card.year, :four_digits)
-          xml.tag! 'n2:CVV2', credit_card.verification_value
+          xml.tag! 'n2:CVV2', credit_card.verification_value unless credit_card.verification_value.blank?
 
           if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
             xml.tag! 'n2:StartMonth', format(credit_card.start_month, :two_digits) unless credit_card.start_month.blank?
@@ -108,6 +109,11 @@ module ActiveMerchant #:nodoc:
             add_address(xml, 'n2:Address', address)
           end
         end
+      end
+
+      def add_descriptors(xml, options)
+        xml.tag! 'n2:SoftDescriptor', options[:soft_descriptor] unless options[:soft_descriptor].blank?
+        xml.tag! 'n2:SoftDescriptorCity', options[:soft_descriptor_city] unless options[:soft_descriptor_city].blank?
       end
 
       def credit_card_type(type)

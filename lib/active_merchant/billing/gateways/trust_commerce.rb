@@ -223,7 +223,7 @@ module ActiveMerchant #:nodoc:
         commit('reversal', parameters)
       end
 
-      # recurring() a TrustCommerce account that is activated for Citatdel, TrustCommerce's
+      # recurring() a TrustCommerce account that is activated for Citadel, TrustCommerce's
       # hosted customer billing info database.
       #
       # Recurring billing uses the same TC action as a plain-vanilla 'store', but we have a separate method for clarity. It can be called
@@ -267,7 +267,7 @@ module ActiveMerchant #:nodoc:
         commit('store', parameters)
       end
 
-      # store() requires a TrustCommerce account that is activated for Citatdel. You can call it with a credit card and a billing ID
+      # store() requires a TrustCommerce account that is activated for Citadel. You can call it with a credit card and a billing ID
       # you would like to use to reference the stored credit card info for future captures. Use 'verify' to specify whether you want
       # to simply store the card in the DB, or you want TC to verify the data first.
 
@@ -290,6 +290,17 @@ module ActiveMerchant #:nodoc:
         }
 
         commit('unstore', parameters)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?cc=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2')
       end
 
       private

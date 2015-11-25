@@ -4,7 +4,7 @@ class CyberSourceTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = CyberSourceGateway.new(
       :login => 'l',
@@ -12,6 +12,7 @@ class CyberSourceTest < Test::Unit::TestCase
     )
 
     @amount = 100
+    @customer_ip = '127.0.0.1'
     @credit_card = credit_card('4111111111111111', :brand => 'visa')
     @declined_card = credit_card('801111111111111', :brand => 'visa')
     @check = check()
@@ -28,6 +29,7 @@ class CyberSourceTest < Test::Unit::TestCase
                },
 
                :email => 'someguy1232@fakeemail.net',
+               :ip => @customer_ip,
                :order_id => '1000',
                :line_items => [
                    {
@@ -71,6 +73,15 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
     assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
     assert response.test?
+  end
+
+  def test_purchase_includes_customer_ip
+    customer_ip_regexp = /<ipAddress>#{@customer_ip}<\//
+    @gateway.expects(:ssl_post).
+      with(anything, regexp_matches(customer_ip_regexp), anything).
+      returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_successful_check_purchase
@@ -376,7 +387,67 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
+
+  def test_supports_network_tokenization
+    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
+  end
+
   private
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+    opening connection to ics2wstest.ic3.com:443...
+    opened
+    starting SSL for ics2wstest.ic3.com:443...
+    SSL established
+    <- "POST /commerce/1.x/transactionProcessor HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ics2wstest.ic3.com\r\nContent-Length: 2459\r\n\r\n"
+    <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <s:Header>\n    <wsse:Security s:mustUnderstand=\"1\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">\n      <wsse:UsernameToken>\n        <wsse:Username>test</wsse:Username>\n        <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">DT3MZm8t8BsDZC9ZoKl592lvlRbQCcEXmEcYlh3gZObo6zTLQdf2m5klbqXlTq31iTJ5/Ctl/Z5LFE60GFnWGR8Cn5GeXuToZNbMHAvZKZ3sw9tC3Hf4U3Dj8XS2EI4OBvA1jcw38hd3VEm0ZZCAQEDZCC+AnM2ya9417zqynYjwgSyPOfh6CfMlSJKTgxQJLot7jFxYNvM/s9yBZoh37wJZUXdZ9Bf/CH6O3tKzafbyfn5rK25+GeYN9koih4O8c+PLQepzj5miiR7bikFzgEnsVs6LaZdLM8Sx/XVXk+60h02lg/a6KdS3kmUvnTGOihg5JUnl2JucBpH/P4aQYZ==</wsse:Password>\n      </wsse:UsernameToken>\n    </wsse:Security>\n  </s:Header>\n  <s:Body xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n    <requestMessage xmlns=\"urn:schemas-cybersource-com:transaction-data-1.109\">\n      <merchantID>test</merchantID>\n      <merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</merchantReferenceCode>\n      <clientLibrary>Ruby Active Merchant</clientLibrary>\n      <clientLibraryVersion>1.50.0</clientLibraryVersion>\n      <clientEnvironment>x86_64-darwin14.0</clientEnvironment>\n<billTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1>456 My Street</street1>\n  <street2>Apt 1</street2>\n  <city>Ottawa</city>\n  <state>NC</state>\n  <postalCode>K1C2N6</postalCode>\n  <country>US</country>\n  <company>Widgets Inc</company>\n  <phoneNumber>(555)555-5555</phoneNumber>\n  <email>someguy1232@fakeemail.net</email>\n</billTo>\n<shipTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1/>\n  <city/>\n  <state/>\n  <postalCode/>\n  <country/>\n  <email>someguy1232@fakeemail.net</email>\n</shipTo>\n<purchaseTotals>\n  <currency>USD</currency>\n  <grandTotalAmount>1.00</grandTotalAmount>\n</purchaseTotals>\n<card>\n  <accountNumber>4111111111111111</accountNumber>\n  <expirationMonth>09</expirationMonth>\n  <expirationYear>2016</expirationYear>\n  <cvNumber>123</cvNumber>\n  <cardType>001</cardType>\n</card>\n<ccAuthService run=\"true\"/>\n<ccCaptureService run=\"true\"/>\n<businessRules>\n  <ignoreAVSResult>true</ignoreAVSResult>\n  <ignoreCVResult>true</ignoreCVResult>\n</businessRules>\n    </requestMessage>\n  </s:Body>\n</s:Envelope>\n"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Server: Apache-Coyote/1.1\r\n"
+    -> "X-OPNET-Transaction-Trace: pid=18901,requestid=08985faa-d84a-4200-af8a-1d0a4d50f391\r\n"
+    -> "Set-Cookie: _op_aixPageId=a_233cede6-657e-481e-977d-a4a886dafd37; Path=/\r\n"
+    -> "Content-Type: text/xml\r\n"
+    -> "Content-Length: 1572\r\n"
+    -> "Date: Fri, 05 Jun 2015 13:01:57 GMT\r\n"
+    -> "Connection: close\r\n"
+    -> "\r\n"
+    reading 1572 bytes...
+    -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n<soap:Header>\n<wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><wsu:Timestamp xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\" wsu:Id=\"Timestamp-513448318\"><wsu:Created>2015-06-05T13:01:57.974Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c=\"urn:schemas-cybersource-com:transaction-data-1.109\"><c:merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</c:merchantReferenceCode><c:requestID>4335093172165000001515</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj//wSR1gMBn41YRu/WIkGLlo3asGzCbBky4VOjHT9/xXHSYBT9/xXHSbSA+RQkhk0ky3SA3+mwMCcjrAYDPxqwjd+sKWXL</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>888888</c:authorizationCode><c:avsCode>X</c:avsCode><c:avsCodeRaw>I1</c:avsCodeRaw><c:cvCode/><c:authorizedDateTime>2015-06-05T13:01:57Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccAuthReply><c:ccCaptureReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2015-06-05T13:01:57Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccCaptureReply></c:replyMessage></soap:Body></soap:Envelope>"
+    read 1572 bytes
+    Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+    opening connection to ics2wstest.ic3.com:443...
+    opened
+    starting SSL for ics2wstest.ic3.com:443...
+    SSL established
+    <- "POST /commerce/1.x/transactionProcessor HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ics2wstest.ic3.com\r\nContent-Length: 2459\r\n\r\n"
+    <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <s:Header>\n    <wsse:Security s:mustUnderstand=\"1\" xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\">\n      <wsse:UsernameToken>\n        <wsse:Username>test</wsse:Username>\n        <wsse:Password Type=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText\">[FILTERED]</wsse:Password>\n      </wsse:UsernameToken>\n    </wsse:Security>\n  </s:Header>\n  <s:Body xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\n    <requestMessage xmlns=\"urn:schemas-cybersource-com:transaction-data-1.109\">\n      <merchantID>test</merchantID>\n      <merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</merchantReferenceCode>\n      <clientLibrary>Ruby Active Merchant</clientLibrary>\n      <clientLibraryVersion>1.50.0</clientLibraryVersion>\n      <clientEnvironment>x86_64-darwin14.0</clientEnvironment>\n<billTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1>456 My Street</street1>\n  <street2>Apt 1</street2>\n  <city>Ottawa</city>\n  <state>NC</state>\n  <postalCode>K1C2N6</postalCode>\n  <country>US</country>\n  <company>Widgets Inc</company>\n  <phoneNumber>(555)555-5555</phoneNumber>\n  <email>someguy1232@fakeemail.net</email>\n</billTo>\n<shipTo>\n  <firstName>Longbob</firstName>\n  <lastName>Longsen</lastName>\n  <street1/>\n  <city/>\n  <state/>\n  <postalCode/>\n  <country/>\n  <email>someguy1232@fakeemail.net</email>\n</shipTo>\n<purchaseTotals>\n  <currency>USD</currency>\n  <grandTotalAmount>1.00</grandTotalAmount>\n</purchaseTotals>\n<card>\n  <accountNumber>[FILTERED]</accountNumber>\n  <expirationMonth>09</expirationMonth>\n  <expirationYear>2016</expirationYear>\n  <cvNumber>[FILTERED]</cvNumber>\n  <cardType>001</cardType>\n</card>\n<ccAuthService run=\"true\"/>\n<ccCaptureService run=\"true\"/>\n<businessRules>\n  <ignoreAVSResult>true</ignoreAVSResult>\n  <ignoreCVResult>true</ignoreCVResult>\n</businessRules>\n    </requestMessage>\n  </s:Body>\n</s:Envelope>\n"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Server: Apache-Coyote/1.1\r\n"
+    -> "X-OPNET-Transaction-Trace: pid=18901,requestid=08985faa-d84a-4200-af8a-1d0a4d50f391\r\n"
+    -> "Set-Cookie: _op_aixPageId=a_233cede6-657e-481e-977d-a4a886dafd37; Path=/\r\n"
+    -> "Content-Type: text/xml\r\n"
+    -> "Content-Length: 1572\r\n"
+    -> "Date: Fri, 05 Jun 2015 13:01:57 GMT\r\n"
+    -> "Connection: close\r\n"
+    -> "\r\n"
+    reading 1572 bytes...
+    -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n<soap:Header>\n<wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><wsu:Timestamp xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\" wsu:Id=\"Timestamp-513448318\"><wsu:Created>2015-06-05T13:01:57.974Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c=\"urn:schemas-cybersource-com:transaction-data-1.109\"><c:merchantReferenceCode>734dda9bb6446f2f2638ab7faf34682f</c:merchantReferenceCode><c:requestID>4335093172165000001515</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj//wSR1gMBn41YRu/WIkGLlo3asGzCbBky4VOjHT9/xXHSYBT9/xXHSbSA+RQkhk0ky3SA3+mwMCcjrAYDPxqwjd+sKWXL</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>888888</c:authorizationCode><c:avsCode>X</c:avsCode><c:avsCodeRaw>I1</c:avsCodeRaw><c:cvCode/><c:authorizedDateTime>2015-06-05T13:01:57Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccAuthReply><c:ccCaptureReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2015-06-05T13:01:57Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>19475060MAIKBSQG</c:reconciliationID></c:ccCaptureReply></c:replyMessage></soap:Body></soap:Envelope>"
+    read 1572 bytes
+    Conn close
+    POST_SCRUBBED
+  end
 
   def successful_purchase_response
     <<-XML

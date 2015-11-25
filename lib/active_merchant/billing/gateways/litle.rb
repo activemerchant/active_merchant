@@ -3,7 +3,7 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
-      SCHEMA_VERSION = '8.18'
+      SCHEMA_VERSION = '9.4'
 
       self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
       self.live_url = 'https://payments.litle.com/vap/communicator/online'
@@ -103,12 +103,17 @@ module ActiveMerchant #:nodoc:
         commit(void_type(kind), request)
       end
 
-      def store(creditcard, options = {})
+      def store(payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.registerTokenRequest(transaction_attributes(options)) do
-            doc.orderId(truncated(options[:order_id]))
-            doc.accountNumber(creditcard.number)
+            doc.orderId(truncate(options[:order_id], 24))
+            if payment_method.is_a?(String)
+              doc.paypageRegistrationId(payment_method)
+            else
+              doc.accountNumber(payment_method.number)
+              doc.cardValidationNum(payment_method.verification_value) if payment_method.verification_value
+            end
           end
         end
 
@@ -155,7 +160,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_purchase_params(doc, money, payment_method, options)
-        doc.orderId(truncated(options[:order_id]))
+        doc.orderId(truncate(options[:order_id], 24))
         doc.amount(money)
         add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
@@ -163,6 +168,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(doc, payment_method)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
+        add_debt_repayment(doc, options)
       end
 
       def add_descriptor(doc, options)
@@ -172,6 +178,10 @@ module ActiveMerchant #:nodoc:
             doc.descriptor(options[:descriptor_name]) if options[:descriptor_name]
           end
         end
+      end
+
+      def add_debt_repayment(doc, options)
+        doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
       def add_payment_method(doc, payment_method)
@@ -189,6 +199,11 @@ module ActiveMerchant #:nodoc:
             doc.number(payment_method.number)
             doc.expDate(exp_date(payment_method))
             doc.cardValidationNum(payment_method.verification_value)
+          end
+          if payment_method.is_a?(NetworkTokenizationCreditCard)
+            doc.cardholderAuthentication do
+              doc.authenticationValue(payment_method.payment_cryptogram)
+            end
           end
         end
       end
@@ -228,6 +243,8 @@ module ActiveMerchant #:nodoc:
       def add_order_source(doc, payment_method, options)
         if options[:order_source]
           doc.orderSource(options[:order_source])
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard)
+          doc.orderSource('applepay')
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.orderSource('retail')
         else
@@ -264,6 +281,12 @@ module ActiveMerchant #:nodoc:
           end
         end
 
+        if parsed.empty?
+          %w(response message).each do |attribute|
+            parsed[attribute.to_sym] = doc.xpath("//litleOnlineResponse").attribute(attribute).value
+          end
+        end
+
         parsed
       end
 
@@ -296,7 +319,7 @@ module ActiveMerchant #:nodoc:
 
       def transaction_attributes(options)
         attributes = {}
-        attributes[:id] = truncated(options[:id] || options[:order_id])
+        attributes[:id] = truncate(options[:id] || options[:order_id], 24)
         attributes[:reportGroup] = options[:merchant] || 'Default Report Group'
         attributes[:customerId] = options[:customer]
         attributes.delete_if { |key, value| value == nil }
@@ -321,21 +344,6 @@ module ActiveMerchant #:nodoc:
 
       def url
         test? ? test_url : live_url
-      end
-
-      def truncated(value)
-        return unless value
-        value[0..24]
-      end
-
-      def truncated_order_id(options)
-        return unless options[:order_id]
-        options[:order_id][0..24]
-      end
-
-      def truncated_id(options)
-        return unless options[:id]
-        options[:id][0..24]
       end
 
       def headers

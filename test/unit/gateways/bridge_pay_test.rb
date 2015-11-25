@@ -12,6 +12,7 @@ class BridgePayTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @check = check
     @amount = 100
     @options = {}
   end
@@ -32,6 +33,16 @@ class BridgePayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal 'Duplicate Transaction', response.message
+  end
+
+  def test_successful_purchase_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_purchase_with_echeck_response)
+
+    response = @gateway.purchase(@amount, @check)
+    assert_success response
+
+    assert_equal 'OK6269|1316661', response.authorization
+    assert response.test?
   end
 
   def test_authorize_and_capture
@@ -97,7 +108,7 @@ class BridgePayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, :billing_address => address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/Street=1234\+My\+Street/, data)
+      assert_match(/Street=456\+My\+Street/, data)
       assert_match(/Zip=K1C2N6/, data)
     end.respond_with(successful_purchase_response)
   end
@@ -126,6 +137,15 @@ class BridgePayTest < Test::Unit::TestCase
     assert_equal "Invalid Account Number", response.message
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_echeck_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(echeck_pre_scrubbed), echeck_post_scrubbed
+  end
 
   private
 
@@ -162,6 +182,19 @@ class BridgePayTest < Test::Unit::TestCase
         <GetCommercialCard>False</GetCommercialCard>
         <ExtData>InvNum=1,CardType=VISA</ExtData>
       </Response>
+    )
+  end
+
+  def successful_purchase_with_echeck_response
+    %(
+    <Response xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://TPISoft.com/SmartPayments/">
+      <Result>0</Result>
+      <RespMSG>Approved</RespMSG>
+      <Message>APPROVAL</Message>
+      <AuthCode>OK6269</AuthCode>
+      <PNRef>1316661</PNRef>
+      <GetCommercialCard>False</GetCommercialCard>
+    </Response>
     )
   end
 
@@ -262,6 +295,30 @@ class BridgePayTest < Test::Unit::TestCase
         <RespMSG>Original Transaction ID Not Found</RespMSG>
         <Message>Original PNRef is required.</Message>
       </Response>
+    )
+  end
+
+  def pre_scrubbed
+    %(
+      <- "Amount=1.00&PNRef=&InvNum=1914676616596fbf4c467c02facb81d1&CardNum=4000300011100000&ExpDate=0915&MagData=&NameOnCard=Longbob+Longsen&Zip=K1C2N6&Street=1234+My+Street&CVNum=123&ExtData=%3CForce%3ET%3C%2FForce%3E&UserName=Spre3676&Password=H3392nc5&TransType=Auth"
+    )
+  end
+
+  def post_scrubbed
+    %(
+      <- "Amount=1.00&PNRef=&InvNum=1914676616596fbf4c467c02facb81d1&CardNum=[FILTERED]&ExpDate=0915&MagData=&NameOnCard=Longbob+Longsen&Zip=K1C2N6&Street=1234+My+Street&CVNum=[FILTERED]&ExtData=%3CForce%3ET%3C%2FForce%3E&UserName=Spre3676&Password=[FILTERED]&TransType=Auth"
+    )
+  end
+
+  def echeck_pre_scrubbed
+    %(
+    <- UserName=Spre3676&Password=H3392nc5&TransType=Sale&Amount=1.00&PNRef=&InvNum=b3ca834652da047353eb96433b2ab7d8&CardNum=&ExpDate=&MagData=&NameOnCard=&Zip=K1C2N6&Street=456+My+Street&CVNum=&ExtData=%3CForce%3ET%3C%2FForce%3E&CheckNum=1001&TransitNum=490000018&AccountNum=1234567890&NameOnCheck=John+Doe&MICR="
+    )
+  end
+
+  def echeck_post_scrubbed
+    %(
+    <- UserName=Spre3676&Password=[FILTERED]&TransType=Sale&Amount=1.00&PNRef=&InvNum=b3ca834652da047353eb96433b2ab7d8&CardNum=[FILTERED]&ExpDate=&MagData=&NameOnCard=&Zip=K1C2N6&Street=456+My+Street&CVNum=[FILTERED]&ExtData=%3CForce%3ET%3C%2FForce%3E&CheckNum=1001&TransitNum=[FILTERED]&AccountNum=[FILTERED]&NameOnCheck=John+Doe&MICR="
     )
   end
 end

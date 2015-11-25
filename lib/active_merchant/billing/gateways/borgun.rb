@@ -4,11 +4,12 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BorgunGateway < Gateway
       self.display_name = "Borgun"
+      self.homepage_url = 'http://www.borgun.com'
 
       self.test_url = 'https://gatewaytest.borgun.is/ws/Heimir.pub.ws:Authorization'
       self.live_url = 'https://gateway01.borgun.is/ws/Heimir.pub.ws:Authorization'
 
-      self.supported_countries = ['IS']
+      self.supported_countries = ['IS', 'GB', 'HU', 'CZ', 'DE', 'DK', 'SE' ]
       self.default_currency = 'ISK'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb]
@@ -62,6 +63,16 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, tramount.to_i, options)
         add_reference(post, authorization)
         commit('void', post)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.gsub(%r((&lt;PAN&gt;)[^&]*(&lt;/PAN&gt;))i, '\1[FILTERED]\2').
+          gsub(%r((&lt;CVC2&gt;)[^&]*(&lt;/CVC2&gt;))i, '\1[FILTERED]\2').
+          gsub(%r(((?:\r\n)?Authorization: Basic )[^\r\n]+(\r\n)?), '\1[FILTERED]\2')
       end
 
       private

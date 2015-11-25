@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
     module CreditCardMethods
       CARD_COMPANIES = {
-        'visa'               => /^4\d{12}(\d{3})?$/,
+        'visa'               => /^4\d{12}(\d{3})?(\d{3})?$/,
         'master'             => /^(5[1-5]\d{4}|677189)\d{10}$/,
         'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/,
         'american_express'   => /^3[47]\d{13}$/,
@@ -49,11 +49,11 @@ module ActiveMerchant #:nodoc:
       def valid_card_verification_value?(cvv, brand)
         cvv.to_s =~ /^\d{#{card_verification_value_length(brand)}}$/
       end
-      
+
       def card_verification_value_length(brand)
         brand == 'american_express' ? 4 : 3
       end
-      
+
       def valid_issue_number?(number)
         (number.to_s =~ /^\d{1,2}$/)
       end
@@ -68,6 +68,7 @@ module ActiveMerchant #:nodoc:
         def valid_number?(number)
           valid_test_mode_card_number?(number) ||
             valid_card_number_length?(number) &&
+            valid_card_number_characters?(number) &&
             valid_checksum?(number)
         end
 
@@ -136,6 +137,10 @@ module ActiveMerchant #:nodoc:
 
         def valid_card_number_length?(number) #:nodoc:
           number.to_s.length >= 12
+        end
+
+        def valid_card_number_characters?(number) #:nodoc:
+          !number.to_s.match(/\D/)
         end
 
         def valid_test_mode_card_number?(number) #:nodoc:

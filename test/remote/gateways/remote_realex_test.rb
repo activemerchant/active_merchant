@@ -288,4 +288,21 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert rebate_response.authorization.length > 0
     assert_equal 'Successful', rebate_response.message
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visa_declined,
+      :order_id => generate_unique_id,
+      :description => 'Test Realex Purchase',
+      :billing_address => {
+        :zip => '90210',
+        :country => 'US'
+      }
+    )
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@visa_declined.number, clean_transcript)
+    assert_scrubbed(@visa_declined.verification_value.to_s, clean_transcript)
+  end
 end

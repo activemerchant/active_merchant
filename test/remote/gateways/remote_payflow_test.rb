@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemotePayflowTest < Test::Unit::TestCase
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = PayflowGateway.new(fixtures(:payflow))
 
@@ -82,6 +82,15 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_authorize_and_capture
     assert auth = @gateway.authorize(100, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(100, auth.authorization)
+    assert_success capture
+  end
+
+  def test_authorize_and_capture_with_three_d_secure_option
+    assert auth = @gateway.authorize(100, @credit_card, @options.merge(three_d_secure_option))
     assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
@@ -285,6 +294,18 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success credit
   end
 
+  def test_purchase_and_refund_with_three_d_secure_option
+    amount = 100
+
+    assert purchase = @gateway.purchase(amount, @credit_card, @options.merge(three_d_secure_option))
+    assert_success purchase
+    assert_equal 'Approved', purchase.message
+    assert !purchase.authorization.blank?
+
+    assert credit = @gateway.refund(amount, purchase.authorization)
+    assert_success credit
+  end
+
   # The default security setting for Payflow Pro accounts is Allow
   # non-referenced credits = No.
   #
@@ -309,5 +330,17 @@ class RemotePayflowTest < Test::Unit::TestCase
     @gateway.options[:verbosity] = 'HIGH'
     assert response = @gateway.purchase(100, @credit_card, @options)
     assert_match %r{^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}}, response.params['transaction_time']
+  end
+
+  def three_d_secure_option
+    {
+        :three_d_secure => {
+            :status => 'Y',
+            :authentication_id => 'QvDbSAxSiaQs241899E0',
+            :eci => '02',
+            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+        }
+    }
   end
 end

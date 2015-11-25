@@ -1,6 +1,9 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardStreamGateway < Gateway
+
+      THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE = "Specifying the :threeDSRequired initialization option is deprecated. Please use the `:threeds_required => true` *transaction* option instead."
+
       self.test_url = self.live_url = 'https://gateway.cardstream.com/direct/'
       self.money_format = :cents
       self.default_currency = 'GBP'
@@ -11,6 +14,7 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_CODES = {
         "AUD" => '036',
+        "BRL" => '986',
         "CAD" => '124',
         "CZK" => '203',
         "DKK" => '208',
@@ -61,10 +65,10 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :shared_secret)
+        @threeds_required = false
         if (options[:threeDSRequired])
-          @threeDSRequired = options[:threeDSRequired]
-        else
-          @threeDSRequired = 'N'
+          ActiveMerchant.deprecated(THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE)
+          @threeds_required = options[:threeDSRequired]
         end
         super
       end
@@ -74,7 +78,6 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_invoice(post, creditcard, money, options)
         add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
         add_customer_data(post, options)
         commit('PREAUTH', post)
       end
@@ -84,7 +87,6 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_invoice(post, creditcard, money, options)
         add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
         add_customer_data(post, options)
         commit('SALE', post)
       end
@@ -109,27 +111,38 @@ module ActiveMerchant #:nodoc:
         commit('REFUND', post)
       end
 
+      def verify(creditcard, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((cardNumber=)\d+), '\1[FILTERED]').
+          gsub(%r((CVV=)\d+), '\1[FILTERED]')
+      end
+
       private
 
       def add_amount(post, money, options)
         add_pair(post, :amount, amount(money), :required => true)
-        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)) || currency_code(self.default_currency))
+        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)))
       end
 
       def add_customer_data(post, options)
-        address = options[:billing_address] || options[:address]
-        add_pair(post, :customerPostCode, address[:zip])
         add_pair(post, :customerEmail, options[:email])
-        add_pair(post, :customerPhone, options[:phone])
-      end
-
-      def add_address(post, creditcard, options)
-        address = options[:billing_address] || options[:address]
-
-        return if address.nil?
-
-        add_pair(post, :customerAddress, address[:address1] + " " + (address[:address2].nil? ? "" : address[:address2]))
-        add_pair(post, :customerPostCode, address[:zip])
+        if (address = options[:billing_address] || options[:address])
+          add_pair(post, :customerAddress, "#{address[:address1]} #{address[:address2]}".strip)
+          add_pair(post, :customerPostCode, address[:zip])
+          add_pair(post, :customerPhone, options[:phone])
+        end
       end
 
       def add_invoice(post, credit_card, money, options)
@@ -140,6 +153,9 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
           add_pair(post, :item1GrossValue, amount(money))
         end
+
+        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
+        add_pair(post, :type, options[:type] || '1')
       end
 
       def add_creditcard(post, credit_card)
@@ -171,7 +187,7 @@ module ActiveMerchant #:nodoc:
         pairs = body.split("&")
         pairs.each do |pair|
           a = pair.split("=")
-          # because some values pairs dont have a value
+          # because some value pairs don't have a value
           result[a[0].to_sym] = a[1] == nil ? '' : CGI.unescape(a[1])
         end
         result
@@ -182,9 +198,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :merchantID => @options[:login],
           :action => action,
-          :type => '1', #Ecommerce
           :countryCode => self.supported_countries[0],
-          :threeDSRequired => @threeDSRequired #Disable 3d secure by default
         )
         # adds a signature to the post hash/array
         add_hmac(parameters)

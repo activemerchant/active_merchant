@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class FatZebraTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = FatZebraGateway.new(
                  :username => 'TEST',
@@ -47,6 +49,63 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, "e1q7dbj2", @options)
     assert_success response
 
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_multi_currency_purchase
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      body.match '"currency":"USD"'
+    }.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, "e1q7dbj2", @options.merge(:currency => 'USD'))
+    assert_success response
+
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_recurring_flag
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring: true))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(%r("extra":{"ecm":"32"}), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_descriptor
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      json = JSON.parse(body)
+      json['extra']['name'] == 'Merchant' && json['extra']['location'] == 'Location'
+    }.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, "e1q7dbj2", @options.merge(:merchant => 'Merchant', :merchant_location => 'Location'))
+    assert_success response
+
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+
+  end
+
+  def test_successful_authorization
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      body.match '"capture":false'
+    }.returns(successful_purchase_response)
+
+    assert response = @gateway.authorize(@amount, "e1q7dbj2", @options)
+    assert_success response
+
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      url =~ %r[purchases/e1q7dbj2/capture\z]
+    }.returns(successful_purchase_response)
+
+    response = @gateway.capture(@amount, "e1q7dbj2", @options)
+    assert_success response
     assert_equal '001-P-12345AA', response.authorization
     assert response.test?
   end
@@ -102,7 +161,7 @@ class FatZebraTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_refund_response)
 
-    assert response = @gateway.refund(100, "TEST", "Test refund")
+    assert response = @gateway.refund(100, "TEST")
     assert_success response
     assert_equal '003-R-7MNIUMY6', response.authorization
     assert response.test?
@@ -111,7 +170,7 @@ class FatZebraTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     @gateway.expects(:ssl_request).returns(unsuccessful_refund_response)
 
-    assert response = @gateway.refund(100, "TEST", "Test refund")
+    assert response = @gateway.refund(100, "TEST")
     assert_failure response
     assert response.test?
   end

@@ -14,12 +14,14 @@ Gem::Specification.new do |s|
   s.homepage = 'http://activemerchant.org/'
   s.rubyforge_project = 'activemerchant'
 
+  s.required_ruby_version = '>= 2'
+
   s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'
 
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
 
-  s.add_dependency('activesupport', '>= 3.2.14', '< 5.0.0')
+  s.add_dependency('activesupport', '>= 3.2.14', '< 5.1')
   s.add_dependency('i18n', '>= 0.6.9')
   s.add_dependency('builder', '>= 2.1.2', '< 4.0.0')
   s.add_dependency('nokogiri', "~> 1.4")

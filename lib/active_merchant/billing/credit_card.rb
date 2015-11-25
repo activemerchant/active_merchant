@@ -35,12 +35,13 @@ module ActiveMerchant #:nodoc:
     #
     # == Example Usage
     #   cc = CreditCard.new(
-    #     :first_name => 'Steve',
-    #     :last_name  => 'Smith',
-    #     :month      => '9',
-    #     :year       => '2010',
-    #     :brand      => 'visa',
-    #     :number     => '4242424242424242'
+    #     :first_name         => 'Steve',
+    #     :last_name          => 'Smith',
+    #     :month              => '9',
+    #     :year               => '2017',
+    #     :brand              => 'visa',
+    #     :number             => '4242424242424242',
+    #     :verification_value => '424'
     #   )
     #
     #   cc.validate # => {}
@@ -49,7 +50,13 @@ module ActiveMerchant #:nodoc:
     class CreditCard < Model
       include CreditCardMethods
 
-      cattr_accessor :require_verification_value
+      class << self
+        # Inherited, but can be overridden w/o changing parent's value
+        attr_accessor :require_verification_value
+        attr_accessor :require_name
+      end
+
+      self.require_name = true
       self.require_verification_value = true
 
       # Returns or sets the credit card number.
@@ -127,10 +134,68 @@ module ActiveMerchant #:nodoc:
       # @return [String] the verification value
       attr_accessor :verification_value
 
+      # Sets if the credit card requires a verification value.
+      #
+      # @return [Boolean]
+      def require_verification_value=(value)
+        @require_verification_value_set = true
+        @require_verification_value = value
+      end
+
+      # Returns if this credit card needs a verification value.
+      #
+      # By default this returns the configured value from `CreditCard.require_verification_value`,
+      # but one can set a per instance requirement with `credit_card.require_verification_value = false`.
+      #
+      # @return [Boolean]
+      def requires_verification_value?
+        @require_verification_value_set ||= false
+        if @require_verification_value_set
+          @require_verification_value
+        else
+          self.class.requires_verification_value?
+        end
+      end
+
       # Returns or sets the track data for the card
       #
       # @return [String]
       attr_accessor :track_data
+
+      # Returns or sets whether a card has been processed using manual entry.
+      #
+      # This attribute is optional and is only used by gateways who use this information in their transaction risk
+      # calculations. See {this page on 'card not present' transactions}[http://en.wikipedia.org/wiki/Card_not_present_transaction]
+      # for further explanation and examples of this kind of transaction.
+      #
+      # @return [true, false]
+      attr_accessor :manual_entry
+
+      # Returns or sets the ICC/ASN1 credit card data for a EMV transaction, typically this is a BER-encoded TLV string.
+      #
+      # @return [String]
+      attr_accessor :icc_data
+
+      # Returns or sets a fallback reason for a EMV transaction whereby the customer's card entered a fallback scenario.
+      # This can be an arbitrary string.
+      #
+      # @return [String]
+      attr_accessor :fallback_reason
+
+      # Returns or sets whether card-present card data has been read contactlessly.
+      #
+      # @return [true, false]
+      attr_accessor :contactless
+
+      # Returns the ciphertext of the card's encrypted PIN.
+      #
+      # @return [String]
+      attr_accessor :encrypted_pin_cryptogram
+
+      # Returns the Key Serial Number (KSN) of the card's encrypted PIN.
+      #
+      # @return [String]
+      attr_accessor :encrypted_pin_ksn
 
       def type
         ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
@@ -243,13 +308,23 @@ module ActiveMerchant #:nodoc:
         require_verification_value
       end
 
+      def self.requires_name?
+        require_name
+      end
+
+      def emv?
+        icc_data.present?
+      end
+
       private
 
       def validate_essential_attributes #:nodoc:
         errors = []
 
-        errors << [:first_name, "cannot be empty"] if first_name.blank?
-        errors << [:last_name,  "cannot be empty"] if last_name.blank?
+        if self.class.requires_name?
+          errors << [:first_name, "cannot be empty"] if first_name.blank?
+          errors << [:last_name,  "cannot be empty"] if last_name.blank?
+        end
 
         if(empty?(month) || empty?(year))
           errors << [:month, "is required"] if empty?(month)
@@ -294,7 +369,7 @@ module ActiveMerchant #:nodoc:
           unless valid_card_verification_value?(verification_value, brand)
             errors << [:verification_value, "should be #{card_verification_value_length(brand)} digits"]
           end
-        elsif CreditCard.requires_verification_value?
+        elsif requires_verification_value?
           errors << [:verification_value, "is required"]
         end
         errors

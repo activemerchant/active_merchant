@@ -83,11 +83,11 @@ module ActiveMerchant
       end
     end
 
-    def assert_valid(model)
+    def assert_valid(model, message=nil)
       errors = model.validate
 
       clean_backtrace do
-        assert_equal({}, errors, "Expected to be valid")
+        assert_equal({}, errors, (message || "Expected to be valid"))
       end
 
       errors
@@ -123,7 +123,8 @@ module ActiveMerchant
     end
 
     def assert_scrubbed(unexpected_value, transcript)
-      refute transcript.include?(unexpected_value), "Expected #{unexpected_value} to be scrubbed out of transcript"
+      regexp = (Regexp === unexpected_value ? unexpected_value : Regexp.new(Regexp.quote(unexpected_value.to_s)))
+      refute_match regexp, transcript, "Expected the value to be scrubbed out of the transcript"
     end
 
     private
@@ -152,7 +153,7 @@ module ActiveMerchant
         :year => default_expiration_date.year,
         :first_name => 'Longbob',
         :last_name => 'Longsen',
-        :verification_value => '123',
+        :verification_value => options[:verification_value] || '123',
         :brand => 'visa'
       }.update(options)
 
@@ -216,7 +217,7 @@ module ActiveMerchant
     def address(options = {})
       {
         name:     'Jim Smith',
-        address1: '1234 My Street',
+        address1: '456 My Street',
         address2: 'Apt 1',
         company:  'Widgets Inc',
         city:     'Ottawa',
