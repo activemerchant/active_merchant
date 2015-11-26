@@ -69,7 +69,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_retail_market_type_included_in_swipe_transactions_with_valid_track_data
+  def test_retail_market_type_device_type_included_in_swipe_transactions_with_valid_track_data
     [BAD_TRACK_DATA, nil].each do |track|
       @credit_card.track_data = track
       stub_comms do
@@ -89,6 +89,22 @@ class AuthorizeNetTest < Test::Unit::TestCase
         parse(data) do |doc|
           assert_not_nil doc.at_xpath('//retail')
           assert_equal "2", doc.at_xpath('//retail/marketType').content
+          assert_equal "7", doc.at_xpath('//retail/deviceType').content
+        end
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_device_type_used_from_options_if_included_with_valid_track_data
+    [TRACK1_DATA, TRACK2_DATA].each do |track|
+      @credit_card.track_data = track
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card, {device_type: 1})
+      end.check_request do |endpoint, data, headers|
+        parse(data) do |doc|
+          assert_not_nil doc.at_xpath('//retail')
+          assert_equal "2", doc.at_xpath('//retail/marketType').content
+          assert_equal "1", doc.at_xpath('//retail/deviceType').content
         end
       end.respond_with(successful_purchase_response)
     end
@@ -114,6 +130,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_not_nil doc.at_xpath('//retail')
         assert_equal "1", doc.at_xpath('//retail/marketType').content
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_market_type_can_be_specified
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, market_type: 0)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal "0", doc.at_xpath('//retail/marketType').content
       end
     end.respond_with(successful_purchase_response)
   end
@@ -245,6 +271,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
       @gateway.purchase(@amount, credit_card('4000100011112224', last_name: 'Wåhlin'))
     end.check_request do |endpoint, data, headers|
       assert_match(/Wåhlin/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_partial_auth
+    stub_comms do
+      @gateway.purchase(100, credit_card, disable_partial_auth: true)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<settingName>allowPartialAuth<\/settingName>/, data)
+      assert_match(/<settingValue>false<\/settingValue>/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -924,7 +959,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       -> "Connection: close\r\n"
       -> "\r\n"
       reading 973 bytes...
-      -> "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"utf-8\"?><createTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\"><refId>1</refId><messages><resultCode>Ok</resultCode><message><code>I00001</code><text>Successful.</text></message></messages><transactionResponse><responseCode>1</responseCode><authCode>H6K4BU</authCode><avsResultCode>Y</avsResultCode><cvvResultCode>P</cvvResultCode><cavvResultCode>2</cavvResultCode><transId>2227534280</transId><refTransID /><transHash>FE7A5BA8F209227CE1EC4B07C4A1BB81</transHash><testRequest>0</testRequest><accountNumber>XXXX2224</accountNumber><accountType>Visa</accountType><messages><message><code>1</code><description>This transaction has been approved.</description></message></messages><userFields><userField><name>x_currency_code</name><value>USD</value></userField></userFields></transactionResponse></createTransactionResponse>"
+      -> "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"utf-8\"?><createTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\"><refId>1</refId><messages><resultCode>Ok</resultCode><message><code>I00001</code><text>Successful.</text></message></messages><transactionResponse><responseCode>1</responseCode><authCode>H6K4BU</authCode><avsResultCode>Y</avsResultCode><cvvResultCode>P</cvvResultCode><cavvResultCode>2</cavvResultCode><transId>2227534280</transId><refTransID /><transHash>FE7A5BA8F209227CE1EC4B07C4A1BB81</transHash><testRequest>0</testRequest><accountNumber>[FILTERED]</accountNumber><accountType>Visa</accountType><messages><message><code>1</code><description>This transaction has been approved.</description></message></messages><userFields><userField><name>x_currency_code</name><value>USD</value></userField></userFields></transactionResponse></createTransactionResponse>"
       read 973 bytes
       Conn close
     PRE_SCRUBBED

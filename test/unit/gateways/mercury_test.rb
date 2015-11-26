@@ -4,7 +4,7 @@ class MercuryTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
@@ -33,6 +33,16 @@ class MercuryTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_allow_partial_auth
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(allow_partial_auth: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/PartialAuth>Allow</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -53,12 +63,40 @@ class MercuryTest < Test::Unit::TestCase
     assert refund.test?
   end
 
-  def test_add_swipe_data_with_credit_card
-    @credit_card.track_data = "data"
+  def test_card_present_with_track_1_data
+    track_data = "%B4003000123456781^LONGSEN/L. ^15121200000000000000123?"
+    @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match(/Track1>data</, data)
+      assert_match(/<Track1>#{Regexp.escape(track_data)}<\/Track1>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_card_present_with_track_2_data
+    track_data = ";5413330089010608=2512101097750213?"
+    stripped_track_data = "5413330089010608=2512101097750213"
+    @credit_card.track_data = track_data
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<Track2>#{Regexp.escape(stripped_track_data)}<\/Track2>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_card_present_with_invalid_data
+    track_data = "this is not valid track data"
+    @credit_card.track_data = track_data
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<Track1>#{Regexp.escape(track_data)}<\/Track1>/, data)
     end.respond_with(successful_purchase_response)
 
     assert_instance_of Response, response

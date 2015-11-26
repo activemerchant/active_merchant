@@ -10,6 +10,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
 
     @options = {
       order_id: "1",
+      invoice: "I1234",
       billing_address: address,
       description: "Store Purchase",
       redirect_url: "http://bogus.com"
@@ -31,6 +32,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
       transaction_type: "Purchase",
       description: "Description",
       order_id: "orderid1",
+      invoice: "I1234",
       currency: "AUD",
       email: "jim@example.com",
       billing_address: {
@@ -66,6 +68,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_successful_purchase_with_overly_long_fields
     options = {
       order_id: "OrderId must be less than 50 characters otherwise it fails",
+      invoice: "Max 12 chars",
       description: "EWay Rapid transactions fail if the description is more than 64 characters.",
       billing_address: {
         address1: "The Billing Address 1 Cannot Be More Than Fifty Characters.",
@@ -184,5 +187,15 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "Unauthorized", response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(100, @credit_card_success, @params)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card_success.number, clean_transcript)
+    assert_scrubbed(@credit_card_success.verification_value.to_s, clean_transcript)
   end
 end

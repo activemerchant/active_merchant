@@ -6,7 +6,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
-    @options = { :billing_address => address(:zip => "27614", :state => "NC")}
+    @options = { :billing_address => address(:zip => "27614", :state => "NC"), :shipping_address => address }
     @amount = 100
   end
 
@@ -38,6 +38,12 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_extra_details
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => generate_unique_id, :description => "socool"))
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
+  def test_successful_purchase_with_extra_test_mode
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:test_mode => true))
     assert_equal 'Success', response.message
     assert_success response
   end

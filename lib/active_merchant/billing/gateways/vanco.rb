@@ -132,6 +132,7 @@ module ActiveMerchant
               add_client_id(doc)
               add_amount(doc, money, options)
               add_payment_method(doc, payment_method, options)
+              add_options(doc, options)
               add_purchase_noise(doc)
             end
           end
@@ -196,21 +197,26 @@ module ActiveMerchant
       end
 
       def add_credit_card(doc, credit_card, options)
-        address = options[:billing_address]
-
         doc.AccountNumber(credit_card.number)
         doc.CustomerName("#{credit_card.last_name}, #{credit_card.first_name}")
         doc.CardExpMonth(format(credit_card.month, :two_digits))
         doc.CardExpYear(format(credit_card.year, :two_digits))
         doc.CardCVV2(credit_card.verification_value)
         doc.CardBillingName(credit_card.name)
+        doc.AccountType("CC")
+        add_billing_address(doc, options)
+      end
+
+      def add_billing_address(doc, options)
+        address = options[:billing_address]
+        return unless address
+
         doc.CardBillingAddr1(address[:address1])
         doc.CardBillingAddr2(address[:address2])
         doc.CardBillingCity(address[:city])
         doc.CardBillingState(address[:state])
         doc.CardBillingZip(address[:zip])
         doc.CardBillingCountryCode(address[:country])
-        doc.AccountType("CC")
       end
 
       def add_echeck(doc, echeck)
@@ -236,6 +242,10 @@ module ActiveMerchant
         doc.ContactPhone("1234567890")
         doc.ContactExtension("None")
         doc.ReasonForCredit("Refund requested")
+      end
+
+      def add_options(doc, options)
+        doc.CustomerIPAddress(options[:ip]) if options[:ip]
       end
 
       def add_client_id(doc)

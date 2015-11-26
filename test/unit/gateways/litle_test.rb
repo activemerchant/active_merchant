@@ -13,6 +13,14 @@ class LitleTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        month: '01',
+        year: '2012',
+        brand: "visa",
+        number:  "44444444400009",
+        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+      })
     @amount = 100
     @options = {}
   end
@@ -89,6 +97,23 @@ class LitleTest < Test::Unit::TestCase
       assert_match(%r(<debtRepayment>true</debtRepayment>), data)
     end.respond_with(successful_authorize_response)
   end
+
+  def test_passing_payment_cryptogram
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_apple_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/BwABBJQ1AgAAAAAgJDUCAAAAAAA=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_add_applepay_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_apple_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>applepay</orderSource>", data
+    end.respond_with(successful_purchase_response)
+  end
+
 
   def test_successful_authorize_and_capture
     response = stub_comms do
@@ -217,6 +242,15 @@ class LitleTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal "1111222233330123", response.authorization
+  end
+
+  def test_successful_store_with_paypage_registration_id
+    response = stub_comms do
+      @gateway.store("cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=")
+    end.respond_with(successful_store_paypage_response)
+
+    assert_success response
+    assert_equal "1111222233334444", response.authorization
   end
 
   def test_failed_store
@@ -485,6 +519,21 @@ class LitleTest < Test::Unit::TestCase
           <message>Account number was successfully registered</message>
           <bin>445711</bin>
           <type>VI</type>
+        </registerTokenResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_store_paypage_response
+    %(
+      <litleOnlineResponse version='8.2' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <registerTokenResponse id='99999' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>222358384397377801</litleTxnId>
+          <orderId>F12345</orderId>
+          <litleToken>1111222233334444</litleToken>
+          <response>801</response>
+          <responseTime>2015-05-20T14:37:22</responseTime>
+          <message>Account number was successfully registered</message>
         </registerTokenResponse>
       </litleOnlineResponse>
     )

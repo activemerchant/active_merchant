@@ -51,6 +51,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_remembered_amount(post, authorization)
         add_tax(post, options)
+        add_order_id(post, options)
 
         commit("Void", post)
       end
@@ -95,9 +96,9 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
         post[:CurrencyCode] = options[:currency] || currency(money)
-        post[:InvoiceNumber] = options[:order_id]
         post[:InvoiceDetail] = options[:invoice_detail] if options[:invoice_detail]
         post[:CustomerCode] = options[:customer_code] if options[:customer_code]
+        add_order_id(post, options)
         add_tax(post, options)
       end
 
@@ -126,6 +127,10 @@ module ActiveMerchant #:nodoc:
         post[:IMEI] = nil
       end
 
+      def add_order_id(post, options)
+        post[:InvoiceNumber] = options[:order_id]
+      end
+
       def add_tax(post, options)
         post[:TaxAmount] = amount(options[:tax] || 0)
       end
@@ -148,7 +153,8 @@ module ActiveMerchant #:nodoc:
 
         data = build_request(post)
         begin
-          raw = parse(ssl_post(self.live_url, data, headers))
+          xml = ssl_post(self.live_url, data, headers)
+          raw = parse(xml)
         rescue ActiveMerchant::ResponseError => e
           if(e.response.code == "500" && e.response.body.start_with?("<s:Envelope"))
             raw = {
@@ -166,7 +172,9 @@ module ActiveMerchant #:nodoc:
           raw,
           authorization: authorization_from(post, raw),
           error_code: error_code_from(succeeded, raw),
-          test: test?
+          test: test?,
+          cvv_result: cvv_result_from_xml(xml),
+          avs_result: avs_result_from_xml(xml)
         )
       end
 
@@ -256,6 +264,63 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         succeeded ? nil : STANDARD_ERROR_CODE_MAPPING[response[:result]]
+      end
+
+      def cvv_result_from_xml(xml)
+        ActiveMerchant::Billing::CVVResult.new(cvv_result_code(xml))
+      end
+
+      def avs_result_from_xml(xml)
+        ActiveMerchant::Billing::AVSResult.new(code: avs_result_code(xml))
+      end
+
+      def cvv_result_code(xml)
+        cvv = validation_result_element(xml, "CVV")
+        return nil unless cvv
+        validation_result_matches?(*validation_result_element_text(cvv.parent)) ? 'M' : 'N'
+      end
+
+      def avs_result_code(xml)
+        billing_address_elem = validation_result_element(xml, "Billing Address")
+        zip_code_elem = validation_result_element(xml, "Zip Code")
+
+        return nil unless billing_address_elem && zip_code_elem
+
+        billing_matches = avs_result_matches(billing_address_elem)
+        zip_matches = avs_result_matches(zip_code_elem)
+
+        if billing_matches && zip_matches
+          'D'
+        elsif !billing_matches && zip_matches
+          'P'
+        elsif billing_matches && !zip_matches
+          'B'
+        else
+          'C'
+        end
+      end
+
+      def avs_result_matches(elem)
+        validation_result_matches?(*validation_result_element_text(elem.parent))
+      end
+
+      def validation_result_element(xml, name)
+        doc = Nokogiri::XML(xml)
+        doc.remove_namespaces!
+        doc.at_xpath("//ParameterValidationResultList//ParameterValidationResult//Name[text() = '#{name}']")
+      end
+
+      def validation_result_element_text(element)
+        result_text = element.elements.detect { |elem|
+          elem.name == "Result"
+        }.children.detect { |elem| elem.text }.text
+
+        result_text.split(";").collect(&:strip)
+      end
+
+      def validation_result_matches?(present, match)
+        present.downcase.start_with?('present') &&
+          match.downcase.start_with?('match')
       end
     end
   end

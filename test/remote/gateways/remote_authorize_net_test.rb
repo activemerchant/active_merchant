@@ -81,6 +81,11 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_purchase_with_disable_partial_authorize
+    purchase = @gateway.purchase(46225, @credit_card, @options.merge(disable_partial_auth: true))
+    assert_success purchase
+  end
+
   def test_successful_authorize_with_email_and_ip
     options = @options.merge({email: 'hello@example.com', ip: '127.0.0.1'})
     auth = @gateway.authorize(@amount, @credit_card, options)
@@ -100,7 +105,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_card_present_authorize_and_capture_with_track_data_only
     track_credit_card = ActiveMerchant::Billing::CreditCard.new(:track_data => '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
-    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert authorization = @gateway.authorize(@amount, track_credit_card, @options)
     assert_success authorization
 
     capture = @gateway.capture(@amount, authorization.authorization)

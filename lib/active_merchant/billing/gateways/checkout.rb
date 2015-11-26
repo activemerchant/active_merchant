@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.money_format = :decimals
 
-      self.supported_countries = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'MU', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'US']
+      self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
       self.homepage_url = 'https://www.checkout.com/'

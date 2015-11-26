@@ -118,6 +118,38 @@ class CardStreamTest < Test::Unit::TestCase
     assert_equal "CARD DECLINED", response.message
   end
 
+  def test_purchase_options
+
+    # Default
+    purchase = stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/type=1/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+
+    purchase = stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(type: 2))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/type=2/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+  end
+
+  def test_successful_purchase_without_street_address
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(142, @visacreditcard, billing_address: {state: "Northampton"})
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_successful_purchase_without_any_address
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(142, @visacreditcard)
+    assert_equal 'APPROVED', response.message
+  end
+
   def test_hmac_signature_added_to_post
     post_params = "action=SALE&amount=10000&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")
@@ -127,6 +159,42 @@ class CardStreamTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     @gateway.purchase(10000, @visacreditcard, @visacredit_options)
+  end
+
+  def test_3ds_response
+    purchase = stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(threeds_required: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/threeDSRequired=Y/, data)
+    end.respond_with(successful_purchase_response_with_3dsecure)
+
+    assert_failure purchase # 3DS required means purchase not _yet_ successful
+    assert_equal "UDNLRVk6eHJlZj0xNTA4MDYxNVJaMThSSjE1Uko2NFlWWg==", purchase.params["threeDSMD"]
+    assert_equal "eJxVUttuwjAM/ZWKD2iaQrnJjVQGA7TBGFSTeMxSC8rohTRd2d8vKe0YD5F8jh37\r\n+CQQHiXidIeilMhghUXBD2jFkd/xPNHtCz747EaCdhhsgi1eGHyjLOIsZdR2bBdI\r\nC/VVKY48VQy4uEyWa+YN6LDbA9JASFAup2zk9Tx3pOkbhJQnyHa5FhGdf6wQC2UF\r\nQmRlqizdvc5CDeUPG7p9IC2AUp7ZUam8GBNSVZUtuIwKJZEntsgSAsQUALnr2pQm\r\nKnTDaxyx1TSoHs/BW5/2zlsofCCmAiKukLkO9Zyh07dob0yHYzoAUvPAE6OEzScb\r\ni7q2o9U2DORmUHAD1DWZ/wxoqyWmot2nRYDXPEtRV+gLfzFEWAgWrCxlrMmbFbQG\r\nQwO57/S0MM4LpU1dxM/hrJx9zU8f6/3WuZxGL6/vle+bt6gLzKhYe6h3u80yAIhp\r\nQZpnJs1X0NHDF/kFvj+6mg==", purchase.params["threeDSPaReq"]
+    assert_equal "https://dropit.3dsecure.net:9443/PIT/ACS", purchase.params["threeDSACSURL"]
+  end
+
+  def test_deprecated_3ds_required
+    assert_deprecation_warning(CardStreamGateway::THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE) do
+      @gateway = CardStreamGateway.new(
+        :login => 'login',
+        :shared_secret => 'secret',
+        :threeDSRequired => true
+      )
+    end
+    stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/threeDSRequired=Y/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_default_3dsecure_required
+    stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/threeDSRequired=N/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_transcript_scrubbing
@@ -153,6 +221,10 @@ class CardStreamTest < Test::Unit::TestCase
 
   def successful_purchase_response
     "merchantID=0000000&threeDSEnabled=Y&merchantDescription=General+test+account+with+AVS%2FCV2+checking&amount=142&currencyCode=826&transactionUnique=27a594210e27846c8e9102647f210586&orderRef=AM+test+purchase&customerName=Longbob+Longsen&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&action=SALE&type=1&countryCode=826&merchantAlias=0000992&remoteAddress=80.229.33.63&responseCode=0&responseMessage=AUTHCODE%3A635959&xref=13021914LS06DW22NW22LVJ&threeDSEnrolled=U&threeDSXID=00000000000004717491&transactionID=4717491&transactionPreviousID=0&timestamp=2013-02-19+14%3A06%3A44&amountReceived=142&avscv2ResponseCode=222100&avscv2ResponseMessage=ALL+MATCH&avscv2AuthEntity=merchant+host&cv2Check=matched&addressCheck=matched&postcodeCheck=matched&cardNumberMask=%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A0821&cardTypeCode=VC&cardType=Visa+Credit&threeDSErrorCode=-1&threeDSErrorDescription=Error+while+attempting+to+send+the+request+to%3A+https%3A%2F%2F3dstest.universalpaymentgateway.com%3A4343%2FAPI%0A%0DPlease+make+sure+that+ActiveMerchant+server+is+running+and+the+URL+is+valid.+ERROR_INTERNET_CANNOT_CONNECT%3A+The+attempt+to+connect+to+the+server+failed.&threeDSMerchantPref=PROCEED&threeDSVETimestamp=2013-02-19+14%3A06%3A22&currencyExponent=2&responseStatus=0&merchantName=CARDSTREAM+TEST&merchantID2=100001"
+  end
+
+  def successful_purchase_response_with_3dsecure
+    "responseCode=65802&responseMessage=3DS+AUTHENTICATION+REQUIRED&responseStatus=2&merchantID=103191&threeDSEnabled=Y&threeDSCheckPref=not+known%2Cnot+checked%2Cauthenticated%2Cnot+authenticated%2Cattempted+authentication&avscv2CheckEnabled=N&cv2CheckPref=not+known%2Cnot+checked%2Cmatched%2Cnot+matched%2Cpartially+matched&addressCheckPref=not+known%2Cnot+checked%2Cmatched%2Cnot+matched%2Cpartially+matched&postcodeCheckPref=not+known%2Cnot+checked%2Cmatched%2Cnot+matched%2Cpartially+matched&cardCVVMandatory=Y&customerID=1749&eReceiptsEnabled=N&eReceiptsStoreID=1&amount=1202&currencyCode=826&transactionUnique=42e13d06ce4d5f5e3eb4868d29baa8bb&orderRef=AM+test+purchase&threeDSRequired=Y&customerName=Longbob+Longsen&customerAddress=25+The+Larches&customerPostCode=LE10+2RT&action=SALE&type=1&countryCode=826&customerPostcode=LE10+2RT&customerReceiptsRequired=N&state=finished&remoteAddress=45.37.180.92&requestMerchantID=103191&processMerchantID=103191&xref=15080615RZ18RJ15RJ64YVZ&cardExpiryDate=1220&threeDSXID=MDAwMDAwMDAwMDAwMDg5NjY0OTc%3D&threeDSEnrolled=Y&transactionID=8966497&cardNumberMask=%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A1112&cardType=Visa+Credit&cardTypeCode=VC&cardScheme=Visa+&cardSchemeCode=VC&cardIssuer=Unknown&cardIssuerCountry=Unknown&cardIssuerCountryCode=XXX&threeDSPaReq=eJxVUttuwjAM%2FZWKD2iaQrnJjVQGA7TBGFSTeMxSC8rohTRd2d8vKe0YD5F8jh37%0D%0A%2BCQQHiXidIeilMhghUXBD2jFkd%2FxPNHtCz747EaCdhhsgi1eGHyjLOIsZdR2bBdI%0D%0AC%2FVVKY48VQy4uEyWa%2BYN6LDbA9JASFAup2zk9Tx3pOkbhJQnyHa5FhGdf6wQC2UF%0D%0AQmRlqizdvc5CDeUPG7p9IC2AUp7ZUam8GBNSVZUtuIwKJZEntsgSAsQUALnr2pQm%0D%0AKnTDaxyx1TSoHs%2FBW5%2F2zlsofCCmAiKukLkO9Zyh07dob0yHYzoAUvPAE6OEzScb%0D%0Ai7q2o9U2DORmUHAD1DWZ%2FwxoqyWmot2nRYDXPEtRV%2BgLfzFEWAgWrCxlrMmbFbQG%0D%0AQwO57%2FS0MM4LpU1dxM%2FhrJx9zU8f6%2F3WuZxGL6%2Fvle%2Bbt6gLzKhYe6h3u80yAIhp%0D%0AQZpnJs1X0NHDF%2FkFvj%2B6mg%3D%3D&threeDSACSURL=https%3A%2F%2Fdropit.3dsecure.net%3A9443%2FPIT%2FACS&threeDSVETimestamp=2015-08-06+15%3A18%3A15&threeDSCheck=not+checked&vcsResponseCode=0&vcsResponseMessage=Success+-+no+velocity+check+rules+applied&currencyExponent=2&threeDSMD=UDNLRVk6eHJlZj0xNTA4MDYxNVJaMThSSjE1Uko2NFlWWg%3D%3D&timestamp=2015-08-06+15%3A18%3A17&threeDSResponseCode=65802&threeDSResponseMessage=3DS+AUTHENTICATION+REQUIRED&signature=8551e3f1c77b6cfa78e154d99ffb05fdeabbae48a7ce723a3464047731ad98a1c4bfe0b7dfdf46de7ff3dab66b3e2e365025fc9ff3a74d86ae4378c8cc985d88"
   end
 
   def successful_cancellation_response

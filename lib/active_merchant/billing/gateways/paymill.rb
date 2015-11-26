@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         post[:preauthorization] = preauth(authorization)
-        post[:description] = options[:description]
+        post[:description] = options[:order_id]
         post[:source] = 'active_merchant'
         commit(:post, 'transactions', post)
       end
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         post[:amount] = amount(money)
-        post[:description] = options[:description]
+        post[:description] = options[:order_id]
         commit(:post, "refunds/#{transaction_id(authorization)}", post)
       end
 
@@ -49,6 +49,17 @@ module ActiveMerchant #:nodoc:
 
       def store(credit_card, options={})
         save_card(credit_card)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(account.number=)(\d*)/, '\1[FILTERED]').
+          gsub(/(account.verification=)(\d*)/, '\1[FILTERED]')
       end
 
       private
@@ -117,7 +128,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         post[:token] = card_token
-        post[:description] = options[:description]
+        post[:description] = options[:order_id]
         post[:source] = 'active_merchant'
         commit(:post, 'transactions', post)
       end
@@ -127,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         post[:token] = card_token
-        post[:description] = options[:description]
+        post[:description] = options[:order_id]
         post[:source] = 'active_merchant'
         commit(:post, 'preauthorizations', post)
       end
@@ -185,46 +196,103 @@ module ActiveMerchant #:nodoc:
       end
 
       RESPONSE_CODES = {
-        10001 => "General undefined response.",
-        10002 => "Still waiting on something.",
+        10001 => "Undefined response",
+        10002 => "Waiting for something",
+        11000 => "Retry request at a later time",
 
-        20000 => "General success response.",
+        20000 => "Operation successful",
+        20100 => "Funds held by acquirer",
+        20101 => "Funds held by acquirer because merchant is new",
+        20200 => "Transaction reversed",
+        20201 => "Reversed due to chargeback",
+        20202 => "Reversed due to money-back guarantee",
+        20203 => "Reversed due to complaint by buyer",
+        20204 => "Payment has been refunded",
+        20300 => "Reversal has been canceled",
 
-        40000 => "General problem with data.",
-        40001 => "General problem with payment data.",
-        40100 => "Problem with credit card data.",
-        40101 => "Problem with cvv.",
-        40102 => "Card expired or not yet valid.",
-        40103 => "Limit exceeded.",
-        40104 => "Card invalid.",
-        40105 => "Expiry date not valid.",
-        40106 => "Credit card brand required.",
-        40200 => "Problem with bank account data.",
-        40201 => "Bank account data combination mismatch.",
-        40202 => "User authentication failed.",
-        40300 => "Problem with 3d secure data.",
-        40301 => "Currency / amount mismatch",
-        40400 => "Problem with input data.",
-        40401 => "Amount too low or zero.",
-        40402 => "Usage field too long.",
-        40403 => "Currency not allowed.",
+        30000 => "Transaction still in progress",
+        30100 => "Transaction has been accepted",
+        31000 => "Transaction pending",
+        31100 => "Pending due to address",
+        31101 => "Pending due to uncleared eCheck",
+        31102 => "Pending due to risk review",
+        31103 => "Pending due regulatory review",
+        31104 => "Pending due to unregistered/unconfirmed receiver",
+        31200 => "Pending due to unverified account",
+        31201 => "Pending due to non-captured funds",
+        31202 => "Pending due to international account (accept manually)",
+        31203 => "Pending due to currency conflict (accept manually)",
+        31204 => "Pending due to fraud filters (accept manually)",
 
-        50000 => "General problem with backend.",
-        50001 => "Country blacklisted.",
-        50100 => "Technical error with credit card.",
-        50101 => "Error limit exceeded.",
-        50102 => "Card declined by authorization system.",
-        50103 => "Manipulation or stolen card.",
-        50104 => "Card restricted.",
-        50105 => "Invalid card configuration data.",
-        50200 => "Technical error with bank account.",
-        50201 => "Card blacklisted.",
-        50300 => "Technical error with 3D secure.",
-        50400 => "Decline because of risk issues.",
-        50500 => "General timeout.",
-        50501 => "Timeout on side of the acquirer.",
-        50502 => "Risk management transaction timeout.",
-        50600 => "Duplicate transaction."
+
+        40000 => "Problem with transaction data",
+        40001 => "Problem with payment data",
+        40002 => "Invalid checksum",
+        40100 => "Problem with credit card data",
+        40101 => "Problem with CVV",
+        40102 => "Card expired or not yet valid",
+        40103 => "Card limit exceeded",
+        40104 => "Card is not valid",
+        40105 => "Expiry date not valid",
+        40106 => "Credit card brand required",
+        40200 => "Problem with bank account data",
+        40201 => "Bank account data combination mismatch",
+        40202 => "User authentication failed",
+        40300 => "Problem with 3-D Secure data",
+        40301 => "Currency/amount mismatch",
+        40400 => "Problem with input data",
+        40401 => "Amount too low or zero",
+        40402 => "Usage field too long",
+        40403 => "Currency not allowed",
+        40410 => "Problem with shopping cart data",
+        40420 => "Problem with address data",
+        40500 => "Permission error with acquirer API",
+        40510 => "Rate limit reached for acquirer API",
+
+        50000 => "Problem with back end",
+        50001 => "Country blacklisted",
+        50002 => "IP address blacklisted",
+        50004 => "Live mode not allowed",
+        50005 => "Insufficient permissions (API key)",
+        50100 => "Technical error with credit card",
+        50101 => "Error limit exceeded",
+        50102 => "Card declined",
+        50103 => "Manipulation or stolen card",
+        50104 => "Card restricted",
+        50105 => "Invalid configuration data",
+        50200 => "Technical error with bank account",
+        50201 => "Account blacklisted",
+        50300 => "Technical error with 3-D Secure",
+        50400 => "Declined because of risk issues",
+        50401 => "Checksum was wrong",
+        50402 => "Bank account number was invalid (formal check)",
+        50403 => "Technical error with risk check",
+        50404 => "Unknown error with risk check",
+        50405 => "Unknown bank code",
+        50406 => "Open chargeback",
+        50407 => "Historical chargeback",
+        50408 => "Institution / public bank account (NCA)",
+        50409 => "KUNO/Fraud",
+        50410 => "Personal Account Protection (PAP)",
+        50420 => "Rejected due to acquirer fraud settings",
+        50430 => "Rejected due to acquirer risk settings",
+        50440 => "Failed due to restrictions with acquirer account",
+        50450 => "Failed due to restrictions with user account",
+        50500 => "General timeout",
+        50501 => "Timeout on side of the acquirer",
+        50502 => "Risk management transaction timeout",
+        50600 => "Duplicate operation",
+        50700 => "Cancelled by user",
+        50710 => "Failed due to funding source",
+        50711 => "Payment method not usable, use other payment method",
+        50712 => "Limit of funding source was exceeded",
+        50713 => "Means of payment not reusable (canceled by user)",
+        50714 => "Means of payment not reusable (expired)",
+        50720 => "Rejected by acquirer",
+        50730 => "Transaction denied by merchant",
+        50800 => "Preauthorisation failed",
+        50810 => "Authorisation has been voided",
+        50820 => "Authorisation period expired"
       }
 
       def response_message(parsed_response)

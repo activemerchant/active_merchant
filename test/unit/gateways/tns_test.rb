@@ -91,6 +91,22 @@ class TnsTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_passing_alpha3_country_code
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, :billing_address => {country: "US"})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/USA/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_non_existent_country
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, :billing_address => {country: "Blah"})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/"country":null/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_passing_cvv
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)

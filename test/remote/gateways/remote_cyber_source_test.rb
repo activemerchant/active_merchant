@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemoteCyberSourceTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = CyberSourceGateway.new({nexus: "NC"}.merge(fixtures(:cyber_source)))
 
