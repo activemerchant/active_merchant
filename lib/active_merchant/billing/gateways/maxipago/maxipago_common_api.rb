@@ -30,6 +30,17 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def common_purchase(money, creditcard, options)
+        post = {}
+        add_aux_data(post, options)
+        add_amount(post, money)
+        add_creditcard(post, creditcard)
+        add_name(post, creditcard)
+        add_address(post, options)
+
+        commit(build_sale_request(post))
+      end
+
       private
 
       def add_aux_data(post, options)

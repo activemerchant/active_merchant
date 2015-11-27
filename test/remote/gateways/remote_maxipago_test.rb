@@ -46,6 +46,34 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_recurring
+    @options = {
+      order_id: '12345',
+      billing_address: address,
+      description: 'Store Purchase',
+      start_date: Time.now,
+      period: 'monthly',
+      frequency: 1
+    }
+
+    assert response = @gateway.recurring(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_recurring
+    @options = {
+      order_id: '12345',
+      billing_address: address,
+      description: 'Store Purchase',
+      start_date: Time.now,
+      period: 'monthly',
+      frequency: -1
+    }
+
+    assert response = @gateway.purchase(@invalid_amount, @credit_card, @options)
+    assert_failure response
+  end
+
   def test_failed_capture
     assert response = @gateway.capture(@amount, 'bogus')
     assert_failure response

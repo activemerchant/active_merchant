@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:cycles</tt> -- Limit to certain # of cycles (OPTIONAL)
       # * <tt>:start_date</tt> -- When does the charging starts (REQUIRED)
       # * <tt>:description</tt> -- The description to appear in the profile (REQUIRED)
-      def generate_boleto(amount, boleto, options = {})
+      def generate_boleto(amount, options = {})
         options[:amount] = amount
         requires!(options, :expiration_date, :number, :amount)
 

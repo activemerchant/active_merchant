@@ -12,15 +12,12 @@ module ActiveMerchant #:nodoc:
 
       # TODO: Tests, Docs and OnlineDebit
 
-      def purchase(money, creditcard, options = {})
-        post = {}
-        add_aux_data(post, options)
-        add_amount(post, money)
-        add_creditcard(post, creditcard)
-        add_name(post, creditcard)
-        add_address(post, options)
-
-        commit(build_sale_request(post))
+      def purchase(money, creditcard_or_payment_type, options = {})
+        if creditcard_or_payment_type == 'Boleto'
+          generate_boleto(money, options)
+        else
+          common_purchase(money, creditcard_or_payment_type, options)
+        end
       end
 
       def authorize(money, creditcard, options = {})

@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
     module MaxipagoRecurringAPI
       # Create a recurring payment.
       #
-      # This transaction creates a recurring payment profile
+      # This transaction creates a recurring payment transaction
       # ==== Parameters
       #
       # * <tt>amount</tt> -- The amount to be charged to the customer at each interval as an Integer value in cents.
@@ -15,11 +15,10 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>:period</tt> -- [Day, Week, SemiMonth, Month, Year] default: Month
-      # * <tt>:frequency</tt> -- a number
-      # * <tt>:cycles</tt> -- Limit to certain # of cycles (OPTIONAL)
+      # * <tt>:period</tt> -- [monthly, weekly, daily] (REQUIRED)
+      # * <tt>:frequency</tt> -- a number (REQUIRED)
+      # * <tt>:installments</tt> -- Limit to certain # of cycles (REQUIRED)
       # * <tt>:start_date</tt> -- When does the charging starts (REQUIRED)
-      # * <tt>:description</tt> -- The description to appear in the profile (REQUIRED)
       def recurring(amount, credit_card, options = {})
         options[:credit_card] = credit_card
         options[:amount] = amount
