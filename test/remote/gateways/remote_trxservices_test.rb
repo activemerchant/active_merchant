@@ -7,20 +7,20 @@ class RemoteTrxservicesTest < Test::Unit::TestCase
       :number             => '4111111111111111',
       :month              => 12,
       :year               => 2019,
-      :first_name         => 'Robert',
-      :last_name          => 'Frost'
+      :first_name         => 'Tami',
+      :last_name          => 'Fenwick'
     )
     @declined_card = ActiveMerchant::Billing::CreditCard.new(
       :number             => "4000300011112220",
       :month              => 12,
       :year               => 2014,
-      :first_name         => 'Ben',
-      :last_name          => 'Watkins'
+      :first_name         => 'Joe',
+      :last_name          => 'Timmer'
     )
     @credit_card.verification_value = 346
     @amount = 14.12
     @address = { address1: '811 Hickory St', zip: 68108, city: 'Omaha', state: 'NE', country: 'USA' }
-    @email = 'test@example.com'
+    @email = 'tami@hitfactory.co.nz'
   end
 
   def test_successful_purchase
