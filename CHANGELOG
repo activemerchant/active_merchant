@@ -18,6 +18,8 @@
 * Cashnet: Allow custcode override on refund [duff]
 * Omise: Add a new optional api_version config [zdk]
 * Elavon: Include IP address in purchase and authorize requests [aprofeit]
+* TransFirst: Add support for ACH and more operations [davidsantoso]
+* FirstData_e4: Fix void for even dollar transactions [duff]
 
 
 == Version 1.55.0 (November 9, 2015)
