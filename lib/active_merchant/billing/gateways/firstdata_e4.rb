@@ -356,7 +356,7 @@ module ActiveMerchant #:nodoc:
           [
             response[:authorization_num],
             response[:transaction_tag],
-            response[:dollar_amount].sub(".", "")
+            (response[:dollar_amount].to_f * 100).round
           ].join(";")
         else
           ""
