@@ -92,7 +92,9 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         resp = {}
-        msg.split("\n").each do |li|
+        # body.split("\n").each do |li|
+        body.split('|').each do |li|
+          next if li.strip.blank?
           key, value = li.split("=")
           # only keep the first occurrence of a key.
           # Errors will reuse the same messageCode and messageText
@@ -115,11 +117,11 @@ module ActiveMerchant #:nodoc:
 
 
         # Return the response.
-        Response.new(success, @response['messageText'], response,
+        Response.new(success, response['messageText'], response,
                      :test => test?,
-                     :authorization => @response['authorizationCode'],
-                     :avs_code => @response['addressValidationCode'],
-                     :transaction_id => @response['transactionCode']
+                     :authorization => response['authorizationCode'],
+                     :avs_code => response['addressValidationCode'],
+                     :transaction_id => response['transactionCode']9
         )
       end
 
@@ -141,13 +143,13 @@ module ActiveMerchant #:nodoc:
 
       def post_data(params = {})
         post = {}
-        post['businessId']    = @options[] #???
         post['login']         = @options[:login]
         post['password']      = @options[:password]
+        post['businessId']    = @options['businessId']
+        post['billingAccountNumber'] = @options['billingAccountNumber']
         post['product']       = 'IVR'
         post['ecommerceIndicator'] = 'ECOMMERCE'
         post['requestedPaymentDate'] = DateTime.now.strftime('%Y-%m-%d')
-        post['billingAccountNumber'] = nil #TODO:???? businessId??
         # combine with the other parameters and URL encode
         request = post.merge(params)
         request.to_query
