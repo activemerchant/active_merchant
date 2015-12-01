@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
         parameters['remitAmount'] = amount(money)
         url = test? ? TEST_URL : LIVE_URL
 
-        data = ssl_post url, post_data(parameters)
+        data = ssl_post url, post_data(parameters), {'Content-Type' => 'application/x-www-form-urlencoded'}
 
         response = parse(data)
         success  = response['messageCode'].to_s == '0'
@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
                      :test => test?,
                      :authorization => response['authorizationCode'],
                      :avs_code => response['addressValidationCode'],
-                     :transaction_id => response['transactionCode']9
+                     :transaction_id => response['transactionCode']
         )
       end
 
