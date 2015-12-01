@@ -145,6 +145,10 @@ module ActiveMerchant
       @default_expiration_date ||= Date.new((Time.now.year + 1), 9, 30)
     end
 
+    def formatted_expiration_date(credit_card)
+      credit_card.expiry_date.expiration.strftime('%Y-%m')
+    end
+
     def credit_card(number = '4242424242424242', options = {})
       defaults = {
         :number => number,
