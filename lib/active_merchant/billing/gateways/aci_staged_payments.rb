@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
     #
     # This is only a partial implementation of what the gateway is capable of
     #
-    class AciStagedPayments < Gateway
+    class AciStagedPaymentsGateway < Gateway
       TEST_URL = 'https://collectpay-uat.princetonecom.com/connect/namevaluepair/createCreditCardPayment1.do'
       LIVE_URL = 'https://collectpay.princetonecom.com/connect/namevaluepair/createCreditCardPayment1.do'
 
