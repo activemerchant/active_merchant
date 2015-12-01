@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
     #
     # This is only a partial implementation of what the gateway is capable of
     #
-    class S1AciStagedPayments < Gateway
+    class ACIStagedPayments < Gateway
       TEST_URL = 'https://collectpay-uat.princetonecom.com/connect/namevaluepair/createCreditCardPayment1.do'
       LIVE_URL = 'https://collectpay.princetonecom.com/connect/namevaluepair/createCreditCardPayment1.do'
 
@@ -21,11 +21,10 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://collectpay.princetonecom.com' # doesn't work
 
       # The name of the gateway
-      self.display_name = 'ACI via PrincetonECom'
+      self.display_name = 'ACI Staged Payments via PrincetonECom'
 
 
       def initialize(options = {})
-        #TODO: what to do with gateway_id & payee_id? map to what in ACI?
         requires!(options, :login, :password, :gateway_id, :payee_id)
         @options = options
         @options['businessId']           = @options.delete(:gateway_id)
