@@ -326,7 +326,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !response.params["threeDSPaReq"].blank?
   end
 
-  def test_successful_3dsecure_auth
+  def test_successful_3dsecure_auth_capture
     assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @mastercard_options.merge(threeds_required: true))
     assert_equal '3DS AUTHENTICATION REQUIRED', response.message
     assert_equal "65802", response.params["responseCode"]
@@ -335,6 +335,10 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !response.params["threeDSACSURL"].blank?
     assert !response.params["threeDSMD"].blank?
     assert !response.params["threeDSPaReq"].blank?
+
+    assert responseCapture = @gateway.capture(1202, response.authorization)
+    assert_equal 'APPROVED', responseCapture.message
+    assert_success responseCapture
   end
 
   def test_transcript_scrubbing
