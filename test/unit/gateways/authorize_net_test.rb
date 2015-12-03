@@ -512,6 +512,26 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal("15", store.params["message_code"])
   end
 
+  def test_successful_store_new_payment_profile
+    @gateway.expects(:ssl_post).returns(successful_store_new_payment_profile_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_equal "Successful", store.message
+    assert_equal "38392170", store.params["customer_profile_id"]
+    assert_equal "34896759", store.params["customer_payment_profile_id"]
+  end
+
+  def test_failed_store_new_payment_profile
+    @gateway.expects(:ssl_post).returns(failed_store_new_payment_profile_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_failure store
+    assert_equal "A duplicate customer payment profile already exists", store.message
+    assert_equal "38392767", store.params["customer_profile_id"]
+    assert_equal "34897359", store.params["customer_payment_profile_id"]
+  end
+
   def test_address
     stub_comms do
       @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444'})
@@ -1716,6 +1736,40 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <customerShippingAddressIdList />
       <validationDirectResponseList />
       </createCustomerProfileResponse>
+    eos
+  end
+
+  def successful_store_new_payment_profile_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerPaymentProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <customerProfileId>38392170</customerProfileId>
+        <customerPaymentProfileId>34896759</customerPaymentProfileId>
+      </createCustomerPaymentProfileResponse>
+    eos
+  end
+
+  def failed_store_new_payment_profile_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerPaymentProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00039</code>
+            <text>A duplicate customer payment profile already exists.</text>
+          </message>
+        </messages>
+        <customerProfileId>38392767</customerProfileId>
+        <customerPaymentProfileId>34897359</customerPaymentProfileId>
+      </createCustomerPaymentProfileResponse>
     eos
   end
 
