@@ -242,6 +242,19 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "1", response.params["message_code"]
   end
 
+  def test_successful_store_new_payment_profile
+    assert store = @gateway.store(@credit_card)
+    assert_success store
+    assert store.authorization
+
+    new_card = credit_card('4424222222222222')
+    customer_profile_id, _, _ = store.authorization.split("#")
+
+    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
+    assert_equal "Successful", response.message
+    assert_equal "1", response.params["message_code"]
+  end
+
   def test_failed_store
     assert response = @gateway.store(credit_card("141241"))
     assert_failure response
