@@ -104,6 +104,12 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :order_id => generate_unique_id,
       :description => 'AM test purchase'
     }
+
+    @three_ds_enrolled_card = credit_card('4012001037141112',
+      :month => '12',
+      :year => '2020',
+      :brand => :visa
+    )
   end
 
   def test_successful_visacreditcard_authorization_and_capture
@@ -222,6 +228,19 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_purchase_no_currency_specified_defaults_to_GBP
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: nil))
+    assert_success response
+    assert_equal "826", response.params["currencyCode"]
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_purchase_non_existent_currency
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: "CEO"))
+    assert_failure response
+    assert_equal 'MISSING CURRENCYCODE', response.message
+  end
+
   def test_successful_visadebitcard_purchase
     assert response = @gateway.purchase(142, @visadebitcard, @visadebit_options)
     assert_equal 'APPROVED', response.message
@@ -282,5 +301,50 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert_equal 'APPROVED', response.message
     assert_success response
     assert response.test?
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@mastercard, @mastercard_options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @mastercard_options)
+    assert_failure response
+    assert_equal 'INVALID CARDNUMBER', response.message
+  end
+
+  def test_successful_3dsecure_purchase
+    assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @mastercard_options.merge(threeds_required: true))
+    assert_equal '3DS AUTHENTICATION REQUIRED', response.message
+    assert_equal "65802", response.params["responseCode"]
+    assert response.test?
+    assert !response.authorization.blank?
+    assert !response.params["threeDSACSURL"].blank?
+    assert !response.params["threeDSMD"].blank?
+    assert !response.params["threeDSPaReq"].blank?
+  end
+
+  def test_successful_3dsecure_auth
+    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @mastercard_options.merge(threeds_required: true))
+    assert_equal '3DS AUTHENTICATION REQUIRED', response.message
+    assert_equal "65802", response.params["responseCode"]
+    assert response.test?
+    assert !response.authorization.blank?
+    assert !response.params["threeDSACSURL"].blank?
+    assert !response.params["threeDSMD"].blank?
+    assert !response.params["threeDSPaReq"].blank?
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visacreditcard, @visacredit_options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed( @visacreditcard.number, clean_transcript)
+    assert_scrubbed( @visacreditcard.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@gateway.options[:shared_secret], clean_transcript)
   end
 end

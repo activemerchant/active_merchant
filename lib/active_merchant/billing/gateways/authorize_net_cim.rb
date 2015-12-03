@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
     # 5. Click Submit
     class AuthorizeNetCimGateway < Gateway
       self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
-      self.live_url = 'https://api.authorize.net/xml/v1/request.api'
+      self.live_url = 'https://api2.authorize.net/xml/v1/request.api'
 
       AUTHORIZE_NET_CIM_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
@@ -574,6 +574,7 @@ module ActiveMerchant #:nodoc:
       def build_get_customer_payment_profile_request(xml, options)
         xml.tag!('customerProfileId', options[:customer_profile_id])
         xml.tag!('customerPaymentProfileId', options[:customer_payment_profile_id])
+        xml.tag!('unmaskExpirationDate', options[:unmask_expiration_date]) if options[:unmask_expiration_date]
         xml.target!
       end
 

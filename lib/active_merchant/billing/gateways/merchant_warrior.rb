@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         commit('processCard', post)
       end
 
-      def capture(money, identification)
+      def capture(money, identification, options = {})
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit('processCapture', post)
       end
 
-      def refund(money, identification)
+      def refund(money, identification, options = {})
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_product(post, options)
-        post['transactionProduct'] = options[:description]
+        post['transactionProduct'] = truncate(options[:description], 34)
       end
 
       def add_payment_method(post, payment_method)

@@ -10,7 +10,8 @@ class RemoteElavonTest < Test::Unit::TestCase
     @options = {
       :email => "paul@domain.com",
       :description => 'Test Transaction',
-      :billing_address => address
+      :billing_address => address,
+      :ip => '203.0.113.0'
     }
     @amount = 100
   end
@@ -39,6 +40,16 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert auth.authorization
 
     assert capture = @gateway.capture(@amount, auth.authorization, :credit_card => @credit_card)
+    assert_success capture
+  end
+
+  def test_authorize_and_capture_with_auth_code
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'APPROVAL', auth.message
+    assert auth.authorization
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
 
@@ -166,7 +177,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_unsuccessful_update
     assert response = @gateway.update('ABC123', @credit_card, @options)
     assert_failure response
-    assert_equal 'Invalid Token', response.message
+    assert_match %r{invalid}i, response.message
     assert response.test?
   end
 
@@ -179,10 +190,10 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_equal 'APPROVAL', response.message
   end
 
-  def test_successful_purchase_with_token
+  def test_failed_purchase_with_token
     assert response = @gateway.purchase(@amount, 'ABC123', @options)
     assert_failure response
     assert response.test?
-    assert_equal 'The token supplied in the authorization request appears to be invalid', response.message
+    assert_match %r{invalid}i, response.message
   end
 end

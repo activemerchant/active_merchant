@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! "Transaction" do
             xml.tag! 'TranType', 'Credit'
             xml.tag! 'TranCode', action
-            if action == 'PreAuth' || action == 'Sale'
+            if options[:allow_partial_auth] && (action == 'PreAuth' || action == 'Sale')
               xml.tag! "PartialAuth", "Allow"
             end
             add_invoice(xml, options[:order_id], nil, options)
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
             xml.tag! 'TranType', 'Credit'
-            if action == 'PreAuthCapture'
+            if options[:allow_partial_auth] && (action == 'PreAuthCapture')
               xml.tag! "PartialAuth", "Allow"
             end
             xml.tag! 'TranCode', (@use_tokenization ? (action + "ByRecordNo") : action)
@@ -195,7 +195,16 @@ module ActiveMerchant #:nodoc:
       def add_credit_card(xml, credit_card, action)
         xml.tag! 'Account' do
           if credit_card.track_data.present?
-            xml.tag! 'Track1', credit_card.track_data
+            # Track 1 has a start sentinel (STX) of '%' and track 2 is ';'
+            # Track 1 and 2 have identical end sentinels (ETX) of '?'
+            # If the track has no STX or is corrupt, we send it as track 1, to let Mercury
+            #handle with the validation error as it sees fit.
+            # Track 2 requires having the start and end sentinels stripped. Track 1 does not.
+            if credit_card.track_data[0] == ';' # track 2 start sentinel (STX)
+              xml.tag! 'Track2', credit_card.track_data[1..-2]
+            else # track 1 or a corrupt track
+              xml.tag! 'Track1', credit_card.track_data
+            end
           else
             xml.tag! 'AcctNo', credit_card.number
             xml.tag! 'ExpDate', expdate(credit_card)

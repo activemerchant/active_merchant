@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # ==== USA ePay Advanced SOAP Interface
     #
-    # This class encapuslates USA ePay's Advanced SOAP Interface. The Advanced Soap Interface allows
+    # This class encapsulates USA ePay's Advanced SOAP Interface. The Advanced Soap Interface allows
     # standard transactions, storing customer information, and recurring billing. Storing sensitive
     # information on USA ePay's servers can help with PCI DSS compliance, since customer and card data
     # do not need to be stored locally.
@@ -403,7 +403,7 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      # Retrive all of the payment methods belonging to a customer
+      # Retrieve all of the payment methods belonging to a customer
       #
       # ==== Required
       # * <tt>:customer_number</tt>
@@ -418,7 +418,7 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      # Retrive one of the payment methods belonging to a customer
+      # Retrieve one of the payment methods belonging to a customer
       #
       # ==== Required
       # * <tt>:customer_number</tt>
@@ -1385,8 +1385,7 @@ module ActiveMerchant #:nodoc:
       def build_billing_address(soap, options)
         if options[:billing_address]
           if options[:billing_address][:name]
-            name = options[:billing_address][:name].split(nil,2) # divide name
-            options[:billing_address][:first_name], options[:billing_address][:last_name] = name[0], name[1]
+            options[:billing_address][:first_name], options[:billing_address][:last_name] = split_names(options[:billing_address][:name])
           end
           soap.BillingAddress 'xsi:type' => "ns1:Address" do
             ADDRESS_OPTIONS.each do |k,v|
@@ -1399,8 +1398,7 @@ module ActiveMerchant #:nodoc:
       def build_shipping_address(soap, options)
         if options[:shipping_address]
           if options[:shipping_address][:name]
-            name = options[:shipping_address][:name].split(nil,2) # divide name
-            options[:shipping_address][:first_name], options[:shipping_address][:last_name] = name[0], name[1]
+            options[:shipping_address][:first_name], options[:shipping_address][:last_name] = split_names(options[:shipping_address][:name])
           end
           soap.ShippingAddress 'xsi:type' => "ns1:Address" do
             ADDRESS_OPTIONS.each do |k,v|

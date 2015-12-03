@@ -19,7 +19,7 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
@@ -31,7 +31,7 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_soap_fault_during_authorization
-    response_400 = stub(:code => "400", :message => "Bad Request", :body => fault_authorization_response)
+    response_400 = stub(:code => "400", :message => "Bad Request", :body => failed_authorize_response)
     @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_400))
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
@@ -94,14 +94,14 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_avs_result
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'N', response.avs_result['code']
   end
 
   def test_cvv_result
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
@@ -119,9 +119,48 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_successful_verify_with_failed_void
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+  end
+
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
 
-  def successful_authorization_response
+  def pre_scrubbed
+    %q(
+    <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <SaleKeyed xmlns=\"http://schemas.merchantwarehouse.com/merchantware/40/Credit/\">\n      <merchantName>Test Spreedly PayItSimple</merchantName>\n      <merchantSiteId>BK34Z768</merchantSiteId>\n      <merchantKey>TCTTS-IDYQV-RDFY1-6DS01-WTPVH</merchantKey>\n      <invoiceNumber>14b33b8a</invoiceNumber>\n      <amount>10.20</amount>\n      <cardNumber>5424180279791732</cardNumber>\n      <expirationDate>0916</expirationDate>\n      <cardholder>Longbob Longsen</cardholder>\n      <cardSecurityCode>123</cardSecurityCode>\n      <avsStreetAddress>456 My Street</avsStreetAddress>\n      <avsStreetZipCode>K1C2N6</avsStreetZipCode>\n    </SaleKeyed>\n  </soap:Body>\n</soap:Envelope>\n"
+    )
+  end
+
+  def post_scrubbed
+    %q(
+    <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <SaleKeyed xmlns=\"http://schemas.merchantwarehouse.com/merchantware/40/Credit/\">\n      <merchantName>Test Spreedly PayItSimple</merchantName>\n      <merchantSiteId>BK34Z768</merchantSiteId>\n      <merchantKey>[FILTERED]</merchantKey>\n      <invoiceNumber>14b33b8a</invoiceNumber>\n      <amount>10.20</amount>\n      <cardNumber>[FILTERED]</cardNumber>\n      <expirationDate>0916</expirationDate>\n      <cardholder>Longbob Longsen</cardholder>\n      <cardSecurityCode>[FILTERED]</cardSecurityCode>\n      <avsStreetAddress>456 My Street</avsStreetAddress>\n      <avsStreetZipCode>K1C2N6</avsStreetZipCode>\n    </SaleKeyed>\n  </soap:Body>\n</soap:Envelope>\n"
+    )
+  end
+
+  def successful_authorize_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope
@@ -153,7 +192,7 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
     XML
   end
 
-  def fault_authorization_response
+  def failed_authorize_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
@@ -213,12 +252,41 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
     XML
   end
 
+  def successful_void_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body>
+    <VoidResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <VoidResult>
+        <Amount />
+        <ApprovalStatus>APPROVED</ApprovalStatus>
+        <AuthorizationCode>VOID</AuthorizationCode>
+        <AvsResponse />
+        <Cardholder />
+        <CardNumber />
+        <CardType>0</CardType>
+        <CvResponse />
+        <EntryMode>0</EntryMode>
+        <ErrorMessage />
+        <ExtraData />
+        <InvoiceNumber />
+        <Token>266783537</Token>
+        <TransactionDate>7/9/2015 3:13:51 PM</TransactionDate>
+        <TransactionType>3</TransactionType>
+      </VoidResult>
+    </VoidResponse>
+  </soap:Body>
+</soap:Envelope>
+    XML
+  end
+
   def failed_void_response
     <<-XML
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body>
-    <VoidPreAuthorizationResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <VoidPreAuthorizationResult>
+    <VoidResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <VoidResult>
         <Amount />
         <ApprovalStatus>DECLINED;1019;original transaction id not found</ApprovalStatus>
         <AuthorizationCode />
@@ -234,8 +302,8 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
         <Token />
         <TransactionDate>5/15/2013 9:37:04 AM</TransactionDate>
         <TransactionType>3</TransactionType>
-      </VoidPreAuthorizationResult>
-    </VoidPreAuthorizationResponse>
+      </VoidResult>
+    </VoidResponse>
   </soap:Body>
 </soap:Envelope>
     XML

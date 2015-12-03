@@ -2,6 +2,9 @@ require 'test_helper'
 require 'net/http'
 
 class RemoteMigsTest < Test::Unit::TestCase
+  include ActiveMerchant::NetworkConnectionRetries
+  include ActiveMerchant::PostsData
+
   def setup
     @gateway = MigsGateway.new(fixtures(:migs_purchase))
     @capture_gateway = MigsGateway.new(fixtures(:migs_capture))
@@ -15,7 +18,8 @@ class RemoteMigsTest < Test::Unit::TestCase
     @credit_card = @visa
 
     @options = {
-      :order_id => '1'
+      :order_id => '1',
+      :currency => 'USD'
     }
   end
 
@@ -23,22 +27,24 @@ class RemoteMigsTest < Test::Unit::TestCase
     options = {
       :order_id   => 1,
       :unique_id  => 9,
-      :return_url => 'http://localhost:8080/payments/return'
+      :return_url => 'http://localhost:8080/payments/return',
+      :currency => 'USD'
     }
 
     choice_url = @gateway.purchase_offsite_url(@amount, options)
-    assert_response_contains 'Pay securely by clicking on the card logo below', choice_url
+
+    assert_response_match /Pay securely .* by clicking on the card logo below/, choice_url
 
     responses = {
-      'visa'             => 'You have chosen <B>VISA</B>',
-      'master'           => 'You have chosen <B>MasterCard</B>',
-      'diners_club'      => 'You have chosen <B>Diners Club</B>',
-      'american_express' => 'You have chosen <B>American Express</B>'
+      'visa'             => /You have chosen .*VISA.*/,
+      'master'           => /You have chosen .*MasterCard.*/,
+      'diners_club'      => /You have chosen .*Diners Club.*/,
+      'american_express' => /You have chosen .*American Express.*/
     }
 
     responses.each_pair do |card_type, response_text|
       url = @capture_gateway.purchase_offsite_url(@amount, options.merge(:card_type => card_type))
-      assert_response_contains response_text, url
+      assert_response_match response_text, url
     end
   end
 
@@ -92,19 +98,20 @@ class RemoteMigsTest < Test::Unit::TestCase
 
   private
 
-  include ActiveMerchant::PostsData
-  def assert_response_contains(text, url)
+  def assert_response_match(regexp, url)
     response = https_response(url)
-    assert response.body.include?(text)
+    assert_match regexp, response.body
   end
 
   def https_response(url, cookie = nil)
-    headers = cookie ? {'Cookie' => cookie} : {}
-    response = raw_ssl_request(:get, url, nil, headers)
-    if response.is_a?(Net::HTTPRedirection)
-      new_cookie = [cookie, response['Set-Cookie']].compact.join(';')
-      response = https_response(response['Location'], new_cookie)
+    retry_exceptions do
+      headers = cookie ? {'Cookie' => cookie} : {}
+      response = raw_ssl_request(:get, url, nil, headers)
+      if response.is_a?(Net::HTTPRedirection)
+        new_cookie = [cookie, response['Set-Cookie']].compact.join(';')
+        response = https_response(response['Location'], new_cookie)
+      end
+      response
     end
-    response
   end
 end

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = "https://api.ewaypayments.com/"
 
       self.money_format = :cents
-      self.supported_countries = ['AU', 'NZ', 'GB', 'SG']
+      self.supported_countries = ['AU', 'NZ', 'GB', 'SG', 'MY', 'HK']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
       self.homepage_url = "http://www.eway.com.au/"
       self.display_name = "eWAY Rapid 3.1"
@@ -28,6 +28,8 @@ module ActiveMerchant #:nodoc:
       #                  :transaction_type - One of: Purchase (default), MOTO
       #                                      or Recurring.  For stored card payments (aka - TokenPayments),
       #                                      this must be either MOTO or Recurring.
+      #                  :invoice          - The merchant’s invoice number for this
+      #                                      transaction (optional).
       #                  :order_id         - A merchant-supplied identifier for the
       #                                      transaction (optional).
       #                  :description      - A merchant-supplied description of the
@@ -42,7 +44,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
       def purchase(amount, payment_method, options={})
@@ -85,6 +87,8 @@ module ActiveMerchant #:nodoc:
       # identification - The transaction id which is returned in the
       #                  authorization of the successful purchase transaction
       # options        - A standard ActiveMerchant options hash:
+      #                  :invoice          - The merchant’s invoice number for this
+      #                                      transaction (optional).
       #                  :order_id         - A merchant-supplied identifier for the
       #                                      transaction (optional).
       #                  :description      - A merchant-supplied description of the
@@ -99,7 +103,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object
       def refund(amount, identification, options = {})
@@ -125,7 +129,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where the authorization is the customer_token on success
       def store(payment_method, options = {})
@@ -155,7 +159,7 @@ module ActiveMerchant #:nodoc:
       #                                      transaction (optional).
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
-      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #                                      (default: "https://github.com/activemerchant/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object where the authorization is the customer_token on success
       def update(customer_token, payment_method, options = {})
@@ -167,6 +171,17 @@ module ActiveMerchant #:nodoc:
         add_customer_token(params, customer_token)
         params['Method'] = 'UpdateTokenCustomer'
         commit(url_for("Transaction"), params)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("Number\\?":\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("CVN\\?":\\?"?)[^",]*)i, '\1[FILTERED]')
       end
 
       private
@@ -186,8 +201,8 @@ module ActiveMerchant #:nodoc:
         currency_code = options[:currency] || currency(money)
         params[key] = {
           'TotalAmount' => localized_amount(money, currency_code),
-          'InvoiceReference' => truncate(options[:order_id]),
-          'InvoiceNumber' => truncate(options[:order_id], 12),
+          'InvoiceReference' => truncate(options[:order_id], 50),
+          'InvoiceNumber' => truncate(options[:invoice] || options[:order_id], 12),
           'InvoiceDescription' => truncate(options[:description], 64),
           'CurrencyCode' => currency_code,
         }
@@ -207,16 +222,12 @@ module ActiveMerchant #:nodoc:
       def add_address(params, address, options={})
         return unless address
 
-        if address[:name]
-          parts = address[:name].split(/\s+/)
-          params['FirstName'] = parts.shift if parts.size > 1
-          params['LastName'] = parts.join(" ")
-        end
+        params['FirstName'], params['LastName'] = split_names(address[:name])
         params['Title'] = address[:title]
         params['CompanyName'] = address[:company] unless options[:skip_company]
-        params['Street1'] = truncate(address[:address1])
-        params['Street2'] = truncate(address[:address2])
-        params['City'] = truncate(address[:city])
+        params['Street1'] = truncate(address[:address1], 50)
+        params['Street2'] = truncate(address[:address2], 50)
+        params['City'] = truncate(address[:city], 50)
         params['State'] = address[:state]
         params['PostalCode'] = address[:zip]
         params['Country'] = address[:country].to_s.downcase
@@ -230,7 +241,7 @@ module ActiveMerchant #:nodoc:
         params['Customer'] ||= {}
         if credit_card.respond_to? :number
           card_details = params['Customer']['CardDetails'] = {}
-          card_details['Name'] = truncate(credit_card.name)
+          card_details['Name'] = truncate(credit_card.name, 50)
           card_details['Number'] = credit_card.number
           card_details['ExpiryMonth'] = "%02d" % (credit_card.month || 0)
           card_details['ExpiryYear'] = "%02d" % (credit_card.year || 0)
@@ -308,7 +319,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         # Note: TransactionID is always null for store requests, but TokenCustomerID is also sent back for purchase from
-        # stored card transactions so we give precendence to TransactionID
+        # stored card transactions so we give precedence to TransactionID
         response['TransactionID'] || response['Customer']['TokenCustomerID']
       end
 
@@ -335,11 +346,6 @@ module ActiveMerchant #:nodoc:
         else
           "P"
         end
-      end
-
-      def truncate(value, max_size = 50)
-        return nil unless value
-        value.to_s[0, max_size]
       end
 
       MESSAGES = {

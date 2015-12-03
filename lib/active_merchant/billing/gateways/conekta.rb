@@ -55,6 +55,17 @@ module ActiveMerchant #:nodoc:
         commit(:post, "charges/#{identifier}/refund", post)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card%5Bnumber%5D=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?card%5Bcvc%5D=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_order(post, money, options)
@@ -69,7 +80,7 @@ module ActiveMerchant #:nodoc:
         details[:name] = options[:customer] if options[:customer]
         details[:email] = options[:email] if options[:email]
         details[:phone] = options[:phone] if options[:phone]
-        details[:device_fingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
+        post[:device_fingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
         details[:ip] = options[:ip] if options[:ip]
         add_billing_address(details, options)
         add_line_items(details, options)
@@ -160,6 +171,7 @@ module ActiveMerchant #:nodoc:
       def headers(meta)
         {
           "Accept" => "application/vnd.conekta-v#{options[:version]}+json",
+          "Accept-Language" => "es",
           "Authorization" => "Basic " + Base64.encode64("#{options[:key]}:"),
           "RaiseHtmlError" => "false",
           "Conekta-Client-User-Agent" => {"agent"=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
@@ -181,7 +193,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success,
-          raw_response["message"],
+          raw_response["message_to_purchaser"],
           raw_response,
           test: test?,
           authorization: raw_response["id"]
@@ -206,4 +218,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

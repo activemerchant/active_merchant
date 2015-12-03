@@ -38,10 +38,10 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_should_be_able_to_look_for_test_mode
-    Base.gateway_mode = :test
+    Base.mode = :test
     assert @gateway.test?
 
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_false @gateway.test?
   end
 
@@ -90,10 +90,20 @@ class GatewayTest < Test::Unit::TestCase
     assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
   end
 
-  def test_non_fractional_currencies_accessor
-    assert Gateway.non_fractional_currency?('JPY')
-    refute Gateway.non_fractional_currency?('CAD')
+  def test_split_names
+    assert_equal ["Longbob", "Longsen"], @gateway.send(:split_names, "Longbob Longsen")
   end
+
+  def test_split_names_with_single_name
+    assert_equal ["", "Prince"], @gateway.send(:split_names, "Prince")
+  end
+
+  def test_split_names_with_empty_names
+    assert_equal [nil, nil], @gateway.send(:split_names, "")
+    assert_equal [nil, nil], @gateway.send(:split_names, nil)
+    assert_equal [nil, nil], @gateway.send(:split_names, " ")
+  end
+
 
   def test_supports_scrubbing?
     gateway = Gateway.new
@@ -106,6 +116,20 @@ class GatewayTest < Test::Unit::TestCase
 
     assert_raise(RuntimeError) do
       gateway.scrub("hi")
+    end
+  end
+
+  def test_strip_invalid_xml_chars
+    xml = <<EOF
+      <response>
+        <element>Parse the First & but not this &tilde; &x002a;</element>
+      </response>
+EOF
+    parsed_xml = @gateway.send(:strip_invalid_xml_chars, xml)
+
+    assert REXML::Document.new(parsed_xml)
+    assert_raise(REXML::ParseException) do
+      REXML::Document.new(xml)
     end
   end
 end

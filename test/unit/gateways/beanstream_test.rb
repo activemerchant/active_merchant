@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BeanstreamTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.mode = :test
 
@@ -11,6 +13,16 @@ class BeanstreamTest < Test::Unit::TestCase
                )
 
     @credit_card = credit_card
+
+    @decrypted_credit_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      month: "01",
+      year: "2012",
+      brand: "visa",
+      number: "4030000010001234",
+      payment_cryptogram: "cryptogram goes here",
+      eci: "an ECI value",
+      transaction_id: "transaction ID",
+    )
 
     @check       = check(
                      :institution_number => '001',
@@ -110,6 +122,22 @@ class BeanstreamTest < Test::Unit::TestCase
     assert_equal '10000028;15.00;P', response.authorization
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorize_response, unsuccessful_void_response)
+    assert_success response
+    assert_equal "Approved", response.message
+  end
+
+  def test_failed_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(unsuccessful_authorize_response, successful_void_response)
+    assert_failure response
+    assert_equal "DECLINE", response.message
+  end
+
 
   # Testing Non-American countries
 
@@ -192,6 +220,24 @@ class BeanstreamTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_includes_network_tokenization_fields
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/3DSecureXID/, data)
+      assert_match(/3DSecureECI/, data)
+      assert_match(/3DSecureCAVV/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+
   private
 
   def successful_purchase_response
@@ -208,6 +254,22 @@ class BeanstreamTest < Test::Unit::TestCase
 
   def successful_check_purchase_response
     "trnApproved=1&trnId=10000072&messageId=1&messageText=Approved&trnOrderNumber=5d9f511363a0f35d37de53b4d74f5b&authCode=&errorType=N&errorFields=&responseType=T&trnAmount=15%2E00&trnDate=6%2F4%2F2008+6%3A33%3A55+PM&avsProcessed=0&avsId=0&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Address+Verification+not+performed+for+this+transaction%2E&trnType=D&paymentMethod=EFT&ref1=reference+one&ref2=&ref3=&ref4=&ref5="
+  end
+
+  def successful_authorize_response
+    "trnApproved=1&trnId=10100560&messageId=1&messageText=Approved&trnOrderNumber=0b936c13208677aaa00be509c541e7&authCode=TEST&errorType=N&errorFields=&responseType=T&trnAmount=15%2E00&trnDate=9%2F9%2F2015+10%3A10%3A28+AM&avsProcessed=1&avsId=N&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Street+address+and+Postal%2FZIP+do+not+match%2E&cvdId=1&cardType=VI&trnType=PA&paymentMethod=CC&ref1=reference+one&ref2=&ref3=&ref4=&ref5="
+  end
+
+  def unsuccessful_authorize_response
+    "trnApproved=0&trnId=10100561&messageId=7&messageText=DECLINE&trnOrderNumber=7eef9f25c6f123572f193bee4a1aa0&authCode=&errorType=N&errorFields=&responseType=T&trnAmount=15%2E00&trnDate=9%2F9%2F2015+10%3A11%3A22+AM&avsProcessed=1&avsId=N&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Street+address+and+Postal%2FZIP+do+not+match%2E&cvdId=2&cardType=AM&trnType=PA&paymentMethod=CC&ref1=reference+one&ref2=&ref3=&ref4=&ref5="
+  end
+
+  def successful_void_response
+    "trnApproved=1&trnId=10100563&messageId=1&messageText=Approved&trnOrderNumber=6ca476d1a29da81a5f2d5d2c92ddeb&authCode=TEST&errorType=N&errorFields=&responseType=T&trnAmount=15%2E00&trnDate=9%2F9%2F2015+10%3A13%3A12+AM&avsProcessed=0&avsId=U&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Address+information+is+unavailable%2E&cvdId=2&cardType=VI&trnType=VP&paymentMethod=CC&ref1=reference+one&ref2=&ref3=&ref4=&ref5="
+  end 
+
+  def unsuccessful_void_response
+    "trnApproved=0&trnId=0&messageId=0&messageText=%3CLI%3EAdjustment+id+must+be+less+than+8+characters%3Cbr%3E&trnOrderNumber=&authCode=&errorType=U&errorFields=adjId&responseType=T&trnAmount=&trnDate=9%2F9%2F2015+10%3A15%3A20+AM&avsProcessed=0&avsId=0&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Address+Verification+not+performed+for+this+transaction%2E&cardType=&trnType=VP&paymentMethod=CC&ref1=&ref2=&ref3=&ref4=&ref5="
   end
 
   def brazilian_address_params_without_zip_and_state
@@ -234,5 +296,12 @@ class BeanstreamTest < Test::Unit::TestCase
     "<response><code>1</code><message>Request successful</message></response>"
   end
 
-end
+  def transcript
+    "ref1=reference+one&trnCardOwner=Longbob+Longsen&trnCardNumber=4030000010001234&trnExpMonth=09&trnExpYear=16&trnCardCvd=123&ordName=xiaobo+zzz&ordEmailAddress=xiaobozzz%40example.com&username=awesomesauce&password=sp00nz%21%21"
+  end
 
+  def scrubbed_transcript
+    "ref1=reference+one&trnCardOwner=Longbob+Longsen&trnCardNumber=[FILTERED]&trnExpMonth=09&trnExpYear=16&trnCardCvd=[FILTERED]&ordName=xiaobo+zzz&ordEmailAddress=xiaobozzz%40example.com&username=awesomesauce&password=[FILTERED]"
+  end
+
+end

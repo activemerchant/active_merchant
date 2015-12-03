@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemoteLitleCertification < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
     @gateway = LitleGateway.new(fixtures(:litle).merge(:url => "https://cert.litle.com/vap/communicator/online"))
   end
 

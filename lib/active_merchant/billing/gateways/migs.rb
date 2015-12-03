@@ -58,7 +58,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         post = {}
-        post[:Amount] = amount(money)
+
+        add_amount(post, money, options)
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_standard_parameters('pay', post, options[:unique_id])
@@ -78,7 +79,8 @@ module ActiveMerchant #:nodoc:
         requires!(@options, :advanced_login, :advanced_password)
 
         post = options.merge(:TransNo => authorization)
-        post[:Amount] = amount(money)
+
+        add_amount(post, money, options)
         add_advanced_user(post)
         add_standard_parameters('capture', post, options[:unique_id])
 
@@ -93,7 +95,8 @@ module ActiveMerchant #:nodoc:
         requires!(@options, :advanced_login, :advanced_password)
 
         post = options.merge(:TransNo => authorization)
-        post[:Amount] = amount(money)
+
+        add_amount(post, money, options)
         add_advanced_user(post)
         add_standard_parameters('refund', post, options[:unique_id])
 
@@ -143,7 +146,8 @@ module ActiveMerchant #:nodoc:
         requires!(@options, :secure_hash)
 
         post = {}
-        post[:Amount] = amount(money)
+
+        add_amount(post, money, options)
         add_invoice(post, options)
         add_creditcard_type(post, options[:card_type]) if options[:card_type]
 
@@ -184,6 +188,11 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_amount(post, money, options)
+        post[:Amount] = amount(money)
+        post[:Currency] = options[:currency] if options[:currency]
+      end
+
       def add_advanced_user(post)
         post[:User] = @options[:advanced_login]
         post[:Password] = @options[:advanced_password]
@@ -220,12 +229,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_object(response)
+        avs_response_code = response[:AVSResultCode]
+        avs_response_code = 'S' if avs_response_code == "Unsupported"
+
+        cvv_result_code = response[:CSCResultCode]
+        cvv_result_code = 'P' if cvv_result_code == "Unsupported"
+
         Response.new(success?(response), response[:Message], response,
           :test => test?,
           :authorization => response[:TransactionNo],
           :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:AVSResultCode] },
-          :cvv_result => response[:CSCResultCode]
+          :avs_result => { :code => avs_response_code },
+          :cvv_result => cvv_result_code
         )
       end
 
