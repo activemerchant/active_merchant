@@ -2,6 +2,7 @@
 
 * AuthorizeNetCim: Add unmaskExpirationDate option [RamilGilmanov]
 * Element: Add gateway support [davidsantoso]
+* Cardstream: 3D-secure capture fix [duff]
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
