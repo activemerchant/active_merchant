@@ -22,79 +22,66 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
-        requires!(options, :login, :password)
-        # Assign options to Class Instance
+        # Initialize the gateway
+        requires!(options, :gateway_username, :gateway_password)
         @options = options
         super
       end
 
       def purchase(money, payment, options={})
-        # Purchase is sale tranaction, we create an array of params and then call the processing function
+        ## Purchase is sale transaction, an array of params is assembled and then passed on to processing function
+        # CC Data, Check Data, Invoice Data, Address, Shipping Address Data
+        # Customer Data (IP, EMail), Custom Data
         post = {}
-        # CC Data, Cheque Data
         add_payment(post, payment)
-        # Invoice Data
         add_invoice(post, money, options)
-        # Address, Shipping Address Data
         add_address(post, options)
-        # Customer Data (IP, EMail)
         add_customer_data(post, options)
-        # Custom Data
         add_custom_data(post, options)
-        # Call the commit function to pass on the params to gateway
         commit('sale', post)
       end
 
       def authorize(money, payment, options={})
-        # Authorize transaction, same as purchase only we do not charge the card
+        ## Authorize transaction, same as purchase,  card is not not charged
+        # CC Data, Check Data, Invoice Data, Address, Shipping Address Data
+        # Customer Data (IP, EMail), Custom Data
         post = {}
-        # CC Data, Check Data
         add_payment(post, payment)
-        # Invoice Data
         add_invoice(post, money, options)
-        # Address, Shipping Address Data
         add_address(post, options)
-        # Customer Data (IP, EMail)
         add_customer_data(post, options)
-        # Custom Data
         add_custom_data(post, options)
-        # Call the commit function to pass on the params to gateway
         commit('auth', post)
       end
 
       def capture(money, authorization, options={})
-        # Capture transaction, only payment and customer address is required
+        ## Capture transaction, only payment and customer address is required
+        # Invoice Data, Authorization
         post = {}
-        # Invoice Data
         add_invoice(post, money, options)
-        # Add Authorization
         add_authorization(post, authorization, options)
-        # Call the commit function to pass on the params to gateway
         commit('capture', post)
       end
 
       def refund(money, authorization, options={})
-        # Refund transaction, we need to pass on the authorization number along with amount for refund to locate previous trnsaction
+        ## Refund transaction, authorization number, amount
+        # Invoice Data, Authorization
         post = {}
-        # Invoice Data
         add_invoice(post, money, options)
-        # Add Authorization
         add_authorization(post, authorization, options)
-        # Call the commit function to pass on the params to gateway
         commit('refund', post)
       end
 
       def void(authorization, options={})
-        # Void transaction, we need to pass on only authorization number for voiding transaction
+        ## Void transaction, authorization number
+        # Authorization
         post = {}
-        # Add Authorization
         add_authorization(post, authorization, options)
-        # Call the commit function to pass on the params to gateway
         commit('void', post)
       end
 
       def verify(credit_card, options={})
-        # Verify is two step process, first we fire the authorize then we capture the auth and issue void
+        ## Verify is two step process, authorize then we capture the auth and issue void
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -112,7 +99,6 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((<CCNumber>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<CVV>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<GatewayUserName>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<GatewayPassword>)[^<]+(<))i, '\1[FILTERED]\2')
       end
 
@@ -130,7 +116,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_authorization(post, authorization, options)
-        # Add the authorization code
+        # Add the authorization code to params
         post[:TransactionID] = authorization
       end 
 
@@ -146,8 +132,6 @@ module ActiveMerchant #:nodoc:
         if options.has_key? :invoice
           post[:PONumber] = options[:invoice]
         end
-        # Agms support only USD so we do not pass though currency convertor function
-        # post[:currency] = (options[:currency] || currency(money))
       end
 
       def add_address(post, options)
@@ -225,10 +209,8 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         # Parse the response body
         doc = Nokogiri::XML(body)
-        # Remove the namespaces
         doc.remove_namespaces!
         response = {}
-        # Extract the response data from the ProcessTransactionResult node
         doc.xpath("//ProcessTransactionResult//*").each do |node|
           response[node.name] = node.children.text
         end
@@ -237,17 +219,12 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         # Process the params as per action
-        # URL to fire the request
         url = (test? ? test_url : live_url)
-        # Build the data which is passed to ssl_post later
         data = post_data(action, parameters)
         header = {}
-        # Assign soap headers
         header['SOAPAction'] = "https://gateway.agms.com/roxapi/ProcessTransaction"
         header['Content-Type'] = "text/xml; charset=utf-8"
-        # Pass the post info to ssl_post method, standard for active_merchant
         response = parse(ssl_post(url, data, header))
-        # Process the response, parse into standard Response object, uses function to parse and generate the standard object
         Response.new(
           success_from(response),
           message_from(response),
@@ -294,8 +271,8 @@ module ActiveMerchant #:nodoc:
             xml['soap'].Body do
               xml.ProcessTransaction('xmlns' => "https://gateway.agms.com/roxapi/") do
                 xml.objparameters do
-                  xml.GatewayUserName(@options[:login])
-                  xml.GatewayPassword(@options[:password])
+                  xml.GatewayUserName(@options[:gateway_username])
+                  xml.GatewayPassword(@options[:gateway_password])
                   xml.TransactionType(action)
                   parameters.each do |label, value|
                     xml.send(label, value)

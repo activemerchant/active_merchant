@@ -26,9 +26,7 @@ class RemoteAgmsTest < Test::Unit::TestCase
     end
     transcript = @gateway.scrub(transcript)
     assert_scrubbed(@credit_card.number, transcript)
-    # assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:login], transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:gateway_password], transcript)
   end
 
   def test_successful_purchase
@@ -123,8 +121,8 @@ class RemoteAgmsTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = AgmsGateway.new(
-      login: '',
-      password: ''
+      gateway_username: '',
+      gateway_password: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

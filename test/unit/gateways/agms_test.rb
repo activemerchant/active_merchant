@@ -6,10 +6,8 @@ class AgmsTest < Test::Unit::TestCase
   
   def setup
     @gateway = AgmsGateway.new(
-      login: 'login',
-      password: 'password',
-      api_key: 'api key',
-      account_number: 'account number'
+      gateway_username: 'gateway_username',
+      gateway_password: 'gateway_password',
     )
 
     @credit_card = credit_card
@@ -270,7 +268,7 @@ Conn close
 opening connection to gateway.agms.com...
 opened
 <- "POST /roxapi/agms.asmx HTTP/1.1\r\nContent-Type: text/xml; charset=utf-8\r\nSoapaction: https://gateway.agms.com/roxapi/ProcessTransaction\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway.agms.com\r\nContent-Length: 1025\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <ProcessTransaction xmlns=\"https://gateway.agms.com/roxapi/\">\n      <objparameters>\n        <GatewayUserName>[FILTERED]</GatewayUserName>\n        <GatewayPassword>[FILTERED]</GatewayPassword>\n        <TransactionType>sale</TransactionType>\n        <CCNumber>[FILTERED]</CCNumber>\n        <CVV>[FILTERED]</CVV>\n        <CCExpDate>0916</CCExpDate>\n        <FirstName>Longbob</FirstName>\n        <LastName>Longsen</LastName>\n        <Amount>1.00</Amount>\n        <Address1>1234 My Street</Address1>\n        <Address2>Apt 1</Address2>\n        <Company>Widgets Inc</Company>\n        <Phone>(555)555-5555</Phone>\n        <Zip>K1C2N6</Zip>\n        <City>Ottawa</City>\n        <Country>CA</Country>\n        <State>ON</State>\n      </objparameters>\n    </ProcessTransaction>\n  </soap:Body>\n</soap:Envelope>\n"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <ProcessTransaction xmlns=\"https://gateway.agms.com/roxapi/\">\n      <objparameters>\n        <GatewayUserName>login</GatewayUserName>\n        <GatewayPassword>[FILTERED]</GatewayPassword>\n        <TransactionType>sale</TransactionType>\n        <CCNumber>[FILTERED]</CCNumber>\n        <CVV>[FILTERED]</CVV>\n        <CCExpDate>0916</CCExpDate>\n        <FirstName>Longbob</FirstName>\n        <LastName>Longsen</LastName>\n        <Amount>1.00</Amount>\n        <Address1>1234 My Street</Address1>\n        <Address2>Apt 1</Address2>\n        <Company>Widgets Inc</Company>\n        <Phone>(555)555-5555</Phone>\n        <Zip>K1C2N6</Zip>\n        <City>Ottawa</City>\n        <Country>CA</Country>\n        <State>ON</State>\n      </objparameters>\n    </ProcessTransaction>\n  </soap:Body>\n</soap:Envelope>\n"
 -> "HTTP/1.1 200 OK\r\n"
 -> "Cache-Control: private, max-age=0\r\n"
 -> "Content-Length: 696\r\n"

@@ -17,10 +17,8 @@ adyen:
   password: password
 
 agms:
-  login: 'osdgithub'
-  password: 'Ks1m32aF@'
-  api_key: 'accf69cefaeb1d19702e33b0a9bfc9f8f0ab3c065d937fc'
-  account_number: '1002186'
+  gateway_username: 'osdgithub'
+  gateway_password: 'Ks1m32aF@'
 
 app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
