@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
         if options.has_key? :custom_field_9
           post[:Custom_Field_9] = options[:custom_field_9]
         end   
-        if options.has_key? :custom_field_1
+        if options.has_key? :custom_field_10
           post[:Custom_Field_10] = options[:custom_field_10]
         end   
       end
