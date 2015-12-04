@@ -1,4 +1,4 @@
-source :rubygems
+source 'https://rubygems.org'
 
 gem 'activesupport', '>= 2.3.11'
 gem 'money'
