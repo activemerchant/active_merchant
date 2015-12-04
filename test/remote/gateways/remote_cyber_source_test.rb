@@ -88,19 +88,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
-  def test_successful_subscription_authorization
-    assert response = @gateway.store(@credit_card, @subscription_options)
-    assert_equal 'Successful transaction', response.message
-    assert_success response
-    assert response.test?
-
-    assert response = @gateway.authorize(@amount, response.authorization, :order_id => generate_unique_id)
-    assert_equal 'Successful transaction', response.message
-    assert_success response
-    assert response.test?
-    assert !response.authorization.blank?
-  end
-
   def test_unsuccessful_authorization
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert response.test?
@@ -121,11 +108,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization_and_failed_auth_reversal
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-    assert_equal 'Successful transaction', auth.message
-
-    assert auth_reversal = @gateway.auth_reversal(@amount + 10, auth.authorization)
+    assert auth_reversal = @gateway.auth_reversal(@amount, "UnknownAuth")
     assert_failure auth_reversal
     assert_equal 'One or more fields contains invalid data', auth_reversal.message
   end
@@ -148,18 +131,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_successful_pinless_debit_card_puchase
     assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(:pinless_debit_card => true))
-    assert_equal 'Successful transaction', response.message
-    assert_success response
-    assert response.test?
-  end
-
-  def test_successful_subscription_purchase
-    assert response = @gateway.store(@credit_card, @subscription_options)
-    assert_equal 'Successful transaction', response.message
-    assert_success response
-    assert response.test?
-
-    assert response = @gateway.purchase(@amount, response.authorization, :order_id => generate_unique_id)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
@@ -217,16 +188,65 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  # Pinless debit payment can never be refunded.
-  def test_unsuccessful_pinless_debit_card_refund
-    assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(:pinless_debit_card => true))
+  def test_successful_validate_pinless_debit_card
+    assert response = @gateway.validate_pinless_debit_card(@pinless_debit_card, @options)
+    assert response.test?
+    assert_equal 'Y', response.params["status"]
+    assert_equal true,  response.success?
+  end
+
+  def test_network_tokenization_authorize_and_capture
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :eci                => "05",
+      :payment_cryptogram => "EHuWW9PiBkWvqE5juRwDzAUFBAk="
+    )
+
+    assert auth = @gateway.authorize(@amount, credit_card, @options)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
+  def test_successful_authorize_with_mdd_fields
+    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_mdd_fields
+    (1..20).each { |e| @options["mdd_field_#{e}".to_sym] = "value #{e}" }
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_subscription_authorization
+    assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
-    assert response = @gateway.refund(@amount, response.authorization)
-    assert_equal 'One or more fields contains invalid data', response.message
-    assert_equal false,  response.success?
+
+    assert response = @gateway.authorize(@amount, response.authorization, :order_id => generate_unique_id)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
   end
+
+  def test_successful_subscription_purchase
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.purchase(@amount, response.authorization, :order_id => generate_unique_id)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
 
   def test_successful_subscription_credit
     assert response = @gateway.store(@credit_card, @subscription_options)
@@ -259,7 +279,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @subscription_options.merge(:setup_fee => 99.0, :subscription => {:amount => 49.0, :automatic_renew => false, frequency: 'monthly'}))
     assert_equal 'Successful transaction', response.message
     response = @gateway.retrieve(";#{response.params['subscriptionID']};", :order_id => @subscription_options[:order_id])
-    assert_equal 49.0, response.params['recurringAmount'].to_f
+    assert_equal "0.49", response.params['recurringAmount']
     assert_equal 'monthly', response.params['frequency']
   end
 
@@ -306,27 +326,5 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.retrieve(response.authorization, :order_id => generate_unique_id)
     assert response.success?
     assert response.test?
-  end
-
-  def test_successful_validate_pinless_debit_card
-    assert response = @gateway.validate_pinless_debit_card(@pinless_debit_card, @options)
-    assert response.test?
-    assert_equal 'Y', response.params["status"]
-    assert_equal true,  response.success?
-  end
-
-  def test_network_tokenization_authorize_and_capture
-    credit_card = network_tokenization_credit_card('4111111111111111',
-      :brand              => 'visa',
-      :eci                => "05",
-      :payment_cryptogram => "EHuWW9PiBkWvqE5juRwDzAUFBAk="
-    )
-
-    assert auth = @gateway.authorize(@amount, credit_card, @options)
-    assert_success auth
-    assert_equal 'Successful transaction', auth.message
-
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
   end
 end
