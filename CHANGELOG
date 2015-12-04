@@ -7,6 +7,7 @@
 * CyberSource: Add support for mdd_fields [duff]
 * Worldpay: Add support for verify [davidsantoso]
 * Element: Add guard clause to handle undocumented errors [davidsantoso]
+* Clearhaus: Add tests for signed requests [anellis]
 
 
 == Version 1.56.0 (December 1, 2015)

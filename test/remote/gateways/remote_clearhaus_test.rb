@@ -16,15 +16,23 @@ class RemoteClearhausTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  ## Disabling for now because of security
-  # def test_signing_request
-  #   gateway = ClearhausGateway.new(fixtures(:clearhaus_secure))
+  def test_signing_request
+    gateway = ClearhausGateway.new(fixtures(:clearhaus_secure))
 
-  #   assert gateway.options[:signing_key]
-  #   assert auth = gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
-  #   assert_equal 'Approved', auth.message
-  # end
+    assert gateway.options[:signing_key]
+    assert auth = gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+  end
+
+  def test_successful_purchase_without_cvv
+    gateway = ClearhausGateway.new(fixtures(:clearhaus_secure))
+    credit_card = credit_card('4111111111111111', verification_value: nil)
+    response = gateway.purchase(@amount, credit_card, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
 
   def test_successful_purchase_with_more_options
     options = {

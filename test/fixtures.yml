@@ -160,13 +160,20 @@ checkout_v2:
 
 # Working credentials, no need to replace
 clearhaus: &clearhaus
-  api_key: 526cf564-119c-4bb6-9cf8-0015eac7e4f6
+  api_key: d966051d-b7fd-4054-b4a6-22c4ff4d4701
   mpi_api_key: f21d07e4-be0a-4cd3-9dcb-9461dac1c90d
 
 clearhaus_secure:
   <<: *clearhaus
   signing_key: |
     -----BEGIN RSA PRIVATE KEY-----
+    MIIBOwIBAAJBALYK0zmwuYkH3YWcFNLLddx5cwDxEY7Gi1xITuQqRrU4yD3uSw+J
+    WYKknb4Tbndb6iEHY+e6gIGD+49TojnNeIUCAwEAAQJARyuYRRe4kcBHdPL+mSL+
+    Y0IAGkAlUyKAXYXPghidKD/v/oLrFaZWALGM2clv6UoYYpPnInSgbcud4sTcfeUm
+    QQIhAN2JZ2qv0WGcbIopBpwpQ5jDxMGVkmkVVUEWWABGF8+pAiEA0lySxTELZm8b
+    Gx9UEDRghN+Qv/OuIKFldu1Ba4f8W30CIQCaQFIBtunTTVdF28r+cLzgYW9eWwbW
+    pEP4TdZ4WlW6AQIhAMDCTUdeUpjxlH/87BXROORozAXocBW8bvJUI486U5ctAiAd
+    InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
     -----END RSA PRIVATE KEY-----
 
 
