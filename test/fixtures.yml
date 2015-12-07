@@ -921,7 +921,7 @@ stripe:
 
 # Working credentials, no need to replace
 stripe_destination:
-  stripe_user_id: "acct_161hWaHIrJcQ9OHT"
+  stripe_user_id: "acct_17FRNfIPBJTitsen"
 
 # Used only for remote tests that use EMV credit card mocks
 stripe_emv_uk:
