@@ -265,7 +265,7 @@ module ActiveMerchant #:nodoc:
         if action == "PaymentAccountCreate"
           response["paymentaccount"]["paymentaccountid"]
         else
-          "#{response['transaction']['transactionid']}|#{amount}"
+          "#{response['transaction']['transactionid']}|#{amount}" if response['transaction']
         end
       end
 
