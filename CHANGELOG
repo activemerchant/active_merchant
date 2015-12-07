@@ -10,7 +10,7 @@
 * Clearhaus: Add tests for signed requests [anellis]
 * Stripe: Support adding cards to account [anellis]
 * Clearhaus: Add text_on_statement option [anellis]
-
+* Payeezy: Void and verify support [davidsantoso]
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
