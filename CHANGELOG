@@ -6,6 +6,7 @@
 * Auth.net: Update store to create payment profiles [davidsantoso]
 * CyberSource: Add support for mdd_fields [duff]
 * Worldpay: Add support for verify [davidsantoso]
+* Element: Add guard clause to handle undocumented errors [davidsantoso]
 
 
 == Version 1.56.0 (December 1, 2015)
