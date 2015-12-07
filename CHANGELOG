@@ -8,7 +8,7 @@
 * Worldpay: Add support for verify [davidsantoso]
 * Element: Add guard clause to handle undocumented errors [davidsantoso]
 * Clearhaus: Add tests for signed requests [anellis]
-
+* Stripe: Support adding cards to account [anellis]
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]

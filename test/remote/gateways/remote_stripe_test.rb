@@ -8,6 +8,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242')
     @declined_card = credit_card('4000000000000002')
     @new_credit_card = credit_card('5105105105105100')
+    @debit_card = credit_card('4000056655665556')
 
     @options = {
       :currency => "USD",
@@ -179,6 +180,14 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "TheDesc", customer_response.params["description"]
     assert_equal "email@example.com", customer_response.params["email"]
     assert_equal 2, customer_response.params["sources"]["total_count"]
+  end
+
+  def test_successful_store_with_existing_account
+    account = fixtures(:stripe_destination)[:stripe_user_id]
+
+    assert response = @gateway.store(@debit_card, account: account)
+    assert_success response
+    assert_equal "card", response.params["object"]
   end
 
   def test_successful_purchase_using_stored_card
