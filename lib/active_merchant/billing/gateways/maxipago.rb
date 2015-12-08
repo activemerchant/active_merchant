@@ -2,6 +2,7 @@ require 'nokogiri'
 require 'active_merchant/billing/gateways/maxipago/maxipago_common_api'
 require 'active_merchant/billing/gateways/maxipago/maxipago_recurring_api'
 require 'active_merchant/billing/gateways/maxipago/maxipago_boleto_api'
+require 'active_merchant/billing/gateways/maxipago/maxipago_bank_transfer_api'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -9,12 +10,15 @@ module ActiveMerchant #:nodoc:
       include MaxipagoCommonAPI
       include MaxipagoRecurringAPI
       include MaxipagoBoletoAPI
+      include MaxipagoBankTransferAPI
 
       # TODO: Tests, Docs and OnlineDebit
 
       def purchase(money, creditcard_or_payment_type, options = {})
-        if creditcard_or_payment_type == 'Boleto'
+        if creditcard_or_payment_type == :boleto_bancario
           generate_boleto(money, options)
+        elsif creditcard_or_payment_type == :bank_transfer
+          bank_transfer(money, options)
         else
           common_purchase(money, creditcard_or_payment_type, options)
         end
@@ -39,13 +43,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def details(identifier, options = {})
-        post = if options[:type] == :order
-         { order_id: identifier }
-        else
+        post = if options[:type] == :transaction
          { transaction_id: identifier }
+        else
+         { order_id: identifier }
         end
 
-        commit(build_detail_request(post))
+        commit(build_detail_request(post), :report)
       end
 
       private

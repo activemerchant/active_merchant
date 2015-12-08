@@ -65,6 +65,10 @@ module ActiveMerchant #:nodoc:
         post[:billing_name] = creditcard.name
       end
 
+      def add_payer_name(post, options)
+        post[:billing_name] = options[:payer][:name]
+      end
+
       def add_address(post, options)
         if(address = (options[:address] || options[:billing_address]))
           post[:billing_address] = address[:address1]
@@ -106,6 +110,7 @@ module ActiveMerchant #:nodoc:
             xml.processorID params[:processorID]
             xml.fraudCheck 'N'
             xml.referenceNum params[:referenceNum] # spree_order
+            xml.customerIdExt params[:customer_identifier] if params[:payment_type] == :bank_transfer
             xml.transactionDetail {
               xml.payType {
                 if params[:payment_type] == :boleto
@@ -113,6 +118,10 @@ module ActiveMerchant #:nodoc:
                     xml.expirationDate params[:expiration_date]
                     xml.number params[:number]
                     xml.instructions params[:instructions]
+                  }
+                elsif params[:payment_type] == :bank_transfer
+                  xml.onlineDebit {
+                    xml.parametersURL params[:url_params] if params[:url_params]
                   }
                 else
                   xml.creditCard {

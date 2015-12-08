@@ -26,9 +26,9 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         add_aux_data(post, options)
-        add_amount(post, money)
-        add_creditcard(post, creditcard)
-        add_name(post, creditcard)
+        add_amount(post, amount)
+        add_creditcard(post, credit_card)
+        add_name(post, credit_card)
         add_address(post, options)
         add_recurring(post, options)
 
@@ -36,11 +36,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def cancel_recurring(order_id, options = {})
-        commit(build_api_request('cancel-recurring', order_id))
-      end
-
-      def status_recurring(order_id, options = {})
-        commit(build_detail_request({ order_id: order_id }))
+        commit(build_api_request('cancel-recurring', order_id), :api)
       end
 
       private
