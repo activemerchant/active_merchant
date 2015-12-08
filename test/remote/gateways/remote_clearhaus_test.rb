@@ -34,6 +34,15 @@ class RemoteClearhausTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_text_on_statement
+    options = { text_on_statement: "hello" }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
+    assert_success response
+    assert_equal response.params["text_on_statement"], "hello"
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
