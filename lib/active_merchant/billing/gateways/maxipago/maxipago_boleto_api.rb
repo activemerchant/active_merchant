@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def generate_boleto_number(processor_id)
-        digits = processor_itau? ? 8 : 10
+        digits = processor_itau?(processor_id) ? 8 : 10
         limit = 10 ** digits
         number = Random.rand(limit)
         "%0#{digits}d" % number

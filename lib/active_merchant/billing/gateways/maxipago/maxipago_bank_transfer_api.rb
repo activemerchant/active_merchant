@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       def bank_transfer(amount, options = {})
         options[:amount] = amount
         options[:customer_identifier] = options[:payer][:legal_identifier]
-        requires!(options, :customer_identifier, :amount)
+        requires!(options, :customer_identifier, :amount, :url_params)
 
         post = {}
         add_aux_data(post, options)
