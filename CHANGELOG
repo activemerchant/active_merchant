@@ -11,6 +11,8 @@
 * Stripe: Support adding cards to account [anellis]
 * Clearhaus: Add text_on_statement option [anellis]
 * Payeezy: Void and verify support [davidsantoso]
+* Creditcall: Use ecommerce rather than cnp [duff]
+
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
