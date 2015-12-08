@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       def capture(amount, authorization, options={})
         post = {}
-        add_amount(post, amount, options)
+        add_invoice(post, amount, options)
 
         commit("/authorizations/#{authorization}/captures", post)
       end
@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         add_amount(post, money, options)
         post[:reference] = options[:order_id] if options[:order_id]
-        post[:text_on_statement] = options[:description] if options[:description]
+        post[:text_on_statement] = options[:text_on_statement] if options[:text_on_statement]
       end
 
       def add_amount(post, amount, options)
