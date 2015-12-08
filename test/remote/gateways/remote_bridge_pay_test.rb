@@ -124,6 +124,14 @@ class RemoteBridgePayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_store_and_purchase
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    purchase = @gateway.purchase(@amount, store.authorization)
+    assert_success purchase
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

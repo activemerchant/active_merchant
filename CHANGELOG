@@ -13,6 +13,8 @@
 * Payeezy: Void and verify support [davidsantoso]
 * Creditcall: Use ecommerce rather than cnp [duff]
 * Payeezy: Add support for echecks [davidsantoso]
+* Bridgepay: Add ability to store cards and pay with token [anellis]
+
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
