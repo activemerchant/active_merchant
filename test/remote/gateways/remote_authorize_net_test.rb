@@ -450,6 +450,12 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_echeck_credit
+    response = @gateway.credit(@amount, @check, @options)
+    assert_equal 'The transaction is currently under review', response.message
+    assert response.authorization
+  end
+
   def test_failed_credit
     response = @gateway.credit(@amount, @declined_card, @options)
     assert_failure response

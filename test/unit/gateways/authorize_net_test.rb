@@ -154,7 +154,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "15378535", doc.at_xpath("//accountNumber").content
         assert_equal "Bank of Elbonia", doc.at_xpath("//bankName").content
         assert_equal "Jim Smith", doc.at_xpath("//nameOnAccount").content
-        assert_equal "WEB", doc.at_xpath("//echeckType").content
         assert_equal "1", doc.at_xpath("//checkNumber").content
         assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
@@ -176,7 +175,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "15378535", doc.at_xpath("//accountNumber").content
         assert_equal "Bank of Elbonia", doc.at_xpath("//bankName").content
         assert_equal "Jim Smith", doc.at_xpath("//nameOnAccount").content
-        assert_equal "WEB", doc.at_xpath("//echeckType").content
         assert_equal "1", doc.at_xpath("//checkNumber").content
         assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
