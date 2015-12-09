@@ -5,6 +5,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
     @gateway = PayeezyGateway.new(fixtures(:payeezy))
     @credit_card = credit_card
     @bad_credit_card = credit_card('4111111111111113')
+    @check = check
     @amount = 100
     @options = {
       :billing_address => address,
@@ -14,6 +15,12 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
   end
@@ -55,6 +62,17 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_successful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
+
+  def test_successful_refund_with_echeck
+    assert purchase = @gateway.purchase(@amount, @check, @options)
     assert_match(/Transaction Normal/, purchase.message)
     assert_success purchase
 
@@ -147,6 +165,17 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:token], transcript)
+  end
+
+  def test_transcript_scrubbing_echeck
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:token], transcript)
   end
 end

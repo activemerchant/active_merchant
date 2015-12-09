@@ -12,6 +12,7 @@ class PayeezyGateway < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @check = check
     @amount = 100
     @options = {
       :billing_address => address
@@ -58,6 +59,15 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
   end
 
+  def test_successful_purchase_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_purchase_echeck_response)
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert_equal 'ET133078|69864362|tele_check|100', response.authorization
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).raises(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -100,6 +110,12 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.refund(@amount, @authorization)
+    assert_success response
+  end
+
+  def test_successful_refund_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_refund_echeck_response)
     assert response = @gateway.refund(@amount, @authorization)
     assert_success response
   end
@@ -190,6 +206,11 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_scrub_echeck
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
+  end
+
   private
 
   def pre_scrubbed
@@ -260,9 +281,69 @@ class PayeezyGateway < Test::Unit::TestCase
     TRANSCRIPT
   end
 
+  def pre_scrubbed_echeck
+    <<-TRANSCRIPT
+    {\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"method\":\"tele_check\",\"tele_check\":{\"check_number\":\"1\",\"check_type\":\"P\",\"routing_number\":\"244183602\",\"account_number\":\"15378535\",\"accountholder_name\":\"Jim Smith\"},\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+    -> "HTTP/1.1 201 Created\r\n"
+    -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
+    -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
+    -> "Access-Control-Allow-Origin: http://localhost:8080\r\n"
+    -> "Access-Control-Max-Age: 3628800\r\n"
+    -> "Access-Control-Request-Headers: origin, x-requested-with, accept, content-type\r\n"
+    -> "Content-Language: en-US\r\n"
+    -> "Content-Type: application/json;charset=UTF-8\r\n"
+    -> "Date: Wed, 09 Dec 2015 19:33:14 GMT\r\n"
+    -> "OPTR_CXT: 0100010000094b4179-bed8-4068-b077-d8679a20046f00000000-0000-0000-0000-000000000000-1                                  HTTP    ;\r\n"
+    -> "Server: Apigee Router\r\n"
+    -> "X-Archived-Client-IP: 10.180.205.250\r\n"
+    -> "X-Backside-Transport: OK OK,OK OK\r\n"
+    -> "X-Client-IP: 10.180.205.250,107.23.55.229\r\n"
+    -> "X-Global-Transaction-ID: 97138449\r\n"
+    -> "X-Powered-By: Servlet/3.0\r\n"
+    -> "Content-Length: 491\r\n"
+    -> "Connection: Close\r\n"
+    -> "\r\n"
+    reading 491 bytes...
+    -> "{\"correlation_id\":\"228.1449689594381\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET196703\",\"transaction_tag\":\"69865571\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"8535\",\"routing_number\":\"244183602\"}}
+    TRANSCRIPT
+  end
+
+  def post_scrubbed_echeck
+    <<-TRANSCRIPT
+    {\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"method\":\"tele_check\",\"tele_check\":{\"check_number\":\"1\",\"check_type\":\"P\",\"routing_number\":\"[FILTERED]\",\"account_number\":\"[FILTERED]\",\"accountholder_name\":\"Jim Smith\"},\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
+    -> "HTTP/1.1 201 Created\r\n"
+    -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
+    -> "Access-Control-Allow-Methods: GET, PUT, POST, DELETE\r\n"
+    -> "Access-Control-Allow-Origin: http://localhost:8080\r\n"
+    -> "Access-Control-Max-Age: 3628800\r\n"
+    -> "Access-Control-Request-Headers: origin, x-requested-with, accept, content-type\r\n"
+    -> "Content-Language: en-US\r\n"
+    -> "Content-Type: application/json;charset=UTF-8\r\n"
+    -> "Date: Wed, 09 Dec 2015 19:33:14 GMT\r\n"
+    -> "OPTR_CXT: 0100010000094b4179-bed8-4068-b077-d8679a20046f00000000-0000-0000-0000-000000000000-1                                  HTTP    ;\r\n"
+    -> "Server: Apigee Router\r\n"
+    -> "X-Archived-Client-IP: 10.180.205.250\r\n"
+    -> "X-Backside-Transport: OK OK,OK OK\r\n"
+    -> "X-Client-IP: 10.180.205.250,107.23.55.229\r\n"
+    -> "X-Global-Transaction-ID: 97138449\r\n"
+    -> "X-Powered-By: Servlet/3.0\r\n"
+    -> "Content-Length: 491\r\n"
+    -> "Connection: Close\r\n"
+    -> "\r\n"
+    reading 491 bytes...
+    -> "{\"correlation_id\":\"228.1449689594381\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET196703\",\"transaction_tag\":\"69865571\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"[FILTERED]\",\"routing_number\":\"[FILTERED]\"}}
+    TRANSCRIPT
+  end
+
   def successful_purchase_response
     <<-RESPONSE
     {\"method\":\"credit_card\",\"amount\":\"1\",\"currency\":\"USD\",\"avs\":\"4\",\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Bobsen 995\",\"card_number\":\"4242\",\"exp_date\":\"0816\"},\"token\":{\"token_type\":\"transarmor\",\"token_data\":{\"value\":\"0152552999534242\"}},\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET114541\",\"transaction_tag\":\"55083431\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"correlation_id\":\"124.1433862672836\"}
+    RESPONSE
+  end
+
+  def successful_purchase_echeck_response
+    <<-RESPONSE
+    {\"correlation_id\":\"228.1449688619062\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET133078\",\"transaction_tag\":\"69864362\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"8535\",\"routing_number\":\"244183602\"}}
     RESPONSE
   end
 
@@ -328,6 +409,12 @@ message:
   def successful_refund_response
     <<-RESPONSE
     {\"method\":\"credit_card\",\"amount\":\"1\",\"currency\":\"USD\",\"cvv2\":\"I\",\"token\":{\"token_type\":\"transarmor\",\"token_data\":{\"value\":\"9968749582724242\"}},\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"refund\",\"transaction_id\":\"55084328\",\"transaction_tag\":\"55084328\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"correlation_id\":\"124.1433864648126\"}
+    RESPONSE
+  end
+
+  def successful_refund_echeck_response
+    <<-RESPONSE
+    {\"correlation_id\":\"228.1449688783287\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"refund\",\"transaction_id\":\"69864710\",\"transaction_tag\":\"69864710\",\"method\":\"tele_check\",\"amount\":\"50\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
     RESPONSE
   end
 
