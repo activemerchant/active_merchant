@@ -445,7 +445,6 @@ module ActiveMerchant #:nodoc:
             xml.routingNumber(check.routing_number)
             xml.accountNumber(check.account_number)
             xml.nameOnAccount(check.name)
-            xml.echeckType("WEB")
             xml.bankName(check.bank_name)
             xml.checkNumber(check.number)
           end
