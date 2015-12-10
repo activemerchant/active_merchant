@@ -14,7 +14,7 @@
 * Creditcall: Use ecommerce rather than cnp [duff]
 * Payeezy: Add support for echecks [davidsantoso]
 * Bridgepay: Add ability to store cards and pay with token [anellis]
-
+* Initial support for Android Pay network tokenization cards [mrezentes]
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
