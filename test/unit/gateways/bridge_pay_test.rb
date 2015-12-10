@@ -96,28 +96,20 @@ class BridgePayTest < Test::Unit::TestCase
     assert_success refund
   end
 
-  def test_store
-    response = stub_comms do
-      @gateway.store(@credit_card)
-    end.respond_with(successful_store_response)
-
-    assert_success response
-
-    assert_equal "Success", response.message
-    assert response.test?
-  end
-
-  def test_successful_purchase_with_token
+  def test_store_and_purchase_with_token
     store = stub_comms do
       @gateway.store(@credit_card)
     end.respond_with(successful_store_response)
+
     assert_success store
+    assert_equal "Success", store.message
 
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    response = @gateway.purchase(@amount, store.authorization)
+    purchase = stub_comms do
+      @gateway.purchase(@amount, store.authorization)
+    end.respond_with(successful_purchase_response)
 
-    assert_equal "Approved", response.message
-    assert response.test?
+    assert_success purchase
+    assert_equal "Approved", purchase.message
   end
 
   def test_passing_cvv
