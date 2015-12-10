@@ -342,7 +342,7 @@ module ActiveMerchant #:nodoc:
           end
           post[:card] = card
 
-          if creditcard.is_a?(NetworkTokenizationCreditCard)
+          if creditcard.is_a?(NetworkTokenizationCreditCard) && creditcard.source == :apple_pay
             post[:three_d_secure] = {
               apple_pay:  true,
               cryptogram: creditcard.payment_cryptogram
