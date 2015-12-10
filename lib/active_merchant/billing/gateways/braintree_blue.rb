@@ -554,13 +554,15 @@ module ActiveMerchant #:nodoc:
             :last_name => credit_card_or_vault_id.last_name
           )
           if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
-            parameters[:apple_pay_card] = {
-              :number => credit_card_or_vault_id.number,
-              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-              :expiration_year => credit_card_or_vault_id.year.to_s,
-              :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
-              :cryptogram => credit_card_or_vault_id.payment_cryptogram
-            }
+            if credit_card_or_vault_id.source == :apple_pay
+              parameters[:apple_pay_card] = {
+                :number => credit_card_or_vault_id.number,
+                :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+                :expiration_year => credit_card_or_vault_id.year.to_s,
+                :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
+                :cryptogram => credit_card_or_vault_id.payment_cryptogram
+              }
+            end
           else
             parameters[:credit_card] = {
               :number => credit_card_or_vault_id.number,
