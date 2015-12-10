@@ -182,13 +182,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(parameters)
-        if parameters[:transaction]
-          url = url("ManageCardVault")
-        else
-          url = url(parameters[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard')
-        end
         data = post_data(parameters)
-        raw = parse(ssl_post(url, data))
+        raw = parse(ssl_post(url(parameters), data))
 
         Response.new(
           success_from(raw),
@@ -199,9 +194,17 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def url(action)
-        base = test? ? test_url : live_url
-        "#{base}/#{action}"
+      def url(params)
+        if params[:transaction]
+          "#{base_url}/ManageCardVault"
+        else
+          action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
+          "#{base_url}/#{action}"
+        end
+      end
+
+      def base_url
+        test? ? test_url : live_url
       end
 
       def success_from(response)
