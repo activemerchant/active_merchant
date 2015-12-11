@@ -34,7 +34,12 @@ module ActiveMerchant #:nodoc:
             xml.CustRef options[:order_id]
             add_amount(xml, money)
             xml.TrnType "1"
-            add_credit_card(xml, payment)
+            if payment.respond_to?(:number)
+              add_credit_card(xml, payment)
+            else
+              # triggered payment for an tokenised credit card
+              add_token_details(xml, payment)
+            end
             add_credentials(xml)
             xml.TrnSource options[:ip]
           end
@@ -47,7 +52,12 @@ module ActiveMerchant #:nodoc:
             xml.CustRef options[:order_id]
             add_amount(xml, money)
             xml.TrnType "2"
-            add_credit_card(xml, payment)
+            if payment.respond_to?(:number)
+              add_credit_card(xml, payment)
+            else
+              # triggered payment for an tokenised credit card
+              add_token_details(xml, payment)
+            end
             add_credentials(xml)
             xml.TrnSource options[:ip]
           end
@@ -122,6 +132,13 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(xml, money)
         xml.Amount amount(money)
+      end
+
+      def add_token_details(xml, payment)
+        xml.CreditCard do
+          xml.CardNumber payment
+          xml.TokeniseAlgorithmID "2"
+        end
       end
 
       def add_credit_card(xml, payment)

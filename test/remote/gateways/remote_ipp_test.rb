@@ -81,6 +81,28 @@ class RemoteIppTest < Test::Unit::TestCase
     assert_equal '', response.message
   end
 
+  def test_successful_purchase_with_token
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '', response.message
+    customer_token = response.authorization
+
+    assert response = @gateway.purchase(200, customer_token, @options)
+    assert_success response
+    assert_equal '', response.message
+  end
+
+  def test_successful_authorize_with_token
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '', response.message
+    customer_token = response.authorization
+
+    assert response = @gateway.authorize(200, customer_token, @options)
+    assert_success response
+    assert_equal '', response.message
+  end
+
   def test_failed_store
     response = @gateway.store(credit_card(''), @options)
     assert_failure response
