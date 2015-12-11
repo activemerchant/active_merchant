@@ -91,6 +91,17 @@ module ActiveMerchant #:nodoc:
         commit(:post, "credit_cards", post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("card_number\\":\\")[^"\\]*)i, '\1[FILTERED]').
+          gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
+      end
+
       private
 
       # Add the money details to the request
