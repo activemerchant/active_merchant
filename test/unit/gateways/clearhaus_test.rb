@@ -61,7 +61,7 @@ class ClearhausTest < Test::Unit::TestCase
 
   def test_additional_params
     stub_comms do
-      response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '123', description: 'test'))
+      response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '123', text_on_statement: 'test'))
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|

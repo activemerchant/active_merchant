@@ -1,5 +1,24 @@
 = ActiveMerchant CHANGELOG
 
+* AuthorizeNetCim: Add unmaskExpirationDate option [RamilGilmanov]
+* Element: Add gateway support [davidsantoso]
+* Cardstream: 3D-secure capture fix [duff]
+* Auth.net: Update store to create payment profiles [davidsantoso]
+* CyberSource: Add support for mdd_fields [duff]
+* Worldpay: Add support for verify [davidsantoso]
+* Element: Add guard clause to handle undocumented errors [davidsantoso]
+* Clearhaus: Add tests for signed requests [anellis]
+* Stripe: Support adding cards to account [anellis]
+* Clearhaus: Add text_on_statement option [anellis]
+* Payeezy: Void and verify support [davidsantoso]
+* Creditcall: Use ecommerce rather than cnp [duff]
+* Payeezy: Add support for echecks [davidsantoso]
+* Bridgepay: Add ability to store cards and pay with token [anellis]
+* Initial support for Android Pay network tokenization cards [mrezentes]
+* Transfirst: Fix exception when not all eCheck information is present [davidsantoso]
+* Auth.net: Add tests for echeck refunds [davidsantoso]
+
+== Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
 * Mercury: Add support for card present track 2 [ryanbalsdon]
 * Cardstream: Improve default currency handling [duff]
@@ -16,7 +35,10 @@
 * Stripe: Correctly detect test mode voids [methodmissing]
 * Garanti: Add test mode URL and update remote test credentials [cbilgili]
 * Cashnet: Allow custcode override on refund [duff]
-
+* Omise: Add a new optional api_version config [zdk]
+* Elavon: Include IP address in purchase and authorize requests [aprofeit]
+* TransFirst: Add support for ACH and more operations [davidsantoso]
+* FirstData_e4: Fix void for even dollar transactions [duff]
 
 == Version 1.55.0 (November 9, 2015)
 * CyberSource: send customer IP address when provided [fastjames]
@@ -69,7 +91,6 @@
 * Vanco: Handle case of no billing_address [duff]
 * BluePay: Add support for CUSTOM_ID2 field [ajporterfield]
 * Creditcall: Handle no verification_value [duff]
-
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]

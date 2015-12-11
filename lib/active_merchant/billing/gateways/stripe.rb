@@ -168,8 +168,10 @@ module ActiveMerchant #:nodoc:
         post[:validate] = options[:validate] unless options[:validate].nil?
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
-
-        if options[:customer]
+        if options[:account]
+          add_external_account(post, card_params, payment)
+          commit(:post, "accounts/#{CGI.escape(options[:account])}/external_accounts", post, options)
+        elsif options[:customer]
           MultiResponse.run(:first) do |r|
             # The /cards endpoint does not update other customer parameters.
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", card_params, options) }
@@ -290,6 +292,13 @@ module ActiveMerchant #:nodoc:
         post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
       end
 
+      def add_external_account(post, card_params, payment)
+        external_account = {}
+        external_account[:object] ="card"
+        external_account[:currency] = (options[:currency] || currency(payment)).downcase
+        post[:external_account] = external_account.merge(card_params[:card])
+      end
+
       def add_customer_data(post, options)
         metadata_options = [:description, :ip, :user_agent, :referrer]
         post.update(options.slice(*metadata_options))
@@ -333,7 +342,7 @@ module ActiveMerchant #:nodoc:
           end
           post[:card] = card
 
-          if creditcard.is_a?(NetworkTokenizationCreditCard)
+          if creditcard.is_a?(NetworkTokenizationCreditCard) && creditcard.source == :apple_pay
             post[:three_d_secure] = {
               apple_pay:  true,
               cryptogram: creditcard.payment_cryptogram

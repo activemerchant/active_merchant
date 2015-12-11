@@ -82,6 +82,7 @@ module ActiveMerchant #:nodoc:
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
+        add_ip(form, options)
         commit(:purchase, money, form)
       end
 
@@ -100,6 +101,7 @@ module ActiveMerchant #:nodoc:
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
+        add_ip(form, options)
         commit(:authorize, money, form)
       end
 
@@ -294,6 +296,10 @@ module ActiveMerchant #:nodoc:
 
       def add_partial_shipment_flag(form, options)
         form[:partial_shipment_flag] = 'Y' if options[:partial_shipment_flag]
+      end
+
+      def add_ip(form, options)
+        form[:cardholder_ip] = options[:ip] if options.has_key?(:ip)
       end
 
       def message_from(response)

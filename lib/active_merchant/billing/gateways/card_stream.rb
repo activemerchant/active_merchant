@@ -95,6 +95,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_pair(post, :xref, authorization)
         add_amount(post, money, options)
+        add_threeds_required(post, options)
         commit('SALE', post)
       end
 
@@ -154,8 +155,8 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :item1GrossValue, amount(money))
         end
 
-        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
         add_pair(post, :type, options[:type] || '1')
+        add_threeds_required(post, options)
       end
 
       def add_creditcard(post, credit_card)
@@ -173,6 +174,10 @@ module ActiveMerchant #:nodoc:
         end
 
         add_pair(post, :cardCVV, credit_card.verification_value)
+      end
+
+      def add_threeds_required(post, options)
+        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
       end
 
       def add_hmac(post)
