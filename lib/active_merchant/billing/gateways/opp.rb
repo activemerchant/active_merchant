@@ -13,9 +13,9 @@ module ActiveMerchant #:nodoc:
     # == Usage
     #
     #   gateway = ActiveMerchant::Billing::OppGateway.new(
-    #      userId: 'merchant user id', 
+    #      user_id: 'merchant user id', 
     #      password: 'password',
-    #      entityId: 'entity id', 
+    #      entity_id: 'entity id', 
     #   )
     #
     #   # set up credit card object as in main ActiveMerchant example
@@ -28,15 +28,15 @@ module ActiveMerchant #:nodoc:
     #     :last_name  => 'Bobsen'
     #     :verification_value: '123')
     #
-    #   # Request: complete example, including address, billing address, shipping address, shopping cart
+    #   # Request: complete example, including address, billing address, shipping address
     #    complete_request_options = {
     #      order_id: "your merchant/shop order id", # alternative is to set merchantInvoiceId 
-    #      merchantTransactionId: "your merchant/shop transaction id",
+    #      merchant_transaction_id: "your merchant/shop transaction id",
     #      address: address,
     #      description: 'Store Purchase - Books',
-    #      riskWorkflow: false,
-    #      testMode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
-    #      createRegistration: false, # payment details will be stored on the server an latter can be referenced
+    #      risk_workflow: false,
+    #      test_mode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
+    #      create_registration: false, # payment details will be stored on the server an latter can be referenced
     #
     #     billing_address: {
     #        address1: '123 Test Street',
@@ -54,36 +54,23 @@ module ActiveMerchant #:nodoc:
     #        country:  'DE',
     #      },
     #      customer: {
-    #        merchantCustomerId:  "your merchant/customer id",
-    #        givenName:  'Jane',
+    #        merchant_customer_id:  "your merchant/customer id",
+    #        givenname:  'Jane',
     #        surname:  'Jones',
-    #        birthDate:  '1965-05-01',
+    #        birth_date:  '1965-05-01',
     #        phone:  '(?!?)555-5555',
     #        mobile:  '(?!?)234-23423',
     #        email:  'jane@jones.com',
-    #        companyName:  'JJ Ltd.',
-    #        identificationDocType:  'PASSPORT',
-    #        identificationDocId:  'FakeID2342431234123',
+    #        company_name:  'JJ Ltd.',
+    #        identification_doctype:  'PASSPORT',
+    #        identification_docid:  'FakeID2342431234123',
     #        ip:  101.102.103.104,
-    #      },
-    #      cart: {
-    #        items: [
-    #            { name: ' Bestseller Book', merchantItemId: 'isbn-0123456789012345', 
-    #              quantity: 1, type: 'book', price: 1.95, currency: 'EUR', description: 'Some item description',
-    #              tax: 7.0, shipping: 3.25, discount: 5.0
-    #            },                    
-    #            { name: 'Book 2', merchantItemId: 'isbn-0123456789012345', 
-    #              quantity: 1, type: 'book', price: 2.45, currency: 'EUR', description: 'Other item description',
-    #              tax: 7.0, shipping: 3.25, discount: 10.0
-    #            }                    
-    #        ],
     #      },
     #    }
     #    
     #    # Request: minimal example
     #    minimal_request_options = {
     #      order_id: "your merchant/shop order id", # alternative is to set merchantInvoiceId 
-    #      merchantTransactionId: "your merchant/shop transaction id",
     #      description: 'Store Purchase - Books',
     #    }
     #
@@ -105,21 +92,21 @@ module ActiveMerchant #:nodoc:
     #   you may check the original result code from OPP that can be found in response.params['result']['code']
     #       
     # == Special features
-    #   For purchase method risk check can be forced when options[:riskWorkflow] = true 
+    #   For purchase method risk check can be forced when options[:risk_workflow] = true 
     #   This will split (on OPP server side) the transaction into two separate transactions: authorize and capture, 
     #   but capture will be executed only if risk checks are successful.   
     #
     #   For testing you may use the test account details listed fixtures.yml under opp. It is important to note that there are two test modes available:
-    #     options[:testMode]='EXTERNAL' causes test transactions to be forwarded to the processor's test system for 'end-to-end' testing
-    #     options[:testMode]='INTERNAL' causes transactions to be sent to opp simulators, which is useful when switching to the live endpoint for connectivity testing.
-    #   If no testMode parameter is sent, testMode=INTERNAL is the default behaviour.
+    #     options[:test_mode]='EXTERNAL' causes test transactions to be forwarded to the processor's test system for 'end-to-end' testing
+    #     options[:test_mode]='INTERNAL' causes transactions to be sent to opp simulators, which is useful when switching to the live endpoint for connectivity testing.
+    #   If no test_mode parameter is sent, test_mode=INTERNAL is the default behaviour.
     #
-    #   Shopping Cart, Billing Address, Shipping Address, Custom Parameters are supported as described under https://docs.oppwa.com/parameters
+    #   Billing Address, Shipping Address, Custom Parameters are supported as described under https://docs.oppwa.com/parameters
     #   See complete example above for details. 
     #
     #   == Tokenization
-    #  When createRegistration is set to true, the payment details will be stored and a token will be returned in registrationId response field, 
-    #  which can subsequently be used to referenced the stored payment.
+    #  When create_registration is set to true, the payment details will be stored and a token will be returned in registrationId response field, 
+    #  which can subsequently be used to reference the stored payment.
 
       self.test_url = 'https://test.oppwa.com/v1/payments'
       self.live_url = 'https://oppwa.com/v1/payments'
@@ -131,37 +118,35 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://docs.oppwa.com'
       self.display_name = 'Open Payment Platform'
 
-      METHOD_TO_PAYMENTTYPE_MAPPING = { purchase: 'DB', authorize: 'PA', capture: 'CP', refund: 'RF', void: 'RV', pacp: 'PA.CP' }
-
       def initialize(options={})
-        requires!(options, :userId, :password, :entityId)
+        requires!(options, :user_id, :password, :entity_id)
         super
       end
 
       def purchase(money, payment, options={})
         # debit
-        execute_dbpa(options[:riskWorkflow] ? METHOD_TO_PAYMENTTYPE_MAPPING[:pacp]: METHOD_TO_PAYMENTTYPE_MAPPING[__method__], 
+        execute_dbpa(options[:risk_workflow] ? 'PA.CP': 'DB', 
           money, payment, options)
       end
 
       def authorize(money, payment, options={})
         # preauthorization PA
-        execute_dbpa(METHOD_TO_PAYMENTTYPE_MAPPING[__method__], money, payment, options)
+        execute_dbpa('PA', money, payment, options)
       end
       
       def capture(money, authorization, options={})
         # capture CP
-        execute_referencing(METHOD_TO_PAYMENTTYPE_MAPPING[__method__], money, authorization, options)
+        execute_referencing('CP', money, authorization, options)
       end
 
       def refund(money, authorization, options={})
         # refund RF
-        execute_referencing(METHOD_TO_PAYMENTTYPE_MAPPING[__method__], money, authorization, options)
+        execute_referencing('RF', money, authorization, options)
       end
 
       def void(authorization, options={})
         # reversal RV
-        execute_referencing(METHOD_TO_PAYMENTTYPE_MAPPING[__method__], nil, authorization, options)
+        execute_referencing('RV', nil, authorization, options)
       end
 
       def verify(credit_card, options={})
@@ -192,7 +177,6 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment_method(post, payment, options)
         add_address(post, options)
-        add_cart_items(post, options)
         add_customer_data(post, options)
         add_options(post, options)
         commit(post, nil, options)
@@ -206,22 +190,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_authentication(post) 
-          post[:authentication] = { entityId: @options[:entityId], password: @options[:password], userId: @options[:userId]} 
+          post[:authentication] = { entityId: @options[:entity_id], password: @options[:password], userId: @options[:user_id]} 
       end
 
       def add_customer_data(post, options)
         if options[:customer]
           post[:customer] = {
-            merchantCustomerId:  options[:customer][:merchantCustomerId],
-            givenName:  options[:customer][:givenName],
+            merchantCustomerId:  options[:customer][:merchant_customer_id],
+            givenName:  options[:customer][:givenname],
             surname:  options[:customer][:surname],
-            birthDate:  options[:customer][:birthDate],
+            birthDate:  options[:customer][:birth_date],
             phone:  options[:customer][:phone],
             mobile:  options[:customer][:mobile],
             email:  options[:customer][:email],
-            companyName:  options[:customer][:companyName],
-            identificationDocType:  options[:customer][:identificationDocType],
-            identificationDocId:  options[:customer][:identificationDocId],
+            companyName:  options[:customer][:company_name],
+            identificationDocType:  options[:customer][:identification_doctype],
+            identificationDocId:  options[:customer][:identification_docid],
             ip:  options[:customer][:ip],
           }
         end
@@ -256,7 +240,7 @@ module ActiveMerchant #:nodoc:
           post[:currency] = (currency(money) || @options[:currency]) if 'RV'!=(post[:paymentType])
           post[:descriptor] = options[:description] || options[:descriptor]  
           post[:merchantInvoiceId] = options[:merchantInvoiceId] || options[:order_id] 
-          post[:merchantTransactionId] = options[:merchantTransactionId]  
+          post[:merchantTransactionId] = options[:merchant_transaction_id]  
       end
 
       def add_payment_method(post, payment, options)
@@ -278,31 +262,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_options(post, options)
-        post[:createRegistration] = options[:createRegistration] if options[:createRegistration] && !options[:registrationId]
-        post[:testMode] = options[:testMode] if test? && options[:testMode]
+        post[:createRegistration] = options[:create_registration] if options[:create_registration] && !options[:registrationId]
+        post[:testMode] = options[:test_mode] if test? && options[:test_mode]
         options.each {|key, value| post[key] = value if key.to_s.match('customParameters\[[a-zA-Z0-9\._]{3,64}\]') }
         post['customParameters[SHOPPER_pluginId]'] = 'activemerchant'
-      end
-
-      def add_cart_items(post, options)
-        if cart = options[:cart]
-          if cart[:items] 
-            post[:cart] = {}
-            cart[:items].each_with_index {|value, idx|
-              post[:cart]["items[#{idx}]"] = {} 
-              post[:cart]["items[#{idx}]"][:name] = value[:name] if value[:name]   
-              post[:cart]["items[#{idx}]"][:merchantItemId] = value[:merchantItemId] if value[:merchantItemId]
-              post[:cart]["items[#{idx}]"][:quantity] = value[:quantity] if value[:quantity]
-              post[:cart]["items[#{idx}]"][:type] = value[:type] if value[:type]
-              post[:cart]["items[#{idx}]"][:price] = value[:price] if value[:price]
-              post[:cart]["items[#{idx}]"][:currency] = value[:currency] if value[:currency]
-              post[:cart]["items[#{idx}]"][:description] = value[:description] if value[:description]
-              post[:cart]["items[#{idx}]"][:tax] =  value[:tax] if value[:tax]
-              post[:cart]["items[#{idx}]"][:shipping] = value[:shipping] if value[:shipping]
-              post[:cart]["items[#{idx}]"][:discount] = value[:discount] if value[:discount]
-            }
-          end    
-        end
       end
 
       def build_url(url, authorization, options)

@@ -13,11 +13,11 @@ class OppTest < Test::Unit::TestCase
     ip = '101.102.103.104'
     @complete_request_options = {
       order_id: "Order #{time}",
-      merchantTransactionId: "active_merchant_test_complete #{time}",
+      merchant_transaction_id: "active_merchant_test_complete #{time}",
       address: address,
       description: 'Store Purchase - Books',
-#      riskWorkflow: true,
-#      testMode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
+#      risk_workflow: true,
+#      test_mode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
 
       billing_address: {
         name:     'Billy Billing',
@@ -36,35 +36,22 @@ class OppTest < Test::Unit::TestCase
         country:  'RU',
       },
       customer: {
-        merchantCustomerId:  "merchantCustomerId #{ip}",
-        givenName:  'Billy',
+        merchant_customer_id:  "merchantCustomerId #{ip}",
+        givenname:  'Billy',
         surname:  'Billing',
-        birthDate:  '1965-05-01',
+        birth_date:  '1965-05-01',
         phone:  '(?!?)555-5555',
         mobile:  '(?!?)234-23423',
         email:  'billy.billing@nosuchdeal.com',
-        companyName:  'No such deal Ltd.',
-        identificationDocType:  'PASSPORT',
-        identificationDocId:  'FakeID2342431234123',
+        company_name:  'No such deal Ltd.',
+        identification_doctype:  'PASSPORT',
+        identification_docid:  'FakeID2342431234123',
         ip:  ip,
-      },
-      cart: {
-        items: [
-            { name: 'Self Help Bestseller', merchantItemId: 'isbn-0928840928034928', 
-              quantity: 1, type: 'book', price: 1.95, currency: 'EUR', description: 'Some item description',
-              tax: 7.0, shipping: 3.25, discount: 5.0
-            },                    
-            { name: 'Fondation', merchantItemId: 'isbn-09280834098023423', 
-              quantity: 1, type: 'book', price: 2.45, currency: 'EUR', description: 'Other item description',
-              tax: 7.0, shipping: 3.25, discount: 10.0
-            }                    
-        ],
       },
     }
     
     @minimal_request_options = {
       order_id: "Order #{time}",
-      merchantTransactionId: "active_merchant_test_minimal #{time}",
       description: 'Store Purchase - Books',
     }
 
