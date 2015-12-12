@@ -6,6 +6,7 @@
 * CyberSource: Only get alpha2 country code when it's a known country [bruno] #2238
 * Fat Zebra: Add scrubbing to Fat Zebra gateway [bruno] #2037
 * Monei: Add US and CA as new supported countries [davidgf] #2209
+* NAB Transact: Add scrubbing to NAB Transact [bruno] #2038
 * iATS: Add scrubbing support to iATS [bruno] #2228
 * Stripe: Ensure ECI values for tokenized cards are padded [jasonwebster] #2250
 
