@@ -79,6 +79,18 @@ module ActiveMerchant #:nodoc:
         commit_periodic(:deletecrn, build_unstore_request(identification, options))
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        return "" if transcript.blank?
+        transcript.
+          gsub(%r((<cardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<cvv>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<password>)[^<]+(<))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def add_metadata(xml, options)
