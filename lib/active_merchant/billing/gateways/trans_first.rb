@@ -105,11 +105,16 @@ module ActiveMerchant #:nodoc:
       def add_echeck(post, payment)
         add_pair(post, :TransRoute, payment.routing_number, required: true)
         add_pair(post, :BankAccountNo, payment.account_number, required: true)
-        add_pair(post, :BankAccountType, payment.account_type.capitalize, required: true) if payment.account_type
-        add_pair(post, :CheckType, payment.account_holder_type.capitalize, required: true) if payment.account_holder_type
+        add_pair(post, :BankAccountType, add_or_use_default(payment.account_type, "Checking"), required: true)
+        add_pair(post, :CheckType, add_or_use_default(payment.account_holder_type, "Personal"), required: true)
         add_pair(post, :Name, payment.name, required: true)
         add_pair(post, :ProcessDate, Time.now.strftime("%m%d%y"), required: true)
         add_pair(post, :Description, "", required: true)
+      end
+
+      def add_or_use_default(payment_data, default_value)
+        return payment_data.capitalize if payment_data
+        return default_value
       end
 
       def add_unused_fields(post)
