@@ -17,6 +17,7 @@
 * Initial support for Android Pay network tokenization cards [mrezentes]
 * Transfirst: Fix exception when not all eCheck information is present [davidsantoso]
 * Auth.net: Add tests for echeck refunds [davidsantoso]
+* Transfirst: use default values for some eCheck data [davidsantoso]
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
