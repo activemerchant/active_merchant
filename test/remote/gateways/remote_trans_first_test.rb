@@ -31,6 +31,14 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_purchase_with_echeck_defaults
+    @check = check(account_holder_type: nil, account_type: nil)
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert response.test?
+    assert_success response
+    assert !response.authorization.blank?
+  end
+
   def test_failed_purchase
     @amount = 21
     assert response = @gateway.purchase(@amount, @credit_card, @options)
