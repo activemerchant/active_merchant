@@ -19,6 +19,7 @@
 * Auth.net: Add tests for echeck refunds [davidsantoso]
 * Transfirst: use default values for some eCheck data [davidsantoso]
 * Element: Update the live URL endpoint [davidsantoso]
+* Element: Parse responses from unexpected API errors [davidsantoso]
 
 
 == Version 1.56.0 (December 1, 2015)
