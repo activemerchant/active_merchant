@@ -147,6 +147,15 @@ class ElementTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_handles_error_response
+    @gateway.expects(:ssl_post).returns(error_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal response.error_code, "103"
+    assert_equal response.message, "TargetNamespace required"
+    assert_failure response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -163,6 +172,12 @@ class ElementTest < Test::Unit::TestCase
   def post_scrubbed
     <<-XML
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Body>\n    <CreditCardSale xmlns=\"https://transaction.elementexpress.com\">\n      <credentials>\n        <AccountID>1013963</AccountID>\n        <AccountToken>[FILTERED]</AccountToken>\n        <AcceptorID>3928907</AcceptorID>\n      </credentials>\n      <application>\n        <ApplicationID>5211</ApplicationID>\n        <ApplicationName>Spreedly</ApplicationName>\n        <ApplicationVersion>1</ApplicationVersion>\n      </application>\n      <card>\n        <CardNumber>[FILTERED]</CardNumber>\n        <ExpirationMonth>09</ExpirationMonth>\n        <ExpirationYear>16</ExpirationYear>\n        <CardholderName>Longbob Longsen</CardholderName>\n        <CVV>[FILTERED]</CVV>\n      </card>\n      <transaction>\n        <TransactionAmount>1.00</TransactionAmount>\n        <MarketCode>Default</MarketCode>\n      </transaction>\n      <terminal>\n        <TerminalID>01</TerminalID>\n        <CardPresentCode>UseDefault</CardPresentCode>\n        <CardholderPresentCode>UseDefault</CardholderPresentCode>\n        <CardInputCode>UseDefault</CardInputCode>\n        <CVVPresenceCode>UseDefault</CVVPresenceCode>\n        <TerminalCapabilityCode>UseDefault</TerminalCapabilityCode>\n        <TerminalEnvironmentCode>UseDefault</TerminalEnvironmentCode>\n        <MotoECICode>UseDefault</MotoECICode>\n      </terminal>\n      <address>\n        <BillingAddress1>456 My Street</BillingAddress1>\n        <BillingAddress2>Apt 1</BillingAddress2>\n        <BillingCity>Ottawa</BillingCity>\n        <BillingState>ON</BillingState>\n        <BillingZipcode>K1C2N6</BillingZipcode>\n      </address>\n    </CreditCardSale>\n  </soap:Body>\n</soap:Envelope>\n
+    XML
+  end
+
+  def error_response
+    <<-XML
+<Response xmlns='https://transaction.elementexpress.com'><Response><ExpressResponseCode>103</ExpressResponseCode><ExpressResponseMessage>TargetNamespace required</ExpressResponseMessage></Response></Response>
     XML
   end
 

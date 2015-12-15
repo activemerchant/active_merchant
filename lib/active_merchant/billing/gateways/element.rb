@@ -233,7 +233,13 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.remove_namespaces!
-        doc.root.xpath("//response/*").each do |node|
+        root = doc.root.xpath("//response/*")
+
+        if root.empty?
+          root = doc.root.xpath("//Response/*")
+        end
+
+        root.each do |node|
           if (node.elements.empty?)
             response[node.name.downcase] = node.text
           else
@@ -257,7 +263,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(action, response, amount),
-          test: test?
+          test: test?,
+          error_code: error_code_from(response)
         )
       end
 
@@ -275,6 +282,10 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         response["expressresponsemessage"]
+      end
+
+      def error_code_from(response)
+        response["expressresponsecode"]
       end
 
       def split_authorization(authorization)
