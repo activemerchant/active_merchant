@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ElementGateway < Gateway
       self.test_url = 'https://certtransaction.elementexpress.com/express.asmx'
-      self.live_url = 'https://transaction.elementexpress.com'
+      self.live_url = 'https://transaction.elementexpress.com/express.asmx'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Element'
 
       SERVICE_TEST_URL = 'https://certservices.elementexpress.com/express.asmx'
-      SERVICE_LIVE_URL = 'https://service.elementexpress.com'
+      SERVICE_LIVE_URL = 'https://service.elementexpress.com/express.asmx'
 
       def initialize(options={})
         requires!(options, :account_id, :account_token, :application_id, :acceptor_id, :application_name, :application_version)
