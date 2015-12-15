@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
         build_transaction_request(params) do |xml|
           xml.send(action) {
             xml.processorID params[:processorID]
-            xml.fraudCheck 'N'
+            xml.fraudCheck 'N' unless params[:recurring].present?
             xml.referenceNum params[:referenceNum] # spree_order
             xml.customerIdExt params[:customer_identifier] if params[:payment_type] == :bank_transfer
             xml.transactionDetail {
@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
             }
             xml.payment {
               xml.chargeTotal params[:amount]
-              if params[:installments].present?
+              if params[:installments].present? && !params[:recurring].present?
                 xml.creditInstallment {
                   xml.numberOfInstallments params[:installments]
                   xml.chargeInterest 'N'
