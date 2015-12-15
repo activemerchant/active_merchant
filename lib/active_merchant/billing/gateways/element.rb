@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(action, response, amount),
-          test: test?,
+          test: test?
         )
       end
 
@@ -327,7 +327,7 @@ module ActiveMerchant #:nodoc:
       def headers(action)
         {
           "Content-Type" => "text/xml; charset=utf-8",
-          "SOAPAction" => "https://#{interface(action)}.elementexpress.com/#{action}",
+          "SOAPAction" => "https://#{interface(action)}.elementexpress.com/#{action}"
         }
       end
     end
