@@ -22,7 +22,7 @@
 * Element: Parse responses from unexpected API errors [davidsantoso]
 * Transfirst: Remove unused fields for echeck [davidsantoso]
 * Sage: Internal refactoring into a single gateway class w/ common http conn [anellis]
-
+* Cardstream: Adjust authorize and capture transactions [anellis]
 
 == Version 1.56.0 (December 1, 2015)
 * Add Cardknox gateway [dlehren]
