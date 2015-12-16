@@ -62,6 +62,19 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?RegKey=)\w*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?CardNumber=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?CVV2=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?TransRoute=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?BankAccountNo=)\d*(&?)), '\1[FILTERED]\2')
+      end
+
       private
 
       def add_amount(post, money)
