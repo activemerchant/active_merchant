@@ -75,11 +75,12 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         post = {}
+        add_pair(post, :captureDelay, -1)
         add_amount(post, money, options)
         add_invoice(post, creditcard, money, options)
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
-        commit('PREAUTH', post)
+        commit('SALE', post)
       end
 
       def purchase(money, creditcard, options = {})
@@ -94,9 +95,9 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
-        add_amount(post, money, options)
-        add_threeds_required(post, options)
-        commit('SALE', post)
+        add_pair(post, :amount, amount(money), :required => true)
+
+        commit('CAPTURE', post)
       end
 
       def refund(money, authorization, options = {})
@@ -199,11 +200,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-
+        parameters.update(:countryCode => self.supported_countries[0]) unless action == 'CAPTURE'
         parameters.update(
           :merchantID => @options[:login],
-          :action => action,
-          :countryCode => self.supported_countries[0],
+          :action => action
         )
         # adds a signature to the post hash/array
         add_hmac(parameters)
