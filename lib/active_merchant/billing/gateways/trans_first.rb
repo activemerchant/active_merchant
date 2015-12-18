@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.transfirst.com/'
       self.display_name = 'TransFirst'
 
-      UNUSED_CREDIT_CARD_FIELDS = %w(UserId TrackData TaxIndicator MerchZIP MerchCustPNum MCC InstallmentNum InstallmentOf POSInd POSConditionCode EComInd AuthCharInd CardCertData CAVVData)
+      UNUSED_CREDIT_CARD_FIELDS = %w(UserId TrackData MerchZIP MerchCustPNum MCC InstallmentNum InstallmentOf POSInd POSEntryMode POSConditionCode EComInd AuthCharInd CardCertData CAVVData)
 
       DECLINED = 'The transaction was declined'
 
@@ -91,10 +91,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        add_pair(post, :RefID, options[:order_id], required: true) if options[:order_id]
-        add_pair(post, :SECCCode, options[:invoice], required: true) if options[:invoice]
-        add_pair(post, :PONumber, options[:invoice], required: true) if options[:invoice]
+        add_pair(post, :RefID, options[:order_id], required: true)
+        add_pair(post, :SECCCode, options[:invoice], required: true)
+        add_pair(post, :PONumber, options[:invoice], required: true)
         add_pair(post, :SaleTaxAmount, amount(options[:tax] || 0))
+        add_pair(post, :TaxIndicator, 0)
         add_pair(post, :PaymentDesc, options[:description] || "", required: true)
         add_pair(post, :CompanyName, options[:company_name] || "", required: true)
       end
