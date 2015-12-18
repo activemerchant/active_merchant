@@ -62,12 +62,13 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_authorization_with_paypage_registration_with_month_year_verification
+  def test_successful_authorization_with_paypage_registration_with_month_year_verification_name
     paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
       'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
       month: '11',
       year: '12',
-      verification_value: '123'
+      verification_value: '123',
+      name: 'Joe Payer'
     )
 
     assert response = @gateway.authorize(5090, paypage_registration, billing_address: address)
@@ -75,7 +76,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_authorization_with_paypage_registration_without_month_year_verification
+  def test_successful_authorization_with_paypage_registration_without_month_year_verification_name
     paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
       'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw=='
     )
@@ -138,12 +139,13 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_purchase_with_paypage_registration_with_month_year_verification
+  def test_successful_purchase_with_paypage_registration_with_month_year_verification_name
     paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
       'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
       month: '11',
       year: '12',
-      verification_value: '123'
+      verification_value: '123',
+      name: 'Joe Payer'
     )
 
     assert response = @gateway.purchase(5090, paypage_registration, billing_address: address)
@@ -151,7 +153,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_successful_purchase_with_paypage_registration_without_month_year_verification
+  def test_successful_purchase_with_paypage_registration_without_month_year_verification_name
     paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
       'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw=='
     )
