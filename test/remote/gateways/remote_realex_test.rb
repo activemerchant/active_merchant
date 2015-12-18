@@ -57,7 +57,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_not_nil response
     assert_failure response
 
-    assert_equal '506', response.params['result']
+    assert_equal '504', response.params['result']
     assert_match %r{no such}i, response.message
   end
 
@@ -70,7 +70,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_not_nil response
     assert_failure response
 
-    assert_equal '506', response.params['result']
+    assert_equal '504', response.params['result']
     assert_match %r{no such}i, response.message
   end
 
@@ -268,7 +268,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   def test_realex_purchase_then_refund
     order_id = generate_unique_id
 
-    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:rebate_secret => 'rebate'))
+    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:rebate_secret => 'refund'))
 
     purchase_response = gateway_with_refund_password.purchase(@amount, @visa,
       :order_id => order_id,
@@ -284,9 +284,22 @@ class RemoteRealexTest < Test::Unit::TestCase
 
     assert_not_nil rebate_response
     assert_success rebate_response
-    assert rebate_response.test?
     assert rebate_response.authorization.length > 0
     assert_equal 'Successful', rebate_response.message
+  end
+
+  def test_realex_store
+    response = @gateway.store(@visa,
+        :order_id => generate_unique_id,
+        :customer => generate_unique_id,
+        :cardref  => generate_unique_id)
+    assert_not_nil response
+    assert_instance_of MultiResponse, response
+    assert response.authorization.length > 0
+    customer_stored = response.responses[0]
+    card_stored = response.responses[1]
+    assert_equal 'Successful', customer_stored.message
+    assert_equal 'Successful', card_stored.message
   end
 
   def test_transcript_scrubbing
