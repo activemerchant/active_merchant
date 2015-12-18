@@ -226,6 +226,7 @@
 * Add supports_network_tokenization? to gateways [jnormore]
 * Bpoint: Handle message for invalid login [anellis]
 * TransFirst: Add scrubbing [davidsantoso]
+* TransFirst: Add back a few request fields [davidsantoso]
 
 
 == Version 1.50.0 (June 1, 2015)
