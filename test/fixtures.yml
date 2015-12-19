@@ -193,6 +193,11 @@ creditcall:
   terminal_id: '99961426'
   transaction_key: '9drdRU9wJ65SNRw3'
 
+# Working credentials, no need to replace
+credomatic:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
 # To get 100% passing Cybersource remote tests, you must ask
 # Cybersource support to enable the recurring and pinless debit
 # services on your test account.
