@@ -2,100 +2,95 @@ require 'test_helper'
 
 class CredomaticTest < Test::Unit::TestCase
   def setup
-    @gateway = CredomaticGateway.new(some_credential: 'login', another_credential: 'password')
+    @gateway = CredomaticGateway.new(username: 'credomatic_username', key: 'EhgYYuklOpoiImaZjwuYuplKkmaWeVBi', key_id: '68985432')
     @credit_card = credit_card
     @amount = 100
 
     @options = {
       order_id: '1',
-      billing_address: address,
-      description: 'Store Purchase'
     }
   end
 
-  def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  # def test_successful_purchase
+  # end
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
+  # def test_successful_authorize
+  #   @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    assert_equal 'REPLACE', response.authorization
-    assert response.test?
-  end
+  #   response = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success response
 
-  def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  #   assert_equal 'APROBADA', response.authorization
+  #   assert response.test?
+  # end
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-  end
+  # def test_failed_authorize
+    # @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
-  def test_successful_authorize
-  end
+    # response = @gateway.authorize(@amount, @credit_card, @options)
+    # assert_failure response
+    # assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+  # end
 
-  def test_failed_authorize
-  end
+  # def test_successful_capture
+  # end
 
-  def test_successful_capture
-  end
+  # def test_failed_capture
+  # end
 
-  def test_failed_capture
-  end
+  # def test_successful_refund
+  # end
 
-  def test_successful_refund
-  end
+  # def test_failed_refund
+  # end
 
-  def test_failed_refund
-  end
+  # def test_successful_void
+  # end
 
-  def test_successful_void
-  end
+  # def test_failed_void
+  # end
 
-  def test_failed_void
-  end
+  # def test_successful_verify
+  # end
 
-  def test_successful_verify
-  end
+  # def test_successful_verify_with_failed_void
+  # end
 
-  def test_successful_verify_with_failed_void
-  end
+  # def test_failed_verify
+  # end
 
-  def test_failed_verify
-  end
-
-  def test_scrub
-    assert @gateway.supports_scrubbing?
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  end
+  # def test_scrub
+    # assert @gateway.supports_scrubbing?
+    # assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  # end
 
   private
 
   def pre_scrubbed
-    %q(
-      Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    )
+    # %q(
+    #   Run the remote tests for this gateway, and then put the contents of transcript.log here.
+    # )
   end
 
   def post_scrubbed
-    %q(
-      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-      Things to scrub:
-        - Credit card number
-        - CVV
-        - Sensitive authentication details
-    )
+    # %q(
+    #   Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
+    #   Things to scrub:
+    #     - Credit card number
+    #     - CVV
+    #     - Sensitive authentication details
+    # )
   end
 
   def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
+    # %(
+    #   Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
+    #   to "true" when running remote tests:
 
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_credomatic_test.rb \
-        -n test_successful_purchase
-    )
+    #   $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
+    #     test/remote/gateways/remote_credomatic_test.rb \
+    #     -n test_successful_purchase
+    # )
   end
 
   def failed_purchase_response
