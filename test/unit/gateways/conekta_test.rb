@@ -45,18 +45,20 @@ class ConektaTest < Test::Unit::TestCase
       description: "{
         \"device_fingerprint\":\"41l9l92hjco6cuekf0c7dq68v4\",
         \"description\":\"Blue clip\",
-        \"customer\":\"Mario Reyes\",
-        \"email\":\"mario@gmail.com\",
-        \"phone\":\"1234567890\",
-        \"ip\":\"127.0.0.1\",
-        \"billing_address\": {
-          \"address1\": \"Rio Missisipi #123\",
-          \"address2\": \"Paris\",
-          \"city\": \"Guerrero\",
-          \"country\": \"Mexico\",
-          \"zip\": \"5555\",
-          \"name\": \"Mario Reyes\",
-          \"phone\": \"12345678\"
+        \"details\": {
+          \"name\":\"Mario Reyes\",
+          \"email\":\"mario@gmail.com\",
+          \"phone\":\"1234567890\",
+          \"ip_address\":\"127.0.0.1\",
+          \"billing_address\": {
+            \"street1\": \"Rio Missisipi #123\",
+            \"street2\": \"Paris\",
+            \"city\": \"Guerrero\",
+            \"country\": \"Mexico\",
+            \"zip\": \"5555\",
+            \"name\": \"Mario Reyes\",
+            \"phone\": \"12345678\"
+          }
         }
       }"
     }

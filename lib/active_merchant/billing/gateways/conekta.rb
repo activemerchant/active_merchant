@@ -19,10 +19,11 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_source, options = {})
         post = {}.with_indifferent_access
         options = options.with_indifferent_access
-
-        add_order(post, money, options)
-        add_payment_source(post, payment_source, options)
-        add_details_data(post, options)
+        if (post = build_details_from_description(money, payment_source, options)).blank?
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          add_details_data(post, options)
+        end
 
         commit(:post, 'charges', post)
       end
@@ -30,10 +31,11 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment_source, options = {})
         post = {}.with_indifferent_access
         options = options.with_indifferent_access
-
-        add_order(post, money, options)
-        add_payment_source(post, payment_source, options)
-        add_details_data(post, options)
+        if (post = build_details_from_description(money, payment_source, options)).blank?
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          add_details_data(post, options)
+        end
 
         post[:capture] = false
         commit(:post, "charges", post)
@@ -62,18 +64,21 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_order(post, money, options)
-        build_details_from_description(post, options)
         post[:description] = options[:description] || "Active Merchant Purchase"
         post[:reference_id] = options[:order_id] if options[:order_id]
         post[:currency] = (options[:currency] || currency(money)).downcase
         post[:amount] = amount(money)
       end
 
-      def build_details_from_description(post, options)
-        hash = JSON.parse(options[:description]).with_indifferent_access rescue nil
-        if hash.present? and hash[:description].present?
-          options.merge!(hash)
-          options[:description] = hash[:description]
+      def build_details_from_description(money, payment_source, options)
+        post = {}.with_indifferent_access
+        begin
+          options = JSON.parse(options[:description]).with_indifferent_access
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          post.merge!(options)
+        rescue
+          post
         end
       end
 
