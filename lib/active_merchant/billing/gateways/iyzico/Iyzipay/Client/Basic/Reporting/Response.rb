@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+
+module Iyzipay
+  module Client
+    module Basic
+      module Installment
+        module Response
+        end
+      end
+    end
+  end
+end
+
+require_relative 'Response/Mapper'
+require_relative 'Response/BouncedRowResponse'
+require_relative 'Response/PayoutCompletedResponse'
