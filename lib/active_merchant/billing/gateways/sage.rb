@@ -1,172 +1,423 @@
-require 'active_merchant/billing/gateways/sage/sage_bankcard'
-require 'active_merchant/billing/gateways/sage/sage_virtual_check'
-require 'active_merchant/billing/gateways/sage/sage_vault'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SageGateway < Gateway
-      self.supported_countries = SageBankcardGateway.supported_countries
-      self.supported_cardtypes = SageBankcardGateway.supported_cardtypes
+      self.display_name = 'http://www.sagepayments.com'
+      self.homepage_url = 'Sage Payment Solutions'
+      self.live_url = 'https://www.sagepayments.net/cgi-bin'
 
-      self.abstract_class = true
+      self.supported_countries =  ['US', 'CA']
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
-      # Creates a new SageGateway
-      #
-      # The gateway requires that a valid login and password be passed
-      # in the +options+ hash.
-      #
-      # ==== Options
-      #
-      # * <tt>:login</tt> - The Sage Payment Solutions Merchant ID Number.
-      # * <tt>:password</tt> - The Sage Payment Solutions Merchant Key Number.
+      TRANSACTIONS = {
+        :purchase           => '01',
+        :authorization      => '02',
+        :capture            => '11',
+        :void               => '04',
+        :credit             => '06',
+        :refund             => '10'
+      }
+
+      SOURCE_CARD   = "bankcard"
+      SOURCE_ECHECK =  "virtual_check"
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
       end
 
-      # Performs an authorization transaction
-      #
-      # ==== Parameters
-      # * <tt>money</tt> - The amount to be authorized as an integer value in cents.
-      # * <tt>credit_card</tt> - The CreditCard object to be used as the funding source for the transaction.
-      # * <tt>options</tt> - A hash of optional parameters.
-      #   * <tt>:order_id</tt> - A unique reference for this order. (maximum of 20 characters).
-      #   * <tt>:email</tt> - The customer's email address
-      #   * <tt>:customer</tt> - The Customer Number for Purchase Card Level II Transactions
-      #   * <tt>:billing_address</tt> - The customer's billing address as a hash of address information.
-      #     * <tt>:address1</tt> - The billing address street
-      #     * <tt>:city</tt> - The billing address city
-      #     * <tt>:state</tt> - The billing address state
-      #     * <tt>:country</tt> - The 2 digit ISO billing address country code
-      #     * <tt>:zip</tt> - The billing address zip code
-      #     * <tt>:phone</tt> - The billing address phone number
-      #     * <tt>:fax</tt> - The billing address fax number
-      #   * <tt>:shipping_address</tt> - The customer's shipping address as a hash of address information.
-      #     * <tt>:name</tt> - The name at the shipping address
-      #     * <tt>:address1</tt> - The shipping address street
-      #     * <tt>:city</tt> - The shipping address city
-      #     * <tt>:state</tt> - The shipping address state code
-      #     * <tt>:country</tt> - The 2 digit ISO shipping address country code
-      #     * <tt>:zip</tt> - The shipping address zip code
-      #   * <tt>:tax</tt> - The tax amount for the transaction as an Integer value in cents. Maps to Sage <tt>T_tax</tt>.
-      #   * <tt>:shipping</tt> - The shipping amount for the transaction as an Integer value in cents. Maps to Sage <tt>T_shipping</tt>.
       def authorize(money, credit_card, options = {})
-        bankcard.authorize(money, credit_card, options)
+        post = {}
+        add_credit_card(post, credit_card)
+        add_transaction_data(post, money, options)
+        commit(:authorization, post, SOURCE_CARD)
       end
 
-      # Performs a purchase, which is essentially an authorization and capture in a single operation.
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> - The amount to be authorized as an integer value in cents.
-      # * <tt>source</tt> - The CreditCard or Check object to be used as the funding source for the transaction.
-      # * <tt>options</tt> - A hash of optional parameters.
-      #   * <tt>:order_id</tt> - A unique reference for this order. (maximum of 20 characters).
-      #   * <tt>:email</tt> - The customer's email address
-      #   * <tt>:customer</tt> - The Customer Number for Purchase Card Level II Transactions
-      #   * <tt>:billing_address</tt> - The customer's billing address as a hash of address information.
-      #     * <tt>:address1</tt> - The billing address street
-      #     * <tt>:city</tt> - The billing address city
-      #     * <tt>:state</tt> - The billing address state
-      #     * <tt>:country</tt> - The 2 digit ISO billing address country code
-      #     * <tt>:zip</tt> - The billing address zip code
-      #     * <tt>:phone</tt> - The billing address phone number
-      #     * <tt>:fax</tt> - The billing address fax number
-      #   * <tt>:shipping_address</tt> - The customer's shipping address as a hash of address information.
-      #     * <tt>:name</tt> - The name at the shipping address
-      #     * <tt>:address1</tt> - The shipping address street
-      #     * <tt>:city</tt> - The shipping address city
-      #     * <tt>:state</tt> - The shipping address state code
-      #     * <tt>:country</tt> - The 2 digit ISO shipping address country code
-      #     * <tt>:zip</tt> - The shipping address zip code
-      #   * <tt>:tax</tt> - The tax amount for the transaction as an integer value in cents. Maps to Sage <tt>T_tax</tt>.
-      #   * <tt>:shipping</tt> - The shipping amount for the transaction as an integer value in cents. Maps to Sage <tt>T_shipping</tt>.
-      #
-      # ==== Additional options in the +options+ hash for when using a Check as the funding source
-      # * <tt>:originator_id</tt> - 10 digit originator. If not provided, Sage will use the default Originator ID for the specific customer type.
-      # * <tt>:addenda</tt> - Transaction addenda.
-      # * <tt>:ssn</tt> - The customer's Social Security Number.
-      # * <tt>:drivers_license_state</tt> - The customer's drivers license state code.
-      # * <tt>:drivers_license_number</tt> - The customer's drivers license number.
-      # * <tt>:date_of_birth</tt> - The customer's date of birth as a Time or Date object or a string in the format <tt>mm/dd/yyyy</tt>.
-      def purchase(money, source, options = {})
-        if card_brand(source) == "check"
-          virtual_check.purchase(money, source, options)
+      def purchase(money, payment_method, options = {})
+        post = {}
+        if card_brand(payment_method) == "check"
+          source = SOURCE_ECHECK
+          add_check(post, payment_method)
+          add_check_customer_data(post, options)
         else
-          bankcard.purchase(money, source, options)
+          source = SOURCE_CARD
+          add_credit_card(post, payment_method)
         end
+        add_transaction_data(post, money, options)
+        commit(:purchase, post, source)
       end
 
-      # Captures authorized funds.
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> - The amount to be authorized as an integer value in cents. Sage doesn't support changing the capture amount, so the full amount of the initial transaction will be captured.
-      # * <tt>reference</tt> - The authorization reference string returned by the original transaction's Response#authorization.
+      # The +money+ amount is not used. The entire amount of the
+      # initial authorization will be captured.
       def capture(money, reference, options = {})
-        bankcard.capture(money, reference, options)
+        post = {}
+        add_reference(post, reference)
+        commit(:capture, post, SOURCE_CARD)
       end
 
-      # Voids a prior transaction. Works for both CreditCard and Check transactions.
-      #
-      # ==== Parameters
-      #
-      # * <tt>reference</tt> - The authorization reference string returned by the original transaction's Response#authorization.
       def void(reference, options = {})
-        if reference.split(";").last == "virtual_check"
-          virtual_check.void(reference, options)
-        else
-          bankcard.void(reference, options)
-        end
+        post = {}
+        add_reference(post, reference)
+        source = reference.split(";").last
+        commit(:void, post, source)
       end
 
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> - The amount to be authorized as an integer value in cents.
-      # * <tt>source</tt> - The CreditCard or Check object to be used as the target for the credit.
-      def credit(money, source, options = {})
-        if card_brand(source) == "check"
-          virtual_check.credit(money, source, options)
+      def credit(money, payment_method, options = {})
+        post = {}
+        if card_brand(payment_method) == "check"
+          source = SOURCE_ECHECK
+          add_check(post, payment_method)
+          add_check_customer_data(post, options)
         else
-          bankcard.credit(money, source, options)
+          source = SOURCE_CARD
+          add_credit_card(post, payment_method)
         end
+        add_transaction_data(post, money, options)
+        commit(:credit, post, source)
       end
 
       def refund(money, reference, options={})
-        bankcard.refund(money, reference, options)
+        post = {}
+        add_reference(post, reference)
+        add_transaction_data(post, money, options)
+        commit(:refund, post, SOURCE_CARD)
       end
 
-      # Stores a credit card in the Sage vault.
-      #
-      # ==== Parameters
-      #
-      # * <tt>credit_card</tt> - The CreditCard object to be stored.
       def store(credit_card, options = {})
         vault.store(credit_card, options)
       end
 
-      # Deletes a stored card from the Sage vault.
-      #
-      # ==== Parameters
-      #
-      # * <tt>identification</tt> - The 'GUID' identifying the stored card.
       def unstore(identification, options = {})
         vault.unstore(identification, options)
       end
 
       private
 
-      def bankcard
-        @bankcard ||= SageBankcardGateway.new(@options)
+      def add_credit_card(post, credit_card)
+        post[:C_name]       = credit_card.name
+        post[:C_cardnumber] = credit_card.number
+        post[:C_exp]        = expdate(credit_card)
+        post[:C_cvv]        = credit_card.verification_value if credit_card.verification_value?
       end
 
-      def virtual_check
-        @virtual_check ||= SageVirtualCheckGateway.new(@options)
+      def add_check(post, check)
+        post[:C_first_name]   = check.first_name
+        post[:C_last_name]    = check.last_name
+        post[:C_rte]          = check.routing_number
+        post[:C_acct]         = check.account_number
+        post[:C_check_number] = check.number
+        post[:C_acct_type]    = account_type(check)
+      end
+
+      def add_check_customer_data(post, options)
+        # Required  Customer Type – (NACHA Transaction Class)
+        # CCD for Commercial, Merchant Initiated
+        # PPD for Personal, Merchant Initiated
+        # WEB for Internet, Consumer Initiated
+        # RCK for Returned Checks
+        # ARC for Account Receivable Entry
+        # TEL for TelephoneInitiated
+        post[:C_customer_type] = "WEB"
+
+        # Optional  10  Digit Originator  ID – Assigned  By for  each transaction  class  or  business  purpose. If  not provided, the default Originator ID for the specific  Customer Type will be applied. 
+        post[:C_originator_id] = options[:originator_id]
+
+        # Optional  Transaction Addenda
+        post[:T_addenda] = options[:addenda]
+
+        # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes ) 
+        post[:C_ssn] = options[:ssn].to_s.gsub(/[^\d]/, '')
+
+        post[:C_dl_state_code] = options[:drivers_license_state]
+        post[:C_dl_number]     = options[:drivers_license_number]
+        post[:C_dob]           = format_birth_date(options[:date_of_birth])
+      end
+
+      def format_birth_date(date)
+        date.respond_to?(:strftime) ? date.strftime("%m/%d/%Y") : date
+      end
+
+      # DDA for Checking
+      # SAV for Savings 
+      def account_type(check)
+        case check.account_type
+        when 'checking' then 'DDA'
+        when 'savings'  then 'SAV'
+        else raise ArgumentError, "Unknown account type #{check.account_type}"
+        end
+      end
+
+      def parse(data, source)
+        source == SOURCE_ECHECK ? parse_check(data) : parse_credit_card(data)
+      end
+
+      def parse_check(data)
+        response = {}
+        response[:success]          = data[1,1]
+        response[:code]             = data[2,6].strip
+        response[:message]          = data[8,32].strip
+        response[:risk]             = data[40, 2]
+        response[:reference]        = data[42, 10]
+
+        extra_data = data[53...-1].split("\034")
+        response[:order_number] = extra_data[0]
+        response[:authentication_indicator] = extra_data[1]
+        response[:authentication_disclosure] = extra_data[2]
+        response
+      end
+
+      def parse_credit_card(data)
+        response = {}
+        response[:success]          = data[1,1]
+        response[:code]             = data[2,6]
+        response[:message]          = data[8,32].strip
+        response[:front_end]        = data[40, 2]
+        response[:cvv_result]       = data[42, 1]
+        response[:avs_result]       = data[43, 1].strip
+        response[:risk]             = data[44, 2]
+        response[:reference]        = data[46, 10]
+
+        response[:order_number], response[:recurring] = data[57...-1].split("\034")
+        response
+      end
+
+      def add_invoice(post, options)
+        post[:T_ordernum] = (options[:order_id] || generate_unique_id).slice(0, 20)
+        post[:T_tax] = amount(options[:tax]) unless options[:tax].blank?
+        post[:T_shipping] = amount(options[:shipping]) unless options[:shipping].blank?
+      end
+
+      def add_reference(post, reference)
+        ref, _ = reference.to_s.split(";")
+        post[:T_reference] = ref
+      end
+
+      def add_amount(post, money)
+        post[:T_amt] = amount(money)
+      end
+
+      def add_customer_data(post, options)
+        post[:T_customer_number] = options[:customer] if Float(options[:customer]) rescue nil
+      end
+
+      def add_addresses(post, options)
+        billing_address   = options[:billing_address] || options[:address] || {}
+
+        post[:C_address]    = billing_address[:address1]
+        post[:C_city]       = billing_address[:city]
+
+        if ['US', 'CA'].include?(billing_address[:country])
+          post[:C_state]    = billing_address[:state]
+        else
+          post[:C_state]    = "Outside of United States"
+        end
+
+        post[:C_zip]        = billing_address[:zip]
+        post[:C_country]    = billing_address[:country]
+        post[:C_telephone]  = billing_address[:phone]
+        post[:C_fax]        = billing_address[:fax]
+        post[:C_email]      = options[:email]
+
+        if shipping_address = options[:shipping_address]
+          post[:C_ship_name]    = shipping_address[:name]
+          post[:C_ship_address] = shipping_address[:address1]
+          post[:C_ship_city]    = shipping_address[:city]
+          post[:C_ship_state]   = shipping_address[:state]
+          post[:C_ship_zip]     = shipping_address[:zip]
+          post[:C_ship_country] = shipping_address[:country]
+        end
+      end
+
+      def add_transaction_data(post, money, options)
+        add_amount(post, money)
+        add_invoice(post, options)
+        add_addresses(post, options)
+        add_customer_data(post, options)
+      end
+
+      def commit(action, params, source)
+        url = url(params, source)
+        response = parse(ssl_post(url, post_data(action, params)), source)
+
+        Response.new(success?(response), response[:message], response,
+          :test => test?,
+          :authorization => authorization_from(response, source),
+          :avs_result => { :code => response[:avs_result] },
+          :cvv_result => response[:cvv_result]
+        )
+      end
+
+      def url(params, source)
+        if source == SOURCE_ECHECK
+          "#{live_url}/eftVirtualCheck.dll?transaction"
+        else
+          "#{live_url}/eftBankcard.dll?transaction"
+        end
+      end
+
+      def authorization_from(response, source)
+        "#{response[:reference]};#{source}"
+      end
+
+      def success?(response)
+        response[:success] == 'A'
+      end
+
+      def post_data(action, params = {})
+        params[:M_id]  = @options[:login]
+        params[:M_key] = @options[:password]
+        params[:T_code] = TRANSACTIONS[action]
+
+        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
       def vault
-        @vault ||= SageVaultGateway.new(@options)
+        @vault ||= SageVault.new(@options, self)
+      end
+
+      class SageVault
+
+        def initialize(options, gateway)
+          @live_url = 'https://www.sagepayments.net/web_services/wsVault/wsVault.asmx'
+          @options = options
+          @gateway = gateway
+        end
+
+        def store(credit_card, options = {})
+          request = build_store_request(credit_card, options)
+          commit(:store, request)
+        end
+
+        def unstore(identification, options = {})
+          request = build_unstore_request(identification, options)
+          commit(:unstore, request)
+        end
+
+        private
+
+        # A valid request example, since the Sage docs have none:
+        #
+        # <?xml version="1.0" encoding="UTF-8" ?>
+        # <SOAP-ENV:Envelope
+        #   xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+        #   xmlns:ns1="https://www.sagepayments.net/web_services/wsVault/wsVault">
+        #   <SOAP-ENV:Body>
+        #     <ns1:INSERT_CREDIT_CARD_DATA>
+        #       <ns1:M_ID>279277516172</ns1:M_ID>
+        #       <ns1:M_KEY>O3I8G2H8V6A3</ns1:M_KEY>
+        #       <ns1:CARDNUMBER>4111111111111111</ns1:CARDNUMBER>
+        #       <ns1:EXPIRATION_DATE>0915</ns1:EXPIRATION_DATE>
+        #     </ns1:INSERT_CREDIT_CARD_DATA>
+        #   </SOAP-ENV:Body>
+        # </SOAP-ENV:Envelope>
+        def build_store_request(credit_card, options)
+          xml = Builder::XmlMarkup.new
+          add_credit_card(xml, credit_card, options)
+          xml.target!
+        end
+
+        def build_unstore_request(identification, options)
+          xml = Builder::XmlMarkup.new
+          add_identification(xml, identification, options)
+          xml.target!
+        end
+
+        def add_customer_data(xml)
+          xml.tag! 'ns1:M_ID', @options[:login]
+          xml.tag! 'ns1:M_KEY', @options[:password]
+        end
+
+        def add_credit_card(xml, credit_card, options)
+          xml.tag! 'ns1:CARDNUMBER', credit_card.number
+          xml.tag! 'ns1:EXPIRATION_DATE', exp_date(credit_card)
+        end
+
+        def add_identification(xml, identification, options)
+          xml.tag! 'ns1:GUID', identification
+        end
+
+        def exp_date(credit_card)
+          year  = sprintf("%.4i", credit_card.year)
+          month = sprintf("%.2i", credit_card.month)
+
+          "#{month}#{year[-2..-1]}"
+        end
+
+        def commit(action, request)
+          response = parse(@gateway.ssl_post(@live_url,
+            build_soap_request(action, request),
+            build_headers(action))
+          )
+
+          case action
+          when :store
+            success = response[:success] == 'true'
+            message = response[:message].downcase.capitalize if response[:message]
+          when :unstore
+            success = response[:delete_data_result] == 'true'
+            message = success ? 'Succeeded' : 'Failed'
+          end
+
+          Response.new(success, message, response,
+            authorization: response[:guid]
+          )
+        end
+
+        ENVELOPE_NAMESPACES = {
+          'xmlns:SOAP-ENV' => "http://schemas.xmlsoap.org/soap/envelope/",
+          'xmlns:ns1' => "https://www.sagepayments.net/web_services/wsVault/wsVault"
+        }
+
+        ACTION_ELEMENTS = {
+          store: 'INSERT_CREDIT_CARD_DATA',
+          unstore: 'DELETE_DATA'
+        }
+
+        def build_soap_request(action, body)
+          xml = Builder::XmlMarkup.new
+
+          xml.instruct!
+          xml.tag! 'SOAP-ENV:Envelope', ENVELOPE_NAMESPACES do
+            xml.tag! 'SOAP-ENV:Body' do
+              xml.tag! "ns1:#{ACTION_ELEMENTS[action]}" do
+                add_customer_data(xml)
+                xml << body
+              end
+            end
+          end
+          xml.target!
+        end
+
+        SOAP_ACTIONS = {
+          store: 'https://www.sagepayments.net/web_services/wsVault/wsVault/INSERT_CREDIT_CARD_DATA',
+          unstore: 'https://www.sagepayments.net/web_services/wsVault/wsVault/DELETE_DATA'
+        }
+
+        def build_headers(action)
+          {
+            "SOAPAction" => SOAP_ACTIONS[action],
+            "Content-Type" => "text/xml; charset=utf-8"
+          }
+        end
+
+        def parse(body)
+          response = {}
+          hashify_xml!(body, response)
+          response
+        end
+
+        def hashify_xml!(xml, response)
+          xml = REXML::Document.new(xml)
+
+          # Store
+          xml.elements.each("//Table1/*") do |node|
+            response[node.name.underscore.to_sym] = node.text
+          end
+
+          # Unstore
+          xml.elements.each("//DELETE_DATAResponse/*") do |node|
+            response[node.name.underscore.to_sym] = node.text
+          end
+        end
       end
     end
   end
