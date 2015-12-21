@@ -52,6 +52,17 @@ module ActiveMerchant #:nodoc:
         commit(refund_url, money, post)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<ewayCardNumber>)\d+(</ewayCardNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<ewayCVN>)\d+(</ewayCVN>))i, '\1[FILTERED]\2')
+      end
+
       private
       def requires_address!(options)
         raise ArgumentError.new("Missing eWay required parameters: address or billing_address") unless (options.has_key?(:address) or options.has_key?(:billing_address))

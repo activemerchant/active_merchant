@@ -61,6 +61,17 @@ module ActiveMerchant #:nodoc:
         commit(:post, "charges/#{identifier}/refund", post)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card%5Bnumber%5D=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?card%5Bcvc%5D=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_order(post, money, options)
@@ -224,4 +235,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

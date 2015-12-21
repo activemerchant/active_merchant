@@ -13,6 +13,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       :merchant_id => 'merchant_id'
     )
     @customer_ref_num = "ABC"
+
+    @options = { :order_id => '1'}
   end
 
   def test_successful_purchase
@@ -207,8 +209,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
 
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card,
-        :billing_address => address_with_invalid_chars)
+      assert_deprecation_warning do
+        @gateway.add_customer_profile(credit_card,
+          :billing_address => address_with_invalid_chars)
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
@@ -255,8 +259,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
 
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card,
-        :billing_address => long_address)
+      assert_deprecation_warning do
+        @gateway.add_customer_profile(credit_card,
+          :billing_address => long_address)
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
@@ -323,7 +329,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_default_managed_billing
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-        @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014" })
+        assert_deprecation_warning do
+          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014" })
+        end
       end
     end.check_request do |endpoint, data, headers|
       assert_match(/<MBType>R/, data)
@@ -337,10 +345,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_managed_billing
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-        @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014",
-                :end_date => "10-10-2015",
-                :max_dollar_value => 1500,
-                :max_transactions => 12})
+        assert_deprecation_warning do
+          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014",
+                  :end_date => "10-10-2015",
+                  :max_dollar_value => 1500,
+                  :max_transactions => 12})
+        end
       end
     end.check_request do |endpoint, data, headers|
       assert_match(/<MBType>R/, data)
@@ -499,7 +509,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_add_customer_profile
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card)
+      assert_deprecation_warning do
+        @gateway.add_customer_profile(credit_card)
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>C/, data)
       assert_match(/<CustomerName>Longbob Longsen/, data)
@@ -509,7 +521,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_add_customer_profile_with_email
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card, { :billing_address => { :email => 'xiaobozzz@example.com' } })
+      assert_deprecation_warning do
+        @gateway.add_customer_profile(credit_card, { :billing_address => { :email => 'xiaobozzz@example.com' } })
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>C/, data)
       assert_match(/<CustomerEmail>xiaobozzz@example.com/, data)
@@ -519,7 +533,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_update_customer_profile
     response = stub_comms do
-      @gateway.update_customer_profile(credit_card)
+      assert_deprecation_warning do
+        @gateway.update_customer_profile(credit_card)
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>U/, data)
       assert_match(/<CustomerName>Longbob Longsen/, data)
@@ -529,7 +545,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_retrieve_customer_profile
     response = stub_comms do
-      @gateway.retrieve_customer_profile(@customer_ref_num)
+      assert_deprecation_warning do
+        @gateway.retrieve_customer_profile(@customer_ref_num)
+      end
     end.check_request do |endpoint, data, headers|
       assert_no_match(/<CustomerName>Longbob Longsen/, data)
       assert_match(/<CustomerProfileAction>R/, data)
@@ -540,7 +558,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_delete_customer_profile
     response = stub_comms do
-      @gateway.delete_customer_profile(@customer_ref_num)
+      assert_deprecation_warning do
+        @gateway.delete_customer_profile(@customer_ref_num)
+      end
     end.check_request do |endpoint, data, headers|
       assert_no_match(/<CustomerName>Longbob Longsen/, data)
       assert_match(/<CustomerProfileAction>D/, data)
@@ -597,6 +617,32 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_nil response.params['account_num']
+  end
+
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, successful_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal "Approved", response.message
+  end
+
+  def test_successful_verify_and_failed_void
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(successful_purchase_response, failed_purchase_response)
+    assert_success response
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+    assert_equal "Approved", response.message
+  end
+
+  def test_failed_verify
+    response = stub_comms do
+      @gateway.verify(credit_card, @options)
+    end.respond_with(failed_purchase_response, failed_purchase_response)
+    assert_failure response
+    assert_equal "AUTH DECLINED                   12001", response.message
   end
 
   private

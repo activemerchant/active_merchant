@@ -28,6 +28,20 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
     assert_not_equal 'SUCCESS', response.message
   end
 
+  def test_failed_card_purchase
+    @options[:billing_address][:name] = 'FAILED'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_not_equal 'SUCCESS', response.message
+  end
+
+  def test_error_card_purchase
+    @options[:billing_address][:name] = 'ERROR'
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_not_equal 'SUCCESS', response.message
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -90,7 +104,7 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
+    refund = @gateway.refund(@amount+1, purchase.authorization)
     assert_failure refund
   end
 

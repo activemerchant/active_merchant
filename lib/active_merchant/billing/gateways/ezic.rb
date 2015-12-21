@@ -3,7 +3,7 @@ module ActiveMerchant
     class EzicGateway < Gateway
       self.live_url = 'https://secure-dm3.ezic.com/gw/sas/direct3.2'
 
-      self.supported_countries = %w(AU CA CN FR DE GI IL MT MU MX NL NZ PA PH RU SG KR ES KN GB)
+      self.supported_countries = %w(AU CA CN FR DE GI IL MT MU MX NL NZ PA PH RU SG KR ES KN GB US)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
@@ -59,8 +59,21 @@ module ActiveMerchant
         commit("R", post)
       end
 
+      def void(authorization, options={})
+        post = {}
+
+        add_account_id(post)
+        add_authorization(post, authorization)
+        add_pay_type(post)
+
+        commit("U", post)
+      end
+
       def verify(credit_card, options={})
-        authorize(100, credit_card, options)
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
       end
 
       def supports_scrubbing?
@@ -87,12 +100,7 @@ module ActiveMerchant
       def add_billing_address(post, options)
         address = options[:billing_address] || {}
 
-        if address[:name]
-          names = address[:name].split
-          post[:bill_name2] = names.pop
-          post[:bill_name1] = names.join(" ")
-        end
-
+        post[:bill_name1], post[:bill_name2] = split_names(address[:name])
         post[:bill_street] = address[:address1] if address[:address1]
         post[:bill_city] = address[:city] if address[:city]
         post[:bill_state] = address[:state] if address[:state]
@@ -104,12 +112,7 @@ module ActiveMerchant
       def add_shipping_address(post, options)
         address = options[:shipping_address] || {}
 
-        if address[:name]
-          names = address[:name].split
-          post[:ship_name2] = names.pop
-          post[:ship_name1] = names.join(" ")
-        end
-
+        post[:ship_name1], post[:ship_name2] = split_names(address[:name])
         post[:ship_street] = address[:address1] if address[:address1]
         post[:ship_city] = address[:city] if address[:city]
         post[:ship_state] = address[:state] if address[:state]

@@ -68,6 +68,7 @@ module ActiveMerchant #:nodoc:
         def valid_number?(number)
           valid_test_mode_card_number?(number) ||
             valid_card_number_length?(number) &&
+            valid_card_number_characters?(number) &&
             valid_checksum?(number)
         end
 
@@ -136,6 +137,10 @@ module ActiveMerchant #:nodoc:
 
         def valid_card_number_length?(number) #:nodoc:
           number.to_s.length >= 12
+        end
+
+        def valid_card_number_characters?(number) #:nodoc:
+          !number.to_s.match(/\D/)
         end
 
         def valid_test_mode_card_number?(number) #:nodoc:

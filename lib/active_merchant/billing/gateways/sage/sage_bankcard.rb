@@ -47,15 +47,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, credit_card, options = {})
-        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, credit_card, options)
-      end
-
-      def refund(money, credit_card, options = {})
         post = {}
         add_credit_card(post, credit_card)
         add_transaction_data(post, money, options)
         commit(:credit, post)
+      end
+
+      def refund(money, reference, options={})
+        post = {}
+        add_reference(post, reference)
+        add_transaction_data(post, money, options)
+        commit(:refund, post)
       end
 
       private

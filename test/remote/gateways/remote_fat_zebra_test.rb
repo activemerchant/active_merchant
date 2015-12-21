@@ -39,6 +39,26 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert_match /Currency XYZ is not valid for this merchant/, response.message
   end
 
+  def test_successful_purchase_sans_cvv
+    @credit_card.verification_value = nil
+    assert response = @gateway.purchase(@amount, @credit_card, recurring: true)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_purchase_sans_cvv
+    @credit_card.verification_value = nil
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_failure response
+    assert_equal 'CVV is required', response.message
+  end
+
+  def test_successful_purchase_with_no_options
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_authorize_and_capture
     assert auth_response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth_response
@@ -78,17 +98,10 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert_equal 'Declined', response.message
   end
 
-  def test_invalid_data
-    @options.delete(:ip)
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal "Customer ip can't be blank", response.message
-  end
-
   def test_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
 
-    assert response = @gateway.refund(@amount, purchase.authorization, rand(1000000).to_s)
+    assert response = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success response
     assert_match %r{Approved}, response.message
   end
@@ -96,7 +109,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_invalid_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
 
-    assert response = @gateway.refund(@amount, nil, rand(1000000).to_s)
+    assert response = @gateway.refund(@amount, nil, @options)
     assert_failure response
     assert_match %r{Original transaction is required}, response.message
   end

@@ -54,6 +54,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
+        add_test_mode(post, options)
 
         commit(:authorization, post)
       end
@@ -69,6 +70,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
+        add_test_mode(post, options)
 
         commit(:purchase, post)
       end
@@ -77,6 +79,7 @@ module ActiveMerchant #:nodoc:
         post = { :refNum => authorization }
 
         add_amount(post, money)
+        add_test_mode(post, options)
         commit(:capture, post)
       end
 
@@ -84,6 +87,7 @@ module ActiveMerchant #:nodoc:
         post = { :refNum => authorization }
 
         add_amount(post, money)
+        add_test_mode(post, options)
         commit(:refund, post)
       end
 
@@ -97,7 +101,9 @@ module ActiveMerchant #:nodoc:
       # Pass `no_release: true` to keep the void from immediately settling
       def void(authorization, options = {})
         command = (options[:no_release] ? :void : :void_release)
-        commit(command, refNum: authorization)
+        post = { :refNum => authorization }
+        add_test_mode(post, options)
+        commit(command, post)
       end
 
     private
@@ -141,9 +147,10 @@ module ActiveMerchant #:nodoc:
 
       def add_address_for_type(type, post, credit_card, address)
         prefix = address_key_prefix(type)
+        first_name, last_name = split_names(address[:name])
 
-        post[address_key(prefix, 'fname')]    = credit_card.first_name
-        post[address_key(prefix, 'lname')]    = credit_card.last_name
+        post[address_key(prefix, 'fname')]    = first_name.blank? && last_name.blank? ? credit_card.first_name : first_name
+        post[address_key(prefix, 'lname')]    = first_name.blank? && last_name.blank? ? credit_card.last_name : last_name
         post[address_key(prefix, 'company')]  = address[:company]   unless address[:company].blank?
         post[address_key(prefix, 'street')]   = address[:address1]  unless address[:address1].blank?
         post[address_key(prefix, 'street2')]  = address[:address2]  unless address[:address2].blank?
@@ -178,8 +185,13 @@ module ActiveMerchant #:nodoc:
           post[:card]   = credit_card.number
           post[:cvv2]   = credit_card.verification_value if credit_card.verification_value?
           post[:expir]  = expdate(credit_card)
-          post[:name]   = credit_card.name
+          post[:name]   = credit_card.name unless credit_card.name.blank?
+          post[:cardpresent] = true if credit_card.manual_entry
         end
+      end
+
+      def add_test_mode(post, options)
+        post[:testmode] = (options[:test_mode] ? 1 : 0) if options.has_key?(:test_mode)
       end
 
       # see: http://wiki.usaepay.com/developer/transactionapi#split_payments
@@ -246,7 +258,7 @@ module ActiveMerchant #:nodoc:
         parameters[:command]  = TRANSACTIONS[action]
         parameters[:key]      = @options[:login]
         parameters[:software] = 'Active Merchant'
-        parameters[:testmode] = (@options[:test] ? 1 : 0)
+        parameters[:testmode] = (@options[:test] ? 1 : 0) unless parameters.has_key?(:testmode)
         seed = SecureRandom.hex(32).upcase
         hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
         parameters[:hash] = "s/#{seed}/#{hash}/n"
@@ -256,4 +268,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

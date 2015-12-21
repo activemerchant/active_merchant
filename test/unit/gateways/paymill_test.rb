@@ -14,7 +14,7 @@ class PaymillTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
     assert_equal "tran_c94ba7df2dae8fd55028df41173c;", response.authorization
-    assert_equal "General success response.", response.message
+    assert_equal "Operation successful", response.message
     assert_equal 20000, response.params['data']['response_code']
     assert_equal 'pay_b8e6a28fc5e5e1601cdbefbaeb8a', response.params['data']['payment']['id']
     assert_equal '5100', response.params['data']['payment']['last4']
@@ -35,7 +35,7 @@ class PaymillTest < Test::Unit::TestCase
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, failed_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
-    assert_equal 'Card declined by authorization system.', response.message
+    assert_equal 'Card declined', response.message
     assert_equal 50102, response.params['data']['response_code']
   end
 
@@ -75,7 +75,7 @@ class PaymillTest < Test::Unit::TestCase
     assert response.test?
 
     assert_equal "tran_4c612d5293e26d56d986eb89648c;preauth_fdf916cab73b97c4a139", response.authorization
-    assert_equal "General success response.", response.message
+    assert_equal "Operation successful", response.message
     assert_equal '0004', response.params['data']['payment']['last4']
     assert_equal 20000, response.params['data']['response_code']
     assert_nil response.avs_result["message"]
@@ -86,14 +86,14 @@ class PaymillTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_equal 20000, response.params['data']['response_code']
-    assert_equal "General success response.", response.message
+    assert_equal "Operation successful", response.message
   end
 
   def test_failed_authorize
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, failed_authorize_response)
     response = @gateway.authorize(@amount, @credit_card)
     assert_failure response
-    assert_equal 'Card declined by authorization system.', response.message
+    assert_equal 'Card declined', response.message
     assert_equal 50102, response.params['data']['response_code']
   end
 
@@ -131,7 +131,7 @@ class PaymillTest < Test::Unit::TestCase
     assert_success refund
     assert response.test?
 
-    assert_equal 'General success response.', refund.message
+    assert_equal 'Operation successful', refund.message
     assert_equal 'tran_89c8728e94273510afa99ab64e45', refund.params['data']['transaction']['id']
     assert_equal 'refund_d02807f46181c0919016;', refund.authorization
     assert_equal 20000, refund.params['data']['response_code']
@@ -147,7 +147,7 @@ class PaymillTest < Test::Unit::TestCase
     assert_success refund
     assert response.test?
 
-    assert_equal 'General success response.', refund.message
+    assert_equal 'Operation successful', refund.message
     assert_equal 'tran_89c8728e94273510afa99ab64e45', refund.params['data']['transaction']['id']
     assert_equal 'refund_d02807f46181c0919016;', refund.authorization
     assert_equal 20000, refund.params['data']['response_code']
@@ -188,7 +188,7 @@ class PaymillTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, "token")
     assert_success response
     assert_equal "tran_c94ba7df2dae8fd55028df41173c;", response.authorization
-    assert_equal "General success response.", response.message
+    assert_equal "Operation successful", response.message
     assert_equal 20000, response.params['data']['response_code']
     assert_equal 'pay_b8e6a28fc5e5e1601cdbefbaeb8a', response.params['data']['payment']['id']
     assert_equal '5100', response.params['data']['payment']['last4']
@@ -205,11 +205,15 @@ class PaymillTest < Test::Unit::TestCase
     assert response.test?
 
     assert_equal "tran_4c612d5293e26d56d986eb89648c;preauth_fdf916cab73b97c4a139", response.authorization
-    assert_equal "General success response.", response.message
+    assert_equal "Operation successful", response.message
     assert_equal '0004', response.params['data']['payment']['last4']
     assert_equal 20000, response.params['data']['response_code']
     assert_nil response.avs_result["message"]
     assert_nil response.cvv_result["message"]
+  end
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
   private
@@ -733,6 +737,14 @@ class PaymillTest < Test::Unit::TestCase
 
   def failed_capture_response
     MockResponse.new 409, %[{"error":"Preauthorization has already been used","exception":"preauthorization_already_used"}]
+  end
+
+  def transcript
+    "connection_uri=https://test-token.paymill.com?account.number=5500000000000004&account.expiry.month=09&account.expiry.year=2016&account.verification=123"
+  end
+
+  def scrubbed_transcript
+    "connection_uri=https://test-token.paymill.com?account.number=[FILTERED]&account.expiry.month=09&account.expiry.year=2016&account.verification=[FILTERED]"
   end
 
   class MockResponse

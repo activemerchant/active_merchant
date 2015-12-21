@@ -196,6 +196,13 @@ module ActiveMerchant #:nodoc:
         commit(order, :authorize, options[:trace_number])
       end
 
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization) }
+        end
+      end
+
       # AC – Authorization and Capture
       def purchase(money, creditcard, options = {})
         order = build_new_order_xml(AUTH_AND_CAPTURE, money, options) do |xml|
@@ -661,6 +668,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_customer_request_xml(creditcard, options = {})
+        ActiveMerchant.deprecated "Customer Profile support in Orbital is non-conformant to the ActiveMerchant API and will be removed in its current form in a future version. Please contact the ActiveMerchant maintainers if you have an interest in modifying it to conform to the store/unstore/update API."
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Profile do

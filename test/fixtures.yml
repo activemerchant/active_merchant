@@ -11,10 +11,11 @@
 # Paste any required PEM certificates after the pem key.
 #
 
-adyen:
-  company: company
-  merchant: merchant
-  password: password
+
+allied_wallet:
+  site_id: site_id
+  merchant_id: merchant_id
+  token: token
 
 app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
@@ -84,6 +85,12 @@ borgun:
   username: spreedly
   password: Qxi.34k
 
+bpoint:
+  username: 'A'
+  password: 'B'
+  merchant_number: 'C'
+  biller_code: ''
+
 braintree_blue:
   merchant_id: X
   public_key: Y
@@ -104,14 +111,23 @@ bridge_pay:
   user_name: Spre3676
   password: H3392nc5
 
+# Working credentials, no need to replace
+cams:
+  username: testintegrationc
+  password: password9
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
   password: password
 
 card_stream:
-  login: X
-  password: Y
+  login: 103191
+  shared_secret: Dear0Coming15Edge
+
+# Working credentials, no need to replace
+cardknox:
+  api_key: ActiveMerchant_Test
 
 # Cashnet doesn't provide public testing data
 cashnet:
@@ -139,6 +155,28 @@ checkout:
   merchant_id: SBMTEST
   password: Password1!
 
+checkout_v2:
+  secret_key: secret_key
+
+# Working credentials, no need to replace
+clearhaus: &clearhaus
+  api_key: d966051d-b7fd-4054-b4a6-22c4ff4d4701
+  mpi_api_key: f21d07e4-be0a-4cd3-9dcb-9461dac1c90d
+
+clearhaus_secure:
+  <<: *clearhaus
+  signing_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIBOwIBAAJBALYK0zmwuYkH3YWcFNLLddx5cwDxEY7Gi1xITuQqRrU4yD3uSw+J
+    WYKknb4Tbndb6iEHY+e6gIGD+49TojnNeIUCAwEAAQJARyuYRRe4kcBHdPL+mSL+
+    Y0IAGkAlUyKAXYXPghidKD/v/oLrFaZWALGM2clv6UoYYpPnInSgbcud4sTcfeUm
+    QQIhAN2JZ2qv0WGcbIopBpwpQ5jDxMGVkmkVVUEWWABGF8+pAiEA0lySxTELZm8b
+    Gx9UEDRghN+Qv/OuIKFldu1Ba4f8W30CIQCaQFIBtunTTVdF28r+cLzgYW9eWwbW
+    pEP4TdZ4WlW6AQIhAMDCTUdeUpjxlH/87BXROORozAXocBW8bvJUI486U5ctAiAd
+    InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
+    -----END RSA PRIVATE KEY-----
+
+
 # Contact Support at it_support@commercegate.com for credentials and offer/site
 commercegate:
   login: "XXXXXXX"
@@ -149,6 +187,11 @@ commercegate:
 
 conekta:
   key: key_eYvWV7gSDkNYXsmr
+
+# Working credentials, no need to replace
+creditcall:
+  terminal_id: '99961426'
+  transaction_key: '9drdRU9wJ65SNRw3'
 
 # To get 100% passing Cybersource remote tests, you must ask
 # Cybersource support to enable the recurring and pinless debit
@@ -161,6 +204,11 @@ data_cash:
   login: X
   password: Y
 
+# No working test credentials
+dibs:
+  merchant_id: SOMECREDENTIAL
+  secret_key: NOPUBLICCREDENTIAL
+
 direc_pay:
   login: 200904281000001
 
@@ -172,6 +220,14 @@ elavon:
   login: LOGIN
   password: PASSWORD
   user: USER (often the same as LOGIN)
+
+element:
+  account_id: "1013963"
+  account_token: "683EED8A1A357EB91575A168E74482A74836FD72B1AD11B41B29B473CA9D65B9FE067701"
+  application_id: "5211"
+  acceptor_id: "3928907"
+  application_name: "Spreedly"
+  application_version: "1"
 
 # login: merchant number
 # password: referrer url (for authorize authentication)
@@ -242,10 +298,16 @@ flo2cash_simple:
   password: ANOTHERCREDENTIAL
   account_id: ANOTHERCREDENTIAL
 
+forte:
+  location_id: "176008"
+  account_id: "300111"
+  api_key: "f087a90f00f0ae57050c937ed3815c9f"
+  secret: "d793d64064e3113a74fa72035cfc3a1d"
+
 garanti:
   login: "PROVAUT"
-  terminal_id: 111995
-  merchant_id: 600218
+  terminal_id: 30691300
+  merchant_id: 7000679
   password: "123qweASD"
 
 global_transport:
@@ -300,6 +362,9 @@ itransact:
 jetpay:
   login: TESTTERMINAL
 
+komoju:
+  login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3
+
 linkpoint:
   login: STOREID
   pem: |
@@ -324,15 +389,21 @@ merchant_one:
   username: 'demo'
   password: 'password'
 
+# Working credentials, no need to replace
+merchant_partners:
+  account_id: TEST0
+  merchant_pin: "1234567890"
+
 merchant_ware:
  login:
  password:
  name:
 
+# Working credentials, no need to replace
 merchant_ware_version_four:
- login:
- password:
- name:
+ login: 'BK34Z768'
+ password: 'TCTTS-IDYQV-RDFY1-6DS01-WTPVH'
+ name: 'Test Spreedly PayItSimple'
 
 merchant_warrior:
   merchant_uuid: '50c5b9f0b52ea'
@@ -352,6 +423,9 @@ mercury_no_tokenization:
 metrics_global:
   login: 'demo'
   password: 'password'
+
+micropayment:
+  access_key: "0b4832ca37a31e748c4490b58d743986"
 
 # Working credentials, no need to replace
 migs_capture: # MiGS gateway for auth/capture mode
@@ -438,6 +512,12 @@ ogone:
   password: PASSWORD
   signature: SIGNATURE
 
+# Get credentials or api keys from https://dashboard.omise.co
+omise:
+  public_key: pkey_test_4zt0fss8gs0z6b4zlsq
+  secret_key: skey_test_4zt0fss8eklsj88dx9l
+  api_version: '2015-11-17'
+
 # Working credentials, no need to replace
 openpay:
   key: 'sk_e568c42a6c384b7ab02cd47d2e407cab'
@@ -486,8 +566,15 @@ pay_secure:
   password: PASSWORD
 
 paybox_direct:
-  login: 199988899
+  login: 199988863
   password: 1999888I
+  rang: 85
+
+# Working credentials, no need to replace
+payeezy:
+  apikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT
+  apisecret: 36ef1fc3b908b7a79ad2c29de931d2ccff26fcec35602c709a9e34318e936683
+  token: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6
 
 payex:
   account: ACCOUNT
@@ -510,8 +597,8 @@ payment_express:
   password: PASSWORD
 
 paymill:
-  private_key: PRIVATE_KEY
-  public_key: PUBLIC_KEY
+  private_key: a9580be4a7b9d0151a3da88c6c935ce0
+  public_key: 57313835619696ac361dc591bc973626
 
 paypal_certificate:
   login: activemerchant-cert-test_api1.example.com
@@ -560,9 +647,13 @@ payscout:
   username: demo
   password: password
 
+# There are all kind of special options that must be set on a test account, and
+# PayU is not transparent about what they are. At this point you need to tell
+# them specifically that the account will be used with Spreedly, which should
+# hopefully get you the right options.
 payu_in:
-  login: C0Dr8m
-  secret: 3sf0jURk
+  key: KEY
+  salt: SALT
 
 payway:
   username:
@@ -664,6 +755,9 @@ quickpay:
   login: 89898978
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
 
+quickpay_v10_api_key:
+  api_key: "03508e7791ba6c9d0e6830716e650f35c4342c4b3576723ad556e236ca4c7788"
+
 # To get the right apikey, log in to the manager.
 # Go to Indstillinger > API adgang and make sure you have the right key in the fixture.
 quickpay_with_api_key:
@@ -680,7 +774,7 @@ qvalent:
 raven_pac_net:
   user: ernest
   secret: "all good men die young"
-  prn: 840033
+  prn: 987743
 
 realex:
   login: X
@@ -758,6 +852,19 @@ redsys:
   login: MERCHANT CODE
   secret_key: SECRET KEY
 
+redsys_sha256:
+  login: MERCHANT CODE
+  secret_key: SECRET KEY
+  signature_algorithm: 'sha256'
+
+# Working credentials, no need to replace
+s5:
+  mode: CONNECTOR_TEST
+  sender: ff80808142b2c03c0142b7a7339603e0
+  channel: ff80808142b2c03c0142b7a7339803e5
+  login: 8a82941847c4d0780147cea1d1730dcc
+  password: n3yNMBGK
+
 sage:
   login: login
   password: password
@@ -784,6 +891,9 @@ secure_pay_tech:
   login: TESTDIGISPL1
   password: d557591484cb2cd12bba445aba420d2c69cd6a88
 
+securion_pay:
+  secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
+
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
   login: X
@@ -799,9 +909,13 @@ spreedly_core:
   password: "Y2i7AjgU03SUjwY4xnOPqzdsv4dMbPDCQzorAk8Bcoy0U8EIVE4innGjuoMQv7MN"
   gateway_token: "3gLeg4726V5P0HK7cq7QzHsL0a6"
 
+# Working credentials, no need to replace
 stripe:
-  login:
-  fee_refund_login:
+  login: sk_test_3OD4TdKSIOhDOL2146JJcC79
+
+# Working credentials, no need to replace
+stripe_destination:
+  stripe_user_id: "acct_17FRNfIPBJTitsen"
 
 # Used only for remote tests that use EMV credit card mocks
 stripe_emv_uk:
@@ -824,8 +938,18 @@ tns:
   password: 3f34fe50334fbe6cbe04c283411a5860
 
 trans_first:
-  login: LOGIN
+  login: 45567
+  password: TNYYKYMFZ59HSN7Q
+
+# Transact Pro doesn't provide public testing data
+transact_pro:
+  guid: GUID
   password: PASSWORD
+  terminal: TERMINALID
+  card_number: "TESTCARDNUMBER"
+  verification_value: "TESTCARDCVV"
+  month: "TESTCARDMONTH"
+  year: "TESTCARDYEAR"
 
 transax:
   login: transaxdemo
@@ -851,6 +975,12 @@ valitor:
   password: SecurityNumber
 
 # Working credentials, no need to replace
+vanco:
+  user_id: SPREEDWS
+  password: v@nco2oo
+  client_id: SPREEDLY
+
+# Working credentials, no need to replace
 verify:
   login: 'demo'
   password: 'password'
@@ -865,9 +995,10 @@ webpay:
 
 # Working test credentials, no need to replace
 wepay:
-  client_id: "187493"
-  account_id: "1311201206"
-  access_token: "STAGE_4c6a319f9b6ef50e596ee3ea0b845f2fecd50fa0d8bc0b7483bd61c2018dbf5c"
+  client_id: "44716"
+  account_id: "2080478981"
+  access_token: "STAGE_67d2e41067af064af698e9cdc185c7570e4cb3191de04d8d092357c2a9120b6c"
+  client_secret: "d48fefe743"
 
 # Working test credentials with AVS/CVV support, no need to replace
 wirecard:

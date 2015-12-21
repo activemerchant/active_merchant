@@ -49,6 +49,10 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_void_required_elements(post)
         add_reference(post, authorization)
+        add_remembered_amount(post, authorization)
+        add_tax(post, options)
+        add_order_id(post, options)
+
         commit("Void", post)
       end
 
@@ -89,33 +93,13 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["AUD"] = "036"
-      CURRENCY_CODES["CAD"] = "124"
-      CURRENCY_CODES["CHF"] = "756"
-      CURRENCY_CODES["CZK"] = "203"
-      CURRENCY_CODES["DKK"] = "208"
-      CURRENCY_CODES["EUR"] = "978"
-      CURRENCY_CODES["GBP"] = "826"
-      CURRENCY_CODES["HKD"] = "344"
-      CURRENCY_CODES["HUF"] = "348"
-      CURRENCY_CODES["IRR"] = "364"
-      CURRENCY_CODES["JPY"] = "392"
-      CURRENCY_CODES["LVL"] = "428"
-      CURRENCY_CODES["MYR"] = "458"
-      CURRENCY_CODES["NOK"] = "578"
-      CURRENCY_CODES["PLN"] = "985"
-      CURRENCY_CODES["SEK"] = "752"
-      CURRENCY_CODES["SGD"] = "702"
-      CURRENCY_CODES["USD"] = "840"
-      CURRENCY_CODES["ZAR"] = "710"
-
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
-        post[:CurrencyCode] = CURRENCY_CODES[options[:currency] || currency(money)]
-        post[:TaxAmount] = amount(options[:tax])
-        post[:InvoiceNumber] = options[:order_id]
-        post[:InvoiceDetail] = options[:description]
+        post[:CurrencyCode] = options[:currency] || currency(money)
+        post[:InvoiceDetail] = options[:invoice_detail] if options[:invoice_detail]
+        post[:CustomerCode] = options[:customer_code] if options[:customer_code]
+        add_order_id(post, options)
+        add_tax(post, options)
       end
 
       def add_payment_method(post, payment_method)
@@ -124,7 +108,7 @@ module ActiveMerchant #:nodoc:
         post[:CardVerificationNumber] = payment_method.verification_value
         post[:CardExpirationDate] = format(payment_method.month, :two_digits) + format(payment_method.year, :two_digits)
         post[:CardLastFourDigits] = payment_method.last_digits
-        post[:MagneticData] = payment_method.track_data
+        post[:MagneticData] = payment_method.track_data if payment_method.track_data
       end
 
       def add_customer_data(post, options)
@@ -143,11 +127,22 @@ module ActiveMerchant #:nodoc:
         post[:IMEI] = nil
       end
 
+      def add_order_id(post, options)
+        post[:InvoiceNumber] = options[:order_id]
+      end
+
+      def add_tax(post, options)
+        post[:TaxAmount] = amount(options[:tax] || 0)
+      end
+
       def add_reference(post, authorization)
-        reference_number, last_four_digits, original_amount = split_authorization(authorization)
+        reference_number, last_four_digits = split_authorization(authorization)
         post[:ReferenceNumber] = reference_number
         post[:CardLastFourDigits] = last_four_digits
-        post[:Amount] = original_amount
+      end
+
+      def add_remembered_amount(post, authorization)
+        post[:Amount] = split_authorization(authorization).last
       end
 
       def commit(action, post)
@@ -158,7 +153,8 @@ module ActiveMerchant #:nodoc:
 
         data = build_request(post)
         begin
-          raw = parse(ssl_post(self.live_url, data, headers))
+          xml = ssl_post(self.live_url, data, headers)
+          raw = parse(xml)
         rescue ActiveMerchant::ResponseError => e
           if(e.response.code == "500" && e.response.body.start_with?("<s:Envelope"))
             raw = {
@@ -176,7 +172,9 @@ module ActiveMerchant #:nodoc:
           raw,
           authorization: authorization_from(post, raw),
           error_code: error_code_from(succeeded, raw),
-          test: test?
+          test: test?,
+          cvv_result: cvv_result_from_xml(xml),
+          avs_result: avs_result_from_xml(xml)
         )
       end
 
@@ -184,7 +182,7 @@ module ActiveMerchant #:nodoc:
         {
           "Accept-Encoding" => "gzip,deflate",
           "Content-Type"  => "text/xml;charset=UTF-8",
-          "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCard"
+          "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCreditCard"
         }
       end
 
@@ -204,11 +202,11 @@ module ActiveMerchant #:nodoc:
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <soapenv:Header/>
    <soapenv:Body>
-      <tem:ProcessCard>
+      <tem:ProcessCreditCard>
          <tem:request>
            #{body}
          </tem:request>
-      </tem:ProcessCard>
+      </tem:ProcessCreditCard>
    </soapenv:Body>
 </soapenv:Envelope>
         EOS
@@ -219,7 +217,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.remove_namespaces!
-        body = doc.xpath("//ProcessCardResult")
+        body = doc.xpath("//ProcessCreditCardResult")
         body.children.each do |node|
           if (node.elements.size == 0)
             response[node.name.underscore.to_sym] = node.text
@@ -266,6 +264,63 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         succeeded ? nil : STANDARD_ERROR_CODE_MAPPING[response[:result]]
+      end
+
+      def cvv_result_from_xml(xml)
+        ActiveMerchant::Billing::CVVResult.new(cvv_result_code(xml))
+      end
+
+      def avs_result_from_xml(xml)
+        ActiveMerchant::Billing::AVSResult.new(code: avs_result_code(xml))
+      end
+
+      def cvv_result_code(xml)
+        cvv = validation_result_element(xml, "CVV")
+        return nil unless cvv
+        validation_result_matches?(*validation_result_element_text(cvv.parent)) ? 'M' : 'N'
+      end
+
+      def avs_result_code(xml)
+        billing_address_elem = validation_result_element(xml, "Billing Address")
+        zip_code_elem = validation_result_element(xml, "Zip Code")
+
+        return nil unless billing_address_elem && zip_code_elem
+
+        billing_matches = avs_result_matches(billing_address_elem)
+        zip_matches = avs_result_matches(zip_code_elem)
+
+        if billing_matches && zip_matches
+          'D'
+        elsif !billing_matches && zip_matches
+          'P'
+        elsif billing_matches && !zip_matches
+          'B'
+        else
+          'C'
+        end
+      end
+
+      def avs_result_matches(elem)
+        validation_result_matches?(*validation_result_element_text(elem.parent))
+      end
+
+      def validation_result_element(xml, name)
+        doc = Nokogiri::XML(xml)
+        doc.remove_namespaces!
+        doc.at_xpath("//ParameterValidationResultList//ParameterValidationResult//Name[text() = '#{name}']")
+      end
+
+      def validation_result_element_text(element)
+        result_text = element.elements.detect { |elem|
+          elem.name == "Result"
+        }.children.detect { |elem| elem.text }.text
+
+        result_text.split(";").collect(&:strip)
+      end
+
+      def validation_result_matches?(present, match)
+        present.downcase.start_with?('present') &&
+          match.downcase.start_with?('match')
       end
     end
   end

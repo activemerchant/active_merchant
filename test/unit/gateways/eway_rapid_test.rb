@@ -82,6 +82,7 @@ class EwayRapidTest < Test::Unit::TestCase
         :partner_id => "SomePartner",
         :description => "The Really Long Description More Than Sixty Four Characters Gets Truncated",
         :order_id => "orderid1",
+        :invoice => "I1234",
         :currency => "INR",
         :email => "jim@example.com",
         :billing_address => {
@@ -121,12 +122,12 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_match(%r{"TotalAmount":"200"}, data)
       assert_match(%r{"InvoiceDescription":"The Really Long Description More Than Sixty Four Characters Gets"}, data)
       assert_match(%r{"InvoiceReference":"orderid1"}, data)
-      assert_match(%r{"InvoiceNumber":"orderid1"}, data)
+      assert_match(%r{"InvoiceNumber":"I1234"}, data)
       assert_match(%r{"CurrencyCode":"INR"}, data)
 
       assert_match(%r{"Title":"Mr."}, data)
-      assert_match(%r{"FirstName":"Jim"}, data)
-      assert_match(%r{"LastName":"Awesome Smith"}, data)
+      assert_match(%r{"FirstName":"Jim Awesome"}, data)
+      assert_match(%r{"LastName":"Smith"}, data)
       assert_match(%r{"CompanyName":"Awesome Co"}, data)
       assert_match(%r{"Street1":"1234 My Street"}, data)
       assert_match(%r{"Street2":"Apt 1"}, data)
@@ -366,6 +367,10 @@ class EwayRapidTest < Test::Unit::TestCase
     assert_success response
     assert_equal "P", response.cvv_result["code"]
     assert_equal "I", response.avs_result["code"]
+  end
+
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
   private
@@ -1011,4 +1016,21 @@ class EwayRapidTest < Test::Unit::TestCase
     )
   end
 
+  def transcript
+    <<-TRANSCRIPT
+      "CardDetails":{"Name":"Longbob Longsen","Number":"4444333322221111","ExpiryMonth":"09","ExpiryYear":"2015","CVN":"123"}},"ShippingAddress"
+      \"CardDetails\":{\"Name\":\"Longbob Longsen\",\"Number\":\"4444333322221111\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"2015\",\"CVN\":\"123\"}},\"ShippingAddress\"
+      {\"CardDetails\":{\"Number\":\"444433XXXXXX1111\",\"Name\":\"Longbob Longsen\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"15\"
+      "Verification":{"CVN":0,"Address":0,"Email":0,"Mobile":0,"Phone":0},"Customer":{"CardDetails":{"Number":"444433XXXXXX1111","Name":"Longbob Longsen","ExpiryMonth":"09"
+    TRANSCRIPT
+  end
+
+  def scrubbed_transcript
+    <<-SCRUBBED_TRANSCRIPT
+      "CardDetails":{"Name":"Longbob Longsen","Number":"[FILTERED]","ExpiryMonth":"09","ExpiryYear":"2015","CVN":"[FILTERED]"}},"ShippingAddress"
+      \"CardDetails\":{\"Name\":\"Longbob Longsen\",\"Number\":\"[FILTERED]\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"2015\",\"CVN\":\"[FILTERED]\"}},\"ShippingAddress\"
+      {\"CardDetails\":{\"Number\":\"[FILTERED]\",\"Name\":\"Longbob Longsen\",\"ExpiryMonth\":\"09\",\"ExpiryYear\":\"15\"
+      "Verification":{"CVN":[FILTERED],"Address":0,"Email":0,"Mobile":0,"Phone":0},"Customer":{"CardDetails":{"Number":"[FILTERED]","Name":"Longbob Longsen","ExpiryMonth":"09"
+    SCRUBBED_TRANSCRIPT
+  end
 end

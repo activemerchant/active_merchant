@@ -68,6 +68,9 @@ module ActiveMerchant
             when :put
               debug body
               http.put(endpoint.request_uri, body, headers)
+            when :patch
+              debug body
+              http.patch(endpoint.request_uri, body, headers)
             when :delete
               # It's kind of ambiguous whether the RFC allows bodies
               # for DELETE requests. But Net::HTTP's delete method
