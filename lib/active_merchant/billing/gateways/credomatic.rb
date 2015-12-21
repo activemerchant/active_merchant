@@ -21,7 +21,8 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {
         '200' => STANDARD_ERROR_CODE[:card_declined],
         '300' => STANDARD_ERROR_CODE[:processing_error],
-        '305' => STANDARD_ERROR_CODE[:card_declined],
+        '303' => STANDARD_ERROR_CODE[:processing_error],
+        '305' => STANDARD_ERROR_CODE[:invalid_number],
       }
 
       def initialize(options={})
@@ -90,15 +91,11 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript
+          .gsub(%r((&?username=)\w*(&?)), '\1[FILTERED]\2')
+          .gsub(%r((&?hash=)\w*(&?)), '\1[FILTERED]\2')
       end
 
       private
-
-      # def add_customer_data(post, options)
-      # end
-
-      # def add_address(post, creditcard, options)
-      # end
 
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
