@@ -233,11 +233,29 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
+          if node.name == 'records'
+            parse_records(response, node)
+            node = node.elements[1]
+          end
+          # there is not a else to allow values of last record (which is in position 1)
+          # to be in responses root
+
           node.elements.each{|element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
       end
+
+      def parse_records(response, node)
+        records = []
+        node.elements.each do |record|
+          record_hash = {}
+          record.elements.each { |element| parse_element(record_hash, element)}
+          records << record_hash
+        end
+        response[:records] = records
+      end
+
     end
   end
 end
