@@ -24,20 +24,51 @@ class ConektaTest < Test::Unit::TestCase
       :last_name          => "Moreno Reyes"
     )
 
-    @options = {
-      :device_fingerprint => "41l9l92hjco6cuekf0c7dq68v4",
-      :description => 'Blue clip',
-      :success_url => "https://www.example.com/success",
-      :failure_url => "https://www.example.com/failure",
-      :address1 => "Rio Missisipi #123",
-      :address2 => "Paris",
-      :city => "Guerrero",
-      :country => "Mexico",
-      :zip => "5555",
-      :name => "Mario Reyes",
-      :phone => "12345678",
-      :carrier => "Estafeta"
+   @options = {
+      device_fingerprint: "41l9l92hjco6cuekf0c7dq68v4",
+      description: 'Blue clip',
+      customer: "Mario Reyes",
+      email: "mario@gmail.com",
+      phone: "1234567890",
+      billing_address: {
+        address1: "Rio Missisipi #123",
+        address2: "Paris",
+        city: "Guerrero",
+        country: "Mexico",
+        zip: "5555",
+        phone: "12345678",
+      },
+      carrier: "Estafeta"
     }
+
+    @spreedly_options = {
+      description: "{
+        \"device_fingerprint\":\"41l9l92hjco6cuekf0c7dq68v4\",
+        \"description\":\"Blue clip\",
+        \"customer\":\"Mario Reyes\",
+        \"email\":\"mario@gmail.com\",
+        \"phone\":\"1234567890\",
+        \"ip\":\"127.0.0.1\",
+        \"billing_address\": {
+          \"address1\": \"Rio Missisipi #123\",
+          \"address2\": \"Paris\",
+          \"city\": \"Guerrero\",
+          \"country\": \"Mexico\",
+          \"zip\": \"5555\",
+          \"name\": \"Mario Reyes\",
+          \"phone\": \"12345678\"
+        }
+      }"
+    }
+  end
+
+  def test_successful_purchase_using_spreedly
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @spreedly_options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
   end
 
   def test_successful_tokenized_purchase

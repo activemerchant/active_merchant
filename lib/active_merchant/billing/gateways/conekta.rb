@@ -17,7 +17,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_source, options = {})
-        post = {}
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
 
         add_order(post, money, options)
         add_payment_source(post, payment_source, options)
@@ -27,7 +28,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment_source, options = {})
-        post = {}
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
 
         add_order(post, money, options)
         add_payment_source(post, payment_source, options)
@@ -38,7 +40,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, identifier, options = {})
-        post = {}
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
 
         post[:order_id] = identifier
         add_order(post, money, options)
@@ -47,7 +50,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, identifier, options)
-        post = {}
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
 
         post[:order_id] = identifier
         add_order(post, money, options)
@@ -58,10 +62,19 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_order(post, money, options)
+        build_details_from_description(post, options)
         post[:description] = options[:description] || "Active Merchant Purchase"
         post[:reference_id] = options[:order_id] if options[:order_id]
         post[:currency] = (options[:currency] || currency(money)).downcase
         post[:amount] = amount(money)
+      end
+
+      def build_details_from_description(post, options)
+        hash = JSON.parse(options[:description]).with_indifferent_access rescue nil
+        if hash.present? and hash[:description].present?
+          options.merge!(hash)
+          options[:description] = hash[:description]
+        end
       end
 
       def add_details_data(post, options)
@@ -74,7 +87,6 @@ module ActiveMerchant #:nodoc:
         add_billing_address(details, options)
         add_line_items(details, options)
         add_shipment(details, options)
-
         post[:details] = details
       end
 
