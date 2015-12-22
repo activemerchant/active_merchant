@@ -56,6 +56,19 @@ module ActiveMerchant #:nodoc:
         commit(url("refund"), post)
       end
 
+      def verify_payment(transaction_ids)
+        raise ArgumentError, "Transaction Ids cannot be blank" if transaction_ids.blank?
+
+        post = {}
+
+        post[:command] = "verify_payment"
+        post[:var1] = transaction_ids.join("|")
+
+        add_auth(post, :command, :var1)
+
+        commit(url("verify_payment"), post)
+      end
+
       def supports_scrubbing?
         true
       end
