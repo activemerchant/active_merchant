@@ -93,6 +93,10 @@ module ActiveMerchant #:nodoc:
         transcript
           .gsub(%r((&?username=)\w*(&?)), '\1[FILTERED]\2')
           .gsub(%r((&?hash=)\w*(&?)), '\1[FILTERED]\2')
+          .gsub(%r((&?ccnumber=)\w*(&?)), '\1[FILTERED]\2')
+          .gsub(%r((&?ccexp=)\w*(&?)), '\1[FILTERED]\2')
+          .gsub(%r((&?cvv=)\w*(&?)), '\1[FILTERED]\2')
+          .gsub(%r((&?key_id=)\w*(&?)), '\1[FILTERED]\2')
       end
 
       private
