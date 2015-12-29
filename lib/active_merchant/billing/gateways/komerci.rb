@@ -5,12 +5,14 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ecommerce.redecard.com.br/pos_virtual/wskomerci/cap_teste.asmx'
       self.live_url = 'https://ecommerce.redecard.com.br/pos_virtual/wskomerci/cap.asmx'
 
-      self.supported_countries = ['BR']
-      self.default_currency = 'BRL'
-      self.supported_cardtypes = [:visa, :master, :diners]
-
+      self.supported_countries = %w(BR)
+      self.supported_cardtypes = %i(visa master diners_club)
+      self.supported_banks = %i()
+      self.supported_boletos = %i()
       self.homepage_url = 'http://www.userede.com.br/pt-BR/Paginas/default.aspx'
-      self.display_name = 'RedeCard Komerci'
+      self.display_name = 'Rede'
+      self.display_logo = 'https://cdn.edools.com/assets/images/gateways/Rede.png'
+      self.default_currency = 'BRL'
 
       SALE_TYPES = {
         spot_sale: '04',

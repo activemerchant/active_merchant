@@ -8,10 +8,13 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://desenvolvedor.moip.com.br/sandbox'
       self.live_url = 'https://www.moip.com.br'
 
-      self.supported_countries = ['BR']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_countries = %w(BR)
+      self.supported_cardtypes = %i(visa master american_express diners_club hipercard elo hiper)
+      self.supported_banks = %i(itau santander banco_do_brasil bradesco banrisul)
+      self.supported_boletos = %i(bradesco)
       self.homepage_url = 'https://www.moip.com.br/'
       self.display_name = 'Moip'
+      self.display_logo = 'https://cdn.edools.com/assets/images/gateways/moip.png'
       self.default_currency = 'BRL'
 
       def purchase(money, payment_method, options = {})

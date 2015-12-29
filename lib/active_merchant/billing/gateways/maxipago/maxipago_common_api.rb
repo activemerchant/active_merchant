@@ -17,12 +17,15 @@ module ActiveMerchant #:nodoc:
         base.live_url = URLS[:live][:transaction]
         base.test_url = URLS[:test][:transaction]
 
-        base.supported_countries = ['BR']
+        base.supported_countries = %w(BR)
+        base.supported_cardtypes = %i(visa master discover american_express diners_club)
+        base.supported_banks = %i(itau)
+        base.supported_boletos = %i(itau bradesco)
+        base.homepage_url = 'http://www.maxipago.com/'
+        base.display_name = 'maxiPago'
+        base.display_logo = 'https://cdn.edools.com/assets/images/gateways/maxiPago.png'
         base.default_currency = 'BRL'
         base.money_format = :dollars
-        base.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club]
-        base.homepage_url = 'http://www.maxipago.com/'
-        base.display_name = 'maxiPago!'
       end
 
       def initialize(options = {})

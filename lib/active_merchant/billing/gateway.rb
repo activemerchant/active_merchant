@@ -118,10 +118,15 @@ module ActiveMerchant #:nodoc:
 
       # The supported card types for the gateway
       class_attribute :supported_cardtypes
+      class_attribute :supported_banks
+      class_attribute :supported_boletos
       self.supported_cardtypes = []
+      self.supported_banks = []
+      self.supported_boletos = []
 
       class_attribute :homepage_url
       class_attribute :display_name
+      class_attribute :display_logo
 
       class_attribute :test_url, :live_url
 
