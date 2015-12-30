@@ -247,10 +247,10 @@ module ActiveMerchant #:nodoc:
                   @pki_string << "#{l}=#{m},"
                 end
                 @pki_string = @pki_string.gsub(/[#{sub}]+$/, '')
-                @pki_string << "],"
+                @pki_string << "], "
               end
             end
-            @pki_string = @pki_string.gsub(/[#{sub}]+$/, '')
+            @pki_string = @pki_string.gsub(/[#{sub}] +$/, '')
             @pki_string << "],"
           elsif value.is_a?(Hash)
             @pki_string << "#{key}=["
@@ -277,7 +277,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         random_header_value = RandomStringGenerator.random_string(RequestHelper::RANDOM_STRING_SIZE)
         headers = {
-            "Authorization" => "Basic " + crate_hash(options, random_header_value),
+            "Authorization" => crate_hash(options, random_header_value),
             "x-iyzi-rnd" => random_header_value.to_s,
             "accept" => "application/json",
             "content-type" => "application/json"
