@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'test_helper'
 
 class IyzicoTest < Test::Unit::TestCase
@@ -16,8 +17,8 @@ class IyzicoTest < Test::Unit::TestCase
         email: 'dharmesh.vasani@multidots.in',
         phone: '9898912233',
         name: 'Jim',
-        lastLoginDate:'2015-10-05 12:43:35',
-        registrationDate:'2013-04-21 15:12:09',
+        lastLoginDate: '2015-10-05 12:43:35',
+        registrationDate: '2013-04-21 15:12:09',
         items: [{
                     :name => 'EDC Marka Usb',
                     :category1 => 'Elektronik',
@@ -25,38 +26,19 @@ class IyzicoTest < Test::Unit::TestCase
                     :id => 'BI103',
                     :price => 0.38,
                     :itemType => 'PHYSICAL',
-                    :subMerchantKey => 'sub merchant key',
-                    :subMerchantPrice =>0.37
-                }, {
-                    :name => 'EDC Marka Usb',
-                    :category1 => 'Elektronik',
-                    :category2 => 'Usb / Cable',
-                    :id => 'BI104',
-                    :price => 0.2,
-                    :itemType => 'PHYSICAL',
-                    :subMerchantKey => 'sub merchant key',
-                    :subMerchantPrice =>0.19
-                }, {
-                    :name => 'EDC Marka Usb',
-                    :category1 => 'Elektronik',
-                    :category2 => 'Usb / Cable',
-                    :id => 'BI104',
-                    :price => 0.42,
-                    :itemType => 'PHYSICAL',
-                    :subMerchantKey => 'sub merchant key',
-                    :subMerchantPrice =>0.41
+                    :subMerchantKey => 'nm57s4v5mk2652k87g5728cc56nh23',
+                    :subMerchantPrice => 0.37
                 }]
     }
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+#    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-
-    assert_equal 'REPLACE', response.authorization
-    assert response.test?
+    assert_equal "success", response.params['status']
+    assert_equal "tr", response.params['locale']
   end
 
   def test_failed_purchase
@@ -64,7 +46,9 @@ class IyzicoTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal "1000", response.params['errorCode']
+    assert_equal "failure", response.params['status']
+    assert_equal "tr", response.params['locale']
   end
 
   def test_successful_authorize
@@ -77,6 +61,12 @@ class IyzicoTest < Test::Unit::TestCase
   end
 
   def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+    authorization = 4374
+    response = @gateway.void(authorization, options={})
+    assert_equal "5088", response.params['errorCode']
+    assert_equal "failure", response.params['status']
+    assert_equal "tr", response.params['locale']
   end
 
   def test_successful_verify
@@ -88,52 +78,63 @@ class IyzicoTest < Test::Unit::TestCase
   def test_failed_verify
   end
 
-  def test_scrub
-    assert @gateway.supports_scrubbing?
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  end
 
   private
 
-  def pre_scrubbed
-    %q(
-      Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    )
-  end
-
-  def post_scrubbed
-    %q(
-      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-      Things to scrub:
-        - Credit card number
-        - CVV
-        - Sensitive authentication details
-    )
-  end
-
   def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_iyzico_test.rb \
-        -n test_successful_purchase
-    )
   end
 
   def failed_purchase_response
+    <<-RESPONSE
+    {
+      "status"=>"failure",
+      "errorCode"=>"1000",
+      "errorMessage"=>"Geçersiz imza",
+      "locale"=>"tr",
+      "systemTime"=>1451901922908,
+      "conversationId"=>"shopify_1"
+    }
+    RESPONSE
   end
 
   def successful_authorize_response
   end
 
   def failed_authorize_response
+    <<-RESPONSE
+    {
+       "status"=>"failure",
+       "errorCode"=>"1000",
+       "errorMessage"=>"Geçersiz imza",
+       "locale"=>"tr",
+       "systemTime"=>1451898355612,
+       "conversationId"=>"shopify_1"
+    }
+    RESPONSE
   end
 
   def successful_void_response
+    <<-RESPONSE
+    {
+      "status"=>"success",
+      "locale"=>"tr",
+      "systemTime"=>1451901238711,
+      "paymentId"=>"4374",
+      "price"=>0.1
+    }
+    RESPONSE
   end
 
   def failed_void_response
+    <<-RESPONSE
+    {
+       "status"=>"failure",
+       "errorCode"=>"5088",
+       "errorMessage"=>"",
+       "locale"=>"tr",
+       "systemTime"=>1451895765449,
+       "conversationId"=>"shopify_1"
+    }
+    RESPONSE
   end
 end

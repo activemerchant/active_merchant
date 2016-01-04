@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(0.1, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -94,8 +94,6 @@ module ActiveMerchant #:nodoc:
         buyer[:surname]= options[:name]
         buyer[:identityNumber]= "SHOPIFY_#{options[:name]}"
         buyer[:email] = options[:email]
-        #buyer[:lastLoginDate]= options[:lastLoginDate]
-        #buyer[:registrationDate]= options[:registrationDate]
         unless billing_data.nil?
           buyer[:gsmNumber] = billing_data[:phone]
           buyer[:registrationAddress] = billing_data[:address1]
@@ -156,7 +154,6 @@ module ActiveMerchant #:nodoc:
             basket_item[:price] =item[:price]
             basket_item[:name] = item[:name]
             basket_item[:category1] = item[:category1]
-            #basket_item[:category2] = item[:category2]
             basket_item[:itemType] ='PHYSICAL'
             basket_item[:subMerchantKey] = item[:subMerchantKey]
             basket_item[:subMerchantPrice] = item[:subMerchantPrice]
@@ -168,7 +165,6 @@ module ActiveMerchant #:nodoc:
           basket_item[:price] = "not provided"
           basket_item[:name] = "not provided"
           basket_item[:category1] = "not provided"
-          #basket_item[:category2] = "not provided"
           basket_item[:itemType] = 'PHYSICAL'
           basket_item[:subMerchantKey] = "not provided"
           basket_item[:subMerchantPrice] ="not provided"
