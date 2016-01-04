@@ -53,6 +53,12 @@ class RemoteIyzicoTest < Test::Unit::TestCase
     assert_equal "Kart numarası geçersizdir", response.message
   end
 
+  def test_failed_authorize
+    response = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal "Kart numarası geçersizdir", response.message
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
