@@ -7,7 +7,7 @@ class RemoteIyzicoTest < Test::Unit::TestCase
 
     @amount = 0.1
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
-        :type => "MasterCard",
+        :brand => "MasterCard",
         :number => "4242424242424242",
         :verification_value => "000",
         :month => 1,
