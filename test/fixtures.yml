@@ -486,6 +486,11 @@ nab_transact_privileged:
   login: XYZ0010
   password: abcd1234
 
+# Working credentials, no need to replace
+ncr_secure_pay:
+  username: test_ecomm:public
+  password: publ1ct3st
+
 net_registry:
   login: X
   password: Y
