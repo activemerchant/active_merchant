@@ -195,6 +195,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(xml, options)
         add_address(xml, creditcard, options)
         xml.tag! 'DCI', 0 # No duplicate checking will be done, except for ORDERID
+        xml.tag! 'INDUSTRYSPECIFICDATA', options[:industry_specific_data] if options[:industry_specific_data]
         xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
         xml.tag! 'INVOICEDESC', options[:invoice_description] if options[:invoice_description]
         xml.tag! 'INVOICENUM', options[:invoice_number] if options[:invoice_number]

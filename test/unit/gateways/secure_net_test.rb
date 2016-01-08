@@ -166,6 +166,22 @@ class SecureNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passes_with_no_industry_specific_data
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{INDUSTRYSPECIFICDATA}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_with_industry_specific_data
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, industry_specific_data: 'P')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{INDUSTRYSPECIFICDATA}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_passes_with_test_mode
     stub_comms do
       @gateway.purchase(@amount, @credit_card, test_mode: false)
