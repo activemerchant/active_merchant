@@ -14,7 +14,8 @@ module ActiveMerchant #:nodoc:
 
       def redirect_url_for(token, options = {})
         options[:review] ||= false
-        super
+        cmd = options[:mobile] ? '_express-checkout-mobile' : '_express-checkout'
+        build_redirect_url_for(token, options: options, cmd: cmd)
       end
 
       # GATEWAY.setup_purchase(100,

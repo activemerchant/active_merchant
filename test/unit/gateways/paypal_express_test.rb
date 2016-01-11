@@ -2,15 +2,11 @@ require 'test_helper'
 require 'nokogiri'
 
 class PaypalExpressTest < Test::Unit::TestCase
-  TEST_REDIRECT_URL        = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890'
-  TEST_REDIRECT_URL_MOBILE = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout-mobile&token=1234567890'
-  LIVE_REDIRECT_URL        = 'https://www.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890'
-  LIVE_REDIRECT_URL_MOBILE = 'https://www.paypal.com/cgi-bin/webscr?cmd=_express-checkout-mobile&token=1234567890'
+  TEST_REDIRECT_URL        = 'https://www.sandbox.paypal.com/checkoutnow?token=1234567890'
+  LIVE_REDIRECT_URL        = 'https://www.paypal.com/checkoutnow?token=1234567890'
 
   TEST_REDIRECT_URL_WITHOUT_REVIEW = "#{TEST_REDIRECT_URL}&useraction=commit"
   LIVE_REDIRECT_URL_WITHOUT_REVIEW = "#{LIVE_REDIRECT_URL}&useraction=commit"
-  TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW = "#{TEST_REDIRECT_URL_MOBILE}&useraction=commit"
-  LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW = "#{LIVE_REDIRECT_URL_MOBILE}&useraction=commit"
 
   def setup
     @gateway = PaypalExpressGateway.new(
@@ -39,13 +35,11 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_live_redirect_url
     Base.mode = :production
     assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
-    assert_equal LIVE_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
   end
 
   def test_live_redirect_url_without_review
     Base.mode = :production
     assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
-    assert_equal LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
   end
 
   def test_force_sandbox_redirect_url
@@ -60,19 +54,16 @@ class PaypalExpressTest < Test::Unit::TestCase
 
     assert gateway.test?
     assert_equal TEST_REDIRECT_URL, gateway.redirect_url_for('1234567890')
-    assert_equal TEST_REDIRECT_URL_MOBILE, gateway.redirect_url_for('1234567890', :mobile => true)
   end
 
   def test_test_redirect_url
     assert_equal :test, Base.mode
     assert_equal TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
-    assert_equal TEST_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
   end
 
   def test_test_redirect_url_without_review
     assert_equal :test, Base.mode
     assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
-    assert_equal TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
   end
 
   def test_get_express_details

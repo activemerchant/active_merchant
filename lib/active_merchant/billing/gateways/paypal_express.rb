@@ -27,11 +27,15 @@ module ActiveMerchant #:nodoc:
       }
 
       CURRENCIES_WITHOUT_FRACTIONS = %w(BRL HUF JPY MYR TWD TRY)
-
-      self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr'
+      self.live_redirect_url = 'https://www.paypal.com/checkoutnow'
+      self.test_redirect_url = 'https://www.sandbox.paypal.com/checkoutnow'
       self.supported_countries = ['US']
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name = 'PayPal Express Checkout'
+
+      def redirect_url_for(token, options = {})
+        build_redirect_url_for(token, options: options)
+      end
 
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)

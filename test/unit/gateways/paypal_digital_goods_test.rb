@@ -1,10 +1,10 @@
 require 'test_helper'
 
 class PaypalDigitalGoodsTest < Test::Unit::TestCase
-  TEST_REDIRECT_URL         = 'https://www.sandbox.paypal.com/incontext?cmd=_express-checkout&token=1234567890&useraction=commit'
-  MOBILE_TEST_REDIRECT_URL  = 'https://www.sandbox.paypal.com/incontext?cmd=_express-checkout-mobile&token=1234567890&useraction=commit'
-  LIVE_REDIRECT_URL         = 'https://www.paypal.com/incontext?cmd=_express-checkout&token=1234567890&useraction=commit'
-  MOBILE_LIVE_REDIRECT_URL  = 'https://www.paypal.com/incontext?cmd=_express-checkout-mobile&token=1234567890&useraction=commit'
+  TEST_REDIRECT_URL         = 'https://www.sandbox.paypal.com/incontext?token=1234567890&useraction=commit&cmd=_express-checkout'
+  MOBILE_TEST_REDIRECT_URL  = 'https://www.sandbox.paypal.com/incontext?token=1234567890&useraction=commit&cmd=_express-checkout-mobile'
+  LIVE_REDIRECT_URL         = 'https://www.paypal.com/incontext?token=1234567890&useraction=commit&cmd=_express-checkout'
+  MOBILE_LIVE_REDIRECT_URL  = 'https://www.paypal.com/incontext?token=1234567890&useraction=commit&cmd=_express-checkout-mobile'
 
   def setup
     @gateway = PaypalDigitalGoodsGateway.new(

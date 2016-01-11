@@ -69,6 +69,11 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name = 'PayPal Express Checkout'
 
+      def redirect_url_for(token, options = {})
+        cmd = options[:mobile] ? '_express-checkout-mobile' : '_express-checkout'
+        build_redirect_url_for(token, options: options, cmd: cmd)
+      end
+
       def authorize(money, options = {})
         requires!(options, :token, :payer_id)
         request = build_sale_or_authorization_request('Authorization', money, options)
