@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
-      SENSITIVE_FIELDS = [:account_num]
+      SENSITIVE_FIELDS = [:account_num, :cc_account_num]
 
       def initialize(options = {})
         requires!(options, :merchant_id)
