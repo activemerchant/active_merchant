@@ -28,13 +28,15 @@ module ActiveMerchant #:nodoc:
 
 
       def initialize(options = {})
-        requires!(options, :token, :api_key)
+        requires!(options, :username, :password)
         super
       end
 
       private
 
       def build_authenticate_request(money, options)
+        options[:extras] ||= {}
+
         xml = Builder::XmlMarkup.new
         xml.tag! 'EnviarInstrucao' do
           xml.tag! 'InstrucaoUnica', TipoValidacao: 'Transparente' do
@@ -43,24 +45,24 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'Razao',     options[:reason]
 
             xml.tag! 'Valores' do
-              currency = options[:currency] || default_currency
+              currency = options[:extras][:currency] || default_currency
               xml.tag! 'Valor',     amount(money),                moeda: currency
-              xml.tag! 'Acrescimo', amount(options[:additional]), moeda: currency unless options[:additional].blank?
-              xml.tag! 'Deducao',   amount(options[:discount]),   moeda: currency unless options[:discount].blank?
+              xml.tag! 'Acrescimo', amount(options[:extras][:additional]), moeda: currency unless options[:extras][:additional].blank?
+              xml.tag! 'Deducao',   amount(options[:extras][:discount]),   moeda: currency unless options[:extras][:discount].blank?
             end
 
             xml.tag! 'Pagador' do
-              add_customer_data(xml, options[:payer])
-              add_address(xml, options[:address] || options[:billing_address])
+              add_customer_data(xml, options[:customer])
+              add_address(xml, options[:address])
             end
 
-            add_commissions(xml, options[:commissions])           unless options[:commissions].blank?
-            add_installments_options(xml, options[:installments]) unless options[:installments].blank?
-            add_receiver(xml, options[:receiver])                 unless options[:receiver].blank?
-            add_payment_slip_data(xml, options[:payment_slip])    unless options[:payment_slip].blank?
+            add_commissions(xml, options[:extras][:commissions])        unless options[:extras][:commissions].blank?
+            add_installments_options(xml, options[:installments_info])  unless options[:installments_info].blank?
+            add_receiver(xml, options[:extras][:receiver])              unless options[:extras][:receiver].blank?
+            add_payment_slip_data(xml, options[:boleto])                unless options[:boleto].blank?
 
-            xml.tag! 'URLNotificacao', options[:notification_url] unless options[:notification_url].blank?
-            xml.tag! 'URLRetorno', options[:return_url]           unless options[:return_url].blank?
+            xml.tag! 'URLNotificacao', options[:extras][:notification_url] unless options[:extras][:notification_url].blank?
+            xml.tag! 'URLRetorno', options[:extras][:return_url]           unless options[:extras][:return_url].blank?
 
           end
         end
@@ -80,8 +82,8 @@ module ActiveMerchant #:nodoc:
 
         case params[:pagamentoWidget][:dadosPagamento][:Forma]
           when 'CartaoCredito'
-            requires!(options, :creditcard)
-            add_creditcard(params[:pagamentoWidget][:dadosPagamento], options[:payment_method], options[:creditcard])
+            requires!(options, :credit_card, :customer)
+            add_creditcard(params[:pagamentoWidget][:dadosPagamento], options[:payment_method], options[:credit_card], options[:customer])
           when 'DebitoBancario'
             params[:pagamentoWidget][:dadosPagamento][:Instituicao] = options[:payment_method].classify
         end
@@ -99,14 +101,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(params, creditcard_or_vault, options)
-        params[:Parcelas] = options[:installments] || 1
+      def add_creditcard(params, creditcard_or_vault, cc_options, customer)
+        params[:Parcelas] = cc_options[:installments] || 1
 
         if creditcard_or_vault.is_a?(String)
           params[:Instituicao] = CARD_BRAND[creditcard_or_vault.underscore]
           params[:CartaoCredito] =  {
               :Cofre => options[:vault_id],
-              :CodigoSeguranca => options[:verification_value]
+              :CodigoSeguranca => options[:cvv]
           }
         else
           params[:Instituicao] =  CARD_BRAND[creditcard_or_vault.brand]
@@ -116,9 +118,9 @@ module ActiveMerchant #:nodoc:
               :CodigoSeguranca => creditcard_or_vault.verification_value,
               :Portador => {
                   :Nome =>           creditcard_or_vault.name,
-                  :Telefone =>       options[:phone],
-                  :Identidade =>     options[:buyer_cpf],
-                  :DataNascimento => options[:birthday]
+                  :Telefone =>       customer[:phone],
+                  :Identidade =>     options[:legal_identifier],
+                  :DataNascimento => options[:born_at]
               }
           }
         end
@@ -132,13 +134,13 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, address)
         xml.tag! 'EnderecoCobranca' do
-          xml.tag! 'Logradouro',   address[:address1]
-          xml.tag! 'Complemento',  address[:address2]
+          xml.tag! 'Logradouro',   address[:street]
+          xml.tag! 'Complemento',  address[:complement]
           xml.tag! 'Numero',       address[:number]
-          xml.tag! 'Bairro',       address[:neighborhood]
+          xml.tag! 'Bairro',       address[:district]
           xml.tag! 'Cidade',       address[:city]
           xml.tag! 'Estado',       address[:state]
-          xml.tag! 'CEP',          address[:zip]
+          xml.tag! 'CEP',          address[:zip_code]
           xml.tag! 'Pais',         address[:country] || 'BRA'
           xml.tag! 'TelefoneFixo', address[:phone]
         end
@@ -197,7 +199,8 @@ module ActiveMerchant #:nodoc:
                      message_from(response),
                      params_from(response),
                      :test => test?,
-                     :authorization => authorization_from(response))
+                     :authorization => authorization_from(response),
+                     :payment_action => status_action_from(response))
       end
 
       def parse_json(body)
@@ -281,6 +284,22 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def status_action_from(response)
+        if response['Classificacao'] && response['Classificacao']['Codigo']
+          case response['Classificacao']['Codigo']
+          when 1 then :authorize
+          when 2 then :initiate
+          when 3 then :wait_boleto
+          when 4 then :confirm
+          when 5 then :cancel
+          when 6 then :wait_analysis
+          when 7 then :reverse
+          when 9 then :refund
+          when 999 then :confirm
+          end
+        end
+      end
+
       def add_authentication
         {
           'authorization' => basic_auth,
@@ -290,7 +309,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def basic_auth
-        "Basic " + Base64.strict_encode64(@options[:token].to_s + ":" + @options[:api_key].to_s).chomp
+        "Basic " + Base64.strict_encode64(@options[:username].to_s + ":" + @options[:password].to_s).chomp
       end
     end
   end
