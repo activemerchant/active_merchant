@@ -601,10 +601,21 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
+  def test_unsuccessful_transaction_returns_id_when_available
+    Braintree::TransactionGateway.any_instance.expects(:sale).returns(braintree_error_result(transaction: {id: 'transaction_id'}))
+    assert response = @gateway.purchase(100, credit_card("41111111111111111111"))
+    refute response.success?
+    assert response.authorization.present?
+  end
+
   private
 
   def braintree_result(options = {})
     Braintree::SuccessfulResult.new(:transaction => Braintree::Transaction._new(nil, {:id => "transaction_id"}.merge(options)))
+  end
+
+  def braintree_error_result(options = {})
+    Braintree::ErrorResult.new(@internal_gateway, {errors: {}}.merge(options))
   end
 
   def with_braintree_configuration_restoration(&block)
