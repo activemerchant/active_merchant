@@ -26,6 +26,7 @@
 * NCRSecurePay: New gateway support (Monetra white-label) [rwdaigle]
 * Element: Map ReferenceNumber to order_id [duff]
 * Element: Use a better MotoECICode default [duff]
+* BraintreeBlue: Return transaction id for failed transactions when available [prburke]
 
 
 == Version 1.56.0 (December 1, 2015)
