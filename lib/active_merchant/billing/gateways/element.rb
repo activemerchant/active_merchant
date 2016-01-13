@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
           xml.CVVPresenceCode "UseDefault"
           xml.TerminalCapabilityCode "UseDefault"
           xml.TerminalEnvironmentCode "UseDefault"
-          xml.MotoECICode "UseDefault"
+          xml.MotoECICode "NonAuthenticatedSecureECommerceTransaction"
         end
       end
 
