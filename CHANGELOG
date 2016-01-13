@@ -25,6 +25,7 @@
 * Cardstream: Adjust authorize and capture transactions [anellis]
 * NCRSecurePay: New gateway support (Monetra white-label) [rwdaigle]
 * Element: Map ReferenceNumber to order_id [duff]
+* Element: Use a better MotoECICode default [duff]
 
 
 == Version 1.56.0 (December 1, 2015)
