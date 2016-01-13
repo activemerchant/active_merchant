@@ -16,13 +16,11 @@ module ActiveMerchant
         test? ? test_redirect_url : live_redirect_url
       end
 
-      def redirect_url_for(token, options = {})
-        options = {:review => true, :mobile => false}.update(options)
-
-        cmd  = options[:mobile] ? '_express-checkout-mobile' : '_express-checkout'
-        url  = "#{redirect_url}?cmd=#{cmd}&token=#{token}"
+      def build_redirect_url_for(token, options: {}, cmd: nil)
+        options = {review: true}.update(options)
+        url = "#{redirect_url}?token=#{token}"
         url += '&useraction=commit' unless options[:review]
-
+        url += "&cmd=#{cmd}" if cmd
         url
       end
     end
