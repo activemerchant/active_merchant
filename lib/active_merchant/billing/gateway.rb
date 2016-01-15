@@ -126,6 +126,7 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :homepage_url
       class_attribute :display_name
+      class_attribute :display_fullname
       class_attribute :display_logo
 
       class_attribute :test_url, :live_url

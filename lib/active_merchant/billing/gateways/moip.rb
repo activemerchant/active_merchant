@@ -13,6 +13,7 @@ module ActiveMerchant #:nodoc:
       self.supported_banks = %i(itau santander banco_do_brasil bradesco banrisul)
       self.supported_boletos = %i(bradesco)
       self.homepage_url = 'https://www.moip.com.br/'
+      self.display_fullname = 'Moip Pagamentos S/A'
       self.display_name = 'Moip'
       self.display_logo = 'https://cdn.edools.com/assets/images/gateways/moip.png'
       self.default_currency = 'BRL'
@@ -20,13 +21,16 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         payment = { :payment_method => payment_method }
         pay_options = options.merge(payment)
-        MultiResponse.run do |r|
+
+        use_first_response = payment_method == :boleto || payment_method == :bank_transfer
+
+        MultiResponse.run(use_first_response) do |r|
           r.process { authenticate(money, payment_method, options) }
           r.process { pay(money, r.authorization, pay_options) }
         end
       end
 
-      def query(token)
+      def details(token)
         @query = true
         response = commit(:get, 'xml', build_url('query', token), nil, add_authentication)
         @query = false
@@ -35,7 +39,7 @@ module ActiveMerchant #:nodoc:
 
       private
         def authenticate(money, payment_method, options = {})
-          commit(:post, 'xml', build_url('authenticate'), build_authenticate_request(money, options), add_authentication)
+          commit(:post, 'xml', build_url('authenticate'), build_authenticate_request(money, options), add_authentication, payment_method)
         end
 
         def pay(amount, authorization, options = {})

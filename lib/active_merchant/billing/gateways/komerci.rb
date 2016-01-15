@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_banks = %i()
       self.supported_boletos = %i()
       self.homepage_url = 'http://www.userede.com.br/pt-BR/Paginas/default.aspx'
+      self.display_fullname = 'Rede'
       self.display_name = 'Rede'
       self.display_logo = 'https://cdn.edools.com/assets/images/gateways/Rede.png'
       self.default_currency = 'BRL'

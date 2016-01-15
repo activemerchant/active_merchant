@@ -22,7 +22,8 @@ module ActiveMerchant #:nodoc:
         base.supported_banks = %i(itau)
         base.supported_boletos = %i(itau bradesco)
         base.homepage_url = 'http://www.maxipago.com/'
-        base.display_name = 'maxiPago'
+        base.display_fullname = 'MaxiPago'
+        base.display_name = 'MaxiPago'
         base.display_logo = 'https://cdn.edools.com/assets/images/gateways/maxiPago.png'
         base.default_currency = 'BRL'
         base.money_format = :dollars

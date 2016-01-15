@@ -19,13 +19,25 @@ module ActiveMerchant #:nodoc:
           'bradesco'         => 'DebitoBancario',
           'banrisul'         => 'DebitoBancario',
           'banco_do_brasil'  => 'DebitoBancario',
-          'boleto_bancario'  => 'BoletoBancario',
+          'santander'        => 'DebitoBancario',
+          'bank_transfer'    => 'DebitoBancario',
+          'boleto'           => 'BoletoBancario',
           'visa'             => 'CartaoCredito',
           'master'           => 'CartaoCredito',
           'diners_club'      => 'CartaoCredito',
           'american_express' => 'CartaoCredito'
       }
 
+      PAYMENT_ACTIONS = {
+        'Autorizado'     => :authorize,
+        'Iniciado'       => :initiate,
+        'BoletoImpresso' => :wait_boleto,
+        'Concluido'      => :confirm,
+        'Cancelado'      => :cancel,
+        'EmAnalise'      => :wait_analysis,
+        'Estornado'      => :reverse,
+        'Reembolsado'    => :refund
+      }
 
       def initialize(options = {})
         requires!(options, :username, :password)
@@ -41,7 +53,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'EnviarInstrucao' do
           xml.tag! 'InstrucaoUnica', TipoValidacao: 'Transparente' do
 
-            xml.tag! 'IdProprio', options[:order_id]
+            xml.tag! 'IdProprio', options[:transaction_id]
             xml.tag! 'Razao',     options[:reason]
 
             xml.tag! 'Valores' do
@@ -85,7 +97,7 @@ module ActiveMerchant #:nodoc:
             requires!(options, :credit_card, :customer)
             add_creditcard(params[:pagamentoWidget][:dadosPagamento], options[:payment_method], options[:credit_card], options[:customer])
           when 'DebitoBancario'
-            params[:pagamentoWidget][:dadosPagamento][:Instituicao] = options[:payment_method].classify
+            params[:pagamentoWidget][:dadosPagamento][:Instituicao] = options[:bank_transfer][:institution].classify
         end
 
         {
@@ -119,8 +131,8 @@ module ActiveMerchant #:nodoc:
               :Portador => {
                   :Nome =>           creditcard_or_vault.name,
                   :Telefone =>       customer[:phone],
-                  :Identidade =>     options[:legal_identifier],
-                  :DataNascimento => options[:born_at]
+                  :Identidade =>     customer[:legal_identifier],
+                  :DataNascimento => customer[:born_at]
               }
           }
         end
@@ -183,24 +195,29 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_slip_data(xml, options)
+        expiration_days_type = if options[:expiration_days_type] == 'business_days'
+                                 'Uteis'
+                               else
+                                 'Corridos'
+                               end
         xml.tag! 'Boleto' do
           xml.tag! 'URLLogo',         options[:logo_url]           unless options[:logo_url].blank?
           xml.tag! 'Instrucao1',      options[:instruction_line_1] unless options[:instruction_line_1].blank?
           xml.tag! 'Instrucao2',      options[:instruction_line_2] unless options[:instruction_line_2].blank?
           xml.tag! 'Instrucao3',      options[:instruction_line_3] unless options[:instruction_line_3].blank?
-          xml.tag! 'DiasExpiracao',   options[:expiration_days], tipo: options[:expiration_days_type] || 'Corridos' unless options[:expiration_days].blank?
-          xml.tag! 'DataVencimento',  options[:expiration_date].to_date.strftime('%Y-%m-%dT%H:%M:%S.%L%:z')         unless options[:expiration_date].blank?
+          xml.tag! 'DiasExpiracao',   options[:expiration_days], tipo: expiration_days_type unless options[:expiration_days].blank?
+          xml.tag! 'DataVencimento',  options[:expiration_date].to_date.strftime('%Y-%m-%dT%H:%M:%S.%L%:z') unless options[:expiration_date].blank?
         end
       end
 
-      def commit(method, format, url, parameters, headers = {})
+      def commit(method, format, url, parameters, headers = {}, payment_method = nil)
         response = send("parse_#{format}", ssl_request(method, url, parameters, headers))
         Response.new(success?(response),
                      message_from(response),
                      params_from(response),
                      :test => test?,
                      :authorization => authorization_from(response),
-                     :payment_action => status_action_from(response))
+                     :payment_action => status_action_from(response, payment_method))
       end
 
       def parse_json(body)
@@ -272,7 +289,7 @@ module ActiveMerchant #:nodoc:
           message[:status] = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
           message
         else
-          response['Mensagem'] || response[:erro] || response[:status]
+          response['Mensagem'] || response[:erro] || response[:status] || (response['EnviarInstrucaoUnicaResponse'] && response['EnviarInstrucaoUnicaResponse']['Resposta']['Erro'])
         end
       end
 
@@ -284,19 +301,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def status_action_from(response)
-        if response['Classificacao'] && response['Classificacao']['Codigo']
-          case response['Classificacao']['Codigo']
-          when 1 then :authorize
-          when 2 then :initiate
-          when 3 then :wait_boleto
-          when 4 then :confirm
-          when 5 then :cancel
-          when 6 then :wait_analysis
-          when 7 then :reverse
-          when 9 then :refund
-          when 999 then :confirm
-          end
+      def status_action_from(response, payment_method)
+        status = if response['Status']
+                   response['Status']
+                 elsif @query
+                   response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status']
+                 end
+
+        if status
+          PAYMENT_ACTIONS[status]
+        elsif payment_method == :boleto
+          :wait_boleto
+        elsif payment_method == :bank_transfer
+          :initiate
         end
       end
 
