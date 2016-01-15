@@ -952,6 +952,11 @@ trans_first:
   login: 45567
   password: TNYYKYMFZ59HSN7Q
 
+# Working credentials, no need to replace
+trans_first_transaction_express:
+  gateway_id: 7777778764
+  reg_key: M84PKPDMD5BY86HN
+
 # Transact Pro doesn't provide public testing data
 transact_pro:
   guid: GUID
