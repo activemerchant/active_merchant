@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :username, :password)
         super
       end
 
@@ -50,8 +50,15 @@ module ActiveMerchant #:nodoc:
       def add_aux_data(post, options)
         processor_id = options[:processor_id] || 4 # test: 1, redecard: 2, cielo: 4
         post[:processorID]  = (test? ? 1 : processor_id)
-        post[:referenceNum] = options[:order_id]
-        post[:installments] = options[:installments] if options.has_key?(:installments) && options[:installments] > 1 # only send installments if it is a deferred payment
+        post[:referenceNum] = options[:transaction_id]
+
+        return unless options[:credit_card]
+
+        installments = options[:credit_card][:installments]
+
+        return unless installments && installments > 1 # only send installments if it is a deferred payment
+
+        post[:installments] = installments
       end
 
       def add_amount(post, money)
@@ -70,19 +77,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payer_name(post, options)
-        post[:billing_name] = options[:payer][:name]
+        post[:billing_name] = options[:customer][:name]
       end
 
       def add_address(post, options)
-        if(address = (options[:address] || options[:billing_address]))
-          post[:billing_address] = address[:address1]
-          post[:billing_address2] = address[:address2]
-          post[:billing_city] = address[:city]
-          post[:billing_state] = address[:state]
-          post[:billing_postalcode] = address[:zip]
-          post[:billing_country] = address[:country]
-          post[:billing_phone] = address[:phone]
-        end
+        address = options[:address]
+
+        return unless address
+
+        post[:billing_address] = address[:street]
+        post[:billing_address2] = address[:complement]
+        post[:billing_city] = address[:city]
+        post[:billing_state] = address[:state]
+        post[:billing_postalcode] = address[:zip_code]
+        post[:billing_country] = address[:country]
+        post[:billing_phone] = address[:phone]
       end
 
       def commit(request, type = :transaction)
@@ -93,7 +102,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          authorization: response[:order_id]
+          authorization: response[:order_id],
+          payment_action: status_action_from(response)
         )
       end
 
@@ -106,6 +116,11 @@ module ActiveMerchant #:nodoc:
         return response[:processor_message] if response[:processor_message].present?
         return response[:response_message] if response[:response_message].present?
         return (success?(response) ? 'success' : 'error')
+      end
+
+      def status_action_from(response)
+        return :confirm if response[:response_code] == '0'
+        return :fail
       end
 
       def build_sale_request(params, action="sale")
@@ -184,7 +199,7 @@ module ActiveMerchant #:nodoc:
           xml.send("transaction-request") {
             xml.version API_VERSION
             xml.verification {
-              xml.merchantId @options[:login]
+              xml.merchantId @options[:username]
               xml.merchantKey @options[:password]
             }
             xml.order {

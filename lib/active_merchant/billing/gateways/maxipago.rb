@@ -16,10 +16,13 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, creditcard_or_payment_type, options = {})
         if creditcard_or_payment_type == :boleto_bancario
+          options[:processor_id] = options[:extras][:boleto_processor_id]
           generate_boleto(money, options)
         elsif creditcard_or_payment_type == :bank_transfer
+          options[:processor_id] = options[:extras][:debit_processor_id]
           bank_transfer(money, options)
         else
+          options[:processor_id] = options[:extras][:credit_processor_id]
           common_purchase(money, creditcard_or_payment_type, options)
         end
       end
