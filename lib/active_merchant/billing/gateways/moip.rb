@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def pay(amount, authorization, options = {})
-          commit(:get, 'json', build_url('pay', build_pay_params(authorization, options)), nil)
+          commit(:get, 'json', build_url('pay', build_pay_params(authorization, options)), nil, {}, nil, authorization)
         end
     end
   end

@@ -210,13 +210,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(method, format, url, parameters, headers = {}, payment_method = nil)
+      def commit(method, format, url, parameters, headers = {}, payment_method = nil, authorization = nil)
         response = send("parse_#{format}", ssl_request(method, url, parameters, headers))
         Response.new(success?(response),
                      message_from(response),
                      params_from(response),
                      :test => test?,
-                     :authorization => authorization_from(response),
+                     :authorization => authorization || authorization_from(response),
                      :payment_action => status_action_from(response, payment_method))
       end
 

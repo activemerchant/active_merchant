@@ -22,18 +22,22 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
-        requires!(options, :login, :password, :affiliate)
+        requires!(options, :username, :password, :code)
         super
       end
 
       def purchase(money, credit_card, options={})
         post = {}
+
+        set_sale_type(options)
+
+        # add_user_account(post)
         add_affiliate(post, options)
         add_invoice(post, money, options)
         add_payment_value(post, money, options)
         add_credit_card(post, credit_card)
+        add_transacao(post, options)
         add_authorize_empty_params(post)
-        post[:transacao] = SALE_TYPES[options[:sale_type]] || '04'
         commit('GetAuthorized', post)
       end
 
@@ -92,6 +96,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :money)
         post = {}
 
+        set_sale_type(options)
+
         add_affiliate(post, options)
         add_payment_value(post, options[:money], options)
         add_authorization(post, authorization, options)
@@ -104,12 +110,20 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def set_sale_type(options)
+        options[:sale_type] = if options[:credit_card][:installments] <= 1
+                                :spot_sale
+                              else
+                                :establishment_instalments
+                              end
+      end
+
       def add_transaction_type(post, options)
         post[:transorig] = options[:sale_type]
       end
 
       def add_user_account(post)
-        post[:usr] = @options[:login]
+        post[:usr] = @options[:username]
         post[:pwd] = @options[:password]
       end
 
@@ -123,18 +137,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_affiliate(post, options)
-        post[:filiacao] = @options[:affiliate]
+        post[:filiacao] = @options[:code]
         post[:distribuidor] = @options.fetch(:distributor, nil)
       end
 
       def add_payment_value(post, money, options)
         post[:total] = amount(money)
-        post[:parcelas] = options[:instalments] || '00'
+        post[:parcelas] = '00'
+        return unless options[:credit_card][:installments] > 1
+        post[:parcelas] =  "%02d" % options[:credit_card][:installments]
       end
 
       def add_invoice(post, money, options)
         post[:transacao] = '73'
-        post[:numpedido] = options[:order_id]
+        post[:numpedido] = options[:transaction_id]
       end
 
       def add_credit_card(post, credit_card)
@@ -143,6 +159,10 @@ module ActiveMerchant #:nodoc:
         post[:mes] = credit_card.month < 10 ? "0#{credit_card.month}" : credit_card.month.to_s
         post[:ano] = credit_card.year.to_s.slice(2..4)
         post[:portador] = [credit_card.first_name, credit_card.last_name].join(' ')
+      end
+
+      def add_transacao(post, options)
+        post[:transacao] = SALE_TYPES[options[:sale_type]] || '04'
       end
 
       # All the request parameters are required anf if not used should be sent
@@ -175,6 +195,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response),
+          payment_action: status_action_from(response, action),
           test: test?
         )
       end
@@ -215,6 +236,12 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         response[:numautor]
+      end
+
+      def status_action_from(response, action)
+        return :confirm if action == 'GetAuthorized' && response[:codret] == '0' && response[:confcodret] == '0' && response[:numcv].present?
+        return :confirm if response[:codret] == '0'
+        return :fail
       end
 
       def post_data(action, parameters = {})
