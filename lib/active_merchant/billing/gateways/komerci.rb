@@ -108,6 +108,10 @@ module ActiveMerchant #:nodoc:
         commit('VoidPreAuthorization', post)
       end
 
+      def details(token)
+        Response.new(false, 'Not Supported', {}, test: test?)
+      end
+
       private
 
       def set_sale_type(options)
