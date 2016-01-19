@@ -6,7 +6,8 @@ module ActiveMerchant #:nodoc:
     module MaxipagoBankTransferAPI
       def bank_transfer(amount, options = {})
         options[:amount] = amount
-        options[:customer_identifier] = options[:payer][:legal_identifier]
+        options[:customer_identifier] = options[:customer][:legal_identifier]
+        options[:url_params] = URI(options[:extras][:return_url]).query
         requires!(options, :customer_identifier, :amount, :url_params)
 
         post = {}

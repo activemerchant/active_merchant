@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
     module MaxipagoBoletoAPI
       def generate_boleto(amount, options = {})
         options[:amount] = amount
-        requires!(options, :expiration_date, :number, :amount)
+        requires!(options, :amount)
 
         post = {}
         add_aux_data(post, options)
@@ -33,9 +33,16 @@ module ActiveMerchant #:nodoc:
 
       def add_boleto(post, options)
         post[:payment_type] = :boleto
-        post[:expiration_date] = options[:expiration_date].strftime('%Y-%m-%d')
-        post[:number] = options[:number] || generate_boleto_number(options[:processor_id])
-        post[:instructions] = options[:instructions] if options[:instructions]
+        expiration_days = options[:boleto][:expiration_days] || 3
+        post[:expiration_date] = (Time.now + expiration_days.days).strftime('%Y-%m-%d')
+        post[:number] = options[:boleto][:number] || generate_boleto_number(options[:extras][:boleto_processor_id])
+
+        instructions = ''
+        instructions = "#{options[:extras][:instruction_line_1]}"   if options[:extras][:instruction_line_1]
+        instructions = "\n#{options[:extras][:instruction_line_2]}" if options[:extras][:instruction_line_2]
+        instructions = "\n#{options[:extras][:instruction_line_3]}" if options[:extras][:instruction_line_3]
+
+        post[:instructions] = instructions if instructions
       end
 
       def processor_itau?(processor_id)

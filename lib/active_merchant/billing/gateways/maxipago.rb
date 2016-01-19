@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       # TODO: Tests, Docs and OnlineDebit
 
       def purchase(money, creditcard_or_payment_type, options = {})
-        if creditcard_or_payment_type == :boleto_bancario
+        if creditcard_or_payment_type == :boleto
           options[:processor_id] = options[:extras][:boleto_processor_id]
           generate_boleto(money, options)
         elsif creditcard_or_payment_type == :bank_transfer

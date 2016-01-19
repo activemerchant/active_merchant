@@ -103,7 +103,8 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           authorization: response[:order_id],
-          payment_action: status_action_from(response)
+          payment_action: status_action_from(response),
+          external_url: response[:boleto_url] || response[:online_debit_url]
         )
       end
 
@@ -119,7 +120,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def status_action_from(response)
-        return :confirm if response[:response_code] == '0'
+        return :wait_boleto if response[:response_code] == '0' && response[:boleto_url]
+        return :initiate    if response[:response_code] == '0' && response[:online_debit_url]
+        return :confirm     if response[:response_code] == '0'
         return :fail
       end
 
