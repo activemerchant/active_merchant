@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :CardHolderName, payment.name, required: true)
         add_pair(post, :CardNumber, payment.number, required: true)
         add_pair(post, :Expiration, expdate(payment), required: true)
-        add_pair(post, :CVV2, payment.verification_value)
+        add_pair(post, :CVV2, payment.verification_value, required: true)
       end
 
       def add_echeck(post, payment)
