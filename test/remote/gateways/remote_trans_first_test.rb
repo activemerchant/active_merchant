@@ -24,6 +24,12 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     @gateway.void(response.authorization)
   end
 
+  def test_successful_purchase_sans_cvv
+    @credit_card.verification_value = ""
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_successful_purchase_with_echeck
     assert response = @gateway.purchase(@amount, @check, @options)
     assert response.test?
