@@ -60,6 +60,7 @@ class RemoteForteTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
+    assert_equal "1", response.params["order_number"]
     assert_equal 'TEST APPROVAL', response.message
   end
 
