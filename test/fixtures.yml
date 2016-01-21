@@ -1015,10 +1015,10 @@ world_pay_gateway:
   login: LOGIN
   password: PASSWORD
 
-# Working credentials, no need to replace
+# credentials required
 worldnet:
-  terminalid: 2921001
-  sharedsecret: 'secretpass'
+  terminalid: 
+  sharedsecret: ''
 
 # Working credentials, no need to replace
 
