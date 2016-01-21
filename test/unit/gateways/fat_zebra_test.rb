@@ -29,6 +29,18 @@ class FatZebraTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_metadata
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      body.match '"metadata":{"foo":"bar"}'
+    }.returns(successful_purchase_response_with_metadata)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:metadata => { 'foo' => 'bar' }))
+    assert_success response
+
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_with_token
     @gateway.expects(:ssl_request).with { |method, url, body, headers|
       body.match '"card_token":"e1q7dbj2"'
@@ -182,16 +194,61 @@ class FatZebraTest < Test::Unit::TestCase
     {
       :successful => true,
       :response => {
-        :authorization => "55355",
+        :authorization => 55355,
         :id => "001-P-12345AA",
         :card_number => "XXXXXXXXXXXX1111",
         :card_holder => "John Smith",
-        :card_expiry => "10/2011",
+        :card_expiry => "2011-10-31",
         :card_token => "a1bhj98j",
         :amount => 349,
+        :decimal_amount => 3.49,
         :successful => true,
-        :reference => "ABC123",
         :message => "Approved",
+        :reference => "ABC123",
+        :currency => "AUD",
+        :transaction_id => "001-P-12345AA",
+        :settlement_date => "2011-07-01",
+        :transaction_date => "2011-07-01T12:00:00+11:00",
+        :response_code => "08",
+        :captured => true,
+        :captured_amount => 349,
+        :rrn => "000000000000",
+        :cvv_match => "U",
+        :metadata => {
+        },
+      },
+      :test => true,
+      :errors => []
+    }.to_json
+  end
+
+  def successful_purchase_response_with_metadata
+    {
+      :successful => true,
+      :response => {
+        :authorization => 55355,
+        :id => "001-P-12345AA",
+        :card_number => "XXXXXXXXXXXX1111",
+        :card_holder => "John Smith",
+        :card_expiry => "2011-10-31",
+        :card_token => "a1bhj98j",
+        :amount => 349,
+        :decimal_amount => 3.49,
+        :successful => true,
+        :message => "Approved",
+        :reference => "ABC123",
+        :currency => "AUD",
+        :transaction_id => "001-P-12345AA",
+        :settlement_date => "2011-07-01",
+        :transaction_date => "2011-07-01T12:00:00+11:00",
+        :response_code => "08",
+        :captured => true,
+        :captured_amount => 349,
+        :rrn => "000000000000",
+        :cvv_match => "U",
+        :metadata => {
+          'foo' => 'bar',
+        },
       },
       :test => true,
       :errors => []
@@ -202,15 +259,27 @@ class FatZebraTest < Test::Unit::TestCase
     {
       :successful => true,
       :response => {
-          :authorization_id => nil,
-          :id => nil,
+          :authorization => 0,
+          :id => "001-P-12345AB",
           :card_number => "XXXXXXXXXXXX1111",
           :card_holder => "John Smith",
-          :card_expiry => "10/2011",
+          :card_expiry => "2011-10-31",
           :amount => 100,
-          :authorized => false,
-          :reference => "ABC123",
+          :decimal_amount => 1.0,
+          :successful => false,
           :message => "Card Declined - check with issuer",
+          :reference => "ABC123",
+          :currency => "AUD",
+          :transaction_id => "001-P-12345AB",
+          :settlement_date => nil,
+          :transaction_date => "2011-07-01T12:00:00+11:00",
+          :response_code => "01",
+          :captured => false,
+          :captured_amount => 0,
+          :rrn => "000000000001",
+          :cvv_match => "U",
+          :metadata => {
+          }
       },
       :test => true,
       :errors => []
@@ -221,20 +290,28 @@ class FatZebraTest < Test::Unit::TestCase
     {
       :successful => true,
       :response => {
-        :authorization => "1339973263",
+        :authorization => 1339973263,
         :id => "003-R-7MNIUMY6",
-        :amount => -10,
+        :amount => 10,
         :refunded => "Approved",
-        :message => "08 Approved",
+        :message => "Approved",
         :card_holder => "Harry Smith",
         :card_number => "XXXXXXXXXXXX4444",
         :card_expiry => "2013-05-31",
         :card_type => "MasterCard",
         :transaction_id => "003-R-7MNIUMY6",
-        :successful => true
+        :reference => "18280",
+        :currency => "USD",
+        :successful => true,
+        :transaction_date => "2013-07-01T12:00:00+11:00",
+        :response_code => "08",
+        :settlement_date => "2013-07-01",
+        :metadata => {
+        },
+        :standalone => false,
+        :rrn => "000000000002",
       },
       :errors => [
-
       ],
       :test => true
     }.to_json
@@ -253,8 +330,8 @@ class FatZebraTest < Test::Unit::TestCase
         :card_number => "XXXXXXXXXXXX4444",
         :card_expiry => "2013-05-31",
         :card_type => "MasterCard",
-        :transaction_id => nil,
-        :successful => false
+        :successful => false,
+        :reference => nil,
       },
       :errors => [
         "Reference can't be blank"

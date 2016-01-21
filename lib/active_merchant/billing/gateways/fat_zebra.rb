@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
         add_extra_options(post, options)
         add_order_id(post, options)
         add_ip(post, options)
+        add_metadata(post, options)
 
         commit(:post, 'purchases', post)
       end
@@ -51,6 +52,7 @@ module ActiveMerchant #:nodoc:
         add_extra_options(post, options)
         add_order_id(post, options)
         add_ip(post, options)
+        add_metadata(post, options)
 
         post[:capture] = false
 
@@ -133,6 +135,10 @@ module ActiveMerchant #:nodoc:
 
       def add_ip(post, options)
         post[:customer_ip] = options[:ip] || "127.0.0.1"
+      end
+
+      def add_metadata(post, options)
+        post[:metadata] = options.fetch(:metadata, {})
       end
 
       # Post the data to the gateway
