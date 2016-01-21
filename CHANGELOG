@@ -29,6 +29,7 @@
 * BraintreeBlue: Return transaction id for failed transactions when available [prburke]
 * PayPal: Add InContextPaypalExpressGateway [xuorig]
 * TransFirst: CVV is a required tag [duff]
+* Checkout V2: Add Descriptor Name and City Options [anellis]
 
 
 == Version 1.56.0 (December 1, 2015)
