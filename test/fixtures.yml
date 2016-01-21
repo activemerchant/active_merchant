@@ -995,6 +995,13 @@ viaklix:
   password: PASSWORD
   user: USER
 
+# Working credentials, no need to replace
+w_n_t_p_s:
+   login => 'TestMerchant',
+   password => 'password'
+  #some_credential: SOMECREDENTIAL
+  #another_credential: ANOTHERCREDENTIAL
+
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
@@ -1019,6 +1026,17 @@ wirecard_checkout_page:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+# credentials required
+worldnet:
+  terminalid: 
+  sharedsecret: ''
+
+# Working credentials, no need to replace
+
+
+# Working credentials, no need to replace
+
 
 worldpay_online_payments:
   client_key: "T_C_b9f629e7-cea7-4edb-8206-24bbe351d699"
