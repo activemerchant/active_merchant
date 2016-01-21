@@ -283,8 +283,9 @@ module ActiveMerchant #:nodoc:
 
       def build_address(xml, addr)
         if addr[:name]
-          xml.tag! 'firstName', addr[:name].split(' ').first
-          xml.tag! 'lastName' , addr[:name].split(' ').last
+          first_name, last_name = split_names(addr[:name])
+          xml.tag! 'firstName', first_name
+          xml.tag! 'lastName' , last_name
         end
         xml.tag! 'street' , addr[:address1] if addr[:address1].present?
         xml.tag! 'street2', addr[:address2] if addr[:address2].present?

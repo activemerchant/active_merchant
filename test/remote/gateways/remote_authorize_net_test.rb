@@ -105,7 +105,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_card_present_authorize_and_capture_with_track_data_only
     track_credit_card = ActiveMerchant::Billing::CreditCard.new(:track_data => '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
-    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert authorization = @gateway.authorize(@amount, track_credit_card, @options)
     assert_success authorization
 
     capture = @gateway.capture(@amount, authorization.authorization)

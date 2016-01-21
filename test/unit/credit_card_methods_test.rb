@@ -69,7 +69,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_false valid_card_verification_value?(123, 'american_express')
     assert_false valid_card_verification_value?(12345, 'american_express')
   end
-  
+
   def test_should_be_able_to_identify_valid_issue_numbers
     assert valid_issue_number?(1)
     assert valid_issue_number?(10)
@@ -184,6 +184,11 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
     assert_not_equal 'discover', CreditCard.brand?('6010000000000000')
     assert_not_equal 'discover', CreditCard.brand?('6600000000000000')
+  end
+
+  def test_matching_invalid_card
+    assert_nil CreditCard.brand?("XXXXXXXXXXXX0000")
+    assert_false CreditCard.valid_number?("XXXXXXXXXXXX0000")
   end
 
   def test_16_digit_maestro_uk

@@ -232,6 +232,16 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal '1111222233330123', store_response.params['litleToken']
   end
 
+  def test_store_with_paypage_registration_id_successful
+    paypage_registration_id = "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg="
+    assert store_response = @gateway.store(paypage_registration_id, :order_id => '50')
+
+    assert_success store_response
+    assert_equal 'Account number was successfully registered', store_response.message
+    assert_equal '801', store_response.params['response']
+    assert_equal '1111222233334444', store_response.params['litleToken']
+  end
+
   def test_store_unsuccessful
     credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4457119999999999'))
     assert store_response = @gateway.store(credit_card, :order_id => '51')

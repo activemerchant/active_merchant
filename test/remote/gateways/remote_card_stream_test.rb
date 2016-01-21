@@ -228,6 +228,19 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_purchase_no_currency_specified_defaults_to_GBP
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: nil))
+    assert_success response
+    assert_equal "826", response.params["currencyCode"]
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_purchase_non_existent_currency
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: "CEO"))
+    assert_failure response
+    assert_equal 'MISSING CURRENCYCODE', response.message
+  end
+
   def test_successful_visadebitcard_purchase
     assert response = @gateway.purchase(142, @visadebitcard, @visadebit_options)
     assert_equal 'APPROVED', response.message

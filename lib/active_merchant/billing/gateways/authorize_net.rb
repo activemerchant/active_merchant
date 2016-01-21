@@ -32,7 +32,9 @@ module ActiveMerchant #:nodoc:
         '23' => STANDARD_ERROR_CODE[:card_declined],
         '3153' => STANDARD_ERROR_CODE[:processing_error],
         '235' => STANDARD_ERROR_CODE[:processing_error],
-        '24' => STANDARD_ERROR_CODE[:pickup_card]
+        '24' => STANDARD_ERROR_CODE[:pickup_card],
+        '300' => STANDARD_ERROR_CODE[:config_error],
+        '384' => STANDARD_ERROR_CODE[:config_error]
       }
 
       MARKET_TYPE = {
@@ -317,7 +319,6 @@ module ActiveMerchant #:nodoc:
           xml.transactionRequest do
             xml.transactionType('voidTransaction')
             xml.refTransId(transaction_id_from(authorization))
-            add_user_fields(xml, nil, options)
           end
         end
       end
@@ -433,14 +434,18 @@ module ActiveMerchant #:nodoc:
         return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
         if valid_track_data
           xml.retail do
-            xml.marketType(MARKET_TYPE[:retail])
-
-            device_type = options[:device_type] || DEVICE_TYPE[:wireless_pos]
-            xml.deviceType(device_type)
+            xml.marketType(options[:market_type] || MARKET_TYPE[:retail])
+            xml.deviceType(options[:device_type] || DEVICE_TYPE[:wireless_pos])
           end
         elsif payment.manual_entry
           xml.retail do
-            xml.marketType(MARKET_TYPE[:moto])
+            xml.marketType(options[:market_type] || MARKET_TYPE[:moto])
+          end
+        else
+          if options[:market_type]
+            xml.retail do
+              xml.marketType(options[:market_type])
+            end
           end
         end
       end
@@ -540,13 +545,6 @@ module ActiveMerchant #:nodoc:
         else
           [options[:first_name], options[:last_name]]
         end
-      end
-
-      def split_names(full_name)
-        names = (full_name || "").split
-        last_name = names.pop
-        first_name = names.join(" ")
-        [first_name, last_name]
       end
 
       def headers

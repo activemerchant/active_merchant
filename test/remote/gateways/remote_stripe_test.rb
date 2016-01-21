@@ -91,6 +91,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     assert void = @gateway.void(response.authorization)
+    assert void.test?
     assert_success void
   end
 
@@ -105,7 +106,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     assert refund = @gateway.refund(@amount - 20, response.authorization)
-    refund_id = refund.params["refunds"]["data"].first["id"]
+    assert refund.test?
+    refund_id = refund.params["id"]
     assert_equal refund.authorization, refund_id
     assert_success refund
   end
@@ -134,7 +136,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "wow@example.com", response.params["metadata"]["email"]
     assert_equal "charge", response.params["object"]
     assert_success response.responses.last, "The void should succeed"
-    assert response.responses.last.params["refunded"]
+    assert_equal "refund", response.responses.last.params["object"]
   end
 
   def test_unsuccessful_verify

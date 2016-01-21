@@ -668,6 +668,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_customer_request_xml(creditcard, options = {})
+        ActiveMerchant.deprecated "Customer Profile support in Orbital is non-conformant to the ActiveMerchant API and will be removed in its current form in a future version. Please contact the ActiveMerchant maintainers if you have an interest in modifying it to conform to the store/unstore/update API."
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Profile do

@@ -87,9 +87,7 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address] || options[:address] || {}
 
         if name = address[:name]
-          segments = name.split(' ')
-          post[:lastName] = segments.pop
-          post[:firstName] = segments.join(' ')
+          post[:firstName], post[:lastName] = split_names(name)
         else
           post[:firstName] = address[:first_name]
           post[:lastName]  = address[:last_name]

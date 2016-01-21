@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
         :refund => 'CCRETURN',
         :authorize => 'CCAUTHONLY',
         :capture => 'CCFORCE',
+        :capture_complete => 'CCCOMPLETE',
         :void => 'CCDELETE',
         :store => 'CCGETTOKEN',
         :update => 'CCUPDATETOKEN',
@@ -81,6 +82,7 @@ module ActiveMerchant #:nodoc:
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
+        add_ip(form, options)
         commit(:purchase, money, form)
       end
 
@@ -99,6 +101,7 @@ module ActiveMerchant #:nodoc:
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
+        add_ip(form, options)
         commit(:authorize, money, form)
       end
 
@@ -110,16 +113,22 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt>
       #   * <tt>:credit_card</tt> - The CreditCard details from the initial transaction (required).
       def capture(money, authorization, options = {})
-        requires!(options, :credit_card)
-
         form = {}
-        add_salestax(form, options)
-        add_approval_code(form, authorization)
-        add_invoice(form, options)
-        add_creditcard(form, options[:credit_card])
-        add_customer_data(form, options)
-        add_test_mode(form, options)
-        commit(:capture, money, form)
+        if options[:credit_card]
+          action = :capture
+          add_salestax(form, options)
+          add_approval_code(form, authorization)
+          add_invoice(form, options)
+          add_creditcard(form, options[:credit_card])
+          add_customer_data(form, options)
+          add_test_mode(form, options)
+        else
+          action = :capture_complete
+          add_txn_id(form, authorization)
+          add_partial_shipment_flag(form, options)
+          add_test_mode(form, options)
+        end
+        commit(action, money, form)
       end
 
       # Refund a transaction.
@@ -264,7 +273,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if shipping_address = options[:shipping_address]
-          first_name, last_name = parse_first_and_last_name(shipping_address[:name])
+          first_name, last_name = split_names(shipping_address[:name])
           form[:ship_to_first_name]     = first_name.to_s.slice(0, 20)
           form[:ship_to_last_name]      = last_name.to_s.slice(0, 30)
           form[:ship_to_address1]       = shipping_address[:address1].to_s.slice(0, 30)
@@ -281,16 +290,16 @@ module ActiveMerchant #:nodoc:
         form[:verify] = 'Y' if options[:verify]
       end
 
-      def parse_first_and_last_name(value)
-        name = value.to_s.split(' ')
-
-        last_name = name.pop || ''
-        first_name = name.join(' ')
-        [ first_name, last_name ]
-      end
-
       def add_test_mode(form, options)
         form[:test_mode] = 'TRUE' if options[:test_mode]
+      end
+
+      def add_partial_shipment_flag(form, options)
+        form[:partial_shipment_flag] = 'Y' if options[:partial_shipment_flag]
+      end
+
+      def add_ip(form, options)
+        form[:cardholder_ip] = options[:ip] if options.has_key?(:ip)
       end
 
       def message_from(response)

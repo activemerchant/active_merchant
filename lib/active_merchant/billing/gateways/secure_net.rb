@@ -163,9 +163,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'COUNTRY', address[:country].to_s
 
             if address[:name]
-              names = address[:name].split
-              last_name = names.pop
-              first_name = names.join(" ")
+              first_name, last_name = split_names(address[:name])
               xml.tag! 'FIRSTNAME', first_name
               xml.tag! 'LASTNAME', last_name
             else
@@ -208,8 +206,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_more_required_params(xml, options)
+        test_mode = options[:test_mode].nil? ? test? : options[:test_mode]
         xml.tag! 'RETAIL_LANENUM', '0'
-        xml.tag! 'TEST', 'TRUE' if test?
+        xml.tag! 'TEST', test_mode ? 'TRUE' : 'FALSE'
         xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
         xml.tag! 'TRANSACTION_SERVICE', 0
         xml.tag! 'DEVELOPERID', options[:developer_id] if options[:developer_id]
