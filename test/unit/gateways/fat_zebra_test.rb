@@ -29,6 +29,18 @@ class FatZebraTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_metadata
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      body.match '"metadata":{"foo":"bar"}'
+    }.returns(successful_purchase_response_with_metadata)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:metadata => { 'foo' => 'bar' }))
+    assert_success response
+
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_with_token
     @gateway.expects(:ssl_request).with { |method, url, body, headers|
       body.match '"card_token":"e1q7dbj2"'
@@ -203,6 +215,39 @@ class FatZebraTest < Test::Unit::TestCase
         :rrn => "000000000000",
         :cvv_match => "U",
         :metadata => {
+        },
+      },
+      :test => true,
+      :errors => []
+    }.to_json
+  end
+
+  def successful_purchase_response_with_metadata
+    {
+      :successful => true,
+      :response => {
+        :authorization => 55355,
+        :id => "001-P-12345AA",
+        :card_number => "XXXXXXXXXXXX1111",
+        :card_holder => "John Smith",
+        :card_expiry => "2011-10-31",
+        :card_token => "a1bhj98j",
+        :amount => 349,
+        :decimal_amount => 3.49,
+        :successful => true,
+        :message => "Approved",
+        :reference => "ABC123",
+        :currency => "AUD",
+        :transaction_id => "001-P-12345AA",
+        :settlement_date => "2011-07-01",
+        :transaction_date => "2011-07-01T12:00:00+11:00",
+        :response_code => "08",
+        :captured => true,
+        :captured_amount => 349,
+        :rrn => "000000000000",
+        :cvv_match => "U",
+        :metadata => {
+          'foo' => 'bar',
         },
       },
       :test => true,
