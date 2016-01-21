@@ -245,20 +245,28 @@ class FatZebraTest < Test::Unit::TestCase
     {
       :successful => true,
       :response => {
-        :authorization => "1339973263",
+        :authorization => 1339973263,
         :id => "003-R-7MNIUMY6",
-        :amount => -10,
+        :amount => 10,
         :refunded => "Approved",
-        :message => "08 Approved",
+        :message => "Approved",
         :card_holder => "Harry Smith",
         :card_number => "XXXXXXXXXXXX4444",
         :card_expiry => "2013-05-31",
         :card_type => "MasterCard",
         :transaction_id => "003-R-7MNIUMY6",
-        :successful => true
+        :reference => "18280",
+        :currency => "USD",
+        :successful => true,
+        :transaction_date => "2013-07-01T12:00:00+11:00",
+        :response_code => "08",
+        :settlement_date => "2013-07-01",
+        :metadata => {
+        },
+        :standalone => false,
+        :rrn => "000000000002",
       },
       :errors => [
-
       ],
       :test => true
     }.to_json
@@ -277,8 +285,8 @@ class FatZebraTest < Test::Unit::TestCase
         :card_number => "XXXXXXXXXXXX4444",
         :card_expiry => "2013-05-31",
         :card_type => "MasterCard",
-        :transaction_id => nil,
-        :successful => false
+        :successful => false,
+        :reference => nil,
       },
       :errors => [
         "Reference can't be blank"
