@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    #class Error < ActiveMerchantError #:nodoc:
-    #end
+    class Error < ActiveMerchantError #:nodoc:
+    end
 
     class Response
       attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result, :error_code, :emv_authorization
