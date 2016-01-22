@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
       # See the documentation for the gateway you will be using to make sure there are no other
       # required options.
       def initialize(options = {})
-        requires!(options, :terminalid, :sharedsecret)
+       @options = options
       end
 
       # Are we running in test mode?
