@@ -50,6 +50,8 @@ class CardStreamTest < Test::Unit::TestCase
     assert response = @gateway.authorize(142, @visacreditcard, @visacredit_options)
     assert_success response
     assert response.avs_result
+    assert_equal "M", response.avs_result['code']
+    assert_equal "Street address and postal code match.", response.avs_result['message']
     assert_equal "Y", response.avs_result['street_match']
     assert_equal "Y", response.avs_result['postal_match']
 
