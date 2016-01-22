@@ -31,6 +31,7 @@
 * TransFirst: CVV is a required tag [duff]
 * Checkout V2: Add Descriptor Name and City Options [anellis]
 * Forte: Pass order_id [anellis]
+* Merchant ESolutioins: Truncate order_id [anellis]
 
 
 == Version 1.56.0 (December 1, 2015)
