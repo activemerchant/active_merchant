@@ -99,7 +99,8 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         if options.has_key? :order_id
-          post[:invoice_number] = options[:order_id].to_s.gsub(/[^\w.]/, '')
+          order_id = options[:order_id].to_s.gsub(/[^\w.]/, '')
+          post[:invoice_number] = truncate(order_id, 17)
         end
       end
 
