@@ -1017,7 +1017,7 @@ world_pay_gateway:
 
 # credentials required
 worldnet:
-  terminalid: 2921001
+  terminalid: '2921001'
   sharedsecret: 'secretpass'
 
 # Working credentials, no need to replace
