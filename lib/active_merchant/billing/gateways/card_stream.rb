@@ -216,12 +216,31 @@ module ActiveMerchant #:nodoc:
                      :test => test?,
                      :authorization => response[:xref],
                      :cvv_result => CVV_CODE[response[:avscv2ResponseCode].to_s[0, 1]],
-                     :avs_result => {
-                       :postal_match => AVS_POSTAL_MATCH[response[:avscv2ResponseCode].to_s[1, 1]],
-                       :street_match => AVS_STREET_MATCH[response[:avscv2ResponseCode].to_s[2, 1]]
-                     }
+                     :avs_result => avs_from(response)
         )
       end
+
+      def avs_from(response)
+        postal_match = AVS_POSTAL_MATCH[response[:avscv2ResponseCode].to_s[1, 1]]
+        street_match = AVS_STREET_MATCH[response[:avscv2ResponseCode].to_s[2, 1]]
+
+        code = if postal_match == "Y" && street_match == "Y"
+          "M"
+        elsif postal_match == "Y"
+          "P"
+        elsif street_match == "Y"
+          "A"
+        else
+          "I"
+        end
+
+        AVSResult.new({
+          :code => code,
+          :postal_match => postal_match,
+          :street_match => street_match
+        })
+      end
+
 
       def currency_code(currency)
         CURRENCY_CODES[currency]
@@ -234,6 +253,7 @@ module ActiveMerchant #:nodoc:
       def add_pair(post, key, value, options = {})
         post[key] = value if !value.blank? || options[:required]
       end
+
     end
   end
 end

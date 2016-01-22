@@ -34,6 +34,7 @@
 * Merchant ESolutioins: Truncate order_id [anellis]
 * Transfirst Transaction Express: New gateway support [sdball]
 * Stripe: Add `stripe_account` header option [anellis]
+* Cardstream: Add AVS code and message [anellis]
 
 
 == Version 1.56.0 (December 1, 2015)
