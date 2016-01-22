@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
           
             
           def initialize(options={})
-               requires!(options, :terminalid, :sharedsecret)
+               
                @@terminalid = options[:terminalid].to_s
                @@sharedsecret = options[:sharedsecret].to_s
               super
