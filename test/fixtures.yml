@@ -11,7 +11,6 @@
 # Paste any required PEM certificates after the pem key.
 #
 
-
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
@@ -45,6 +44,12 @@ bank_frick:
 
 banwire:
   login: "desarrollo"
+
+# Non-alphanumeric characters may cause an authentication error
+barclaycard_smartpay:
+  company: company
+  merchant: merchant
+  password: password
 
 barclays_epdq:
   login: test
