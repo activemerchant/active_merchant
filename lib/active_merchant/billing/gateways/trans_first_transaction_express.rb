@@ -345,10 +345,6 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
       CURRENCY_CODES["USD"] = "840"
 
-      def credit_card?(payment_method)
-        payment_method.respond_to?(:number)
-      end
-
       def headers
         {
           "Content-Type" => "text/xml"
@@ -436,6 +432,12 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response)
         response["tranNr"] || response["pmtId"]
       end
+
+      # -- helper methods ----------------------------------------------------
+      def credit_card?(payment_method)
+        payment_method.respond_to?(:number)
+      end
+
 
       # -- request methods ---------------------------------------------------
       def build_xml_transaction_request
