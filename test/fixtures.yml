@@ -11,11 +11,15 @@
 # Paste any required PEM certificates after the pem key.
 #
 
-
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
   token: token
+
+adyen:
+  company: company
+  merchant: merchant
+  password: password
 
 app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
