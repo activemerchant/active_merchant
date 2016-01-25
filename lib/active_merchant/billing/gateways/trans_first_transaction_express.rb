@@ -298,36 +298,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def update(token, payment_method, options={})
-        wallet_details_request = build_xml_payment_search_request do |doc|
-          doc["v1"].type 1 # recurring profile
-          doc["v1"].pmtCrta do
-            doc["v1"].pmtId token
-          end
-        end
-
-        MultiResponse.run do |r|
-          r.process { commit(wallet_details_request) }
-          return r unless r.success? && r.params["FndRecurrProfResponse"]
-
-          update_payment_method_request = build_xml_payment_update_request do |doc|
-            doc["v1"].cust do
-              doc["v1"].contact do
-                doc["v1"].id r.params["contact_id"]
-              end
-
-              doc["v1"].pmt do
-                doc["v1"].id token
-                doc["v1"].type 1 # update
-                add_payment_method(doc, payment_method)
-              end
-            end
-          end
-
-          r.process { commit(update_payment_method_request) }
-        end
-      end
-
       def supports_scrubbing?
         true
       end
@@ -480,7 +450,6 @@ module ActiveMerchant #:nodoc:
           end
         end.doc.root.to_xml
       end
-
 
       def add_merchant(doc, product_type=nil)
         doc["v1"].merc do

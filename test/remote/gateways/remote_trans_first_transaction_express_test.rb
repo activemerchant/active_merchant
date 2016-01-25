@@ -210,35 +210,6 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal "50011", response.error_code
   end
 
-  def test_successful_update
-    initial_card = credit_card("4485896261017708")
-    updated_card = credit_card("371449635392376")
-
-    assert store = @gateway.store(initial_card)
-    assert_success store
-
-    update = @gateway.update(store.authorization, updated_card)
-    assert_success update
-    assert_equal "Succeeded", update.message
-  end
-
-  def test_successful_purchase_using_updated_card
-    initial_card = credit_card("4485896261017708")
-    updated_card = credit_card("371449635392376")
-
-    assert store = @gateway.store(initial_card)
-    assert_success store
-
-    token = store.authorization
-
-    update = @gateway.update(token, updated_card)
-    assert_success update
-
-    response = @gateway.purchase(@amount, token, @options)
-    assert_success response
-    assert_match "Succeeded", response.message
-  end
-
   # def test_dump_transcript
   #   skip("Transcript scrubbing for this gateway has been tested.")
   #   # This test will run a purchase transaction on your gateway
