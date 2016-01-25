@@ -285,10 +285,10 @@ module ActiveMerchant #:nodoc:
           customer_id = r.params["custId"]
 
           store_payment_method_request = build_xml_payment_storage_request do |doc|
-            doc.tag! "v1:cust" do
+            doc["v1"].cust do
               add_customer_id(doc, customer_id)
-              doc.tag! "v1:pmt" do
-                doc.tag! "v1:type", 0 # add
+              doc["v1"].pmt do
+                doc["v1"].type 0 # add
                 add_payment_method(doc, payment_method)
               end
             end
@@ -300,9 +300,9 @@ module ActiveMerchant #:nodoc:
 
       def update(token, payment_method, options={})
         wallet_details_request = build_xml_payment_search_request do |doc|
-          doc.tag! "v1:type", 1 # recurring profile
-          doc.tag! "v1:pmtCrta" do
-            doc.tag! "v1:pmtId", token
+          doc["v1"].type 1 # recurring profile
+          doc["v1"].pmtCrta do
+            doc["v1"].pmtId token
           end
         end
 
@@ -311,14 +311,14 @@ module ActiveMerchant #:nodoc:
           return r unless r.success? && r.params["FndRecurrProfResponse"]
 
           update_payment_method_request = build_xml_payment_update_request do |doc|
-            doc.tag! "v1:cust" do
-              doc.tag! "v1:contact" do
-                doc.tag! "v1:id", r.params["contact_id"]
+            doc["v1"].cust do
+              doc["v1"].contact do
+                doc["v1"].id r.params["contact_id"]
               end
 
-              doc.tag! "v1:pmt" do
-                doc.tag! "v1:id", token
-                doc.tag! "v1:type", 1 # update
+              doc["v1"].pmt do
+                doc["v1"].id token
+                doc["v1"].type 1 # update
                 add_payment_method(doc, payment_method)
               end
             end
@@ -441,79 +441,78 @@ module ActiveMerchant #:nodoc:
 
       # -- request methods ---------------------------------------------------
       def build_xml_transaction_request
-        build_xml_request("v1:SendTranRequest") do |doc|
+        build_xml_request("SendTranRequest") do |doc|
           yield doc
         end
       end
 
       def build_xml_payment_storage_request
-        build_xml_request("v1:UpdtRecurrProfRequest") do |doc|
+        build_xml_request("UpdtRecurrProfRequest") do |doc|
           yield doc
         end
       end
 
       def build_xml_payment_update_request
         merchant_product_type = 5 # credit card
-        build_xml_request("v1:UpdtRecurrProfRequest", merchant_product_type) do |doc|
+        build_xml_request("UpdtRecurrProfRequest", merchant_product_type) do |doc|
           yield doc
         end
       end
 
       def build_xml_payment_search_request
-        build_xml_request("v1:FndRecurrProfRequest") do |doc|
+        build_xml_request("FndRecurrProfRequest") do |doc|
           yield doc
         end
       end
 
       def build_xml_request(wrapper, merchant_product_type=nil)
-        xml = Builder::XmlMarkup.new
         soapenv = "http://schemas.xmlsoap.org/soap/envelope/"
         v1 = "http://postilion/realtime/merchantframework/xsd/v1/"
 
-        xml.tag! "soapenv:Envelope", "xmlns:soapenv" => soapenv do
-          xml.tag! "soapenv:Body" do
-            xml.tag! wrapper, "xmlns:v1" => v1 do
-              add_merchant(xml, product_type=merchant_product_type)
-              yield xml
+        Nokogiri::XML::Builder.new(encoding: "UTF-8") do |xml|
+          xml["soapenv"].Envelope("xmlns:soapenv" => soapenv) do
+            xml["soapenv"].Body do
+              xml["v1"].send(wrapper, "xmlns:v1" => v1) do
+                add_merchant(xml)
+                yield(xml)
+              end
             end
           end
-        end
-
-        xml.target!
+        end.doc.root.to_xml
       end
 
 
       def add_merchant(doc, product_type=nil)
-        doc.tag! "v1:merc" do
-          doc.tag! "v1:id", @options[:gateway_id]
-          doc.tag! "v1:regKey", @options[:reg_key]
-          doc.tag! "v1:inType", "1"
-          doc.tag! "v1:prodType", product_type if product_type
+        doc["v1"].merc do
+          doc["v1"].id @options[:gateway_id]
+          doc["v1"].regKey @options[:reg_key]
+          doc["v1"].inType "1"
+          doc["v1"].prodType product_type if product_type
         end
       end
 
       def add_transaction_code(doc, action)
-        doc.tag! "v1:tranCode", TRANSACTION_CODES[action]
+        doc["v1"].tranCode TRANSACTION_CODES[action]
       end
 
       def add_amount(doc, money)
-        doc.tag! "v1:reqAmt", amount(money)
+        doc["v1"].reqAmt amount(money)
       end
 
       def add_order_number(doc, options)
         return unless options[:order_id]
 
-        doc.tag! "v1:authReq" do
-          doc.tag! "v1:ordNr", options[:order_id]
-        end
+        doc["v1"].authReq {
+          doc["v1"].ordNr options[:order_id]
+        }
       end
 
       def add_payment_method(doc, payment_method)
-        doc.tag! "v1:card" do
-          doc.tag! "v1:pan", payment_method.number
-          doc.tag! "v1:sec", payment_method.verification_value
-          doc.tag! "v1:xprDt", expiration_date(payment_method)
-        end
+        doc["v1"].card {
+          doc["v1"].pan payment_method.number
+          doc["v1"].sec payment_method.verification_value
+          doc["v1"].xprDt expiration_date(payment_method)
+        }
       end
 
       def expiration_date(payment_method)
@@ -523,52 +522,52 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_pan(doc, payment_method)
-        doc.tag! "v1:card" do
-          doc.tag! "v1:pan", payment_method.number
+        doc["v1"].card do
+          doc["v1"].pan payment_method.number
         end
       end
 
       def add_contact(doc, fullname, options)
-        doc.tag! "v1:contact" do
-          doc.tag! "v1:fullName", fullname
-          doc.tag! "v1:coName", options[:company_name] if options[:company_name]
-          doc.tag! "v1:title", options[:title] if options[:title]
+        doc["v1"].contact do
+          doc["v1"].fullName fullname
+          doc["v1"].coName options[:company_name] if options[:company_name]
+          doc["v1"].title options[:title] if options[:title]
 
           if (billing_address = options[:billing_address])
-            doc.tag! "v1:phone" do
-              doc.tag! "v1:type", (options[:phone_number_type] || "4")
-              doc.tag! "v1:nr", billing_address[:phone].gsub(/\D/, '')
+            doc["v1"].phone do
+              doc["v1"].type (options[:phone_number_type] || "4")
+              doc["v1"].nr billing_address[:phone].gsub(/\D/, '')
             end
-            doc.tag! "v1:addrLn1", billing_address[:address1]
-            doc.tag! "v1:addrLn2", billing_address[:address2]
-            doc.tag! "v1:city", billing_address[:city]
-            doc.tag! "v1:state", billing_address[:state]
-            doc.tag! "v1:zipCode", billing_address[:zip]
-            doc.tag! "v1:ctry", "US"
+            doc["v1"].addrLn1 billing_address[:address1]
+            doc["v1"].addrLn2 billing_address[:address2]
+            doc["v1"].city billing_address[:city]
+            doc["v1"].state billing_address[:state]
+            doc["v1"].zipCode billing_address[:zip]
+            doc["v1"].ctry "US"
           end
 
-          doc.tag! "v1:email", options[:email] if options[:email]
-          doc.tag! "v1:type", options[:contact_type] if options[:contact_type]
-          doc.tag! "v1:stat", options[:contact_stat] if options[:contact_stat]
+          doc["v1"].email options[:email] if options[:email]
+          doc["v1"].type options[:contact_type] if options[:contact_type]
+          doc["v1"].stat options[:contact_stat] if options[:contact_stat]
 
           if (shipping_address = options[:shipping_address])
-            doc.tag! "v1:ship" do
-              doc.tag! "v1:fullName", fullname
-              doc.tag! "v1:addrLn1", shipping_address[:address1]
-              doc.tag! "v1:addrLn2", shipping_address[:address2] if shipping_address[:address2]
-              doc.tag! "v1:city", shipping_address[:city]
-              doc.tag! "v1:state", shipping_address[:state]
-              doc.tag! "v1:zipCode", shipping_address[:zip]
-              doc.tag! "v1:phone", shipping_address[:phone].gsub(/\D/, '') if shipping_address[:phone]
-              doc.tag! "v1:email", shipping_address[:email] if shipping_address[:email]
+            doc["v1"].ship do
+              doc["v1"].fullName fullname
+              doc["v1"].addrLn1 shipping_address[:address1]
+              doc["v1"].addrLn2 shipping_address[:address2] if shipping_address[:address2]
+              doc["v1"].city shipping_address[:city]
+              doc["v1"].state shipping_address[:state]
+              doc["v1"].zipCode shipping_address[:zip]
+              doc["v1"].phone shipping_address[:phone].gsub(/\D/, '') if shipping_address[:phone]
+              doc["v1"].email shipping_address[:email] if shipping_address[:email]
             end
           end
         end
       end
 
       def add_original_transaction_data(doc, authorization)
-        doc.tag! "v1:origTranData" do
-          doc.tag! "v1:tranNr", authorization
+        doc["v1"].origTranData do
+          doc["v1"].tranNr authorization
         end
       end
 
@@ -576,22 +575,21 @@ module ActiveMerchant #:nodoc:
         options[:contact_type] = 1 # recurring
         options[:contact_stat] = 1 # active
 
-        doc.tag! "v1:cust" do
-          doc.tag! "v1:type", 0 # add
-
+        doc["v1"].cust do
+          doc["v1"].type 0 # add
           add_contact(doc, fullname, options)
         end
       end
 
       def add_customer_id(doc, customer_id)
-        doc.tag! "v1:contact" do
-          doc.tag! "v1:id", customer_id
+        doc["v1"].contact do
+          doc["v1"].id customer_id
         end
       end
 
       def add_wallet_id(doc, wallet_id)
-        doc.tag! "v1:recurMan" do
-          doc.tag! "v1:id", wallet_id
+        doc["v1"].recurMan do
+          doc["v1"].id wallet_id
         end
       end
     end
