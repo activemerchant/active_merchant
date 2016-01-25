@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        if credit_card? payment_method
+        if credit_card?(payment_method)
           request = build_xml_transaction_request do |doc|
             add_transaction_code(doc, :purchase)
             add_payment_method(doc, payment_method)
@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, payment_method, options={})
-        if credit_card? payment_method
+        if credit_card?(payment_method)
           request = build_xml_transaction_request do |doc|
             add_transaction_code(doc, :authorize)
             add_payment_method(doc, payment_method)
