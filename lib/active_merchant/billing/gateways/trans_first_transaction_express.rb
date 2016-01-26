@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
       self.display_name = "TransFirst Transaction Express"
       self.homepage_url = "http://transactionexpress.com/"
 
-      self.test_url = "https://ws.cert.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1?wsdl"
-      self.live_url = "https://ws.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1?wsdl"
+      self.test_url = "https://ws.cert.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1"
+      self.live_url = "https://ws.transactionexpress.com/portal/merchantframework/MerchantWebServices-v1"
 
       self.supported_countries = ["US"]
       self.default_currency = "USD"
