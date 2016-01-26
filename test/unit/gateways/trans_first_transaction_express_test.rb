@@ -22,7 +22,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "000015212561", response.authorization
+    assert_equal "purchase|000015212561", response.authorization
     assert response.test?
   end
 
@@ -53,7 +53,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "000015377801", response.authorization
+    assert_equal "authorize|000015377801", response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -89,7 +89,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "000015212561", response.authorization
+    assert_equal "purchase|000015212561", response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -102,7 +102,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("5d53a33d960c46d00f5dc061947d998c")
+      @gateway.void("purchase|5d53a33d960c46d00f5dc061947d998c")
     end.check_request do |endpoint, data, headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
@@ -117,7 +117,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "000015212561", response.authorization
+    assert_equal "purchase|000015212561", response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -144,7 +144,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "000001677461", response.authorization
+    assert_equal "credit|000001677461", response.authorization
     assert response.test?
   end
 
@@ -183,7 +183,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal "Succeeded", response.message
-    assert_equal "1453495229881170023", response.authorization
+    assert_equal "store|1453495229881170023", response.authorization
     assert response.test?
   end
 

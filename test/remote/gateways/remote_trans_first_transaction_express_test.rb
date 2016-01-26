@@ -59,7 +59,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "Succeeded", response.message
-    assert_match %r(^\d+$), response.authorization
+    assert_match %r(^authorize\|\d+$), response.authorization
 
     capture = @gateway.capture(@amount, response.authorization)
     assert_success capture
@@ -87,7 +87,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    void = @gateway.void(response.authorization, void_type: :void_purchase)
+    void = @gateway.void(response.authorization)
     assert_success void
     assert_equal "Succeeded", void.message
   end
@@ -96,7 +96,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
-    void = @gateway.void(authorize.authorization, void_type: :void_authorization)
+    void = @gateway.void(authorize.authorization)
     assert_success void
     assert_equal "Succeeded", void.message
   end

@@ -16,6 +16,7 @@ module ActiveMerchant #:nodoc:
 
       V1_NAMESPACE = "http://postilion/realtime/merchantframework/xsd/v1/"
       SOAPENV_NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
+      AUTHORIZATION_FIELD_SEPARATOR = "|"
 
       APPROVAL_CODES = %w(00 10)
 
@@ -160,7 +161,7 @@ module ActiveMerchant #:nodoc:
 
       TRANSACTION_CODES = {
         authorize: 0,
-        void_authorization: 2,
+        void_authorize: 2,
 
         purchase: 1,
         capture: 3,
@@ -193,9 +194,10 @@ module ActiveMerchant #:nodoc:
           end
         else
           action = :wallet_sale
+          wallet_id = split_authorization(payment_method).last
           request = build_xml_transaction_request do |doc|
             add_amount(doc, amount)
-            add_wallet_id(doc, payment_method)
+            add_wallet_id(doc, wallet_id)
           end
         end
 
@@ -210,9 +212,10 @@ module ActiveMerchant #:nodoc:
             add_amount(doc, amount)
           end
         else
+          wallet_id = split_authorization(payment_method).last
           request = build_xml_transaction_request do |doc|
             add_amount(doc, amount)
-            add_wallet_id(doc, payment_method)
+            add_wallet_id(doc, wallet_id)
           end
         end
 
@@ -220,32 +223,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(amount, authorization, options={})
+        action, transaction_id = split_authorization(authorization)
         request = build_xml_transaction_request do |doc|
           add_amount(doc, amount)
-          add_original_transaction_data(doc, authorization)
+          add_original_transaction_data(doc, transaction_id)
         end
 
         commit(:capture, request)
       end
 
-      # Transaction Express has three types of possible void
-      # - void_authorization
-      # - void_purchase (alias: void_capture)
-      # - void_refund (alias: void_credit)
       def void(authorization, options={})
-        void_type = (options[:void_type] || :void_purchase)
+        action, transaction_id = split_authorization(authorization)
 
         request = build_xml_transaction_request do |doc|
-          add_original_transaction_data(doc, authorization)
+          add_original_transaction_data(doc, transaction_id)
         end
 
-        commit(void_type, request)
+        commit(void_type(action), request)
       end
 
       def refund(amount, authorization, options={})
+        action, transaction_id = split_authorization(authorization)
+
         request = build_xml_transaction_request do |doc|
           add_amount(doc, amount)
-          add_original_transaction_data(doc, authorization)
+          add_original_transaction_data(doc, transaction_id)
           add_order_number(doc, options)
         end
 
@@ -335,7 +337,7 @@ module ActiveMerchant #:nodoc:
           message_from(succeeded, response),
           response,
           error_code: error_code_from(succeeded, response),
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           avs_result: AVSResult.new(code: response["AVSCode"]),
           cvv_result: CVVResult.new(response["CVV2Response"]),
           test: test?
@@ -397,8 +399,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response)
-        response["tranNr"] || response["pmtId"]
+      def authorization_from(action, response)
+        authorization = response["tranNr"] || response["pmtId"]
+
+        # guard so we don't return something like "purchase|"
+        return unless authorization
+
+        [action, authorization].join(AUTHORIZATION_FIELD_SEPARATOR)
       end
 
       # -- helper methods ----------------------------------------------------
@@ -406,6 +413,13 @@ module ActiveMerchant #:nodoc:
         payment_method.respond_to?(:number)
       end
 
+      def split_authorization(authorization)
+        authorization.split(AUTHORIZATION_FIELD_SEPARATOR)
+      end
+
+      def void_type(action)
+        :"void_#{action}"
+      end
 
       # -- request methods ---------------------------------------------------
       def build_xml_transaction_request
