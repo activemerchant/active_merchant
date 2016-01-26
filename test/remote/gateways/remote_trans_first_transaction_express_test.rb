@@ -83,11 +83,32 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal "12", response.error_code
   end
 
-  def test_successful_void
+  def test_successful_purchase_void
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
     void = @gateway.void(response.authorization, void_type: :void_purchase)
+    assert_success void
+    assert_equal "Succeeded", void.message
+  end
+
+  def test_successful_authorization_void
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    void = @gateway.void(authorize.authorization, void_type: :void_authorization)
+    assert_success void
+    assert_equal "Succeeded", void.message
+  end
+
+  def test_successful_capture_void
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    capture = @gateway.capture(@amount, authorize.authorization)
+    assert_success capture
+
+    void = @gateway.void(capture.authorization, void_type: :void_capture)
     assert_success void
     assert_equal "Succeeded", void.message
   end
