@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
         void_capture: 6,
 
         refund: 4,
-        blind_credit: 5,
+        credit: 5,
         void_refund: 13,
         void_credit: 13,
 
@@ -258,7 +258,7 @@ module ActiveMerchant #:nodoc:
           add_amount(doc, amount)
         end
 
-        commit(:blind_credit, request)
+        commit(:credit, request)
       end
 
       def verify(credit_card, options={})
