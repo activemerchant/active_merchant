@@ -14,6 +14,9 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
+      V1_NAMESPACE = "http://postilion/realtime/merchantframework/xsd/v1/"
+      SOAPENV_NAMESPACE = "http://schemas.xmlsoap.org/soap/envelope/"
+
       APPROVAL_CODES = %w(00 10)
 
       RESPONSE_MESSAGES = {
@@ -181,51 +184,48 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, payment_method, options={})
         if credit_card?(payment_method)
+          action = :purchase
           request = build_xml_transaction_request do |doc|
-            add_transaction_code(doc, :purchase)
             add_payment_method(doc, payment_method)
             add_contact(doc, payment_method.name, options)
             add_amount(doc, amount)
             add_order_number(doc, options)
           end
         else
+          action = :wallet_sale
           request = build_xml_transaction_request do |doc|
-            add_transaction_code(doc, :wallet_sale)
             add_amount(doc, amount)
             add_wallet_id(doc, payment_method)
           end
         end
 
-        commit(request)
+        commit(action, request)
       end
 
       def authorize(amount, payment_method, options={})
         if credit_card?(payment_method)
           request = build_xml_transaction_request do |doc|
-            add_transaction_code(doc, :authorize)
             add_payment_method(doc, payment_method)
             add_contact(doc, payment_method.name, options)
             add_amount(doc, amount)
           end
         else
           request = build_xml_transaction_request do |doc|
-            add_transaction_code(doc, :authorize)
             add_amount(doc, amount)
             add_wallet_id(doc, payment_method)
           end
         end
 
-        commit(request)
+        commit(:authorize, request)
       end
 
       def capture(amount, authorization, options={})
         request = build_xml_transaction_request do |doc|
-          add_transaction_code(doc, :capture)
           add_amount(doc, amount)
           add_original_transaction_data(doc, authorization)
         end
 
-        commit(request)
+        commit(:capture, request)
       end
 
       # Transaction Express has three types of possible void
@@ -236,42 +236,38 @@ module ActiveMerchant #:nodoc:
         void_type = (options[:void_type] || :void_purchase)
 
         request = build_xml_transaction_request do |doc|
-          add_transaction_code(doc, void_type)
           add_original_transaction_data(doc, authorization)
         end
 
-        commit(request)
+        commit(void_type, request)
       end
 
       def refund(amount, authorization, options={})
         request = build_xml_transaction_request do |doc|
-          add_transaction_code(doc, :refund)
           add_amount(doc, amount)
           add_original_transaction_data(doc, authorization)
           add_order_number(doc, options)
         end
 
-        commit(request)
+        commit(:refund, request)
       end
 
       def credit(amount, payment_method, options={})
         request = build_xml_transaction_request do |doc|
-          add_transaction_code(doc, :blind_credit)
           add_pan(doc, payment_method)
           add_amount(doc, amount)
         end
 
-        commit(request)
+        commit(:blind_credit, request)
       end
 
       def verify(credit_card, options={})
         request = build_xml_transaction_request do |doc|
-          add_transaction_code(doc, :verify)
           add_payment_method(doc, credit_card)
           add_contact(doc, credit_card.name, options)
         end
 
-        commit(request)
+        commit(:verify, request)
       end
 
       def store(payment_method, options={})
@@ -280,7 +276,7 @@ module ActiveMerchant #:nodoc:
         end
 
         MultiResponse.run do |r|
-          r.process { commit(store_customer_request) }
+          r.process { commit(:store, store_customer_request) }
           return r unless r.success? && r.params["custId"]
           customer_id = r.params["custId"]
 
@@ -294,7 +290,7 @@ module ActiveMerchant #:nodoc:
             end
           end
 
-          r.process { commit(store_payment_method_request) }
+          r.process { commit(:store, store_payment_method_request) }
         end
       end
 
@@ -321,7 +317,9 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def commit(request)
+      def commit(action, request)
+        request = add_transaction_code_to_request(request, action)
+
         raw_response = begin
           ssl_post(url, request, headers)
         rescue ActiveMerchant::ResponseError => e
@@ -436,19 +434,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_xml_request(wrapper, merchant_product_type=nil)
-        soapenv = "http://schemas.xmlsoap.org/soap/envelope/"
-        v1 = "http://postilion/realtime/merchantframework/xsd/v1/"
-
         Nokogiri::XML::Builder.new(encoding: "UTF-8") do |xml|
-          xml["soapenv"].Envelope("xmlns:soapenv" => soapenv) do
+          xml["soapenv"].Envelope("xmlns:soapenv" => SOAPENV_NAMESPACE) do
             xml["soapenv"].Body do
-              xml["v1"].send(wrapper, "xmlns:v1" => v1) do
+              xml["v1"].send(wrapper, "xmlns:v1" => V1_NAMESPACE) do
                 add_merchant(xml)
                 yield(xml)
               end
             end
           end
         end.doc.root.to_xml
+      end
+
+      def add_transaction_code_to_request(request, action)
+        # store requests don't get a transaction code
+        return request if action == :store
+
+        doc = Nokogiri::XML::Document.parse(request)
+        merc_nodeset = doc.xpath('//v1:merc', 'v1' => V1_NAMESPACE)
+        merc_nodeset.after "<tranCode>#{TRANSACTION_CODES[action]}</tranCode>"
+        doc.root.to_xml
       end
 
       def add_merchant(doc, product_type=nil)
@@ -458,10 +463,6 @@ module ActiveMerchant #:nodoc:
           doc["v1"].inType "1"
           doc["v1"].prodType product_type if product_type
         end
-      end
-
-      def add_transaction_code(doc, action)
-        doc["v1"].tranCode TRANSACTION_CODES[action]
       end
 
       def add_amount(doc, money)
