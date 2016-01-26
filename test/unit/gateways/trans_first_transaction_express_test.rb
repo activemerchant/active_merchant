@@ -203,7 +203,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(empty_purchase_response)
 
     assert_failure response
-    assert_equal "Empty response received from Transaction Express gateway.", response.message
+    assert_equal nil, response.message
   end
 
   def test_transcript_scrubbing

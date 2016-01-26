@@ -376,13 +376,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(succeeded, response)
-        if succeeded
-          if response["rspCode"] == "10"
-            "Succeeded, partial capture"
-          else
-            "Succeeded"
-          end
-        elsif response["rspCode"]
+        return "Succeeded" if succeeded
+
+        if response["rspCode"]
           code = response["rspCode"]
           extended_code = response["extRspCode"]
 
@@ -390,12 +386,8 @@ module ActiveMerchant #:nodoc:
           extended = EXTENDED_RESPONSE_MESSAGES[extended_code]
 
           [message, extended].compact.join('. ')
-        elsif response["faultstring"]
-          response["faultstring"]
-        elsif response.empty?
-          "Empty response received from Transaction Express gateway."
         else
-          "Unknown response received from Transaction Express gateway."
+          response["faultstring"]
         end
       end
 

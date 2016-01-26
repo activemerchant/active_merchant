@@ -44,7 +44,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
   def test_partial_purchase
     response = @gateway.purchase(@partial_amount, @credit_card, @options)
     assert_success response
-    assert_equal "Succeeded, partial capture", response.message
+    assert_equal "Succeeded", response.message
     assert_match /0*555$/, response.params["amt"]
   end
 
