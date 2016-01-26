@@ -46,6 +46,14 @@ class RemoteLitleTest < Test::Unit::TestCase
       number: "4488282659650110",
       verification_value: "992"
     )
+    @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        month: '01',
+        year: '2012',
+        brand: "visa",
+        number:  "44444444400009",
+        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+      })
   end
 
   def test_successful_authorization
@@ -91,6 +99,18 @@ class RemoteLitleTest < Test::Unit::TestCase
       billing_address: {
       }
     })
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_debt_repayment_flag
+    assert response = @gateway.purchase(10010, @credit_card1, @options.merge(debt_repayment: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay
+    assert response = @gateway.purchase(10010, @decrypted_apple_pay)
     assert_success response
     assert_equal 'Approved', response.message
   end

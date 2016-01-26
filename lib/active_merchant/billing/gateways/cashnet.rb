@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CashnetGateway < Gateway
+      include Empty
+
       self.live_url      = "https://commerce.cashnet.com/"
 
       self.supported_countries = ["US"]
@@ -47,6 +49,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:origtx]  = identification
         add_invoice(post, options)
+        add_customer_data(post, options)
         commit('REFUND', money, post)
       end
 
@@ -106,6 +109,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:email_g]  = options[:email]
+        post[:custcode]  = options[:custcode] unless empty?(options[:custcode])
       end
 
       def expdate(creditcard)

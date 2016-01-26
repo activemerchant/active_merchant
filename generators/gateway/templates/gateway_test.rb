@@ -2,11 +2,7 @@ require 'test_helper'
 
 class <%= class_name %>Test < Test::Unit::TestCase
   def setup
-    @gateway = <%= class_name %>Gateway.new(
-      some_credential: 'login',
-      another_credential: 'password'
-    )
-
+    @gateway = <%= class_name %>Gateway.new(some_credential: 'login', another_credential: 'password')
     @credit_card = credit_card
     @amount = 100
 

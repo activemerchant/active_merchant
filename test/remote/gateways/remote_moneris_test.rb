@@ -21,6 +21,17 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_purchase_with_network_tokenization
+    @credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
+      verification_value: nil
+    )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
   def test_successful_authorization
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -60,6 +71,17 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
     void = @gateway.void(response.authorization)
     assert_success void
+  end
+
+  def test_successful_authorization_with_network_tokenization
+    @credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
+      verification_value: nil
+    )
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
   end
 
   def test_successful_purchase_and_void
@@ -154,13 +176,6 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response = gateway.purchase(1039, @credit_card, @options)
     assert_success response
     assert_equal({'code' => 'M', 'message' => 'CVV matches'}, response.cvv_result)
-  end
-
-  def test_cvv_no_match_when_enabled
-    gateway = MonerisGateway.new(fixtures(:moneris).merge(cvv_enabled: true))
-    assert response = gateway.purchase(1053, @credit_card, @options)
-    assert_success response
-    assert_equal({'code' => 'N', 'message' => 'CVV does not match'}, response.cvv_result)
   end
 
   def test_avs_result_valid_when_enabled

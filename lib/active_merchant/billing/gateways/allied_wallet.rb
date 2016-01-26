@@ -76,7 +76,10 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Bearer )[a-zA-Z0-9._-]+)i, '\1[FILTERED]').
           gsub(%r(("cardNumber\\?":\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("cVVCode\\?":\\?")[^"]*)i, '\1[FILTERED]')
+          gsub(%r(("cVVCode\\?":\\?")\d+[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cVVCode\\?":)null), '\1[BLANK]').
+          gsub(%r(("cVVCode\\?":\\?")\\?"), '\1[BLANK]"').
+          gsub(%r(("cVVCode\\?":\\?")\s+), '\1[BLANK]"')
       end
 
       private
@@ -104,7 +107,7 @@ module ActiveMerchant #:nodoc:
         post[:email] = options[:email] || "unspecified@example.com"
         post[:iPAddress] = options[:ip]
         if (billing_address = options[:billing_address])
-          post[:firstName], post[:lastName] = billing_address[:name].split
+          post[:firstName], post[:lastName] = split_names(billing_address[:name])
           post[:addressLine1] = billing_address[:address1]
           post[:addressLine2] = billing_address[:address2]
           post[:city] = billing_address[:city]

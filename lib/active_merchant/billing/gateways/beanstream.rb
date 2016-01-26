@@ -99,6 +99,13 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def verify(source, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, source, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def success?(response)
         response[:trnApproved] == '1' || response[:responseCode] == '1'
       end
@@ -182,6 +189,18 @@ module ActiveMerchant #:nodoc:
         commit(post, true)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
+      end
+
       private
       def build_response(*args)
         Response.new(*args)
@@ -189,4 +208,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

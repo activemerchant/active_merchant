@@ -126,6 +126,24 @@ class S5Test < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_store
+    response = stub_comms do
+      @gateway.store(@credit_card)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_store
+    response = stub_comms do
+      @gateway.store(@credit_card)
+    end.respond_with(failed_store_response)
+
+    assert_failure response
+    assert response.test?
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -422,6 +440,54 @@ class S5Test < Test::Unit::TestCase
             </Processing>
         </Transaction>
     </Response>
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+      <Response version="1.0">
+        <Transaction mode="CONNECTOR_TEST" channel="ff80808142b2c03c0142b7a7339803e5">
+            <Identification>
+                <ShortID>1901.3386.3074</ShortID>
+                <UniqueID>8a8294494e634488014e6a586d91354e</UniqueID>
+            </Identification>
+            <Payment code="CC.RG" />
+            <Account />
+            <Processing code="CC.RG.90.00">
+                <Timestamp>2015-07-07 21:07:36</Timestamp>
+                <Result>ACK</Result>
+                <Status code="90">NEW</Status>
+                <Reason code="00">Successful Processing</Reason>
+                <Return code="000.100.112">Request successfully processed in 'Merchant in Connector Test Mode'</Return>
+                <Risk score="-100" />
+                <ConfirmationStatus>CONFIRMED</ConfirmationStatus>
+                <SecurityHash>1ebb9fc2109729dbfd63f7fe9df7996b20f8d66f</SecurityHash>
+            </Processing>
+        </Transaction>
+      </Response>
+    RESPONSE
+  end
+
+  def failed_store_response
+    <<-RESPONSE
+      <Response version="1.0">
+        <Transaction mode="CONNECTOR_TEST" channel="ff80808142b2c03c0142b7a7339803e5">
+            <Identification>
+                <ShortID>1263.6366.5058</ShortID>
+                <UniqueID>8a82944a4e6357e2014e6a66adea602a</UniqueID>
+            </Identification>
+            <Payment code="CC.RG" />
+            <Account />
+            <Processing code="CC.RG.70.40">
+                <Timestamp>2015-07-07 21:23:10</Timestamp>
+                <Result>NOK</Result>
+                <Status code="70">REJECTED_VALIDATION</Status>
+                <Reason code="40">Account Validation</Reason>
+                <Return code="100.100.101">invalid creditcard, bank account number or bank name</Return>
+                <SecurityHash>ecc63ca63ef074129c8997c8bb94591223f127a4</SecurityHash>
+            </Processing>
+        </Transaction>
+      </Response>
     RESPONSE
   end
 end

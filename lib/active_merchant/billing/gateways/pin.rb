@@ -75,6 +75,16 @@ module ActiveMerchant #:nodoc:
         commit(:put, "customers/#{CGI.escape(token)}", post, options)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(number\\?":\\?")(\d*)/, '\1[FILTERED]').
+          gsub(/(cvc\\?":\\?")(\d*)/, '\1[FILTERED]')
+      end
       private
 
       def add_amount(post, money, options)

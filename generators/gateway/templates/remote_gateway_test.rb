@@ -7,37 +7,26 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
-
     @options = {
-      order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
     }
   end
 
-  def test_dump_transcript
-    #skip("Transcript scrubbing for this gateway has been tested.")
-
-    # This test will run a purchase transaction on your gateway
-    # and dump a transcript of the HTTP conversation so that
-    # you can use that transcript as a reference while
-    # implementing your scrubbing logic
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
-  end
-
-  def test_transcript_scrubbing
-    transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
-    end
-    transcript = @gateway.scrub(transcript)
-
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
-  end
-
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+  end
+
+  def test_successful_purchase_with_more_options
+    options = {
+      order_id: '1',
+      ip: "127.0.0.1",
+      email: "joe@example.com"
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
@@ -52,13 +41,15 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(nil, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
+    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
+    assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
   end
 
   def test_partial_capture
@@ -70,16 +61,18 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(nil, '')
+    response = @gateway.capture(@amount, '')
     assert_failure response
+    assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
   end
 
   def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(nil, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
+    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
   end
 
   def test_partial_refund
@@ -91,8 +84,9 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, '')
+    response = @gateway.refund(@amount, '')
     assert_failure response
+    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
   end
 
   def test_successful_void
@@ -101,11 +95,13 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
+    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
   end
 
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
+    assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
   end
 
   def test_successful_verify
@@ -118,15 +114,34 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_invalid_login
-    gateway = <%= class_name %>Gateway.new(
-      login: '',
-      password: ''
-    )
+    gateway = <%= class_name %>Gateway.new(login: '', password: '')
+
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
   end
+
+  def test_dump_transcript
+    # This test will run a purchase transaction on your gateway
+    # and dump a transcript of the HTTP conversation so that
+    # you can use that transcript as a reference while
+    # implementing your scrubbing logic.  You can delete
+    # this helper after completing your scrub implementation.
+    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
 end

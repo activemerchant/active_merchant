@@ -26,6 +26,17 @@ module ActiveMerchant #:nodoc:
         commit(money, post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card_num=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?card_ccv2=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_response_type(post)
@@ -35,11 +46,11 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:user] = @options[:login]
         post[:phone] = options[:billing_address][:phone]
-        post[:mail] = options[:email]
+        post[:mail] = options[:email] || "unspecified@email.com"
       end
 
       def add_order_data(post, options)
-        post[:reference] = options[:order_id]
+        post[:reference] = options[:order_id] || generate_unique_id
         post[:concept] = options[:description]
       end
 

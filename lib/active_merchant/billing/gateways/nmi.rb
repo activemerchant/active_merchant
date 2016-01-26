@@ -1,256 +1,243 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class NmiGateway < Gateway
-      API_VERSION = '3.1'
+      include Empty
 
-      self.test_url = 'https://secure.networkmerchants.com/gateway/transact.dll'
-      self.live_url = 'https://secure.networkmerchants.com/gateway/transact.dll'
+      DUP_WINDOW_DEPRECATION_MESSAGE = "The class-level duplicate_window variable is deprecated. Please use the :dup_seconds transaction option instead."
 
-      class_attribute :duplicate_window
-
-      APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
-
-      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT, AUTHORIZATION_CODE = 0, 2, 3, 4
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE = 5, 6, 38, 39
-
+      self.test_url = self.live_url = 'https://secure.nmi.com/api/transact.php'
       self.default_currency = 'USD'
-
+      self.money_format = :dollars
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://nmi.com/'
       self.display_name = 'NMI'
 
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
-      AVS_REASON_CODES = %w(27 45)
-      TRANSACTION_ALREADY_ACTIONED = %w(310 311)
+      def self.duplicate_window=(seconds)
+        ActiveMerchant.deprecated(DUP_WINDOW_DEPRECATION_MESSAGE)
+        @dup_seconds = seconds
+      end
+
+      def self.duplicate_window
+        instance_variable_defined?(:@dup_seconds) ? @dup_seconds : nil
+      end
 
       def initialize(options = {})
         requires!(options, :login, :password)
         super
       end
 
-      def authorize(money, paysource, options = {})
+      def purchase(amount, payment_method, options={})
         post = {}
-        add_currency_code(post, money, options)
-        add_invoice(post, options)
-        add_payment_source(post, paysource, options)
-        add_address(post, options)
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
-        add_duplicate_window(post)
+        add_merchant_defined_fields(post, options)
 
-        commit('AUTH_ONLY', money, post)
+        commit("sale", post)
       end
 
-      def purchase(money, paysource, options = {})
+      def authorize(amount, payment_method, options={})
         post = {}
-        add_currency_code(post, money, options)
-        add_invoice(post, options)
-        add_payment_source(post, paysource, options)
-        add_address(post, options)
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
-        add_duplicate_window(post)
+        add_merchant_defined_fields(post, options)
 
-        commit('AUTH_CAPTURE', money, post)
+        commit("auth", post)
       end
 
-      def capture(money, authorization, options = {})
-        post = {:trans_id => authorization}
+      def capture(amount, authorization, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_reference(post, authorization)
+        add_merchant_defined_fields(post, options)
+
+        commit("capture", post)
+      end
+
+      def void(authorization, options={})
+        post = {}
+        add_reference(post, authorization)
+
+        commit("void", post)
+      end
+
+      def refund(amount, authorization, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_reference(post, authorization)
+
+        commit("refund", post)
+      end
+
+      def credit(amount, payment_method, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
-        add_invoice(post, options)
-        commit('PRIOR_AUTH_CAPTURE', money, post)
+
+        commit("credit", post)
       end
 
-      def void(authorization, options = {})
-        post = {:trans_id => authorization}
-        add_duplicate_window(post)
-        commit('VOID', nil, post)
+      def verify(payment_method, options={})
+        post = {}
+        add_payment_method(post, payment_method)
+        add_customer_data(post, options)
+        add_merchant_defined_fields(post, options)
+
+        commit("validate", post)
       end
 
-      def refund(money, identification, options = {})
-        requires!(options, :card_number)
+      def store(payment_method, options = {})
+        post = {}
+        add_invoice(post, nil, options)
+        add_payment_method(post, payment_method)
+        add_customer_data(post, options)
+        add_merchant_defined_fields(post, options)
 
-        post = { :trans_id => identification,
-                 :card_num => options[:card_number]
-               }
-
-        post[:first_name] = options[:first_name] if options[:first_name]
-        post[:last_name] = options[:last_name] if options[:last_name]
-        post[:zip] = options[:zip] if options[:zip]
-
-        add_invoice(post, options)
-        add_duplicate_window(post)
-
-        commit('CREDIT', money, post)
+        commit("add_customer", post)
       end
 
-      def credit(money, identification, options = {})
-        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, identification, options)
+      def supports_scrubbing?
+        true
       end
 
-      def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+      def scrub(transcript)
+        transcript.
+          gsub(%r((password=)\w+), '\1[FILTERED]').
+          gsub(%r((ccnumber=)\d+), '\1[FILTERED]').
+          gsub(%r((cvv=)\d+), '\1[FILTERED]').
+          gsub(%r((checkaba=)\d+), '\1[FILTERED]').
+          gsub(%r((checkaccount=)\d+), '\1[FILTERED]')
       end
 
       private
 
-      def commit(action, money, parameters)
-        parameters[:amount] = amount(money) unless action == 'VOID'
-
-        url = test? ? self.test_url : self.live_url
-        data = ssl_post(url, post_data(action, parameters))
-
-        response          = parse(data)
-        response[:action] = action
-
-        message = message_from(response)
-
-        Response.new(success?(response), message, response,
-          :test => test?,
-          :authorization => response[:transaction_id],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:card_code]
-        )
+      def add_invoice(post, money, options)
+        post[:amount] = amount(money)
+        post[:orderid] = options[:order_id]
+        post[:orderdescription] = options[:description]
+        post[:currency] = options[:currency] || currency(money)
+        post[:billing_method] = "recurring" if options[:recurring]
+        if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
+          post[:dup_seconds] = dup_seconds
+        end
       end
 
-      def success?(response)
-        response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
-      end
-
-      def fraud_review?(response)
-        response[:response_code] == FRAUD_REVIEW
-      end
-
-      def parse(body)
-        fields = split(body)
-
-        results = {
-          :response_code => fields[RESPONSE_CODE].to_i,
-          :response_reason_code => fields[RESPONSE_REASON_CODE],
-          :response_reason_text => fields[RESPONSE_REASON_TEXT],
-          :avs_result_code => fields[AVS_RESULT_CODE],
-          :transaction_id => fields[TRANSACTION_ID],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE],
-          :authorization_code => fields[AUTHORIZATION_CODE],
-          :cardholder_authentication_code => fields[CARDHOLDER_AUTH_CODE]
-        }
-        results
-      end
-
-      def post_data(action, parameters = {})
-        post = {}
-
-        post[:version]        = API_VERSION
-        post[:login]          = @options[:login]
-        post[:tran_key]       = @options[:password]
-        post[:relay_response] = "FALSE"
-        post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
-        post[:solution_ID]    = application_id if application_id.present? && application_id != "ActiveMerchant"
-
-        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        request
-      end
-
-      def add_currency_code(post, money, options)
-        post[:currency_code] = options[:currency] || currency(money)
-      end
-
-      def add_invoice(post, options)
-        post[:invoice_num] = options[:order_id]
-        post[:description] = options[:description]
-      end
-
-      def add_creditcard(post, creditcard, options={})
-        post[:card_num]   = creditcard.number
-        post[:card_code]  = creditcard.verification_value if creditcard.verification_value?
-        post[:exp_date]   = expdate(creditcard)
-        post[:first_name] = creditcard.first_name
-        post[:last_name]  = creditcard.last_name
-
-        post[:recurring_billing] = "TRUE" if options[:recurring]
-      end
-
-      def add_payment_source(params, source, options={})
-        add_creditcard(params, source, options)
+      def add_payment_method(post, payment_method)
+        if(payment_method.is_a?(String))
+          post[:customer_vault_id] = payment_method
+        elsif(card_brand(payment_method) == 'check')
+          post[:payment] = 'check'
+          post[:checkname] = payment_method.name
+          post[:checkaba] = payment_method.routing_number
+          post[:checkaccount] = payment_method.account_number
+          post[:account_holder_type] = payment_method.account_holder_type
+          post[:account_type] = payment_method.account_type
+          post[:sec_code] = 'WEB'
+        else
+          post[:payment] = 'creditcard'
+          post[:firstname] = payment_method.first_name
+          post[:lastname] = payment_method.last_name
+          post[:ccnumber] = payment_method.number
+          post[:cvv] = payment_method.verification_value unless empty?(payment_method.verification_value)
+          post[:ccexp] = exp_date(payment_method)
+        end
       end
 
       def add_customer_data(post, options)
-        if options.has_key? :email
-          post[:email] = options[:email]
-          post[:email_customer] = false
+        post[:email] = options[:email]
+        post[:ipaddress] = options[:ip]
+        post[:customer_id] = options[:customer_id] || options[:customer]
+
+        if(billing_address = options[:billing_address] || options[:address])
+          post[:company] = billing_address[:company]
+          post[:address1] = billing_address[:address1]
+          post[:address2] = billing_address[:address2]
+          post[:city] = billing_address[:city]
+          post[:state] = billing_address[:state]
+          post[:country] = billing_address[:country]
+          post[:zip]    = billing_address[:zip]
+          post[:phone] = billing_address[:phone]
         end
 
-        if options.has_key? :customer
-          post[:cust_id] = options[:customer] if Float(options[:customer]) rescue nil
-        end
-
-        if options.has_key? :ip
-          post[:customer_ip] = options[:ip]
-        end
-
-        if options.has_key? :cardholder_authentication_value
-          post[:cardholder_authentication_value] = options[:cardholder_authentication_value]
-        end
-
-        if options.has_key? :authentication_indicator
-          post[:authentication_indicator] = options[:authentication_indicator]
-        end
-
-      end
-
-      def add_duplicate_window(post)
-        unless duplicate_window.nil?
-          post[:duplicate_window] = duplicate_window
+        if(shipping_address = options[:shipping_address])
+          post[:shipping_company] = shipping_address[:company]
+          post[:shipping_address1] = shipping_address[:address1]
+          post[:shipping_address2] = shipping_address[:address2]
+          post[:shipping_city] = shipping_address[:city]
+          post[:shipping_state] = shipping_address[:state]
+          post[:shipping_country] = shipping_address[:country]
+          post[:shipping_zip]    = shipping_address[:zip]
+          post[:shipping_phone] = shipping_address[:phone]
         end
       end
 
-      def add_address(post, options)
-        if address = options[:billing_address] || options[:address]
-          post[:address] = address[:address1].to_s
-          post[:company] = address[:company].to_s
-          post[:phone]   = address[:phone].to_s
-          post[:zip]     = address[:zip].to_s
-          post[:city]    = address[:city].to_s
-          post[:country] = address[:country].to_s
-          post[:state]   = address[:state].blank?  ? 'n/a' : address[:state]
-        end
-
-        if address = options[:shipping_address]
-          post[:ship_to_first_name] = address[:first_name].to_s
-          post[:ship_to_last_name] = address[:last_name].to_s
-          post[:ship_to_address] = address[:address1].to_s
-          post[:ship_to_company] = address[:company].to_s
-          post[:ship_to_phone]   = address[:phone].to_s
-          post[:ship_to_zip]     = address[:zip].to_s
-          post[:ship_to_city]    = address[:city].to_s
-          post[:ship_to_country] = address[:country].to_s
-          post[:ship_to_state]   = address[:state].blank?  ? 'n/a' : address[:state]
+      def add_merchant_defined_fields(post, options)
+        (1..20).each do |each|
+          key = "merchant_defined_field_#{each}".to_sym
+          post[key] = options[key] if options[key]
         end
       end
 
-      def message_from(results)
-        if results[:response_code] == DECLINED
-          return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
-          if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[ results[:avs_result_code] ]
-          end
+      def add_reference(post, authorization)
+        post[:transactionid] = authorization
+      end
+
+      def exp_date(payment_method)
+        "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
+      end
+
+      def commit(action, params)
+
+        params[action == "add_customer" ? :customer_vault : :type] = action
+        params[:username] = @options[:login]
+        params[:password] = @options[:password]
+
+        raw_response = ssl_post(url, post_data(action, params), headers)
+        response = parse(raw_response)
+        succeeded = success_from(response)
+
+        Response.new(
+          succeeded,
+          message_from(succeeded, response),
+          response,
+          authorization: response[:transactionid],
+          avs_result: AVSResult.new(code: response[:avsresponse]),
+          cvv_result: CVVResult.new(response[:cvvresponse]),
+          test: test?
+        )
+      end
+
+      def headers
+        { "Content-Type"  => "application/x-www-form-urlencoded;charset=UTF-8" }
+      end
+
+      def post_data(action, params)
+        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+      end
+
+      def url
+        test? ? test_url : live_url
+      end
+
+      def parse(body)
+        Hash[CGI::parse(body).map { |k,v| [k.intern, v.first] }]
+      end
+
+      def success_from(response)
+        response[:response] == "1"
+      end
+
+      def message_from(succeeded, response)
+        if succeeded
+          "Succeeded"
+        else
+          response[:responsetext]
         end
-
-        (results[:response_reason_text] ? results[:response_reason_text].chomp('.') : '')
       end
 
-      def split(response)
-        response[1..-2].split(/\$,\$/)
-      end
     end
   end
 end
-

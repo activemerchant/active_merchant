@@ -4,7 +4,7 @@ class GlobalTransportTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
     @gateway = GlobalTransportGateway.new(global_user_name: 'login', global_password: 'password', term_type: "ABC")
 
     @options = {

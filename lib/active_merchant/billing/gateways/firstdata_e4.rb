@@ -139,6 +139,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
       end
 
+      def supports_network_tokenization?
+        true
+      end
+
       private
 
       def build_request(action, body)
@@ -157,7 +161,7 @@ module ActiveMerchant #:nodoc:
       def build_sale_or_authorization_request(money, credit_card_or_store_authorization, options)
         xml = Builder::XmlMarkup.new
 
-        add_amount(xml, money)
+        add_amount(xml, money, options)
 
         if credit_card_or_store_authorization.is_a? String
           add_credit_card_token(xml, credit_card_or_store_authorization)
@@ -168,6 +172,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(xml, options)
         add_invoice(xml, options)
         add_card_authentication_data(xml, options)
+        add_tax_fields(xml, options)
+        add_level_3(xml, options)
 
         xml.target!
       end
@@ -176,7 +182,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         add_identification(xml, identification)
-        add_amount(xml, money)
+        add_amount(xml, money, options)
         add_customer_data(xml, options)
         add_card_authentication_data(xml, options)
 
@@ -208,8 +214,10 @@ module ActiveMerchant #:nodoc:
         xml.tag! "Transaction_Tag", transaction_tag
       end
 
-      def add_amount(xml, money)
-        xml.tag! "DollarAmount", amount(money)
+      def add_amount(xml, money, options)
+        currency_code = options[:currency] || default_currency
+        xml.tag! 'DollarAmount', localized_amount(money, currency_code)
+        xml.tag! 'Currency', currency_code
       end
 
       def add_credit_card(xml, credit_card, options)
@@ -297,6 +305,15 @@ module ActiveMerchant #:nodoc:
         xml.tag! "Reference_3",  options[:description] if options[:description]
       end
 
+      def add_tax_fields(xml, options)
+        xml.tag! "Tax1Amount",  options[:tax1_amount] if options[:tax1_amount]
+        xml.tag! "Tax1Number",  options[:tax1_number] if options[:tax1_number]
+      end
+
+      def add_level_3(xml, options)
+        xml.tag!("Level3") { |x| x << options[:level_3] } if options[:level_3]
+      end
+
       def expdate(credit_card)
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
       end
@@ -339,7 +356,7 @@ module ActiveMerchant #:nodoc:
           [
             response[:authorization_num],
             response[:transaction_tag],
-            (response[:dollar_amount].to_f * 100).to_i
+            (response[:dollar_amount].to_f * 100).round
           ].join(";")
         else
           ""
@@ -363,7 +380,7 @@ module ActiveMerchant #:nodoc:
 
       def money_from_authorization(auth)
         _, _, amount = auth.split(/;/, 3)
-        amount.to_i # return the # of cents, no need to divide
+        amount.to_i
       end
 
       def message_from(response)
@@ -410,4 +427,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

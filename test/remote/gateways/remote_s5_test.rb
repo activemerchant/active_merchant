@@ -146,6 +146,28 @@ class RemoteS5Test < Test::Unit::TestCase
     assert_match %r{authorization failure}, response.message
   end
 
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_match %r{Request successfully processed}, response.message
+  end
+
+  def test_purchase_using_stored_card
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success response
+    assert_match %r{Request successfully processed}, response.message
+  end
+
+  def test_failed_store
+    credit_card = credit_card('4111')
+    response = @gateway.store(credit_card, @options)
+    assert_failure response
+    assert_match %r{invalid creditcard}, response.message
+  end
+
   def test_invalid_login
     gateway = S5Gateway.new(
       sender: '',

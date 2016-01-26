@@ -3,7 +3,7 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
-      SCHEMA_VERSION = '8.18'
+      SCHEMA_VERSION = '9.4'
 
       self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
       self.live_url = 'https://payments.litle.com/vap/communicator/online'
@@ -168,6 +168,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(doc, payment_method)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
+        add_debt_repayment(doc, options)
       end
 
       def add_descriptor(doc, options)
@@ -177,6 +178,10 @@ module ActiveMerchant #:nodoc:
             doc.descriptor(options[:descriptor_name]) if options[:descriptor_name]
           end
         end
+      end
+
+      def add_debt_repayment(doc, options)
+        doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
       def add_payment_method(doc, payment_method)
@@ -194,6 +199,11 @@ module ActiveMerchant #:nodoc:
             doc.number(payment_method.number)
             doc.expDate(exp_date(payment_method))
             doc.cardValidationNum(payment_method.verification_value)
+          end
+          if payment_method.is_a?(NetworkTokenizationCreditCard)
+            doc.cardholderAuthentication do
+              doc.authenticationValue(payment_method.payment_cryptogram)
+            end
           end
         end
       end
@@ -233,6 +243,8 @@ module ActiveMerchant #:nodoc:
       def add_order_source(doc, payment_method, options)
         if options[:order_source]
           doc.orderSource(options[:order_source])
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :apple_pay
+          doc.orderSource('applepay')
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.orderSource('retail')
         else
