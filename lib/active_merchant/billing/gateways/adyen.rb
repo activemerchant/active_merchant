@@ -47,9 +47,8 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         requires!(options, :order_id)
 
-        post = {}
-        post[:modificationRequest] = modification_request(authorization, options)
-        post[:modificationRequest][:modificationAmount] = amount_hash(money, options[:currency])
+        post = modification_request(authorization, options)
+        post[:modificationAmount] = amount_hash(money, options[:currency])
 
         commit('capture', post)
       end
@@ -57,9 +56,8 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         requires!(options, :order_id)
 
-        post = {}
-        post[:modificationRequest] = modification_request(authorization, options)
-        post[:modificationRequest][:modificationAmount] = amount_hash(money, options[:currency])
+        post = modification_request(authorization, options)
+        post[:modificationAmount] = amount_hash(money, options[:currency])
 
         commit('refund', post)
       end
@@ -67,8 +65,7 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         requires!(options, :order_id)
 
-        post = {}
-        post[:modificationRequest] = modification_request(identification, options)
+        post = modification_request(identification, options)
 
         commit('cancel', post)
       end
