@@ -33,6 +33,7 @@
 * Forte: Pass order_id [anellis]
 * Merchant ESolutioins: Truncate order_id [anellis]
 * Transfirst Transaction Express: New gateway support [sdball]
+* Stripe: Add `stripe_account` header option [anellis]
 
 
 == Version 1.56.0 (December 1, 2015)

@@ -432,6 +432,7 @@ module ActiveMerchant #:nodoc:
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
         headers.merge!("Idempotency-Key" => idempotency_key) if idempotency_key
+        headers.merge!("Stripe-Account" => options[:stripe_account]) if options[:stripe_account]
         headers
       end
 
