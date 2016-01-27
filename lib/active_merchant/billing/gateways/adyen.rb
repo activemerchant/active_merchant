@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post)
         request = post_data(flatten_hash(post.merge(:action => action)))
-        raw_response = ssl_post(build_url(action), request, headers)
+        raw_response = ssl_post(url, request, headers)
         response = parse(raw_response)
 
         Response.new(
@@ -154,8 +154,8 @@ module ActiveMerchant #:nodoc:
         successful_responses.include?(response['response'])
       end
 
-      def build_url(action)
-        "#{test? ? self.test_url : self.live_url}/#{action}"
+      def url
+        test? ? self.test_url : self.live_url
       end
 
       def address_hash(address)
