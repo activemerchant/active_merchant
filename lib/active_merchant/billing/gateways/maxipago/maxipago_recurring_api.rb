@@ -20,8 +20,10 @@ module ActiveMerchant #:nodoc:
       # * <tt>:installments</tt> -- Limit to certain # of cycles (REQUIRED)
       # * <tt>:start_date</tt> -- When does the charging starts (REQUIRED)
       def recurring(amount, credit_card, options = {})
-        options[:credit_card] = credit_card
         options[:amount] = amount
+
+        extract_params(options, options[:subscription])
+
         requires!(options, :start_date, :period, :frequency, :amount, :installments)
 
         post = {}
@@ -40,6 +42,14 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def extract_params(options, subscription)
+        return unless subscription
+        options[:start_date] = Time.now + subscription[:trials].to_i
+        options[:period] = subscription[:period]
+        options[:frequency] = subscription[:frequency] || 1
+        options[:installments] = subscription[:cicles] || 12
+      end
 
       def add_recurring(post, options)
         post[:recurring] = {}

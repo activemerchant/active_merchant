@@ -104,6 +104,7 @@ module ActiveMerchant #:nodoc:
           test: test?,
           authorization: response[:order_id],
           payment_action: status_action_from(response),
+          subscription_action: request.include?('recurring') ? subscription_status_action_from(response) : nil,
           external_url: response[:boleto_url] || response[:online_debit_url]
         )
       end
@@ -122,6 +123,11 @@ module ActiveMerchant #:nodoc:
       def status_action_from(response)
         return :wait_boleto if response[:response_code] == '0' && response[:boleto_url]
         return :initiate    if response[:response_code] == '0' && response[:online_debit_url]
+        return :confirm     if response[:response_code] == '0'
+        return :fail
+      end
+
+      def subscription_status_action_from(response)
         return :confirm     if response[:response_code] == '0'
         return :fail
       end

@@ -1,9 +1,20 @@
+# third party gem
+require 'moip-assinaturas'
+
 require File.dirname(__FILE__) + '/moip/moip_core'
+require File.dirname(__FILE__) + '/moip/moip_recurring_api'
+
+Moip::Assinaturas.config do |config|
+  config.sandbox    = false
+  config.token      = "FAKETOKEN"
+  config.key        = "FAKEKEY"
+end
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MoipGateway < Gateway
       include MoipCore
+      include MoipRecurringApi
 
       self.test_url = 'https://desenvolvedor.moip.com.br/sandbox'
       self.live_url = 'https://www.moip.com.br'
