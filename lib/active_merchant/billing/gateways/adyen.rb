@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AdyenGateway < Gateway
-      self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet/soap/Payment'
-      self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet/soap/Payment'
+      self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet/Payment/v12'
+      self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet/Payment/v12'
 
       self.supported_countries = ['AR', 'AT', 'BE', 'BR', 'CA', 'CH', 'CL', 'CN', 'CO', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'HK', 'ID', 'IE', 'IL', 'IN', 'IT', 'JP', 'KR', 'LU', 'MX', 'MY', 'NL', 'NO', 'PA', 'PE', 'PH', 'PL', 'PT', 'RU', 'SE', 'SG', 'TH', 'TR', 'TW', 'US', 'VN', 'ZA']
       self.default_currency = 'EUR'
@@ -120,6 +120,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
+          'Content-Type' => 'application/x-www-form-urlencoded; charset=utf-8',
           'Authorization' => 'Basic ' + Base64.encode64("ws@Company.#{@options[:company]}:#{@options[:password]}").strip
         }
       end
