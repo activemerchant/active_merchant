@@ -242,6 +242,12 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal '1111222233334444', store_response.params['litleToken']
   end
 
+  def test_purchase_with_token_and_billing_address_successful
+    assert response = @gateway.purchase(199, '1111222233334444', @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_store_unsuccessful
     credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4457119999999999'))
     assert store_response = @gateway.store(credit_card, :order_id => '51')
