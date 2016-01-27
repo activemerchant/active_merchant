@@ -29,17 +29,16 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
 
-        post = {}
-        post[:paymentRequest] = payment_request(money, options)
-        post[:paymentRequest][:amount] = amount_hash(money, options[:currency])
-        post[:paymentRequest][:card] = credit_card_hash(creditcard)
+        post = payment_request(money, options)
+        post[:amount] = amount_hash(money, options[:currency])
+        post[:card] = credit_card_hash(creditcard)
 
         if address = (options[:billing_address] || options[:address])
-          post[:paymentRequest][:billingAddress] = address_hash(address)
+          post[:billingAddress] = address_hash(address)
         end
 
         if options[:shipping_address]
-          post[:paymentRequest][:deliveryAddress] = address_hash(options[:shipping_address])
+          post[:deliveryAddress] = address_hash(options[:shipping_address])
         end
 
         commit('authorise', post)
