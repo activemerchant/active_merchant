@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
           post[:paymentRequest][:deliveryAddress] = address_hash(options[:shipping_address])
         end
 
-        commit('authorise', post)
+        commit('Payment.authorise', post)
       end
 
       def capture(money, authorization, options = {})
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         post[:modificationRequest] = modification_request(authorization, options)
         post[:modificationRequest][:modificationAmount] = amount_hash(money, options[:currency])
 
-        commit('capture', post)
+        commit('Payment.capture', post)
       end
 
       def refund(money, authorization, options = {})
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         post[:modificationRequest] = modification_request(authorization, options)
         post[:modificationRequest][:modificationAmount] = amount_hash(money, options[:currency])
 
-        commit('refund', post)
+        commit('Payment.refund', post)
       end
 
       def void(identification, options = {})
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:modificationRequest] = modification_request(identification, options)
 
-        commit('cancel', post)
+        commit('Payment.cancel', post)
       end
 
       def verify(creditcard, options = {})
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post)
         request = post_data(flatten_hash(post.merge(:action => action)))
-        raw_response = ssl_post(build_url(action), request, headers)
+        raw_response = ssl_post(url, request, headers)
         response = parse(raw_response)
 
         Response.new(
@@ -155,8 +155,8 @@ module ActiveMerchant #:nodoc:
         successful_responses.include?(response['response'])
       end
 
-      def build_url(action)
-        "#{test? ? self.test_url : self.live_url}/#{action}"
+      def url
+        test? ? self.test_url : self.live_url
       end
 
       def address_hash(address)
