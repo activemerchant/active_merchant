@@ -367,4 +367,10 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "Eggcellent Description", response.params["statement_descriptor"]
   end
 
+  def test_stripe_account_header
+    account = fixtures(:stripe_destination)[:stripe_user_id]
+    assert response = @gateway.purchase(@amount, @credit_card, stripe_account: account)
+    assert_success response
+  end
+
 end
