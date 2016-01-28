@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
       def modification_request(reference, options)
         hash = {}
         hash[:merchantAccount]    = @options[:merchant]
-        hash[:originalReference]  = options[:reference] if options[:reference]
+        hash[:originalReference]  = reference if reference
         hash.keep_if { |_, v| v }
       end
 
