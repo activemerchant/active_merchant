@@ -170,6 +170,17 @@ class LitleTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_token_refund
+    refund = stub_comms do
+      @gateway.refund(@amount, nil, litle_token: '100000000000000007' )
+    end.check_request do |endpoint, data, headers|
+      assert_match(/100000000000000007/, data)
+      assert_match(/ecommerce/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
   def test_failed_refund
     response = stub_comms do
       @gateway.refund(@amount, "SomeAuthorization")

@@ -75,8 +75,17 @@ module ActiveMerchant #:nodoc:
           add_authentication(doc)
           add_descriptor(doc, options)
           doc.credit(transaction_attributes(options)) do
-            doc.litleTxnId(transaction_id)
-            doc.amount(money) if money
+            if authorization
+              doc.litleTxnId(transaction_id)
+              doc.amount(money) if money
+            elsif options[:litle_token]
+              doc.orderId(truncate(options[:order_id], 24))
+              doc.amount(money) if money
+              doc.orderSource(options.fetch(:order_source, 'ecommerce'))
+              doc.token do
+                doc.litleToken(options[:litle_token])
+              end
+            end
           end
         end
 
