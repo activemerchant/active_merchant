@@ -102,6 +102,10 @@ class AdyenTest < Test::Unit::TestCase
     @gateway.authorize(@amount, @credit_card, @options)
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_authorize_response
@@ -131,4 +135,95 @@ class AdyenTest < Test::Unit::TestCase
   def successful_void_response
     'modificationResult.pspReference=7914002636728161&modificationResult.response=%5Bcancel-received%5D'
   end
+
+  def transcript
+    %(
+    opening connection to pal-test.barclaycardsmartpay.com:443...
+    opened
+    starting SSL for pal-test.barclaycardsmartpay.com:443...
+    SSL established
+    <- "POST /pal/servlet/Payment/v12/authorise HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded; charset=utf-8\r\nAuthorization: Basic d3NAQ29tcGFueS5QbHVzNTAwQ1k6UVpiWWd3Z2pDejNiZEdiNEhqYXk=\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.barclaycardsmartpay.com\r\nContent-Length: 466\r\n\r\n"
+    <- "merchantAccount=Plus500CYEcom&reference=1&shopperEmail=long%40bob.com&shopperReference=Longbob+Longsen&amount.currency=EUR&amount.value=100&card.cvc=737&card.expiryMonth=06&card.expiryYear=2016&card.holderName=Longbob+Longsen&card.number=4111111111111111&billingAddress.city=Ottawa&billingAddress.street=My+Street+Apt&billingAddress.houseNumberOrName=456+1&billingAddress.postalCode=K1C2N6&billingAddress.stateOrProvince=ON&billingAddress.country=CA&action=authorise"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Date: Thu, 28 Jan 2016 21:32:16 GMT\r\n"
+    -> "Server: Apache\r\n"
+    -> "Set-Cookie: JSESSIONID=69398C80F6B1CBB04AA98B1D1895898B.test4e; Path=/pal/; Secure; HttpOnly\r\n"
+    -> "pspReference: 8614540167365201\r\n"
+    -> "Content-Length: 66\r\n"
+    -> "Connection: close\r\n"
+    -> "Content-Type: application/x-www-form-urlencoded;charset=utf-8\r\n"
+    -> "\r\n"
+    reading 66 bytes...
+    -> ""
+    -> "pspReference=8614540167365201&resultCode=Authorised&authCode=33683"
+    read 66 bytes
+    Conn close
+    opening connection to pal-test.barclaycardsmartpay.com:443...
+    opened
+    starting SSL for pal-test.barclaycardsmartpay.com:443...
+    SSL established
+    <- "POST /pal/servlet/Payment/v12/capture HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded; charset=utf-8\r\nAuthorization: Basic d3NAQ29tcGFueS5QbHVzNTAwQ1k6UVpiWWd3Z2pDejNiZEdiNEhqYXk=\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.barclaycardsmartpay.com\r\nContent-Length: 140\r\n\r\n"
+    <- "merchantAccount=Plus500CYEcom&originalReference=8614540167365201&modificationAmount.currency=EUR&modificationAmount.value=100&action=capture"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Date: Thu, 28 Jan 2016 21:32:18 GMT\r\n"
+    -> "Server: Apache\r\n"
+    -> "Set-Cookie: JSESSIONID=951837A566ED97C5869AA7C9DF91B608.test104e; Path=/pal/; Secure; HttpOnly\r\n"
+    -> "pspReference: 7914540167387121\r\n"
+    -> "Content-Length: 61\r\n"
+    -> "Connection: close\r\n"
+    -> "Content-Type: application/x-www-form-urlencoded;charset=utf-8\r\n"
+    -> "\r\n"
+    reading 61 bytes...
+    -> ""
+    -> "pspReference=7914540167387121&response=%5Bcapture-received%5D"
+    read 61 bytes
+    Conn close
+    )
+  end
+
+  def scrubbed_transcript
+    %(
+    opening connection to pal-test.barclaycardsmartpay.com:443...
+    opened
+    starting SSL for pal-test.barclaycardsmartpay.com:443...
+    SSL established
+    <- "POST /pal/servlet/Payment/v12/authorise HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded; charset=utf-8\r\nAuthorization: Basic [FILTERED]Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.barclaycardsmartpay.com\r\nContent-Length: 466\r\n\r\n"
+    <- "merchantAccount=Plus500CYEcom&reference=1&shopperEmail=long%40bob.com&shopperReference=Longbob+Longsen&amount.currency=EUR&amount.value=100&card.cvc=[FILTERED]&card.expiryMonth=06&card.expiryYear=2016&card.holderName=Longbob+Longsen&card.number=[FILTERED]&billingAddress.city=Ottawa&billingAddress.street=My+Street+Apt&billingAddress.houseNumberOrName=456+1&billingAddress.postalCode=K1C2N6&billingAddress.stateOrProvince=ON&billingAddress.country=CA&action=authorise"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Date: Thu, 28 Jan 2016 21:32:16 GMT\r\n"
+    -> "Server: Apache\r\n"
+    -> "Set-Cookie: JSESSIONID=69398C80F6B1CBB04AA98B1D1895898B.test4e; Path=/pal/; Secure; HttpOnly\r\n"
+    -> "pspReference: 8614540167365201\r\n"
+    -> "Content-Length: 66\r\n"
+    -> "Connection: close\r\n"
+    -> "Content-Type: application/x-www-form-urlencoded;charset=utf-8\r\n"
+    -> "\r\n"
+    reading 66 bytes...
+    -> ""
+    -> "pspReference=8614540167365201&resultCode=Authorised&authCode=33683"
+    read 66 bytes
+    Conn close
+    opening connection to pal-test.barclaycardsmartpay.com:443...
+    opened
+    starting SSL for pal-test.barclaycardsmartpay.com:443...
+    SSL established
+    <- "POST /pal/servlet/Payment/v12/capture HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded; charset=utf-8\r\nAuthorization: Basic [FILTERED]Accept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.barclaycardsmartpay.com\r\nContent-Length: 140\r\n\r\n"
+    <- "merchantAccount=Plus500CYEcom&originalReference=8614540167365201&modificationAmount.currency=EUR&modificationAmount.value=100&action=capture"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Date: Thu, 28 Jan 2016 21:32:18 GMT\r\n"
+    -> "Server: Apache\r\n"
+    -> "Set-Cookie: JSESSIONID=951837A566ED97C5869AA7C9DF91B608.test104e; Path=/pal/; Secure; HttpOnly\r\n"
+    -> "pspReference: 7914540167387121\r\n"
+    -> "Content-Length: 61\r\n"
+    -> "Connection: close\r\n"
+    -> "Content-Type: application/x-www-form-urlencoded;charset=utf-8\r\n"
+    -> "\r\n"
+    reading 61 bytes...
+    -> ""
+    -> "pspReference=7914540167387121&response=%5Bcapture-received%5D"
+    read 61 bytes
+    Conn close
+    )
+  end
+
 end

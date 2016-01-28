@@ -74,6 +74,17 @@ module ActiveMerchant #:nodoc:
         authorize(0, creditcard, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r(((?:\r\n)?Authorization: Basic )[^\r\n]+(\r\n)?), '\1[FILTERED]').
+          gsub(%r((card.number=)\d+), '\1[FILTERED]').
+          gsub(%r((card.cvc=)\d+), '\1[FILTERED]')
+      end
+
       private
 
       def commit(action, post)
