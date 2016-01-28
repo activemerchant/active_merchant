@@ -93,6 +93,8 @@ module ActiveMerchant #:nodoc:
         case e.response.code
         when '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)
+        when '422'
+          return Response.new(false, 'Unprocessable Entity', {}, :test => test?)
         when '500'
           if e.response.body.split(' ')[0] == 'validation'
             return Response.new(false, e.response.body.split(' ', 3)[2], {}, :test => test?)
