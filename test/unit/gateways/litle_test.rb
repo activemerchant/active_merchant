@@ -27,7 +27,34 @@ class LitleTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card)
+      @gateway.purchase(@amount, "token")
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal "100000000000000006;sale", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_token
+    response = stub_comms do
+      @gateway.purchase(@amount, "token0009")
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<token>\s*<litleToken>token0009<), data)
+      assert_not_match(%r(<expDate>), data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal "100000000000000006;sale", response.authorization
+    assert response.test?
+  end
+
+  def test_successfull_purchase_with_token_and_expdate
+    response = stub_comms do
+      @gateway.purchase(@amount, "token0009", { :exp_month => "01", exp_year: "2017"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<expDate>0117<), data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -165,6 +192,17 @@ class LitleTest < Test::Unit::TestCase
       @gateway.refund(@amount, response.authorization)
     end.check_request do |endpoint, data, headers|
       assert_match(/100000000000000006/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
+  def test_successful_token_refund
+    refund = stub_comms do
+      @gateway.refund(@amount, nil, litle_token: '100000000000000007' )
+    end.check_request do |endpoint, data, headers|
+      assert_match(/100000000000000007/, data)
+      assert_match(/ecommerce/, data)
     end.respond_with(successful_refund_response)
 
     assert_success refund
