@@ -158,50 +158,50 @@ module ActiveMerchant #:nodoc:
       end
 
       def address_hash(address)
-        full_address = "#{address[:address1]} #{address[:address2]}"
+        full_address = "#{address[:address1]} #{address[:address2]}" if address
 
-        {
-          :city              => address[:city],
-          :street            => full_address.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' '),
-          :houseNumberOrName => full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' '),
-          :postalCode        => address[:zip],
-          :stateOrProvince   => address[:state],
-          :country           => address[:country]
-        }
+        hash = {}
+        hash[:city]              = address[:city] if address[:city]
+        hash[:street]            = full_address.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
+        hash[:houseNumberOrName] = full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        hash[:postalCode]        = address[:zip] if address[:zip]
+        hash[:stateOrProvince]   = address[:state] if address[:state]
+        hash[:country]           = address[:country] if address[:country]
+        hash
       end
 
       def amount_hash(money, currency)
-        {
-          :currency => (currency || currency(money)),
-          :value    => amount(money)
-        }
+        hash = {}
+        hash[:currency] = currency || currency(money)
+        hash[:value]    = amount(money) if money
+        hash
       end
 
       def credit_card_hash(creditcard)
-        {
-          :cvc         => creditcard.verification_value,
-          :expiryMonth => format(creditcard.month, :two_digits),
-          :expiryYear  => format(creditcard.year, :four_digits),
-          :holderName  => creditcard.name,
-          :number      => creditcard.number
-        }
+        hash = {}
+        hash[:cvc]         = creditcard.verification_value if creditcard.verification_value
+        hash[:expiryMonth] = format(creditcard.month, :two_digits) if creditcard.month
+        hash[:expiryYear]  = format(creditcard.year, :four_digits) if creditcard.year
+        hash[:holderName]  = creditcard.name if creditcard.name
+        hash[:number]      = creditcard.number if creditcard.number
+        hash
       end
 
       def modification_request(reference, options)
-        {
-          :merchantAccount    => @options[:merchant],
-          :originalReference  => reference
-        }.keep_if { |_, v| v }
+        hash = {}
+        hash[:merchantAccount]    = @options[:merchant]
+        hash[:originalReference]  = options[:reference] if options[:reference]
+        hash.keep_if { |_, v| v }
       end
 
       def payment_request(money, options)
-        {
-          :merchantAccount  => @options[:merchant],
-          :reference        => options[:order_id],
-          :shopperEmail     => options[:email],
-          :shopperIP        => options[:ip],
-          :shopperReference => options[:customer]
-        }.keep_if { |_, v| v }
+        hash = {}
+        hash[:merchantAccount]  = @options[:merchant] if @options[:merchant]
+        hash[:reference]        = options[:order_id] if options[:order_id]
+        hash[:shopperEmail]     = options[:email] if options[:email]
+        hash[:shopperIP]        = options[:ip] if options[:ip]
+        hash[:shopperReference] = options[:customer] if options[:customer]
+        hash.keep_if { |_, v| v }
       end
     end
   end
