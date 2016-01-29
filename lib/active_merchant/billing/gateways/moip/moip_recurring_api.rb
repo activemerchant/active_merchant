@@ -18,6 +18,15 @@ module ActiveMerchant #:nodoc:
         5 => :process
       }
 
+      SUBSCRIPTION_STATUS_MAP = {
+        'active'    => :confirm,
+        'suspended' => :cancel,
+        'expired'   => :process,
+        'overdue'   => :process,
+        'canceled'  => :cancel,
+        'trial'     => :no_wait_process
+      }
+
       INVOICE_STATUS_MAP = {
         1 => :open,
         2 => :wait_confirmation,
@@ -83,6 +92,14 @@ module ActiveMerchant #:nodoc:
       def payment(payment_id)
         response = Moip::Assinaturas::Payment.details(payment_id, moip_auth: moip_auth)
         Response.new(response[:success], nil, payment_to_response(response), test: test?)
+      end
+
+      def subscription_details(subscription_code)
+        response = Moip::Assinaturas::Subscription.details(subscription_code, moip_auth: moip_auth)
+        Response.new(response[:success], nil, response,
+                     test: test?,
+                     subscription_action: SUBSCRIPTION_STATUS_MAP[response[:subscription][:status].downcase],
+                     next_charge_at: next_invoice_date(response[:subscription][:next_invoice_date]))
       end
 
       private
@@ -241,6 +258,10 @@ module ActiveMerchant #:nodoc:
           'action' => PAYMENT_STATUS_MAP[payment[:status][:code]],
           'payment_method' => PAYMENT_METHOD_MAP[payment[:payment_method][:code]]
         }
+      end
+
+      def next_invoice_date(invoice_date)
+        DateTime.new(invoice_date[:year], invoice_date[:month], invoice_date[:day], 0, 0, 0, '-03:00')
       end
     end
   end
