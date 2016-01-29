@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AdyenGateway < Gateway
-      self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet/Payment/v12'
-      self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet/Payment/v12'
+      self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
+      self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
       self.supported_countries = ['AR', 'AT', 'BE', 'BR', 'CA', 'CH', 'CL', 'CN', 'CO', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'HK', 'ID', 'IE', 'IL', 'IN', 'IT', 'JP', 'KR', 'LU', 'MX', 'MY', 'NL', 'NO', 'PA', 'PE', 'PH', 'PL', 'PT', 'RU', 'SE', 'SG', 'TH', 'TR', 'TW', 'US', 'VN', 'ZA']
       self.default_currency = 'EUR'
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(action, post)
-        request = post_data(flatten_hash(post.merge(:action => action)))
+        request = post_data(flatten_hash(post))
         raw_response = ssl_post(build_url(action), request, headers)
         response = parse(raw_response)
 
@@ -154,18 +154,24 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['resultCode'] if response.has_key?('resultCode') # Payment request
         return response['response'] if response['response'] # Modification request
+        return response['result'] if response['result'] # Store/Recurring request
         "Failure" # Negative fallback in case of error
       end
 
       def success_from(response)
         return true if response.has_key?('authCode')
-
+        return true if response[:result] = "Success"
         successful_responses = %w([capture-received] [cancel-received] [refund-received])
         successful_responses.include?(response['response'])
       end
 
       def build_url(action)
-        "#{test? ? self.test_url : self.live_url}/#{action}"
+        case action
+        when 'store'
+          "#{test? ? self.test_url : self.live_url}/Recurring/v12/storeToken"
+        else
+          "#{test? ? self.test_url : self.live_url}/Payment/v12/#{action}"
+        end
       end
 
       def address_hash(address)
@@ -207,10 +213,18 @@ module ActiveMerchant #:nodoc:
 
       def payment_request(money, options)
         hash = {}
-        hash[:merchantAccount]  = @options[:merchant] if @options[:merchant]
+        hash[:merchantAccount]  = @options[:merchant]
         hash[:reference]        = options[:order_id] if options[:order_id]
         hash[:shopperEmail]     = options[:email] if options[:email]
         hash[:shopperIP]        = options[:ip] if options[:ip]
+        hash[:shopperReference] = options[:customer] if options[:customer]
+        hash.keep_if { |_, v| v }
+      end
+
+      def store_request(options)
+        hash = {}
+        hash[:merchantAccount]  = @options[:merchant]
+        hash[:shopperEmail]     = options[:email] if options[:email]
         hash[:shopperReference] = options[:customer] if options[:customer]
         hash.keep_if { |_, v| v }
       end
