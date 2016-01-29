@@ -74,6 +74,16 @@ module ActiveMerchant #:nodoc:
         authorize(0, creditcard, options)
       end
 
+      def store(creditcard, options = {})
+        # ??? require :email and :customer, :order_id?
+
+        post = store_request(options)
+        post[:card] = credit_card_hash(creditcard)
+        post[:recurring] = {:contract => 'RECURRING'}
+
+        commit('store', post)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -97,7 +107,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          authorization: response['pspReference']
+          authorization: response['recurringDetailReference'] || response['pspReference']
         )
 
       rescue ResponseError => e
@@ -154,13 +164,13 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['resultCode'] if response.has_key?('resultCode') # Payment request
         return response['response'] if response['response'] # Modification request
-        return response['result'] if response['result'] # Store/Recurring request
-        "Failure" # Negative fallback in case of error
+        return response['result'] if response.has_key?('result') # Store/Recurring request
+        'Failure' # Negative fallback in case of error
       end
 
       def success_from(response)
         return true if response.has_key?('authCode')
-        return true if response[:result] = "Success"
+        return true if response['result'] == 'Success'
         successful_responses = %w([capture-received] [cancel-received] [refund-received])
         successful_responses.include?(response['response'])
       end

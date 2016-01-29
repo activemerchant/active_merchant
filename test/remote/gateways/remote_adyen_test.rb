@@ -11,6 +11,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
+      email: 'long@bob.com',
+      customer: 'Longbob Longsen',
       description: 'Store Purchase'
     }
   end
@@ -111,8 +113,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal "Success", response.message
+  end
+
+  def test_failed_store
+    response = @gateway.store(credit_card('', :month => '', :year => '', :verification_value => ''), @options)
+    assert_failure response
+    assert_equal "Unprocessable Entity", response.message
+  end
+
   def test_dump_transcript
-    # skip("Transcript scrubbing for this gateway has been tested.")
+    skip("Transcript scrubbing for this gateway has been tested.")
 
     # This test will run a purchase transaction on your gateway
     # and dump a transcript of the HTTP conversation so that

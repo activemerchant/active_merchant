@@ -102,6 +102,21 @@ class AdyenTest < Test::Unit::TestCase
     @gateway.authorize(@amount, @credit_card, @options)
   end
 
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_store
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_store_response)))
+
+    response = @gateway.store(@credit_card, @options)
+    assert_failure response
+    assert response.test?
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
@@ -109,15 +124,15 @@ class AdyenTest < Test::Unit::TestCase
   private
 
   def successful_authorize_response
-    'paymentResult.pspReference=7914002629995504&paymentResult.authCode=56469&paymentResult.resultCode=Authorised'
+    'pspReference=7914002629995504&authCode=56469&resultCode=Authorised'
   end
 
   def failed_authorize_response
-    'paymentResult.pspReference=7914002630895750&paymentResult.refusalReason=Refused&paymentResult.resultCode=Refused'
+    'pspReference=7914002630895750&refusalReason=Refused&resultCode=Refused'
   end
 
   def successful_capture_response
-    'modificationResult.pspReference=8814002632606717&modificationResult.response=%5Bcapture-received%5D'
+    'pspReference=8814002632606717&response=%5Bcapture-received%5D'
   end
 
   def failed_capture_response
@@ -125,7 +140,7 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
-    'modificationResult.pspReference=8814002634988063&modificationResult.response=%5Brefund-received%5D'
+    'pspReference=8814002634988063&response=%5Brefund-received%5D'
   end
 
   def failed_refund_response
@@ -133,7 +148,15 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def successful_void_response
-    'modificationResult.pspReference=7914002636728161&modificationResult.response=%5Bcancel-received%5D'
+    'pspReference=7914002636728161&response=%5Bcancel-received%5D'
+  end
+
+  def successful_store_response
+    'alias=H167852639363479&aliasType=Default&pspReference=8614540938336754&rechargeReference=8314540938334240&recurringDetailReference=8414540862673349&result=Success'
+  end
+
+  def failed_store_response
+    'errorType=validation&errorCode=129&message=Expiry+Date+Invalid&status=422'
   end
 
   def transcript
