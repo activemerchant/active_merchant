@@ -38,6 +38,11 @@ class RemoteConektaTest < Test::Unit::TestCase
         zip: "5555",
         phone: "12345678",
       },
+      line_items: [{
+        name: "an item",
+        description: "an item",
+        unit_price: 1
+      }],
       carrier: "Estafeta"
     }
 
@@ -50,6 +55,11 @@ class RemoteConektaTest < Test::Unit::TestCase
           \"email\":\"mario@gmail.com\",
           \"phone\":\"1234567890\",
           \"ip_address\":\"127.0.0.1\",
+          \"line_items\": [{
+            \"name\": \"an item\",
+            \"description\": \"an item\",
+            \"unit_price\": 1
+          }],
           \"billing_address\": {
             \"street1\": \"Rio Missisipi #123\",
             \"street2\": \"Paris\",
@@ -154,7 +164,7 @@ class RemoteConektaTest < Test::Unit::TestCase
       },
       line_items: [
         {
-          rname: "Box of Cohiba S1s",
+          name: "Box of Cohiba S1s",
           description: "Imported From Mex.",
           unit_price: 20000,
           quantity: 1,
