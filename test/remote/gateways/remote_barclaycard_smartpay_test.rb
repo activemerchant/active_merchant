@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class RemoteAdyenTest < Test::Unit::TestCase
+class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   def setup
-    @gateway = AdyenGateway.new(fixtures(:adyen))
+    @gateway = BarclaycardSmartpayGateway.new(fixtures(:barclaycard_smartpay))
 
     @amount = 100
     @credit_card = credit_card('4111111111111111', :month => 6, :year => 2016, :verification_value => 737)
@@ -104,7 +104,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = AdyenGateway.new(
+    gateway = BarclaycardSmartpayGateway.new(
     company: '',
     merchant: '',
     password: ''
@@ -123,16 +123,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.store(credit_card('', :month => '', :year => '', :verification_value => ''), @options)
     assert_failure response
     assert_equal "Unprocessable Entity", response.message
-  end
-
-  def test_dump_transcript
-    skip("Transcript scrubbing for this gateway has been tested.")
-
-    # This test will run a purchase transaction on your gateway
-    # and dump a transcript of the HTTP conversation so that
-    # you can use that transcript as a reference while
-    # implementing your scrubbing logic
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 
   def test_transcript_scrubbing

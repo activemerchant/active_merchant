@@ -1,6 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class AdyenGateway < Gateway
+    class BarclaycardSmartpayGateway < Gateway
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
@@ -9,8 +9,8 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
 
-      self.homepage_url = 'https://www.adyen.com/'
-      self.display_name = 'Adyen'
+      self.homepage_url = 'https://www.barclaycardsmartpay.com/'
+      self.display_name = 'Barclaycard Smartpay'
 
       def initialize(options = {})
         requires!(options, :company, :merchant, :password)

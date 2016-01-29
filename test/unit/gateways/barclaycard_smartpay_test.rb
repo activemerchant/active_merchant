@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class AdyenTest < Test::Unit::TestCase
+class BarclaycardSmartpayTest < Test::Unit::TestCase
   def setup
-    @gateway = AdyenGateway.new(
+    @gateway = BarclaycardSmartpayGateway.new(
       company: 'company',
       merchant: 'merchant',
       password: 'password'
