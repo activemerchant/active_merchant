@@ -11,6 +11,9 @@
 # Paste any required PEM certificates after the pem key.
 #
 
+agms:
+  gateway_username: 'osdgithub'
+  gateway_password: 'Ks1m32aF@'
 
 allied_wallet:
   site_id: site_id
