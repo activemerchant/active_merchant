@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.57.0 (February 1, 2016)
 * AuthorizeNetCim: Add unmaskExpirationDate option [RamilGilmanov]
 * Element: Add gateway support [davidsantoso]
 * Cardstream: 3D-secure capture fix [duff]
