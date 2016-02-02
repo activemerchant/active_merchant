@@ -17,6 +17,8 @@ from an ever-growing set of contributors.
 See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
 applications.
 
+If you'd like to contribute to Active Merchant, please start with our [contribution guide](CONTRIBUTING.md).
+
 ## Installation
 
 ### From Git
