@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
         'TW' => 'zh_TW'
       }
 
-      CURRENCIES_WITHOUT_FRACTIONS = %w(BRL HUF JPY MYR TWD TRY)
+      CURRENCIES_WITHOUT_FRACTIONS = %w(HUF JPY TWD)
 
       self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr'
       self.supported_countries = ['US']
