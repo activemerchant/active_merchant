@@ -38,7 +38,6 @@
 * Cardstream: Add AVS code and message [anellis]
 * Barclaycard Smartpay: New gateway support [curiousepic]
 * Transfirst: Fix missing address and remove CC only fields for ACH [davidsantoso]
-* Cashnet: Encode redirect_to response before parsing [hoenth]
 
 
 == Version 1.56.0 (December 1, 2015)
