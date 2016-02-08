@@ -10,6 +10,13 @@ class RemoteStripeTest < Test::Unit::TestCase
     @new_credit_card = credit_card('5105105105105100')
     @debit_card = credit_card('4000056655665556')
 
+    @check = check({
+      bank_name: "STRIPE TEST BANK",
+      account_number: "000123456789",
+      routing_number: "110000000",
+    })
+    @verified_bank_account = fixtures(:stripe_verified_bank_account)
+
     @options = {
       :currency => "USD",
       :description => 'ActiveMerchant Test Purchase',
@@ -67,6 +74,24 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_match /ch_[a-zA-Z\d]+/, response.authorization
   end
 
+  def test_successful_echeck_purchase_with_verified_account
+    customer_id = @verified_bank_account[:customer_id]
+    bank_account_id = @verified_bank_account[:bank_account_id]
+
+    payment = [customer_id, bank_account_id].join('|')
+
+    response = @gateway.purchase(@amount, payment, @options)
+    assert_success response
+    assert response.test?
+    assert_equal "Transaction approved", response.message
+  end
+
+  def test_unsuccessful_direct_bank_account_purchase
+    response = @gateway.purchase(@amount, @check, @options)
+    assert_failure response
+    assert_equal "Direct bank account transactions are not supported. Bank accounts must be stored and verified before use.", response.message
+  end
+
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
@@ -111,6 +136,21 @@ class RemoteStripeTest < Test::Unit::TestCase
     refund_id = refund.params["id"]
     assert_equal refund.authorization, refund_id
     assert_success refund
+  end
+
+  def test_successful_refund_on_verified_bank_account
+    customer_id = @verified_bank_account[:customer_id]
+    bank_account_id = @verified_bank_account[:bank_account_id]
+    payment = [customer_id, bank_account_id].join('|')
+
+    purchase = @gateway.purchase(@amount, payment, @options)
+    assert_success purchase
+
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert refund.test?
+    refund_id = refund.params["id"]
+    assert_equal refund.authorization, refund_id
   end
 
   def test_refund_with_reverse_transfer
@@ -249,6 +289,37 @@ class RemoteStripeTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_store_of_bank_account
+    response = @gateway.store(@check, @options)
+    assert_success response
+    customer_id, bank_account_id = response.authorization.split('|')
+    assert_match /^cus_/, customer_id
+    assert_match /^ba_/, bank_account_id
+  end
+
+  def test_unsuccessful_purchase_from_stored_but_unverified_bank_account
+    store = @gateway.store(@check)
+    assert_success store
+
+    purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_failure purchase
+    assert_match "The customer's bank account must be verified", purchase.message
+  end
+
+  def test_successful_purchase_from_stored_and_verified_bank_account
+    store = @gateway.store(@check)
+    assert_success store
+
+    # verify the account using special test amounts from Stripe
+    # https://stripe.com/docs/guides/ach#manually-collecting-and-verifying-bank-accounts
+    customer_id, bank_account_id = store.authorization.split('|')
+    verify_url = "customers/#{customer_id}/sources/#{bank_account_id}/verify"
+    verify_response = @gateway.send(:api_request, :post, verify_url, { amounts: [32, 45] })
+    assert_match "verified", verify_response["status"]
+
+    purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+  end
 
   def test_invalid_login
     gateway = StripeGateway.new(:login => 'active_merchant_test')
