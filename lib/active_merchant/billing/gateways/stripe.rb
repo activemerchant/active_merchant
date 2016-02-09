@@ -85,12 +85,15 @@ module ActiveMerchant #:nodoc:
       #
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, payment, options = {})
+        if ach?(payment)
+          direct_bank_error = "Direct bank account transactions are not supported. Bank accounts must be stored and verified before use."
+          return Response.new(false, direct_bank_error) if ach?(payment)
+        end
+
         MultiResponse.run do |r|
           if payment.is_a?(ApplePayPaymentToken)
             r.process { tokenize_apple_pay_token(payment) }
             payment = StripePaymentToken.new(r.params["token"]) if r.success?
-          elsif ach?(payment)
-            return Response.new(false, "Direct bank account transactions are not supported. Bank accounts must be stored and verified before use.")
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
