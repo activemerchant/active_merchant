@@ -46,6 +46,11 @@ module ActiveMerchant #:nodoc:
         'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin]
       }
 
+      BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
+        "personal" => "individual",
+        "business" => "company",
+      }
+
       def initialize(options = {})
         requires!(options, :login)
         @api_key = options[:login]
@@ -554,7 +559,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def tokenize_bank_account(bank_account, options = {})
-        account_holder_type = bank_account.account_holder_type == "personal" ? "individual" : "company"
+        account_holder_type = BANK_ACCOUNT_HOLDER_TYPE_MAPPING[bank_account.account_holder_type]
+
         post = {
           bank_account: {
             account_number: bank_account.account_number,
