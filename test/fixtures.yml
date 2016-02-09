@@ -937,6 +937,11 @@ stripe_emv_us:
   login:
   fee_refund_login:
 
+# Externally verified bank account for testing
+stripe_verified_bank_account:
+  customer_id: "cus_7s22nNueP2Hjj6"
+  bank_account_id: "ba_17cHxeAWOtgoysogv3NM8CJ1"
+
 # Working credentials, no need to replace
 swipe_checkout:
   login: 2077103073D8B5
