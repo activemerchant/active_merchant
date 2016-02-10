@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
           xml.send(action, xmlns: "https://transaction.elementexpress.com") do
             add_credentials(xml)
             add_payment_method(xml, payment)
-            add_transaction(xml, money)
+            add_transaction(xml, money, options)
             add_terminal(xml, options)
             add_address(xml, options)
           end
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
           xml.CreditCardAuthorization(xmlns: "https://transaction.elementexpress.com") do
             add_credentials(xml)
             add_payment_method(xml, payment)
-            add_transaction(xml, money)
+            add_transaction(xml, money, options)
             add_terminal(xml, options)
             add_address(xml, options)
           end
