@@ -9,7 +9,8 @@ class RemoteElementTest < Test::Unit::TestCase
     @check = check
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      card_present_code: 'ManualKeyed'
     }
   end
 
