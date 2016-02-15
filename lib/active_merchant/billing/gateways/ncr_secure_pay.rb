@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class NcrSecurePayGateway < Gateway
       self.test_url = 'https://testbox.monetra.com:8665/'
-      self.live_url = 'https://ps.ncrsecurepay.com:8444/'
+      self.live_url = 'https://portal.ncrsecurepay.com:8444/'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
