@@ -25,6 +25,17 @@ class RemoteClearhausTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
   end
 
+  def test_cleans_whitespace_from_signing_key
+    credentials = fixtures(:clearhaus_secure)
+    credentials[:signing_key] = "     #{credentials[:signing_key]}     "
+    gateway = ClearhausGateway.new(credentials)
+
+    assert gateway.options[:signing_key]
+    assert auth = gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+  end
+
   def test_unsuccessful_signing_request
     credentials = fixtures(:clearhaus_secure)
     credentials[:signing_key] = "foo"

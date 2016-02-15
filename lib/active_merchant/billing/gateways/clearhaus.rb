@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
       #       :signing_key - merchant's private key for optionally signing request
       def initialize(options={})
         requires!(options, :api_key)
+        options[:signing_key].strip! if options[:signing_key]
         super
       end
 
