@@ -224,6 +224,19 @@ class ClearhausTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_unsuccessful_signing_request_with_invalid_key
+    gateway = ClearhausGateway.new(api_key: "test_key", signing_key: "foo")
+
+    # stub actual network access, but this shouldn't be reached
+    gateway.stubs(:ssl_post).returns(nil)
+
+    card = credit_card("4111111111111111", month: "06", year: "2018", verification_value: "123")
+    options = { currency: "EUR", ip: "1.1.1.1" }
+
+    response = gateway.authorize(2050, card, options)
+    assert_failure response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
