@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
       #       :signing_key - merchant's private key for optionally signing request
       def initialize(options={})
         requires!(options, :api_key)
+        options[:signing_key].strip! if options[:signing_key]
         super
       end
 
@@ -183,7 +184,11 @@ module ActiveMerchant #:nodoc:
         body = parameters.to_query
 
         if signing_key = @options[:signing_key]
-          headers["Signature"] = generate_signature(@options[:api_key], signing_key, body)
+          begin
+            headers["Signature"] = generate_signature(@options[:api_key], signing_key, body)
+          rescue OpenSSL::PKey::RSAError => e
+            return Response.new(false, e.message)
+          end
         end
 
         response = begin
