@@ -7,6 +7,7 @@ class SagePayTest < Test::Unit::TestCase
     @gateway = SagePayGateway.new(login: 'X')
 
     @credit_card = credit_card('4242424242424242', :brand => 'visa')
+    @electron_credit_card = credit_card('4245190000000000', :brand => 'visa')
     @options = {
       :billing_address => {
         :name => 'Tekin Suleyman',
@@ -34,6 +35,13 @@ class SagePayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_electron_card_type_is_set_correctly
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/CardType=UKE/)).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @electron_credit_card, @options)
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
@@ -47,45 +55,6 @@ class SagePayTest < Test::Unit::TestCase
 
   def test_capture_url
     assert_equal 'https://test.sagepay.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
-  end
-
-  def test_electron_cards
-    # Visa range
-    assert_no_match SagePayGateway::ELECTRON, '4245180000000000'
-
-    # First electron range
-    assert_match SagePayGateway::ELECTRON, '4245190000000000'
-
-    # Second range
-    assert_match SagePayGateway::ELECTRON, '4249620000000000'
-    assert_match SagePayGateway::ELECTRON, '4249630000000000'
-
-    # Third
-    assert_match SagePayGateway::ELECTRON, '4508750000000000'
-
-    # Fourth
-    assert_match SagePayGateway::ELECTRON, '4844060000000000'
-    assert_match SagePayGateway::ELECTRON, '4844080000000000'
-
-    # Fifth
-    assert_match SagePayGateway::ELECTRON, '4844110000000000'
-    assert_match SagePayGateway::ELECTRON, '4844550000000000'
-
-    # Sixth
-    assert_match SagePayGateway::ELECTRON, '4917300000000000'
-    assert_match SagePayGateway::ELECTRON, '4917590000000000'
-
-    # Seventh
-    assert_match SagePayGateway::ELECTRON, '4918800000000000'
-
-    # Visa
-    assert_no_match SagePayGateway::ELECTRON, '4918810000000000'
-
-    # 19 PAN length
-    assert_match SagePayGateway::ELECTRON, '4249620000000000000'
-
-    # 20 PAN length
-    assert_no_match SagePayGateway::ELECTRON, '42496200000000000'
   end
 
   def test_avs_result

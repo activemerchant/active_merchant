@@ -17,6 +17,26 @@ module ActiveMerchant #:nodoc:
         'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/
       }
 
+      # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
+      ELECTRON_RANGES = [
+        [400115],
+        (400837..400839),
+        (412921..412923),
+        [417935],
+        (419740..419741),
+        (419773..419775),
+        [424519],
+        (424962..424963),
+        [437860],
+        [444000],
+        [459472],
+        (484406..484411),
+        (484413..484414),
+        (484418..484418),
+        (484428..484455),
+        (491730..491759),
+      ]
+
       def self.included(base)
         base.extend(ClassMethods)
       end
@@ -104,6 +124,17 @@ module ActiveMerchant #:nodoc:
           return 'maestro' if number =~ card_companies['maestro']
 
           return nil
+        end
+
+        def electron?(number)
+          return false unless [16, 19].include?(number.length)
+
+          # don't recalculate for each range
+          bank_identification_number = first_digits(number).to_i
+
+          ELECTRON_RANGES.any? do |range|
+            range.include?(bank_identification_number)
+          end
         end
 
         def type?(number)
