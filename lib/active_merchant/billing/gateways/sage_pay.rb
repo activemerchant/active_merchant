@@ -36,8 +36,6 @@ module ActiveMerchant #:nodoc:
         :jcb => "JCB"
       }
 
-      ELECTRON = /^(424519|42496[23]|450875|48440[6-8]|4844[1-5][1-5]|4917[3-5][0-9]|491880)\d{10}(\d{3})?$/
-
       AVS_CVV_CODE = {
         "NOTPROVIDED" => nil,
         "NOTCHECKED" => 'X',
@@ -292,8 +290,7 @@ module ActiveMerchant #:nodoc:
 
         card_type = card_brand(credit_card).to_sym
 
-        # Check if it is an electron card
-        if card_type == :visa && credit_card.number =~ ELECTRON
+        if card_type == :visa && credit_card.electron?
           CREDIT_CARDS[:electron]
         else
           CREDIT_CARDS[card_type]

@@ -42,6 +42,7 @@
 * NCRSecurePay: Fix production URL [rwdaigle]
 * Clearhaus: Make request signing more transparent & robust [sdball]
 * Cashnet: Default custcode option and proper redirect handling [hoenth]
+* SagePay: Properly detect Electron brand [sdball]
 
 
 == Version 1.56.0 (December 1, 2015)

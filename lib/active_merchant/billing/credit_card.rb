@@ -111,6 +111,11 @@ module ActiveMerchant #:nodoc:
         @brand = (value.respond_to?(:downcase) ? value.downcase : value)
       end
 
+      # Returns if the card matches known Electron BINs
+      def electron?
+        self.class.electron?(number)
+      end
+
       # Returns or sets the first name of the card holder.
       #
       # @return [String]
