@@ -36,26 +36,6 @@ module ActiveMerchant #:nodoc:
         :jcb => "JCB"
       }
 
-      # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
-      ELECTRON_RANGES = [
-        [400115],
-        (400837..400839),
-        (412921..412923),
-        [417935],
-        (419740..419741),
-        (419773..419775),
-        [424519],
-        (424962..424963),
-        [437860],
-        [444000],
-        [459472],
-        (484406..484411),
-        (484413..484414),
-        (484418..484418),
-        (484428..484455),
-        (491730..491759),
-      ]
-
       AVS_CVV_CODE = {
         "NOTPROVIDED" => nil,
         "NOTCHECKED" => 'X',
@@ -310,7 +290,7 @@ module ActiveMerchant #:nodoc:
 
         card_type = card_brand(credit_card).to_sym
 
-        if card_type == :visa && electron?(credit_card.number)
+        if card_type == :visa && credit_card.electron?
           CREDIT_CARDS[:electron]
         else
           CREDIT_CARDS[card_type]
@@ -413,15 +393,6 @@ module ActiveMerchant #:nodoc:
       def localized_amount(money, currency)
         amount = amount(money)
         CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s) ? amount.split('.').first : amount
-      end
-
-      def electron?(number)
-        return false unless [16, 19].include?(number.length)
-
-        first_six = number[0,6]
-        ELECTRON_RANGES.any? do |range|
-          range.include?(first_six.to_i)
-        end
       end
     end
 

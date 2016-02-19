@@ -7,6 +7,7 @@ class SagePayTest < Test::Unit::TestCase
     @gateway = SagePayGateway.new(login: 'X')
 
     @credit_card = credit_card('4242424242424242', :brand => 'visa')
+    @electron_credit_card = credit_card('4245190000000000', :brand => 'visa')
     @options = {
       :billing_address => {
         :name => 'Tekin Suleyman',
@@ -34,6 +35,13 @@ class SagePayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_electron_card_type_is_set_correctly
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/CardType=UKE/)).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @electron_credit_card, @options)
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
@@ -47,29 +55,6 @@ class SagePayTest < Test::Unit::TestCase
 
   def test_capture_url
     assert_equal 'https://test.sagepay.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
-  end
-
-  def test_electron_cards
-    electron_test = Proc.new do |card_number|
-      electron = @gateway.send(:electron?, card_number)
-      card_number if electron
-    end
-
-    SagePayGateway::ELECTRON_RANGES.each do |range|
-      range.map { |leader| "#{leader}0000000000" }.each do |card_number|
-        assert_equal card_number, electron_test.call(card_number)
-      end
-    end
-
-    # Visa range
-    assert_false electron_test.call('4245180000000000')
-    assert_false electron_test.call('4918810000000000')
-
-    # 19 PAN length
-    assert electron_test.call('4249620000000000000')
-
-    # 20 PAN length
-    assert_false electron_test.call('42496200000000000')
   end
 
   def test_avs_result
