@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
         if (200...300).include?(response.code.to_i)
           return response.body
         elsif 302 == response.code.to_i
-          encoded_url = URI.encode(response['location'])
+          encoded_url = URI::Parser.new.escape(response['location'])
           return ssl_get(URI.parse(encoded_url))
         end
         raise ResponseError.new(response)
