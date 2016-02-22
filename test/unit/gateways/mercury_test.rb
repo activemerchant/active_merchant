@@ -90,6 +90,20 @@ class MercuryTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_card_present_with_max_length_track_1_data
+    track_data    = "%B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567?"
+    stripped_data =  "B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567"
+    @credit_card.track_data = track_data
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<Track1>#{Regexp.escape(stripped_data)}<\/Track1>/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, response
+    assert_success response
+  end
+
   def test_card_present_with_invalid_data
     track_data = "this is not valid track data"
     @credit_card.track_data = track_data
