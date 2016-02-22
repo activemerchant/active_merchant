@@ -197,12 +197,20 @@ module ActiveMerchant #:nodoc:
           if credit_card.track_data.present?
             # Track 1 has a start sentinel (STX) of '%' and track 2 is ';'
             # Track 1 and 2 have identical end sentinels (ETX) of '?'
+            # Tracks may or may not have checksum (LRC) after the ETX
             # If the track has no STX or is corrupt, we send it as track 1, to let Mercury
             #handle with the validation error as it sees fit.
-            # Track 2 requires having the start and end sentinels stripped. Track 1 does not.
-            if credit_card.track_data[0] == ';' # track 2 start sentinel (STX)
-              xml.tag! 'Track2', credit_card.track_data[1..-2]
-            else # track 1 or a corrupt track
+            # Track 2 requires having the STX and ETX stripped. Track 1 does not.
+            # Max-length track 1s require having the STX and ETX stripped. Max is 79 bytes including LRC.
+            is_track_2 = credit_card.track_data[0] == ';'
+            etx_index = credit_card.track_data.rindex('?') || credit_card.track_data.length
+            is_max_track1 = etx_index >= 77
+
+            if is_track_2
+              xml.tag! 'Track2', credit_card.track_data[1...etx_index]
+            elsif is_max_track1
+              xml.tag! 'Track1', credit_card.track_data[1...etx_index]
+            else
               xml.tag! 'Track1', credit_card.track_data
             end
           else
