@@ -16,10 +16,6 @@ allied_wallet:
   merchant_id: merchant_id
   token: token
 
-app55:
-  api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
-  api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
-
 # Working credentials, no need to replace as of Oct 28 2014
 authorize_net:
   login: 5KP3u95bQpv
