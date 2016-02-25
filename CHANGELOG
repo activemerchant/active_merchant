@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* CardStream: Add AED and NZD currencies [sdball]
+
+
 == Version 1.57.0 (February 1, 2016)
 * AuthorizeNetCim: Add unmaskExpirationDate option [RamilGilmanov]
 * Element: Add gateway support [davidsantoso]
