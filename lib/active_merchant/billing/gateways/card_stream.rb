@@ -13,21 +13,23 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'CardStream'
 
       CURRENCY_CODES = {
-        "AUD" => '036',
-        "BRL" => '986',
-        "CAD" => '124',
-        "CZK" => '203',
-        "DKK" => '208',
-        "HKD" => '344',
-        "ICK" => '352',
-        "JPY" => '392',
-        "NOK" => '578',
-        "SGD" => '702',
-        "SEK" => '752',
-        "CHF" => '756',
-        "GBP" => '826',
-        "USD" => '840',
-        "EUR" => '978'
+        "AED" => "784",
+        "AUD" => "036",
+        "BRL" => "986",
+        "CAD" => "124",
+        "CHF" => "756",
+        "CZK" => "203",
+        "DKK" => "208",
+        "EUR" => "978",
+        "GBP" => "826",
+        "HKD" => "344",
+        "ICK" => "352",
+        "JPY" => "392",
+        "NOK" => "578",
+        "NZD" => "554",
+        "SEK" => "752",
+        "SGD" => "702",
+        "USD" => "840",
       }
 
       CVV_CODE = {
