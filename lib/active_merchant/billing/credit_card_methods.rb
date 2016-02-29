@@ -78,6 +78,11 @@ module ActiveMerchant #:nodoc:
         (number.to_s =~ /^\d{1,2}$/)
       end
 
+      # Returns if the card matches known Electron BINs
+      def electron?
+        self.class.electron?(number)
+      end
+
       module ClassMethods
         # Returns true if it validates. Optionally, you can pass a card brand as an argument and
         # make sure it is of the correct brand.
