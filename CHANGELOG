@@ -44,7 +44,6 @@
 * Stripe: Support ACH payments [sdball]
 * NCRSecurePay: Fix production URL [rwdaigle]
 * Clearhaus: Make request signing more transparent & robust [sdball]
-* Cashnet: Default custcode option and proper redirect handling [hoenth]
 * SagePay: Properly detect Electron brand [sdball]
 * Mercury: Fix for max-length track 1 [ryanbalsdon]
 
