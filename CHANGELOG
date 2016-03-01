@@ -1,6 +1,18 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.58.0 (March 1, 2016)
+* Move Electron check out of CreditCard into CreditCardMethods [ThereExistsX]
 * CardStream: Add AED and NZD currencies [sdball]
+* App55: Remove Gateway [ThereExistsX]
+* Mercury: Stripping the start and end sentinels on card-present track data for max-length track1 requests [ryanbalsdon]
+* SagePay: Update VISA Electron ranges [sdball]
+* Clearhaus: Make request signing more transparent & robust [sdball]
+* NCRSecurePay: Fix production URL [rwdaigle]
+* Add ACH support to Stripe [sdball]
+* PayPal Express: Fixing list of currencies without fractions [Krystosterone]
+* Cashnet: Default custcode option and proper redirect handling [rwdaigle]
+* TransFirst: Fix missing address and remove CC only fields for ACH [davidsantoso]
+* More prominent links to contribution docs [rwdaigle]
 
 
 == Version 1.57.0 (February 1, 2016)
