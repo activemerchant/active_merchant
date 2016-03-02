@@ -28,6 +28,8 @@ module ActiveMerchant #:nodoc:
     # Company will automatically be affiliated.
 
     class OrbitalGateway < Gateway
+      include Empty
+
       API_VERSION = "5.6"
 
       POST_HEADERS = {
@@ -328,7 +330,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, creditcard, options)
         if(address = (options[:billing_address] || options[:address]))
-          avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
+          avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
 
           if avs_supported
             xml.tag! :AVSzip,      byte_limit(format_address_field(address[:zip]), 10)
@@ -338,9 +340,9 @@ module ActiveMerchant #:nodoc:
             xml.tag! :AVSstate,    byte_limit(format_address_field(address[:state]), 2)
             xml.tag! :AVSphoneNum, (address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil)
           end
-          # can't look in billing address?
+
           xml.tag! :AVSname, ((creditcard && creditcard.name) ? creditcard.name[0..29] : nil)
-          xml.tag! :AVScountryCode, (avs_supported ? address[:country] : '')
+          xml.tag! :AVScountryCode, (avs_supported ? (byte_limit(format_address_field(address[:country]), 2)) : '')
 
           # Needs to come after AVScountryCode
           add_destination_address(xml, address) if avs_supported
