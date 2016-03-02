@@ -30,8 +30,8 @@ module ActiveMerchant #:nodoc:
     # * The order of the XML elements does matter, make sure to follow the order in
     #   the documentation exactly.
     class CyberSourceGateway < Gateway
-      self.test_url = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
-      self.live_url = 'https://ics2ws.ic3.com/commerce/1.x/transactionProcessor'
+      self.test_url = 'https://ics2wstesta.ic3.com/commerce/1.x/transactionProcessor'
+      self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
       XSD_VERSION = "1.121"
 
