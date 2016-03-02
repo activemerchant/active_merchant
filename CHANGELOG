@@ -12,7 +12,7 @@
 * VisaNet Peru: New gateway support [shasum]
 * Worldpay: Allow installationId to be specified at transaction time [duff]
 * SecurionPay: Support store [shasum]
-
+* Barclaycard Smartpay: Proper AVS return codes [curiousepic]
 
 == Version 1.58.0 (March 1, 2016)
 * Move Electron check out of CreditCard into CreditCardMethods [ThereExistsX]
