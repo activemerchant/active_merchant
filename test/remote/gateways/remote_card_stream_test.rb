@@ -70,6 +70,11 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :description => 'AM test purchase'
     }
 
+    @visacredit_reference_options = {
+      :order_id => generate_unique_id,
+      :description => 'AM test purchase'
+      }
+
     @visadebit_options = {
       :billing_address => {
         :address1 => 'Unit 5, Pickwick Walk',
@@ -226,6 +231,24 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
+  end
+
+  def test_successful_visacreditcard_purchase_via_reference
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge({:type => '9'}))
+    assert_equal 'APPROVED', response.message
+    assert_success response
+    assert response.test?
+    assert response = @gateway.purchase(142, response.authorization, @visacredit_reference_options)
+    assert_equal 'APPROVED', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_visacreditcard_purchase_via_reference
+    assert response = @gateway.purchase(142, 123, @visacredit_reference_options)
+    assert_equal 'DB ERROR', response.message
+    assert_failure response
+    assert response.test?
   end
 
   def test_purchase_no_currency_specified_defaults_to_GBP
