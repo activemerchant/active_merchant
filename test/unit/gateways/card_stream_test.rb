@@ -95,6 +95,24 @@ class CardStreamTest < Test::Unit::TestCase
     assert responseRefund.test?
   end
 
+  def test_successful_visacreditcard_purchase_via_reference
+    @gateway.expects(:ssl_post).returns(successful_reference_purchase_response)
+
+    assert responsePurchase = @gateway.purchase(142, 'authorization', @visacredit_options)
+    assert_equal 'APPROVED', responsePurchase.message
+    assert_success responsePurchase
+    assert responsePurchase.test?
+  end
+
+  def test_failed_visacreditcard_purchase_via_reference
+    @gateway.expects(:ssl_post).returns(failed_reference_purchase_response)
+
+    assert responsePurchase = @gateway.purchase(142, 'authorization', @visacredit_options)
+    assert_equal 'DB ERROR', responsePurchase.message
+    assert_failure responsePurchase
+    assert responsePurchase.test?
+  end
+
   def test_declined_mastercard_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_card_declined_response)
 
@@ -243,6 +261,14 @@ class CardStreamTest < Test::Unit::TestCase
 
   def failed_void_response
     "merchantID=0000000&threeDSEnabled=Y&merchantDescription=General+test+account+with+AVS%2FCV2+checking&amount=10000&currencyCode=826&transactionUnique=7385df1d9c5484142bb6be1e932cd2df&orderRef=AM+test+purchase&customerName=Longbob+Longsen&customerAddress=25+The+Larches+&customerPostCode=LE10+2RT&action=REFUND&type=1&countryCode=826&merchantAlias=0000992&remoteAddress=80.229.33.63&responseCode=5&responseMessage=CARD+DECLINED&xref=13021914RQ07HK55HG29KPH&threeDSEnrolled=U&threeDSXID=00000000000004717495&transactionID=4717495&transactionPreviousID=0&timestamp=2013-02-19+14%3A08%3A18&amountReceived=0&cardNumberMask=%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A0191&cardTypeCode=MC&cardType=Mastercard&threeDSErrorCode=-1&threeDSErrorDescription=Error+while+attempting+to+send+the+request+to%3A+https%3A%2F%2F3dstest.universalpaymentgateway.com%3A4343%2FAPI%0A%0DPlease+make+sure+that+ActiveMerchant+server+is+running+and+the+URL+is+valid.+ERROR_INTERNET_CANNOT_CONNECT%3A+The+attempt+to+connect+to+the+server+failed.&threeDSMerchantPref=PROCEED&threeDSVETimestamp=2013-02-19+14%3A07%3A55&currencyExponent=2&responseStatus=1&merchantName=CARDSTREAM+TEST&merchantID2=100001"
+  end
+
+  def successful_reference_purchase_response
+    "merchantID=103191&threeDSEnabled=Y&threeDSCheckPref=authenticated&avscv2CheckEnabled=N&addressCheckPref=not+known%2Cnot+checked%2Cmatched%2Cnot+matched%2Cpartially+matched&postcodeCheckPref=not+known%2Cnot+checked%2Cmatched%2Cnot+matched%2Cpartially+matched&customerReceiptsRequired=N&eReceiptsEnabled=N&eReceiptsStoreID=1&amount=142&currencyCode=826&transactionUnique=1f21b6d2fdf1f13378705707bc7e24bd&orderRef=AM+test+purchase&type=1&threeDSRequired=N&countryCode=826&action=SALE&responseCode=0&responseMessage=AUTHCODE%3A300382&state=captured&remoteAddress=107.15.253.186&requestMerchantID=103191&processMerchantID=103191&cardNumberMask=492942%2A%2A%2A%2A%2A%2A0821&cardExpiryMonth=12&cardExpiryYear=14&customerName=Longbob+Longsen&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostcode=NN17+8YG&previousID=10886746&cardCVVMandatory=N&xref=16040515PS17RG20GT73SBF&cardExpiryDate=1214&authorisationCode=300382&transactionID=10886747&responseStatus=0&timestamp=2016-04-05+15%3A17%3A20&amountReceived=142&avscv2ResponseCode=422100&avscv2ResponseMessage=ADDRESS+MATCH+ONLY&avscv2AuthEntity=merchant+host&cv2Check=not+matched&addressCheck=matched&postcodeCheck=matched&cardType=Visa+Credit&cardTypeCode=VC&cardScheme=Visa+&cardSchemeCode=VC&cardIssuer=BARCLAYS+BANK+PLC&cardIssuerCountry=United+Kingdom&cardIssuerCountryCode=GBR&vcsResponseCode=0&vcsResponseMessage=Success+-+no+velocity+check+rules+applied&currencyExponent=2&signature=9e13f5ffd9cf94215225ab60f80915879a242dcf8c30c7f39a0265acf0f3f7186cbea656d53fcce249e54f522050efd32e677726fc7d5aa1f7b6ee746e040956"
+  end
+
+  def failed_reference_purchase_response
+    "responseCode=65548&responseMessage=DB+ERROR&responseStatus=2&amount=142&currencyCode=826&transactionUnique=740290de68c10d18acabe9fb0a52bd92&orderRef=AM+test+purchase&type=1&threeDSRequired=N&xref=16040515NM21GM43SF71MMR&countryCode=GB&merchantID=103191&action=SALE&state=finished&remoteAddress=107.15.253.186&requestMerchantID=103191&processMerchantID=103191&transactionID=10886787&timestamp=2016-04-05+15%3A21%3A43&vcsResponseCode=0&vcsResponseMessage=Success+-+no+velocity+check+rules+applied&signature=311f2bfd94c3807fae4fbeff13801c37d81c3e1082c5d3c5893281f18d7152b96420fa7b45285eb692b09b576b3b85d894ee35ff9e31cd06ace54019b806550f"
   end
 
   def transcript
