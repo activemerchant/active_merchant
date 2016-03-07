@@ -368,12 +368,14 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response = @gateway.get_customer_payment_profile(
       :customer_profile_id => @customer_profile_id,
-      :customer_payment_profile_id => @customer_payment_profile_id
+      :customer_payment_profile_id => @customer_payment_profile_id,
+      :unmask_expiration_date => true
     )
     assert_instance_of Response, response
     assert_success response
     assert_nil response.authorization
     assert_equal @customer_payment_profile_id, response.params['profile']['payment_profiles']['customer_payment_profile_id']
+    assert_equal formatted_expiration_date(@credit_card), response.params['profile']['payment_profiles']['payment']['credit_card']['expiration_date']
   end
 
   def test_should_get_customer_shipping_address_request

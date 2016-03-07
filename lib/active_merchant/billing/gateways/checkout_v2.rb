@@ -78,6 +78,9 @@ module ActiveMerchant #:nodoc:
         post[:value] = amount(money)
         post[:trackId] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
+        post[:descriptor] = {}
+        post[:descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
+        post[:descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
       end
 
       def add_payment_method(post, payment_method)

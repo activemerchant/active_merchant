@@ -16,15 +16,54 @@ class RemoteClearhausTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  ## Disabling for now because of security
-  # def test_signing_request
-  #   gateway = ClearhausGateway.new(fixtures(:clearhaus_secure))
+  def test_successful_signing_request
+    gateway = ClearhausGateway.new(fixtures(:clearhaus_secure))
 
-  #   assert gateway.options[:signing_key]
-  #   assert auth = gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success auth
-  #   assert_equal 'Approved', auth.message
-  # end
+    assert gateway.options[:signing_key]
+    assert auth = gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+  end
+
+  def test_cleans_whitespace_from_signing_key
+    credentials = fixtures(:clearhaus_secure)
+    credentials[:signing_key] = "     #{credentials[:signing_key]}     "
+    gateway = ClearhausGateway.new(credentials)
+
+    assert gateway.options[:signing_key]
+    assert auth = gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+  end
+
+  def test_unsuccessful_signing_request
+    credentials = fixtures(:clearhaus_secure)
+    credentials[:signing_key] = "foo"
+    gateway = ClearhausGateway.new(credentials)
+
+    assert gateway.options[:signing_key]
+    assert auth = gateway.authorize(@amount, @credit_card, @options)
+    assert_failure auth
+    assert_equal "Neither PUB key nor PRIV key: not enough data", auth.message
+  end
+
+  def test_successful_purchase_without_cvv
+    gateway = ClearhausGateway.new(fixtures(:clearhaus_secure))
+    credit_card = credit_card('4111111111111111', verification_value: nil)
+    response = gateway.purchase(@amount, credit_card, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_text_on_statement
+    options = { text_on_statement: "hello" }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
+    assert_success response
+    assert_equal response.params["text_on_statement"], "hello"
+    assert_equal 'Approved', response.message
+  end
 
   def test_successful_purchase_with_more_options
     options = {

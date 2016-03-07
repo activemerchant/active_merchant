@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
 
       def add_card_details(xml, payment_method, options={})
         xml.CardDetails do
-          xml.Manual(type: "cnp") do
+          xml.Manual(type: "ecommerce") do
             xml.PAN payment_method.number
             xml.ExpiryDate exp_date(payment_method)
             xml.CSC payment_method.verification_value unless empty?(payment_method.verification_value)

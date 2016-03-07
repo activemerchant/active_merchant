@@ -1,4 +1,4 @@
-# encoding: UTF-8
+# encoding: utf-8
 
 require 'test_helper'
 require 'nokogiri'
@@ -477,6 +477,22 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_no_match(/<AVScity>Ottawa/, data)
       assert_no_match(/<AVSstate>ON/, data)
       assert_no_match(/<AVSphoneNum>5555555555/, data)
+      assert_match(/<AVSname>Longbob Longsen/, data)
+      assert_match(/<AVScountryCode(\/>|><\/AVScountryCode>)/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_allow_sending_avs_parts_when_no_country_specified
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:country => nil))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<AVSzip>K1C2N6/, data)
+      assert_match(/<AVSaddress1>456 My Street/, data)
+      assert_match(/<AVSaddress2>Apt 1/, data)
+      assert_match(/<AVScity>Ottawa/, data)
+      assert_match(/<AVSstate>ON/, data)
+      assert_match(/<AVSphoneNum>5555555555/, data)
       assert_match(/<AVSname>Longbob Longsen/, data)
       assert_match(/<AVScountryCode(\/>|><\/AVScountryCode>)/, data)
     end.respond_with(successful_purchase_response)

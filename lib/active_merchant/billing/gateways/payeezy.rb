@@ -30,22 +30,22 @@ module ActiveMerchant
         super
       end
 
-      def purchase(amount, creditcard, options = {})
+      def purchase(amount, payment_method, options = {})
         params = {transaction_type: 'purchase'}
 
         add_invoice(params, options)
-        add_creditcard(params, creditcard)
+        add_payment_method(params, payment_method)
         add_address(params, options)
         add_amount(params, amount, options)
 
         commit(params, options)
       end
 
-      def authorize(amount, creditcard, options = {})
+      def authorize(amount, payment_method, options = {})
         params = {transaction_type: 'authorize'}
 
         add_invoice(params, options)
-        add_creditcard(params, creditcard)
+        add_payment_method(params, payment_method)
         add_address(params, options)
         add_amount(params, amount, options)
 
@@ -71,12 +71,32 @@ module ActiveMerchant
       end
 
       def void(authorization, options = {})
-        params = {transaction_type: 'refund'}
+        params = {transaction_type: 'void'}
 
         add_authorization_info(params, authorization)
         add_amount(params, amount_from_authorization(authorization), options)
 
         commit(params, options)
+      end
+
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Token: )(\w|-)+), '\1[FILTERED]').
+          gsub(%r((\\?"card_number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((\\?"cvv\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((\\?"account_number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((\\?"routing_number\\?":\\?")\d+), '\1[FILTERED]')
       end
 
       private
@@ -96,6 +116,14 @@ module ActiveMerchant
         params[:method] = method
       end
 
+      def add_payment_method(params, payment_method)
+        if payment_method.is_a? Check
+          add_echeck(params, payment_method)
+        else
+          add_creditcard(params, payment_method)
+        end
+      end
+
       def add_creditcard(params, creditcard)
         credit_card = {}
 
@@ -107,6 +135,19 @@ module ActiveMerchant
 
         params[:method] = 'credit_card'
         params[:credit_card] = credit_card
+      end
+
+      def add_echeck(params, echeck)
+        tele_check = {}
+
+        tele_check[:check_number] = echeck.number
+        tele_check[:check_type] = "P"
+        tele_check[:routing_number] = echeck.routing_number
+        tele_check[:account_number] = echeck.account_number
+        tele_check[:accountholder_name] = "#{echeck.first_name} #{echeck.last_name}"
+
+        params[:method] = 'tele_check'
+        params[:tele_check] = tele_check
       end
 
       def add_address(params, options)
@@ -141,12 +182,9 @@ module ActiveMerchant
           url = "#{url}/#{transaction_id}"
         end
 
-        success = false
         begin
           body = params.to_json
-          raw_response = ssl_post(url, body, headers(body))
-          response = parse(raw_response)
-          success = (response['transaction_status'] == 'approved')
+          response = parse(ssl_post(url, body, headers(body)))
         rescue ResponseError => e
           response = response_error(e.response.body)
         rescue JSON::ParserError
@@ -154,15 +192,19 @@ module ActiveMerchant
         end
 
         Response.new(
-          success,
-          handle_message(response, success),
+          success_from(response),
+          handle_message(response, success_from(response)),
           response,
           test: test?,
           authorization: authorization_from(params, response),
           avs_result: {code: response['avs']},
           cvv_result: response['cvv2'],
-          error_code: error_code(response, success)
+          error_code: error_code(response, success_from(response))
         )
+      end
+
+      def success_from(response)
+        response['transaction_status'] == 'approved'
       end
 
       def authorization_from(params, response)

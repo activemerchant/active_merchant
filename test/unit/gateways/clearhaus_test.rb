@@ -61,7 +61,7 @@ class ClearhausTest < Test::Unit::TestCase
 
   def test_additional_params
     stub_comms do
-      response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '123', description: 'test'))
+      response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '123', text_on_statement: 'test'))
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|
@@ -222,6 +222,38 @@ class ClearhausTest < Test::Unit::TestCase
       assert_match %r{test_key RS256-hex}, headers["Signature"]
       assert_match %r{02f56ed1f6c60cdefd$}, headers["Signature"]
     end.respond_with(successful_authorize_response)
+  end
+
+  def test_cleans_whitespace_from_signing_key
+    signing_key_with_whitespace = "     #{test_private_signing_key}     "
+    gateway = ClearhausGateway.new(api_key: 'test_key', signing_key: signing_key_with_whitespace)
+    card = credit_card('4111111111111111', month: '06', year: '2018', verification_value: '123')
+    options = { currency: 'EUR', ip: '1.1.1.1' }
+
+    stub_comms gateway, :ssl_request do
+      response = gateway.authorize(2050, card, options)
+      assert_success response
+
+      assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization
+      assert response.test?
+    end.check_request do |method, endpoint, data, headers|
+      assert headers["Signature"]
+      assert_match %r{test_key RS256-hex}, headers["Signature"]
+      assert_match %r{02f56ed1f6c60cdefd$}, headers["Signature"]
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_unsuccessful_signing_request_with_invalid_key
+    gateway = ClearhausGateway.new(api_key: "test_key", signing_key: "foo")
+
+    # stub actual network access, but this shouldn't be reached
+    gateway.stubs(:ssl_post).returns(nil)
+
+    card = credit_card("4111111111111111", month: "06", year: "2018", verification_value: "123")
+    options = { currency: "EUR", ip: "1.1.1.1" }
+
+    response = gateway.authorize(2050, card, options)
+    assert_failure response
   end
 
   def test_scrub

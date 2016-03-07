@@ -11,15 +11,10 @@
 # Paste any required PEM certificates after the pem key.
 #
 
-
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
   token: token
-
-app55:
-  api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
-  api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
 
 # Working credentials, no need to replace as of Oct 28 2014
 authorize_net:
@@ -45,6 +40,12 @@ bank_frick:
 
 banwire:
   login: "desarrollo"
+
+# Non-alphanumeric characters may cause an authentication error
+barclaycard_smartpay:
+  company: company
+  merchant: merchant
+  password: password
 
 barclays_epdq:
   login: test
@@ -160,13 +161,20 @@ checkout_v2:
 
 # Working credentials, no need to replace
 clearhaus: &clearhaus
-  api_key: 526cf564-119c-4bb6-9cf8-0015eac7e4f6
+  api_key: d966051d-b7fd-4054-b4a6-22c4ff4d4701
   mpi_api_key: f21d07e4-be0a-4cd3-9dcb-9461dac1c90d
 
 clearhaus_secure:
   <<: *clearhaus
   signing_key: |
     -----BEGIN RSA PRIVATE KEY-----
+    MIIBOwIBAAJBALYK0zmwuYkH3YWcFNLLddx5cwDxEY7Gi1xITuQqRrU4yD3uSw+J
+    WYKknb4Tbndb6iEHY+e6gIGD+49TojnNeIUCAwEAAQJARyuYRRe4kcBHdPL+mSL+
+    Y0IAGkAlUyKAXYXPghidKD/v/oLrFaZWALGM2clv6UoYYpPnInSgbcud4sTcfeUm
+    QQIhAN2JZ2qv0WGcbIopBpwpQ5jDxMGVkmkVVUEWWABGF8+pAiEA0lySxTELZm8b
+    Gx9UEDRghN+Qv/OuIKFldu1Ba4f8W30CIQCaQFIBtunTTVdF28r+cLzgYW9eWwbW
+    pEP4TdZ4WlW6AQIhAMDCTUdeUpjxlH/87BXROORozAXocBW8bvJUI486U5ctAiAd
+    InviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==
     -----END RSA PRIVATE KEY-----
 
 
@@ -213,6 +221,14 @@ elavon:
   login: LOGIN
   password: PASSWORD
   user: USER (often the same as LOGIN)
+
+element:
+  account_id: "1013963"
+  account_token: "683EED8A1A357EB91575A168E74482A74836FD72B1AD11B41B29B473CA9D65B9FE067701"
+  application_id: "5211"
+  acceptor_id: "3928907"
+  application_name: "Spreedly"
+  application_version: "1"
 
 # login: merchant number
 # password: referrer url (for authorize authentication)
@@ -465,6 +481,11 @@ nab_transact_privileged:
   login: XYZ0010
   password: abcd1234
 
+# Working credentials, no need to replace
+ncr_secure_pay:
+  username: test_ecomm:public
+  password: publ1ct3st
+
 net_registry:
   login: X
   password: Y
@@ -501,6 +522,7 @@ ogone:
 omise:
   public_key: pkey_test_4zt0fss8gs0z6b4zlsq
   secret_key: skey_test_4zt0fss8eklsj88dx9l
+  api_version: '2015-11-17'
 
 # Working credentials, no need to replace
 openpay:
@@ -850,8 +872,8 @@ s5:
   password: n3yNMBGK
 
 sage:
-  login: login
-  password: password
+  login: 214282982451
+  password: 'Z5W2S8J7X8T5'
 
 sage_pay:
   login: LOGIN
@@ -899,7 +921,7 @@ stripe:
 
 # Working credentials, no need to replace
 stripe_destination:
-  stripe_user_id: "acct_161hWaHIrJcQ9OHT"
+  stripe_user_id: "acct_17FRNfIPBJTitsen"
 
 # Used only for remote tests that use EMV credit card mocks
 stripe_emv_uk:
@@ -910,6 +932,11 @@ stripe_emv_uk:
 stripe_emv_us:
   login:
   fee_refund_login:
+
+# Externally verified bank account for testing
+stripe_verified_bank_account:
+  customer_id: "cus_7s22nNueP2Hjj6"
+  bank_account_id: "ba_17cHxeAWOtgoysogv3NM8CJ1"
 
 # Working credentials, no need to replace
 swipe_checkout:
@@ -922,8 +949,13 @@ tns:
   password: 3f34fe50334fbe6cbe04c283411a5860
 
 trans_first:
-  login: LOGIN
-  password: PASSWORD
+  login: 45567
+  password: TNYYKYMFZ59HSN7Q
+
+# Working credentials, no need to replace
+trans_first_transaction_express:
+  gateway_id: 7777778764
+  reg_key: M84PKPDMD5BY86HN
 
 # Transact Pro doesn't provide public testing data
 transact_pro:

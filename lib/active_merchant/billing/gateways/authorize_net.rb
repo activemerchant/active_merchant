@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.live_url = 'https://api2.authorize.net/xml/v1/request.api'
 
-      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK ES FI FR GB GB GI GR HU IE IT LI LU MC MT NL NO PL PT RO SE SI SK SM TR US VA)
+      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK EE ES FI FR GB GB GI GR HU IE IS IT LI LT LU LV MC MT NL NO PL PT RO SE SI SK SM TR US VA)
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
@@ -154,25 +154,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(credit_card, options = {})
-        commit(:cim_store) do |xml|
-          xml.profile do
-            xml.merchantCustomerId(truncate(options[:merchant_customer_id], 20) || SecureRandom.hex(10))
-            xml.description(truncate(options[:description], 255)) unless empty?(options[:description])
-            xml.email(options[:email]) unless empty?(options[:email])
-
-            xml.paymentProfiles do
-              xml.customerType("individual")
-              add_billing_address(xml, credit_card, options)
-              add_shipping_address(xml, options, "shipToList")
-              xml.payment do
-                xml.creditCard do
-                  xml.cardNumber(truncate(credit_card.number, 16))
-                  xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
-                  xml.cardCode(credit_card.verification_value) if credit_card.verification_value
-                end
-              end
-            end
-          end
+        if options[:customer_profile_id]
+          create_customer_payment_profile(credit_card, options)
+        else
+          create_customer_profile(credit_card, options)
         end
       end
 
@@ -460,7 +445,6 @@ module ActiveMerchant #:nodoc:
             xml.routingNumber(check.routing_number)
             xml.accountNumber(check.account_number)
             xml.nameOnAccount(check.name)
-            xml.echeckType("WEB")
             xml.bankName(check.bank_name)
             xml.checkNumber(check.number)
           end
@@ -538,6 +522,46 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def create_customer_payment_profile(credit_card, options)
+        commit(:cim_store_update) do |xml|
+          xml.customerProfileId options[:customer_profile_id]
+          xml.paymentProfile do
+            add_billing_address(xml, credit_card, options)
+            xml.payment do
+              xml.creditCard do
+                xml.cardNumber(truncate(credit_card.number, 16))
+                xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
+                xml.cardCode(credit_card.verification_value) if credit_card.verification_value
+              end
+            end
+          end
+        end
+      end
+
+      def create_customer_profile(credit_card, options)
+        commit(:cim_store) do |xml|
+          xml.profile do
+            xml.merchantCustomerId(truncate(options[:merchant_customer_id], 20) || SecureRandom.hex(10))
+            xml.description(truncate(options[:description], 255)) unless empty?(options[:description])
+            xml.email(options[:email]) unless empty?(options[:email])
+
+            xml.paymentProfiles do
+              xml.customerType("individual")
+              add_billing_address(xml, credit_card, options)
+              add_shipping_address(xml, options, "shipToList")
+              xml.payment do
+                xml.creditCard do
+                  xml.cardNumber(truncate(credit_card.number, 16))
+                  xml.expirationDate(format(credit_card.year, :four_digits) + '-' + format(credit_card.month, :two_digits))
+                  xml.cardCode(credit_card.verification_value) if credit_card.verification_value
+                end
+              end
+            end
+          end
+        end
+      end
+
+
       def names_from(payment_source, address, options)
         if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
           first_name, last_name = split_names(address[:name])
@@ -602,6 +626,8 @@ module ActiveMerchant #:nodoc:
       def root_for(action)
         if action == :cim_store
           "createCustomerProfileRequest"
+        elsif action == :cim_store_update
+          "createCustomerPaymentProfileRequest"
         elsif is_cim_action?(action)
           "createCustomerProfileTransactionRequest"
         else
@@ -694,6 +720,11 @@ module ActiveMerchant #:nodoc:
         end
 
         response[:customer_payment_profile_id] = if(element = doc.at_xpath("//customerPaymentProfileIdList/numericString"))
+          (empty?(element.content) ? nil : element.content)
+        end
+
+        response[:customer_payment_profile_id] = if(element = doc.at_xpath("//customerPaymentProfileIdList/numericString") ||
+                                                              doc.at_xpath("//customerPaymentProfileId"))
           (empty?(element.content) ? nil : element.content)
         end
 

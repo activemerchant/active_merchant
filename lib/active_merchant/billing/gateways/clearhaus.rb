@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
       #       :signing_key - merchant's private key for optionally signing request
       def initialize(options={})
         requires!(options, :api_key)
+        options[:signing_key].strip! if options[:signing_key]
         super
       end
 
@@ -90,7 +91,7 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       def capture(amount, authorization, options={})
         post = {}
-        add_amount(post, amount, options)
+        add_invoice(post, amount, options)
 
         commit("/authorizations/#{authorization}/captures", post)
       end
@@ -145,7 +146,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         add_amount(post, money, options)
         post[:reference] = options[:order_id] if options[:order_id]
-        post[:text_on_statement] = options[:description] if options[:description]
+        post[:text_on_statement] = options[:text_on_statement] if options[:text_on_statement]
       end
 
       def add_amount(post, amount, options)
@@ -183,7 +184,11 @@ module ActiveMerchant #:nodoc:
         body = parameters.to_query
 
         if signing_key = @options[:signing_key]
-          headers["Signature"] = generate_signature(@options[:api_key], signing_key, body)
+          begin
+            headers["Signature"] = generate_signature(@options[:api_key], signing_key, body)
+          rescue OpenSSL::PKey::RSAError => e
+            return Response.new(false, e.message)
+          end
         end
 
         response = begin

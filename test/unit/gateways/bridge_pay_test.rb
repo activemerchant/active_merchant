@@ -96,6 +96,22 @@ class BridgePayTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_store_and_purchase_with_token
+    store = stub_comms do
+      @gateway.store(@credit_card)
+    end.respond_with(successful_store_response)
+
+    assert_success store
+    assert_equal "Success", store.message
+
+    purchase = stub_comms do
+      @gateway.purchase(@amount, store.authorization)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+    assert_equal "Approved", purchase.message
+  end
+
   def test_passing_cvv
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -295,6 +311,21 @@ class BridgePayTest < Test::Unit::TestCase
         <RespMSG>Original Transaction ID Not Found</RespMSG>
         <Message>Original PNRef is required.</Message>
       </Response>
+    )
+  end
+
+  def successful_store_response
+    %(
+    <CardVaultResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://TPISoft.com/SmartPayments/">
+      <Result>0</Result>
+      <Message>Success</Message>
+      <Token>4005552646800019</Token>
+      <CustomerPaymentInfoKey>128962</CustomerPaymentInfoKey>
+      <ExpDate>0916</ExpDate>
+      <NameOnCard>Longbob Longsen</NameOnCard>
+      <Street />
+      <Zip />
+    </CardVaultResponse>
     )
   end
 

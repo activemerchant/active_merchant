@@ -385,6 +385,27 @@ class WorldpayTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_verify
+    @gateway.expects(:ssl_post).times(3).returns(successful_authorize_response, successful_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_verify_with_failed_void
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
@@ -619,6 +640,22 @@ class WorldpayTest < Test::Unit::TestCase
         </reply>
       </paymentService>
     RESPONSE
+  end
+
+  def failed_void_response
+    <<-REQUEST
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="CHARGEBEEM1">
+        <reply>
+          <orderStatus orderCode="non_existent_authorization">
+            <error code="5">
+              <![CDATA[Could not find payment for order]]>
+            </error>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    REQUEST
   end
 
   def sample_authorization_request

@@ -35,7 +35,7 @@ class RemoteOmiseTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Success', response.message
     assert_equal response.params['amount'], @amount
-    assert response.params['captured'], 'captured should be true'
+    assert response.params['paid'], 'paid should be true'
     assert response.params['authorized'], 'authorized should be true'
   end
 
@@ -78,7 +78,7 @@ class RemoteOmiseTest < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
     assert_equal authorize.params['amount'], @amount
-    assert !authorize.params['captured'], 'captured should be false'
+    assert !authorize.params['paid'], 'paid should be false'
     assert authorize.params['authorized'], 'authorized should be true'
   end
 
@@ -86,7 +86,7 @@ class RemoteOmiseTest < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     capture   = @gateway.capture(@amount, authorize.authorization, @options)
     assert_success capture
-    assert capture.params['captured'], 'captured should be true'
+    assert capture.params['paid'], 'paid should be true'
     assert capture.params['authorized'], 'authorized should be true'
   end
 

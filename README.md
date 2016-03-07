@@ -17,6 +17,8 @@ from an ever-growing set of contributors.
 See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
 applications.
 
+If you'd like to contribute to Active Merchant, please start with our [contribution guide](CONTRIBUTING.md).
+
 ## Installation
 
 ### From Git
@@ -82,7 +84,6 @@ For more in-depth documentation and tutorials, see [GettingStarted.md](GettingSt
 
 The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis) contains a [table of features supported by each gateway](http://github.com/activemerchant/active_merchant/wikis/gatewayfeaturematrix).
 
-* [App55](https://www.app55.com/) - AU, BR, CA, CH, CL, CN, CO, CZ, DK, EU, GB, HK, HU, ID, IS, JP, KE, KR, MX, MY, NO, NZ, PH, PL, TH, TW, US, VN, ZA
 * [Authorize.Net CIM](http://www.authorize.net/) - US
 * [Authorize.Net](http://www.authorize.net/) - AD, AT, AU, BE, BG, CA, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GB, GI, GR, HU, IE, IT, LI, LU, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, SM, TR, US, VA
 * [Axcess MS](http://www.axcessms.com/) - AD, AT, BE, BG, BR, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HR, HU, IE, IL, IM, IS, IT, LI, LT, LU, LV, MC, MT, MX, NL, NO, PL, PT, RO, RU, SE, SI, SK, TR, US, VA

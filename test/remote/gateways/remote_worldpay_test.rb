@@ -144,6 +144,18 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal "Could not find payment for order", response.message
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{SUCCESS}, response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match %r{REFUSED}, response.message
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card,  @options)

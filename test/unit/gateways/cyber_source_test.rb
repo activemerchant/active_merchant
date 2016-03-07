@@ -84,6 +84,23 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_purchase_includes_mdd_fields
+    stub_comms do
+      @gateway.purchase(100, @credit_card, order_id: "1", mdd_field_2: "CustomValue2", mdd_field_3: "CustomValue3")
+    end.check_request do |endpoint, data, headers|
+      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_includes_mdd_fields
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: "1", mdd_field_2: "CustomValue2", mdd_field_3: "CustomValue3")
+    end.check_request do |endpoint, data, headers|
+      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+
   def test_successful_check_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
