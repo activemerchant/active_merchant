@@ -311,6 +311,11 @@ garanti:
   merchant_id: 7000679
   password: "123qweASD"
 
+global_collect:
+  merchant_id: 1428
+  api_key_id: 96f16a41890565d0
+  secret_api_key: g/VQ432G02bFpwg/6EY7uiPRSZxKMbQ87Kal716XORA=
+
 global_transport:
   global_user_name: "USERNAME"
   global_password: "PASSWORD"

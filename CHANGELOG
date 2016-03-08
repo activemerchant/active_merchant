@@ -6,6 +6,7 @@
 * Moneris: Add verify [anellis]
 * Jetpay: Add support for origin field[anellis]
 * Jetpay: Don't default origin field [duff]
+* GlobalCollect: New gateway support [curiousepic]
 
 == Version 1.58.0 (March 1, 2016)
 * Move Electron check out of CreditCard into CreditCardMethods [ThereExistsX]
