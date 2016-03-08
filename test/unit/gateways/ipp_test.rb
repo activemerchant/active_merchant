@@ -82,6 +82,33 @@ class IppTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_store
+    response = stub_comms do
+      @gateway.store(@credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<TokeniseCreditCard }, data)
+      assert_match(%r{<CardNumber>4242424242424242<}, data)
+      assert_match(%r{<TokeniseAlgorithmID>2<}, data)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_equal "9528017040311761", response.authorization
+  end
+
+  def test_failed_store
+    response = stub_comms do
+      @gateway.store(credit_card(''))
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<TokeniseCreditCard }, data)
+      assert_match(%r{<CardNumber><}, data)
+      assert_match(%r{<TokeniseAlgorithmID>2<}, data)
+    end.respond_with(failed_store_response)
+
+    assert_failure response
+    assert_equal "Exception encountered", response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -206,6 +233,24 @@ Conn close
   &lt;DeclinedMessage&gt;&lt;/DeclinedMessage&gt;
 &lt;/Response&gt;
 </SubmitSingleRefundResult></SubmitSingleRefundResponse></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def successful_store_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><TokeniseCreditCardResponse xmlns="http://www.ippayments.com.au/interface/api/sipp"><TokeniseCreditCardResult>&lt;TokeniseCreditCardResponse&gt;
+	&lt;ReturnValue&gt;0&lt;/ReturnValue&gt;
+	&lt;Token&gt;9528017040311761&lt;/Token&gt;
+&lt;/TokeniseCreditCardResponse&gt;</TokeniseCreditCardResult></TokeniseCreditCardResponse></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def failed_store_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><TokeniseCreditCardResponse xmlns="http://www.ippayments.com.au/interface/api/sipp"><TokeniseCreditCardResult>&lt;TokeniseCreditCardResponse&gt;
+	&lt;ReturnValue&gt;99&lt;/ReturnValue&gt;
+	&lt;Token&gt;&lt;/Token&gt;
+&lt;/TokeniseCreditCardResponse&gt;</TokeniseCreditCardResult></TokeniseCreditCardResponse></soap:Body></soap:Envelope>
     XML
   end
 end

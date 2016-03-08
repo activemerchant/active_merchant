@@ -3,7 +3,9 @@ require 'test_helper'
 class RealexTest < Test::Unit::TestCase
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
-    public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request, :build_capture_request
+    public :build_purchase_or_authorization_request, :build_refund_request,
+      :build_void_request, :build_capture_request, :build_store_payer_request,
+      :build_store_payment_request
   end
 
   def setup
@@ -92,6 +94,38 @@ class RealexTest < Test::Unit::TestCase
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       assert_success @gateway.credit(@amount, '1234;1234;1234')
     end
+  end
+
+  def test_successful_store_customer_and_card
+    @gateway.expects(:ssl_request).twice.returns(successful_store_customer_response, successful_store_card_response)
+    @options[:customer] = 'longbob1'
+    @options[:cardref] = 'longbob1-visa'
+
+    assert response = @gateway.store(@credit_card, @options)
+    assert_instance_of MultiResponse, response
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    customer_response = response.responses[0]
+    assert_not_nil customer_response.params['result']
+
+    card_response = response.responses[1]
+    assert_not_nil card_response.params['result']
+  end
+
+  def test_unsuccessful_store_customer
+    @gateway.expects(:ssl_request).returns(unsuccessful_store_customer_response)
+    @options[:customer] = 'longb@b1'
+    @options[:cardref] = 'longbob1-visa'
+
+    assert response = @gateway.store(@credit_card, @options)
+    assert_instance_of MultiResponse, response
+    assert_failure response
+    assert_equal 1, response.responses.size
+
+    customer_response = response.responses[0]
+    assert_not_nil customer_response.params['result']
+    assert_equal '506', customer_response.params['result']
   end
 
   def test_supported_countries
@@ -267,6 +301,63 @@ SRC
 
   end
 
+  def test_store_customer_xml
+    options = {
+      :order_id => '1',
+      :customer => 'longbob1'
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_customer_store_xml = <<-SRC
+<request timestamp="20090824160201" type="payer-new">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <payer ref="longbob1">
+    <firstname>Longbob</firstname>
+    <surname>Longsen</surname>
+  </payer>
+  <sha1hash>d1a2644000ca28ef00425441d9397fc28ee39e39</sha1hash>
+</request>
+SRC
+
+    assert_xml_equal valid_customer_store_xml, @gateway.build_store_payer_request(@credit_card, options)
+
+  end
+
+  def test_store_payment_xml
+    options = {
+      :order_id => '1',
+      :customer => 'longbob1',
+      :cardref  => 'longbob1-visa'
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_payment_store_xml = <<-SRC
+<request timestamp="20090824160201" type="card-new">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <card>
+    <number>4263971921001307</number>
+    <expdate>0808</expdate>
+    <chname>Longbob Longsen</chname>
+    <type>VISA</type>
+    <issueno></issueno>
+    <ref>longbob1-visa</ref>
+    <payerref>longbob1</payerref>
+  </card>
+  <sha1hash>f9d2fa924657dea4144cd81f7320073fd4cf3c36</sha1hash>
+</request>
+SRC
+
+    assert_xml_equal valid_payment_store_xml, @gateway.build_store_payment_request(@credit_card, options)
+
+  end
+
+
   def test_auth_with_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -433,6 +524,56 @@ SRC
   <sha1hash>7384ae67....ac7d7d</sha1hash>
   <md5hash>34e7....a77d</md5hash>
 </response>"
+    RESPONSE
+  end
+
+  def successful_store_customer_response
+    <<-RESPONSE
+<response timestamp="20151218014939">
+  <merchantid>your merchant id</merchantid>
+  <account>account to use</account>
+  <orderid>order id from request</orderid>
+  <result>00</result>
+  <message>Successful</message>
+  <pasref>relaex payments reference</pasref>
+  <authcode/>
+  <batchid/>
+  <timetaken>0</timetaken>
+  <processingtimetaken/>
+  <md5hash>742b8175....512ae8</md5hash>
+  <sha1hash>ee69....e759</sha1hash>
+</response>
+    RESPONSE
+  end
+
+  def unsuccessful_store_customer_response
+    <<-RESPONSE
+<response timestamp="20151218024741">
+  <merchantid>your merchant id</merchantid>
+  <account>account to use</account>
+  <orderid>order id from request</orderid>
+  <result>506</result>
+  <message>payerRef : must match "[a-zA-Z0-9_\-\. ]*"</message>
+</response>
+    RESPONSE
+  end
+
+  def successful_store_card_response
+    <<-RESPONSE
+<response timestamp=\"20151218014941\">
+  <merchantid>your merchant id</merchantid>
+  <account>account to use</account>
+  <orderid>order id from request</orderid>
+  <result>00</result>
+  <message>Successful</message>
+  <pasref>relaex payments reference</pasref>
+  <authcode/>
+  <batchid/>
+  <timetaken>0</timetaken>
+  <processingtimetaken/>
+  <md5hash>de20....9738</md5hash>
+  <sha1hash>50f27....5155</sha1hash>
+</response>
     RESPONSE
   end
 
