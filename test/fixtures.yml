@@ -203,6 +203,10 @@ creditcall:
   terminal_id: '99961426'
   transaction_key: '9drdRU9wJ65SNRw3'
 
+credorax:
+  merchant_id: 'merchant_id'
+  cipher_key: 'cipher_key'
+
 # To get 100% passing Cybersource remote tests, you must ask
 # Cybersource support to enable the recurring and pinless debit
 # services on your test account.
