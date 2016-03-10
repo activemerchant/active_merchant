@@ -112,6 +112,14 @@ class MonerisTest < Test::Unit::TestCase
    assert_equal xml_capture_fixture.size, data.size
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, failed_void_response)
+    assert_success response
+    assert_equal "Approved", response.message
+  end
+
   def test_supported_countries
     assert_equal ['CA'], MonerisGateway.supported_countries
   end
@@ -373,6 +381,35 @@ class MonerisTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_authorize_response
+    <<-RESPONSE
+    <?xml version="1.0"?>
+    <response>
+      <receipt>
+        <ReceiptId>47986100c3ad69c37ca945f5c54abf1c</ReceiptId>
+        <ReferenceNum>660144080010396720</ReferenceNum>
+        <ResponseCode>027</ResponseCode>
+        <ISO>01</ISO>
+        <AuthCode>149406</AuthCode>
+        <TransTime>09:59:15</TransTime>
+        <TransDate>2016-03-10</TransDate>
+        <TransType>01</TransType>
+        <Complete>true</Complete>
+        <Message>APPROVED           *                    =</Message>
+        <TransAmount>1.00</TransAmount>
+        <CardType>V</CardType>
+        <TransID>51340-0_10</TransID>
+        <TimedOut>false</TimedOut>
+        <BankTotals>null</BankTotals>
+        <Ticket>null</Ticket>
+        <CorporateCard>false</CorporateCard>
+        <MessageId>1A6070359555668</MessageId>
+        <IsVisaDebit>false</IsVisaDebit>
+      </receipt>
+    </response>
+    RESPONSE
+  end
+
   def successful_authorization_network_tokenization
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -496,6 +533,33 @@ class MonerisTest < Test::Unit::TestCase
     <Message>Successfully updated cc details * =</Message>
   </receipt>
 </response>
+    RESPONSE
+  end
+
+  def failed_void_response
+    <<-RESPONSE
+      <?xml version="1.0"?>
+      <response>
+        <receipt>
+          <ReceiptId>null</ReceiptId>
+          <ReferenceNum>null</ReferenceNum>
+          <ResponseCode>null</ResponseCode>
+          <ISO>null</ISO>
+          <AuthCode>null</AuthCode>
+          <TransTime>null</TransTime>
+          <TransDate>null</TransDate>
+          <TransType>null</TransType>
+          <Complete>false</Complete>
+          <Message>No Pre-auth corresponds to the store Id and order Id and transaction Id entered</Message>
+          <TransAmount>null</TransAmount>
+          <CardType>null</CardType>
+          <TransID>null</TransID>
+          <TimedOut>false</TimedOut>
+          <BankTotals>null</BankTotals>
+          <Ticket>null</Ticket>
+          <IsVisaDebit>false</IsVisaDebit>
+        </receipt>
+      </response>
     RESPONSE
   end
 
