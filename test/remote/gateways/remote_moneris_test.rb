@@ -114,6 +114,12 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_equal 'Declined', response.message
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match "Approved", response.message
+  end
+
   def test_successful_store
     assert response = @gateway.store(@credit_card)
     assert_success response
