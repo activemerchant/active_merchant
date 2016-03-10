@@ -32,6 +32,14 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_equal "Do not honor.", response.message
   end
 
+  def test_successful_purchase_with_origin
+    assert response = @gateway.purchase(9900, @credit_card, {:origin => 'RECURRING'})
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert_not_nil response.authorization
+    assert_not_nil response.params["approval"]
+  end
+
   def test_authorize_and_capture
     assert auth = @gateway.authorize(9900, @credit_card, @options)
     assert_success auth
