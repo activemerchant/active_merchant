@@ -134,6 +134,11 @@ class JetpayTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_purchase_sends_order_origin
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<Origin>RECURRING<\/Origin>/)).returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, {:origin => 'RECURRING'})
+  end
 
   private
   def successful_purchase_response
