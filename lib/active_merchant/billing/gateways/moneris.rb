@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         action = if post[:cavv]
           'cavv_preauth'
-        elsif post[:data_key].blank? 
+        elsif post[:data_key].blank?
           'preauth'
         else
           'res_preauth_cc'
@@ -130,6 +130,13 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         commit 'refund', crediting_params(authorization, :amount => amount(money))
+      end
+
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
       end
 
       def store(credit_card, options = {})
