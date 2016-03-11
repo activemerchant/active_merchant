@@ -209,8 +209,6 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'TransactionID', transaction_id.nil? ? generate_unique_id.slice(0, 18) : transaction_id
           if options && options[:origin]
             xml.tag! 'Origin', options[:origin]
-          else
-            xml.tag! 'Origin', 'INTERNET'
           end
 
           if block_given?
