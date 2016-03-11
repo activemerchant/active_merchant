@@ -190,6 +190,17 @@ module ActiveMerchant #:nodoc:
         commit('DES', post, end_point: :maintenance)
       end
 
+      # Fetch current state of a transaction
+      def reconcile(key="PAYID", value)
+        post = {}
+        if key.eql?("ORDERID")
+          add_merchant_reference(post, value)
+        else
+          add_authorization(post, value)
+        end
+        commit(nil, post, end_point: :query)
+      end
+
       # Credit the specified account by a specific amount.
       def credit(money, identification_or_credit_card, options = {})
         if reference_transaction?(identification_or_credit_card)
@@ -341,6 +352,10 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'CARDNO', creditcard.number
         add_pair post, 'ED',     "%02d%02s" % [creditcard.month, creditcard.year.to_s[-2..-1]]
         add_pair post, 'CVC',    creditcard.verification_value
+      end
+
+      def add_merchant_reference(post, merchant_reference)
+        add_pair post, 'ORDERID', merchant_reference
       end
 
       def parse(body)
