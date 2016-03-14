@@ -406,7 +406,6 @@ module ActiveMerchant #:nodoc:
         post[:metadata] = options[:metadata] || {}
         post[:metadata][:email] = options[:email] if options[:email]
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
-        post[:metadata][:"connect-agent"] = options[:connect_agent] if options[:connect_agent]
         post.delete(:metadata) if post[:metadata].empty?
       end
 
