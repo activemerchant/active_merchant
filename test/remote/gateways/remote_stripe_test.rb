@@ -66,6 +66,12 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "wow@example.com", response.params["metadata"]["email"]
   end
 
+  def test_purchase_with_connect_agent
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(connect_agent: "Test"))
+    assert_success response
+    assert_equal "Test", response.params["metadata"]["connect-agent"]
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -110,6 +116,12 @@ class RemoteStripeTest < Test::Unit::TestCase
 
     assert void = @gateway.void(authorization.authorization)
     assert_success void
+  end
+
+  def test_authorization_with_connect_agent
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(connect_agent: "Test"))
+    assert_success response
+    assert_equal "Test", response.params["metadata"]["connect-agent"]
   end
 
   def test_successful_void

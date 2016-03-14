@@ -258,6 +258,16 @@ class StripeTest < Test::Unit::TestCase
     assert response.emv_authorization, "Response should include emv_auth_data containing the EMV ARC"
   end
 
+  def test_authorization_connect_agent_option
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options.merge(connect_agent: "test"))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/metadata\[connect-agent\]=test/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
@@ -296,6 +306,16 @@ class StripeTest < Test::Unit::TestCase
 
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
+  end
+
+  def test_purchase_connect_agent_option
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(connect_agent: "test"))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/metadata\[connect-agent\]=test/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_amount_localization
