@@ -1011,6 +1011,11 @@ viaklix:
   password: PASSWORD
   user: USER
 
+# Fill up with test credentails
+visanet_peru:
+  login: 
+  password: 
+
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
