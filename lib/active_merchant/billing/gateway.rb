@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
       # See the documentation for the gateway you will be using to make sure there are no other
       # required options.
       def initialize(options = {})
-        @options = options
+       @options = options
       end
 
       # Are we running in test mode?
@@ -291,7 +291,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def requires!(hash, *params)
-        params.each do |param|
+          params.each do |param|
           if param.is_a?(Array)
             raise ArgumentError.new("Missing required parameter: #{param.first}") unless hash.has_key?(param.first)
 

@@ -22,6 +22,7 @@ module ActiveMerchant #:nodoc:
         @success, @message, @params = success, message, params.stringify_keys
         @test = options[:test] || false
         @authorization = options[:authorization]
+        
         @fraud_review = options[:fraud_review]
         @error_code = options[:error_code]
         @emv_authorization = options[:emv_authorization]
