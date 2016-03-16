@@ -8,8 +8,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = "https://api.vnforapps.com/api.tokenization/api/v2/merchant"
 
       self.supported_countries = ["US", "PE"]
-      self.default_currency = "USD"
-      self.money_format = :dollars
+      self.default_currency = "PEN"
+      self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       def initialize(options={})
@@ -48,6 +48,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
+        commit("void", post, options)
+      end
+
+      def cancel(authorization, options={})
+        commit("cancel", post, options)
       end
 
       def refund(amount, authorization, options={})
@@ -99,11 +104,11 @@ module ActiveMerchant #:nodoc:
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["USD"] = "840"
-      CURRENCY_CODES["PEN"] = "604"
+      CURRENCY_CODES["USD"] = 840
+      CURRENCY_CODES["PEN"] = 604
 
       def add_invoice(post, money, options)
-        post[:amount] = amount(money)
+        post[:amount] = amount(money).to_f
         post[:purchaseNumber] = options[:order_id]
         post[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
@@ -113,7 +118,7 @@ module ActiveMerchant #:nodoc:
         post[:lastName] = payment_method.last_name
         # post[:cardtype] = payment_method.brand
         post[:cardNumber] = payment_method.number
-        post[:cvv2Code] = payment_method.verification_value
+        post[:cvv2Code] = Integer(payment_method.verification_value, 10)
         post[:expirationYear] = format(payment_method.year, :four_digits)
         post[:expirationMonth] = format(payment_method.month, :two_digits)
         # post[:cardtrackdata] = payment_method.track_data
@@ -121,6 +126,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:email] = options[:email]
+        # data = {}
         antifraud = {}
         billing_address = options[:billing_address] || options[:address]
         if (billing_address)
@@ -134,6 +140,8 @@ module ActiveMerchant #:nodoc:
           antifraud[:billTo_country] = billing_address[:country]
           antifraud[:billTo_postalCode]    = billing_address[:zip]
         end
+        # post[:data] = data
+        # post[:data][:antifraud] = antifraud
         post[:antifraud] = antifraud
       end
 
@@ -159,9 +167,19 @@ module ActiveMerchant #:nodoc:
       }
 
       def commit(action, params, options)
-        url = base_url() + "/" + options[:merchant_id]
+        case action
+        when "purchase"
+          url = base_url() + "/" + options[:merchant_id]
+          method = :post
+        when "void"
+          url = base_url() + "/" + options[:merchant_id] + "/void/" + options[:purchase_number]
+          method = :put
+        when "cancel"
+          url = base_url() + "/" + options[:merchant_id] + "/cancelDeposit/" + options[:purchase_number]
+          method = :put
+        end
         begin
-          raw_response = ssl_post(url, post_data(action, params), headers)
+          raw_response = ssl_request(method, url, post_data(action, params), headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -173,10 +191,13 @@ module ActiveMerchant #:nodoc:
             success_from(response),
             message_from(response),
             response,
-            authorization: response["transactionUUID"],
-            # avs_result: AVSResult.new(code: response["some_avs_result_key"]),
-            # cvv_result: CVVResult.new(response["some_cvv_result_key"]),
-            test: test?
+            {
+              :authorization => response["transactionUUID"],
+              :error_code => response["errorCode"],
+              # avs_result: AVSResult.new(code: response["some_avs_result_key"]),
+              # cvv_result: CVVResult.new(response["some_cvv_result_key"]),
+              :test => test?
+            }
           )
         end
       end
@@ -200,14 +221,6 @@ module ActiveMerchant #:nodoc:
         # build_xml_request rather than #post_data
       end
 
-      # def build_xml_request
-      #   builder = Nokogiri::XML::Builder.new
-      #   builder.__send__("SomeRootTagOrSomething") do |doc|
-      #     yield(doc)
-      #   end
-      #   builder.to_xml
-      # end
-
       def base_url
         test? ? test_url : live_url
       end
@@ -218,23 +231,6 @@ module ActiveMerchant #:nodoc:
 
         # urlencoded.
         # Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
-
-        # XML
-        # response = {}
-
-        # doc = Nokogiri::XML(xml)
-        # doc.root.xpath("*").each do |node|
-        #   if (node.elements.size == 0)
-        #     response[node.name.downcase.to_sym] = node.text
-        #   else
-        #     node.elements.each do |childnode|
-        #       name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        #       response[name.to_sym] = childnode.text
-        #     end
-        #   end
-        # end unless doc.root.nil?
-
-        # response
       end
 
       def success_from(response)
@@ -265,13 +261,6 @@ module ActiveMerchant #:nodoc:
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
-
-      # def add_authentication(doc)
-      #   doc.authentication do
-      #     doc.user(@options[:login])
-      #     doc.password(@options[:password])
-      #   end
-      # end
     end
   end
 end
