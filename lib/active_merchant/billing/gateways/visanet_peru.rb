@@ -40,20 +40,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(authorization, options={})
+        params = {}
         options[:purchaseNumber] = authorization
-        commit("capture", options)
+        commit("capture", params, options)
       end
 
       # void revokes previous authorize operation
       def void(authorization, options={})
+        params = {}
         options[:purchaseNumber] = authorization
-        commit("void", options)
+        commit("void", params, options)
       end
 
       # cancel revokes previous capture/purchase operations
       def cancel(authorization, options={})
+        params = {}
         options[:purchaseNumber] = authorization
-        commit("cancel", options)
+        commit("cancel", params, options)
       end
 
       # def refund(amount, authorization, options={})
@@ -77,29 +80,29 @@ module ActiveMerchant #:nodoc:
       #   commit("store", post)
       # end
 
-      def supports_scrubbing?
-        true
-      end
+      # def supports_scrubbing?
+      #   true
+      # end
 
       # def scrub(transcript)
-        # JSON.
-        # transcript.
-        #   gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-        #   gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
-        #   gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
+      #   #JSON.
+      #   transcript.
+      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+      #     gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
+      #     gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
 
-        # urlencoded.
-        # transcript.
-        #   gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-        #   gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-        #   gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+      #   #urlencoded.
+      #   transcript.
+      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+      #     gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
+      #     gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
 
-        # XML.
-        # transcript.
-        #   gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-        #   gsub(%r((<CardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
-        #   gsub(%r((<CVN>)[^<]+(<))i, '\1[FILTERED]\2').
-        #   gsub(%r((<Password>)[^<]+(<))i, '\1[FILTERED]\2')
+      #   #XML.
+      #   transcript.
+      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+      #     gsub(%r((<CardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
+      #     gsub(%r((<CVN>)[^<]+(<))i, '\1[FILTERED]\2').
+      #     gsub(%r((<Password>)[^<]+(<))i, '\1[FILTERED]\2')
       # end
 
       private

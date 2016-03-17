@@ -35,11 +35,11 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   #   # assert_match(/Authentication error/, response.body)
   # end
 
-  def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    # assert_equal "Succeeded", response.message
-  end
+  # def test_successful_purchase
+  #   response = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_success response
+  #   assert_equal "Succeeded", response.message
+  # end
 
   # def test_failed_purchase
   #   response = @gateway.purchase(@amount, @declined_card, @options)
@@ -47,16 +47,16 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
   # end
 
-  # def test_successful_authorize_and_capture
-  #   response = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_success response
-  #   assert_equal "Succeeded", response.message
-  #   assert_match %r(^\d+\|.+$), response.authorization
+  def test_successful_authorize_and_capture
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    # assert_equal "Succeeded", response.message
+    # assert_match %r(^\d+\|.+$), response.authorization
 
-  #   capture = @gateway.capture(@amount, response.authorization)
-  #   assert_success capture
-  #   assert_equal "Succeeded", capture.message
-  # end
+    # capture = @gateway.capture(@amount, response.authorization)
+    # assert_success capture
+    # assert_equal "Succeeded", capture.message
+  end
 
   # def test_failed_authorize
   #   response = @gateway.authorize(@amount, @declined_card, @options)
