@@ -18,6 +18,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(amount, payment_method, options) }
+          r.process { capture(r.authorization, options) }
+        end
+      end
+
+      def authorize(amount, payment_method, options={})
         #JSON
         post = {}
 
@@ -26,40 +33,34 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_define_data(post, options)
 
+        # No vaulting for now
         post[:createAlias] = false
 
-        commit("purchase", post, options)
-
-        # #XML
-        # request = build_xml_request do |doc|
-        #   add_authentication(doc)
-        #   doc.sale(transaction_attributes(options)) do
-        #     add_auth_purchase_params(doc, money, payment_method, options)
-        #   end
-        # end
-
-        # commit(:sale, request)
+        commit("authorize", post, options)
       end
 
-      def authorize(amount, payment_method, options={})
+      def capture(authorization, options={})
+        options[:purchaseNumber] = authorization
+        commit("capture", options)
       end
 
-      def capture(amount, authorization, options={})
-      end
-
+      # void revokes previous authorize operation
       def void(authorization, options={})
-        commit("void", post, options)
+        options[:purchaseNumber] = authorization
+        commit("void", options)
       end
 
+      # cancel revokes previous capture/purchase operations
       def cancel(authorization, options={})
-        commit("cancel", post, options)
+        options[:purchaseNumber] = authorization
+        commit("cancel", options)
       end
 
-      def refund(amount, authorization, options={})
-      end
+      # def refund(amount, authorization, options={})
+      # end
 
-      def credit(amount, payment_method, options={})
-      end
+      # def credit(amount, payment_method, options={})
+      # end
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
@@ -68,38 +69,38 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(payment_method, options = {})
-        post = {}
-        add_payment_method(post, payment_method)
-        add_customer_data(post, options)
+      # def store(payment_method, options = {})
+      #   post = {}
+      #   add_payment_method(post, payment_method)
+      #   add_customer_data(post, options)
 
-        commit("store", post)
-      end
+      #   commit("store", post)
+      # end
 
       def supports_scrubbing?
         true
       end
 
-      def scrub(transcript)
+      # def scrub(transcript)
         # JSON.
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
+        # transcript.
+        #   gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+        #   gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
+        #   gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
 
         # urlencoded.
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+        # transcript.
+        #   gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+        #   gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
+        #   gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
 
         # XML.
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((<CardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<CVN>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<Password>)[^<]+(<))i, '\1[FILTERED]\2')
-      end
+        # transcript.
+        #   gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+        #   gsub(%r((<CardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
+        #   gsub(%r((<CVN>)[^<]+(<))i, '\1[FILTERED]\2').
+        #   gsub(%r((<Password>)[^<]+(<))i, '\1[FILTERED]\2')
+      # end
 
       private
 
@@ -157,25 +158,28 @@ module ActiveMerchant #:nodoc:
         post[:transaction_amount] = transaction_amount
       end
 
-      ACTIONS = {
-        purchase: "SALE",
-        authorize: "AUTH",
-        capture: "CAPTURE",
-        void: "VOID",
-        refund: "REFUND",
-        store: "STORE"
-      }
+      # ACTIONS = {
+      #   purchase: "SALE",
+      #   authorize: "AUTH",
+      #   capture: "CAPTURE",
+      #   void: "VOID",
+      #   refund: "REFUND",
+      #   store: "STORE"
+      # }
 
       def commit(action, params, options)
         case action
-        when "purchase"
+        when "authorize"
           url = base_url() + "/" + options[:merchant_id]
           method = :post
+        when "capture"
+          url = base_url() + "/" + options[:merchant_id] + "/deposit/" + options[:purchaseNumber]
+          method = :put
         when "void"
-          url = base_url() + "/" + options[:merchant_id] + "/void/" + options[:purchase_number]
+          url = base_url() + "/" + options[:merchant_id] + "/void/" + options[:purchaseNumber]
           method = :put
         when "cancel"
-          url = base_url() + "/" + options[:merchant_id] + "/cancelDeposit/" + options[:purchase_number]
+          url = base_url() + "/" + options[:merchant_id] + "/cancelDeposit/" + options[:purchaseNumber]
           method = :put
         end
         begin
@@ -191,13 +195,14 @@ module ActiveMerchant #:nodoc:
             success_from(response),
             message_from(response),
             response,
-            {
-              :authorization => response["transactionUUID"],
-              :error_code => response["errorCode"],
-              # avs_result: AVSResult.new(code: response["some_avs_result_key"]),
-              # cvv_result: CVVResult.new(response["some_cvv_result_key"]),
-              :test => test?
-            }
+            :test => test?,
+            :authorization => response["transactionUUID"],
+            :error_code => response["errorCode"]
+            # {
+            #   avs_result: AVSResult.new(code: response["some_avs_result_key"]),
+            #   cvv_result: CVVResult.new(response["some_cvv_result_key"]),
+            #   :test => test?
+            # }
           )
         end
       end
@@ -251,7 +256,9 @@ module ActiveMerchant #:nodoc:
             false,
             message_from(response),
             response,
-            test: test?
+            :test => test?,
+            :authorization => response["transactionUUID"],
+            :error_code => response["errorCode"]
           )
         end
       end
