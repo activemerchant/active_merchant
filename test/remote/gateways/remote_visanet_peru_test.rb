@@ -33,22 +33,26 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
+    assert_equal "capture|" + @options[:merchant_id] + "|" + @options[:order_id], response.authorization
+    assert response.test?
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
+    assert_equal 400, response.error_code
   end
 
   def test_successful_authorize_and_capture
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
-    assert_match %r(^.+\|\d+$), response.authorization
+    assert_equal "authorize|" + @options[:merchant_id] + "|" + @options[:order_id], response.authorization
 
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal "OK", capture.message
+    assert_equal "capture|" + @options[:merchant_id] + "|" + @options[:order_id], capture.authorization
   end
 
   def test_failed_authorize
@@ -58,7 +62,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
 
     @options[:email] = "cybersource@reject.com"
     @options[:order_id] = (SecureRandom.random_number() * (10 ** 9)).floor.to_s
-    response = @gateway.authorize(@amount, @declined_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
     assert_equal "El pedido ha sido rechazado por Decision Manager", response.message
@@ -102,34 +106,6 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_equal 400, response.error_code
   end
 
-  # def test_successful_refund
-  #   response = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success response
-
-  #   refund = @gateway.refund(@amount, response.authorization)
-  #   assert_success refund
-  #   assert_equal "OK", refund.message
-  # end
-
-  # def test_failed_refund
-  #   response = @gateway.refund(nil, "")
-  #   assert_failure response
-  #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
-  #   assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
-  # end
-
-  # def test_successful_credit
-  #   response = @gateway.credit(@amount, @credit_card, @options)
-  #   assert_success response
-  #   assert_equal "OK", response.message
-  # end
-
-  # def test_failed_credit
-  #   response = @gateway.credit(@amount, @declined_card, @options)
-  #   assert_failure response
-  #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
-  # end
-
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -142,19 +118,6 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_equal 400, response.error_code
   end
 
-  # def test_successful_store
-  #   response = @gateway.store(@credit_card, @options)
-  #   assert_success response
-  #   assert_equal "OK", response.message
-  # end
-
-  # def test_failed_store
-  #   response = @gateway.store(@declined_card, @options)
-  #   assert_failure response
-  #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
-  #   assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
-  # end
-
   # def test_dump_transcript
   #   #skip("Transcript scrubbing for this gateway has been tested.")
 
@@ -165,14 +128,14 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   # end
 
-  # def test_transcript_scrubbing
-  #   transcript = capture_transcript(@gateway) do
-  #     @gateway.purchase(@amount, @credit_card, @options)
-  #   end
-  #   clean_transcript = @gateway.scrub(transcript)
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
 
-  #   assert_scrubbed(@credit_card.number, clean_transcript)
-  #   assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
-  #   assert_scrubbed(@gateway.options[:password], clean_transcript)
-  # end
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@gateway.options[:password], clean_transcript)
+  end
 end
