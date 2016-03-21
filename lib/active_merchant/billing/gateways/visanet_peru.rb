@@ -85,30 +85,17 @@ module ActiveMerchant #:nodoc:
       #   commit("store", post)
       # end
 
-      # def supports_scrubbing?
-      #   true
-      # end
+      def supports_scrubbing?
+        true
+      end
 
-      # def scrub(transcript)
-      #   #JSON.
-      #   transcript.
-      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-      #     gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
-      #     gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
-
-      #   #urlencoded.
-      #   transcript.
-      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-      #     gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-      #     gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
-
-      #   #XML.
-      #   transcript.
-      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-      #     gsub(%r((<CardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
-      #     gsub(%r((<CVN>)[^<]+(<))i, '\1[FILTERED]\2').
-      #     gsub(%r((<Password>)[^<]+(<))i, '\1[FILTERED]\2')
-      # end
+      def scrub(transcript)
+        #JSON.
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((\"cardNumber\\\":\\\")\d+), '\1[FILTERED]').
+          gsub(%r((\"cvv2Code\\\":)\d+), '\1[FILTERED]')
+      end
 
       private
 
@@ -186,7 +173,7 @@ module ActiveMerchant #:nodoc:
             message_from(response),
             response,
             :test => test?,
-            :authorization => action + "|" + response["merchantId"] + "|" + response["externalTransactionId"],
+            :authorization => action + "|" + (response["merchantId"] || '') + "|" + (response["externalTransactionId"] || ''),
             :error_code => response["errorCode"]
           )
         end
