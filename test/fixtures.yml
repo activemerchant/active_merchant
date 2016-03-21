@@ -1013,8 +1013,8 @@ viaklix:
 
 # Fill up with test credentails
 visanet_peru:
-  login: 
-  password: 
+  access_key_id:
+  secret_access_key:
 
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"

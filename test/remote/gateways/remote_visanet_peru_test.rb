@@ -24,7 +24,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = VisanetPeruGateway.new(login: "", password: "")
+    gateway = VisanetPeruGateway.new(access_key_id: "", secret_access_key: "")
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
@@ -136,6 +136,6 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
-    assert_scrubbed(@gateway.options[:password], clean_transcript)
+    assert_scrubbed(@gateway.options[:secret_access_key], clean_transcript)
   end
 end

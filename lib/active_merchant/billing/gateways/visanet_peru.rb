@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       def initialize(options={})
-        requires!(options, :login, :password)
+        requires!(options, :access_key_id, :secret_access_key)
         super
       end
 
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Authorization" => "Basic " + Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").strip,
+          "Authorization" => "Basic " + Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip,
           "Content-Type"  => "application/json"
         }
       end
