@@ -26,39 +26,39 @@ module ActiveMerchant #:nodoc:
 
       def authorize(amount, payment_method, options={})
         #JSON
-        post = {}
+        params = {}
 
-        add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
-        add_antifraud_data(post, options)
+        add_invoice(params, amount, options)
+        add_payment_method(params, payment_method)
+        add_antifraud_data(params, options)
 
         # No vaulting for now
-        post[:createAlias] = false
+        params[:createAlias] = false
 
-        commit("authorize", post, options)
+        commit("authorize", params)
       end
 
       def capture(authorization, options={})
         params = {}
         action, merchant_id, purchase_number = split_authorization(authorization)
-        options[:merchant_id] = merchant_id
-        options[:purchaseNumber] = purchase_number
+        params[:merchantId] = merchant_id
+        params[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = purchase_number
-        commit("deposit", params, options)
+        commit("deposit", params)
       end
 
       def void(authorization, options={})
         params = {}
         action, merchant_id, purchase_number = split_authorization(authorization)
-        options[:merchant_id] = merchant_id
-        options[:purchaseNumber] = purchase_number
+        params[:merchantId] = merchant_id
+        params[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = purchase_number
         puts options
         case action
         when "authorize"
-          commit("void", params, options)
+          commit("void", params)
         when "deposit"
-          commit("cancelDeposit", params, options)
+          commit("cancelDeposit", params)
         end
       end
 
@@ -87,25 +87,26 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES["USD"] = 840
       CURRENCY_CODES["PEN"] = 604
 
-      def add_invoice(post, money, options)
+      def add_invoice(params, money, options)
         # Visanet Peru expects a 9-digit numeric purchaseNumber
-        post[:purchaseNumber] = options[:order_id]
-        post[:externalTransactionId] = options[:order_id]
-        post[:amount] = amount(money).to_f
-        post[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
+        params[:purchaseNumber] = options[:order_id]
+        params[:externalTransactionId] = options[:order_id]
+        params[:merchantId] = options[:merchant_id]
+        params[:amount] = amount(money).to_f
+        params[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
 
-      def add_payment_method(post, payment_method)
-        post[:firstName] = payment_method.first_name
-        post[:lastName] = payment_method.last_name
-        post[:cardNumber] = payment_method.number
-        post[:cvv2Code] = Integer(payment_method.verification_value, 10)
-        post[:expirationYear] = format(payment_method.year, :four_digits)
-        post[:expirationMonth] = format(payment_method.month, :two_digits)
+      def add_payment_method(params, payment_method)
+        params[:firstName] = payment_method.first_name
+        params[:lastName] = payment_method.last_name
+        params[:cardNumber] = payment_method.number
+        params[:cvv2Code] = Integer(payment_method.verification_value, 10)
+        params[:expirationYear] = format(payment_method.year, :four_digits)
+        params[:expirationMonth] = format(payment_method.month, :two_digits)
       end
 
-      def add_antifraud_data(post, options)
-        post[:email] = options[:email]
+      def add_antifraud_data(params, options)
+        params[:email] = options[:email]
 
         antifraud = {}
 
@@ -119,20 +120,20 @@ module ActiveMerchant #:nodoc:
         antifraud[:deviceFingerprintId] = options[:device_fingerprint_id]
         antifraud[:merchantDefineData] = options[:merchant_define_data]
 
-        post[:antifraud] = antifraud
+        params[:antifraud] = antifraud
       end
 
-      def commit(action, params, options)
+      def commit(action, params)
         if (action == "authorize")
-          url = base_url() + "/" + options[:merchant_id]
+          url = base_url() + "/" + params[:merchantId]
           method = :post
         else
-          url = base_url() + "/" + options[:merchant_id] + "/" + action + "/" + options[:purchaseNumber]
+          url = base_url() + "/" + params[:merchantId] + "/" + action + "/" + params[:purchaseNumber]
           method = :put
         end
 
         begin
-          raw_response = ssl_request(method, url, post_data(params), headers)
+          raw_response = ssl_request(method, url, params.to_json, headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -160,11 +161,6 @@ module ActiveMerchant #:nodoc:
 
       def split_authorization(authorization)
         authorization.split("|")
-      end
-
-      def post_data(params)
-        # JSON.
-        params.to_json
       end
 
       def base_url
