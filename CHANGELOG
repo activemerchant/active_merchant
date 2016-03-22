@@ -8,6 +8,7 @@
 * Jetpay: Don't default origin field [duff]
 * GlobalCollect: New gateway support [curiousepic]
 * Openpay: Use strict_encode64 [duff]
+* Sage: Always pass along the billing state [duff]
 
 
 == Version 1.58.0 (March 1, 2016)
