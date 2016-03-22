@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         options[:merchant_id] = merchant_id
         options[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = purchase_number
-        commit("capture", params, options)
+        commit("deposit", params, options)
       end
 
       def void(authorization, options={})
@@ -57,8 +57,8 @@ module ActiveMerchant #:nodoc:
         case action
         when "authorize"
           commit("void", params, options)
-        when "capture"
-          commit("cancel", params, options)
+        when "deposit"
+          commit("cancelDeposit", params, options)
         end
       end
 
@@ -123,22 +123,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, params, options)
-        case action
-        when "authorize"
+        if (action == "authorize")
           url = base_url() + "/" + options[:merchant_id]
           method = :post
-        when "capture"
-          url = base_url() + "/" + options[:merchant_id] + "/deposit/" + options[:purchaseNumber]
-          method = :put
-        when "void"
-          url = base_url() + "/" + options[:merchant_id] + "/void/" + options[:purchaseNumber]
-          method = :put
-        when "cancel"
-          url = base_url() + "/" + options[:merchant_id] + "/cancelDeposit/" + options[:purchaseNumber]
+        else
+          url = base_url() + "/" + options[:merchant_id] + "/" + action + "/" + options[:purchaseNumber]
           method = :put
         end
+
         begin
-          raw_response = ssl_request(method, url, post_data(action, params), headers)
+          raw_response = ssl_request(method, url, post_data(params), headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -168,7 +162,7 @@ module ActiveMerchant #:nodoc:
         authorization.split("|")
       end
 
-      def post_data(action, params)
+      def post_data(params)
         # JSON.
         params.to_json
       end
