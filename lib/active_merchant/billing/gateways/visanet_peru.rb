@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(params, money, options)
         # Visanet Peru expects a 9-digit numeric purchaseNumber
-        purchase_number = options[:purchase_number] || rand(100000000 .. 1000000000)
+        purchase_number = options[:purchase_number] || rand(100000000 .. 1000000000).to_s
         params[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = purchase_number
         params[:merchantId] = options[:merchant_id]

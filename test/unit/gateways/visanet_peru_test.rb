@@ -11,6 +11,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     @options = {
       # Visanet Peru expects a 9-digit numeric order_id (aka) purchaseNumber
       order_id: "987654321",
+      purchase_number: "987654321",
       billing_address: address,
       email: "visanetperutest@mailinator.com",
       merchant_id: "101266802",
@@ -31,7 +32,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_success response
     assert_equal "OK", response.message
 
-    assert_equal "capture|" + @options[:merchant_id] + "|" + @options[:order_id], response.authorization
+    assert_equal "deposit|" + @options[:merchant_id] + "|" + @options[:order_id], response.authorization
     assert response.test?
   end
 
@@ -74,7 +75,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal "OK", capture.message
-    assert_equal "capture|" + @options[:merchant_id] + "|" + @options[:order_id], capture.authorization
+    assert_equal "deposit|" + @options[:merchant_id] + "|" + @options[:order_id], capture.authorization
     assert capture.test?
   end
 
@@ -117,7 +118,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_equal 400, response.error_code
 
     @gateway.expects(:ssl_request).returns(failed_void_response_for_capture)
-    response = @gateway.void("capture" + "|" + @options[:merchant_id] + "|" + invalid_purchase_number)
+    response = @gateway.void("deposit" + "|" + @options[:merchant_id] + "|" + invalid_purchase_number)
     assert_failure response
     assert_equal "[ 'NUMORDEN 122333444 no se encuentra registrado', 'No se realizo la anulacion del deposito' ]", response.message
     assert_equal 400, response.error_code
