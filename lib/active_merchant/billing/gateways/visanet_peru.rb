@@ -30,9 +30,7 @@ module ActiveMerchant #:nodoc:
 
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
-        add_customer_data(post, options)
-        add_device_fingerprint_data(post, options)
-        add_merchant_define_data(post, options)
+        add_antifraud_data(post, options)
 
         # No vaulting for now
         post[:createAlias] = false
@@ -64,26 +62,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # def refund(amount, authorization, options={})
-      # end
-
-      # def credit(amount, payment_method, options={})
-      # end
-
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
-
-      # def store(payment_method, options = {})
-      #   post = {}
-      #   add_payment_method(post, payment_method)
-      #   add_customer_data(post, options)
-
-      #   commit("store", post)
-      # end
 
       def supports_scrubbing?
         true
@@ -104,10 +88,10 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES["PEN"] = 604
 
       def add_invoice(post, money, options)
-        post[:amount] = amount(money).to_f
         # Visanet Peru expects a 9-digit numeric purchaseNumber
         post[:purchaseNumber] = options[:order_id]
         post[:externalTransactionId] = options[:order_id]
+        post[:amount] = amount(money).to_f
         post[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
 
@@ -120,28 +104,22 @@ module ActiveMerchant #:nodoc:
         post[:expirationMonth] = format(payment_method.month, :two_digits)
       end
 
-      def add_customer_data(post, options)
+      def add_antifraud_data(post, options)
         post[:email] = options[:email]
+
         antifraud = {}
+
         billing_address = options[:billing_address] || options[:address]
-        if (billing_address)
-          antifraud[:billTo_street1] = billing_address[:address1]
-          antifraud[:billTo_city] = billing_address[:city]
-          antifraud[:billTo_state] = billing_address[:state]
-          antifraud[:billTo_country] = billing_address[:country]
-          antifraud[:billTo_postalCode]    = billing_address[:zip]
-        end
+        antifraud[:billTo_street1] = billing_address[:address1]
+        antifraud[:billTo_city] = billing_address[:city]
+        antifraud[:billTo_state] = billing_address[:state]
+        antifraud[:billTo_country] = billing_address[:country]
+        antifraud[:billTo_postalCode] = billing_address[:zip]
+
+        antifraud[:deviceFingerprintId] = options[:device_fingerprint_id]
+        antifraud[:merchantDefineData] = options[:merchant_define_data]
+
         post[:antifraud] = antifraud
-      end
-
-      def add_device_fingerprint_data(post, options)
-        post[:antifraud][:deviceFingerprintId] = options[:device_fingerprint_id]
-      end
-
-      def add_merchant_define_data(post, options)
-        if (merchantDefineData = options[:merchant_define_data])
-          post[:antifraud][:merchantDefineData] = merchantDefineData
-        end
       end
 
       def commit(action, params, options)
