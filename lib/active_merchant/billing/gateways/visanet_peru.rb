@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         params[:merchantId] = merchant_id
         params[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = purchase_number
-        puts options
+
         case action
         when "authorize"
           commit("void", params)
@@ -89,8 +89,9 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(params, money, options)
         # Visanet Peru expects a 9-digit numeric purchaseNumber
-        params[:purchaseNumber] = options[:order_id]
-        params[:externalTransactionId] = options[:order_id]
+        purchase_number = options[:purchase_number] || rand(100000000 .. 1000000000)
+        params[:purchaseNumber] = purchase_number
+        params[:externalTransactionId] = purchase_number
         params[:merchantId] = options[:merchant_id]
         params[:amount] = amount(money).to_f
         params[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
@@ -124,16 +125,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, params)
-        if (action == "authorize")
-          url = base_url() + "/" + params[:merchantId]
-          method = :post
-        else
-          url = base_url() + "/" + params[:merchantId] + "/" + action + "/" + params[:purchaseNumber]
-          method = :put
-        end
-
         begin
-          raw_response = ssl_request(method, url, params.to_json, headers)
+          raw_response = ssl_request(method(action), url(action, params), params.to_json, headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -146,7 +139,7 @@ module ActiveMerchant #:nodoc:
             message_from(response),
             response,
             :test => test?,
-            :authorization => action + "|" + (response["merchantId"] || '') + "|" + (response["externalTransactionId"] || ''),
+            :authorization => generate_authorization(action, response),
             :error_code => response["errorCode"]
           )
         end
@@ -159,8 +152,28 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      def url(action, params)
+        if (action == "authorize")
+          url = base_url() + "/" + params[:merchantId]
+        else
+          url = base_url() + "/" + params[:merchantId] + "/" + action + "/" + params[:purchaseNumber]
+        end
+      end
+
+      def method(action)
+        if (action == "authorize")
+          method = :post
+        else
+          method = :put
+        end
+      end
+
       def split_authorization(authorization)
         authorization.split("|")
+      end
+
+      def generate_authorization(action, response)
+        action + "|" + (response["merchantId"] || '') + "|" + (response["externalTransactionId"] || '')
       end
 
       def base_url
