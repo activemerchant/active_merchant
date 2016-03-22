@@ -207,18 +207,6 @@ class SageGatewayTest < Test::Unit::TestCase
     assert_equal "", post[:C_state]
   end
 
-
-  def test_international_address_without_state
-    post = {}
-    options = {
-      :billing_address => { :country => "JP", :state => ""}
-    }
-    @gateway.send(:add_addresses, post, options)
-
-    assert_equal "JP", post[:C_country]
-    assert_equal "Outside of United States", post[:C_state]
-  end
-
   def test_successful_check_purchase
     @gateway.expects(:ssl_post).returns(successful_check_purchase_response)
 
