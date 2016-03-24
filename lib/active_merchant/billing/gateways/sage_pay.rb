@@ -43,6 +43,26 @@ module ActiveMerchant #:nodoc:
         "NOTMATCHED" => 'N'
       }
 
+      OPTIONAL_REQUEST_FIELDS = {
+        paypal_callback_url: :PayPalCallbackURL,
+        basket: :Basket,
+        gift_aid_payment: :GiftAidPayment ,
+        apply_avscv2: :ApplyAVSCV2 ,
+        apply_3d_secure: :Apply3DSecure,
+        account_type: :AccountType,
+        billing_agreement: :BillingAgreement,
+        basket_xml: :BasketXML,
+        customer_xml: :CustomerXML,
+        surcharge_xml: :SurchargeXML,
+        vendor_data: :VendorData,
+        language: :Language,
+        website: :Website,
+        recipient_account_number: :FIRecipientAcctNumber ,
+        recipient_surname: :FIRecipientSurname ,
+        recipient_postcode: :FIRecipientPostcode ,
+        recipient_dob: :FIRecipientDoB
+      }
+
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :switch, :solo, :maestro, :diners_club]
       self.supported_countries = ['GB', 'IE']
       self.default_currency = 'GBP'
@@ -195,14 +215,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_optional_data(post, options)
-        add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
-        add_pair(post, :ApplyAVSCV2, options[:apply_avscv2]) unless options[:apply_avscv2].blank?
-        add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
         add_pair(post, :CreateToken, 1) unless options[:store].blank?
-        add_pair(post, :FIRecipientAcctNumber, options[:recipient_account_number])
-        add_pair(post, :FIRecipientSurname, options[:recipient_surname])
-        add_pair(post, :FIRecipientPostcode, options[:recipient_postcode])
-        add_pair(post, :FIRecipientDoB, options[:recipient_dob])
+
+        OPTIONAL_REQUEST_FIELDS.each do |gateway_option, sagepay_field|
+          add_pair(post, sagepay_field, options[gateway_option])
+        end
       end
 
       def add_address(post, options)
