@@ -141,7 +141,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount + 1, purchase.authorization, @options)
     assert_failure refund
-    assert_match %r{Wrong Refund data}, refund.message
+    assert_match %r{Invalid Refund data}, refund.message
   end
 
   def test_successful_void
