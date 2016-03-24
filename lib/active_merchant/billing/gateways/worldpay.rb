@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       def build_authorization_request(money, payment_method, options)
         build_request do |xml|
           xml.tag! 'submit' do
-            xml.tag! 'order', {'orderCode' => options[:order_id], 'installationId' => @options[:inst_id]}.reject{|_,v| !v} do
+            xml.tag! 'order', order_tag_attributes(options) do
               xml.description(options[:description].blank? ? "Purchase" : options[:description])
               add_amount(xml, money, options)
               if options[:order_content]
@@ -149,6 +149,10 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
+      end
+
+      def order_tag_attributes(options)
+        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject{|_,v| !v}
       end
 
       def build_capture_request(money, authorization, options)
