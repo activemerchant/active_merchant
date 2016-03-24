@@ -79,6 +79,29 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store(credit_card, options = {})
+        if options[:customer_id].blank?
+          MultiResponse.run() do |r|
+            #create charge object
+            r.process { authorize(100, credit_card, options) }
+            #create customer and save card
+            r.process { create_customer_add_card(r.authorization, options) }
+            #void the charge
+            r.process(:ignore_result) { void(r.params["metadata"]["chargeId"], options) }
+          end
+        else
+          verify(credit_card, options)
+        end
+      end
+
+      def customer(options = {})
+        if options[:customer_id].blank?
+          return nil
+        else
+          commit("customers/#{CGI.escape(options[:customer_id])}", nil, options, :get)
+        end
+      end
+
       def supports_scrubbing?
         true
       end
@@ -92,8 +115,18 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def create_customer_add_card(authorization, options)
+        post = {}
+        post[:email] = options[:email]
+        post[:description] = options[:description]
+        post[:card] = authorization
+        post[:metadata] = {}
+        post[:metadata][:chargeId] = authorization
+        commit('customers', post, options)
+      end
+
       def add_customer(post, payment, options)
-        post[:customer] = options[:customer] if options[:customer]
+        post[:customerId] = options[:customer_id] if options[:customer_id]
       end
 
       def add_customer_data(post, options)
@@ -156,8 +189,8 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(url, parameters = nil, options = {})
-        response = api_request(url, parameters, options)
+      def commit(url, parameters = nil, options = {}, method = nil)
+        response = api_request(url, parameters, options, method)
         success = !response.key?("error")
 
         Response.new(success,
@@ -206,10 +239,14 @@ module ActiveMerchant #:nodoc:
         end.compact.join("&")
       end
 
-      def api_request(endpoint, parameters = nil, options = {})
+      def api_request(endpoint, parameters = nil, options = {}, method = nil)
         raw_response = response = nil
         begin
-          raw_response = ssl_post(self.live_url + endpoint, post_data(parameters), headers(options))
+          if method.blank?
+            raw_response = ssl_post(self.live_url + endpoint, post_data(parameters), headers(options))
+          else
+            raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(options))
+          end
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body

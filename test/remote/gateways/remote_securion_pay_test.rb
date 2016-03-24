@@ -20,6 +20,29 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_match %r(^cust_\w+$), response.authorization
+    assert_equal "customer", response.params["objectType"]
+    assert_match %r(^card_\w+$), response.params["cards"][0]["id"]
+    assert_equal "card", response.params["cards"][0]["objectType"]
+
+    @options[:customer_id] = response.authorization
+    response = @gateway.store(@new_credit_card, @options)
+    assert_success response
+    assert_match %r(^card_\w+$), response.params["card"]["id"]
+    assert_equal @options[:customer_id], response.params["card"]["customerId"]
+
+    response = @gateway.customer(@options)
+    assert_success response
+    assert_equal @options[:customer_id], response.params["id"]
+    assert_equal "401288", response.params["cards"][0]["first6"]
+    assert_equal "1881", response.params["cards"][0]["last4"]
+    assert_equal "424242", response.params["cards"][1]["first6"]
+    assert_equal "4242", response.params["cards"][1]["last4"]
+  end
+
   # def test_dump_transcript
   #   skip("Transcript scrubbing for this gateway has been tested.")
   #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
@@ -118,7 +141,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount + 1, purchase.authorization, @options)
     assert_failure refund
-    assert_match %r{Wrong Refund data}, refund.message
+    assert_match %r{Invalid Refund data}, refund.message
   end
 
   def test_successful_void
