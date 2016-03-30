@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Element'
 
       SERVICE_TEST_URL = 'https://certservices.elementexpress.com/express.asmx'
-      SERVICE_LIVE_URL = 'https://service.elementexpress.com/express.asmx'
+      SERVICE_LIVE_URL = 'https://services.elementexpress.com/express.asmx'
 
       def initialize(options={})
         requires!(options, :account_id, :account_token, :application_id, :acceptor_id, :application_name, :application_version)
