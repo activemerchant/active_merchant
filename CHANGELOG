@@ -19,6 +19,8 @@
 * Vanco: Update live_url [duff]
 * Cardstream: Reference purchase [curiousepic]
 * Paymill: Fix error handling [methodmissing]
+* Latitude19: New gateway support [shasum]
+
 
 == Version 1.58.0 (March 1, 2016)
 * Move Electron check out of CreditCard into CreditCardMethods [ThereExistsX]

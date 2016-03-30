@@ -371,6 +371,11 @@ jetpay:
 komoju:
   login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3
 
+latitude19:
+  account_number: "03022016"
+  configuration_id: "380835424362"
+  secret: "&2016(march)02"
+
 linkpoint:
   login: STOREID
   pem: |
