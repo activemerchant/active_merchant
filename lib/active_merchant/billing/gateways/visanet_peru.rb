@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
         params[:firstName] = payment_method.first_name
         params[:lastName] = payment_method.last_name
         params[:cardNumber] = payment_method.number
-        params[:cvv2Code] = Integer(payment_method.verification_value, 10)
+        params[:cvv2Code] = payment_method.verification_value
         params[:expirationYear] = format(payment_method.year, :four_digits)
         params[:expirationMonth] = format(payment_method.month, :two_digits)
       end
