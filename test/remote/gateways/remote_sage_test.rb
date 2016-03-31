@@ -9,6 +9,11 @@ class RemoteSageTest < Test::Unit::TestCase
 
     @visa        = credit_card("4111111111111111")
     @check       = check
+    @mastercard  = credit_card("5499740000000057")
+    @discover    = credit_card("6011000993026909")
+    @amex        = credit_card("371449635392376")
+
+    @declined_card = credit_card('4000')
 
     @options = {
       :order_id => generate_unique_id,
@@ -20,6 +25,35 @@ class RemoteSageTest < Test::Unit::TestCase
 
   def test_successful_visa_purchase
     assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+  end
+
+  def test_declined_visa_purchase
+    @amount = 200
+
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_failure response
+    assert response.test?
+  end
+
+  def test_successful_mastercard_purchase
+    assert response = @gateway.purchase(@amount, @mastercard, @options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_discover_purchase
+    assert response = @gateway.purchase(@amount, @discover, @options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_amex_purchase
+    assert response = @gateway.purchase(@amount, @amex, @options)
     assert_success response
     assert response.test?
     assert_false response.authorization.blank?
@@ -39,6 +73,13 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_with_minimal_options
+    assert response = @gateway.purchase(@amount, @visa, billing_address: address)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+  end
+
   def test_authorization_and_capture
     assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
@@ -47,12 +88,24 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_failed_capture
+    assert response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_equal 'INVALID T_REFERENCE', response.message
+  end
+
   def test_visa_authorization_and_void
     assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
+  end
+
+  def test_failed_void
+    assert response = @gateway.void('')
+    assert_failure response
+    assert_equal 'INVALID T_REFERENCE', response.message
   end
 
   def test_check_purchase_and_void
@@ -91,6 +144,43 @@ class RemoteSageTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, "UnknownReference", @options)
     assert_failure response
     assert_equal "INVALID T_REFERENCE", response.message
+  end
+
+  def test_partial_refund
+    purchase = @gateway.purchase(@amount, @visa, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options)
+    assert_success refund
+    assert_equal "APPROVED", refund.message
+  end
+
+  def test_store_visa
+    assert response = @gateway.store(@visa, @options)
+    assert_success response
+    assert auth = response.authorization,
+      "Store card authorization should not be nil"
+    assert_not_nil response.message
+  end
+
+  def test_failed_store
+    assert response = @gateway.store(@declined_card, @options)
+    assert_failure response
+    assert_nil response.authorization
+  end
+
+  def test_unstore_visa
+    assert auth = @gateway.store(@visa, @options).authorization,
+      "Unstore card authorization should not be nil"
+    assert response = @gateway.unstore(auth, @options)
+    assert_success response
+  end
+
+  def test_failed_unstore_visa
+    assert auth = @gateway.store(@visa, @options).authorization,
+      "Unstore card authorization should not be nil"
+    assert response = @gateway.unstore(auth, @options)
+    assert_success response
   end
 
   def test_invalid_login

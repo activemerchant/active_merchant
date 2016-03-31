@@ -33,6 +33,12 @@ class RemoteVancoTest < Test::Unit::TestCase
     assert_equal "Success", response.message
   end
 
+  def test_successful_purchase_sans_minimal_options
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal "Success", response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @credit_card, billing_address: address(country: "CA"))
     assert_failure response

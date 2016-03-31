@@ -3,8 +3,10 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CreditcallGateway < Gateway
+      include Empty
+
       self.test_url = 'https://test.cardeasexml.com/generic.cex'
-      self.live_url = 'https://live.cardeasexml.com/'
+      self.live_url = 'https://live.cardeasexml.com/generic.cex'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -118,10 +120,10 @@ module ActiveMerchant #:nodoc:
 
       def add_card_details(xml, payment_method, options={})
         xml.CardDetails do
-          xml.Manual(type: "cnp") do
+          xml.Manual(type: "ecommerce") do
             xml.PAN payment_method.number
             xml.ExpiryDate exp_date(payment_method)
-            xml.CSC payment_method.verification_value
+            xml.CSC payment_method.verification_value unless empty?(payment_method.verification_value)
           end
 
           if address = options[:billing_address]

@@ -188,20 +188,26 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_with_credit_card(creditcard, options)
         commit do
+          if options[:payment_method_nonce]
+            credit_card_params = { payment_method_nonce: options[:payment_method_nonce] }
+          else
+            credit_card_params = {
+              :credit_card => {
+                :cardholder_name => creditcard.name,
+                :number => creditcard.number,
+                :cvv => creditcard.verification_value,
+                :expiration_month => creditcard.month.to_s.rjust(2, "0"),
+                :expiration_year => creditcard.year.to_s,
+                :token => options[:credit_card_token]
+              }
+            }
+          end
           parameters = {
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email]),
             :id => options[:customer],
-            :credit_card => {
-              :cardholder_name => creditcard.name,
-              :number => creditcard.number,
-              :cvv => creditcard.verification_value,
-              :expiration_month => creditcard.month.to_s.rjust(2, "0"),
-              :expiration_year => creditcard.year.to_s,
-              :token => options[:credit_card_token]
-            }
-          }
+          }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
@@ -315,7 +321,7 @@ module ActiveMerchant #:nodoc:
       def response_from_result(result)
         Response.new(result.success?, message_from_result(result),
           { braintree_transaction: transaction_hash(result) },
-          { authorization: (result.transaction.id if result.success?) }
+          { authorization: (result.transaction.id if result.transaction) }
          )
       end
 
@@ -328,10 +334,8 @@ module ActiveMerchant #:nodoc:
 
       def response_options(result)
         options = {}
-        if result.success?
-          options[:authorization] = result.transaction.id
-        end
         if result.transaction
+          options[:authorization] = result.transaction.id
           options[:avs_result] = { code: avs_code_from(result.transaction) }
           options[:cvv_result] = result.transaction.cvv_response_code
         end
@@ -536,6 +540,9 @@ module ActiveMerchant #:nodoc:
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
           if options[:payment_method_token]
             parameters[:payment_method_token] = credit_card_or_vault_id
+            options.delete(:billing_address)
+          elsif options[:payment_method_nonce]
+            parameters[:payment_method_nonce] = credit_card_or_vault_id
           else
             parameters[:customer_id] = credit_card_or_vault_id
           end
@@ -545,13 +552,15 @@ module ActiveMerchant #:nodoc:
             :last_name => credit_card_or_vault_id.last_name
           )
           if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
-            parameters[:apple_pay_card] = {
-              :number => credit_card_or_vault_id.number,
-              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-              :expiration_year => credit_card_or_vault_id.year.to_s,
-              :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
-              :cryptogram => credit_card_or_vault_id.payment_cryptogram
-            }
+            if credit_card_or_vault_id.source == :apple_pay
+              parameters[:apple_pay_card] = {
+                :number => credit_card_or_vault_id.number,
+                :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+                :expiration_year => credit_card_or_vault_id.year.to_s,
+                :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
+                :cryptogram => credit_card_or_vault_id.payment_cryptogram
+              }
+            end
           else
             parameters[:credit_card] = {
               :number => credit_card_or_vault_id.number,
@@ -561,7 +570,7 @@ module ActiveMerchant #:nodoc:
             }
           end
         end
-        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address] && !options[:payment_method_token]
+        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
         parameters[:channel] = application_id if application_id.present? && application_id != "ActiveMerchant"
 

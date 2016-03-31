@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         {
           "Content-Type" => "application/json",
-          "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
+          "Authorization" => "Basic " + Base64.strict_encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Openpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Openpay-Client-User-Agent" => user_agent
         }

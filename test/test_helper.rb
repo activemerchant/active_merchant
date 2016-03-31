@@ -122,7 +122,8 @@ module ActiveMerchant
     end
 
     def assert_scrubbed(unexpected_value, transcript)
-      refute transcript.include?(unexpected_value.to_s), "Expected #{unexpected_value} to be scrubbed out of transcript"
+      regexp = (Regexp === unexpected_value ? unexpected_value : Regexp.new(Regexp.quote(unexpected_value.to_s)))
+      refute_match regexp, transcript, "Expected the value to be scrubbed out of the transcript"
     end
 
     private
@@ -142,6 +143,10 @@ module ActiveMerchant
     private
     def default_expiration_date
       @default_expiration_date ||= Date.new((Time.now.year + 1), 9, 30)
+    end
+
+    def formatted_expiration_date(credit_card)
+      credit_card.expiry_date.expiration.strftime('%Y-%m')
     end
 
     def credit_card(number = '4242424242424242', options = {})

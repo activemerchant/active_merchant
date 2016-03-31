@@ -3,6 +3,8 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ForteGateway < Gateway
+      include Empty
+
       self.test_url = 'https://sandbox.forte.net/api/v2'
       self.live_url = 'https://api.forte.net/v2'
 
@@ -21,8 +23,9 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options={})
         post = {}
         add_amount(post, money, options)
+        add_invoice(post, options)
         add_payment_method(post, payment_method)
-        add_billing_address(post, options)
+        add_billing_address(post, payment_method, options)
         add_shipping_address(post, options)
         post[:action] = "sale"
 
@@ -32,8 +35,9 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment_method, options={})
         post = {}
         add_amount(post, money, options)
+        add_invoice(post, options)
         add_payment_method(post, payment_method)
-        add_billing_address(post, options)
+        add_billing_address(post, payment_method, options)
         add_shipping_address(post, options)
         post[:action] = "authorize"
 
@@ -42,6 +46,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         post = {}
+        add_invoice(post, options)
         post[:transaction_id] = transaction_id_from(authorization)
         post[:authorization_code] = authorization_code_from(authorization)
         post[:action] = "capture"
@@ -52,8 +57,9 @@ module ActiveMerchant #:nodoc:
       def credit(money, payment_method, options={})
         post = {}
         add_amount(post, money, options)
+        add_invoice(post, options)
         add_payment_method(post, payment_method)
-        add_billing_address(post, options)
+        add_billing_address(post, payment_method, options)
         post[:action] = "disburse"
 
         commit(:post, post)
@@ -93,21 +99,34 @@ module ActiveMerchant #:nodoc:
         post[:location_id] = "loc_#{@options[:location_id]}"
       end
 
+      def add_invoice(post, options)
+        post[:order_number] = options[:order_id]
+      end
+
       def add_amount(post, money, options)
         post[:authorization_amount] = amount(money)
       end
 
-      def add_billing_address(post, options)
+      def add_billing_address(post, payment, options)
+        post[:billing_address] = {}
         if address = options[:billing_address] || options[:address]
-          post[:billing_address] = {}
-          post[:billing_address][:first_name] = address[:name].split(" ").first if address[:name]
-          post[:billing_address][:last_name] = address[:name].split(" ").last if address[:name]
-          post[:billing_address][:address_line1] = address[:address1] if address[:address1]
-          post[:billing_address][:address_line2] = address[:address2] if address[:address2]
-          post[:billing_address][:address_country] = address[:country] if address[:country]
-          post[:billing_address][:address_zip] = address[:zip] if address[:zip]
-          post[:billing_address][:address_state] = address[:state] if address[:state]
-          post[:billing_address][:address_city] = address[:city] if address[:city]
+          first_name, last_name = split_names(address[:name])
+          post[:billing_address][:first_name] = first_name if first_name
+          post[:billing_address][:last_name] = last_name if last_name
+          post[:billing_address][:physical_address] = {}
+          post[:billing_address][:physical_address][:street_line1] = address[:address1] if address[:address1]
+          post[:billing_address][:physical_address][:street_line2] = address[:address2] if address[:address2]
+          post[:billing_address][:physical_address][:postal_code] = address[:zip] if address[:zip]
+          post[:billing_address][:physical_address][:region] = address[:state] if address[:state]
+          post[:billing_address][:physical_address][:locality] = address[:city] if address[:city]
+        end
+
+        if empty?(post[:billing_address][:first_name] && payment.first_name)
+          post[:billing_address][:first_name] = payment.first_name
+        end
+
+        if empty?(post[:billing_address][:last_name] && payment.last_name)
+          post[:billing_address][:last_name] = payment.last_name
         end
       end
 
@@ -116,14 +135,14 @@ module ActiveMerchant #:nodoc:
         address = options[:shipping_address]
 
         post[:shipping_address] = {}
-        post[:shipping_address][:first_name] = address[:name].split(" ").first if address[:name]
-        post[:shipping_address][:last_name] = address[:name].split(" ").last if address[:name]
-        post[:shipping_address][:address_line1] = address[:address1] if address[:address1]
-        post[:shipping_address][:address_line2] = address[:address2] if address[:address2]
-        post[:shipping_address][:address_country] = address[:country] if address[:country]
-        post[:shipping_address][:address_zip] = address[:zip] if address[:zip]
-        post[:shipping_address][:address_state] = address[:state] if address[:state]
-        post[:shipping_address][:address_city] = address[:city] if address[:city]
+        first_name, last_name = split_names(address[:name])
+        post[:shipping_address][:first_name] = first_name if first_name
+        post[:shipping_address][:last_name] = last_name if last_name
+        post[:shipping_address][:physical_address][:street_line1] = address[:address1] if address[:address1]
+        post[:shipping_address][:physical_address][:street_line2] = address[:address2] if address[:address2]
+        post[:shipping_address][:physical_address][:postal_code] = address[:zip] if address[:zip]
+        post[:shipping_address][:physical_address][:region] = address[:state] if address[:state]
+        post[:shipping_address][:physical_address][:locality] = address[:city] if address[:city]
       end
 
       def add_payment_method(post, payment_method)

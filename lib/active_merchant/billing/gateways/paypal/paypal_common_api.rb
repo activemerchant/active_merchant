@@ -619,7 +619,7 @@ module ActiveMerchant #:nodoc:
       def add_express_only_payment_details(xml, options = {})
         add_optional_fields(xml,
                             %w{n2:NoteText          n2:PaymentAction
-                               n2:TransactionId     n2:AllowedPaymentMethodType
+                               n2:TransactionId     n2:AllowedPaymentMethod
                                n2:PaymentRequestID  },
                             options)
       end
@@ -692,7 +692,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def item_amount(amount, currency_code)
-        if amount.to_i < 0 && Gateway.non_fractional_currency?(currency_code)
+        if amount.to_i < 0 && non_fractional_currency?(currency_code)
           amount(amount).to_f.floor
         else
           localized_amount(amount, currency_code)

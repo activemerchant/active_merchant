@@ -13,20 +13,23 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'CardStream'
 
       CURRENCY_CODES = {
-        "AUD" => '036',
-        "CAD" => '124',
-        "CZK" => '203',
-        "DKK" => '208',
-        "HKD" => '344',
-        "ICK" => '352',
-        "JPY" => '392',
-        "NOK" => '578',
-        "SGD" => '702',
-        "SEK" => '752',
-        "CHF" => '756',
-        "GBP" => '826',
-        "USD" => '840',
-        "EUR" => '978'
+        "AED" => "784",
+        "AUD" => "036",
+        "BRL" => "986",
+        "CAD" => "124",
+        "CHF" => "756",
+        "CZK" => "203",
+        "DKK" => "208",
+        "EUR" => "978",
+        "GBP" => "826",
+        "HKD" => "344",
+        "ICK" => "352",
+        "JPY" => "392",
+        "NOK" => "578",
+        "NZD" => "554",
+        "SEK" => "752",
+        "SGD" => "702",
+        "USD" => "840",
       }
 
       CVV_CODE = {
@@ -74,11 +77,12 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         post = {}
+        add_pair(post, :captureDelay, -1)
         add_amount(post, money, options)
         add_invoice(post, creditcard, money, options)
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
-        commit('PREAUTH', post)
+        commit('SALE', post)
       end
 
       def purchase(money, creditcard, options = {})
@@ -93,8 +97,9 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
-        add_amount(post, money, options)
-        commit('SALE', post)
+        add_pair(post, :amount, amount(money), :required => true)
+
+        commit('CAPTURE', post)
       end
 
       def refund(money, authorization, options = {})
@@ -132,7 +137,7 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         add_pair(post, :amount, amount(money), :required => true)
-        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)) || currency_code(self.default_currency))
+        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)))
       end
 
       def add_customer_data(post, options)
@@ -153,8 +158,8 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :item1GrossValue, amount(money))
         end
 
-        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
         add_pair(post, :type, options[:type] || '1')
+        add_threeds_required(post, options)
       end
 
       def add_creditcard(post, credit_card)
@@ -172,6 +177,10 @@ module ActiveMerchant #:nodoc:
         end
 
         add_pair(post, :cardCVV, credit_card.verification_value)
+      end
+
+      def add_threeds_required(post, options)
+        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
       end
 
       def add_hmac(post)
@@ -193,11 +202,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-
+        parameters.update(:countryCode => self.supported_countries[0]) unless action == 'CAPTURE'
         parameters.update(
           :merchantID => @options[:login],
-          :action => action,
-          :countryCode => self.supported_countries[0],
+          :action => action
         )
         # adds a signature to the post hash/array
         add_hmac(parameters)
@@ -210,12 +218,31 @@ module ActiveMerchant #:nodoc:
                      :test => test?,
                      :authorization => response[:xref],
                      :cvv_result => CVV_CODE[response[:avscv2ResponseCode].to_s[0, 1]],
-                     :avs_result => {
-                       :postal_match => AVS_POSTAL_MATCH[response[:avscv2ResponseCode].to_s[1, 1]],
-                       :street_match => AVS_STREET_MATCH[response[:avscv2ResponseCode].to_s[2, 1]]
-                     }
+                     :avs_result => avs_from(response)
         )
       end
+
+      def avs_from(response)
+        postal_match = AVS_POSTAL_MATCH[response[:avscv2ResponseCode].to_s[1, 1]]
+        street_match = AVS_STREET_MATCH[response[:avscv2ResponseCode].to_s[2, 1]]
+
+        code = if postal_match == "Y" && street_match == "Y"
+          "M"
+        elsif postal_match == "Y"
+          "P"
+        elsif street_match == "Y"
+          "A"
+        else
+          "I"
+        end
+
+        AVSResult.new({
+          :code => code,
+          :postal_match => postal_match,
+          :street_match => street_match
+        })
+      end
+
 
       def currency_code(currency)
         CURRENCY_CODES[currency]
@@ -228,6 +255,7 @@ module ActiveMerchant #:nodoc:
       def add_pair(post, key, value, options = {})
         post[key] = value if !value.blank? || options[:required]
       end
+
     end
   end
 end

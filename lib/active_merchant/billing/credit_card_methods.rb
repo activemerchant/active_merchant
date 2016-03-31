@@ -17,6 +17,26 @@ module ActiveMerchant #:nodoc:
         'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/
       }
 
+      # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
+      ELECTRON_RANGES = [
+        [400115],
+        (400837..400839),
+        (412921..412923),
+        [417935],
+        (419740..419741),
+        (419773..419775),
+        [424519],
+        (424962..424963),
+        [437860],
+        [444000],
+        [459472],
+        (484406..484411),
+        (484413..484414),
+        (484418..484418),
+        (484428..484455),
+        (491730..491759),
+      ]
+
       def self.included(base)
         base.extend(ClassMethods)
       end
@@ -58,6 +78,11 @@ module ActiveMerchant #:nodoc:
         (number.to_s =~ /^\d{1,2}$/)
       end
 
+      # Returns if the card matches known Electron BINs
+      def electron?
+        self.class.electron?(number)
+      end
+
       module ClassMethods
         # Returns true if it validates. Optionally, you can pass a card brand as an argument and
         # make sure it is of the correct brand.
@@ -68,6 +93,7 @@ module ActiveMerchant #:nodoc:
         def valid_number?(number)
           valid_test_mode_card_number?(number) ||
             valid_card_number_length?(number) &&
+            valid_card_number_characters?(number) &&
             valid_checksum?(number)
         end
 
@@ -105,6 +131,17 @@ module ActiveMerchant #:nodoc:
           return nil
         end
 
+        def electron?(number)
+          return false unless [16, 19].include?(number.length)
+
+          # don't recalculate for each range
+          bank_identification_number = first_digits(number).to_i
+
+          ELECTRON_RANGES.any? do |range|
+            range.include?(bank_identification_number)
+          end
+        end
+
         def type?(number)
           ActiveMerchant.deprecated "CreditCard#type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand? instead."
           brand?(number)
@@ -136,6 +173,10 @@ module ActiveMerchant #:nodoc:
 
         def valid_card_number_length?(number) #:nodoc:
           number.to_s.length >= 12
+        end
+
+        def valid_card_number_characters?(number) #:nodoc:
+          !number.to_s.match(/\D/)
         end
 
         def valid_test_mode_card_number?(number) #:nodoc:

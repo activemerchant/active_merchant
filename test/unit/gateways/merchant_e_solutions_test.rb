@@ -2,7 +2,7 @@ require 'test_helper'
 
 class MerchantESolutionsTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = MerchantESolutionsGateway.new(
                  :login => 'login',
@@ -33,6 +33,19 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_purchase_with_long_order_id_truncates_id
+    options = {order_id: "thisislongerthan17characters"}
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes("invoice_number=thisislongerthan1"),
+      )
+    ).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
   end
 
   def test_authorization

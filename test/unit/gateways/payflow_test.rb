@@ -37,10 +37,34 @@ class PayflowTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_authorization_with_three_d_secure_option
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |endpoint, data, headers|
+      assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path
+    end.respond_with(successful_authorization_response)
+    assert_equal "Approved", response.message
+    assert_success response
+    assert response.test?
+    assert_equal "VUJN1A6E11D9", response.authorization
+    refute response.fraud_review?
+  end
+
   def test_successful_purchase_with_fraud_review
     @gateway.stubs(:ssl_post).returns(successful_purchase_with_fraud_review_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "126", response.params["result"]
+    assert response.fraud_review?
+  end
+
+  def test_successful_purchase_with_three_d_secure_option
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option))
+    end.check_request do |endpoint, data, headers|
+      assert_three_d_secure REXML::Document.new(data), purchase_buyer_auth_result_path
+    end.respond_with(successful_purchase_with_fraud_review_response)
     assert_success response
     assert_equal "126", response.params["result"]
     assert response.fraud_review?
@@ -108,7 +132,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_overriding_test_mode
-    Base.gateway_mode = :production
+    Base.mode = :production
 
     gateway = PayflowGateway.new(
       :login => 'LOGIN',
@@ -120,7 +144,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_using_production_mode
-    Base.gateway_mode = :production
+    Base.mode = :production
 
     gateway = PayflowGateway.new(
       :login => 'LOGIN',
@@ -324,6 +348,17 @@ class PayflowTest < Test::Unit::TestCase
     doc = REXML::Document.new(xml.target!)
     node = REXML::XPath.first(doc, '/Card/ExtData')
     assert_equal '01', node.attributes['Value']
+  end
+
+  def test_add_credit_card_with_three_d_secure
+    xml = Builder::XmlMarkup.new
+    credit_card = credit_card("5641820000000005",
+                              :brand => "switch",
+                              :issue_number => 1
+    )
+
+    @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option))
+    assert_three_d_secure REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
   end
 
   def test_duplicate_response_flag
@@ -585,5 +620,37 @@ class PayflowTest < Test::Unit::TestCase
   </ResponseData>
 </XMLPayResponse>
     XML
+  end
+  
+  def assert_three_d_secure(xml_doc, buyer_auth_result_path)
+    assert_equal 'Y', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
+    assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
+    assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
+    assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
+    assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
+    assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
+    assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
+  end
+
+  def authorize_buyer_auth_result_path
+    '/XMLPayRequest/RequestData/Transactions/Transaction/Authorization/PayData/Tender/Card/BuyerAuthResult'
+  end
+
+  def purchase_buyer_auth_result_path
+    '/XMLPayRequest/RequestData/Transactions/Transaction/Sale/PayData/Tender/Card/BuyerAuthResult'
+  end
+
+  def three_d_secure_option
+    {
+        :three_d_secure => {
+            :status => 'Y',
+            :authentication_id => 'QvDbSAxSiaQs241899E0',
+            :pareq => 'pareq block',
+            :acs_url => 'https://bankacs.bank.com/ascurl',
+            :eci => '02',
+            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+        }
+    }
   end
 end

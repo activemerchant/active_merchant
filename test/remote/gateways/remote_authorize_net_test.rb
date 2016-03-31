@@ -105,7 +105,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_card_present_authorize_and_capture_with_track_data_only
     track_credit_card = ActiveMerchant::Billing::CreditCard.new(:track_data => '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
-    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert authorization = @gateway.authorize(@amount, track_credit_card, @options)
     assert_success authorization
 
     capture = @gateway.capture(@amount, authorization.authorization)
@@ -238,6 +238,19 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card)
     assert_success response
     assert response.authorization
+    assert_equal "Successful", response.message
+    assert_equal "1", response.params["message_code"]
+  end
+
+  def test_successful_store_new_payment_profile
+    assert store = @gateway.store(@credit_card)
+    assert_success store
+    assert store.authorization
+
+    new_card = credit_card('4424222222222222')
+    customer_profile_id, _, _ = store.authorization.split("#")
+
+    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
     assert_equal "Successful", response.message
     assert_equal "1", response.params["message_code"]
   end
@@ -434,6 +447,12 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_echeck_credit
+    response = @gateway.credit(@amount, @check, @options)
+    assert_equal 'The transaction is currently under review', response.message
     assert response.authorization
   end
 
