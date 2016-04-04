@@ -4,12 +4,52 @@ module ActiveMerchant #:nodoc:
       self.display_name = "Latitude19 Gateway"
       self.homepage_url = "http://www.l19tech.com"
 
-      self.live_url = self.test_url = "https://gateway.l19tech.com/payments/"
+      self.live_url = "https://gateway.l19tech.com/payments/"
+      self.test_url = "https://gateway-sb.l19tech.com/payments/"
 
       self.supported_countries = ["US"]
       self.default_currency = "USD"
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+
+      RESPONSE_CODE_MAPPING = {
+        '100' => 'Approved',
+        '101' => 'Local duplicate detected',
+        '102' => 'Accepted local capture with no match',
+        '103' => 'Auth succeeded but capture failed',
+        '104' => 'Auth succeeded but failed to save info',
+        '200' => STANDARD_ERROR_CODE[:card_declined],
+        '300' => 'Processor reject',
+        '301' => 'Local reject on user/password',
+        '302' => 'Local reject',
+        '303' => 'Processor unknown response',
+        '304' => 'Error parsing processor response',
+        '305' => 'Processor auth succeeded but settle failed',
+        '306' => 'Processor auth succeeded settle status unknown',
+        '307' => 'Processor settle status unknown',
+        '308' => 'Processor duplicate',
+        '400' => 'Not submitted',
+        '401' => 'Terminated before request submitted',
+        '402' => 'Local server busy',
+        '500' => 'Submitted not returned',
+        '501' => 'Terminated before response returned',
+        '502' => 'Processor returned timeout status',
+        '600' => 'Failed local capture with no match',
+        '601' => 'Failed local capture',
+        '700' => 'Failed local void (not in capture file)',
+        '701' => 'Failed local void',
+        '800' => 'Failed local refund (not authorized)',
+        '801' => 'Failed local refund'
+      }
+
+      BRAND_MAP = {
+        "master" => "MC",
+        "visa" => "VI",
+        "american_express" => "AX",
+        "discover" => "DS",
+        "diners_club" => "DC",
+        "jcb" => "JC"
+      }
 
       def initialize(options={})
         requires!(options, :account_number, :configuration_id, :secret)
@@ -17,29 +57,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        #JSON
-        post = {}
-
-        add_unique_id(post)
-        add_session_request_data(post, options)
-        # add_invoice(post, amount, options)
-        # add_payment_method(post, payment_method)
-        # add_customer_data(post, options)
-
-        commit("session/", post)
-
-        # #XML
-        # request = build_xml_request do |doc|
-        #   add_authentication(doc)
-        #   doc.sale(transaction_attributes(options)) do
-        #     add_auth_purchase_params(doc, money, payment_method, options)
-        #   end
-        # end
-
-        # commit(:sale, request)
+        if options[customer_account_number]
+          auth_or_sale("sale", nil, options[customer_account_number], amount, payment_method, options)
+        else
+          MultiResponse.run() do |r|
+            r.process { get_session(options) }
+            r.process { get_token(r.authorization, payment_method, options) }
+            r.process { auth_or_sale("sale", r.authorization, nil, amount, payment_method, options) }
+          end
+        end
       end
 
       def authorize(amount, payment_method, options={})
+        if options[customer_account_number]
+          auth_or_sale("auth", nil, options[customer_account_number], amount, payment_method, options)
+        else
+          MultiResponse.run() do |r|
+            r.process { get_session(options) }
+            r.process { get_token(r.authorization, payment_method, options) }
+            r.process { auth_or_sale("auth", r.authorization, nil, amount, payment_method, options) }
+          end
+        end
       end
 
       def capture(amount, authorization, options={})
@@ -61,13 +99,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(payment_method, options = {})
-        post = {}
-        add_payment_method(post, payment_method)
-        add_customer_data(post, options)
+      # def store(payment_method, options = {})
+      #   post = {}
+      #   add_payment_method(post, payment_method)
+      #   add_customer_data(post, options)
 
-        commit("store", post)
-      end
+      #   commit("store", post)
+      # end
 
       def supports_scrubbing?
         true
@@ -96,162 +134,219 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["USD"] = "840"
+      # CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
+      # CURRENCY_CODES["USD"] = "840"
 
-      def add_session_request_data(post, options)
-        add_method(post, "getSession")
-        params = {}
-        params[:pgwAccountNumber] = @options[:account_number]
-        puts "account number = ", params[:pgwAccountNumber]
-        params[:pgwConfigurationId] = @options[:configuration_id]
-        puts "configuration id = ", params[:pgwConfigurationId]
-        params[:requestTimeStamp] = Time.now.getutc.strftime("%Y%m%d%H%M%S")
-        puts "timestamp = ", params[:requestTimeStamp]
-        puts "local options", options
-        puts "global options", @options
-        message = params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + params[:requestTimeStamp] + "|" + post[:method]
-        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message)
-        post[:params] = [params]
-      end
-
-      def add_method(post, method)
-        post[:method] = method
-      end
-
-      def add_unique_id(post)
+      def add_request_id(post)
         post[:id] = SecureRandom.hex(16)
       end
 
-      def add_invoice(post, money, options)
-        post[:amount] = amount(money)
-        post[:orderid] = options[:order_id]
-        post[:currency] = CURRENCY_CODES[options[:currency] || currency(money)]
-      end
-
-      def add_payment_method(post, payment_method)
-        post[:cardholder] = payment_method.name
-        post[:cardtype] = payment_method.brand
-        post[:cardnumber] = payment_method.number
-        post[:cardcvv] = payment_method.verification_value
-        post[:cardexpyear] = format(payment_method.year, :four_digits)
-        post[:cardexpmonth] = format(payment_method.month, :two_digits)
-        post[:cardtrackdata] = payment_method.track_data
-      end
-
-      def add_customer_data(post, options)
-        post[:email] = options[:email]
-        if (billing_address = options[:billing_address])
-          post[:name] = billing_address[:name]
-          post[:company] = billing_address[:company]
-          post[:address1] = billing_address[:address1]
-          post[:address2] = billing_address[:address2]
-          post[:city] = billing_address[:city]
-          post[:state] = billing_address[:state]
-          post[:country] = billing_address[:country]
-          post[:zip]    = billing_address[:zip]
-          post[:phone] = billing_address[:phone]
+      def message(params, method)
+        if method == "getSession"
+          params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + params[:requestTimeStamp] + "|" + method
+        else
+          params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + params[:orderNumber] + "|" + method + "|" + (params[:amount] || "") + "|" + (params[:sessionToken] || "") + "|" + (params[:accountToken] || "")
         end
       end
 
-      def add_reference(post, authorization)
-        transaction_id, transaction_amount = split_authorization(authorization)
-        post[:transaction_id] = transaction_id
-        post[:transaction_amount] = transaction_amount
+      def get_session(options)
+        post = {}
+        post[:method] = "getSession"
+
+        add_request_id(post)
+
+        params = {}
+        params[:pgwAccountNumber] = @options[:account_number]
+        params[:pgwConfigurationId] = @options[:configuration_id]
+        params[:requestTimeStamp] = Time.now.getutc.strftime("%Y%m%d%H%M%S")
+        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
+        post[:params] = [params]
+
+        commit("session", post)
+        # add_payment_method(post, payment_method)
+        # add_customer_data(post, options)
       end
 
-      ACTIONS = {
-        purchase: "SALE",
-        authorize: "AUTH",
-        capture: "CAPTURE",
-        void: "VOID",
-        refund: "REFUND",
-        store: "STORE"
-      }
+      def get_token(session_id, payment_method, options)
+        post = {}
+        post[:method] = "tokenize"
+
+        add_request_id(post)
+
+        params = {}
+        params[:sessionId] = session_id
+        params[:cardNumber] = payment_method.number
+        post[:params] = [params]
+
+        commit("token", post)
+      end
+
+      def auth_or_sale(method, session_token = nil, account_token = nil, amount, payment_method, options)
+        post = {}
+        post[:method] = method
+
+        add_request_id(post)
+
+        params = {}
+
+        if account_token
+          params[:accountToken] = account_token
+        else
+          params[:sessionToken] = session_token
+        end
+
+        add_invoice(params, amount, options)
+        add_payment_method(params, payment_method)
+        add_customer_data(params, options)
+
+        params[:pgwAccountNumber] = @options[:account_number]
+        params[:pgwConfigurationId] = @options[:configuration_id]
+        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
+
+        post[:params] = [params]
+
+        commit("v1/", post)
+      end
+
+      def add_invoice(params, money, options)
+        params[:amount] = amount(money)
+        params[:orderNumber] = options[:order_id]
+        params[:transactionClass] = "eCommerce" || options[:transaction_class]
+        # params[:currency] = CURRENCY_CODES[options[:currency] || currency(money)]
+      end
+
+      def add_payment_method(params, payment_method)
+        params[:cardExp] = format(payment_method.month, :two_digits).to_s + "/" + format(payment_method.year, :two_digits).to_s
+        params[:cardType] = BRAND_MAP[payment_method.brand.to_s]
+        params[:cvv] = payment_method.verification_value
+        params[:firstName] = payment_method.first_name
+        params[:lastName] = payment_method.last_name
+      end
+
+      def add_customer_data(params, options)
+        # params[:email] = options[:email]
+        if (billing_address = options[:billing_address] || options[:address])
+          params[:address1] = billing_address[:address1]
+          params[:address2] = billing_address[:address2]
+          params[:city] = billing_address[:city]
+          params[:stateProvince] = billing_address[:state]
+          params[:zipPostalCode] = billing_address[:zip]
+          params[:countryCode] = billing_address[:country]
+          # params[:phone] = billing_address[:phone]
+        end
+      end
+
+      # def add_reference(post, authorization)
+      #   transaction_id, transaction_amount = split_authorization(authorization)
+      #   post[:transaction_id] = transaction_id
+      #   post[:transaction_amount] = transaction_amount
+      # end
+
+      # ACTIONS = {
+      #   purchase: "SALE",
+      #   authorize: "AUTH",
+      #   capture: "CAPTURE",
+      #   void: "VOID",
+      #   refund: "REFUND",
+      #   store: "STORE"
+      # }
 
       def commit(endpoint, params)
-        raw_response = ssl_post(url() + endpoint, post_data(params), headers)
-        response = parse(raw_response)
-
-        Response.new(
-          success_from(response),
-          message_from(response),
-          response,
-          authorization: response["result"]["sessionId"],
-          # avs_result: AVSResult.new(code: response["some_avs_result_key"]),
-          # cvv_result: CVVResult.new(response["some_cvv_result_key"]),
-          test: test?
-        )
-
-      # rescue JSON::ParserError
-      #   unparsable_response(raw_response)
+        begin
+          raw_response = ssl_post(url() + endpoint, post_data(params), headers)
+          response = parse(raw_response)
+        rescue ResponseError => e
+          raw_response = e.response.body
+          response_error(raw_response)
+        rescue JSON::ParserError
+          unparsable_response(raw_response)
+        else
+          success = success_from(response)
+          Response.new(
+            success,
+            message_from(response),
+            response,
+            authorization: success ? authorization_from(response) : nil,
+            avs_result: success ? avs_from(response) : nil,
+            cvv_result: success ? cvv_from(response) : nil,
+            error_code: success ? nil : error_from(response),
+            test: test?
+          )
+        end
       end
 
       def headers
         {
-          # "Authorization" => "Basic " + Base64.encode64("#{@options[:login]}:#{@options[:password]}").strip,
-          # "Content-Type"  => "application/x-www-form-urlencoded;charset=UTF-8"
           "Content-Type"  => "application/json"
         }
       end
 
       def post_data(params)
-        # JSON.
         params.to_json
-
-        # urlencoded.
-        # params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
-
-        # XML.
-        # build_xml_request rather than #post_data
       end
-
-      # def build_xml_request
-      #   builder = Nokogiri::XML::Builder.new
-      #   builder.__send__("SomeRootTagOrSomething") do |doc|
-      #     yield(doc)
-      #   end
-      #   builder.to_xml
-      # end
 
       def url
         test? ? test_url : live_url
       end
 
       def parse(body)
-        # JSON.
         JSON.parse(body)
-
-        # urlencoded.
-        # Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
-
-        # XML
-        # response = {}
-
-        # doc = Nokogiri::XML(xml)
-        # doc.root.xpath("*").each do |node|
-        #   if (node.elements.size == 0)
-        #     response[node.name.downcase.to_sym] = node.text
-        #   else
-        #     node.elements.each do |childnode|
-        #       name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        #       response[name.to_sym] = childnode.text
-        #     end
-        #   end
-        # end unless doc.root.nil?
-
-        # response
       end
 
       def success_from(response)
-        response["result"]["lastActionSucceeded"] == 1
+        return false if response["result"].nil? || response["error"]
+
+        if response["result"].key?("pgwResponseCode")
+          response["error"].nil? && response["result"]["lastActionSucceeded"] == 1 && response["result"]["pgwResponseCode"] == "100"
+        else
+          response["error"].nil? && response["result"]["lastActionSucceeded"] == 1
+        end
       end
 
       def message_from(response)
-        if response["result"]["lastActionSucceeded"] == 1
-          "Succeeded"
+        return response["error"] || "HTTP Response Error" unless response.key?("result")
+
+        return response["error"] if response["error"]
+
+        if response["result"].key?("pgwResponseCode")
+          "pgwResponseCodeDescription|" + RESPONSE_CODE_MAPPING[response["result"]["pgwResponseCode"]] + "|responseText|" + (response["result"]["responseText"] || "") + "|processorResponseCode|" + (response["result"]["processor"]["responseCode"] || "")
         else
-          "Action Failed"
+          response["result"]["lastActionSucceeded"] == 1 ? "Succeeded" : "Failed"
+        end
+      end
+
+      def error_from(response)
+        return response["error"] if response["error"]
+
+        if response["result"].key?("pgwResponseCode")
+          "pgwResponseCode|" + response["result"]["pgwResponseCode"] + "|pgwResponseCodeDescription|" + RESPONSE_CODE_MAPPING[response["result"]["pgwResponseCode"]] + "|responseText|" + (response["result"]["responseText"] || "") + "|processorResponseCode|" + (response["result"]["processor"]["responseCode"] || "")
+        end
+      end
+
+      def authorization_from(response)
+        response["result"]["sessionId"] || response["result"]["sessionToken"] || ((response["result"]["pgwTID"] || "") + "|" + (response["result"]["accountToken"] || ""))
+      end
+
+      def avs_from(response)
+        response["result"].key?("avsResponse") ? AVSResult.new(code: response["result"]["avsResponse"]) : nil
+      end
+
+      def cvv_from(response)
+        response["result"].key?("cvvResponse") ? CVVResult.new(response["result"]["cvvResponse"]) : nil
+      end
+
+      def response_error(raw_response)
+        begin
+          response = parse(raw_response)
+        rescue JSON::ParserError
+          unparsable_response(raw_response)
+        else
+          return Response.new(
+            false,
+            message_from(response),
+            response,
+            :test => test?
+          )
         end
       end
 
@@ -260,14 +355,6 @@ module ActiveMerchant #:nodoc:
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
-
-      # def add_authentication(doc)
-      #   doc.authentication do
-      #     doc.user(@options[:login])
-      #     doc.password(@options[:password])
-      #   end
-      # end
-
     end
   end
 end
