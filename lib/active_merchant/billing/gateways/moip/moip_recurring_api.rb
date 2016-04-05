@@ -1,8 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module MoipRecurringApi #:nodoc:
-      DEFAULT_PLAN_CODE = 'defaultED'
-
       INTERVAL_MAP = {
         'monthly' => ['MONTH', 1],
         'quarterly' => ['MONTH', 3],
@@ -53,25 +51,28 @@ module ActiveMerchant #:nodoc:
       }
 
       def recurring(amount, credit_card, options = {})
+        moip_plan_code = "PLAN-CODE-#{options[:subscription][:plan_code]}"
+
         cust = ensure_customer_created(options, credit_card)
-        plan = ensure_plan_created(amount, options)
+        plan = ensure_plan_created(moip_plan_code, amount, options)
 
         params = {
           code: options[:transaction_id],
-          plan: { code: DEFAULT_PLAN_CODE },
+          plan: { code: moip_plan_code },
           amount: amount,
           customer: { code: customer_code(options) }
         }
 
         resp = Moip::Assinaturas::Subscription.create(params, false, moip_auth: moip_auth)
 
-        Response.new(resp[:success],
-                     resp[:subscription][:message],
-                     resp,
-                     test: test?,
-                     authorization: resp[:subscription][:code],
-                     subscription_action: subscription_action_from(resp),
-                     next_charge_at: next_charge_at(resp))
+        if resp[:success]
+          Response.new(resp[:success], resp[:subscription][:message],
+            resp, test: test?, authorization: resp[:subscription][:code],
+            subscription_action: subscription_action_from(resp),
+            next_charge_at: next_charge_at(resp))
+        else
+          Response.new(resp[:success], resp[:message], resp)
+        end
       end
 
       def invoices(subscription_code)
@@ -117,13 +118,16 @@ module ActiveMerchant #:nodoc:
         create_customer(options[:customer], options[:address], credit_card)
       end
 
-      def ensure_plan_created(amount, options)
-        return if Moip::Assinaturas::Plan.details(DEFAULT_PLAN_CODE,
-                                                  moip_auth: moip_auth)[:success]
+      def ensure_plan_created(moip_plan_code, amount, options)
+        plan = Moip::Assinaturas::Plan.details(moip_plan_code, moip_auth: moip_auth)
 
-        create_plan(amount, options[:subscription])
+        if plan[:success]
+          try_update_plan(plan, moip_plan_code, amount, options[:subscription])
+        else
+          create_plan(moip_plan_code, amount, options[:subscription])
+        end
       rescue
-        create_plan(amount, options[:subscription])
+        create_plan(moip_plan_code, amount, options[:subscription])
       end
 
       def create_customer(customer, address, credit_card)
@@ -161,13 +165,43 @@ module ActiveMerchant #:nodoc:
         }, true, moip_auth: moip_auth)
       end
 
-      def create_plan(amount, subscription)
+      def try_update_plan(moip_plan, moip_plan_code, amount, subscription)
+        plan_attributes = plan_params(moip_plan_code, amount, subscription)
+
+        if plan_changed?(moip_plan[:plan], plan_attributes)
+          response = Moip::Assinaturas::Plan.update(plan_attributes, moip_auth: moip_auth)
+
+          if response[:success]
+            Moip::Assinaturas::Plan.details(moip_plan_code, moip_auth: moip_auth)
+          else
+            plan
+          end
+        else
+          plan
+        end
+      end
+
+      def plan_changed?(plan, plan_attributes)
+        plan['amount']             != plan_attributes[:amount]            ||
+        plan['interval']['unit']   != plan_attributes[:interval][:unit]   ||
+        plan['interval']['length'] != plan_attributes[:interval][:length] ||
+        plan['trial']['days']      != plan_attributes[:trial][:days]      ||
+        plan['trial']['enabled']   != plan_attributes[:trial][:enabled]   ||
+        plan['billing_cycles']     != plan_attributes[:billing_cycles]
+      end
+
+      def create_plan(moip_plan_code, amount, subscription)
+        Moip::Assinaturas::Plan.create(plan_params(moip_plan_code, amount, subscription),
+          moip_auth: moip_auth)
+      end
+
+      def plan_params(moip_plan_code, amount, subscription)
         unit, length = INTERVAL_MAP[subscription[:period]]
 
-        plan_params = {
-          code: DEFAULT_PLAN_CODE,
-          name: 'Edools General Plan',
-          description: 'General plan used to create subscriptions by Edools',
+        plan_attributes = {
+          code: moip_plan_code,
+          name: "ONE INVOICE FOR #{length} #{unit} #{moip_plan_code}",
+          description: 'PLAN USED TO CREATE SUBSCRIPTIONS BY EDOOLS',
           amount: amount,
           status: 'ACTIVE',
           interval: {
@@ -176,13 +210,13 @@ module ActiveMerchant #:nodoc:
           },
           trial: {
             days: subscription[:trials],
-            enabled: subscription[:trials] && subscription[:trials] > 0
+            enabled: subscription[:trials].present? && subscription[:trials] > 0
           }
         }
 
-        plan_params[:billing_cycles] = subscription[:cycles] if subscription[:cycles]
+        plan_attributes[:billing_cycles] = subscription[:cycles] if subscription[:cycles]
 
-        Moip::Assinaturas::Plan.create(plan_params, moip_auth: moip_auth)
+        plan_attributes
       end
 
       def customer_code(options)
