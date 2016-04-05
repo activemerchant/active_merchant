@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Content-Type' => 'application/x-www-form-urlencoded; charset=utf-8',
-          'Authorization' => 'Basic ' + Base64.encode64("ws@Company.#{@options[:company]}:#{@options[:password]}").strip
+          'Authorization' => 'Basic ' + Base64.strict_encode64("ws@Company.#{@options[:company]}:#{@options[:password]}").strip
         }
       end
 
