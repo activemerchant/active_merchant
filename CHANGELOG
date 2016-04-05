@@ -15,6 +15,7 @@
 * Barclaycard Smartpay: Proper AVS return codes [curiousepic]
 * VisaNetPeru: Pass through CVV [duff]
 * Barclaycard Smartpay: Use strict_encode64 [duff]
+* VisaNetPeru: Fix error when billing address empty [shasum]
 
 
 == Version 1.58.0 (March 1, 2016)
