@@ -14,6 +14,7 @@
 * SecurionPay: Support store [shasum]
 * Barclaycard Smartpay: Proper AVS return codes [curiousepic]
 * VisaNetPeru: Pass through CVV [duff]
+* Barclaycard Smartpay: Use strict_encode64 [duff]
 
 
 == Version 1.58.0 (March 1, 2016)
