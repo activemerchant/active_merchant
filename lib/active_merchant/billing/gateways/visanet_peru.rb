@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((\"cardNumber\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvv2Code\\\":)\d+), '\1[FILTERED]')
+          gsub(%r((\"cvv2Code\\\":\\\")\d+), '\1[FILTERED]')
       end
 
       private
@@ -108,12 +108,13 @@ module ActiveMerchant #:nodoc:
       def add_antifraud_data(params, options)
         antifraud = {}
 
-        billing_address = options[:billing_address] || options[:address]
-        antifraud[:billTo_street1] = billing_address[:address1]
-        antifraud[:billTo_city] = billing_address[:city]
-        antifraud[:billTo_state] = billing_address[:state]
-        antifraud[:billTo_country] = billing_address[:country]
-        antifraud[:billTo_postalCode] = billing_address[:zip]
+        if billing_address = options[:billing_address] || options[:address]
+          antifraud[:billTo_street1] = billing_address[:address1]
+          antifraud[:billTo_city] = billing_address[:city]
+          antifraud[:billTo_state] = billing_address[:state]
+          antifraud[:billTo_country] = billing_address[:country]
+          antifraud[:billTo_postalCode] = billing_address[:zip]
+        end
 
         antifraud[:deviceFingerprintId] = options[:device_fingerprint_id]
         antifraud[:merchantDefineData] = options[:merchant_define_data]
