@@ -65,13 +65,14 @@ module ActiveMerchant #:nodoc:
 
         resp = Moip::Assinaturas::Subscription.create(params, false, moip_auth: moip_auth)
 
-        Response.new(resp[:success],
-                     resp[:subscription][:message],
-                     resp,
-                     test: test?,
-                     authorization: resp[:subscription][:code],
-                     subscription_action: subscription_action_from(resp),
-                     next_charge_at: next_charge_at(resp))
+        if resp[:success]
+          Response.new(resp[:success], resp[:subscription][:message],
+            resp, test: test?, authorization: resp[:subscription][:code],
+            subscription_action: subscription_action_from(resp),
+            next_charge_at: next_charge_at(resp))
+        else
+          Response.new(resp[:success], resp[:message], resp)
+        end
       end
 
       def invoices(subscription_code)
