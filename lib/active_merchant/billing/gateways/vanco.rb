@@ -6,7 +6,7 @@ module ActiveMerchant
       include Empty
 
       self.test_url = 'https://www.vancodev.com/cgi-bin/wstest2.vps'
-      self.live_url = 'https://www.vancoservices.com/cgi-bin/ws2.vps'
+      self.live_url = 'https://myvanco.vancopayments.com/cgi-bin/ws2.vps'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
