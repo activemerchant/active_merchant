@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = "https://gateway.l19tech.com/payments/"
       self.test_url = "https://gateway-sb.l19tech.com/payments/"
 
-      self.supported_countries = ["US"]
+      self.supported_countries = ["US", "CA"]
       self.default_currency = "USD"
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
@@ -57,8 +57,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        if options[customer_account_number]
-          auth_or_sale("sale", nil, options[customer_account_number], amount, payment_method, options)
+        if options["customer_account_number"]
+          auth_or_sale("sale", nil, options["customer_account_number"], amount, payment_method, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
@@ -69,8 +69,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, payment_method, options={})
-        if options[customer_account_number]
-          auth_or_sale("auth", nil, options[customer_account_number], amount, payment_method, options)
+        if options["customer_account_number"]
+          auth_or_sale("auth", nil, options["customer_account_number"], amount, payment_method, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
@@ -81,6 +81,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(amount, authorization, options={})
+        post = {}
+        post[:method] = "deposit"
+
+        add_request_id(post)
+
+        params = {}
+
+        add_invoice(params, amount, options)
+
+        params[:pgwTID] = authorization
+        params[:pgwAccountNumber] = @options[:account_number]
+        params[:pgwConfigurationId] = @options[:configuration_id]
+        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
+
+        post[:params] = [params]
+
+        commit("v1/", post)
       end
 
       def void(authorization, options={})
@@ -90,14 +107,33 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(amount, payment_method, options={})
-      end
-
-      def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+        if options["customer_account_number"]
+          refundWithCard(nil, options["customer_account_number"], amount, payment_method, options)
+        else
+          MultiResponse.run() do |r|
+            r.process { get_session(options) }
+            r.process { get_token(r.authorization, payment_method, options) }
+            r.process { refundWithCard(r.authorization, nil, amount, payment_method, options) }
+          end
         end
       end
+
+      def verify(payment_method, options={})
+        if options["customer_account_number"]
+          verifyOnly(nil, options["customer_account_number"], payment_method, options)
+        else
+          MultiResponse.run() do |r|
+            r.process { get_session(options) }
+            r.process { get_token(r.authorization, payment_method, options) }
+            r.process { verifyOnly(r.authorization, nil, payment_method, options) }
+          end
+        end
+      end
+
+        # MultiResponse.run(:use_first_response) do |r|
+        #   r.process { authorize(100, credit_card, options) }
+        #   r.process(:ignore_result) { void(r.authorization, options) }
+        # end
 
       # def store(payment_method, options = {})
       #   post = {}
@@ -145,7 +181,7 @@ module ActiveMerchant #:nodoc:
         if method == "getSession"
           params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + params[:requestTimeStamp] + "|" + method
         else
-          params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + params[:orderNumber] + "|" + method + "|" + (params[:amount] || "") + "|" + (params[:sessionToken] || "") + "|" + (params[:accountToken] || "")
+          params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + (params[:orderNumber] || "") + "|" + method + "|" + (params[:amount] || "") + "|" + (params[:sessionToken] || "") + "|" + (params[:accountToken] || "")
         end
       end
 
@@ -163,8 +199,6 @@ module ActiveMerchant #:nodoc:
         post[:params] = [params]
 
         commit("session", post)
-        # add_payment_method(post, payment_method)
-        # add_customer_data(post, options)
       end
 
       def get_token(session_id, payment_method, options)
@@ -201,6 +235,59 @@ module ActiveMerchant #:nodoc:
 
         params[:pgwAccountNumber] = @options[:account_number]
         params[:pgwConfigurationId] = @options[:configuration_id]
+        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, method))
+
+        post[:params] = [params]
+
+        commit("v1/", post)
+      end
+
+      def verifyOnly(session_token = nil, account_token = nil, payment_method, options)
+        post = {}
+        post[:method] = "verifyOnly"
+
+        add_request_id(post)
+
+        params = {}
+
+        if account_token
+          params[:accountToken] = account_token
+        else
+          params[:sessionToken] = session_token
+        end
+
+        add_invoice(params, 0, options)
+        add_payment_method(params, payment_method)
+        add_customer_data(params, options)
+
+        params[:pgwAccountNumber] = @options[:account_number]
+        params[:pgwConfigurationId] = @options[:configuration_id]
+        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
+
+        post[:params] = [params]
+
+        commit("v1/", post)
+      end
+
+      def refundWithCard(session_token = nil, account_token = nil, amount, payment_method, options)
+        post = {}
+        post[:method] = "refundWithCard"
+
+        add_request_id(post)
+
+        params = {}
+
+        if account_token
+          params[:accountToken] = account_token
+        else
+          params[:sessionToken] = session_token
+        end
+
+        add_invoice(params, amount, options)
+        add_payment_method(params, payment_method)
+
+        params[:pgwAccountNumber] = @options[:account_number]
+        params[:pgwConfigurationId] = @options[:configuration_id]
         params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
 
         post[:params] = [params]
@@ -212,7 +299,6 @@ module ActiveMerchant #:nodoc:
         params[:amount] = amount(money)
         params[:orderNumber] = options[:order_id]
         params[:transactionClass] = "eCommerce" || options[:transaction_class]
-        # params[:currency] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
 
       def add_payment_method(params, payment_method)
@@ -224,7 +310,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(params, options)
-        # params[:email] = options[:email]
         if (billing_address = options[:billing_address] || options[:address])
           params[:address1] = billing_address[:address1]
           params[:address2] = billing_address[:address2]
@@ -232,7 +317,6 @@ module ActiveMerchant #:nodoc:
           params[:stateProvince] = billing_address[:state]
           params[:zipPostalCode] = billing_address[:zip]
           params[:countryCode] = billing_address[:country]
-          # params[:phone] = billing_address[:phone]
         end
       end
 
@@ -324,7 +408,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response["result"]["sessionId"] || response["result"]["sessionToken"] || ((response["result"]["pgwTID"] || "") + "|" + (response["result"]["accountToken"] || ""))
+        response["result"]["sessionId"] || response["result"]["sessionToken"] || response["result"]["pgwTID"] || response["result"]["accountToken"]
       end
 
       def avs_from(response)
