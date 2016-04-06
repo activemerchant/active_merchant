@@ -8,7 +8,7 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     @credit_card = credit_card('4153013999700024', month: 11, year: 2017, verification_value: "024")
     @declined_card = credit_card('4153013999700156', month: 11, year: 2017, verification_value: "156")
     @stolen_card = credit_card('4153013999700289', month: 11, year: 2017, verification_value: "289")
-    @disabled_online_payemnts_card = credit_card('4920101111111113', month: 11, year: 2017, verification_value: "113")
+    @disabled_online_payments_card = credit_card('4920101111111113', month: 11, year: 2017, verification_value: "113")
 
     @options = {
       billing_address: address,
@@ -36,6 +36,18 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
 
   def test_declined_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'Authorization failed', response.message
+  end
+
+  def test_stolen_purchase
+    response = @gateway.purchase(@amount, @stolen_card, @options)
+    assert_failure response
+    assert_equal 'Authorization failed', response.message
+  end
+
+  def test_disabled_online_payment_card_purchase
+    response = @gateway.purchase(@amount, @disabled_online_payments_card, @options)
     assert_failure response
     assert_equal 'Authorization failed', response.message
   end
