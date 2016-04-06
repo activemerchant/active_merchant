@@ -57,25 +57,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        if options["customer_account_number"]
-          auth_or_sale("sale", nil, options["customer_account_number"], amount, payment_method, options)
+        if options[:account_token]
+          auth_or_sale("sale", nil, amount, payment_method, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
             r.process { get_token(r.authorization, payment_method, options) }
-            r.process { auth_or_sale("sale", r.authorization, nil, amount, payment_method, options) }
+            r.process { auth_or_sale("sale", r.authorization, amount, payment_method, options) }
           end
         end
       end
 
       def authorize(amount, payment_method, options={})
-        if options["customer_account_number"]
-          auth_or_sale("auth", nil, options["customer_account_number"], amount, payment_method, options)
+        if options[:account_token]
+          auth_or_sale("auth", nil, amount, payment_method, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
             r.process { get_token(r.authorization, payment_method, options) }
-            r.process { auth_or_sale("auth", r.authorization, nil, amount, payment_method, options) }
+            r.process { auth_or_sale("auth", r.authorization, amount, payment_method, options) }
           end
         end
       end
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
 
         add_invoice(params, amount, options)
 
-        params[:pgwTID] = authorization
+        _, params[:pgwTID] = split_authorization(authorization)
         params[:pgwAccountNumber] = @options[:account_number]
         params[:pgwConfigurationId] = @options[:configuration_id]
         params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
@@ -101,77 +101,73 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
-      end
-
-      def refund(amount, authorization, options={})
+        method, pgwTID = split_authorization(authorization)
+        case method
+        when "auth"
+          reverse_or_void("reversal", authorization, options)
+        when "deposit", "sale"
+          reverse_or_void("void", authorization, options)
+        else
+          message = "Unsupported operation. Only successful and active - Purchase, Authorize and Capture transactions can be voided."
+          return Response.new(false, message)
+        end
       end
 
       def credit(amount, payment_method, options={})
-        if options["customer_account_number"]
-          refundWithCard(nil, options["customer_account_number"], amount, payment_method, options)
+        if options[:account_token]
+          refundWithCard(nil, amount, payment_method, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
             r.process { get_token(r.authorization, payment_method, options) }
-            r.process { refundWithCard(r.authorization, nil, amount, payment_method, options) }
+            r.process { refundWithCard(r.authorization, amount, payment_method, options) }
           end
         end
       end
 
-      def verify(payment_method, options={})
-        if options["customer_account_number"]
-          verifyOnly(nil, options["customer_account_number"], payment_method, options)
+      def verify(payment_method, options={}, action=nil)
+        if options[:account_token]
+          verifyOnly(action, nil, payment_method, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
             r.process { get_token(r.authorization, payment_method, options) }
-            r.process { verifyOnly(r.authorization, nil, payment_method, options) }
+            r.process { verifyOnly(action, r.authorization, payment_method, options) }
           end
         end
       end
 
-        # MultiResponse.run(:use_first_response) do |r|
-        #   r.process { authorize(100, credit_card, options) }
-        #   r.process(:ignore_result) { void(r.authorization, options) }
-        # end
-
-      # def store(payment_method, options = {})
-      #   post = {}
-      #   add_payment_method(post, payment_method)
-      #   add_customer_data(post, options)
-
-      #   commit("store", post)
-      # end
+      def store(payment_method, options={})
+        verify(payment_method, options, "store")
+      end
 
       def supports_scrubbing?
         true
       end
 
-      def scrub(transcript)
-        # JSON.
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
+      # def scrub(transcript)
+      #   # JSON.
+      #   transcript.
+      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+      #     gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
+      #     gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
 
-        # urlencoded.
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+      #   # urlencoded.
+      #   transcript.
+      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+      #     gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
+      #     gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
 
-        # XML.
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((<CardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<CVN>)[^<]+(<))i, '\1[FILTERED]\2').
-          gsub(%r((<Password>)[^<]+(<))i, '\1[FILTERED]\2')
-      end
+      #   # XML.
+      #   transcript.
+      #     gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+      #     gsub(%r((<CardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
+      #     gsub(%r((<CVN>)[^<]+(<))i, '\1[FILTERED]\2').
+      #     gsub(%r((<Password>)[^<]+(<))i, '\1[FILTERED]\2')
+      # end
+
 
       private
-
-      # CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      # CURRENCY_CODES["USD"] = "840"
 
       def add_request_id(post)
         post[:id] = SecureRandom.hex(16)
@@ -185,114 +181,108 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def get_session(options)
+      def get_session(options={})
         post = {}
         post[:method] = "getSession"
-
         add_request_id(post)
 
         params = {}
-        params[:pgwAccountNumber] = @options[:account_number]
-        params[:pgwConfigurationId] = @options[:configuration_id]
-        params[:requestTimeStamp] = Time.now.getutc.strftime("%Y%m%d%H%M%S")
-        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
-        post[:params] = [params]
+        add_credentials(params, post[:method])
 
+        post[:params] = [params]
         commit("session", post)
       end
 
-      def get_token(session_id, payment_method, options)
+      def get_token(authorization, payment_method, options={})
         post = {}
         post[:method] = "tokenize"
-
         add_request_id(post)
 
         params = {}
-        params[:sessionId] = session_id
+        _, params[:sessionId] = split_authorization(authorization)
         params[:cardNumber] = payment_method.number
-        post[:params] = [params]
 
+        post[:params] = [params]
         commit("token", post)
       end
 
-      def auth_or_sale(method, session_token = nil, account_token = nil, amount, payment_method, options)
+      def auth_or_sale(method, authorization, amount, payment_method, options={})
         post = {}
         post[:method] = method
-
         add_request_id(post)
 
         params = {}
-
-        if account_token
-          params[:accountToken] = account_token
-        else
-          params[:sessionToken] = session_token
-        end
-
+        add_token(authorization, params, options)
         add_invoice(params, amount, options)
         add_payment_method(params, payment_method)
         add_customer_data(params, options)
-
-        params[:pgwAccountNumber] = @options[:account_number]
-        params[:pgwConfigurationId] = @options[:configuration_id]
-        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, method))
+        add_credentials(params, post[:method])
 
         post[:params] = [params]
-
         commit("v1/", post)
       end
 
-      def verifyOnly(session_token = nil, account_token = nil, payment_method, options)
+      def verifyOnly(action, authorization, payment_method, options={})
         post = {}
         post[:method] = "verifyOnly"
-
         add_request_id(post)
 
         params = {}
-
-        if account_token
-          params[:accountToken] = account_token
-        else
-          params[:sessionToken] = session_token
-        end
-
+        add_token(authorization, params, options)
+        params[:requestAccountToken] = "1" if action == "store"
         add_invoice(params, 0, options)
         add_payment_method(params, payment_method)
         add_customer_data(params, options)
-
-        params[:pgwAccountNumber] = @options[:account_number]
-        params[:pgwConfigurationId] = @options[:configuration_id]
-        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
+        add_credentials(params, post[:method])
 
         post[:params] = [params]
-
         commit("v1/", post)
       end
 
-      def refundWithCard(session_token = nil, account_token = nil, amount, payment_method, options)
+      def refundWithCard(authorization, amount, payment_method, options={})
         post = {}
         post[:method] = "refundWithCard"
-
         add_request_id(post)
 
         params = {}
-
-        if account_token
-          params[:accountToken] = account_token
-        else
-          params[:sessionToken] = session_token
-        end
-
+        add_token(authorization, params, options)
         add_invoice(params, amount, options)
         add_payment_method(params, payment_method)
-
-        params[:pgwAccountNumber] = @options[:account_number]
-        params[:pgwConfigurationId] = @options[:configuration_id]
-        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, post[:method]))
+        add_credentials(params, post[:method])
 
         post[:params] = [params]
-
         commit("v1/", post)
+      end
+
+      def reverse_or_void(method, authorization, options={})
+        post = {}
+        post[:method] = method
+        add_request_id(post)
+
+        params = {}
+        params[:orderNumber] = options[:order_id]
+        _, params[:pgwTID] = split_authorization(authorization)
+        add_credentials(params, post[:method])
+
+        post[:params] = [params]
+        commit("v1/", post)
+      end
+
+      def add_token(authorization, params, options={})
+        if options[:account_token]
+          params[:accountToken] = options[:account_token]
+        else
+          _, params[:sessionToken] = split_authorization(authorization)
+        end
+      end
+
+      def add_credentials(params, method)
+        params[:pgwAccountNumber] = @options[:account_number]
+        params[:pgwConfigurationId] = @options[:configuration_id]
+
+        params[:requestTimeStamp] = Time.now.getutc.strftime("%Y%m%d%H%M%S") if method == "getSession"
+
+        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, method))
       end
 
       def add_invoice(params, money, options)
@@ -320,24 +310,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # def add_reference(post, authorization)
-      #   transaction_id, transaction_amount = split_authorization(authorization)
-      #   post[:transaction_id] = transaction_id
-      #   post[:transaction_amount] = transaction_amount
-      # end
-
-      # ACTIONS = {
-      #   purchase: "SALE",
-      #   authorize: "AUTH",
-      #   capture: "CAPTURE",
-      #   void: "VOID",
-      #   refund: "REFUND",
-      #   store: "STORE"
-      # }
-
-      def commit(endpoint, params)
+      def commit(endpoint, post)
         begin
-          raw_response = ssl_post(url() + endpoint, post_data(params), headers)
+          raw_response = ssl_post(url() + endpoint, post_data(post), headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -350,7 +325,7 @@ module ActiveMerchant #:nodoc:
             success,
             message_from(response),
             response,
-            authorization: success ? authorization_from(response) : nil,
+            authorization: success ? authorization_from(response, post[:method]) : nil,
             avs_result: success ? avs_from(response) : nil,
             cvv_result: success ? cvv_from(response) : nil,
             error_code: success ? nil : error_from(response),
@@ -407,8 +382,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response)
-        response["result"]["sessionId"] || response["result"]["sessionToken"] || response["result"]["pgwTID"] || response["result"]["accountToken"]
+      def authorization_from(response, method)
+        method + "|" + (
+          response["result"]["sessionId"] ||
+          response["result"]["sessionToken"] ||
+          response["result"]["pgwTID"] ||
+          response["result"]["accountToken"]
+        )
+      end
+
+      def split_authorization(authorization)
+        authorization.split("|")
       end
 
       def avs_from(response)
