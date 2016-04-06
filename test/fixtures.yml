@@ -679,6 +679,13 @@ payment_express:
   login: LOGIN
   password: PASSWORD
 
+# Working credentials, no need to replace
+payment_highway:
+  sph_account: test
+  sph_merchant: test_merchantId
+  account_key: testKey
+  account_secret: testSecret
+
 paymentez:
   application_code: APPCODE
   app_key: APPKEY
