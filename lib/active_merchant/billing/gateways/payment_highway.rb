@@ -1,6 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaymentHighwayGateway < Gateway
+      self.money_format = :cents
       self.test_url = 'https://v1-hub-staging.sph-test-solinor.com/'
       self.live_url = 'https://example.com/live'
 
