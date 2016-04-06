@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
     # and +refund+ will become mandatory.
     class MercuryGateway < Gateway
       URLS = {
-        :test => 'https://w1.mercurydev.net/ws/ws.asmx',
+        :test => 'https://w1.mercurycert.net/ws/ws.asmx',
         :live => 'https://w1.mercurypay.com/ws/ws.asmx'
       }
 
