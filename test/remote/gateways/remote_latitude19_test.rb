@@ -15,55 +15,56 @@ class RemoteLatitude19Test < Test::Unit::TestCase
     }
   end
 
-  def test_invalid_login
-    gateway = Latitude19Gateway.new(login: "", password: "")
-    response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
+  # def test_invalid_login
+  #   gateway = Latitude19Gateway.new(login: "", password: "")
+  #   response = gateway.purchase(@amount, @credit_card, @options)
+  #   assert_failure response
 
-    # Use this version if you need to capture a raised error.
-    # authentication_exception = assert_raise ActiveMerchant::ResponseError do
-    #   gateway.purchase(@amount, @credit_card, @options)
-    # end
-    # response = authentication_exception.response
-    # assert_match(/Authentication error/, response.body)
-  end
+  #   # Use this version if you need to capture a raised error.
+  #   # authentication_exception = assert_raise ActiveMerchant::ResponseError do
+  #   #   gateway.purchase(@amount, @credit_card, @options)
+  #   # end
+  #   # response = authentication_exception.response
+  #   # assert_match(/Authentication error/, response.body)
+  # end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    # assert_equal "Succeeded", response.message
+    assert_equal "pgwResponseCodeDescription|Approved|responseText|00 -- APPROVAL|processorResponseCode|00", response.message
+    assert response.test?
   end
 
-  def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal "REPLACE WITH FAILED MESSAGE", response.message
-  end
+  # def test_failed_purchase
+  #   response = @gateway.purchase(@amount, @declined_card, @options)
+  #   assert_failure response
+  #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
+  # end
 
   def test_successful_authorize_and_capture
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    # assert_equal "Succeeded", response.message
-    # assert_match %r(^\d+\|.+$), response.authorization
+    assert_equal "pgwResponseCodeDescription|Approved|responseText|00 -- APPROVAL|processorResponseCode|00", response.message
+    assert_match %r(^\w+$), response.authorization
 
-    # capture = @gateway.capture(@amount, response.authorization)
-    # assert_success capture
-    # assert_equal "Succeeded", capture.message
+    capture = @gateway.capture(@amount, response.authorization, @options)
+    assert_success capture
+    assert_equal "pgwResponseCodeDescription|Approved|responseText|00 -- APPROVAL|processorResponseCode|00", capture.message
   end
 
-  def test_failed_authorize
-    response = @gateway.authorize(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal "REPLACE WITH FAILED MESSAGE", response.message
-    assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
-  end
+  # def test_failed_authorize
+  #   response = @gateway.authorize(@amount, @declined_card, @options)
+  #   assert_failure response
+  #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
+  #   assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
+  # end
 
-  def test_failed_capture
-    response = @gateway.capture(@amount, "")
-    assert_failure response
-    assert_equal "REPLACE WITH FAILED MESSAGE", response.message
-    assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
-  end
+  # def test_failed_capture
+  #   response = @gateway.capture(@amount, "")
+  #   assert_failure response
+  #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
+  #   assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
+  # end
 
   def test_successful_void
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -100,27 +101,27 @@ class RemoteLatitude19Test < Test::Unit::TestCase
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal "pgwResponseCodeDescription|Approved|responseText|00 -- APPROVAL|processorResponseCode|00", response.message
   end
 
-  def test_failed_credit
-    response = @gateway.credit(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal "REPLACE WITH FAILED MESSAGE", response.message
-  end
+  # def test_failed_credit
+  #   response = @gateway.credit(@amount, @declined_card, @options)
+  #   assert_failure response
+  #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
+  # end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{Succeeded}, response.message
+    assert_equal "pgwResponseCodeDescription|Approved|responseText|85 -- AVS ACCEPTED|processorResponseCode|85", response.message
   end
 
-  def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
-    assert_failure response
-    assert_equal "REPLACE WITH FAILED MESSAGE", response.message
-    assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
-  end
+  # def test_failed_verify
+  #   response = @gateway.verify(@declined_card, @options)
+  #   assert_failure response
+  #   assert_equal "REPLACE WITH FAILED MESSAGE", response.message
+  #   assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
+  # end
 
   def test_successful_store
     response = @gateway.store(@credit_card, @options)
