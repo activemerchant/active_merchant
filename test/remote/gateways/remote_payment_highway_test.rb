@@ -23,17 +23,16 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     assert_equal 'Request successful.', response.message
   end
 
-  #def test_successful_purchase_with_more_options
-    #options = {
-      #order_id: '1',
-      #ip: "127.0.0.1",
-      #email: "joe@example.com"
-    #}
+  def test_successful_order_status
+    options = {
+      order_id: SecureRandom.uuid
+    }
 
-    #response = @gateway.purchase(@amount, @credit_card, options)
-    #assert_success response
-    #assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-  #end
+    @gateway.purchase(@amount, @credit_card, options)
+    response = @gateway.order_status(options[:order_id])
+    assert_success response
+    assert response.params["transactions"].size == 1
+  end
 
   #def test_failed_purchase
     #response = @gateway.purchase(@amount, @declined_card, @options)

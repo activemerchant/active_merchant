@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         transactionId = initTransaction
 
-        commit("/transaction/#{transactionId}/debit", {
+        payload = {
           "amount": money,
           "currency": "EUR",
           "card": {
@@ -43,11 +43,17 @@ module ActiveMerchant #:nodoc:
         }
 
         payload = add_ip(payload, options)
+        payload = add_order_id(payload, options)
 
         commit("/transaction/#{transactionId}/debit", payload.to_json)
       end
 
+      def order_status(order_id)
+        fetch("/transactions/?order=#{order_id}", "")
+      end
+
       private
+
       def add_ip(payload, options)
         return payload unless options.has_key?(:ip)
 
@@ -56,13 +62,34 @@ module ActiveMerchant #:nodoc:
         new_payload
       end
 
+      def add_order_id(payload, options)
+        return payload unless options.has_key?(:order_id)
+
+        new_payload = payload.clone
+        new_payload["order"] = options.fetch(:order_id)
+        new_payload
+      end
+
+      def fetch(action, payload)
+        send_request(action, payload, "GET")
+      end
+
       def commit(action, payload)
+        send_request(action, payload, "POST")
+      end
+
+      def send_request(action, payload, method)
         url = (test? ? test_url : live_url)
         json = payload
         request_id = generate_request_id
         timestamp = Time.now.utc.xmlschema
-        signature = generate_signature("POST", action, request_id, timestamp, json)
-        response = JSON.parse(ssl_post(url + action, json, headers(request_id, timestamp, signature)))
+        signature = generate_signature(method, action, request_id, timestamp, json)
+
+        response = JSON.parse(
+          method == "GET" ?
+          (ssl_get(url + action, headers(request_id, timestamp, signature))) :
+          (ssl_post(url + action, json, headers(request_id, timestamp, signature)))
+        )
 
         Response.new(
           success_from(response),
