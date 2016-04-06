@@ -34,11 +34,11 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     assert response.params["transactions"].size == 1
   end
 
-  #def test_failed_purchase
-    #response = @gateway.purchase(@amount, @declined_card, @options)
-    #assert_failure response
-    #assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  #end
+  def test_declined_purchase
+    response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'Authorization failed', response.message
+  end
 
   #def test_successful_authorize_and_capture
     #auth = @gateway.authorize(@amount, @credit_card, @options)

@@ -16,6 +16,7 @@ module ActiveMerchant #:nodoc:
 
       RESPONSE_CODE_MAPPING = {
         100 => "Request successful.",
+        200 => "Authorization failed",
         901 => "Invalid input. Detailed information is in the message field."
       }
 
