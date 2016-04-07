@@ -372,9 +372,9 @@ komoju:
   login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3
 
 latitude19:
-  account_number:
-  configuration_id:
-  secret:
+  account_number: "account_number"
+  configuration_id: "configuration_id"
+  secret: "secret"
 
 linkpoint:
   login: STOREID
