@@ -68,7 +68,6 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         post = {}
-        add_invoice(post, options)
         post[:SCHEDULEID] = authorization
 
         commit(:stopntimes, post)

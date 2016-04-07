@@ -100,7 +100,7 @@ class Be2billTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    assert response = @gateway.refund(@amount, @credit_card, @options)
+    assert response = @gateway.void('A189063', @options)
     assert_instance_of Response, response
     assert_success response
 
