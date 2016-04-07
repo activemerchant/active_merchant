@@ -65,8 +65,7 @@ class PaymentHighwayTest < Test::Unit::TestCase
   end
 
   def test_scrub
-    assert @gateway.supports_scrubbing?
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert !@gateway.supports_scrubbing?
   end
 
   private
