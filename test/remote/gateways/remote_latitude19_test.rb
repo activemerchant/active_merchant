@@ -5,7 +5,7 @@ class RemoteLatitude19Test < Test::Unit::TestCase
     @gateway = Latitude19Gateway.new(fixtures(:latitude19))
 
     @amount = 100
-    @credit_card = credit_card("4000100011112224")
+    @credit_card = credit_card("4000100011112224", verification_value: "747")
     @declined_card = credit_card("375987654111116")
     # @declined_card = credit_card("4000300011112220")
 
@@ -164,15 +164,15 @@ class RemoteLatitude19Test < Test::Unit::TestCase
   #   assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
   # end
 
-  def test_dump_transcript
-    #skip("Transcript scrubbing for this gateway has been tested.")
+  # def test_dump_transcript
+  #   #skip("Transcript scrubbing for this gateway has been tested.")
 
-    # This test will run a purchase transaction on your gateway
-    # and dump a transcript of the HTTP conversation so that
-    # you can use that transcript as a reference while
-    # implementing your scrubbing logic
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
-  end
+  #   # This test will run a purchase transaction on your gateway
+  #   # and dump a transcript of the HTTP conversation so that
+  #   # you can use that transcript as a reference while
+  #   # implementing your scrubbing logic
+  #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  # end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
@@ -182,6 +182,6 @@ class RemoteLatitude19Test < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
-    assert_scrubbed(@gateway.options[:password], clean_transcript)
+    assert_scrubbed(@gateway.options[:secret], clean_transcript)
   end
 end
