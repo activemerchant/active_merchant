@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         payload = add_ip(payload, options)
         payload = add_order_id(payload, options)
 
-        commit("/transaction/#{transactionId}/debit", payload.to_json)
+        commit("/transaction/#{transactionId}/debit", payload.to_json, transactionId)
       end
 
       def order_status(order_id)
@@ -72,14 +72,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def fetch(action, payload)
-        send_request(action, payload, "GET")
+        send_request(action, payload, "GET", nil)
       end
 
-      def commit(action, payload)
-        send_request(action, payload, "POST")
+      def commit(action, payload, transactionId)
+        send_request(action, payload, "POST", transactionId)
       end
 
-      def send_request(action, payload, method)
+      def send_request(action, payload, method, transactionId)
         url = (test? ? test_url : live_url)
         json = payload
         request_id = generate_request_id
@@ -97,7 +97,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(response),
+          authorization: transactionId
         )
       end
 
@@ -142,7 +143,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def initTransaction
-        commit("/transaction", "").params["id"]
+        commit("/transaction", "", "").params["id"]
       end
 
       def response_code(response)

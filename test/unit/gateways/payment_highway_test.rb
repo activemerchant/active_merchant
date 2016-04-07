@@ -2,33 +2,33 @@ require 'test_helper'
 
 class PaymentHighwayTest < Test::Unit::TestCase
   def setup
-    @gateway = PaymentHighwayGateway.new(some_credential: 'login', another_credential: 'password')
+    @gateway = PaymentHighwayGateway.new(sph_account: "account", sph_merchant: "merchant", account_key: "key", account_secret: "secret")
     @credit_card = credit_card
-    @amount = 100
+    @amount = 1000
 
     @options = {
       order_id: '1',
-      billing_address: address,
-      description: 'Store Purchase'
     }
   end
 
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(transaction_id_generation_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'REPLACE', response.authorization
+    assert_equal 'Request successful.', response.message
     assert response.test?
   end
 
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_post).returns(transaction_id_generation_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal PaymentHighwayGateway::RESPONSE_CODE_MAPPING[200], response.message
   end
 
   def test_successful_authorize
@@ -87,18 +87,35 @@ class PaymentHighwayTest < Test::Unit::TestCase
     )
   end
 
-  def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
+  def transaction_id_generation_response
+    {
+      "id":"ebf19bf4-2ea7-4a29-8a90-f1abec66c57d",
+      "result":
+      {
+        "code":100,
+        "message":"OK"
+      }
+    }.to_json
+  end
 
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_payment_highway_test.rb \
-        -n test_successful_purchase
-    )
+  def successful_purchase_response
+    {
+      "result":
+      {
+        "code":100,
+        "message":"OK"
+      }
+    }.to_json
   end
 
   def failed_purchase_response
+    {
+      "result":
+      {
+        "code": 200,
+        "message": "Authorization failed"
+      }
+    }.to_json
   end
 
   def successful_authorize_response
