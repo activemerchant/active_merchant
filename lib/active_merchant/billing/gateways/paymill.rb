@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
         begin
           raw_response = ssl_request(:get, "#{save_card_url}?#{post_data(post)}", nil, {})
         rescue ResponseError => e
-          return Response.new(false, e.response.body, e.response.body, {})
+          return Response.new(false, e.response.body)
         end
 
         response_for_save_from(raw_response)

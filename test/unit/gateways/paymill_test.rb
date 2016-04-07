@@ -31,6 +31,13 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal '000.100.201', response.params['transaction']['processing']['return']['code']
   end
 
+  def test_broken_gateway
+    @gateway.expects(:raw_ssl_request).returns(broken_gateway_response)
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_failure response
+    assert_equal "File not found.\n", response.message
+  end
+
   def test_failed_purchase
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, failed_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
@@ -733,6 +740,10 @@ class PaymillTest < Test::Unit::TestCase
 
   def failed_refund_response
     MockResponse.new 412, %[{"error":"Amount to high","exception":"refund_amount_to_high"}]
+  end
+
+  def broken_gateway_response
+    MockResponse.new(404, "File not found.\n")
   end
 
   def failed_capture_response
