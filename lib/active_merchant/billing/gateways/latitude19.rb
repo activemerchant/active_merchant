@@ -100,9 +100,9 @@ module ActiveMerchant #:nodoc:
         method, pgwTID = split_authorization(authorization)
         case method
         when "auth"
-          reverse_or_void("reversal", authorization, options)
+          reverse_or_void("reversal", pgwTID, options)
         when "deposit", "sale"
-          reverse_or_void("void", authorization, options)
+          reverse_or_void("void", pgwTID, options)
         else
           message = "Unsupported operation. Only successful and active - Purchase, Authorize and Capture transactions can be voided."
           return Response.new(false, message)
@@ -237,14 +237,14 @@ module ActiveMerchant #:nodoc:
         commit("v1/", post)
       end
 
-      def reverse_or_void(method, authorization, options={})
+      def reverse_or_void(method, pgwTID, options={})
         post = {}
         post[:method] = method
         add_request_id(post)
 
         params = {}
         params[:orderNumber] = options[:order_id]
-        _, params[:pgwTID] = split_authorization(authorization)
+        params[:pgwTID] = pgwTID
         add_credentials(params, post[:method])
 
         post[:params] = [params]
@@ -351,7 +351,7 @@ module ActiveMerchant #:nodoc:
         return response["error"] if response["error"]
 
         if response["result"].key?("pgwResponseCode")
-          "pgwResponseCodeDescription|" + RESPONSE_CODE_MAPPING[response["result"]["pgwResponseCode"]] + "|responseText|" + (response["result"]["responseText"] || "") + "|processorResponseCode|" + (response["result"]["processor"]["responseCode"] || "")
+          (RESPONSE_CODE_MAPPING[response["result"]["pgwResponseCode"]] || "") + "|" + (response["result"]["responseText"] || "")
         else
           response["result"]["lastActionSucceeded"] == 1 ? "Succeeded" : "Failed"
         end
