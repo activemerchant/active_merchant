@@ -348,12 +348,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        return response["error"] || "HTTP Response Error" unless response.key?("result")
-
         return response["error"] if response["error"]
+        return "Failed" unless response.key?("result")
 
         if response["result"].key?("pgwResponseCode")
-          (RESPONSE_CODE_MAPPING[response["result"]["pgwResponseCode"]] || "") + "|" + (response["result"]["responseText"] || "")
+          RESPONSE_CODE_MAPPING[response["result"]["pgwResponseCode"]] || response["result"]["responseText"]
         else
           response["result"]["lastActionSucceeded"] == 1 ? "Succeeded" : "Failed"
         end
@@ -361,10 +360,8 @@ module ActiveMerchant #:nodoc:
 
       def error_from(response)
         return response["error"] if response["error"]
-
-        if response["result"].key?("pgwResponseCode")
-          "pgwResponseCode|" + response["result"]["pgwResponseCode"] + "|pgwResponseCodeDescription|" + RESPONSE_CODE_MAPPING[response["result"]["pgwResponseCode"]] + "|responseText|" + (response["result"]["responseText"] || "") + "|processorResponseCode|" + (response["result"]["processor"]["responseCode"] || "")
-        end
+        return "Failed" unless response.key?("result")
+        return response["result"]["pgwResponseCode"] || response["result"]["processor"]["responseCode"] || "Failed"
       end
 
       def authorization_from(response, method)
