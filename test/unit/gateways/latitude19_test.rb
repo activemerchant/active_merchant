@@ -255,7 +255,7 @@ class Latitude19Test < Test::Unit::TestCase
       starting SSL for gateway-sb.l19tech.com:443...
       SSL established
       <- "POST /payments/session HTTP/1.1\r\nContent-Type: application/json\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway-sb.l19tech.com\r\nContent-Length: 319\r\n\r\n"
-      <- "{\"method\":\"getSession\",\"id\":\"c8829a018d77c5ecf4f68f307f6ab640\",\"params\":[{\"pgwAccountNumber\":\"[FILTERED]\",\"pgwConfigurationId\":\"[FILTERED]\",\"requestTimeStamp\":\"20160407141623\",\"pgwHMAC\":\"e5a4f078d9cde4e520ffb8b073365deecb43e2f0accc44d26bccdfe47abdf52479fcd15098d9c741b22520d6bbab1f0107a1674a350fe387774896044c831758\"}]}"
+      <- "{\"method\":\"getSession\",\"id\":\"c8829a018d77c5ecf4f68f307f6ab640\",\"params\":[{\"pgwAccountNumber\":\"03022016\",\"pgwConfigurationId\":\"380835424362\",\"requestTimeStamp\":\"20160407141623\",\"pgwHMAC\":\"e5a4f078d9cde4e520ffb8b073365deecb43e2f0accc44d26bccdfe47abdf52479fcd15098d9c741b22520d6bbab1f0107a1674a350fe387774896044c831758\"}]}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx/1.0.15\r\n"
       -> "Date: Thu, 07 Apr 2016 14:16:24 GMT\r\n"
@@ -305,7 +305,7 @@ class Latitude19Test < Test::Unit::TestCase
       starting SSL for gateway-sb.l19tech.com:443...
       SSL established
       <- "POST /payments/v1/ HTTP/1.1\r\nContent-Type: application/json\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: gateway-sb.l19tech.com\r\nContent-Length: 621\r\n\r\n"
-      <- "{\"method\":\"sale\",\"id\":\"db4f39966113020eab9c50ec626be3ce\",\"params\":[{\"sessionToken\":\"d133b6d9b992443\",\"amount\":\"100\",\"orderNumber\":\"6b122930383de3e1e355c48f863e002c\",\"transactionClass\":\"eCommerce\",\"cardExp\":\"09/17\",\"cardType\":\"VI\",\"cvv\":\"[FILTERED]\",\"firstName\":\"Longbob\",\"lastName\":\"Longsen\",\"address1\":\"456 My Street\",\"address2\":\"Apt 1\",\"city\":\"Ottawa\",\"stateProvince\":\"ON\",\"zipPostalCode\":\"K1C2N6\",\"countryCode\":\"CA\",\"pgwAccountNumber\":\"[FILTERED]\",\"pgwConfigurationId\":\"[FILTERED]\",\"pgwHMAC\":\"f3ebc73f54474c253bbafb88330f9db6bc3331544140d70a928dd264703653094187b9bde70d339dd680d612291e4981f92dc4e69d7f264d3fcd8a9cb09bca43\"}]}"
+      <- "{\"method\":\"sale\",\"id\":\"db4f39966113020eab9c50ec626be3ce\",\"params\":[{\"sessionToken\":\"d133b6d9b992443\",\"amount\":\"100\",\"orderNumber\":\"6b122930383de3e1e355c48f863e002c\",\"transactionClass\":\"eCommerce\",\"cardExp\":\"09/17\",\"cardType\":\"VI\",\"cvv\":\"[FILTERED]\",\"firstName\":\"Longbob\",\"lastName\":\"Longsen\",\"address1\":\"456 My Street\",\"address2\":\"Apt 1\",\"city\":\"Ottawa\",\"stateProvince\":\"ON\",\"zipPostalCode\":\"K1C2N6\",\"countryCode\":\"CA\",\"pgwAccountNumber\":\"03022016\",\"pgwConfigurationId\":\"380835424362\",\"pgwHMAC\":\"f3ebc73f54474c253bbafb88330f9db6bc3331544140d70a928dd264703653094187b9bde70d339dd680d612291e4981f92dc4e69d7f264d3fcd8a9cb09bca43\"}]}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx/1.0.15\r\n"
       -> "Date: Thu, 07 Apr 2016 14:16:29 GMT\r\n"
