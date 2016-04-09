@@ -154,11 +154,51 @@ module ActiveMerchant #:nodoc:
         post[:id] = SecureRandom.hex(16)
       end
 
-      def message(params, method)
+      def add_timestamp()
+        Time.now.getutc.strftime("%Y%m%d%H%M%S")
+      end
+
+      def add_hmac(params, method)
         if method == "getSession"
-          params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + params[:requestTimeStamp] + "|" + method
+          hmac_message = params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + params[:requestTimeStamp] + "|" + method
         else
-          params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + (params[:orderNumber] || "") + "|" + method + "|" + (params[:amount] || "") + "|" + (params[:sessionToken] || "") + "|" + (params[:accountToken] || "")
+          hmac_message = params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + (params[:orderNumber] || "") + "|" + method + "|" + (params[:amount] || "") + "|" + (params[:sessionToken] || "") + "|" + (params[:accountToken] || "")
+        end
+
+        OpenSSL::HMAC.hexdigest('sha512', @options[:secret], hmac_message)
+      end
+
+      def add_credentials(params, method)
+        params[:pgwAccountNumber] = @options[:account_number]
+        params[:pgwConfigurationId] = @options[:configuration_id]
+
+        params[:requestTimeStamp] = add_timestamp() if method == "getSession"
+
+        params[:pgwHMAC] = add_hmac(params, method)
+      end
+
+      def add_invoice(params, money, options)
+        params[:amount] = amount(money)
+        params[:orderNumber] = options[:order_id]
+        params[:transactionClass] = options[:transaction_class] || "eCommerce"
+      end
+
+      def add_payment_method(params, credit_card)
+        params[:cardExp] = format(credit_card.month, :two_digits).to_s + "/" + format(credit_card.year, :two_digits).to_s
+        params[:cardType] = BRAND_MAP[credit_card.brand.to_s]
+        params[:cvv] = credit_card.verification_value
+        params[:firstName] = credit_card.first_name
+        params[:lastName] = credit_card.last_name
+      end
+
+      def add_customer_data(params, options)
+        if (billing_address = options[:billing_address] || options[:address])
+          params[:address1] = billing_address[:address1]
+          params[:address2] = billing_address[:address2]
+          params[:city] = billing_address[:city]
+          params[:stateProvince] = billing_address[:state]
+          params[:zipPostalCode] = billing_address[:zip]
+          params[:countryCode] = billing_address[:country]
         end
       end
 
@@ -259,40 +299,6 @@ module ActiveMerchant #:nodoc:
 
         post[:params] = [params]
         commit("v1/", post)
-      end
-
-      def add_credentials(params, method)
-        params[:pgwAccountNumber] = @options[:account_number]
-        params[:pgwConfigurationId] = @options[:configuration_id]
-
-        params[:requestTimeStamp] = Time.now.getutc.strftime("%Y%m%d%H%M%S") if method == "getSession"
-
-        params[:pgwHMAC] = OpenSSL::HMAC.hexdigest('sha512', @options[:secret], message(params, method))
-      end
-
-      def add_invoice(params, money, options)
-        params[:amount] = amount(money)
-        params[:orderNumber] = options[:order_id]
-        params[:transactionClass] = options[:transaction_class] || "eCommerce"
-      end
-
-      def add_payment_method(params, credit_card)
-        params[:cardExp] = format(credit_card.month, :two_digits).to_s + "/" + format(credit_card.year, :two_digits).to_s
-        params[:cardType] = BRAND_MAP[credit_card.brand.to_s]
-        params[:cvv] = credit_card.verification_value
-        params[:firstName] = credit_card.first_name
-        params[:lastName] = credit_card.last_name
-      end
-
-      def add_customer_data(params, options)
-        if (billing_address = options[:billing_address] || options[:address])
-          params[:address1] = billing_address[:address1]
-          params[:address2] = billing_address[:address2]
-          params[:city] = billing_address[:city]
-          params[:stateProvince] = billing_address[:state]
-          params[:zipPostalCode] = billing_address[:zip]
-          params[:countryCode] = billing_address[:country]
-        end
       end
 
       def commit(endpoint, post)
