@@ -21,7 +21,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Approved|00 -- APPROVAL", response.message
+    assert_equal "Approved", response.message
     assert response.test?
   end
 
@@ -35,14 +35,14 @@ class Latitude19Test < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Approved|00 -- APPROVAL", response.message
+    assert_equal "Approved", response.message
     assert_match %r(^auth\|\w+$), response.authorization
 
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
     capture = @gateway.capture(@amount, response.authorization, @options)
     assert_success capture
-    assert_equal "Approved|00 -- APPROVAL", capture.message
+    assert_equal "Approved", capture.message
   end
 
   # def test_failed_authorize
@@ -54,8 +54,8 @@ class Latitude19Test < Test::Unit::TestCase
     authorization = "auth" + "|" + SecureRandom.hex(6)
     response = @gateway.capture(@amount, authorization, @options)
     assert_failure response
-    assert_equal "Not submitted|CNR -- Missing required token.", response.message
-    assert_equal "pgwResponseCode|400|pgwResponseCodeDescription|Not submitted|responseText|CNR -- Missing required token.|processorResponseCode|", response.error_code
+    assert_equal "Not submitted", response.message
+    assert_equal "400", response.error_code
   end
 
   def test_successful_void
@@ -70,7 +70,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     void = @gateway.void(auth.authorization, @options)
     assert_success void
-    assert_equal "Approved|00 -- APPROVAL", void.message
+    assert_equal "Approved", void.message
 
     # response = @gateway.authorize(@amount, @credit_card, @options)
     # assert_success response
@@ -95,7 +95,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     void = @gateway.void(purchase.authorization, @options)
     assert_success void
-    assert_equal "Approved|00 -- APPROVAL", void.message
+    assert_equal "Approved", void.message
   end
 
   def test_failed_void
@@ -112,8 +112,8 @@ class Latitude19Test < Test::Unit::TestCase
     response = @gateway.void(authorization, @options)
 
     assert_failure response
-    assert_equal "Not submitted|CNR -- Missing required token.", response.message
-    assert_equal "pgwResponseCode|400|pgwResponseCodeDescription|Not submitted|responseText|CNR -- Missing required token.|processorResponseCode|", response.error_code
+    assert_equal "Not submitted", response.message
+    assert_equal "400", response.error_code
   end
 
   def test_successful_credit
@@ -123,7 +123,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Approved|00 -- APPROVAL", response.message
+    assert_equal "Approved", response.message
   end
 
   # def test_failed_credit
@@ -136,7 +136,7 @@ class Latitude19Test < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Approved|85 -- AVS ACCEPTED", response.message
+    assert_equal "Approved", response.message
   end
 
   # def test_failed_verify
@@ -147,18 +147,15 @@ class Latitude19Test < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_token_response)
     @gateway.expects(:ssl_post).returns(successful_session_response)
 
-    response = @gateway.store(@credit_card, @options)
-    assert_success response
-    assert_equal "Approved|85 -- AVS ACCEPTED", response.message
-
-    _, account_token = response.authorization.split("|")
-    @options[:account_token] = account_token
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_equal "Approved", store.message
 
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal "Approved|00 -- APPROVAL", response.message
+    purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert_equal "Approved", purchase.message
   end
 
   def test_scrub
