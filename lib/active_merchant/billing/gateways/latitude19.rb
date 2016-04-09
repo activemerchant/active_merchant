@@ -273,7 +273,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(params, money, options)
         params[:amount] = amount(money)
         params[:orderNumber] = options[:order_id]
-        params[:transactionClass] = "eCommerce" || options[:transaction_class]
+        params[:transactionClass] = options[:transaction_class] || "eCommerce"
       end
 
       def add_payment_method(params, credit_card)
