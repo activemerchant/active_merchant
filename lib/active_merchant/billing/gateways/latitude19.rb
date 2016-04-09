@@ -57,8 +57,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        if options[:account_token]
-          auth_or_sale("sale", nil, amount, payment_method, options)
+        if payment_method.is_a?(String)
+          auth_or_sale("sale", payment_method, amount, nil, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
@@ -69,8 +69,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, payment_method, options={})
-        if options[:account_token]
-          auth_or_sale("auth", nil, amount, payment_method, options)
+        if payment_method.is_a?(String)
+          auth_or_sale("auth", payment_method, amount, nil, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
@@ -104,14 +104,14 @@ module ActiveMerchant #:nodoc:
         when "deposit", "sale"
           reverse_or_void("void", pgwTID, options)
         else
-          message = "Unsupported operation. Only successful and active - Purchase, Authorize and Capture transactions can be voided."
+          message = "Unsupported operation: successful Purchase, Authorize and unsettled Capture transactions can only be voided."
           return Response.new(false, message)
         end
       end
 
       def credit(amount, payment_method, options={})
-        if options[:account_token]
-          refundWithCard(nil, amount, payment_method, options)
+        if payment_method.is_a?(String)
+          refundWithCard(payment_method, amount, nil, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
@@ -122,8 +122,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment_method, options={}, action=nil)
-        if options[:account_token]
-          verifyOnly(action, nil, payment_method, options)
+        if payment_method.is_a?(String)
+          verifyOnly(action, payment_method, nil, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
@@ -189,48 +189,60 @@ module ActiveMerchant #:nodoc:
         commit("token", post)
       end
 
-      def auth_or_sale(method, authorization, amount, payment_method, options={})
+      def auth_or_sale(method, authorization, amount, credit_card, options={})
         post = {}
         post[:method] = method
         add_request_id(post)
 
         params = {}
-        add_token(authorization, params, options)
+        if credit_card
+          _, params[:sessionToken] = split_authorization(authorization)
+          add_payment_method(params, credit_card)
+          add_customer_data(params, options)
+        else
+          _, params[:accountToken] = split_authorization(authorization)
+        end
         add_invoice(params, amount, options)
-        add_payment_method(params, payment_method)
-        add_customer_data(params, options)
         add_credentials(params, post[:method])
 
         post[:params] = [params]
         commit("v1/", post)
       end
 
-      def verifyOnly(action, authorization, payment_method, options={})
+      def verifyOnly(action, authorization, credit_card, options={})
         post = {}
         post[:method] = "verifyOnly"
         add_request_id(post)
 
         params = {}
-        add_token(authorization, params, options)
+        if credit_card
+          _, params[:sessionToken] = split_authorization(authorization)
+          add_payment_method(params, credit_card)
+          add_customer_data(params, options)
+        else
+          _, params[:accountToken] = split_authorization(authorization)
+        end
         params[:requestAccountToken] = "1" if action == "store"
         add_invoice(params, 0, options)
-        add_payment_method(params, payment_method)
-        add_customer_data(params, options)
         add_credentials(params, post[:method])
 
         post[:params] = [params]
         commit("v1/", post)
       end
 
-      def refundWithCard(authorization, amount, payment_method, options={})
+      def refundWithCard(authorization, amount, credit_card, options={})
         post = {}
         post[:method] = "refundWithCard"
         add_request_id(post)
 
         params = {}
-        add_token(authorization, params, options)
+        if credit_card
+          _, params[:sessionToken] = split_authorization(authorization)
+          add_payment_method(params, credit_card)
+        else
+          _, params[:accountToken] = split_authorization(authorization)
+        end
         add_invoice(params, amount, options)
-        add_payment_method(params, payment_method)
         add_credentials(params, post[:method])
 
         post[:params] = [params]
@@ -251,14 +263,6 @@ module ActiveMerchant #:nodoc:
         commit("v1/", post)
       end
 
-      def add_token(authorization, params, options={})
-        if options[:account_token]
-          params[:accountToken] = options[:account_token]
-        else
-          _, params[:sessionToken] = split_authorization(authorization)
-        end
-      end
-
       def add_credentials(params, method)
         params[:pgwAccountNumber] = @options[:account_number]
         params[:pgwConfigurationId] = @options[:configuration_id]
@@ -274,12 +278,12 @@ module ActiveMerchant #:nodoc:
         params[:transactionClass] = "eCommerce" || options[:transaction_class]
       end
 
-      def add_payment_method(params, payment_method)
-        params[:cardExp] = format(payment_method.month, :two_digits).to_s + "/" + format(payment_method.year, :two_digits).to_s
-        params[:cardType] = BRAND_MAP[payment_method.brand.to_s]
-        params[:cvv] = payment_method.verification_value
-        params[:firstName] = payment_method.first_name
-        params[:lastName] = payment_method.last_name
+      def add_payment_method(params, credit_card)
+        params[:cardExp] = format(credit_card.month, :two_digits).to_s + "/" + format(credit_card.year, :two_digits).to_s
+        params[:cardType] = BRAND_MAP[credit_card.brand.to_s]
+        params[:cvv] = credit_card.verification_value
+        params[:firstName] = credit_card.first_name
+        params[:lastName] = credit_card.last_name
       end
 
       def add_customer_data(params, options)

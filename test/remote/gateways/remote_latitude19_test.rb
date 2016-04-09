@@ -124,17 +124,22 @@ class RemoteLatitude19Test < Test::Unit::TestCase
   #   assert_equal "REPLACE WITH FAILED CODE", response.params["error"]
   # end
 
-  def test_successful_store_and_purchase
-    response = @gateway.store(@credit_card, @options)
-    assert_success response
-    assert_equal "Approved|85 -- AVS ACCEPTED", response.message
+  def test_successful_store
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_equal "Approved|85 -- AVS ACCEPTED", store.message
 
-    _, account_token = response.authorization.split("|")
-    @options[:account_token] = account_token
+    purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert_equal "Approved|00 -- APPROVAL", purchase.message
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal "Approved|00 -- APPROVAL", response.message
+    credit = @gateway.credit(@amount, store.authorization, @options)
+    assert_success credit
+    assert_equal "Approved|00 -- APPROVAL", credit.message
+
+    verify = @gateway.verify(store.authorization, @options)
+    assert_success verify
+    assert_equal "Approved|00 -- APPROVAL", verify.message
   end
 
   # def test_failed_store
