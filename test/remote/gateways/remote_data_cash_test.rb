@@ -365,4 +365,30 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_threedsecure_authorization_and_capture
+    authorization = @gateway.authorize(@amount, @visa_delta, @params)
+    assert_success authorization
+    assert authorization.test?
+
+    threedsecure_authorization = @gateway.threedsecure_authorize(authorization.params['datacash_reference'])
+    assert threedsecure_authorization.test?
+
+    capture = @gateway.capture(@amount, authorization.authorization, @params)
+    assert_success capture
+    assert capture.test?
+  end
+
+  def test_successful_threedsecure_authorization_and_void
+    authorization = @gateway.authorize(@amount, @visa_delta, @params)
+    assert_success authorization
+    assert authorization.test?
+
+    threedsecure_authorization = @gateway.threedsecure_authorize(authorization.params['datacash_reference'])
+    assert threedsecure_authorization.test?
+
+    void = @gateway.void(authorization.authorization, @params)
+    assert_success void
+    assert void.test?
+  end
+
 end
