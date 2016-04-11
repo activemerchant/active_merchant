@@ -11,6 +11,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111112')
 
     @options = {
+      :order_id => '123',
       :billing_address => {
         :name     => 'John Doe',
         :address1 => '123 State Street',
@@ -56,7 +57,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', auth.message
     assert auth.authorization
     let_mes_catch_up
-    assert capture = @gateway.capture(amount, auth.authorization)
+    assert capture = @gateway.capture(amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'This transaction has been approved', capture.message
   end
