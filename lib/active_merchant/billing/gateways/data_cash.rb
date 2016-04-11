@@ -546,7 +546,7 @@ module ActiveMerchant
             xml.tag! :ExtendedPolicy do
               xml.tag! :cv2_policy,
               :notprovided =>   POLICY_REJECT,
-              :notchecked =>    POLICY_REJECT,
+              :notchecked =>    POLICY_ACCEPT,
               :matched =>       POLICY_ACCEPT,
               :notmatched =>    POLICY_REJECT,
               :partialmatch =>  POLICY_REJECT
