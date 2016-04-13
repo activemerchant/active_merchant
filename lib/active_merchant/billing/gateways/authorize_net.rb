@@ -323,7 +323,7 @@ module ActiveMerchant #:nodoc:
 
       def add_settings(xml, source, options)
         xml.transactionSettings do
-          if !source.is_a?(String) && card_brand(source) == "check" && options[:recurring]
+          if options[:recurring]
             xml.setting do
               xml.settingName("recurringBilling")
               xml.settingValue("true")
