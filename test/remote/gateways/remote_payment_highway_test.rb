@@ -61,13 +61,14 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     assert_equal 'Request successful.', refund.message
   end
 
-  #def test_partial_refund
-    #purchase = @gateway.purchase(@amount, @credit_card, @options)
-    #assert_success purchase
+  def test_partial_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
-    #assert refund = @gateway.refund(@amount-1, purchase.authorization)
-    #assert_success refund
-  #end
+    assert refund = @gateway.refund(@amount / 2, purchase.authorization, @credit_card)
+    assert_success refund
+    assert_equal 'Request successful.', refund.message
+  end
 
   #def test_failed_refund
     #response = @gateway.refund(@amount, '')
