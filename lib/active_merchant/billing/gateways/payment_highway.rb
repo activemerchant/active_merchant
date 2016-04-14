@@ -29,18 +29,13 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, card, options={})
         transactionId = initTransaction
 
         payload = {
           "amount": money,
-          "currency": "EUR",
-          "card": {
-            "pan": payment.number,
-            "expiry_year": payment.year.to_s,
-            "expiry_month": payment.month.to_s,
-            "cvc": payment.verification_value
-          }
+          "currency": default_currency,
+          "card": card_to_json(card)
         }
 
         payload = add_ip(payload, options)
@@ -53,7 +48,21 @@ module ActiveMerchant #:nodoc:
         fetch("/transactions/?order=#{order_id}", "")
       end
 
+      def refund(amount, transactionId, card)
+        payload = { amount: amount, currency: default_currency, card: card_to_json(card) }
+        commit("/transaction/#{transactionId}/debit", payload.to_json, transactionId)
+      end
+
       private
+
+      def card_to_json card
+        {
+          "pan": card.number,
+          "expiry_year": card.year.to_s,
+          "expiry_month": card.month.to_s,
+          "cvc": card.verification_value
+        }
+      end
 
       def add_ip(payload, options)
         return payload unless options.has_key?(:ip)

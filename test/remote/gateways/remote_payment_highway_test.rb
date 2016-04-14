@@ -52,6 +52,41 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     assert_equal 'Authorization failed', response.message
   end
 
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @credit_card)
+    assert_success refund
+    assert_equal 'Request successful.', refund.message
+  end
+
+  #def test_partial_refund
+    #purchase = @gateway.purchase(@amount, @credit_card, @options)
+    #assert_success purchase
+
+    #assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    #assert_success refund
+  #end
+
+  #def test_failed_refund
+    #response = @gateway.refund(@amount, '')
+    #assert_failure response
+    #assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
+  #end
+
+  #def test_successful_verify
+    #response = @gateway.verify(@credit_card, @options)
+    #assert_success response
+    #assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
+  #end
+
+  #def test_failed_verify
+    #response = @gateway.verify(@declined_card, @options)
+    #assert_failure response
+    #assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+  #end
+
   #def test_successful_authorize_and_capture
     #auth = @gateway.authorize(@amount, @credit_card, @options)
     #assert_success auth
@@ -59,12 +94,6 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     #assert capture = @gateway.capture(@amount, auth.authorization)
     #assert_success capture
     #assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-  #end
-
-  #def test_failed_authorize
-    #response = @gateway.authorize(@amount, @declined_card, @options)
-    #assert_failure response
-    #assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
   #end
 
   #def test_partial_capture
@@ -81,29 +110,6 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     #assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
   #end
 
-  #def test_successful_refund
-    #purchase = @gateway.purchase(@amount, @credit_card, @options)
-    #assert_success purchase
-
-    #assert refund = @gateway.refund(@amount, purchase.authorization)
-    #assert_success refund
-    #assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
-  #end
-
-  #def test_partial_refund
-    #purchase = @gateway.purchase(@amount, @credit_card, @options)
-    #assert_success purchase
-
-    #assert refund = @gateway.refund(@amount-1, purchase.authorization)
-    #assert_success refund
-  #end
-
-  #def test_failed_refund
-    #response = @gateway.refund(@amount, '')
-    #assert_failure response
-    #assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
-  #end
-
   #def test_successful_void
     #auth = @gateway.authorize(@amount, @credit_card, @options)
     #assert_success auth
@@ -117,18 +123,6 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     #response = @gateway.void('')
     #assert_failure response
     #assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
-  #end
-
-  #def test_successful_verify
-    #response = @gateway.verify(@credit_card, @options)
-    #assert_success response
-    #assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
-  #end
-
-  #def test_failed_verify
-    #response = @gateway.verify(@declined_card, @options)
-    #assert_failure response
-    #assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
   #end
 
   #def test_invalid_login
