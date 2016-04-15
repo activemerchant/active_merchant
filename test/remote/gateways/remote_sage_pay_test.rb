@@ -332,6 +332,15 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_successful_store_and_repurchase_with_resupplied_verification_value
+    assert response = @gateway.store(@visa)
+    assert_success response
+    assert !response.authorization.blank?
+    assert purchase = @gateway.purchase(@amount, response.authorization, @options.merge(customer: 1))
+    assert purchase = @gateway.purchase(@amount, response.authorization, @options.merge(verification_value: '123', order_id: 'foobar123'))
+    assert_success purchase
+  end
+
   def test_successful_store_and_authorize
     assert response = @gateway.store(@visa)
     assert_success response
