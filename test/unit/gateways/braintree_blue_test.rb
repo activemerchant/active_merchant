@@ -612,6 +612,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert response.authorization.present?
   end
 
+  def test_unsuccessful_transaction_returns_message_when_available
+    Braintree::TransactionGateway.any_instance.
+      expects(:sale).
+      returns(braintree_error_result(message: 'Some error message'))
+    assert response = @gateway.purchase(100, credit_card("41111111111111111111"))
+    refute response.success?
+    assert_equal response.message, 'Some error message'
+  end
+
   private
 
   def braintree_result(options = {})
