@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
       def credit(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
 
         commit("credit", post)
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(payment_method, options={})
         post = {}
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       def store(payment_method, options = {})
         post = {}
         add_invoice(post, nil, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_method(post, payment_method)
+      def add_payment_method(post, payment_method, options)
         if(payment_method.is_a?(String))
           post[:customer_vault_id] = payment_method
         elsif(card_brand(payment_method) == 'check')
@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
           post[:checkaccount] = payment_method.account_number
           post[:account_holder_type] = payment_method.account_holder_type
           post[:account_type] = payment_method.account_type
-          post[:sec_code] = 'WEB'
+          post[:sec_code] = options[:sec_code] || 'WEB'
         else
           post[:payment] = 'creditcard'
           post[:firstname] = payment_method.first_name
