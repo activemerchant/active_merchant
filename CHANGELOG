@@ -26,6 +26,7 @@
 * AuthorizeNet: Always pass recurringBilling flag if present [curiousepic]
 * S5: Pass order_id to TransactionID [curiousepic]
 * NMI: Set ACH sec_code from options if present [curiousepic]
+* VisaNet Peru: Refactor merchant_id and purchase_number handling [shasum]
 
 
 == Version 1.58.0 (March 1, 2016)
