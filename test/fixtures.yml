@@ -1016,10 +1016,11 @@ viaklix:
   password: PASSWORD
   user: USER
 
-# Fill up with test credentails
+# test credentails
 visanet_peru:
-  access_key_id:
-  secret_access_key:
+  access_key_id: "AKIAJPOQZ7BAXJZ5K35A"
+  secret_access_key: "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"
+  merchant_id: "101266802"
 
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
