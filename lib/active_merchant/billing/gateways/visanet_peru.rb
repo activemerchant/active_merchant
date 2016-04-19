@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       def initialize(options={})
-        requires!(options, :access_key_id, :secret_access_key)
+        requires!(options, :access_key_id, :secret_access_key, :merchant_id)
         super
       end
 
@@ -40,19 +40,15 @@ module ActiveMerchant #:nodoc:
 
       def capture(authorization, options={})
         params = {}
-        _, merchant_id, purchase_number = split_authorization(authorization)
-        params[:merchantId] = merchant_id
+        _, purchase_number = split_authorization(authorization)
         params[:purchaseNumber] = purchase_number
-        params[:externalTransactionId] = purchase_number
         commit("deposit", params)
       end
 
       def void(authorization, options={})
         params = {}
-        action, merchant_id, purchase_number = split_authorization(authorization)
-        params[:merchantId] = merchant_id
+        action, purchase_number = split_authorization(authorization)
         params[:purchaseNumber] = purchase_number
-        params[:externalTransactionId] = purchase_number
 
         case action
         when "authorize"
@@ -88,10 +84,12 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(params, money, options)
         # Visanet Peru expects a 9-digit numeric purchaseNumber
-        purchase_number = options[:purchase_number] || rand(100000000 .. 1000000000).to_s
-        params[:purchaseNumber] = purchase_number
-        params[:externalTransactionId] = purchase_number
-        params[:merchantId] = options[:merchant_id]
+        regex_purchase_number = /^[0-9]{9}$/
+        if options[:order_id] && options[:order_id].to_s =~ regex_purchase_number
+          params[:purchaseNumber] = options[:order_id].to_s
+        else
+          params[:purchaseNumber] = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
+        end
         params[:amount] = amount(money).to_f
         params[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
@@ -116,8 +114,9 @@ module ActiveMerchant #:nodoc:
           antifraud[:billTo_postalCode] = billing_address[:zip]
         end
 
-        antifraud[:deviceFingerprintId] = options[:device_fingerprint_id]
-        antifraud[:merchantDefineData] = options[:merchant_define_data]
+        antifraud[:deviceFingerprintId] = options[:device_fingerprint_id] || SecureRandom.hex(16)
+        antifraud[:merchantDefineData] = options[:merchant_define_data] || {}
+        antifraud[:merchantDefineData][:field91] = @options[:merchant_id]
 
         params[:antifraud] = antifraud
       end
@@ -137,7 +136,7 @@ module ActiveMerchant #:nodoc:
             message_from(response),
             response,
             :test => test?,
-            :authorization => generate_authorization(action, response),
+            :authorization => authorization_from(action, params),
             :error_code => response["errorCode"]
           )
         end
@@ -152,9 +151,9 @@ module ActiveMerchant #:nodoc:
 
       def url(action, params)
         if (action == "authorize")
-          url = base_url() + "/" + params[:merchantId]
+          url = base_url() + "/" + @options[:merchant_id]
         else
-          url = base_url() + "/" + params[:merchantId] + "/" + action + "/" + params[:purchaseNumber]
+          url = base_url() + "/" + @options[:merchant_id] + "/" + action + "/" + params[:purchaseNumber]
         end
       end
 
@@ -170,8 +169,8 @@ module ActiveMerchant #:nodoc:
         authorization.split("|")
       end
 
-      def generate_authorization(action, response)
-        action + "|" + (response["merchantId"] || '') + "|" + (response["externalTransactionId"] || '')
+      def authorization_from(action, params)
+        action + "|" + (params[:purchaseNumber] || '')
       end
 
       def base_url
