@@ -9,23 +9,13 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     @declined_card = credit_card("4111111111111111")
 
     @options = {
-      # Visanet Peru expects a 9-digit numeric purchaseNumber
-      purchase_number: rand(100000000 .. 1000000000).to_s,
-      order_id: (SecureRandom.random_number() * (10 ** 9)).floor.to_s,
       billing_address: address,
-      email: "visanetperutest@mailinator.com",
-      merchant_id: "101266802",
-      device_fingerprint_id: "deadbeef",
-      merchant_define_data: {
-        field3: "movil",  # Channel
-        field91: "101266802", # Merchant Code / Merchant Id
-        field92: "Cabify" # Merchant Name
-      }
+      email: "visanetperutest@mailinator.com"
     }
   end
 
   def test_invalid_login
-    gateway = VisanetPeruGateway.new(access_key_id: "", secret_access_key: "")
+    gateway = VisanetPeruGateway.new(access_key_id: "", secret_access_key: "", merchant_id: "")
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
@@ -34,7 +24,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
-    assert_equal "deposit|" + @options[:merchant_id] + "|" + @options[:purchase_number], response.authorization
+    assert_match %r(^deposit\|[0-9]{9}$), response.authorization
     assert response.test?
   end
 
@@ -48,12 +38,12 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
-    assert_equal "authorize|" + @options[:merchant_id] + "|" + @options[:purchase_number], response.authorization
+    assert_match %r(^authorize\|[0-9]{9}$), response.authorization
 
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal "OK", capture.message
-    assert_equal "deposit|" + @options[:merchant_id] + "|" + @options[:purchase_number], capture.authorization
+    assert_match %r(^deposit\|[0-9]{9}$), capture.authorization
   end
 
   def test_failed_authorize
@@ -62,7 +52,6 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_equal 400, response.error_code
 
     @options[:email] = "cybersource@reject.com"
-    @options[:purchase_number] = rand(100000000 .. 1000000000).to_s
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
@@ -70,8 +59,8 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    invalid_purchase_number = (SecureRandom.random_number() * (10 ** 9)).floor.to_s
-    response = @gateway.capture("authorize" + "|" + @options[:merchant_id] + "|" + invalid_purchase_number)
+    invalid_purchase_number = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
+    response = @gateway.capture("authorize" + "|" + invalid_purchase_number)
     assert_failure response
     assert_equal "[ \"NUMORDEN " + invalid_purchase_number + " no se encuentra registrado\", \"No se realizo el deposito\" ]", response.message
     assert_equal 400, response.error_code
@@ -85,7 +74,6 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_success void
     assert_equal "OK", void.message
 
-    @options[:purchase_number] = rand(100000000 .. 1000000000).to_s
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
@@ -95,13 +83,13 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    invalid_purchase_number = (SecureRandom.random_number() * (10 ** 9)).floor.to_s
-    response = @gateway.void("authorize" + "|" + @options[:merchant_id] + "|" + invalid_purchase_number)
+    invalid_purchase_number = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
+    response = @gateway.void("authorize" + "|" + invalid_purchase_number)
     assert_failure response
     assert_equal "[ \"NUMORDEN no se encuentra registrado.\", \"No se ha realizado la anulacion del pedido\" ]", response.message
     assert_equal 400, response.error_code
 
-    response = @gateway.void("deposit" + "|" + @options[:merchant_id] + "|" + invalid_purchase_number)
+    response = @gateway.void("deposit" + "|" + invalid_purchase_number)
     assert_failure response
     assert_equal "[ \"NUMORDEN " + invalid_purchase_number + " no se encuentra registrado\", \"No se realizo la anulacion del deposito\" ]", response.message
     assert_equal 400, response.error_code
