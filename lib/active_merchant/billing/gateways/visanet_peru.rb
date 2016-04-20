@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         _, purchase_number = split_authorization(authorization)
         params[:purchaseNumber] = purchase_number
+        params[:externalTransactionId] = options[:order_id]
         commit("deposit", params)
       end
 
@@ -49,6 +50,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         action, purchase_number = split_authorization(authorization)
         params[:purchaseNumber] = purchase_number
+        params[:externalTransactionId] = options[:order_id]
 
         case action
         when "authorize"
@@ -84,12 +86,8 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(params, money, options)
         # Visanet Peru expects a 9-digit numeric purchaseNumber
-        regex_purchase_number = /^[0-9]{9}$/
-        if options[:order_id] && options[:order_id].to_s =~ regex_purchase_number
-          params[:purchaseNumber] = options[:order_id].to_s
-        else
-          params[:purchaseNumber] = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
-        end
+        params[:purchaseNumber] = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
+        params[:externalTransactionId] = options[:order_id]
         params[:amount] = amount(money).to_f
         params[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
@@ -115,8 +113,6 @@ module ActiveMerchant #:nodoc:
         end
 
         antifraud[:deviceFingerprintId] = options[:device_fingerprint_id] || SecureRandom.hex(16)
-        antifraud[:merchantDefineData] = options[:merchant_define_data] || {}
-        antifraud[:merchantDefineData][:field91] = @options[:merchant_id]
 
         params[:antifraud] = antifraud
       end
