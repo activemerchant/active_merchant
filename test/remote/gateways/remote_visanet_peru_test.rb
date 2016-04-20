@@ -10,6 +10,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address,
+      order_id: generate_unique_id,
       email: "visanetperutest@mailinator.com"
     }
   end
@@ -25,6 +26,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_success response
     assert_equal "OK", response.message
     assert_match %r(^deposit\|[0-9]{9}$), response.authorization
+    assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert response.test?
   end
 
@@ -39,11 +41,13 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_success response
     assert_equal "OK", response.message
     assert_match %r(^authorize\|[0-9]{9}$), response.authorization
+    assert_equal @options[:order_id], response.params["externalTransactionId"]
 
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal "OK", capture.message
     assert_match %r(^deposit\|[0-9]{9}$), capture.authorization
+    assert_equal @options[:order_id], capture.params["externalTransactionId"]
   end
 
   def test_failed_authorize
@@ -99,6 +103,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
+    assert_equal @options[:order_id], response.params["externalTransactionId"]
   end
 
   def test_failed_verify

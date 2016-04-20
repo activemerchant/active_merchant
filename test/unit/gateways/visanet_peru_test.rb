@@ -10,6 +10,7 @@ class VisanetPeruTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address,
+      order_id: generate_unique_id,
       email: "visanetperutest@mailinator.com"
     }
   end
@@ -23,6 +24,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_equal "OK", response.message
 
     assert_match %r(^deposit\|[0-9]{9}$), response.authorization
+    assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert response.test?
   end
 
@@ -40,6 +42,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_success response
     assert_equal "OK", response.message
     assert_match %r(^authorize\|[0-9]{9}$), response.authorization
+    assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert response.test?
   end
 
@@ -66,6 +69,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_success capture
     assert_equal "OK", capture.message
     assert_match %r(^deposit\|[0-9]{9}$), capture.authorization
+    assert_equal @options[:order_id], capture.params["externalTransactionId"]
     assert capture.test?
   end
 
@@ -120,6 +124,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
+    assert_equal @options[:order_id], response.params["externalTransactionId"]
   end
 
   def test_failed_verify
@@ -224,7 +229,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     {
       "errorCode": 0,
       "errorMessage": "OK",
-      "externalTransactionId": "987654321",
+      "externalTransactionId": "#{@options[:order_id]}",
       "merchantId": "101266802"
     }
     RESPONSE
@@ -253,7 +258,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     {
       "errorCode": 0,
       "errorMessage": "OK",
-      "externalTransactionId": "987654321",
+      "externalTransactionId": "#{@options[:order_id]}",
       "merchantId": "101266802"
     }
     RESPONSE
@@ -273,7 +278,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     {
       "errorCode": 0,
       "errorMessage": "OK",
-      "externalTransactionId": "987654321",
+      "externalTransactionId": "#{@options[:order_id]}",
       "merchantId": "101266802"
     }
     RESPONSE
