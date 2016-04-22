@@ -80,6 +80,11 @@ blue_pay:
   login: '100096218902'
   password: 'MBUVE4G1BACMFM4W3XQHUUL2SMQRP.LW'
 
+# Working credentials, no need to replace
+blue_snap:
+  api_username: 'API_146117371665767340423'
+  api_password: 'nfYwTx8fFAvJqBXcxqwC8'
+
 borgun:
   processor: 118
   merchant_id: 118
