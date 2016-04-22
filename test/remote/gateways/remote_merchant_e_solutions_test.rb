@@ -189,4 +189,13 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Failed with 404 Not Found', response.message
   end
+
+  def test_successful_purchase_with_3dsecure_params
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      { :xid => 'ERERERERERERERERERERERERERE=',
+        :cavv => 'ERERERERERERERERERERERERERE='
+      }))
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
 end
