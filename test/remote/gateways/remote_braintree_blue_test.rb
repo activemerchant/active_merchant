@@ -592,7 +592,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_descriptor
-    assert auth = @gateway.authorize(@amount, @credit_card, descriptor_name: "company*theproduct", descriptor_phone: "1331131131")
+    assert auth = @gateway.authorize(@amount, @credit_card, descriptor_name: "company*theproduct", descriptor_phone: "1331131131", descriptor_url: "company.com")
     assert_success auth
   end
 
