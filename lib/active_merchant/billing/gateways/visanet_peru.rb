@@ -113,6 +113,7 @@ module ActiveMerchant #:nodoc:
         end
 
         antifraud[:deviceFingerprintId] = options[:device_fingerprint_id] || SecureRandom.hex(16)
+        antifraud[:merchantDefineData] = options[:merchant_define_data] if options[:merchant_define_data]
 
         params[:antifraud] = antifraud
       end

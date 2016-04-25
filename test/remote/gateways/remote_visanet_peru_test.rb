@@ -30,6 +30,13 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_merchant_define_data
+    options = @options.merge(merchant_define_data: { field3: "movil", field91: "101266802", field92: "TheMerchant" })
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal "OK", response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
