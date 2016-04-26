@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(amount, transactionId, card)
         payload = { amount: amount, currency: default_currency, card: card_to_json(card) }
-        commit("/transaction/#{transactionId}/debit", payload.to_json, transactionId)
+        commit("/transaction/#{transactionId}/revert", payload.to_json, transactionId)
       end
 
       private
