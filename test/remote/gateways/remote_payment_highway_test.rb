@@ -70,11 +70,14 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     assert_equal 'Request successful.', refund.message
   end
 
-  #def test_failed_refund
-    #response = @gateway.refund(@amount, '')
-    #assert_failure response
-    #assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
-  #end
+  def test_failed_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    response = @gateway.refund(@amount*(-1), purchase.authorization, @credit_card)
+    assert_failure response
+    assert_equal 'Invalid input. Detailed information is in the message field.', response.message
+  end
 
   #def test_successful_verify
     #response = @gateway.verify(@credit_card, @options)
