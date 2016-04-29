@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(params, amount, options)
         add_payment_method(params, payment_method)
         add_antifraud_data(params, options)
-        params[:email] = options[:email]
+        params[:email] = options[:email] || 'unknown@email.com'
 
         # No vaulting for now
         params[:createAlias] = false
