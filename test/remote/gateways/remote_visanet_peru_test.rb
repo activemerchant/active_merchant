@@ -37,6 +37,12 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_equal "OK", response.message
   end
 
+  def test_successful_purchase_sans_options
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal "OK", response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
