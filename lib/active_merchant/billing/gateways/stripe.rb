@@ -340,7 +340,8 @@ module ActiveMerchant #:nodoc:
         card = {}
         if emv_payment?(creditcard)
           add_emv_creditcard(post, creditcard.icc_data)
-          post[:card][:read_method] = "contactless" if creditcard.contactless
+          post[:card][:read_method] = "contactless" if creditcard.contactless_emv
+          post[:card][:read_method] = "contactless_magstripe_mode" if creditcard.contactless_magstripe
           if creditcard.encrypted_pin_cryptogram.present? && creditcard.encrypted_pin_ksn.present?
             post[:card][:encrypted_pin] = creditcard.encrypted_pin_cryptogram
             post[:card][:encrypted_pin_key_id] = creditcard.encrypted_pin_ksn
@@ -349,7 +350,8 @@ module ActiveMerchant #:nodoc:
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
             card[:fallback_reason] = creditcard.fallback_reason if creditcard.fallback_reason
-            card[:read_method] = "contactless" if creditcard.contactless
+            card[:read_method] = "contactless" if creditcard.contactless_emv
+            post[:read_method] = "contactless_magstripe_mode" if creditcard.contactless_magstripe
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
