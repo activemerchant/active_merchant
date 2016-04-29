@@ -32,6 +32,7 @@
 * Merchant e-Solutions: pass optional 3Dsecure params [curiousepic]
 * NMI: Fix refunds and voids of echecks [duff]
 * VisaNet Peru: Pass dummy email when not present [curiousepic]
+* PayU India: Add Maestro as supported card [curiousepic]
 
 
 == Version 1.58.0 (March 1, 2016)
