@@ -29,7 +29,7 @@ class NmiTest < Test::Unit::TestCase
 
     assert_success response
     assert response.test?
-    assert_equal "2762757839", response.authorization
+    assert_equal "2762757839#creditcard", response.authorization
   end
 
   def test_purchase_with_options
@@ -80,7 +80,7 @@ class NmiTest < Test::Unit::TestCase
 
     assert_success response
     assert response.test?
-    assert_equal "2762759808", response.authorization
+    assert_equal "2762759808#check", response.authorization
   end
 
   def test_failed_purchase_with_echeck
@@ -107,7 +107,7 @@ class NmiTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
 
     assert_success response
-    assert_equal "2762787830", response.authorization
+    assert_equal "2762787830#creditcard", response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -146,7 +146,7 @@ class NmiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "2762757839", response.authorization
+    assert_equal "2762757839#creditcard", response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -174,7 +174,7 @@ class NmiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "2762757839", response.authorization
+    assert_equal "2762757839#creditcard", response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -213,7 +213,7 @@ class NmiTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "2762828010", response.authorization
+    assert_equal "2762828010#creditcard", response.authorization
     assert response.test?
   end
 

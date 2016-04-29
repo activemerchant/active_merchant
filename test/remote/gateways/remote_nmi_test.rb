@@ -104,6 +104,15 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_failure void
   end
 
+  def test_successful_void_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+
+    assert response = @gateway.void(response.authorization)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -117,6 +126,16 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, "badauth")
     assert_failure response
   end
+
+  def test_successful_refund_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+
+    assert response = @gateway.refund(@amount, response.authorization)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
 
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)

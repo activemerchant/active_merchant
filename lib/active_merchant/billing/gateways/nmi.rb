@@ -59,6 +59,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
         add_reference(post, authorization)
+        add_payment_type(post, authorization)
 
         commit("void", post)
       end
@@ -67,6 +68,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
+        add_payment_type(post, authorization)
 
         commit("refund", post)
       end
@@ -182,7 +184,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        post[:transactionid] = authorization
+        transaction_id, _ = split_authorization(authorization)
+        post[:transactionid] = transaction_id
+      end
+
+      def add_payment_type(post, authorization)
+        _, payment_type = split_authorization(authorization)
+        post[:payment] = payment_type if payment_type
       end
 
       def exp_date(payment_method)
@@ -203,11 +211,19 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: response[:transactionid],
+          authorization: authorization_from(response, params[:payment]),
           avs_result: AVSResult.new(code: response[:avsresponse]),
           cvv_result: CVVResult.new(response[:cvvresponse]),
           test: test?
         )
+      end
+
+      def authorization_from(response, payment_type)
+        [ response[:transactionid], payment_type ].join("#")
+      end
+
+      def split_authorization(authorization)
+        authorization.split("#")
       end
 
       def headers
