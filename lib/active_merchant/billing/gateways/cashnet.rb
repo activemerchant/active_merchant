@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url        = "http://www.higherone.com/"
       self.display_name        = "Cashnet"
       self.money_format        = :dollars
+      self.max_retries         = 0
 
       # Creates a new CashnetGateway
       #
