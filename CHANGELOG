@@ -36,6 +36,7 @@
 * Cashnet: Don't retry [duff]
 * CardStream: Make Void call Cancel instead of Refund [curiousepic]
 * Remove AN and KV country codes as they're not recognized by ISO-3166-1 [apdunston]
+* Worldpay: Pass unchanged amount with correct currency exponent [curiousepic]
 
 
 == Version 1.58.0 (March 1, 2016)
