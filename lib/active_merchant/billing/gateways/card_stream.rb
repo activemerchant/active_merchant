@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
-        commit('REFUND', post)
+        commit('CANCEL', post)
       end
 
       def verify(creditcard, options={})
@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        parameters.update(:countryCode => self.supported_countries[0]) unless action == 'CAPTURE'
+        parameters.update(:countryCode => self.supported_countries[0]) unless ['CAPTURE', 'CANCEL'].include?(action)
         parameters.update(
           :merchantID => @options[:login],
           :action => action
