@@ -90,11 +90,11 @@ class MerchantWarriorTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_description_truncated
+  def test_orderid_truncated
     stub_comms do
-      @gateway.purchase(@success_amount, @credit_card, description: "ThisIsQuiteALongDescriptionWithLotsOfChars")
+      @gateway.purchase(@success_amount, @credit_card, order_id: "ThisIsQuiteALongDescriptionWithLotsOfChars")
     end.check_request do |endpoint, data, headers|
-      assert_match(/transactionProduct=ThisIsQuiteALongDescriptionWithLot&p/, data)
+      assert_match(/transactionProduct=ThisIsQuiteALongDescriptionWithLot&/, data)
     end.respond_with(successful_purchase_response)
   end
 
