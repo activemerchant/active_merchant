@@ -57,7 +57,6 @@ module ActiveMerchant #:nodoc:
       include CreditCardFormatting
 
       DEBIT_CARDS = [ :switch, :solo ]
-      CURRENCIES_WITHOUT_FRACTIONS = %w(BIF BYR CLP CVE DJF GNF HUF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
 
       CREDIT_DEPRECATION_MESSAGE = "Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead."
       RECURRING_DEPRECATION_MESSAGE = "Recurring functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it."
@@ -119,6 +118,9 @@ module ActiveMerchant #:nodoc:
       # The supported card types for the gateway
       class_attribute :supported_cardtypes
       self.supported_cardtypes = []
+
+      class_attribute :currencies_without_fractions
+      self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF HUF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
 
       class_attribute :homepage_url
       class_attribute :display_name
@@ -252,7 +254,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def non_fractional_currency?(currency)
-        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
+        self.currencies_without_fractions.include?(currency.to_s)
       end
 
       def localized_amount(money, currency)
