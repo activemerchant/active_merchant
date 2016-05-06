@@ -8,6 +8,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_countries = %w(HK GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser, :switch]
+      self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'Worldpay Global'
 
@@ -22,8 +23,6 @@ module ActiveMerchant #:nodoc:
         'diners_club'      => 'DINERS-SSL',
         'switch'           => 'MAESTRO-SSL'
       }
-
-      CURRENCIES_WITHOUT_FRACTIONS = %w{HUF IDR ISK JPY KRW}
 
       def initialize(options = {})
         requires!(options, :login, :password)
