@@ -21,12 +21,11 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      CURRENCIES_WITHOUT_FRACTIONS = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF)
-
       self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF)
 
       self.homepage_url = 'https://stripe.com/'
       self.display_name = 'Stripe'
@@ -532,10 +531,6 @@ module ActiveMerchant #:nodoc:
         else
           false
         end
-      end
-
-      def non_fractional_currency?(currency)
-        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
       end
 
       def emv_payment?(payment)

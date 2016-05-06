@@ -96,8 +96,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_authorize_nonfractional_currency
-    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'JPY')))
-    assert_equal "JPY", result.params['amount_currency_code']
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'IDR')))
+    assert_equal "IDR", result.params['amount_currency_code']
     assert_equal "1234", result.params['amount_value']
     assert_equal "0", result.params['amount_exponent']
   end
