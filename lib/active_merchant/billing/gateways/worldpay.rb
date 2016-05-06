@@ -23,6 +23,8 @@ module ActiveMerchant #:nodoc:
         'switch'           => 'MAESTRO-SSL'
       }
 
+      CURRENCIES_WITHOUT_FRACTIONS = %w{HUF IDR ISK JPY KRW}
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -181,12 +183,11 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(xml, money, options)
         currency = options[:currency] || currency(money)
-        amount   = localized_amount(money, currency)
 
         amount_hash = {
-          :value => amount,
+          :value => amount(money),
           'currencyCode' => currency,
-          'exponent' => 2
+          'exponent' => non_fractional_currency?(currency) ? 0 : 2
         }
 
         if options[:debit_credit_indicator]
@@ -340,13 +341,6 @@ module ActiveMerchant #:nodoc:
       def encoded_credentials
         credentials = "#{@options[:login]}:#{@options[:password]}"
         "Basic #{[credentials].pack('m').strip}"
-      end
-
-      def localized_amount(money, currency)
-        amount = amount(money)
-        return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
-
-        amount.to_i / 100 * 100
       end
     end
   end
