@@ -555,6 +555,10 @@ orbital_gateway:
   merchant_id: MERCHANTID
 
 # Working credentials, no need to replace
+pagarme:
+    api_key: 'ak_test_e1QGU2gL98MDCHZxHLJ9sofPUFJ7tH'
+
+# Working credentials, no need to replace
 pago_facil:
   branch_id: 60f961360ca187d533d5adba7d969d6334771370
   merchant_id: 62ad6f592ecf2faa87ef2437ed85a4d175e73c58
