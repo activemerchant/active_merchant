@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
     module CreditCardMethods
       CARD_COMPANIES = {
         'visa'               => /^4\d{12}(\d{3})?(\d{3})?$/,
-        'master'             => /^(5[1-5]\d{4}|677189)\d{10}$/,
+        'master'             => /^(5[1-5]\d{4}|677189|222[1-9]\d{2}|22[3-9]\d{3}|2[3-6]\d{4}|27[01]\d{3}|2720\d{2})\d{10}$/,
         'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/,
         'american_express'   => /^3[47]\d{13}$/,
         'diners_club'        => /^3(0[0-5]|[68]\d)\d{11}$/,
