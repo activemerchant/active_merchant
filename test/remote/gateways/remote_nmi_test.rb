@@ -12,7 +12,8 @@ class RemoteNmiTest < Test::Unit::TestCase
     @options = {
       :order_id => generate_unique_id,
       :billing_address => address,
-      :description => 'Store purchase'
+      :description => 'Store purchase',
+      :recurring => 'recurring'
     }
   end
 

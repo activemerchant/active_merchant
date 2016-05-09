@@ -35,7 +35,7 @@ class NmiTest < Test::Unit::TestCase
   def test_purchase_with_options
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card,
-        recurring: true, order_id: "#1001", description: "AM test",
+        recurring: 'recurring', order_id: "#1001", description: "AM test",
         currency: "GBP", dup_seconds: 15, customer: "123",
         merchant_defined_field_8: "value8")
     end.check_request do |endpoint, data, headers|
