@@ -1,6 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class VisanetPeruGateway < Gateway
+      include Empty
       self.display_name = "VisaNet Peru Gateway"
       self.homepage_url = "http://www.visanet.com.pe"
 
@@ -183,7 +184,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response["errorMessage"]
+        if empty?(response["errorMessage"]) || response["errorMessage"] == "[ ]"
+          response["data"]["DSC_COD_ACCION"]
+        else
+          response["errorMessage"]
+        end
       end
 
       def response_error(raw_response)
