@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ["US", "PE"]
       self.default_currency = "PEN"
-      self.money_format = :cents
+      self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       def initialize(options={})
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         # Visanet Peru expects a 9-digit numeric purchaseNumber
         params[:purchaseNumber] = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
         params[:externalTransactionId] = options[:order_id]
-        params[:amount] = amount(money).to_f
+        params[:amount] = amount(money)
         params[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
 
