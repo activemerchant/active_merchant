@@ -43,6 +43,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_equal "OK", response.message
     assert_match %r(^authorize\|[0-9]{9}$), response.authorization
     assert_equal @options[:order_id], response.params["externalTransactionId"]
+    assert_equal "1.00", response.params["data"]["IMP_AUTORIZADO"]
     assert response.test?
   end
 
@@ -149,7 +150,7 @@ class VisanetPeruTest < Test::Unit::TestCase
       starting SSL for devapi.vnforapps.com:443...
       SSL established
       <- "POST /api.tokenization/api/v2/merchant/101266802 HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic QUtJQUpQT1FaN0JBWEpaNUszNUE6VXIrVTBwbjFia2pSaFBHeitHK09MTmpxSWk3T0Jsd2taMmVUSHlTRw==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: devapi.vnforapps.com\r\nContent-Length: 551\r\n\r\n"
-      <- "{\"amount\":100.0,\"purchaseNumber\":\"858169315\",\"externalTransactionId\":\"858169315\",\"currencyId\":604,\"firstName\":\"Longbob\",\"lastName\":\"Longsen\",\"cardNumber\":\"4500340090000016\",\"cvv2Code\":\"377\",\"expirationYear\":\"2017\",\"expirationMonth\":\"09\",\"email\":\"visanetperutest@mailinator.com\",\"antifraud\":{\"billTo_street1\":\"456 My Street\",\"billTo_city\":\"Ottawa\",\"billTo_state\":\"ON\",\"billTo_country\":\"CA\",\"billTo_postalCode\":\"K1C2N6\",\"deviceFingerprintId\":\"deadbeef\",\"merchantDefineData\":{\"field3\":\"movil\",\"field91\":\"101266802\",\"field92\":\"Cabify\"}},\"createAlias\":false}"
+      <- "{\"amount\":1.0,\"purchaseNumber\":\"858169315\",\"externalTransactionId\":\"858169315\",\"currencyId\":604,\"firstName\":\"Longbob\",\"lastName\":\"Longsen\",\"cardNumber\":\"4500340090000016\",\"cvv2Code\":\"377\",\"expirationYear\":\"2017\",\"expirationMonth\":\"09\",\"email\":\"visanetperutest@mailinator.com\",\"antifraud\":{\"billTo_street1\":\"456 My Street\",\"billTo_city\":\"Ottawa\",\"billTo_state\":\"ON\",\"billTo_country\":\"CA\",\"billTo_postalCode\":\"K1C2N6\",\"deviceFingerprintId\":\"deadbeef\",\"merchantDefineData\":{\"field3\":\"movil\",\"field91\":\"101266802\",\"field92\":\"Cabify\"}},\"createAlias\":false}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Date: Mon, 21 Mar 2016 07:21:09 GMT\r\n"
@@ -159,7 +160,7 @@ class VisanetPeruTest < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 679 bytes...
-      -> "{\"errorCode\":0,\"errorMessage\":\"OK\",\"transactionUUID\":\"3db3c81a-835a-4db6-9e86-eb450c580b2c\",\"externalTransactionId\":\"858169315\",\"transactionDateTime\":1458544860693,\"transactionDuration\":0,\"merchantId\":\"101266802\",\"userTokenId\":null,\"aliasName\":null,\"data\":{\"FECHAYHORA_TX\":\"21/03/2016 02:23\",\"DSC_ECI\":\"Tarjeta no autenticada.\",\"DSC_COD_ACCION\":\"Operacion Autorizada\",\"NOM_EMISOR\":\"FINANCIERA CORDILLER\",\"RESPUESTA\":\"1\",\"ID_UNICO\":\"\",\"NUMORDEN\":\"858169315\",\"CODACCION\":\"000\",\"ETICKET\":\"3106040291071603210220450000\",\"IMP_AUTORIZADO\":\"100.00\",\"DECISIONCS\":\"1\",\"COD_AUTORIZA\":\"160351\",\"CODTIENDA\":\"101266802\",\"PAN\":\"450034******0016\",\"reviewTransaction\":\"false\",\"ORI_TARJETA\":\"N\"}}"
+      -> "{\"errorCode\":0,\"errorMessage\":\"OK\",\"transactionUUID\":\"3db3c81a-835a-4db6-9e86-eb450c580b2c\",\"externalTransactionId\":\"858169315\",\"transactionDateTime\":1458544860693,\"transactionDuration\":0,\"merchantId\":\"101266802\",\"userTokenId\":null,\"aliasName\":null,\"data\":{\"FECHAYHORA_TX\":\"21/03/2016 02:23\",\"DSC_ECI\":\"Tarjeta no autenticada.\",\"DSC_COD_ACCION\":\"Operacion Autorizada\",\"NOM_EMISOR\":\"FINANCIERA CORDILLER\",\"RESPUESTA\":\"1\",\"ID_UNICO\":\"\",\"NUMORDEN\":\"858169315\",\"CODACCION\":\"000\",\"ETICKET\":\"3106040291071603210220450000\",\"IMP_AUTORIZADO\":\"1.00\",\"DECISIONCS\":\"1\",\"COD_AUTORIZA\":\"160351\",\"CODTIENDA\":\"101266802\",\"PAN\":\"450034******0016\",\"reviewTransaction\":\"false\",\"ORI_TARJETA\":\"N\"}}"
       read 679 bytes
       Conn close
       opening connection to devapi.vnforapps.com:443...
@@ -190,7 +191,7 @@ class VisanetPeruTest < Test::Unit::TestCase
       starting SSL for devapi.vnforapps.com:443...
       SSL established
       <- "POST /api.tokenization/api/v2/merchant/101266802 HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: devapi.vnforapps.com\r\nContent-Length: 551\r\n\r\n"
-      <- "{\"amount\":100.0,\"purchaseNumber\":\"858169315\",\"externalTransactionId\":\"858169315\",\"currencyId\":604,\"firstName\":\"Longbob\",\"lastName\":\"Longsen\",\"cardNumber\":\"[FILTERED]\",\"cvv2Code\":\"[FILTERED]\",\"expirationYear\":\"2017\",\"expirationMonth\":\"09\",\"email\":\"visanetperutest@mailinator.com\",\"antifraud\":{\"billTo_street1\":\"456 My Street\",\"billTo_city\":\"Ottawa\",\"billTo_state\":\"ON\",\"billTo_country\":\"CA\",\"billTo_postalCode\":\"K1C2N6\",\"deviceFingerprintId\":\"deadbeef\",\"merchantDefineData\":{\"field3\":\"movil\",\"field91\":\"101266802\",\"field92\":\"Cabify\"}},\"createAlias\":false}"
+      <- "{\"amount\":1.0,\"purchaseNumber\":\"858169315\",\"externalTransactionId\":\"858169315\",\"currencyId\":604,\"firstName\":\"Longbob\",\"lastName\":\"Longsen\",\"cardNumber\":\"[FILTERED]\",\"cvv2Code\":\"[FILTERED]\",\"expirationYear\":\"2017\",\"expirationMonth\":\"09\",\"email\":\"visanetperutest@mailinator.com\",\"antifraud\":{\"billTo_street1\":\"456 My Street\",\"billTo_city\":\"Ottawa\",\"billTo_state\":\"ON\",\"billTo_country\":\"CA\",\"billTo_postalCode\":\"K1C2N6\",\"deviceFingerprintId\":\"deadbeef\",\"merchantDefineData\":{\"field3\":\"movil\",\"field91\":\"101266802\",\"field92\":\"Cabify\"}},\"createAlias\":false}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Content-Type: application/json\r\n"
       -> "Date: Mon, 21 Mar 2016 07:21:09 GMT\r\n"
@@ -200,7 +201,7 @@ class VisanetPeruTest < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 679 bytes...
-      -> "{\"errorCode\":0,\"errorMessage\":\"OK\",\"transactionUUID\":\"3db3c81a-835a-4db6-9e86-eb450c580b2c\",\"externalTransactionId\":\"858169315\",\"transactionDateTime\":1458544860693,\"transactionDuration\":0,\"merchantId\":\"101266802\",\"userTokenId\":null,\"aliasName\":null,\"data\":{\"FECHAYHORA_TX\":\"21/03/2016 02:23\",\"DSC_ECI\":\"Tarjeta no autenticada.\",\"DSC_COD_ACCION\":\"Operacion Autorizada\",\"NOM_EMISOR\":\"FINANCIERA CORDILLER\",\"RESPUESTA\":\"1\",\"ID_UNICO\":\"\",\"NUMORDEN\":\"858169315\",\"CODACCION\":\"000\",\"ETICKET\":\"3106040291071603210220450000\",\"IMP_AUTORIZADO\":\"100.00\",\"DECISIONCS\":\"1\",\"COD_AUTORIZA\":\"160351\",\"CODTIENDA\":\"101266802\",\"PAN\":\"450034******0016\",\"reviewTransaction\":\"false\",\"ORI_TARJETA\":\"N\"}}"
+      -> "{\"errorCode\":0,\"errorMessage\":\"OK\",\"transactionUUID\":\"3db3c81a-835a-4db6-9e86-eb450c580b2c\",\"externalTransactionId\":\"858169315\",\"transactionDateTime\":1458544860693,\"transactionDuration\":0,\"merchantId\":\"101266802\",\"userTokenId\":null,\"aliasName\":null,\"data\":{\"FECHAYHORA_TX\":\"21/03/2016 02:23\",\"DSC_ECI\":\"Tarjeta no autenticada.\",\"DSC_COD_ACCION\":\"Operacion Autorizada\",\"NOM_EMISOR\":\"FINANCIERA CORDILLER\",\"RESPUESTA\":\"1\",\"ID_UNICO\":\"\",\"NUMORDEN\":\"858169315\",\"CODACCION\":\"000\",\"ETICKET\":\"3106040291071603210220450000\",\"IMP_AUTORIZADO\":\"1.00\",\"DECISIONCS\":\"1\",\"COD_AUTORIZA\":\"160351\",\"CODTIENDA\":\"101266802\",\"PAN\":\"450034******0016\",\"reviewTransaction\":\"false\",\"ORI_TARJETA\":\"N\"}}"
       read 679 bytes
       Conn close
       opening connection to devapi.vnforapps.com:443...
@@ -230,7 +231,10 @@ class VisanetPeruTest < Test::Unit::TestCase
       "errorCode": 0,
       "errorMessage": "OK",
       "externalTransactionId": "#{@options[:order_id]}",
-      "merchantId": "101266802"
+      "merchantId": "101266802",
+      "data": {
+        "IMP_AUTORIZADO": "1.00"
+      }
     }
     RESPONSE
   end
