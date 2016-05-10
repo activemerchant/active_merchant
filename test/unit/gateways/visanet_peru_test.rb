@@ -34,6 +34,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
+    assert_equal "Operacion Denegada.", response.message
   end
 
   def test_successful_authorize
@@ -52,7 +53,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal "[ ]", response.message
+    assert_equal "Operacion Denegada.", response.message
 
     @gateway.expects(:ssl_request).returns(failed_authorize_response_bad_email)
     @options[:email] = "cybersource@reject.com"
@@ -133,7 +134,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal "[ ]", response.message
+    assert_equal "Operacion Denegada.", response.message
   end
 
   def test_scrub
@@ -243,7 +244,10 @@ class VisanetPeruTest < Test::Unit::TestCase
     <<-RESPONSE
     {
       "errorCode": 400,
-      "errorMessage": "[ ]"
+      "errorMessage": "[ ]",
+      "data": {
+        "DSC_COD_ACCION": "Operacion Denegada."
+      }
     }
     RESPONSE
   end
@@ -292,7 +296,10 @@ class VisanetPeruTest < Test::Unit::TestCase
     <<-RESPONSE
     {
       "errorCode": 400,
-      "errorMessage": "[ ]"
+      "errorMessage": "[ ]",
+      "data": {
+        "DSC_COD_ACCION": "Operacion Denegada."
+      }
     }
     RESPONSE
   end

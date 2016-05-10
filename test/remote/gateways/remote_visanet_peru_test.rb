@@ -47,6 +47,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
+    assert_equal "Operacion Denegada.", response.message
   end
 
   def test_successful_authorize_and_capture
@@ -76,6 +77,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
+    assert_equal "Operacion Denegada.", response.message
 
     @options[:email] = "cybersource@reject.com"
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -132,6 +134,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
+    assert_equal "Operacion Denegada.", response.message
   end
 
   # def test_dump_transcript
