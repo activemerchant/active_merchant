@@ -55,12 +55,21 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_equal "OK", response.message
     assert_match %r(^authorize\|[0-9]{9}$), response.authorization
     assert_equal @options[:order_id], response.params["externalTransactionId"]
+    assert_equal "1.00", response.params["data"]["IMP_AUTORIZADO"]
 
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal "OK", capture.message
     assert_match %r(^deposit\|[0-9]{9}$), capture.authorization
     assert_equal @options[:order_id], capture.params["externalTransactionId"]
+  end
+
+  def test_successful_authorize_fractional_amount
+    amount = 199
+    response = @gateway.authorize(amount, @credit_card)
+    assert_success response
+    assert_equal "OK", response.message
+    assert_equal "1.99", response.params["data"]["IMP_AUTORIZADO"]
   end
 
   def test_failed_authorize
