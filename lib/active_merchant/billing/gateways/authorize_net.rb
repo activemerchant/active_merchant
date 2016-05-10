@@ -323,10 +323,10 @@ module ActiveMerchant #:nodoc:
 
       def add_settings(xml, source, options)
         xml.transactionSettings do
-          if options[:recurring]
+          if options.include? :recurring
             xml.setting do
               xml.settingName("recurringBilling")
-              xml.settingValue("true")
+              xml.settingValue(options[:recurring])
             end
           end
           if options[:disable_partial_auth]
