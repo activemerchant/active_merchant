@@ -255,7 +255,7 @@ module ActiveMerchant #:nodoc:
 
       def add_salestax(form, options)
         form[:salestax] = 0
-        form[:salestax] options[:tax] if options[:tax].present?
+        form[:salestax] = options[:tax] if options[:tax].present?
       end
 
       def add_address(form, options)
