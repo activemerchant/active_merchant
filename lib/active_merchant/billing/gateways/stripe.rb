@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         post = {}
 
-        if card_brand(payment) == "check"
+        if !payment.is_a?(String) && card_brand(payment) == "check"
           bank_token_response = tokenize_bank_account(payment)
           if bank_token_response.success?
             params = { source: bank_token_response.params["token"]["id"] }
