@@ -197,8 +197,12 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
       end
 
+      def normalize_line_endings(str)
+        str.gsub(/%0D%0A|%0A%0D|%0D/, "%0A")
+      end
+
       def add_hmac(post)
-        result = post.sort.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        result = post.sort.collect { |key, value| "#{key}=#{normalize_line_endings(CGI.escape(value.to_s))}" }.join("&")
         result = Digest::SHA512.hexdigest("#{result}#{@options[:shared_secret]}")
 
         add_pair(post, :signature, result)
