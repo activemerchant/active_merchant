@@ -44,6 +44,7 @@
 * VisaNet Peru: Select the most meaningful gateway error message [shasum]
 * SecurionPay: Update country list [duff]
 * Support for BIN 2 MasterCard brand detection [rbalsdon]
+* CardStream: Fix signature calculation [duff]
 
 
 == Version 1.58.0 (March 1, 2016)
