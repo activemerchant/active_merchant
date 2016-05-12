@@ -129,6 +129,50 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     assert_match %r{not facet-valid with respect to minLength}, response.message
   end
 
+  def test_successful_store
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+  end
+
+  def test_unsuccessful_store
+    store = @gateway.store(credit_card('3779810000000005', month: '13'), @options)
+    assert_failure store
+  end
+
+  def test_successful_unstore
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal nil, response.message
+    card_reference = response.authorization
+
+    assert response = @gateway.unstore(card_reference, @options)
+    assert_success response
+
+    assert response = @gateway.purchase(@amount, card_reference, @options)
+    assert_failure response
+  end
+
+  def test_unsuccessful_unstore
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal nil, response.message
+    card_reference = response.authorization
+
+    assert response = @gateway.unstore('123456789', @options)
+    assert_failure response
+  end
+
+  def test_purchase_with_stored_card
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal nil, response.message
+    card_reference = response.authorization
+
+    assert response = @gateway.purchase(@amount, card_reference, @options)
+    assert_success response
+    assert_equal 'APPROVAL', response.message
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

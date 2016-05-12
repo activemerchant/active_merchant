@@ -20,8 +20,9 @@ module ActiveMerchant #:nodoc:
         american_express: 'AMEX',
         maestro:          'MAESTRO',
         diners_club:      'DINERS',
-        jcb:              'JCB'
-      }
+        jcb:              'JCB',
+        secure_card:      'SECURECARD'
+      }.freeze
       self.supported_cardtypes = CARD_TYPES.keys
 
       def initialize(options = {})
@@ -87,6 +88,26 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store(payment, options = {})
+        requires!(options, :order_id)
+
+        post = {}
+        post[:merchantref] = options[:order_id]
+        add_payment(post, payment)
+
+        commit('SECURECARDREGISTRATION', post)
+      end
+
+      def unstore(payment, options = {})
+        requires!(options, :order_id)
+
+        post = {}
+        post[:merchantref] = options[:order_id]
+        add_card_reference(post, payment)
+
+        commit('SECURECARDREMOVAL', post)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -122,11 +143,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
-        post[:cardholdername]   = cardholdername(payment)
-        post[:cardtype]         = CARD_TYPES[payment.brand.to_sym]
-        post[:cardnumber]       = payment.number
-        post[:cvv]              = payment.verification_value
-        post[:cardexpiry]       = expdate(payment)
+        # a payment triggered with a secure_card (tokenised card) will not
+        # respond to `:number`
+        if payment.respond_to?(:number)
+          post[:cardholdername] = cardholdername(payment)
+          post[:cardtype]       = CARD_TYPES[payment.brand.to_sym]
+          post[:cardnumber]     = payment.number
+          post[:cvv]            = payment.verification_value if payment.verification_value
+          post[:cardexpiry]     = expdate(payment)
+        else
+          post[:cardtype]       = CARD_TYPES[:secure_card]
+          post[:cardnumber]     = payment
+        end
+      end
+
+      def add_card_reference(post, payment)
+        post[:cardreference] = payment
       end
 
       def cardholdername(payment)
@@ -148,19 +180,26 @@ module ActiveMerchant #:nodoc:
         response = parse(action, ssl_post(url, post_data(action, parameters)))
 
         Response.new(
-          success_from(response),
+          success_from(action, response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           avs_result: AVSResult.new(code: response[:avs_response]),
           cvv_result: CVVResult.new(response[:cvv_response]),
           test: test?,
-          error_code: success_from(response) ? nil : message_to_standard_error_code_from(response)
+          error_code: success_from(action, response) ? nil : message_to_standard_error_code_from(response)
         )
       end
 
-      def success_from(response)
-        response[:responsecode] == 'A'
+      def success_from(action, response)
+        case action
+        when 'SECURECARDREGISTRATION'
+          response[:cardreference].present?
+        when 'SECURECARDREMOVAL'
+          response[:datetime].present? && response[:hash].present?
+        else
+          response[:responsecode] == 'A'
+        end
       end
 
       def message_to_standard_error_code_from(response)
@@ -180,8 +219,13 @@ module ActiveMerchant #:nodoc:
         response[:responsetext] || response[:errorstring]
       end
 
-      def authorization_from(response)
-        response[:uniqueref]
+      def authorization_from(action, response)
+        case action
+        when 'SECURECARDREGISTRATION'
+          response[:cardreference]
+        else
+          response[:uniqueref]
+        end
       end
 
       def post_data(action, parameters = {})
@@ -189,7 +233,14 @@ module ActiveMerchant #:nodoc:
         parameters[:terminaltype]     = @options[:terminal_type]
         parameters[:transactiontype]  = 7 # eCommerce
         parameters[:datetime]         = create_time_stamp
-        parameters[:hash]             = build_signature(parameters)
+        parameters[:hash]             = case action
+                                        when 'SECURECARDREGISTRATION'
+                                          build_store_signature(parameters)
+                                        when 'SECURECARDREMOVAL'
+                                          build_unstore_signature(parameters)
+                                        else
+                                          build_signature(parameters)
+                                        end
         build_xml_request(action, fields(action), parameters)
       end
 
@@ -201,6 +252,25 @@ module ActiveMerchant #:nodoc:
         str = parameters[:terminalid]
         str += (parameters[:uniqueref] || parameters[:orderid])
         str += (parameters[:amount].to_s + parameters[:datetime])
+        Digest::MD5.hexdigest(str + @options[:secret])
+      end
+
+      def build_store_signature(parameters)
+        str = parameters[:terminalid]
+        str += parameters[:merchantref]
+        str += parameters[:datetime]
+        str += parameters[:cardnumber]
+        str += parameters[:cardexpiry]
+        str += parameters[:cardtype]
+        str += parameters[:cardholdername]
+        Digest::MD5.hexdigest(str + @options[:secret])
+      end
+
+      def build_unstore_signature(parameters)
+        str = parameters[:terminalid]
+        str += parameters[:merchantref]
+        str += parameters[:datetime]
+        str += parameters[:cardreference]
         Digest::MD5.hexdigest(str + @options[:secret])
       end
 
@@ -233,6 +303,25 @@ module ActiveMerchant #:nodoc:
            :operator, :reason]
         when 'VOID'
           [:uniqueref]
+        when 'SECURECARDREGISTRATION'
+          [
+            :merchantref,
+            :terminalid,
+            :datetime,
+            :cardnumber, :cardexpiry, :cardtype, :cardholdername,
+            :hash,
+            :dontchecksecurity,
+            :cvv,
+            :issueno
+          ]
+        when 'SECURECARDREMOVAL'
+          [
+            :merchantref,
+            :cardreference,
+            :terminalid,
+            :datetime,
+            :hash
+          ]
         end
       end
 
