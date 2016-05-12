@@ -632,6 +632,42 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response = @gateway.create_customer_profile_transaction(customer_profile_transaction)
     assert_success response
     assert_equal "Successful.", response.message
+    assert_nil response.error_code
+  end
+
+  def test_should_not_create_duplicate_customer_profile_transactions_without_duplicate_window_alteration
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
+
+    key = (Time.now.to_f * 1000000).to_i.to_s
+
+    customer_profile_transaction = {
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :type => :auth_capture,
+        :order => {
+          :invoice_number => key.to_s,
+          :description => "Test Order Description #{key.to_s}",
+          :purchase_order_number => key.to_s
+        },
+        :amount => @amount
+      }
+    }
+
+    assert response = @gateway.create_customer_profile_transaction(customer_profile_transaction)
+    assert_success response
+    assert_equal "Successful.", response.message
+
+    sleep(5)
+
+    assert response = @gateway.create_customer_profile_transaction(customer_profile_transaction)
+    assert_failure response
+    assert_equal "A duplicate transaction has been submitted.", response.message
+    assert_equal "E00027", response.error_code
   end
 
   def test_should_create_customer_profile_transaction_auth_capture_and_then_void_request
