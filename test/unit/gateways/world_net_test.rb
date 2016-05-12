@@ -111,6 +111,30 @@ class WorldNetTest < Test::Unit::TestCase
     assert_equal 'DECLINED', response.message
   end
 
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    response = @gateway.store(credit_card, @options)
+    assert_success response
+  end
+
+  def test_unsuccessful_store
+    @gateway.expects(:ssl_post).returns(failed_store_response)
+    response = @gateway.store(credit_card, @options)
+    assert_failure response
+  end
+
+  def test_successful_unstore
+    @gateway.expects(:ssl_post).returns(successful_unstore_response)
+    response = @gateway.unstore('4111111111111111', @options)
+    assert_success response
+  end
+
+  def test_unsuccessful_unstore
+    @gateway.expects(:ssl_post).returns(failed_unstore_response)
+    response = @gateway.unstore('4111111111111111', @options)
+    assert_failure response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -207,6 +231,26 @@ Conn close
   end
 
   def successful_void_response
+  end
+
+  def successful_store_response
+    %q(<?xml version="1.0" encoding="UTF-8"?>
+<SECURECARDREGISTRATIONRESPONSE><MERCHANTREF>146304412401</MERCHANTREF><CARDREFERENCE>2967530956419033</CARDREFERENCE><DATETIME>12-05-2016:10:08:46:269</DATETIME><HASH>b2e497d14014ad9f4770edbf7716435e</HASH></SECURECARDREGISTRATIONRESPONSE>)
+  end
+
+  def failed_store_response
+    %q(<?xml version="1.0" encoding="UTF-8"?>
+<ERROR><ERRORCODE>E11</ERRORCODE><ERRORSTRING>INVALID CARDEXPIRY</ERRORSTRING></ERROR>)
+  end
+
+  def successful_unstore_response
+    %q(<?xml version="1.0" encoding="UTF-8"?>
+<SECURECARDREMOVALRESPONSE><MERCHANTREF>146304412401</MERCHANTREF><DATETIME>12-05-2016:10:08:48:399</DATETIME><HASH>7f755e185be8066a535699755f709646</HASH></SECURECARDREMOVALRESPONSE>)
+  end
+
+  def failed_unstore_response
+    %q(<?xml version="1.0" encoding="UTF-8"?>
+<ERROR><ERRORCODE>E04</ERRORCODE><ERRORSTRING>INVALID REFERENCE DETAILS</ERRORSTRING></ERROR>)
   end
 
   def failed_void_response
