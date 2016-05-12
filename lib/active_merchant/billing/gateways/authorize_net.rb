@@ -444,7 +444,7 @@ module ActiveMerchant #:nodoc:
           xml.bankAccount do
             xml.routingNumber(check.routing_number)
             xml.accountNumber(check.account_number)
-            xml.nameOnAccount(check.name)
+            xml.nameOnAccount(truncate(check.name, 22))
             xml.bankName(check.bank_name)
             xml.checkNumber(check.number)
           end
