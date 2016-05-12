@@ -23,6 +23,13 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     assert_equal "network_tokenization", @tokenized_card.type
   end
 
+  def test_credit_card?
+    assert @tokenized_card.credit_card?
+    assert @tokenized_apple_pay_card.credit_card?
+    assert @tokenized_android_pay_card.credit_card?
+    assert @tokenized_bogus_pay_card.credit_card?
+  end
+
   def test_optional_validations
     assert_valid @tokenized_card, "Network tokenization card should not require name or verification value"
   end
