@@ -1,68 +1,72 @@
+require 'nokogiri'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
-      self.test_url = 'https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp'
-      self.live_url = 'https://secure.worldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.display_name = "Worldpay US"
+      self.homepage_url = "http://www.worldpay.com/us"
 
-      self.default_currency = 'GBP'
-      self.money_format = :cents
-      self.supported_countries = %w(HK GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser, :switch]
-      self.homepage_url = 'http://www.worldpay.com/'
-      self.display_name = 'Worldpay Global'
+      self.live_url = "https://trans.worldpay.us/cgi-bin/ProcessXML.cgi"
 
-      CARD_CODES = {
-        'visa'             => 'VISA-SSL',
-        'master'           => 'ECMC-SSL',
-        'discover'         => 'DISCOVER-SSL',
-        'american_express' => 'AMEX-SSL',
-        'jcb'              => 'JCB-SSL',
-        'maestro'          => 'MAESTRO-SSL',
-        'laser'            => 'LASER-SSL',
-        'diners_club'      => 'DINERS-SSL',
-        'switch'           => 'MAESTRO-SSL'
-      }
+      self.supported_countries = ["US"]
+      self.default_currency = "USD"
+      self.money_format = :dollars
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
-      def initialize(options = {})
-        requires!(options, :login, :password)
+      def initialize(options={})
+        requires!(options, :account_id, :merchant_pin)
         super
       end
 
-      def purchase(money, payment_method, options = {})
-        MultiResponse.run do |r|
-          r.process{authorize(money, payment_method, options)}
-          r.process{capture(money, r.authorization, options.merge(:authorization_validated => true))}
-        end
+      def purchase(amount, payment_method, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method)
+        add_customer_data(post, options)
+
+        commit(payment_method.is_a?(String) ? :stored_purchase : :purchase, post)
       end
 
-      def authorize(money, payment_method, options = {})
-        requires!(options, :order_id)
-        authorize_request(money, payment_method, options)
+      def authorize(amount, payment_method, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method)
+        add_customer_data(post, options)
+
+        commit(:authorize, post)
       end
 
-      def capture(money, authorization, options = {})
-        MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
-          if r.params
-            authorization_currency = r.params['amount_currency_code']
-            options = options.merge(:currency => authorization_currency) if authorization_currency.present?
-          end
-          r.process{capture_request(money, authorization, options)}
-        end
+      def capture(amount, authorization, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_reference(post, authorization)
+        add_customer_data(post, options)
+
+        commit(:capture, post)
       end
 
-      def void(authorization, options = {})
-        MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "AUTHORISED")}
-          r.process{cancel_request(authorization, options)}
-        end
+      def void(authorization, options={})
+        post = {}
+        add_reference(post, authorization)
+
+        commit(:void, post)
       end
 
-      def refund(money, authorization, options = {})
-        MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "CAPTURED", "SETTLED", "SETTLED_BY_MERCHANT")}
-          r.process{refund_request(money, authorization, options)}
-        end
+      def refund(amount, authorization, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_reference(post, authorization)
+        add_customer_data(post, options)
+
+        commit(:refund, post)
+      end
+
+      def credit(amount, payment_method, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method)
+
+        commit(payment_method.is_a?(String) ? :stored_credit : :credit, post)
       end
 
       def verify(credit_card, options={})
@@ -72,281 +76,169 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def supports_scrubbing
+      def store(payment_method, options = {})
+        post = {}
+        add_payment_method(post, payment_method)
+        add_customer_data(post, options)
+
+        post[:profileactiontype] = options[:profileactiontype] || STORE_TX_TYPES[:store_only]
+
+        commit(:store, post)
+      end
+
+      def supports_scrubbing?
         true
       end
 
       def scrub(transcript)
         transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((<cardNumber>)\d+(</cardNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<cvc>)[^<]+(</cvc>)), '\1[FILTERED]\2')
+          gsub(%r((<ccnum>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<cvv2>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<merchantpin>)[^<]+(<))i, '\1[FILTERED]\2')
+      end
+
+      def test?
+        @options[:account_id].eql?('TEST0')
       end
 
       private
 
-      def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED")
+      def add_invoice(post, money, options)
+        post[:amount] = amount(money)
+        post[:merchantordernumber] = options[:order_id]
+        post[:currency] = options[:currency] || currency(money)
       end
 
-      def capture_request(money, authorization, options)
-        commit('capture', build_capture_request(money, authorization, options), :ok)
-      end
-
-      def cancel_request(authorization, options)
-        commit('cancel', build_void_request(authorization, options), :ok)
-      end
-
-      def inquire_request(authorization, options, *success_criteria)
-        commit('inquiry', build_order_inquiry_request(authorization, options), *success_criteria)
-      end
-
-      def refund_request(money, authorization, options)
-        commit('refund', build_refund_request(money, authorization, options), :ok)
-      end
-
-      def build_request
-        xml = Builder::XmlMarkup.new :indent => 2
-        xml.instruct! :xml, :encoding => 'UTF-8'
-        xml.declare! :DOCTYPE, :paymentService, :PUBLIC, "-//WorldPay//DTD WorldPay PaymentService v1//EN", "http://dtd.worldpay.com/paymentService_v1.dtd"
-        xml.tag! 'paymentService', 'version' => "1.4", 'merchantCode' => @options[:login] do
-          yield xml
-        end
-        xml.target!
-      end
-
-      def build_order_modify_request(authorization)
-        build_request do |xml|
-          xml.tag! 'modify' do
-            xml.tag! 'orderModification', 'orderCode' => authorization do
-              yield xml
-            end
-          end
-        end
-      end
-
-      def build_order_inquiry_request(authorization, options)
-        build_request do |xml|
-          xml.tag! 'inquiry' do
-            xml.tag! 'orderInquiry', 'orderCode' => authorization
-          end
-        end
-      end
-
-      def build_authorization_request(money, payment_method, options)
-        build_request do |xml|
-          xml.tag! 'submit' do
-            xml.tag! 'order', order_tag_attributes(options) do
-              xml.description(options[:description].blank? ? "Purchase" : options[:description])
-              add_amount(xml, money, options)
-              if options[:order_content]
-                xml.tag! 'orderContent' do
-                  xml.cdata! options[:order_content]
-                end
-              end
-              add_payment_method(xml, money, payment_method, options)
-              add_email(xml, options)
-            end
-          end
-        end
-      end
-
-      def order_tag_attributes(options)
-        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject{|_,v| !v}
-      end
-
-      def build_capture_request(money, authorization, options)
-        build_order_modify_request(authorization) do |xml|
-          xml.tag! 'capture' do
-            time = Time.now
-            xml.tag! 'date', 'dayOfMonth' => time.day, 'month' => time.month, 'year'=> time.year
-            add_amount(xml, money, options)
-          end
-        end
-      end
-
-      def build_void_request(authorization, options)
-        build_order_modify_request(authorization) do |xml|
-          xml.tag! 'cancel'
-        end
-      end
-
-      def build_refund_request(money, authorization, options)
-        build_order_modify_request(authorization) do |xml|
-          xml.tag! 'refund' do
-            add_amount(xml, money, options.merge(:debit_credit_indicator => "credit"))
-          end
-        end
-      end
-
-      def add_amount(xml, money, options)
-        currency = options[:currency] || currency(money)
-        amount   = localized_amount(money, currency)
-
-        amount_hash = {
-          :value => amount,
-          'currencyCode' => currency,
-          'exponent' => 2
-        }
-
-        if options[:debit_credit_indicator]
-          amount_hash.merge!('debitCreditIndicator' => options[:debit_credit_indicator])
-        end
-
-        xml.tag! 'amount', amount_hash
-      end
-
-      def add_payment_method(xml, amount, payment_method, options)
-        if payment_method.is_a?(String)
-          if options[:merchant_code]
-            xml.tag! 'payAsOrder', 'orderCode' => payment_method, 'merchantCode' => options[:merchant_code] do
-              add_amount(xml, amount, options)
-            end
-          else
-            xml.tag! 'payAsOrder', 'orderCode' => payment_method do
-              add_amount(xml, amount, options)
-            end
-          end
+      def add_payment_method(post, payment_method)
+        if(payment_method.is_a?(String))
+          user_profile_id, last_4 = split_authorization(payment_method)
+          post[:userprofileid] = user_profile_id
+          post[:last4digits] = last_4
         else
-          xml.tag! 'paymentDetails' do
-            xml.tag! CARD_CODES[card_brand(payment_method)] do
-              xml.tag! 'cardNumber', payment_method.number
-              xml.tag! 'expiryDate' do
-                xml.tag! 'date', 'month' => format(payment_method.month, :two_digits), 'year' => format(payment_method.year, :four_digits)
-              end
-
-              xml.tag! 'cardHolderName', payment_method.name
-              xml.tag! 'cvc', payment_method.verification_value
-
-              add_address(xml, (options[:billing_address] || options[:address]))
-            end
-            if options[:ip]
-              xml.tag! 'session', 'shopperIPAddress' => options[:ip]
-            end
-          end
+          post[:ccname] = payment_method.name
+          post[:ccnum] = payment_method.number
+          post[:cvv2] = payment_method.verification_value
+          post[:expmon] = format(payment_method.month, :two_digits)
+          post[:expyear] = format(payment_method.year, :four_digits)
+          post[:swipedata] = payment_method.track_data if payment_method.track_data
         end
       end
 
-      def add_email(xml, options)
-        return unless options[:email]
-        xml.tag! 'shopper' do
-          xml.tag! 'shopperEmailAddress', options[:email]
+      def add_customer_data(post, options)
+        post[:email] = options[:email] if options[:email]
+        post[:ipaddress] = options[:ip] if options[:ip]
+        if(billing_address = options[:billing_address])
+          post[:billaddr1] = billing_address[:address1]
+          post[:billaddr2] = billing_address[:address2]
+          post[:billcity] = billing_address[:city]
+          post[:billstate] = billing_address[:state]
+          post[:billcountry] = billing_address[:country]
+          post[:bilzip]    = billing_address[:zip]
+          post[:phone] = billing_address[:phone]
         end
       end
 
-      def add_address(xml, address)
-        address = address_with_defaults(address)
-
-        xml.tag! 'cardAddress' do
-          xml.tag! 'address' do
-            if m = /^\s*([^\s]+)\s+(.+)$/.match(address[:name])
-              xml.tag! 'firstName', m[1]
-              xml.tag! 'lastName', m[2]
-            end
-            xml.tag! 'address1', address[:address1]
-            xml.tag! 'address2', address[:address2] if address[:address2]
-            xml.tag! 'postalCode', address[:zip]
-            xml.tag! 'city', address[:city]
-            xml.tag! 'state', address[:state]
-            xml.tag! 'countryCode', address[:country]
-            xml.tag! 'telephoneNumber', address[:phone] if address[:phone]
-          end
-        end
+      def add_reference(post, authorization)
+        post[:historykeyid] = authorization
       end
 
-      def address_with_defaults(address)
-        address ||= {}
-        address.delete_if { |_, v| v.blank? }
-        address.reverse_merge!(default_address)
-      end
+      ACTIONS = {
+        purchase: "2",
+        authorize: "1",
+        capture: "3",
+        void: "5",
+        refund: "4",
+        credit: "6",
+        store: "7",
+        stored_purchase: "8",
+        stored_credit: "13"
+      }
 
-      def default_address
-        {
-          address1: 'N/A',
-          zip: '0000',
-          city: 'N/A',
-          state: 'N/A',
-          country: 'US'
-        }
-      end
+      STORE_TX_TYPES = {
+        store_only: "3"
+      }
 
-      def parse(action, xml)
-        parse_element({:action => action}, REXML::Document.new(xml))
-      end
+      def commit(action, post)
+        post[:acctid] = @options[:account_id]
+        post[:merchantpin] = @options[:merchant_pin]
+        post[:service] = ACTIONS[action] if ACTIONS[action]
 
-      def parse_element(raw, node)
-        node.attributes.each do |k, v|
-          raw["#{node.name.underscore}_#{k.underscore}".to_sym] = v
-        end
-        if node.has_elements?
-          raw[node.name.underscore.to_sym] = true unless node.name.blank?
-          node.elements.each{|e| parse_element(raw, e) }
-        else
-          raw[node.name.underscore.to_sym] = node.text unless node.text.nil?
-        end
-        raw
-      end
-
-      def commit(action, request, *success_criteria)
-        xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
-        raw = parse(action, xmr)
-        success, message = success_and_message_from(raw, success_criteria)
+        data = build_request(post)
+        response_data = parse(ssl_post(live_url, data, headers))
+        succeeded = success_from(response_data)
 
         Response.new(
-          success,
-          message,
-          raw,
-          :authorization => authorization_from(raw),
-          :test => test?)
+          succeeded,
+          message_from(succeeded, response_data),
+          response_data,
+          authorization: authorization_from(post, response_data),
+          :avs_result => AVSResult.new(code: response_data["avs_response"]),
+          :cvv_result => CVVResult.new(response_data["cvv2_response"]),
+          test: test?
+        )
+      end
 
-      rescue ActiveMerchant::ResponseError => e
-        if e.response.code.to_s == "401"
-          return Response.new(false, "Invalid credentials", {}, :test => test?)
+      def headers
+        {
+          "Content-Type"  => "application/xml"
+        }
+      end
+
+      def build_request(post)
+        Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
+          xml.interface_driver {
+            xml.trans_catalog {
+              xml.transaction(name: "creditcard") {
+                xml.inputs {
+                  post.each do |field, value|
+                    xml.send(field, value)
+                  end
+                }
+              }
+            }
+          }
+        end.to_xml
+      end
+
+      def parse(body)
+        response = {}
+        Nokogiri::XML(CGI.unescapeHTML(body)).xpath("//trans_catalog/transaction/outputs").children.each do |node|
+          parse_element(response, node)
+        end
+        response
+      end
+
+      def parse_element(response, node)
+        if node.elements.size == 0
+          response[node.name.downcase.underscore.to_sym] = node.text
         else
-          raise e
+          node.elements.each{|element| parse_element(response, element) }
         end
       end
 
-      def url
-        test? ? self.test_url : self.live_url
+      def success_from(response)
+        response[:status] == "Approved"
       end
 
-      # success_criteria can be:
-      #   - a string or an array of strings (if one of many responses)
-      #   - An array of strings if one of many responses could be considered a
-      #     success.
-      def success_and_message_from(raw, success_criteria)
-        success = (success_criteria.include?(raw[:last_event]) || raw[:ok].present?)
-        if success
-          message = "SUCCESS"
-        else
-          message = (raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria))
+      def message_from(succeeded, response)
+        succeeded ? "Succeeded" : error_message_from(response)
+      end
+
+      def authorization_from(request, response)
+        request[:service] == ACTIONS[:store] ?
+          "#{response[:userprofileid]}|#{response[:last4digits]}" :
+          response[:historyid]
+      end
+
+      def split_authorization(authorization)
+        authorization.split("|")
+      end
+
+      def error_message_from(response)
+        if(response[:status] == "Declined")
+          match = response[:result].match(/DECLINED:\d{10}:(.+):/)
+          match[1] if match
         end
-
-        [ success, message ]
-      end
-
-      def required_status_message(raw, success_criteria)
-        if(!success_criteria.include?(raw[:last_event]))
-          "A transaction status of #{success_criteria.collect{|c| "'#{c}'"}.join(" or ")} is required."
-        end
-      end
-
-      def authorization_from(raw)
-        pair = raw.detect{|k,v| k.to_s =~ /_order_code$/}
-        (pair ? pair.last : nil)
-      end
-
-      def encoded_credentials
-        credentials = "#{@options[:login]}:#{@options[:password]}"
-        "Basic #{[credentials].pack('m').strip}"
-      end
-
-      def localized_amount(money, currency)
-        amount = amount(money)
-        return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
-
-        amount.to_i / 100 * 100
       end
     end
   end
