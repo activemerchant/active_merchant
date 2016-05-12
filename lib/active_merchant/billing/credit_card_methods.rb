@@ -45,6 +45,10 @@ module ActiveMerchant #:nodoc:
         (1..12).include?(month.to_i)
       end
 
+      def credit_card?
+        true
+      end
+
       def valid_expiry_year?(year)
         (Time.now.year..Time.now.year + 20).include?(year.to_i)
       end
