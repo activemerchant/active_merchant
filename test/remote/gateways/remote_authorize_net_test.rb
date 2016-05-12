@@ -8,7 +8,6 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @check = check
     @declined_card = credit_card('400030001111222')
-    @apple_pay_payment_token = apple_pay_payment_token
 
     @options = {
       order_id: '1',
@@ -126,52 +125,6 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The ABA code is invalid', response.message
     assert response.authorization
-  end
-
-  def test_successful_apple_pay_authorization
-    response = @gateway.authorize(5, @apple_pay_payment_token, @options)
-    assert_success response
-    assert_equal 'This transaction has been approved', response.message
-    assert response.authorization
-  end
-
-  def test_successful_apple_pay_purchase
-    response = @gateway.purchase(5, @apple_pay_payment_token, @options)
-    assert_success response
-    assert_equal 'This transaction has been approved', response.message
-  end
-
-  def test_successful_apple_pay_authorization_and_capture
-    assert authorization = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
-    assert_success authorization
-
-    assert capture = @gateway.capture(@amount, authorization.authorization)
-    assert_success capture
-    assert_equal 'This transaction has been approved', capture.message
-  end
-
-  def test_successful_apple_pay_authorization_and_void
-    assert authorization = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
-    assert_success authorization
-
-    assert void = @gateway.void(authorization.authorization)
-    assert_success void
-    assert_equal 'This transaction has been approved', void.message
-  end
-
-
-  def test_failed_apple_pay_authorization
-    response = @gateway.authorize(@amount, apple_pay_payment_token(payment_data: {data: 'garbage'}), @options)
-    assert_failure response
-    assert_equal 'There was an error processing the payment data', response.message
-    assert_equal 'processing_error', response.error_code
-  end
-
-  def test_failed_apple_pay_purchase
-    response = @gateway.purchase(@amount, apple_pay_payment_token(payment_data: {data: 'garbage'}), @options)
-    assert_failure response
-    assert_equal 'There was an error processing the payment data', response.message
-    assert_equal 'processing_error', response.error_code
   end
 
   def test_card_present_purchase_with_track_data_only
