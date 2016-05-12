@@ -24,13 +24,13 @@ module ActiveMerchant #:nodoc:
       }
       self.supported_cardtypes = CARD_TYPES.keys
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :terminal_id, :secret)
         options[:terminal_type] ||= 2 # eCommerce
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         commit('PAYMENT', post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         requires!(options, :order_id)
 
         post = {}
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         commit('PREAUTH', post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         post = {}
         add_invoice(post, money, options)
         post[:uniqueref] = authorization
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         commit('PREAUTHCOMPLETION', post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         requires!(options, :operator, :reason)
 
         post = {}
@@ -74,13 +74,13 @@ module ActiveMerchant #:nodoc:
         commit('REFUND', post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, _options = {})
         post = {}
         post[:uniqueref] = authorization
         commit('VOID', post)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
         post[:ipaddress] = options[:ip]
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, _creditcard, options)
         address = options[:billing_address] || options[:address]
         return unless address
         post[:address1] = address[:address1]
