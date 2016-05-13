@@ -5,6 +5,7 @@ class RemoteStoneTest < Test::Unit::TestCase
     @gateway = StoneGateway.new(fixtures(:stone))
 
     @credit_card = credit_card('4000100011112224')
+    @token = '63c1eb62-aab9-4036-a4a8-a6229a031be2'
 
     @amount = 10000
     @declined_amount = 150100
@@ -18,6 +19,14 @@ class RemoteStoneTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+    assert_not_nil response.params.card_token
+    assert_equal 'Transação de simulação autorizada com sucesso', response.message
+  end
+
+  def test_successful_purchase_with_token
+    response = @gateway.purchase(@amount, @token, @options)
+    assert_success response
+    assert_not_nil response.params.card_token
     assert_equal 'Transação de simulação autorizada com sucesso', response.message
   end
 
@@ -30,6 +39,7 @@ class RemoteStoneTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
+    assert_not_nil auth.params.card_token
 
     assert capture = @gateway.capture(@amount, auth.params)
     assert_success capture
