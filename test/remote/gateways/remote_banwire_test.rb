@@ -53,14 +53,24 @@ class RemoteBanwireTest < Test::Unit::TestCase
     assert_equal 'ID de cuenta invalido', response.message
   end
 
-def test_transcript_scrubbing
-  transcript = capture_transcript(@gateway) do
-    @gateway.purchase(@amount, @credit_card, @options)
+  def test_successful_store
+    assert response = @gateway.store(credit_card, @options)
+    assert_success = response
   end
-  clean_transcript = @gateway.scrub(transcript)
 
-  assert_scrubbed(@credit_card.number, clean_transcript)
-  assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
-end
+  def test_unsuccessful_store
+    assert response = @gateway.store(credit_card('4000300011112220', month: 13), @options)
+    assert_failure = response
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
 
 end
