@@ -677,6 +677,13 @@ payu_in:
   key: KEY
   salt: SALT
 
+# Working credentials, no need to replace
+payu_latam:
+  merchant_id: "508029"
+  account_id: "512322"
+  api_login: "pRRXKOl8ikMmt9u"
+  api_key: "4Vj8eK4rloUd272L48hsrarnUA"
+
 payway:
   username:
   password:
