@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
           billing[:phone]                   = billing_address[:phone]
 
           customer[:email]                  = options[:email] if options[:email]
-          customer[:ipaddress]              = options[:ip] if options[:ip]
+          customer[:ipAddress]              = options[:ip] if options[:ip]
         end
 
         if(shipping_address = options[:shipping_address])
