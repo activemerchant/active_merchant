@@ -83,29 +83,7 @@ class StoneTest < Test::Unit::TestCase
     assert_failure refund
   end
 
-  def test_scrub
-    assert @gateway.supports_scrubbing?
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  end
-
   private
-
-  def pre_scrubbed
-    %q(
-      Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    )
-  end
-
-  def post_scrubbed
-    %q(
-      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-      Things to scrub:
-        - Credit card number
-        - CVV
-        - Sensitive authentication details
-    )
-  end
-
   def successful_response
     "{\"ErrorReport\":null,\"InternalTime\":209,\"MerchantKey\":\"dummy\",\"RequestKey\":\"1e46c866-2902-4d4b-b74e-0570a42c50f0\",\"BoletoTransactionResultCollection\":[],\"BuyerKey\":\"00000000-0000-0000-0000-000000000000\",\"CreditCardTransactionResultCollection\":[{\"AcquirerMessage\":\"Simulator|Transa\xC3\xA7\xC3\xA3o de simula\xC3\xA7\xC3\xA3o autorizada com sucesso\",\"AcquirerName\":\"Simulator\",\"AcquirerReturnCode\":\"0\",\"AffiliationCode\":\"000000000\",\"AmountInCents\":10000,\"AuthorizationCode\":\"654149\",\"AuthorizedAmountInCents\":10000,\"CapturedAmountInCents\":10000,\"CapturedDate\":\"2016-04-21T21:57:22\",\"CreditCard\":{\"CreditCardBrand\":\"Visa\",\"InstantBuyKey\":\"63c1eb62-aab9-4036-a4a8-a6229a031be2\",\"IsExpiredCreditCard\":false,\"MaskedCreditCardNumber\":\"400010****2224\"},\"CreditCardOperation\":\"AuthAndCapture\",\"CreditCardTransactionStatus\":\"Captured\",\"DueDate\":null,\"EstablishmentCode\":null,\"ExternalTime\":0,\"PaymentMethodName\":\"Simulator\",\"RefundedAmountInCents\":null,\"Success\":true,\"TransactionIdentifier\":\"843672\",\"TransactionKey\":\"56cd29e0-e9bb-41c5-b77a-53013fa74cf5\",\"TransactionKeyToAcquirer\":\"56cd29e0e9bb41c5\",\"TransactionReference\":\"123123\",\"UniqueSequentialNumber\":\"243104\",\"VoidedAmountInCents\":null}],\"OrderResult\":{\"CreateDate\":\"2016-04-21T21:57:22\",\"OrderKey\":\"106dff3d-9436-43ff-b33e-3d354f851083\",\"OrderReference\":\"a70438e4\"}}"
   end
