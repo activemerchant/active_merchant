@@ -574,10 +574,11 @@ module ActiveMerchant #:nodoc:
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
         parameters[:channel] = application_id if application_id.present? && application_id != "ActiveMerchant"
 
-        if options[:descriptor_name] || options[:descriptor_phone]
+        if options[:descriptor_name] || options[:descriptor_phone] || options[:descriptor_url]
           parameters[:descriptor] = {
             name: options[:descriptor_name],
-            phone: options[:descriptor_phone]
+            phone: options[:descriptor_phone],
+            url: options[:descriptor_url]
           }
         end
 

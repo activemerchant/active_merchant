@@ -88,34 +88,18 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal "Could not find payment for order", response.message
   end
 
-  def test_currency
-    assert_success(result = @gateway.authorize(@amount, @credit_card, @options.merge(:currency => 'USD')))
+  def test_authorize_fractional_currency
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'USD')))
     assert_equal "USD", result.params['amount_currency_code']
+    assert_equal "1234", result.params['amount_value']
+    assert_equal "2", result.params['amount_exponent']
   end
 
-  def test_authorize_currency_without_fractional_units
-    assert_success(result = @gateway.authorize(1200, @credit_card, @options.merge(:currency => 'HUF')))
-    assert_equal "HUF", result.params['amount_currency_code']
-    assert_equal "12", result.params['amount_value']
-  end
-
-  def test_authorize_currency_without_fractional_units_and_fractions_in_amount
-    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'HUF')))
-    assert_equal "HUF", result.params['amount_currency_code']
-    assert_equal "12", result.params['amount_value']
-  end
-
-  def test_authorize_and_capture_currency_without_fractional_units_and_fractions_in_amount
-    assert_success(auth = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'HUF')))
-    assert_equal "12", auth.params['amount_value']
-
-    assert_success(result = @gateway.capture(1234, auth.authorization))
-    assert_equal "12", result.params['amount_value']
-  end
-
-  def test_purchase_currency_without_fractional_units_and_fractions_in_amount
-    assert_success(result = @gateway.purchase(1234, @credit_card, @options.merge(:currency => 'HUF')))
-    assert_equal "12", result.params['amount_value']
+  def test_authorize_nonfractional_currency
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'IDR')))
+    assert_equal "IDR", result.params['amount_currency_code']
+    assert_equal "1234", result.params['amount_value']
+    assert_equal "0", result.params['amount_exponent']
   end
 
   def test_reference_transaction

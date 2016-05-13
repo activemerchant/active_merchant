@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -59,6 +59,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
         add_reference(post, authorization)
+        add_payment_type(post, authorization)
 
         commit("void", post)
       end
@@ -67,6 +68,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
+        add_payment_type(post, authorization)
 
         commit("refund", post)
       end
@@ -74,7 +76,7 @@ module ActiveMerchant #:nodoc:
       def credit(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
 
         commit("credit", post)
@@ -82,7 +84,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(payment_method, options={})
         post = {}
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -92,7 +94,7 @@ module ActiveMerchant #:nodoc:
       def store(payment_method, options = {})
         post = {}
         add_invoice(post, nil, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -125,7 +127,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_method(post, payment_method)
+      def add_payment_method(post, payment_method, options)
         if(payment_method.is_a?(String))
           post[:customer_vault_id] = payment_method
         elsif(card_brand(payment_method) == 'check')
@@ -135,7 +137,7 @@ module ActiveMerchant #:nodoc:
           post[:checkaccount] = payment_method.account_number
           post[:account_holder_type] = payment_method.account_holder_type
           post[:account_type] = payment_method.account_type
-          post[:sec_code] = 'WEB'
+          post[:sec_code] = options[:sec_code] || 'WEB'
         else
           post[:payment] = 'creditcard'
           post[:firstname] = payment_method.first_name
@@ -182,7 +184,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        post[:transactionid] = authorization
+        transaction_id, _ = split_authorization(authorization)
+        post[:transactionid] = transaction_id
+      end
+
+      def add_payment_type(post, authorization)
+        _, payment_type = split_authorization(authorization)
+        post[:payment] = payment_type if payment_type
       end
 
       def exp_date(payment_method)
@@ -203,11 +211,19 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: response[:transactionid],
+          authorization: authorization_from(response, params[:payment]),
           avs_result: AVSResult.new(code: response[:avsresponse]),
           cvv_result: CVVResult.new(response[:cvvresponse]),
           test: test?
         )
+      end
+
+      def authorization_from(response, payment_type)
+        [ response[:transactionid], payment_type ].join("#")
+      end
+
+      def split_authorization(authorization)
+        authorization.split("#")
       end
 
       def headers

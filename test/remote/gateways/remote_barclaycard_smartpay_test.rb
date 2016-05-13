@@ -5,16 +5,41 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     @gateway = BarclaycardSmartpayGateway.new(fixtures(:barclaycard_smartpay))
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111', :month => 6, :year => 2016, :verification_value => 737)
-    @declined_card = credit_card('4000300011112220', :month => 6, :year => 2016, :verification_value => 737)
+    @credit_card = credit_card('4111111111111111', :month => 8, :year => 2018, :verification_value => 737)
+    @declined_card = credit_card('4000300011112220', :month => 8, :year => 2018, :verification_value => 737)
 
     @options = {
       order_id: '1',
-      billing_address: address,
+      billing_address:       {
+              name:     'Jim Smith',
+              address1: '100 Street',
+              company:  'Widgets Inc',
+              city:     'Ottawa',
+              state:    'ON',
+              zip:      'K1C2N6',
+              country:  'CA',
+              phone:    '(555)555-5555',
+              fax:      '(555)555-6666'},
       email: 'long@bob.com',
       customer: 'Longbob Longsen',
       description: 'Store Purchase'
     }
+
+    @avs_credit_card = credit_card('4400000000000008',
+                                    :month => 8,
+                                    :year => 2018,
+                                    :verification_value => 737)
+
+    @avs_address = @options
+    @avs_address.update(billing_address: {
+        name:     'Jim Smith',
+        street:   'Test AVS result',
+        houseNumberOrName: '2',
+        city:     'Cupertino',
+        state:    'CA',
+        zip:      '95014',
+        country:  'US'
+        })
   end
 
   def test_successful_purchase
@@ -123,6 +148,12 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     response = @gateway.store(credit_card('', :month => '', :year => '', :verification_value => ''), @options)
     assert_failure response
     assert_equal "Unprocessable Entity", response.message
+  end
+
+  # AVS must be enabled on the gateway's end for the test account used
+  def test_avs_result
+    response = @gateway.authorize(@amount, @avs_credit_card, @avs_address)
+    assert_equal 'N', response.avs_result['code']
   end
 
   def test_transcript_scrubbing

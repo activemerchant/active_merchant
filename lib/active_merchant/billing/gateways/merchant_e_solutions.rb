@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantESolutionsGateway < Gateway
+      include Empty
+
       self.test_url = 'https://cert.merchante-solutions.com/mes-api/tridentApi'
       self.live_url = 'https://api.merchante-solutions.com/mes-api/tridentApi'
 
@@ -28,6 +30,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_payment_source(post, creditcard_or_card_id, options)
         add_address(post, options)
+        add_3dsecure_params(post, options)
         commit('P', money, post)
       end
 
@@ -38,6 +41,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_payment_source(post, creditcard_or_card_id, options)
         add_address(post, options)
+        add_3dsecure_params(post, options)
         commit('D', money, post)
       end
 
@@ -45,6 +49,8 @@ module ActiveMerchant #:nodoc:
         post ={}
         post[:transaction_id] = transaction_id
         post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
+        add_invoice(post, options)
+        add_3dsecure_params(post, options)
         commit('S', money, post)
       end
 
@@ -119,6 +125,13 @@ module ActiveMerchant #:nodoc:
         post[:card_number]  = creditcard.number
         post[:cvv2] = creditcard.verification_value if creditcard.verification_value?
         post[:card_exp_date]  = expdate(creditcard)
+      end
+
+      def add_3dsecure_params(post, options)
+        post[:xid] = options[:xid] unless empty?(options[:xid])
+        post[:cavv] = options[:cavv] unless empty?(options[:cavv])
+        post[:ucaf_collection_ind] = options[:ucaf_collection_ind] unless empty?(options[:ucaf_collection_ind])
+        post[:ucaf_auth_data] = options[:ucaf_auth_data] unless empty?(options[:ucaf_auth_data])
       end
 
       def parse(body)

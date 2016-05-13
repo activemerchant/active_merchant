@@ -409,7 +409,6 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'voided', void.params["braintree_transaction"]["status"]
     assert failed_void = @gateway.void(auth.authorization)
     assert_failure failed_void
-    assert failed_void.authorization.present?
     assert_equal 'Transaction can only be voided if status is authorized or submitted_for_settlement. (91504)', failed_void.message
     assert_equal({"processor_response_code"=>"91504"}, failed_void.params["braintree_transaction"])
   end
@@ -575,7 +574,6 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_failed_credit
     assert response = @gateway.credit(@amount, credit_card('5105105105105101'), @options)
     assert_failure response
-    assert response.authorization.present?
     assert_equal 'Credit card number is invalid. (81715)', response.message, "You must get credits enabled in your Sandbox account for this to pass"
   end
 
@@ -594,7 +592,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_descriptor
-    assert auth = @gateway.authorize(@amount, @credit_card, descriptor_name: "company*theproduct", descriptor_phone: "1331131131")
+    assert auth = @gateway.authorize(@amount, @credit_card, descriptor_name: "company*theproduct", descriptor_phone: "1331131131", descriptor_url: "company.com")
     assert_success auth
   end
 

@@ -169,12 +169,10 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = CyberSourceGateway.new( :login => '', :password => '' )
-    authentication_exception = assert_raise ActiveMerchant::ResponseError, 'Failed with 500 Internal Server Error' do
-      gateway.purchase(@amount, @credit_card, @options)
-    end
-    assert response = authentication_exception.response
-    assert_match(/wsse:InvalidSecurity/, response.body)
+    gateway = CyberSourceGateway.new( :login => 'asdf', :password => 'qwer' )
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal "wsse:FailedCheck: \nSecurity Data : UsernameToken authentication failed.\n", response.message
   end
 
   def test_successful_refund

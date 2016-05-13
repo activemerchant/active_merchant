@@ -563,9 +563,10 @@ class BraintreeBlueTest < Test::Unit::TestCase
   def test_successful_purchase_with_descriptor
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:descriptor][:name] == 'wow*productname') &&
-      (params[:descriptor][:phone] == '4443331112')
+      (params[:descriptor][:phone] == '4443331112') &&
+      (params[:descriptor][:url] == 'wow.com')
     end.returns(braintree_result)
-    @gateway.purchase(100, credit_card("41111111111111111111"), descriptor_name: 'wow*productname', descriptor_phone: '4443331112')
+    @gateway.purchase(100, credit_card("41111111111111111111"), descriptor_name: 'wow*productname', descriptor_phone: '4443331112', descriptor_url: 'wow.com')
   end
 
   def test_apple_pay_card
