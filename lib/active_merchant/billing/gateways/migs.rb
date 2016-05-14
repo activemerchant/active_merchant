@@ -104,6 +104,17 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def void(authorization, options = {})
+        requires!(@options, :advanced_login, :advanced_password)
+
+        post = options.merge(:TransNo => authorization)
+
+        add_advanced_user(post)
+        add_standard_parameters('voidAuthorisation', post, options[:unique_id])
+
+        commit(post)
+      end
+
       def credit(money, authorization, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)

@@ -19,7 +19,7 @@ class RemoteMigsTest < Test::Unit::TestCase
 
     @options = {
       :order_id => '1',
-      :currency => 'USD'
+      :currency => 'SAR'
     }
   end
 
@@ -28,7 +28,7 @@ class RemoteMigsTest < Test::Unit::TestCase
       :order_id   => 1,
       :unique_id  => 9,
       :return_url => 'http://localhost:8080/payments/return',
-      :currency => 'USD'
+      :currency => 'SAR'
     }
 
     choice_url = @gateway.purchase_offsite_url(@amount, options)
@@ -66,6 +66,15 @@ class RemoteMigsTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert capture = @capture_gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
+  end
+
+  def test_authorize_and_void
+    assert auth = @capture_gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert void = @capture_gateway.void(auth.authorization, @options)
+    assert_success void
+    assert_equal 'Approved', void.message
   end
 
   def test_failed_authorize
