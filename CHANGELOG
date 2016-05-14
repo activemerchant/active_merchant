@@ -5,6 +5,7 @@
 * TNS: Try TLS v1 [duff]
 * PaypalExpress: Add SoftDescriptor field [talyssonoc]
 * MiGS: Handle IDR currency [curiousepic]
+* Migs: Add support for void [mohsenottello]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
