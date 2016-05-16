@@ -359,7 +359,7 @@ module ActiveMerchant #:nodoc:
               xml.value(currency)
             end
           end
-          if application_id.present? && application_id != "ActiveMerchant"
+          if application_id.present?
             xml.userField do
               xml.name("x_solution_id")
               xml.value(application_id)

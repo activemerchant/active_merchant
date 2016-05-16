@@ -472,7 +472,7 @@ module ActiveMerchant #:nodoc:
         post[:encap_char]     = "$"
         post[:card_num]       = '4111111111111111'
         post[:exp_date]       = '1212'
-        post[:solution_ID]    = application_id if(application_id && application_id != "ActiveMerchant")
+        post[:solution_ID]    = application_id if application_id
         post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 

@@ -572,7 +572,9 @@ module ActiveMerchant #:nodoc:
         end
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
-        parameters[:channel] = application_id if application_id.present? && application_id != "ActiveMerchant"
+
+        channel = @options[:channel] || application_id
+        parameters[:channel] = channel if channel
 
         if options[:descriptor_name] || options[:descriptor_phone] || options[:descriptor_url]
           parameters[:descriptor] = {
