@@ -119,18 +119,18 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        Response.new(success?(action, response),
+        Response.new(success?(response, action),
                      response["message"],
                      response,
                      :test => test?,
-                     :authorization => authorization_from_response(action, response))
+                     :authorization => authorization_from_response(response, action))
       end
 
-      def authorization_from_response(action, response)
+      def authorization_from_response(response, action)
         action == 'store' ? response['token'] : response['code_auth']
       end
 
-      def success?(action, response)
+      def success?(response, action)
         action == 'store' ? response['result'] : response['response'] == "ok"
       end
 
