@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
       # The application making the calls to the gateway
       # Useful for things like the PayPal build notation (BN) id fields
       class_attribute :application_id, instance_writer: false
-      self.application_id = 'ActiveMerchant'
+      self.application_id = nil
 
       attr_reader :options
 
