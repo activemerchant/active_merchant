@@ -132,7 +132,7 @@ class PayflowExpressTest < Test::Unit::TestCase
     xml = Builder::XmlMarkup.new
     @gateway.send(:add_paypal_details, xml, {})
     xml_doc = REXML::Document.new(xml.target!)
-    assert_equal 'ActiveMerchant', REXML::XPath.first(xml_doc, '/PayPal/ButtonSource').text
+    assert_nil REXML::XPath.first(xml_doc, '/PayPal/ButtonSource')
   end
   
   private
