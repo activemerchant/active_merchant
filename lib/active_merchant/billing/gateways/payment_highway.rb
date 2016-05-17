@@ -53,6 +53,10 @@ module ActiveMerchant #:nodoc:
         commit("/transaction/#{transactionId}/revert", payload.to_json, transactionId)
       end
 
+      def transaction_status(transaction_id)
+        fetch("/transaction/#{transaction_id}", "")
+      end
+
       private
 
       def card_to_json card

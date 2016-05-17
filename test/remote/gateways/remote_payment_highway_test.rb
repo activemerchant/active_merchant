@@ -34,6 +34,18 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     assert response.params["transactions"].size == 1
   end
 
+  def test_successful_transaction_status
+    options = {
+      order_id: SecureRandom.uuid
+    }
+
+    purchase = @gateway.purchase(@amount, @credit_card, options)
+    response = @gateway.transaction_status(purchase.authorization)
+    assert_success response
+    assert response.params["transaction"]["status"]["state"] == "ok"
+  end
+
+
   def test_declined_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
