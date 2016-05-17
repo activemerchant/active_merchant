@@ -251,10 +251,10 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(form, options)
         form[:email] = options[:email].to_s.slice(0, 100) unless options[:email].blank?
-        form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
       end
 
       def add_salestax(form, options)
+        form[:salestax] = 0
         form[:salestax] = options[:tax] if options[:tax].present?
       end
 
