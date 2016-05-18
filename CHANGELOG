@@ -3,6 +3,7 @@
 * Orbital: Fix CC num leak on profile calls [drewblas]
 * VisaNetPeru: Add ability to refund [duff]
 * AuthorizeNet: Fix store using new profile [duff]
+* Clearhaus: Support private key for signature [curiousepic]
 
 
 == Version 1.59.0 (May 18, 2016)
