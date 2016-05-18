@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.59.0 (May 18, 2016)
 * Orbital: Allow AVS parts to be sent sans country [duff]
 * SecureNet: Return the right error message for declines [duff]
 * Moneris: Add verify [anellis]
@@ -50,6 +51,7 @@
 * Tns: Fix ipAddress field [duff]
 * WorldNet: New gateway support [varyonic]
 * BraintreeBlue: Allow channel override [duff]
+* MerchantWarrior: Use Truncated Order Id [ThereExistsX]
 
 
 == Version 1.58.0 (March 1, 2016)
