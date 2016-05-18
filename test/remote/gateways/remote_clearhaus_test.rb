@@ -19,18 +19,18 @@ class RemoteClearhausTest < Test::Unit::TestCase
   def test_successful_signing_request
     gateway = ClearhausGateway.new(fixtures(:clearhaus_secure))
 
-    assert gateway.options[:signing_key]
+    assert gateway.options[:private_key]
     assert auth = gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Approved', auth.message
   end
 
-  def test_cleans_whitespace_from_signing_key
+  def test_cleans_whitespace_from_private_key
     credentials = fixtures(:clearhaus_secure)
-    credentials[:signing_key] = "     #{credentials[:signing_key]}     "
+    credentials[:private_key] = "     #{credentials[:private_key]}     "
     gateway = ClearhausGateway.new(credentials)
 
-    assert gateway.options[:signing_key]
+    assert gateway.options[:private_key]
     assert auth = gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Approved', auth.message
@@ -38,13 +38,22 @@ class RemoteClearhausTest < Test::Unit::TestCase
 
   def test_unsuccessful_signing_request
     credentials = fixtures(:clearhaus_secure)
+    credentials[:private_key] = "foo"
+    gateway = ClearhausGateway.new(credentials)
+
+    assert gateway.options[:private_key]
+    assert auth = gateway.authorize(@amount, @credit_card, @options)
+    assert_failure auth
+    assert_equal "Neither PUB key nor PRIV key: not enough data", auth.message
+
+    credentials = fixtures(:clearhaus_secure)
     credentials[:signing_key] = "foo"
     gateway = ClearhausGateway.new(credentials)
 
     assert gateway.options[:signing_key]
     assert auth = gateway.authorize(@amount, @credit_card, @options)
     assert_failure auth
-    assert_equal "Neither PUB key nor PRIV key: not enough data", auth.message
+    assert_equal "invalid signing api-key", auth.message
   end
 
   def test_successful_purchase_without_cvv
