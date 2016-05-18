@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class PaymentHighwayGateway < Gateway
       self.money_format = :cents
       self.test_url = 'https://v1-hub-staging.sph-test-solinor.com/'
-      self.live_url = 'https://example.com/live'
+      self.live_url = 'https://v1.api.paymenthighway.io'
 
       self.supported_countries = ['FI']
       self.default_currency = 'EUR'
