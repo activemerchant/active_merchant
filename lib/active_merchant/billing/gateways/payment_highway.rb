@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, card, options={})
-        transactionId = initTransaction
+        transaction_id = initTransaction
 
         payload = {
           "amount": money,
@@ -41,20 +41,25 @@ module ActiveMerchant #:nodoc:
         payload = add_ip(payload, options)
         payload = add_order_id(payload, options)
 
-        commit("/transaction/#{transactionId}/debit", payload.to_json, transactionId)
+        commit("/transaction/#{transaction_id}/debit", payload.to_json, transaction_id)
       end
 
       def order_status(order_id)
         fetch("/transactions/?order=#{order_id}", "")
       end
 
-      def refund(amount, transactionId, card)
+      def refund(amount, transaction_id, card)
         payload = { amount: amount, currency: default_currency, card: card_to_json(card) }
-        commit("/transaction/#{transactionId}/revert", payload.to_json, transactionId)
+        commit("/transaction/#{transaction_id}/revert", payload.to_json, transaction_id)
       end
 
       def transaction_status(transaction_id)
         fetch("/transaction/#{transaction_id}", "")
+      end
+
+      def commit_form_payment(transaction_id, amount, currency)
+        payload = { amount: amount, currency: currency }
+        commit("/transaction/#{transaction_id}/commit", payload.to_json, transaction_id)
       end
 
       private
@@ -88,11 +93,11 @@ module ActiveMerchant #:nodoc:
         send_request(action, payload, "GET", nil)
       end
 
-      def commit(action, payload, transactionId)
-        send_request(action, payload, "POST", transactionId)
+      def commit(action, payload, transaction_id)
+        send_request(action, payload, "POST", transaction_id)
       end
 
-      def send_request(action, payload, method, transactionId)
+      def send_request(action, payload, method, transaction_id)
         url = (test? ? test_url : live_url)
         json = payload
         request_id = generate_request_id
@@ -111,7 +116,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           error_code: error_code_from(response),
-          authorization: transactionId
+          authorization: transaction_id
         )
       end
 
