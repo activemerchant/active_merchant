@@ -23,7 +23,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_success response
     assert_equal "OK", response.message
 
-    assert_match %r(^deposit\|[0-9]{9}$), response.authorization
+    assert_match %r([0-9]{9}$), response.authorization
     assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert response.test?
   end
@@ -42,7 +42,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
-    assert_match %r(^authorize\|[0-9]{9}$), response.authorization
+    assert_match %r(^[0-9]{9}$), response.authorization
     assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert_equal "1.00", response.params["data"]["IMP_AUTORIZADO"]
     assert response.test?
@@ -70,7 +70,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal "OK", capture.message
-    assert_match %r(^deposit\|[0-9]{9}$), capture.authorization
+    assert_match %r(^[0-9]{9}$), capture.authorization
     assert_equal @options[:order_id], capture.params["externalTransactionId"]
     assert capture.test?
   end
@@ -84,6 +84,26 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_equal 400, response.error_code
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).returns(successful_capture_response)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    @gateway.expects(:ssl_request).returns(successful_refund_response)
+    refund = @gateway.refund(@amount, response.authorization)
+    assert_success refund
+    assert_equal "OK", refund.message
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_request).returns(failed_refund_response)
+    response = @gateway.refund(@amount, "122333444")
+    assert_failure response
+    assert_match(/No se realizo la anulacion del deposito/, response.message)
+    assert_equal 400, response.error_code
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_authorize_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -93,30 +113,13 @@ class VisanetPeruTest < Test::Unit::TestCase
     void = @gateway.void(response.authorization)
     assert_success void
     assert_equal "OK", void.message
-
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-
-    @gateway.expects(:ssl_request).returns(successful_void_response)
-    void = @gateway.void(response.authorization)
-    assert_success void
-    assert_equal "OK", void.message
   end
 
   def test_failed_void
-    invalid_purchase_number = "122333444"
-    @gateway.expects(:ssl_request).returns(failed_void_response_for_authorize)
-    response = @gateway.void("authorize" + "|" + invalid_purchase_number)
+    @gateway.expects(:ssl_request).returns(failed_void_response)
+    response = @gateway.void("122333444")
     assert_failure response
-    assert_equal "[ 'NUMORDEN no se encuentra registrado.', 'No se ha realizado la anulacion del pedido' ]", response.message
-    assert_equal 400, response.error_code
-
-    @gateway.expects(:ssl_request).returns(failed_void_response_for_capture)
-    response = @gateway.void("deposit" + "|" + invalid_purchase_number)
-    assert_failure response
-    assert_equal "[ 'NUMORDEN 122333444 no se encuentra registrado', 'No se realizo la anulacion del deposito' ]", response.message
+    assert_match(/No se ha realizado la anulacion del pedido/, response.message)
     assert_equal 400, response.error_code
   end
 
@@ -315,7 +318,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def failed_void_response_for_authorize
+  def failed_void_response
     <<-RESPONSE
     {
       "errorCode": 400,
@@ -324,7 +327,24 @@ class VisanetPeruTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def failed_void_response_for_capture
+  def successful_refund_response
+    <<-RESPONSE
+    {
+      "errorCode":0,
+      "errorMessage":"OK",
+      "transactionUUID":"388e1e2b-46cc-4abc-818a-a7e4691bf67a",
+      "externalTransactionId":null,
+      "transactionDateTime":1463682009508,
+      "transactionDuration":0,
+      "merchantId":"101266802",
+      "userTokenId":null,
+      "aliasName":null,
+      "data":{"ESTADO":"Autorizado","RESPUESTA":"1"}
+    }
+    RESPONSE
+  end
+
+  def failed_refund_response
     <<-RESPONSE
     {
       "errorCode": 400,
