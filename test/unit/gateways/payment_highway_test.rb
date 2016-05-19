@@ -67,6 +67,14 @@ class PaymentHighwayTest < Test::Unit::TestCase
     assert_equal PaymentHighwayGateway::RESPONSE_CODE_MAPPING[100], response.message
   end
 
+  def test_successful_commit_form_payment
+    @gateway.expects(:ssl_post).returns(successful_commit_form_payment_response)
+
+    assert response = @gateway.commit_form_payment("ebf19bf4-2ea7-4a29-8a90-f1abec66c57d", @amount, @currency)
+    assert_success response
+    assert_equal PaymentHighwayGateway::RESPONSE_CODE_MAPPING[100], response.message
+  end
+
   private
 
   def pre_scrubbed
@@ -148,10 +156,8 @@ class PaymentHighwayTest < Test::Unit::TestCase
     }.to_json
   end
 
-  def successful_void_response
-  end
-
-  def failed_void_response
+  def successful_commit_form_payment_response
+    successful_order_status_response
   end
 
   def successful_order_status_response
