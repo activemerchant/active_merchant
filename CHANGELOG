@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+* Orbital: Fix CC num leak on profile calls [drewblas]
+* VisaNetPeru: Add ability to refund [duff]
+
+
 == Version 1.59.0 (May 18, 2016)
 * Orbital: Allow AVS parts to be sent sans country [duff]
 * SecureNet: Return the right error message for declines [duff]
