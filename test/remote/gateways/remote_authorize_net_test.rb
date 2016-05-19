@@ -204,8 +204,22 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     customer_profile_id, _, _ = store.authorization.split("#")
 
     assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
+    assert_success response
     assert_equal "Successful", response.message
     assert_equal "1", response.params["message_code"]
+  end
+
+  def test_failed_store_new_payment_profile
+    assert store = @gateway.store(@credit_card)
+    assert_success store
+    assert store.authorization
+
+    new_card = credit_card('141241')
+    customer_profile_id, _, _ = store.authorization.split("#")
+
+    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
+    assert_failure response
+    assert_equal "The field length is invalid for Card Number", response.message
   end
 
   def test_failed_store
@@ -235,6 +249,22 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "27", response.params["message_code"]
     assert_equal "6", response.params["response_reason_code"]
     assert_match /but street address not verified/, response.avs_result["message"]
+  end
+
+  def test_successful_purchase_using_stored_card_new_payment_profile
+    assert store = @gateway.store(@credit_card)
+    assert_success store
+    assert store.authorization
+
+    new_card = credit_card('4007000000027')
+    customer_profile_id, _, _ = store.authorization.split("#")
+
+    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
+    assert_success response
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success response
+    assert_equal "This transaction has been approved.", response.message
   end
 
   def test_successful_authorize_and_capture_using_stored_card
