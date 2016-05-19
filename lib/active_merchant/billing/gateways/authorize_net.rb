@@ -738,7 +738,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response)
-        if action == :cim_store
+        if cim?(action)
           response[:result_code] == "Ok"
         else
           response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
@@ -758,7 +758,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, response)
-        if action == :cim_store
+        if cim?(action)
           [response[:customer_profile_id], response[:customer_payment_profile_id], action].join("#")
         else
           [response[:transaction_id], response[:account_number], action].join("#")
@@ -767,6 +767,10 @@ module ActiveMerchant #:nodoc:
 
       def split_authorization(authorization)
         authorization.split("#")
+      end
+
+      def cim?(action)
+        (action == :cim_store) || (action == :cim_store_update)
       end
 
       def transaction_id_from(authorization)
