@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       self.homepage_url = 'https://www.paymenthighway.fi/'
-      self.display_name = 'Payment highway'
+      self.display_name = 'PaymentHighway'
 
       STANDARD_ERROR_CODE_MAPPING = {}
 

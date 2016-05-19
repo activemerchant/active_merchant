@@ -45,7 +45,6 @@ class RemotePaymentHighwayTest < Test::Unit::TestCase
     assert response.params["transaction"]["status"]["state"] == "ok"
   end
 
-
   def test_declined_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
