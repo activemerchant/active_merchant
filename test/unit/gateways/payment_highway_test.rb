@@ -40,6 +40,11 @@ class PaymentHighwayTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    assert refund = @gateway.refund(@amount, "ebf19bf4-2ea7-4a29-8a90-f1abec66c57d", @credit_card)
+    assert_failure refund
+    assert_equal PaymentHighwayGateway::RESPONSE_CODE_MAPPING[200], refund.message
   end
 
   def test_scrub
@@ -118,6 +123,13 @@ class PaymentHighwayTest < Test::Unit::TestCase
   end
 
   def failed_refund_response
+    {
+      "result":
+      {
+        "code":200,
+        "message":"Failed"
+      }
+    }.to_json
   end
 
   def successful_void_response
