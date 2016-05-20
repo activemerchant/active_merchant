@@ -33,9 +33,9 @@ module ActiveMerchant #:nodoc:
         transaction_id = initTransaction
 
         payload = {
-          "amount": money,
-          "currency": default_currency,
-          "card": card_to_json(card)
+          "amount" => money,
+          "currency" => default_currency,
+          "card" => card_to_json(card)
         }
 
         payload = add_ip(payload, options)
@@ -66,10 +66,10 @@ module ActiveMerchant #:nodoc:
 
       def card_to_json card
         {
-          "pan": card.number,
-          "expiry_year": card.year.to_s,
-          "expiry_month": card.month.to_s,
-          "cvc": card.verification_value
+          "pan" => card.number,
+          "expiry_year" => card.year.to_s,
+          "expiry_month" => card.month.to_s,
+          "cvc" => card.verification_value
         }
       end
 
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         return payload unless options.has_key?(:ip)
 
         new_payload = payload.clone
-        new_payload["customer"] = { "network_address": options.fetch(:ip) }
+        new_payload["customer"] = { "network_address" => options.fetch(:ip) }
         new_payload
       end
 
