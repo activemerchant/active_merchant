@@ -117,10 +117,11 @@ class RemoteStoneTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    @credit_card.verification_value = '9999'
+    @credit_card.verification_value = '453'
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
+
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, transcript)

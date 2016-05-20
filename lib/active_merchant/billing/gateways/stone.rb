@@ -79,20 +79,20 @@ module ActiveMerchant #:nodoc:
 
       private
       def add_transaction_information(post, money, params)
-        post[:request_key] = params.request_key
-        post[:credit_card_transaction_collection] = [{
-          amount_in_cents: amount(money),
-          transaction_key: params.transaction_key,
-          transaction_reference: params.transaction_reference
+        post['RequestKey'] = params.request_key
+        post['CreditCardTransactionCollection'] = [{
+          'AmountInCents' => amount(money),
+          'TransactionKey' => params.transaction_key,
+          'TransactionReference' => params.transaction_reference
         }]
-        post[:order_key] = params.order_key
+        post['OrderKey'] = params.order_key
       end
 
       def add_invoice(post, money, options)
         requires!(options, :order_id)
 
-        post[:credit_card_transaction_collection][0][:transaction_reference] = options[:order_id]
-        post[:credit_card_transaction_collection][0][:amount_in_cents] = amount(money)
+        post['CreditCardTransactionCollection'][0]['TransactionReference'] = options[:order_id]
+        post['CreditCardTransactionCollection'][0]['AmountInCents'] = amount(money)
       end
 
       def add_payment(post, card, options)
@@ -100,30 +100,30 @@ module ActiveMerchant #:nodoc:
 
         creditcard = {}
         if card.is_a? String
-          creditcard[:instant_buy_key] = card
+          creditcard['InstantBuyKey'] = card
         else
-          creditcard[:credit_card_brand] = card.brand
-          creditcard[:credit_card_number] = card.number
-          creditcard[:exp_month] = card.expiry_date.month
-          creditcard[:exp_year] = card.expiry_date.year
-          creditcard[:holder_name] = card.name
-          creditcard[:security_code] = card.verification_value
+          creditcard['CreditCardBrand'] = card.brand
+          creditcard['CreditCardNumber'] = card.number
+          creditcard['ExpMonth'] = card.expiry_date.month
+          creditcard['ExpYear'] = card.expiry_date.year
+          creditcard['HolderName'] = card.name
+          creditcard['SecurityCode'] = card.verification_value
         end
 
         opt = {}
-        opt[:payment_method_code] = test? ? 1 : 0
+        opt['PaymentMethodCode'] = test? ? 1 : 0
 
         creditcard_transaction = {}
-        creditcard_transaction[:credit_card] = creditcard
-        creditcard_transaction[:options] = opt
-        creditcard_transaction[:credit_card_operation] = options[:operation]
+        creditcard_transaction['CreditCard'] = creditcard
+        creditcard_transaction['Options'] = opt
+        creditcard_transaction['CreditCardOperation'] = options[:operation]
 
-        post[:credit_card_transaction_collection] = [creditcard_transaction]
+        post['CreditCardTransactionCollection'] = [creditcard_transaction]
       end
 
       def commit(action, parameters)
         begin
-          raw_response = ssl_post(resource_url(action), post_data(parameters))
+          raw_response = ssl_post(resource_url(action), parameters.to_json)
         rescue ResponseError => e
           raw_response = e.message
         end
@@ -148,10 +148,6 @@ module ActiveMerchant #:nodoc:
         headers['Accept'] = 'application/json'
         headers['Content-Type'] = 'application/json'
         super
-      end
-
-      def post_data(parameters = {})
-        parameters.deep_transform_keys{ |key| key.to_s.camelize }.to_json
       end
     end
   end

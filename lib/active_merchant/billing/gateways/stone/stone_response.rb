@@ -6,34 +6,34 @@ module ActiveMerchant #:nodoc:
       def initialize(raw)
         @raw = raw
         begin
-          @info = JSON.parse(raw).deep_transform_keys{ |key| key.underscore.to_sym }
-        rescue
+          @info = JSON.parse(raw)
+        rescue JSON::ParserError
           @info = empty_response(raw)
         end
       end
 
       def request_key
-        @info[:request_key]
+        @info['RequestKey']
       end
 
       def transaction_key
-        transaction[:transaction_key]
+        transaction['TransactionKey']
       end
 
       def transaction_reference
-        transaction[:transaction_reference]
+        transaction['TransactionReference']
       end
 
       def card_token
-        transaction[:credit_card][:instant_buy_key]
+        transaction['CreditCard']['InstantBuyKey']
       end
 
       def order_key
-        @info[:order_result][:order_key]
+        @info['OrderResult']['OrderKey']
       end
 
       def success?
-        !error? && has_transaction? && transaction[:success]
+        !error? && has_transaction? && transaction['Success']
       end
 
       def message
@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization
-        success? ? transaction[:transaction_key] : nil
+        success? ? transaction['TransactionKey'] : nil
       end
 
       def error_code
@@ -51,34 +51,34 @@ module ActiveMerchant #:nodoc:
       end
 
       def has_transaction?
-        @info[:credit_card_transaction_result_collection].any?
+        @info['CreditCardTransactionResultCollection'].any?
       end
 
       def transaction
-        @info[:credit_card_transaction_result_collection][0]
+        @info['CreditCardTransactionResultCollection'][0]
       end
 
       def transaction_message
-        has_transaction? and transaction[:acquirer_message].split('|').last
+        has_transaction? and transaction['AcquirerMessage'].split('|').last
       end
 
       def error?
-        @info[:error_report].present?
+        @info['ErrorReport'].present?
       end
 
       def error_message
-        error? and @info[:error_report][:error_item_collection][0][:description]
+        error? and @info['ErrorReport']['ErrorItemCollection'][0]['Description']
       end
 
       def empty_response(description = nil)
         {
-          error_report: {
-            error_item_collection:[{
-              description: description,
-              error_code: Gateway::STANDARD_ERROR_CODE[:processing_error]
+          'ErrorReport' => {
+            'ErrorItemCollection' => [{
+              'Description' => description,
+              'ErrorCode' => Gateway::STANDARD_ERROR_CODE[:processing_error]
             }]
           },
-          credit_card_transaction_result_collection: []
+          'CreditCardTransactionResultCollection' => []
         }
       end
 
