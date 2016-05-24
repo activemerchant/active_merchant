@@ -967,6 +967,10 @@ tns:
   userid: TESTSPREEDLY01
   password: 3f34fe50334fbe6cbe04c283411a5860
 
+tns_ap:
+  userid: TESTUNISOLMAA01
+  password: b7f8119fda3bd27c17656badb52c95bb
+
 trans_first:
   login: 45567
   password: TNYYKYMFZ59HSN7Q
