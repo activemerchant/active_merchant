@@ -36,7 +36,9 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
     more_options = {
       order_id: '2',
       ip: "127.0.0.1",
-      email: "joe@example.com"
+      email: "joe@example.com",
+      program_code: '1',
+      pay_code: 'IGS25XX46027DCP'
     }
 
     @options.merge!(more_options)
@@ -45,6 +47,25 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'This transaction has been approved.', response.message
   end
+
+  def test_successful_purchase_recurring
+    more_options = {
+      order_id: '2',
+      frequency: 'Quarterly',
+      pay_type: 'Sustainer',
+      ip: "127.0.0.1",
+      email: "joe@example.com",
+      program_code: '2',
+      pay_code: 'IGS25XX46027DCP'
+    }
+
+    @options.merge!(more_options)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved.', response.message
+  end
+
 
   def test_failed_purchase
     response = @gateway.purchase(@declined_amount, @credit_card, @declined_options)

@@ -112,9 +112,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(xml, options={})
-        xml['d4p1'].Frequency 'Monthly'
-        xml['d4p1'].PayType 'OneTime'
+        xml['d4p1'].Frequency empty?(options[:frequency]) ? 'Monthly' : options[:frequency]
+        xml['d4p1'].PayCode options[:pay_code] if options[:pay_code].present?
+        xml['d4p1'].PayType empty?(options[:pay_type]) ? 'OneTime' : options[:pay_type]
         xml['d4p1'].ProcessDateTime Time.current.strftime("%FT%T")
+        xml['d4p1'].ProgramCode options[:program_code] if options[:program_code].present?
       end
 
       def add_credit_card(xml, payment, options={})
