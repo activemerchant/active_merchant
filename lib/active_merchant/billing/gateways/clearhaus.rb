@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         requires!(options, :api_key)
-        options[:private_key].strip! if options[:private_key]
+        options[:private_key] = options[:private_key].strip if options[:private_key]
         super
       end
 
