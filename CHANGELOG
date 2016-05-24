@@ -4,6 +4,7 @@
 * VisaNetPeru: Add ability to refund [duff]
 * AuthorizeNet: Fix store using new profile [duff]
 * Clearhaus: Support private key for signature [curiousepic]
+* Clearhaus: Copy private_key when stripping [curiousepic]
 
 
 == Version 1.59.0 (May 18, 2016)
