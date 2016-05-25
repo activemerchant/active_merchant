@@ -38,7 +38,8 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
       ip: "127.0.0.1",
       email: "joe@example.com",
       program_code: '1',
-      pay_code: 'IGS25XX46027DCP'
+      pay_code: 'IGS25XX46027DCP',
+      market_source: SecureRandom.uuid
     }
 
     @options.merge!(more_options)
@@ -56,7 +57,8 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
       ip: "127.0.0.1",
       email: "joe@example.com",
       program_code: '2',
-      pay_code: 'IGS25XX46027DCP'
+      pay_code: 'IGS25XX46027DCP',
+      market_source: SecureRandom.uuid
     }
 
     @options.merge!(more_options)
