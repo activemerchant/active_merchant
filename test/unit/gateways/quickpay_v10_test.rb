@@ -86,7 +86,7 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def test_successful_store
     stub_comms do
-      assert response = @gateway.store(@credit_card, @options.merge(:amount => @amount))
+      assert response = @gateway.store(@credit_card, @options)
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|
