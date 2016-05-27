@@ -777,7 +777,7 @@ quickpay:
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
 
 quickpay_v10_api_key:
-  api_key: "03508e7791ba6c9d0e6830716e650f35c4342c4b3576723ad556e236ca4c7788"
+  api_key: "6e4e4f0a7cf692b0118ffe2c56c45b0cd3171badf65626de2ead023fd99b8bbc"
 
 # To get the right apikey, log in to the manager.
 # Go to Indstillinger > API adgang and make sure you have the right key in the fixture.
