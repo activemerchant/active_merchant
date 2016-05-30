@@ -163,19 +163,19 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@valid_card, @options.merge(:amount => @amount))
+    assert response = @gateway.store(@valid_card, @options)
     assert_success response
   end
 
   def test_successful_store_and_reference_purchase
-    assert store = @gateway.store(@valid_card, @options.merge(:amount => @amount))
+    assert store = @gateway.store(@valid_card, @options)
     assert_success store
     assert purchase = @gateway.purchase(@amount, store.authorization, @options)
     assert_success purchase
   end
 
   def test_successful_unstore
-    assert response = @gateway.store(@valid_card, @options.merge(:amount => @amount))
+    assert response = @gateway.store(@valid_card, @options)
     assert_success response
 
     assert response = @gateway.unstore(response.authorization)
