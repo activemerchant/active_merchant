@@ -84,6 +84,7 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_CODES = {
         "AUD" => '036',
+        "BRL" => '986',
         "CAD" => '124',
         "CZK" => '203',
         "DKK" => '208',
@@ -103,6 +104,7 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_EXPONENTS = {
         "AUD" => '2',
+        "BRL" => '2',
         "CAD" => '2',
         "CZK" => '2',
         "DKK" => '2',
