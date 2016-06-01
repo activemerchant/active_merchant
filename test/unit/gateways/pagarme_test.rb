@@ -249,52 +249,72 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
 
-  def test_successful_recurring
-    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+  # def test_successful_recurring
+  #   @gateway.expects(:ssl_post).returns(successful_recurring_response)
+  #
+  #   @options = {
+  #       order_id: '1',
+  #       ip: '127.0.0.1',
+  #       customer: {
+  #           document_number: "94123506518",
+  #           id: "70051",
+  #           #id: "11222",
+  #           :document_number => "18152564000105",
+  #           :name => "nome do cliente",
+  #           :email => "eee@email.com",
+  #           :born_at => 13121988,
+  #           :gender => "M",
+  #           :ddi => 55,
+  #           :ddd => 11,
+  #           :number => 999887766
+  #       },
+  #       :address => {
+  #           :street => "rua qualquer",
+  #           :complement => "apto",
+  #           :number => 13,
+  #           :district => "pinheiros",
+  #           :city => "sao paulo",
+  #           :state => "SP",
+  #           :zipcode => "05444040",
+  #           :country => "Brasil"
+  #       },
+  #       :card_number => "4901720080344448",
+  #       :card_holder_name => "Jose da Silva",
+  #       :card_expiration_month => "10",
+  #       :card_expiration_year => "21",
+  #       :card_cvv => "314",
+  #       plan_code: 40408,
+  #       payment_method: 'credit_card',
+  #       invoice: '1',
+  #       merchant: 'Richard\'s',
+  #       description: 'Store Purchase',
+  #       email: 'suporte@pagar.me',
+  #       billing_address: address()
+  #    #   card_hash: "card_ci6y37hc00030a416wrxsmzyi"
+  #   }
+  #   response = @gateway.recurring(@amount, @credit_card, @options)
+  #
+  #   assert_equal response.to_yaml, successful_recurring_response
+  # end
 
-    @options = {
-        order_id: '1',
-        ip: '127.0.0.1',
-        customer: {
-            document_number: "94123506518",
-            id: "70051",
-            #id: "11222",
-            :document_number => "18152564000105",
-            :name => "nome do cliente",
-            :email => "eee@email.com",
-            :born_at => 13121988,
-            :gender => "M",
-            :ddi => 55,
-            :ddd => 11,
-            :number => 999887766
-        },
-        :address => {
-            :street => "rua qualquer",
-            :complement => "apto",
-            :number => 13,
-            :district => "pinheiros",
-            :city => "sao paulo",
-            :state => "SP",
-            :zipcode => "05444040",
-            :country => "Brasil"
-        },
-        :card_number => "4901720080344448",
-        :card_holder_name => "Jose da Silva",
-        :card_expiration_month => "10",
-        :card_expiration_year => "21",
-        :card_cvv => "314",
-        plan_code: 40408,
-        payment_method: 'credit_card',
-        invoice: '1',
-        merchant: 'Richard\'s',
-        description: 'Store Purchase',
-        email: 'suporte@pagar.me',
-        billing_address: address()
-     #   card_hash: "card_ci6y37hc00030a416wrxsmzyi"
-    }
-    response = @gateway.recurring(@amount, @credit_card, @options)
+  # def test_get_invoice
+  #
+  # @gateway.expects(:ssl_post).returns(success_invoice_response)
+  #
+  # response = @gateway.invoice("58223")
+  #
+  # assert_equal response.to_yaml, success_invoice_response
+  #
+  # end
 
-    assert_equal response.to_yaml, successful_recurring_response
+  def test_get_invoices
+
+  @gateway.expects(:ssl_post).returns(success_invoice_response)
+
+  response = @gateway.invoices(1, 2)
+
+  assert_equal response.to_yaml, success_invoice_response
+
   end
 
   def test_scrub
@@ -303,6 +323,104 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   private
+
+  def success_invoice_response
+    <<-SUCCESS_INVOICE_RESPONSE
+      {
+        :object => "subscription",
+        :plan => {:object => "plan",
+                  :id => 40408,
+                  :amount => 15151,
+                  :days => 30,
+                  :name => "teste",
+                  :trial_days => 0,
+                  :date_created => "2016-05-26T19:42:49.709Z",
+                  :payment_methods => ["boleto",
+                                       "credit_card"],
+                  :color => nil,
+                  :charges => 1,
+                  :installments => 1
+        },
+        :id => 58223,
+        :current_transaction => {
+            :object => "transaction",
+            :status => "paid",
+            :refuse_reason => nil,
+            :status_reason => "acquirer",
+            :acquirer_response_code => "00",
+            :acquirer_name => "pagarme",
+            :authorization_code => "216288",
+            :soft_descriptor => nil,
+            :tid => 502012,
+            :nsu => 502012,
+            :date_created => "2016-06-01T01:02:51.467Z",
+            :date_updated => "2016-06-01T01:02:51.903Z",
+            :amount => 15151,
+            :installments => 1,
+            :id => 502012,
+            :cost => 120,
+            :postback_url => nil,
+            :payment_method => "credit_card",
+            :antifraud_score => 70.31,
+            :boleto_url => nil,
+            :boleto_barcode => nil,
+            :boleto_expiration_date => nil,
+            :referer => "api_key",
+            :ip => "189.107.109.252",
+            :subscription_id => 58223,
+            :metadata => {}
+        },
+        :postback_url => nil,
+        :payment_method => "credit_card",
+        :current_period_start => "2016-06-01T01:02:51.463Z",
+        :current_period_end => "2016-07-01T01:02:51.463Z",
+        :charges => 0,
+        :status => "paid",
+        :date_created => "2016-06-01T01:02:51.893Z",
+        :phone => {
+            :ddd => "11",
+            :ddi => "55",
+            :number => "999887766"
+        },
+        :address => {
+            :object => "address",
+            :street => "rua qualquer",
+            :complementary => "apto",
+            :street_number => "13",
+            :neighborhood => "pinheiros",
+            :city => "sao paulo",
+            :state => "SP",
+            :zipcode => "05444040",
+            :country => "Brasil",
+            :id => 33499
+        },
+        :customer => {
+            :object => "customer",
+            :document_number => "18152564000105",
+            :document_type => "cnpj",
+            :name => "nome do cliente",
+            :email => "eee@email.com",
+            :born_at => nil,
+            :gender => nil,
+            :date_created => "2016-05-31T15:30:48.246Z",
+            :id => 70045
+        },
+        :card => {
+            :object => "card",
+            :id => "card_ciovmgj16000e3w6e879dy79m",
+            :date_created => "2016-05-31T15:51:43.963Z",
+            :date_updated => "2016-05-31T15:51:44.353Z",
+            :brand => "visa",
+            :holder_name => "Jose da Silva",
+            :first_digits => "490172",
+            :last_digits => "4448",
+            :fingerprint => "l39iC1lfQakA",
+            :valid => true
+        },
+        :metadata => {}
+    }
+    SUCCESS_INVOICE_RESPONSE
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED

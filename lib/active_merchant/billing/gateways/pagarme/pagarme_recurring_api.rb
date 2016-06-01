@@ -1,6 +1,11 @@
+require File.dirname(__FILE__) + '/helpers_pagarme.rb'
+require File.dirname(__FILE__) + '/response_pagarme.rb'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module PagarmeRecurringApi #:nodoc:
+      include ActiveMerchant::Billing::PagarmeRecurringApi::HelpersPagarme
+      include ActiveMerchant::Billing::PagarmeRecurringApi::ResponsePagarme
 
       SUBSCRIPTION_STATUS_MAP = {
           'ended' => :ended,
@@ -33,75 +38,30 @@ module ActiveMerchant #:nodoc:
         else
           Response.new(false, 'Erro ao criar assinatura', params)
         end
-        #
-        # if resp[:success]
-        #   Response.new(resp[:success], resp[:subscription][:message],
-        #                resp, test: test?, authorization: resp[:subscription][:code],
-        #                subscription_action: subscription_action_from(resp),
-        #                next_charge_at: next_charge_at(resp))
-        # else
-        #   Response.new(resp[:success], resp[:message], resp)
-        # end
-
+        
       end
 
       def invoice(invoice_id)
-        PagarMe::Subscription.find_by_id("14858")
+        response = PagarMe::Subscription.find_by_id(invoice_id)
+        Response.new(true, nil, invoice_to_response(response))
+      end
+
+
+      def invoices(page, count)
+        response = PagarMe::Subscription.all(page, count)
+        Response.new(true, nil, {invoices: invoices_to_response(response)})
       end
 
       private
 
       def ensure_customer_created(options)
-        toCustomerResponse(PagarMe::Customer.find_by_id(options[:customer][:id]))
+        customerResponse(PagarMe::Customer.find_by_id(options[:customer][:id]))
       rescue
         create_customer(options[:customer], options[:address])
       end
 
-      def toCustomerResponse(customer)
-        {
-            :document_number => customer.document_number,
-            :name => customer.name,
-            :email => customer.email,
-            :address => {
-                :street => customer.addresses[0].street,
-                :complementary => customer.addresses[0].complementary,
-                :street_number => customer.addresses[0].street_number,
-                :neighborhood => customer.addresses[0].neighborhood,
-                :city => customer.addresses[0].city,
-                :state => customer.addresses[0].state,
-                :zipcode => customer.addresses[0].zipcode,
-                :country => "Brasil"
-            },
-            :phone => {
-                :ddi => customer.phones[0].ddi,
-                :ddd => customer.phones[0].ddd,
-                :number => customer.phones[0].number
-            }
-        }
-      end
-
       def create_customer(customer, address)
-
-        params = {
-            :document_number => customer[:document_number],
-            :name => customer[:name],
-            :email => customer[:email],
-            :address => {
-                :street => address[:street],
-                :complementary => address[:complement],
-                :street_number => address[:number],
-                :neighborhood => address[:district],
-                :city => address[:city],
-                :state => address[:state],
-                :zipcode => address[:zipcode],
-                :country => "Brasil"
-            },
-            :phone => {
-                :ddi => customer[:ddi],
-                :ddd => customer[:ddd],
-                :number => customer[:number]
-            }
-        }
+        params = customer_params(customer, address)
         PagarMe::Customer.new(params).create
       end
 
