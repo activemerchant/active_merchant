@@ -166,6 +166,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [Openpay](Openpay) - MX
 * [Optimal Payments](http://www.optimalpayments.com/) - CA, US, GB
 * [Orbital Paymentech](http://chasepaymentech.com/) - US, CA
+* [Pargar.me](https://pagar.me/) - BR
 * [PagoFacil](http://www.pagofacil.net/) - MX
 * [PayConex](http://www.bluefincommerce.com/) - US, CA
 * [PayGate PayXML](http://paygate.co.za/) - US, ZA
