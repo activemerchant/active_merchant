@@ -256,7 +256,8 @@ class PagarmeTest < Test::Unit::TestCase
         order_id: '1',
         ip: '127.0.0.1',
         customer: {
-            id: "68744",
+            document_number: "94123506518",
+            id: "70051",
             #id: "11222",
             :document_number => "18152564000105",
             :name => "nome do cliente",
@@ -277,16 +278,23 @@ class PagarmeTest < Test::Unit::TestCase
             :zipcode => "05444040",
             :country => "Brasil"
         },
+        :card_number => "4901720080344448",
+        :card_holder_name => "Jose da Silva",
+        :card_expiration_month => "10",
+        :card_expiration_year => "21",
+        :card_cvv => "314",
+        plan_code: 40408,
+        payment_method: 'credit_card',
         invoice: '1',
         merchant: 'Richard\'s',
         description: 'Store Purchase',
         email: 'suporte@pagar.me',
-        billing_address: address(),
-        card_hash: "card_ci6y37hc00030a416wrxsmzyi"
+        billing_address: address()
+     #   card_hash: "card_ci6y37hc00030a416wrxsmzyi"
     }
     response = @gateway.recurring(@amount, @credit_card, @options)
 
-    puts response
+    assert_equal response.to_yaml, successful_recurring_response
   end
 
   def test_scrub

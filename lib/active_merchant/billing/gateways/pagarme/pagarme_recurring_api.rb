@@ -12,17 +12,27 @@ module ActiveMerchant #:nodoc:
       }
 
       def recurring(amount, credit_card, options = {})
+        requires!(options, :payment_method)
+
 
         params = {
             payment_method: options[:payment_method],
-            customer: ensure_customer_created(options, credit_card),
-            plan: ensure_plan_created(options[:card_hash], amount, options[:plan])
+            customer: ensure_customer_created(options),
+            plan: ensure_plan_created(options[:plan_code], amount, options[:plan]),
+            card_number: options[:card_number],
+            card_holder_name: options[:card_holder_name],
+            card_expiration_month: options[:card_expiration_month],
+            card_expiration_year: options[:card_expiration_year],
+            card_cvv: options[:card_cvv],
         }
 
-        puts params
-        #
-        # resp = PagarMe::Subscription.new(params)
-        # subscription.create
+
+        subscription = PagarMe::Subscription.new(params)
+        if subscription.create
+          Response.new(true, "Assinatura criada com sucesso")
+        else
+          Response.new(false, 'Erro ao criar assinatura', params)
+        end
         #
         # if resp[:success]
         #   Response.new(resp[:success], resp[:subscription][:message],
@@ -35,19 +45,45 @@ module ActiveMerchant #:nodoc:
 
       end
 
-      private
-
-      def ensure_customer_created(options, credit_card)
-          return if PagarMe::Customer.find_by_id(options[:customer][:id])
-
-          create_customer(options[:customer], options[:address], credit_card)
-        rescue
-          create_customer(options[:customer], options[:address], credit_card)
+      def invoice(invoice_id)
+        PagarMe::Subscription.find_by_id("14858")
       end
 
-      def create_customer(customer, address, credit_card)
+      private
+
+      def ensure_customer_created(options)
+        toCustomerResponse(PagarMe::Customer.find_by_id(options[:customer][:id]))
+      rescue
+        create_customer(options[:customer], options[:address])
+      end
+
+      def toCustomerResponse(customer)
+        {
+            :document_number => customer.document_number,
+            :name => customer.name,
+            :email => customer.email,
+            :address => {
+                :street => customer.addresses[0].street,
+                :complementary => customer.addresses[0].complementary,
+                :street_number => customer.addresses[0].street_number,
+                :neighborhood => customer.addresses[0].neighborhood,
+                :city => customer.addresses[0].city,
+                :state => customer.addresses[0].state,
+                :zipcode => customer.addresses[0].zipcode,
+                :country => "Brasil"
+            },
+            :phone => {
+                :ddi => customer.phones[0].ddi,
+                :ddd => customer.phones[0].ddd,
+                :number => customer.phones[0].number
+            }
+        }
+      end
+
+      def create_customer(customer, address)
 
         params = {
+            :document_number => customer[:document_number],
             :name => customer[:name],
             :email => customer[:email],
             :address => {
@@ -70,18 +106,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def ensure_plan_created(plan_code, amount, options)
-        plan = PagarMe::Plan.find_by_id(plan_code)
-
-        if plan
-          try_update_plan(plan, plan_code, amount, options[:subscription])
-        else
-          create_plan(options, amount)
-        end
+        PagarMe::Plan.find_by_id(plan_code)
       rescue
         create_plan(options, amount)
       end
 
-      def create_plan(params, amount, subscription)
+      def create_plan(params, amount)
+        requires!(options, :name, :days)
+
         params = {
             :name => params[:name],
             :days => params[:days],
