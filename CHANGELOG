@@ -7,6 +7,7 @@
 * Clearhaus: Copy private_key when stripping [curiousepic]
 * Quickpay v10: Remove amount requirement for store [curiousepic]
 * Orbital: Add support for the BRL currency [duff]
+* GlobalTransport: Require TLSv1 [duff]
 
 
 == Version 1.59.0 (May 18, 2016)
