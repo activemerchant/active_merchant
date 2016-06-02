@@ -307,15 +307,27 @@ class PagarmeTest < Test::Unit::TestCase
   #
   # end
 
-  def test_get_invoices
+  # def test_get_invoices
+  #
+  # @gateway.expects(:ssl_post).returns(success_invoice_response)
+  #
+  # response = @gateway.invoices(1, 2)
+  #
+  # assert_equal response.to_yaml, success_invoice_response
+  #
+  # end
 
-  @gateway.expects(:ssl_post).returns(success_invoice_response)
+  # def test_update_subscription
+  #   params = {
+  #       card_expiration_date: "0913",
+  #       payment_method: "boleto"
+  #   }
+  #   @gateway.update(58163, params)
+  # end
 
-  response = @gateway.invoices(1, 2)
-
-  assert_equal response.to_yaml, success_invoice_response
-
-  end
+  # def test_cancel
+  #   @gateway.cancel(58163)
+  # end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
