@@ -78,14 +78,12 @@ class RemoteDataCashTest < Test::Unit::TestCase
   def test_successful_purchase_without_address_check
     response = @gateway.purchase(199, @mastercard, @params)
     assert_success response
-    assert response.test?
   end
 
   # Note the Datacash test server regularly times out on switch requests
   def test_successful_purchase_with_solo_card
     response = @gateway.purchase(@amount, @solo, @params)
     assert_success response
-    assert response.test?
   end
 
   # this card number won't check the address details - testing extended
@@ -95,7 +93,6 @@ class RemoteDataCashTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @solo, @params)
     assert_success response
-    assert response.test?
   end
 
   # Testing purchase with request to set up recurring payment account
@@ -103,7 +100,6 @@ class RemoteDataCashTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @mastercard, @params)
     assert_success response
     assert response.authorization.to_s.split(';')[2].blank?
-    assert response.test?
   end
 
   # Testing purchase with request to set up recurring payment account
@@ -118,7 +114,6 @@ class RemoteDataCashTest < Test::Unit::TestCase
     second_order_params = { :order_id => generate_unique_id }
     purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
-    assert purchase.test?
   end
 
   def test_successful_purchase_with_account_set_up_and_repeat_payments_with_visa_delta_card
@@ -126,13 +121,11 @@ class RemoteDataCashTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @visa_delta, @params)
     assert_success response
     assert !response.authorization.to_s.split(';')[2].blank?
-    assert response.test?
 
     #Make second payment on the continuous authorization that was set up in the first purchase
     second_order_params = { :order_id => generate_unique_id }
     purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
-    assert purchase.test?
   end
 
   def test_purchase_with_account_set_up_for_repeat_payments_fails_for_solo_card
@@ -140,7 +133,6 @@ class RemoteDataCashTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @solo, @params)
     assert_equal '92', response.params['status'] # Error code for CA not supported
     assert_equal 'CA Not Supported', response.message
-    assert response.test?
   end
 
   def test_successful_authorization_and_capture_with_account_set_up_and_second_purchase
@@ -241,7 +233,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert void.test?
   end
 
-  def test_successful_refund
+  def test_successful_credit
     response = @gateway.credit(@amount, @mastercard, @params)
     assert_success response
     assert !response.params['datacash_reference'].blank?
@@ -250,86 +242,52 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_transaction_refund
+  def test_successful_refund
     purchase = @gateway.purchase(@amount, @mastercard, @params)
     assert_success purchase
-    assert purchase.test?
 
-    refund = @gateway.credit(@amount, purchase.params['datacash_reference'])
+    refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert !refund.params['datacash_reference'].blank?
     assert !refund.params['merchantreference'].blank?
-
     assert refund.test?
   end
 
-  def test_successful_transaction_refund_using_authorization
+  def test_successful_refund_with_money_set_to_nil
     purchase = @gateway.purchase(@amount, @mastercard, @params)
     assert_success purchase
-    assert purchase.test?
 
-    refund = @gateway.credit(@amount, purchase.authorization)
+    refund = @gateway.refund(nil, purchase.authorization)
     assert_success refund
-    assert !refund.params['datacash_reference'].blank?
-    assert !refund.params['merchantreference'].blank?
-
-    assert refund.test?
   end
 
-  def test_successful_transaction_refund_with_money_set_to_nil
+  def test_successful_partial_refund
     purchase = @gateway.purchase(@amount, @mastercard, @params)
     assert_success purchase
-    assert purchase.test?
 
-    refund = @gateway.credit(nil, purchase.params['datacash_reference'])
-    assert_success refund
-    assert refund.test?
-  end
-
-  def test_successful_transaction_refund_in_two_stages
-    purchase = @gateway.purchase(@amount, @mastercard, @params)
-    assert_success purchase
-    assert purchase.test?
-
-    first_partial_refund = @gateway.credit(100, purchase.params['datacash_reference'])
+    first_partial_refund = @gateway.refund(100, purchase.authorization)
     assert_success first_partial_refund
-    assert first_partial_refund.test?
 
-    second_partial_refund = @gateway.credit(98, purchase.params['datacash_reference'])
+    second_partial_refund = @gateway.refund(98, purchase.authorization)
     assert_success second_partial_refund
-    assert second_partial_refund.test?
   end
 
-  def test_successful_partial_transaction_refund
+  def test_failed_refund
     purchase = @gateway.purchase(@amount, @mastercard, @params)
     assert_success purchase
-    assert purchase.test?
 
-    partial_refund = @gateway.credit(100, purchase.params['datacash_reference'])
-    assert_success partial_refund
-    assert partial_refund.test?
-  end
-
-  def test_fail_to_refund_too_much
-    purchase = @gateway.purchase(@amount, @mastercard, @params)
-    assert_success purchase
-    assert purchase.test?
-
-    refund_too_much = @gateway.credit(500, purchase.params['datacash_reference'])
+    refund_too_much = @gateway.refund(500, purchase.authorization)
     assert_failure refund_too_much
     assert_equal 'Refund amount > orig 1.98', refund_too_much.message
-    assert refund_too_much.test?
   end
 
   def test_fail_to_refund_with_declined_purchase_reference
     declined_purchase = @gateway.purchase(@amount, @mastercard_declined, @params)
     assert_failure declined_purchase
-    assert declined_purchase.test?
 
-    refund = @gateway.credit(@amount, declined_purchase.params['datacash_reference'])
+    refund = @gateway.refund(@amount, declined_purchase.authorization)
     assert_failure refund
     assert_equal 'Cannot refund transaction', refund.message
-    assert refund.test?
   end
 
   def test_fail_to_refund_purchase_which_is_already_refunded
@@ -337,26 +295,21 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert_success purchase
     assert purchase.test?
 
-    first_refund = @gateway.credit(nil, purchase.params['datacash_reference'])
+    first_refund = @gateway.refund(nil, purchase.authorization)
     assert_success first_refund
-    assert first_refund.test?
 
-    second_refund = @gateway.credit(@amount, purchase.params['datacash_reference'])
+    second_refund = @gateway.refund(@amount, purchase.authorization)
     assert_failure second_refund
     assert_equal '1.98 > remaining funds 0.00', second_refund.message
-    assert second_refund.test?
   end
 
-  # Check short merchant references are reformatted
-  def test_merchant_reference_that_is_too_short
+  def test_order_id_that_is_too_short
     @params[:order_id] = @params[:order_id].first(5)
     response = @gateway.purchase(@amount, @mastercard, @params)
     assert_success response
-    assert response.test?
   end
 
-  # Check long merchant references are reformatted
-  def test_merchant_reference_that_is_too_long
+  def test_order_id_that_is_too_long
     @params[:order_id] =  "#{@params[:order_id]}1234356"
     response = @gateway.purchase(@amount, @mastercard, @params)
     assert_success response
