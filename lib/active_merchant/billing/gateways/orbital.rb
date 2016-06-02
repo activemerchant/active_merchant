@@ -295,6 +295,19 @@ module ActiveMerchant #:nodoc:
         commit(order, :delete_customer_profile)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<OrbitalConnectionUsername>).+(</OrbitalConnectionUsername>)), '\1[FILTERED]\2').
+          gsub(%r((<OrbitalConnectionPassword>).+(</OrbitalConnectionPassword>)), '\1[FILTERED]\2').
+          gsub(%r((<AccountNum>).+(</AccountNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
+          gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def authorization_string(*args)
