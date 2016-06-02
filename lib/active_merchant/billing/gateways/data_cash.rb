@@ -187,7 +187,7 @@ module ActiveMerchant
         parsed_authorization = parse_authorization_string(authorization)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => '2' do
           add_authentication(xml)
 
           xml.tag! :Transaction do
@@ -273,7 +273,7 @@ module ActiveMerchant
       def build_purchase_or_authorization_request_with_credit_card_request(type, money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => '2' do
           add_authentication(xml)
 
           xml.tag! :Transaction do
@@ -334,7 +334,7 @@ module ActiveMerchant
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => '2' do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :ContAuthTxn, :type => 'historic'
@@ -376,7 +376,7 @@ module ActiveMerchant
         parsed_authorization = parse_authorization_string(authorization)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => '2' do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :HistoricTxn do
@@ -420,7 +420,7 @@ module ActiveMerchant
       def build_refund_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => '2' do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :CardTxn do

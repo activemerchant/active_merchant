@@ -9,6 +9,7 @@
 * Orbital: Add support for the BRL currency [duff]
 * GlobalTransport: Require TLSv1 [duff]
 * Openpay: Allow currency to be specified [darkaz]
+* DataCash: Use API version 2 [curiousepic]
 
 
 == Version 1.59.0 (May 18, 2016)
