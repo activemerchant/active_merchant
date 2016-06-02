@@ -16,6 +16,13 @@ class OpenpayTest < Test::Unit::TestCase
     @options = {
       order_id: '1234567890',
       billing_address: address,
+      description: 'Store Purchase',
+      email: 'test@openpay.mx'
+    }
+    
+    @options_missing = {
+      order_id: '1234567890',
+      billing_address: address,
       description: 'Store Purchase'
     }
   end
@@ -139,7 +146,7 @@ class OpenpayTest < Test::Unit::TestCase
     @options[:name] = 'John Doe'
 
     assert_raise(ArgumentError) do
-      @gateway.store(@credit_card, @options)
+      @gateway.store(@credit_card, @options_missing)
     end
   end
 

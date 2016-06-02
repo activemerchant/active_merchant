@@ -105,8 +105,29 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:order_id] = options[:order_id]
         post[:device_session_id] = options[:device_session_id]
+        post[:currency] = (options[:currency] || currency(money)).upcase
+        add_customer(post, options)
         add_creditcard(post, creditcard, options)
         post
+      end
+      
+      def add_customer(post, options)
+        if options[:email].to_s  != ''
+          customer = {}
+          customer_name = ''
+          
+          address = options[:billing_address]
+          if !address.nil?
+            customer_name = address[:name].to_s
+            customer[:phone_number] = address[:phone]
+          end
+          
+          customer_name = customer_name == '' ? options[:order_id] : customer_name
+          
+          customer[:name] = customer_name
+          customer[:email] = options[:email]
+          post[:customer] = customer
+        end
       end
 
       def add_creditcard(post, creditcard, options)
