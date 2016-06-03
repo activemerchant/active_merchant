@@ -1,7 +1,7 @@
 require 'nokogiri'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant
+  module Billing
     class AuthorizeNetGateway < Gateway
       include Empty
 
@@ -159,6 +159,11 @@ module ActiveMerchant #:nodoc:
         else
           create_customer_profile(credit_card, options)
         end
+      end
+
+      def verify_credentials
+        response = commit(:verify_credentials) { }
+        response.success?
       end
 
       def supports_scrubbing?
@@ -580,7 +585,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, raw_response)
-        if is_cim_action?(action)
+        if is_cim_action?(action) || action == :verify_credentials
           parse_cim(raw_response)
         else
           parse_normal(action, raw_response)
@@ -628,6 +633,8 @@ module ActiveMerchant #:nodoc:
           "createCustomerProfileRequest"
         elsif action == :cim_store_update
           "createCustomerPaymentProfileRequest"
+        elsif action == :verify_credentials
+          "authenticateTestRequest"
         elsif is_cim_action?(action)
           "createCustomerProfileTransactionRequest"
         else
@@ -738,7 +745,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response)
-        if cim?(action)
+        if cim?(action) || (action == :verify_credentials)
           response[:result_code] == "Ok"
         else
           response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
