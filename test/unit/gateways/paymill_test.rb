@@ -758,22 +758,4 @@ class PaymillTest < Test::Unit::TestCase
     "connection_uri=https://test-token.paymill.com?account.number=[FILTERED]&account.expiry.month=09&account.expiry.year=2016&account.verification=[FILTERED]"
   end
 
-  class MockResponse
-    attr_reader :code, :body
-    def self.succeeded(body)
-      MockResponse.new(200, body)
-    end
-
-    def self.failed(body)
-      MockResponse.new(422, body)
-    end
-
-    def initialize(code, body, headers={})
-      @code, @body, @headers = code, body, headers
-    end
-
-    def [](header)
-      @headers[header]
-    end
-  end
 end

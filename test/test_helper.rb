@@ -317,3 +317,25 @@ module ActionViewHelperTestHelper
     false
   end
 end
+
+
+class MockResponse
+  attr_reader   :code, :body, :message
+  attr_accessor :headers
+
+  def self.succeeded(body, message="")
+    MockResponse.new(200, body, message)
+  end
+
+  def self.failed(body, http_status_code=422, message="")
+    MockResponse.new(http_status_code, body, message)
+  end
+
+  def initialize(code, body, message="", headers={})
+    @code, @body, @message, @headers = code, body, message, headers
+  end
+
+  def [](header)
+    @headers[header]
+  end
+end

@@ -799,23 +799,4 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     XML
   end
 
-  class MockResponse
-    attr_reader :code, :body
-    def self.succeeded(xml)
-      MockResponse.new(200, xml)
-    end
-
-    def self.failed(xml)
-      MockResponse.new(422, xml)
-    end
-
-    def initialize(code, body, headers={})
-      @code, @body, @headers = code, body, headers
-    end
-
-    def [](header)
-      @headers[header]
-    end
-  end
-
 end
