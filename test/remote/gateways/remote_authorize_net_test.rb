@@ -504,4 +504,11 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:password], transcript)
   end
 
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = AuthorizeNetGateway.new(login: "unknown_login", password: "not_right")
+    assert !gateway.verify_credentials
+  end
+
 end

@@ -925,6 +925,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_instance_of FalseClass, response
   end
 
+  def test_verify_good_credentials
+    @gateway.expects(:ssl_post).returns(credentials_are_legit_response)
+    assert @gateway.verify_credentials
+  end
+
+  def test_verify_bad_credentials
+    @gateway.expects(:ssl_post).returns(credentials_are_bogus_response)
+    assert !@gateway.verify_credentials
+  end
+
   private
 
   def pre_scrubbed
@@ -1970,5 +1980,34 @@ class AuthorizeNetTest < Test::Unit::TestCase
     eos
   end
 
+  def credentials_are_legit_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <authenticateTestResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+      </authenticateTestResponse>
+    eos
+  end
+
+  def credentials_are_bogus_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <authenticateTestResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00007</code>
+            <text>User authentication failed due to invalid authentication values.</text>
+          </message>
+        </messages>
+      </authenticateTestResponse>
+    eos
+  end
 
 end
