@@ -544,18 +544,4 @@ class PinTest < Test::Unit::TestCase
     }'
   end
 
-  class MockResponse
-    attr_reader :code, :body
-    def self.succeeded(body)
-      MockResponse.new(200, body)
-    end
-
-    def self.failed(body)
-      MockResponse.new(422, body)
-    end
-
-    def initialize(code, body)
-      @code, @body = code, body
-    end
-  end
 end

@@ -200,7 +200,7 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
-    MockResponse.failed <<-XML
+    body = <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <messages xmlns="http://ws.plimus.com">
         <message>
@@ -210,6 +210,8 @@ class BlueSnapTest < Test::Unit::TestCase
         </message>
       </messages>
     XML
+
+    MockResponse.failed(body, 400)
   end
 
   def successful_authorize_response
@@ -247,7 +249,7 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def failed_authorize_response
-    MockResponse.failed <<-XML
+    body = <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <messages xmlns="http://ws.plimus.com">
       <message>
@@ -257,6 +259,7 @@ class BlueSnapTest < Test::Unit::TestCase
       </message>
       </messages>
     XML
+    MockResponse.failed(body, 400)
   end
 
   def successful_capture_response
@@ -294,7 +297,7 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def failed_capture_response
-    MockResponse.failed <<-XML
+    body = <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <messages xmlns="http://ws.plimus.com">
       <message>
@@ -304,6 +307,7 @@ class BlueSnapTest < Test::Unit::TestCase
       </message>
       </messages>
     XML
+    MockResponse.failed(body, 400)
   end
 
   def successful_refund_response
@@ -341,7 +345,7 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def failed_refund_response
-    MockResponse.failed <<-XML
+    body = <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <messages xmlns="http://ws.plimus.com">
          <message>
@@ -351,6 +355,7 @@ class BlueSnapTest < Test::Unit::TestCase
          </message>
       </messages>
     XML
+    MockResponse.failed(body, 400)
   end
 
   def successful_void_response
@@ -388,7 +393,7 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def failed_void_response
-    MockResponse.failed <<-XML
+    body = <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <messages xmlns="http://ws.plimus.com">
         <message>
@@ -398,6 +403,7 @@ class BlueSnapTest < Test::Unit::TestCase
         </message>
       </messages>
     XML
+    MockResponse.failed(body, 400)
   end
 
   def successful_verify_response
@@ -435,7 +441,7 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def failed_verify_response
-    MockResponse.failed <<-XML
+    body = <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <messages xmlns="http://ws.plimus.com">
         <message>
@@ -445,6 +451,7 @@ class BlueSnapTest < Test::Unit::TestCase
         </message>
       </messages>
     XML
+    MockResponse.failed(body, 400)
   end
 
   def successful_store_response
@@ -486,7 +493,7 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def failed_store_response
-    MockResponse.failed <<-XML
+    body =  <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
       <messages xmlns="http://ws.plimus.com">
         <message>
@@ -496,6 +503,7 @@ class BlueSnapTest < Test::Unit::TestCase
         </message>
       </messages>
     XML
+    MockResponse.failed(body, 400)
   end
 
   def credentials_are_legit_response
@@ -504,27 +512,6 @@ class BlueSnapTest < Test::Unit::TestCase
 
   def credentials_are_bogus_response
     MockResponse.new(401, %{<!DOCTYPE html><html><head><title>Apache Tomcat/8.0.24 - Error report</title><style type="text/css">H1 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:22px;} H2 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:16px;} H3 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:14px;} BODY {font-family:Tahoma,Arial,sans-serif;color:black;background-color:white;} B {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;} P {font-family:Tahoma,Arial,sans-serif;background:white;color:black;font-size:12px;}A {color : black;}A.name {color : black;}.line {height: 1px; background-color: #525D76; border: none;}</style> </head><body><h1>HTTP Status 401 - Bad credentials</h1><div class="line"></div><p><b>type</b> Status report</p><p><b>message</b> <u>Bad credentials</u></p><p><b>description</b> <u>This request requires HTTP authentication.</u></p><hr class="line"><h3>Apache Tomcat/8.0.24</h3></body></html>})
-  end
-
-  class MockResponse
-    attr_reader :code, :body
-    attr_accessor :headers
-
-    def self.succeeded(xml)
-      MockResponse.new(200, xml)
-    end
-
-    def self.failed(xml)
-      MockResponse.new(400, xml)
-    end
-
-    def initialize(code, body, headers={})
-      @code, @body, @headers = code, body, headers
-    end
-
-    def [](header)
-      @headers[header]
-    end
   end
 
 end
