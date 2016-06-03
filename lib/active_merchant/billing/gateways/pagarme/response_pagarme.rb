@@ -46,9 +46,9 @@ module ActiveMerchant #:nodoc:
                   :country => "Brasil"
               },
               :phone => {
-                  :ddi => customer[:ddi],
-                  :ddd => customer[:ddd],
-                  :number => customer[:number]
+                  :ddi => customer[:phone][:ddi],
+                  :ddd => customer[:phone][:ddd],
+                  :number => customer[:phone][:number]
               }
           }
         end
@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
           {
               object: response['object'],
               id: response['id'],
-              status: response['status'],
+              action: INVOICE_STATUS_MAP[response['status']],
               amount: response['amount'],
               fee: response['fee'],
               installment: response['installment'],
@@ -181,8 +181,8 @@ module ActiveMerchant #:nodoc:
               split_rule_id: response['split_rule_id'],
               payment_date: response['payment_date'],
               type: response['type'],
-              payment_method: response['payment_method'],
-              date_created: response['date_created']
+              payment_method: PAYMENT_METHOD_MAP[response['payment_method']],
+              created_at: response['date_created']
           }
         end
 
@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
 
           {
               object: response.object,
-              plan: plan_response_subscription(response),
+              plan: plan_response(response),
               id: response.id,
               current_transaction: transaction_response_subscription(response),
               postback_url: response.postback_url,
@@ -200,8 +200,8 @@ module ActiveMerchant #:nodoc:
               current_period_start: response.current_period_start,
               current_period_end: response.current_period_end,
               charges: response.charges,
-              status: response.status,
-              date_created: response.date_created,
+              action: SUBSCRIPTION_STATUS[response.status],
+              created_at: response.date_created,
               phone: phone_response_invoice(response),
               address: address_response_invoice(response),
               customer: customer_response_invoice(response),
@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
 
           {
               object: response.current_transaction.object,
-              status: response.current_transaction.status,
+              status: INVOICE_STATUS_MAP[response.current_transaction.status],
               refuse_reason: response.current_transaction.refuse_reason,
               status_reason: response.current_transaction.status_reason,
               acquirer_response_code: response.current_transaction.acquirer_response_code,
@@ -225,8 +225,8 @@ module ActiveMerchant #:nodoc:
               soft_descriptor: response.current_transaction.soft_descriptor,
               tid: response.current_transaction.tid,
               nsu: response.current_transaction.nsu,
-              date_created: response.current_transaction.date_created,
-              date_updated: response.current_transaction.date_updated,
+              created_at: response.current_transaction.date_created,
+              updated_at: response.current_transaction.date_updated,
               amount: response.current_transaction.amount,
               installments: response.current_transaction.installments,
               id: response.current_transaction.id,
@@ -244,7 +244,7 @@ module ActiveMerchant #:nodoc:
           }
         end
 
-        def plan_response_subscription(response)
+        def plan_response(response)
           return {} unless response.plan
 
           {
@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
               days: response.plan.days,
               name: response.plan.name,
               trial_days: response.plan.trial_days,
-              date_created: response.plan.date_created,
+              created_at: response.plan.date_created,
               payment_methods: response.plan.payment_methods,
               color: response.plan.color,
               charges: response.plan.charges,

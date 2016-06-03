@@ -249,53 +249,62 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
 
-  # def test_successful_recurring
-  #   @gateway.expects(:ssl_post).returns(successful_recurring_response)
-  #
-  #   @options = {
-  #       order_id: '1',
-  #       ip: '127.0.0.1',
-  #       customer: {
-  #           document_number: "94123506518",
-  #           id: "70051",
-  #           #id: "11222",
-  #           :document_number => "18152564000105",
-  #           :name => "nome do cliente",
-  #           :email => "eee@email.com",
-  #           :born_at => 13121988,
-  #           :gender => "M",
-  #           :ddi => 55,
-  #           :ddd => 11,
-  #           :number => 999887766
-  #       },
-  #       :address => {
-  #           :street => "rua qualquer",
-  #           :complement => "apto",
-  #           :number => 13,
-  #           :district => "pinheiros",
-  #           :city => "sao paulo",
-  #           :state => "SP",
-  #           :zipcode => "05444040",
-  #           :country => "Brasil"
-  #       },
-  #       :card_number => "4901720080344448",
-  #       :card_holder_name => "Jose da Silva",
-  #       :card_expiration_month => "10",
-  #       :card_expiration_year => "21",
-  #       :card_cvv => "314",
-  #       plan_code: 40408,
-  #       payment_method: 'credit_card',
-  #       invoice: '1',
-  #       merchant: 'Richard\'s',
-  #       description: 'Store Purchase',
-  #       email: 'suporte@pagar.me',
-  #       billing_address: address()
-  #    #   card_hash: "card_ci6y37hc00030a416wrxsmzyi"
-  #   }
-  #   response = @gateway.recurring(@amount, @credit_card, @options)
-  #
-  #   assert_equal response.to_yaml, successful_recurring_response
-  # end
+  def test_successful_recurring
+    @gateway.expects(:ssl_request).once.returns(successful_recurring_response)
+
+    @options = {
+        order_id: '1',
+        ip: '127.0.0.1',
+        customer: {
+            document_number: "94123506518",
+            id: "70941",
+            :document_number => "18152564000105",
+            :name => "nome do cliente",
+            :email => "eee@email.com",
+            :born_at => 13121988,
+            :gender => "M",
+            :phone => {
+                :ddi => 55,
+                :ddd => 11,
+                :number => 999887766
+            },
+            :address => {
+                :street => "rua qualquer",
+                :complement => "apto",
+                :number => 13,
+                :district => "pinheiros",
+                :city => "sao paulo",
+                :state => "SP",
+                :zipcode => "05444040",
+                :country => "Brasil"
+            }
+        },
+        :card_number => "4901720080344448",
+        :card_holder_name => "Jose da Silva",
+        :card_expiration_month => "10",
+        :card_expiration_year => "21",
+        :card_cvv => "314",
+        plan_code: 40408,
+        payment_method: 'credit_card',
+        invoice: '1',
+        merchant: 'Richard\'s',
+        description: 'Store Purchase',
+        email: 'suporte@pagar.me',
+        billing_address: address()
+     #   card_hash: "card_ci6y37hc00030a416wrxsmzyi"
+    }
+    response = @gateway.recurring(@amount, @credit_card, @options)
+    puts response.params
+    assert_instance_of Response, response
+    assert_success response
+    #
+    # assert_equal 429356, response.authorization
+    #
+    # assert_equal 'credit_card', response.params["payment_method"]
+    # assert_equal 'refunded', response.params["status"]
+    # assert_equal 'Transação estornada', response.message
+    # assert response.test?
+  end
   #
   # def test_get_invoice
   #
@@ -319,16 +328,16 @@ class PagarmeTest < Test::Unit::TestCase
   #
   # end
 
-  def test_get_payment
-
-  #@gateway.expects(:ssl_post).returns(success_invoice_response)
-
-  response = @gateway.payment("502012","29006")
-
-
-  assert_equal response.to_yaml, success_invoice_response
-
-  end
+  # def test_get_payment
+  #
+  # #@gateway.expects(:ssl_post).returns(success_invoice_response)
+  #
+  # response = @gateway.payment("502012","29006")
+  #
+  #
+  # assert_equal response.to_yaml, success_invoice_response
+  #
+  # end
 
   # def test_get_invoices
   #

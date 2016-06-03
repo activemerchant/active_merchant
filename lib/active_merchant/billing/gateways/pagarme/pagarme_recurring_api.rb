@@ -14,75 +14,55 @@ module ActiveMerchant #:nodoc:
         params = {
             payment_method: options[:payment_method],
             customer: ensure_customer_created(options),
-            plan: ensure_plan_created(options[:plan_code], amount, options[:plan]),
-            card_number: options[:card_number],
-            card_holder_name: options[:card_holder_name],
-            card_expiration_month: options[:card_expiration_month],
-            card_expiration_year: options[:card_expiration_year],
-            card_cvv: options[:card_cvv],
+            plan: ensure_plan_created(options[:plan_code], amount, options[:plan])
         }
 
+        add_credit_card(params, credit_card)
 
-        subscription = PagarMe::Subscription.new(params)
+        puts params
 
-        if subscription.create
-          Response.new(true, "Assinatura criada com sucesso")
-        else
-          Response.new(false, 'Erro ao criar assinatura', params)
-        end
-
+        commit(:post, 'subscriptions', params)
       end
 
       def update(invoice_id, options)
         requires!(options, :payment_method)
 
-        subscription = PagarMe::Subscription.find_by_id(invoice_id)
+        params = {}
 
         if options[:payment_method].present?
-          subscription.payment_method = options[:payment_method]
+          params[:payment_method] = options[:payment_method]
         end
 
         if options[:plan_id].present?
-          subscription.plan_id = options[:plan_id]
+          params[:plan_id] = options[:plan_id]
         end
 
         if options[:card_id].present?
-          subscription.card_id = options[:card_id]
+          params[:card_id] = options[:card_id]
         end
 
         if options[:card_hash].present?
-          subscription.card_hash = options[:card_hash]
+          params[:card_hash] = options[:card_hash]
         end
 
         if options[:card_number].present?
-          subscription.card_number = options[:card_number]
+          params[:card_number] = options[:card_number]
         end
 
         if options[:card_holder_name].present?
-          subscription.card_holder_name = options[:card_holder_name]
+          params[:card_holder_name] = options[:card_holder_name]
         end
 
         if options[:card_expiration_date].present? && expiration_date(options[:card_expiration_date])
           subscription.card_expiration_date = options[:card_expiration_date]
         end
 
-        if subscription.save
-          Response.new(true, "Assinatura alterada com sucesso")
-        else
-          Response.new(false, 'Erro ao alterar assinatura', options)
-        end
-
+        commit(:post, "subscriptions/#{invoice_id}", params)
       end
 
       def cancel(invoice_id)
-        subscription = PagarMe::Subscription.find_by_id(invoice_id)
-
-        if subscription.cancel
-          Response.new(true, "Assinatura alterada com sucesso")
-        else
-          Response.new(false, 'Erro ao alterar assinatura', options)
-        end
-
+        params = {}
+        commit(:post, "subscriptions/#{invoice_id}/cancel", params)
       end
 
 
@@ -92,8 +72,8 @@ module ActiveMerchant #:nodoc:
       end
 
 
-      def invoices(page, count)
-        response = PagarMe::Transaction.all(page, count)
+      def invoices(subscription_id)
+        response = service_pagarme.invoices_by_subscription(subscription_id)
         Response.new(true, nil, {invoices: invoices_to_response(response)})
       end
 
@@ -110,7 +90,6 @@ module ActiveMerchant #:nodoc:
       def subscription_details(subscription_code)
         response = PagarMe::Subscription.find_by_id(subscription_code)
         Response.new(true, nil, subscription_response(response))
-
       end
 
       private
@@ -126,16 +105,16 @@ module ActiveMerchant #:nodoc:
       def ensure_customer_created(options)
         customer_response(PagarMe::Customer.find_by_id(options[:customer][:id]))
       rescue
-        create_customer(options[:customer], options[:address])
+        create_customer(options[:customer], options[:customer][:address])
       end
 
       def create_customer(customer, address)
         params = customer_params(customer, address)
-        PagarMe::Customer.new(params).create
+        PagarMe::Customer.new(params).create.to_hash
       end
 
       def ensure_plan_created(plan_code, amount, options)
-        PagarMe::Plan.find_by_id(plan_code)
+        plan_response(PagarMe::Plan.find_by_id(plan_code))
       rescue
         create_plan(options, amount)
       end
@@ -148,7 +127,7 @@ module ActiveMerchant #:nodoc:
             :days => params[:days],
             :amount => amount,
         }
-        PagarMe::Plan.new(params)
+        PagarMe::Plan.new(params).to_hash
       end
 
     end

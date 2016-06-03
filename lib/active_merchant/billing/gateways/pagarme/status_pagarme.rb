@@ -13,12 +13,22 @@ module ActiveMerchant #:nodoc:
             'refused' => :refused
         }
 
+
         INVOICE_STATUS_REASON_MAP = {
             'acquirer' => :acquirer,
             'antifraud' => :antifraud,
             'internal_error' => :internal_error,
             'no_acquirer' => :no_acquirer,
             'acquirer_timeout' => :acquirer_timeout
+        }
+
+        SUBSCRIPTION_STATUS = {
+            'trialing' => :trialing,
+            'paid' => :paid,
+            'pending_payment' => :pending_payment,
+            'unpaid' => :unpaid,
+            'canceled' => :canceled,
+            'ended' => :ended
         }
 
 

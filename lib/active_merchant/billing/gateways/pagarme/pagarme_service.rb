@@ -13,7 +13,7 @@ class PagarmeService
     }
   end
 
-  def invoice_by_subscription(subscription_id)
+  def invoices_by_subscription(subscription_id)
     self.class.get("/subscriptions/#{subscription_id}/transactions", @options)
   end
 
