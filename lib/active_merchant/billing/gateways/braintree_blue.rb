@@ -175,6 +175,18 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def verify_credentials
+        begin
+          @braintree_gateway.transaction.find("non_existent_token")
+        rescue Braintree::AuthenticationError
+          return false
+        rescue Braintree::NotFoundError
+          return true
+        end
+
+        true
+      end
+
       private
 
       def check_customer_exists(customer_vault_id)

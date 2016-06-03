@@ -613,6 +613,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = BraintreeGateway.new(merchant_id: "UNKNOWN", public_key: "UNKONWN", private_key: "UNKONWN")
+    assert !gateway.verify_credentials
+  end
+
+
   private
   def assert_avs(address1, zip, expected_avs_code)
     response = @gateway.purchase(@amount, @credit_card, billing_address: {address1: address1, zip: zip})

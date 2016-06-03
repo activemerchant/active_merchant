@@ -72,6 +72,20 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal "void_transaction_id", response.authorization
   end
 
+  def test_verify_good_credentials
+    Braintree::TransactionGateway.any_instance.expects(:find).
+      with('non_existent_token').
+      raises(Braintree::NotFoundError)
+    assert @gateway.verify_credentials
+  end
+
+  def test_verify_bad_credentials
+    Braintree::TransactionGateway.any_instance.expects(:find).
+      with('non_existent_token').
+      raises(Braintree::AuthenticationError)
+    assert !@gateway.verify_credentials
+  end
+
   def test_user_agent_includes_activemerchant_version
     assert @internal_gateway.config.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
   end
