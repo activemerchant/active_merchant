@@ -87,14 +87,30 @@ module ActiveMerchant #:nodoc:
 
 
       def invoice(invoice_id)
-        response = PagarMe::Subscription.find_by_id(invoice_id)
+        response = PagarMe::Transaction.find_by_id(invoice_id)
         Response.new(true, nil, invoice_to_response(response))
       end
 
 
       def invoices(page, count)
-        response = PagarMe::Subscription.all(page, count)
+        response = PagarMe::Transaction.all(page, count)
         Response.new(true, nil, {invoices: invoices_to_response(response)})
+      end
+
+      def payments(invoice_id)
+        response = service_pagarme.payments_from_invoice(invoice_id)
+        Response.new(true, nil, { payments: payments_to_response(response) })
+      end
+
+      def payment(invoice_id, payment_id)
+        response = service_pagarme.payment_from_invoice(invoice_id, payment_id)
+        Response.new(true, nil, payment_to_response(response))
+      end
+
+      def subscription_details(subscription_code)
+        response = PagarMe::Subscription.find_by_id(subscription_code)
+        Response.new(true, nil, subscription_response(response))
+
       end
 
       private
@@ -108,7 +124,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ensure_customer_created(options)
-        customerResponse(PagarMe::Customer.find_by_id(options[:customer][:id]))
+        customer_response(PagarMe::Customer.find_by_id(options[:customer][:id]))
       rescue
         create_customer(options[:customer], options[:address])
       end

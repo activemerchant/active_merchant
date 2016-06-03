@@ -1,10 +1,12 @@
 require 'pagarme'
 require File.dirname(__FILE__) + '/pagarme/pagarme_recurring_api.rb'
+require File.dirname(__FILE__) + '/pagarme/pagarme_service.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PagarmeGateway < Gateway
       include PagarmeRecurringApi
+
       self.live_url = 'https://api.pagar.me/1/'
 
       self.supported_countries = ['BR']
@@ -23,6 +25,8 @@ module ActiveMerchant #:nodoc:
       def initialize(options={})
         requires!(options, :api_key)
         @api_key = options[:api_key]
+        @pagarme_service = PagarmeService.new(@api_key)
+
         PagarMe.api_key = @api_key
         super
       end
@@ -163,6 +167,10 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
         response
+      end
+
+      def service_pagarme
+        @pagarme_service
       end
 
       def commit(method, url, parameters, options = {})

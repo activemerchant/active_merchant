@@ -296,16 +296,39 @@ class PagarmeTest < Test::Unit::TestCase
   #
   #   assert_equal response.to_yaml, successful_recurring_response
   # end
-
+  #
   # def test_get_invoice
   #
   # @gateway.expects(:ssl_post).returns(success_invoice_response)
   #
-  # response = @gateway.invoice("58223")
+  # response = @gateway.invoice("502012")
+  #
   #
   # assert_equal response.to_yaml, success_invoice_response
   #
   # end
+
+  # def test_get_payments
+  #
+  # #@gateway.expects(:ssl_post).returns(success_invoice_response)
+  #
+  # response = @gateway.payments("502012")
+  #
+  #
+  # assert_equal response.to_yaml, success_invoice_response
+  #
+  # end
+
+  def test_get_payment
+
+  #@gateway.expects(:ssl_post).returns(success_invoice_response)
+
+  response = @gateway.payment("502012","29006")
+
+
+  assert_equal response.to_yaml, success_invoice_response
+
+  end
 
   # def test_get_invoices
   #
