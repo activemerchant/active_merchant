@@ -10,6 +10,7 @@
 * GlobalTransport: Require TLSv1 [duff]
 * Openpay: Allow currency to be specified [darkaz]
 * DataCash: Use API version 2 [curiousepic]
+* Stripe: Support verify_credentials [duff]
 
 
 == Version 1.59.0 (May 18, 2016)

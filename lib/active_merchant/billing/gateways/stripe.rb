@@ -237,6 +237,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify_credentials
+        begin
+          ssl_get(live_url + "charges/nonexistent", headers)
+        rescue ResponseError => e
+          return false if e.response.code.to_i == 401
+        end
+
+        true
+      end
+
       def supports_scrubbing?
         true
       end
