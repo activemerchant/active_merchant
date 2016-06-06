@@ -24,7 +24,7 @@ class MaxipagoTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '123456789', response.authorization
+    assert_equal '123456789|123456789', response.authorization
   end
 
   def test_failed_purchase
@@ -40,7 +40,7 @@ class MaxipagoTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'C0A8013F:014455FCC857:91A0:01A7243E', response.authorization
+    assert_equal 'C0A8013F:014455FCC857:91A0:01A7243E|663921', response.authorization
     assert response.test?
   end
 
@@ -63,6 +63,69 @@ class MaxipagoTest < Test::Unit::TestCase
 
     response = @gateway.capture(nil, "bogus", @options)
     assert_failure response
+  end
+
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal "VOIDED", void.params["response_message"]
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    void = @gateway.void(purchase.authorization)
+    assert_success void
+    assert_equal "VOIDED", void.params["response_message"]
+
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    void = @gateway.void(capture.authorization)
+    assert_success void
+    assert_equal "VOIDED", void.params["response_message"]
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+    response = @gateway.void("NOAUTH|0000000")
+    assert_failure response
+    assert_equal "error", response.message
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success refund
+    assert_equal "APPROVED", refund.message
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+    refund_amount = @amount + 10
+    refund = @gateway.refund(refund_amount, purchase.authorization, @options)
+    assert_failure refund
+    assert_equal "The Return amount is greater than the amount that can be returned.", refund.message
   end
 
   private
@@ -184,6 +247,77 @@ class MaxipagoTest < Test::Unit::TestCase
         <processorCode/>
         <processorMessage/>
         <errorMessage>Reference Number is a required field.</errorMessage>
+      </transaction-response>
+    )
+  end
+
+  def successful_void_response
+    %(
+      <?xml version="1.0" encoding="UTF-8"?>
+      <transaction-response>
+        <authCode/>
+        <orderID/>
+        <referenceNum/>
+        <transactionID>1408584</transactionID>
+        <transactionTimestamp/>
+        <responseCode>0</responseCode>
+        <responseMessage>VOIDED</responseMessage>
+        <avsResponseCode/>
+        <cvvResponseCode/>
+        <processorCode>A</processorCode>
+        <processorMessage>APPROVED</processorMessage>
+        <errorMessage/>
+      </transaction-response>
+    )
+  end
+
+  def failed_void_response
+    %(
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <api-error>
+        <errorCode>1</errorCode>
+        <errorMsg><![CDATA[Unable to validate, original void transaction not found]]></errorMsg>
+      </api-error>
+    )
+  end
+
+  def successful_refund_response
+    %(
+      <?xml version="1.0" encoding="UTF-8"?>
+      <transaction-response>
+        <authCode/>
+        <orderID>C0A8013F:015527599F53:FAF8:0155C41C</orderID>
+        <referenceNum>12345</referenceNum>
+        <transactionID>1408589</transactionID>
+        <transactionTimestamp>1465244034</transactionTimestamp>
+        <responseCode>0</responseCode>
+        <responseMessage>CAPTURED</responseMessage>
+        <avsResponseCode/>
+        <cvvResponseCode/>
+        <processorCode>A</processorCode>
+        <processorMessage>APPROVED</processorMessage>
+        <errorMessage/>
+        <creditCardScheme>Visa</creditCardScheme>
+      </transaction-response>
+    )
+  end
+
+  def failed_refund_response
+    %(
+      <?xml version="1.0" encoding="UTF-8"?>
+      <transaction-response>
+        <authCode/>
+        <orderID/>
+        <referenceNum/>
+        <transactionID/>
+        <transactionTimestamp>1465244175808</transactionTimestamp>
+        <responseCode>1024</responseCode>
+        <responseMessage>INVALID REQUEST</responseMessage>
+        <avsResponseCode/>
+        <cvvResponseCode/>
+        <processorCode/>
+        <processorMessage/>
+        <errorMessage>The Return amount is greater than the amount that can be returned.</errorMessage>
       </transaction-response>
     )
   end

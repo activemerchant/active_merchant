@@ -51,6 +51,57 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal "VOIDED", void.message
+
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    void = @gateway.void(purchase.authorization)
+    assert_success void
+    assert_equal "VOIDED", void.params["response_message"]
+
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+
+    void = @gateway.void(capture.authorization)
+    assert_success void
+    assert_equal "VOIDED", void.params["response_message"]
+  end
+
+  def test_failed_void
+    response = @gateway.void("NOAUTH|0000000")
+    assert_failure response
+    assert_equal "error", response.message
+  end
+
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success refund
+    assert_equal "APPROVED", refund.message
+  end
+
+  def test_failed_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    refund_amount = @amount + 10
+    refund = @gateway.refund(refund_amount, purchase.authorization, @options)
+    assert_failure refund
+    assert_equal "The Return amount is greater than the amount that can be returned.", refund.message
+  end
+
   def test_invalid_login
     gateway = MaxipagoGateway.new(
       login: '',
