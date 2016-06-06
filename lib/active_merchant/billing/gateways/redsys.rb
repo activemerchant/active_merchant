@@ -70,6 +70,7 @@ module ActiveMerchant #:nodoc:
         "PEN" => '604',
         "PLN" => '616',
         "RUB" => '643',
+        "SAR" => '682',
         "SEK" => '752',
         "SGD" => '702',
         "THB" => '764',

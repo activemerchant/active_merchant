@@ -13,6 +13,7 @@
 * Stripe: Support verify_credentials [duff]
 * AuthorizeNet: Support verify_credentials [duff]
 * BraintreeBlue: Support verify_credentials [duff]
+* Redsys: Added SAR currency [agseco]
 
 
 == Version 1.59.0 (May 18, 2016)
