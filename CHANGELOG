@@ -14,6 +14,7 @@
 * AuthorizeNet: Support verify_credentials [duff]
 * BraintreeBlue: Support verify_credentials [duff]
 * Redsys: Added SAR currency [agseco]
+* MaxiPago: add void and refund [shasum]
 
 
 == Version 1.59.0 (May 18, 2016)
