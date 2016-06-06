@@ -75,8 +75,8 @@ module ActiveMerchant #:nodoc:
 
 
       def invoices(subscription_id)
-        response = commit(:get, "/subscriptions/#{subscription_id}/transactions", nil)#service_pagarme.invoices_by_subscription(subscription_id)
-        Response.new(true, nil, {invoices:  invoices_to_response(response.params)})
+        response = service_pagarme.invoices_by_subscription(subscription_id)
+        Response.new(true, nil, {invoices:  invoices_to_response(response)})
       end
 
       def payments(invoice_id)
