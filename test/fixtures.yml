@@ -534,7 +534,7 @@ orbital_gateway:
 
  # Working credentials, no need to replace
 pagarme:
-  api_key: 'ak_test_e1QGU2gL98MDCHZxHLJ9sofPUFJ7tH'
+  api_key: 'ak_test_MVaWkL5h7ToJYVFSlo8QUOQHXagIfh'
 
 # Working credentials, no need to replace
 pago_facil:

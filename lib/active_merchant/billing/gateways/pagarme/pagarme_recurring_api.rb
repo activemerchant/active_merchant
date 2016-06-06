@@ -17,9 +17,11 @@ module ActiveMerchant #:nodoc:
             plan: ensure_plan_created(options[:plan_code], amount, options[:plan])
         }
 
-        add_credit_card(params, credit_card)
-
-        puts params
+        if options[:card_hash].present?
+          params[:card_id] = options[:card_hash]
+        else
+          add_credit_card(params, credit_card)
+        end
 
         commit(:post, 'subscriptions', params)
       end
@@ -54,10 +56,10 @@ module ActiveMerchant #:nodoc:
         end
 
         if options[:card_expiration_date].present? && expiration_date(options[:card_expiration_date])
-          subscription.card_expiration_date = options[:card_expiration_date]
+          params[:card_expiration_date] = options[:card_expiration_date]
         end
 
-        commit(:post, "subscriptions/#{invoice_id}", params)
+        commit(:put, "subscriptions/#{invoice_id}", params)
       end
 
       def cancel(invoice_id)
@@ -67,14 +69,14 @@ module ActiveMerchant #:nodoc:
 
 
       def invoice(invoice_id)
-        response = PagarMe::Transaction.find_by_id(invoice_id)
-        Response.new(true, nil, invoice_to_response(response))
+        response = commit(:get, "transactions/#{invoice_id}", nil)
+        Response.new(true, nil, {invoice: invoice_to_response(response.params)})
       end
 
 
       def invoices(subscription_id)
-        response = service_pagarme.invoices_by_subscription(subscription_id)
-        Response.new(true, nil, {invoices: invoices_to_response(response)})
+        response = commit(:get, "/subscriptions/#{subscription_id}/transactions", nil)#service_pagarme.invoices_by_subscription(subscription_id)
+        Response.new(true, nil, {invoices:  invoices_to_response(response.params)})
       end
 
       def payments(invoice_id)
@@ -84,7 +86,7 @@ module ActiveMerchant #:nodoc:
 
       def payment(invoice_id, payment_id)
         response = service_pagarme.payment_from_invoice(invoice_id, payment_id)
-        Response.new(true, nil, payment_to_response(response))
+        Response.new(true, nil, { payment: payment_to_response(response) })
       end
 
       def subscription_details(subscription_code)

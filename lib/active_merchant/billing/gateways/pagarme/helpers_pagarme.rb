@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       module HelpersPagarme #:nodoc:
 
         def default_object_if_empty(hash)
-          hash && hash.attributes || {}
+          hash  || {}
         end
 
       end
