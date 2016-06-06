@@ -49,6 +49,18 @@ module ActiveMerchant #:nodoc:
         commit(build_capture_request(authorization, post))
       end
 
+      def void(authorization, options = {})
+        post = {}
+        commit(build_void_request(authorization, post))
+      end
+
+      def refund(money, authorization, options = {})
+        post ={}
+        add_aux_data(post, options)
+        add_amount(post, money)
+        commit(build_refund_request(authorization, post))
+      end
+
       private
 
       def commit(request)
@@ -59,7 +71,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          authorization: response[:order_id]
+          authorization: authorization_from(response)
         )
       end
 
@@ -72,6 +84,14 @@ module ActiveMerchant #:nodoc:
         return response[:processor_message] if response[:processor_message].present?
         return response[:response_message] if response[:response_message].present?
         return (success?(response) ? 'success' : 'error')
+      end
+
+      def authorization_from(response)
+        (response[:order_id] || '') + '|' + (response[:transaction_id] || '')
+      end
+
+      def split_authorization(authorization)
+        authorization.split("|")
       end
 
       def add_aux_data(post, options)
@@ -107,10 +127,33 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def build_refund_request(authorization, params)
+        order_id, _ = split_authorization(authorization)
+        build_request(params) do |xml|
+          xml.return! {
+            xml.orderID order_id
+            xml.referenceNum params[:referenceNum]
+            xml.payment {
+              xml.chargeTotal params[:amount]
+            }
+          }
+        end
+      end
+
+      def build_void_request(authorization, params)
+        _, transaction_id = split_authorization(authorization)
+        build_request(params) do |xml|
+          xml.void! {
+            xml.transactionID transaction_id
+          }
+        end
+      end
+
       def build_capture_request(authorization, params)
+        order_id, _ = split_authorization(authorization)
         build_request(params) do |xml|
           xml.capture! {
-            xml.orderID authorization
+            xml.orderID order_id
             xml.referenceNum params[:referenceNum]
             xml.payment {
               xml.chargeTotal params[:amount]
@@ -194,4 +237,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
