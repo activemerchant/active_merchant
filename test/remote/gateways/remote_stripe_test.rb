@@ -306,6 +306,24 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_match "The customer's bank account must be verified", purchase.message
   end
 
+  def test_store_card_from_token
+    test_card = {
+      card: {
+        number: "4242424242424242",
+        exp_month: "12",
+        exp_year: Date.current.year + 5,
+        cvv: "123"
+      }
+    }
+
+    tokenized_card = @gateway.send(:api_request, :post, "tokens?#{test_card.to_query}")
+    assert_equal(tokenized_card["error"], nil)
+    assert(tokenized_card["id"])
+
+    store = @gateway.store(tokenized_card["id"])
+    assert_success(store)
+  end
+
   def test_successful_purchase_from_stored_and_verified_bank_account
     store = @gateway.store(@check)
     assert_success store
