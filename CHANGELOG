@@ -16,6 +16,7 @@
 * Redsys: Added SAR currency [agseco]
 * MaxiPago: add void and refund [shasum]
 * MaxiPago: Allow processor_id override [duff]
+* Stripe: Interpret string input to store method as token identifier [bizla]
 
 
 == Version 1.59.0 (May 18, 2016)
