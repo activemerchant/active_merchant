@@ -286,7 +286,6 @@ module ActiveMerchant #:nodoc:
         unless emv_payment?(payment)
           add_amount(post, money, options, true)
           add_customer_data(post, options)
-          add_metadata(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
@@ -294,6 +293,7 @@ module ActiveMerchant #:nodoc:
           add_flags(post, options)
         end
 
+        add_metadata(post, options)
         add_application_fee(post, options)
         add_destination(post, options)
         post
