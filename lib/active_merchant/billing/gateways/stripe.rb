@@ -380,7 +380,7 @@ module ActiveMerchant #:nodoc:
             card[:swipe_data] = creditcard.track_data
             card[:fallback_reason] = creditcard.fallback_reason if creditcard.fallback_reason
             card[:read_method] = "contactless" if creditcard.contactless_emv
-            post[:read_method] = "contactless_magstripe_mode" if creditcard.contactless_magstripe
+            card[:read_method] = "contactless_magstripe_mode" if creditcard.contactless_magstripe
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
