@@ -724,8 +724,10 @@ class StripeTest < Test::Unit::TestCase
   def test_add_creditcard_with_track_data
     post = {}
     @credit_card.stubs(:track_data).returns("Tracking data")
+    @credit_card.stubs(:contactless_magstripe).returns(true)
     @gateway.send(:add_creditcard, post, @credit_card, {})
     assert_equal @credit_card.track_data, post[:card][:swipe_data]
+    assert_equal "contactless_magstripe_mode", post[:card][:read_method]
     assert_nil post[:card][:number]
     assert_nil post[:card][:exp_year]
     assert_nil post[:card][:exp_month]
