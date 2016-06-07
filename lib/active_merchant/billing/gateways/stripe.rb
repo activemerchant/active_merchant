@@ -167,16 +167,15 @@ module ActiveMerchant #:nodoc:
         params = {}
         post = {}
 
-        if card_brand(payment) == "check"
-          bank_token_response = tokenize_bank_account(payment)
-          if bank_token_response.success?
-            params = { source: bank_token_response.params["token"]["id"] }
-          else
-            return bank_token_response
-          end
-        elsif payment.is_a?(ApplePayPaymentToken)
+        if payment.is_a?(ApplePayPaymentToken)
           token_exchange_response = tokenize_apple_pay_token(payment)
           params = { card: token_exchange_response.params["token"]["id"] } if token_exchange_response.success?
+        elsif payment.is_a?(StripePaymentToken)
+          add_payment_token(params, payment, options)
+        elsif payment.is_a?(Check)
+          bank_token_response = tokenize_bank_account(payment)
+          return bank_token_response unless bank_token_response.success?
+          params = { source: bank_token_response.params["token"]["id"] }
         else
           add_creditcard(params, payment, options)
         end

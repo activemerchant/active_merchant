@@ -17,6 +17,8 @@ class StripeTest < Test::Unit::TestCase
 
     @apple_pay_payment_token = apple_pay_payment_token
     @emv_credit_card = credit_card_with_icc_data
+    @payment_token = StripeGateway::StripePaymentToken.new(token_params)
+    @token_string = @payment_token.payment_data["id"]
 
     @check = check({
       bank_name: "STRIPE TEST BANK",
@@ -104,6 +106,30 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_new_card_with_token_string
+    @gateway.expects(:ssl_request).returns(successful_new_card_response)
+    @gateway.expects(:add_creditcard)
+
+    assert response = @gateway.store(@token_string, :customer => 'cus_3sgheFxeBgTQ3M')
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_new_card_with_payment_token
+    @gateway.expects(:ssl_request).returns(successful_new_card_response)
+    @gateway.expects(:add_payment_token)
+
+    assert response = @gateway.store(@payment_token, :customer => 'cus_3sgheFxeBgTQ3M')
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert response.test?
+  end
+
   def test_successful_new_card_and_customer_update
     @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
     @gateway.expects(:add_creditcard)
@@ -138,6 +164,34 @@ class StripeTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
 
     assert response = @gateway.store(@emv_credit_card, :customer => 'cus_3sgheFxeBgTQ3M', :email => 'test@test.com')
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 2, response.responses.size
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
+    assert response.test?
+  end
+
+  def test_successful_new_card_and_customer_update_with_token_string
+    @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
+
+    assert response = @gateway.store(@token_string, :customer => 'cus_3sgheFxeBgTQ3M', :email => 'test@test.com')
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 2, response.responses.size
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
+    assert response.test?
+  end
+
+  def test_successful_new_card_and_customer_update_with_payment_token
+    @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
+
+    assert response = @gateway.store(@payment_token, :customer => 'cus_3sgheFxeBgTQ3M', :email => 'test@test.com')
     assert_instance_of MultiResponse, response
     assert_success response
 
@@ -192,6 +246,36 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_new_default_card_with_token_string
+    @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
+    @gateway.expects(:add_creditcard)
+
+    assert response = @gateway.store(@token_string, @options.merge(:customer => 'cus_3sgheFxeBgTQ3M', :set_default => true))
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 2, response.responses.size
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
+    assert response.test?
+  end
+
+  def test_successful_new_default_card_with_payment_token
+    @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
+    @gateway.expects(:add_payment_token)
+
+    assert response = @gateway.store(@payment_token, @options.merge(:customer => 'cus_3sgheFxeBgTQ3M', :set_default => true))
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 2, response.responses.size
+    assert_equal 'cus_3sgheFxeBgTQ3M|card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
+    assert response.test?
+  end
+
   def test_passing_validate_false_on_store
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, validate: false)
@@ -217,6 +301,30 @@ class StripeTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_authorization_response)
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorization_with_token_string
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).returns(successful_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @token_string, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorization_with_payment_token
+    @gateway.expects(:add_payment_token)
+    @gateway.expects(:ssl_request).returns(successful_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @payment_token, @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -280,6 +388,28 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_token_string
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @token_string, @options)
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_payment_token
+    @gateway.expects(:add_payment_token)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @payment_token, @options)
     assert_success response
 
     assert_equal 'ch_test_charge', response.authorization
@@ -594,14 +724,14 @@ class StripeTest < Test::Unit::TestCase
     assert_nil post[:card][:name]
   end
 
-  def test_add_creditcard_with_token
+  def test_add_creditcard_with_card_token
     post = {}
     credit_card_token = "card_2iD4AezYnNNzkW"
     @gateway.send(:add_creditcard, post, credit_card_token, {})
     assert_equal "card_2iD4AezYnNNzkW", post[:card]
   end
 
-  def test_add_creditcard_with_token_and_customer
+  def test_add_creditcard_with_card_token_and_customer
     post = {}
     credit_card_token = "cus_3sgheFxeBgTQ3M|card_2iD4AezYnNNzkW"
     @gateway.send(:add_creditcard, post, credit_card_token, {})
@@ -609,7 +739,7 @@ class StripeTest < Test::Unit::TestCase
     assert_equal "card_2iD4AezYnNNzkW", post[:card]
   end
 
-  def test_add_creditcard_with_token_and_track_data
+  def test_add_creditcard_with_card_token_and_track_data
     post = {}
     credit_card_token = "card_2iD4AezYnNNzkW"
     @gateway.send(:add_creditcard, post, credit_card_token, :track_data => "Tracking data")
@@ -1835,4 +1965,39 @@ class StripeTest < Test::Unit::TestCase
     MockResponse.new(401, body)
   end
 
+  def token_params
+    {
+      "id" => "tok_14uq3k2gKyKnHxtYUAZZZlH3",
+      "object" => "token",
+      "card" => {
+        "id" => "card_189f8n2eZvKYlo2CgvOd3Vtn",
+        "object" => "card",
+        "address_city" => nil,
+        "address_country" => nil,
+        "address_line1" => nil,
+        "address_line1_check" => nil,
+        "address_line2" => nil,
+        "address_state" => nil,
+        "address_zip" => nil,
+        "address_zip_check" => nil,
+        "brand" => "Visa",
+        "country" => "US",
+        "cvc_check" => nil,
+        "dynamic_last4" => nil,
+        "exp_month" => 8,
+        "exp_year" => 2017,
+        "funding" => "credit",
+        "last4" => "4242",
+        "metadata" => {
+        },
+        "name" => nil,
+        "tokenization_method" => nil
+      },
+      "client_ip" => nil,
+      "created" => 1462903169,
+      "livemode" => false,
+      "type" => "card",
+      "used" => false
+    }
+  end
 end
