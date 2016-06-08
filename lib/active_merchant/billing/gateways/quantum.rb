@@ -175,6 +175,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'Country', address[:country]
         xml.tag! 'EmailAddress', options[:email]
         xml.tag! 'IPAddress', options[:ip]
+        xml.tag! 'PhoneNumber', options[:phone]
       end
 
       def add_creditcard(xml, creditcard)
