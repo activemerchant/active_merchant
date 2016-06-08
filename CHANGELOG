@@ -14,6 +14,7 @@
 * AuthorizeNet: Support verify_credentials [duff]
 * BraintreeBlue: Support verify_credentials [duff]
 * Redsys: Added SAR currency [agseco]
+* Stripe: Interpret string input to store method as token identifier [bizla]
 * MaxiPago: add void and refund [shasum]
 * MaxiPago: Allow processor_id override [duff]
 * Stripe: Interpret string input to store method as token identifier [bizla]
