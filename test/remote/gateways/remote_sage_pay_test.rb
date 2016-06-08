@@ -226,9 +226,91 @@ class RemoteSagePayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_apply_avscv2_field
-    response = @gateway.purchase(@amount, @visa, @options.merge({apply_avscv2: 1}))
+    @options[:apply_avscv2] = 1
+    response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
     assert_equal "Y", response.cvv_result['code']
+  end
+
+  def test_successful_purchase_with_pay_pal_callback_url
+    @options[:paypal_callback_urll] = 'callback.com'
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_basket
+    # Example from "Sage Pay Direct Integration and Protocol Guidelines 3.00"
+    # Published: 27/08/2015
+    @options[:basket] = '4:Pioneer NSDV99 DVD-Surround Sound System:1:424.68:' \
+      '74.32:499.00: 499.00:Donnie Darko Director’s Cut:3:11.91:2.08:13.99:' \
+      '41.97: Finding Nemo:2:11.05:1.94:12.99:25.98: Delivery:---:---:---:---' \
+      ':4.99'
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_gift_aid_payment
+    @options[:gift_aid_payment] = 1
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_transaction_registration_with_apply_3d_secure
+    @options[:apply_3d_secure] = 1
+    response = @gateway.purchase(@amount, @visa, @options)
+    # We receive a different type of response for 3D Secure requiring to
+    # redirect the user to the ACSURL given inside the response
+    assert response.params.include?('ACSURL')
+    assert_equal 'OK', response.params['3DSecureStatus']
+    assert_equal '3DAUTH', response.params['Status']
+  end
+
+  def test_successful_purchase_with_account_type
+    @options[:account_type] = 'E'
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_billing_agreement
+    @options[:billing_agreement] = 1
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_basket_xml
+    @options[:basket_xml] = basket_xml
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_customer_xml
+    @options[:customer_xml] = customer_xml
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_surcharge_xml
+    @options[:surcharge_xml] = surcharge_xml
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_vendor_data
+    @options[:vendor_data] = 'Data displayed against the transaction in MySagePay'
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_language
+    @options[:language] = 'FR'
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_website
+    @options[:website] = 'origin-of-transaction.com'
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
   end
 
   def test_invalid_login
@@ -304,5 +386,61 @@ class RemoteSagePayTest < Test::Unit::TestCase
 
   def next_year
     Date.today.year + 1
+  end
+
+  # Based on example from http://www.sagepay.co.uk/support/basket-xml
+  # Only kept required fields to make sense
+  def basket_xml
+    <<-XML
+<basket>
+  <item>
+    <description>DVD 1</description>
+    <quantity>2</quantity>
+    <unitNetAmount>24.50</unitNetAmount>
+    <unitTaxAmount>00.50</unitTaxAmount>
+    <unitGrossAmount>25.00</unitGrossAmount>
+    <totalGrossAmount>50.00</totalGrossAmount>
+  </item>
+ </basket>
+    XML
+  end
+
+  # Example from http://www.sagepay.co.uk/support/customer-xml
+  def customer_xml
+    <<-XML
+<customer> 
+  <customerMiddleInitial>W</customerMiddleInitial> 
+  <customerBirth>1983-01-01</customerBirth> 
+  <customerWorkPhone>020 1234567</customerWorkPhone> 
+  <customerMobilePhone>0799 1234567</customerMobilePhone> 
+  <previousCust>0</previousCust> 
+  <timeOnFile>10</timeOnFile> 
+  <customerId>CUST123</customerId>
+</customer>
+    XML
+  end
+
+  # Example from https://www.sagepay.co.uk/support/12/36/protocol-3-00-surcharge-xml
+  def surcharge_xml
+    <<-XML
+<surcharges>
+  <surcharge>
+    <paymentType>DELTA</paymentType>
+    <fixed>2.50</fixed>
+  </surcharge>
+  <surcharge>
+    <paymentType>VISA</paymentType>
+    <fixed>2.50</fixed>
+  </surcharge>
+  <surcharge>
+    <paymentType>AMEX</paymentType>
+    <percentage>1.50</percentage>
+  </surcharge>
+  <surcharge>
+    <paymentType>MC</paymentType>
+    <percentage>1.50</percentage>
+  </surcharge>
+</surcharges>
+    XML
   end
 end
