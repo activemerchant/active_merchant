@@ -75,34 +75,13 @@ class MaxipagoTest < Test::Unit::TestCase
     assert_success void
     assert_equal "VOIDED", void.params["response_message"]
 
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    @gateway.expects(:ssl_post).returns(successful_void_response)
-    void = @gateway.void(purchase.authorization)
-    assert_success void
-    assert_equal "VOIDED", void.params["response_message"]
-
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    @gateway.expects(:ssl_post).returns(successful_capture_response)
-    capture = @gateway.capture(@amount, auth.authorization, @options)
-    assert_success capture
-
-    @gateway.expects(:ssl_post).returns(successful_void_response)
-    void = @gateway.void(capture.authorization)
-    assert_success void
-    assert_equal "VOIDED", void.params["response_message"]
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
     response = @gateway.void("NOAUTH|0000000")
     assert_failure response
-    assert_equal "error", response.message
+    assert_equal "Unable to validate, original void transaction not found", response.message
   end
 
   def test_successful_refund
@@ -113,7 +92,7 @@ class MaxipagoTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success refund
-    assert_equal "APPROVED", refund.message
+    assert_equal "CAPTURED", refund.message
   end
 
   def test_failed_refund

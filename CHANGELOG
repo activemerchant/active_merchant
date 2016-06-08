@@ -15,6 +15,7 @@
 * BraintreeBlue: Support verify_credentials [duff]
 * Redsys: Added SAR currency [agseco]
 * MaxiPago: add void and refund [shasum]
+* MaxiPago: Allow processor_id override [duff]
 
 
 == Version 1.59.0 (May 18, 2016)

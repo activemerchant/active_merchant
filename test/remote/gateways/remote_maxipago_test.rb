@@ -20,14 +20,16 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
   def test_successful_authorize
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
+    assert_equal "AUTHORIZED", response.message
   end
 
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @invalid_card, @options)
     assert_failure response
+    assert_equal "The transaction has an expired credit card.", response.message
   end
 
-  def test_authorize_and_capture
+  def test_successful_authorize_and_capture
     amount = @amount
     authorize = @gateway.authorize(amount, @credit_card, @options)
     assert_success authorize
@@ -38,6 +40,11 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_sans_options
+    assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
   end
 
@@ -58,29 +65,12 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
     void = @gateway.void(auth.authorization)
     assert_success void
     assert_equal "VOIDED", void.message
-
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    void = @gateway.void(purchase.authorization)
-    assert_success void
-    assert_equal "VOIDED", void.params["response_message"]
-
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    capture = @gateway.capture(@amount, auth.authorization, @options)
-    assert_success capture
-
-    void = @gateway.void(capture.authorization)
-    assert_success void
-    assert_equal "VOIDED", void.params["response_message"]
   end
 
   def test_failed_void
     response = @gateway.void("NOAUTH|0000000")
     assert_failure response
-    assert_equal "error", response.message
+    assert_equal "Unable to validate, original void transaction not found", response.message
   end
 
   def test_successful_refund
@@ -89,7 +79,7 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success refund
-    assert_equal "APPROVED", refund.message
+    assert_equal "CAPTURED", refund.message
   end
 
   def test_failed_refund
