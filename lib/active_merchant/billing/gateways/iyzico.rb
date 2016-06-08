@@ -1,14 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class IyzicoGateway < Gateway
-      self.test_url = 'https://stg.iyzipay.com'
-      self.live_url = 'https://stg.iyzipay.com'
+      self.test_url = 'https://sandbox-api.iyzipay.com'
+      self.live_url = 'https://api.iyzipay.com'
 
       self.supported_countries = ['TR']
       self.default_currency = 'TRY'
       self.supported_cardtypes = [:visa, :master, :american_express]
 
-      self.homepage_url = 'http://www.iyzico.com/'
+      self.homepage_url = 'https://www.iyzico.com/'
       self.display_name = 'Iyzico'
 
       STANDARD_ERROR_CODE_MAPPING = {}
@@ -23,19 +23,22 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         request = {}
         create_transaction_parameters(request, money, payment, options)
-        commit(:post, '/payment/iyzipos/auth/ecom', request, options)
+        create_purchase_pki_string(request)
+        commit(:post, '/payment/iyzipos/auth/ecom', request, options, @purchase_pki_string)
       end
 
       def authorize(money, payment, options={})
         request = {}
         create_transaction_parameters(request, money, payment, options)
-        commit(:post, '/payment/iyzipos/auth/ecom', request, options)
+        create_purchase_pki_string(request)
+        commit(:post, '/payment/iyzipos/auth/ecom', request, options, @purchase_pki_string)
       end
 
       def void(authorization, options={})
         request= {}
         create_cancel_request(request, authorization, options)
-        commit(:post, '/payment/iyzipos/cancel', request, options)
+        create_void_pki_string(request)
+        commit(:post, '/payment/iyzipos/cancel', request, options, @void_pki_string)
       end
 
       def verify(credit_card, options={})
@@ -54,18 +57,6 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-
-      class RandomStringGenerator
-        RANDOM_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-
-        def self.random_string(string_length)
-          random_string = ''
-          string_length.times do |idx|
-            random_string << RANDOM_CHARS.split('').sample
-          end
-          random_string
-        end
-      end
 
       class RequestHelper
         AUTHORIZATION_HEADER_STRING = 'IYZWS %s:%s'
@@ -145,7 +136,7 @@ module ActiveMerchant #:nodoc:
         request[:billingAddress] = billing_address
       end
 
-      def add_basket_items(request, options)
+      def add_basket_items(options)
         items = Array.new
         unless options[:items] == nil
           options[:items].each_with_index do |item|
@@ -188,7 +179,7 @@ module ActiveMerchant #:nodoc:
       # create request object map to send request to iyzico
       def create_transaction_parameters(request, money, payment, options)
         #create payment basket items and calculate total item price
-        basket_items=add_basket_items(request, options)
+        basket_items=add_basket_items(options)
 
         request[:locale] = 'tr'
         if options[:order_id] == nil
@@ -199,10 +190,11 @@ module ActiveMerchant #:nodoc:
         request[:conversationId] = "shopify_#{uid}"
         request[:price] =sum_of_basket_items(basket_items)
         request[:paidPrice] = money.to_s
+        request[:currency] = options[:currency] || currency(money)
         request[:installment] = 1
         request[:paymentChannel] ='WEB'
         request[:basketId] = options[:order_id]
-        request[:paymentGroup] ='PRODUCT'
+        request[:paymentGroup] ='LISTING'
         # create payment card dto
         add_card_data(request, payment)
 
@@ -228,73 +220,214 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def create_pki_string(params)
-        sub = ','
-        @pki_string = "["
-        return nil unless params
-        params.map do |key, value|
-          next if value != false && value.blank?
-          if value.is_a?(Array)
-            @pki_string << "#{key}=["
-            value.each do |val|
-              if val.is_a?(Hash)
-                @pki_string << "["
-                val.each do |l, m|
-                  @pki_string << "#{l}=#{m},"
-                end
-                @pki_string = @pki_string.gsub(/[#{sub}]+$/, '')
-                @pki_string << "], "
-              end
-            end
-            @pki_string = @pki_string.gsub(/[#{sub}] +$/, '')
-            @pki_string << "],"
-          elsif value.is_a?(Hash)
-            @pki_string << "#{key}=["
-            value.each do |k, v|
-              @pki_string << "#{k}=#{v}," unless v.nil?
-            end
-            @pki_string = @pki_string.gsub(/[#{sub}]+$/, '')
-            @pki_string << "],"
-          else
-            @pki_string << "#{key}=#{value},"
-          end
+      class PkiBuilder
+        attr_accessor :request_string
+
+        def initialize(request_string = '')
+          @request_string = request_string
         end
-        @pki_string = @pki_string.gsub(/[#{sub}]+$/, '')
-        @pki_string << "]"
+
+        def append_super(super_request_string)
+          unless super_request_string.nil?
+
+            s = super_request_string[1..-2]
+            if s.length > 0
+              result = @request_string + s
+              result << ','
+            end
+            @request_string = result
+          end
+          self
+        end
+
+        def append(key, value = nil)
+          unless value.nil?
+            append_key_value(key, value)
+          end
+          self
+        end
+
+        def append_array(key, array = nil)
+          unless array.nil?
+            appended_value = ''
+            array.each do |value|
+              appended_value << value
+              appended_value << ', '
+            end
+          end
+          append_key_value_array(key, appended_value)
+
+          self
+        end
+
+        def append_key_value(key, value)
+          @request_string = "#{@request_string}#{key}=#{value}," unless value.nil?
+        end
+
+        def append_key_value_array(key, value)
+          unless value.nil?
+            sub = ', '
+            value = value.gsub(/[#{sub}]+$/, '')
+            @request_string = "#{@request_string}#{key}=[#{value}],"
+          end
+
+          self
+        end
+
+        def append_prefix
+          @request_string = "[#{@request_string}]"
+        end
+
+        def remove_trailing_comma
+          sub = ','
+          @request_string = @request_string.gsub(/[#{sub}]+$/, '')
+        end
+
+        def get_request_string
+          remove_trailing_comma
+          append_prefix
+
+          @request_string
+        end
       end
 
-      def crate_hash(options={}, random_header_value)
+      class PaymentCard
+        def self.to_pki_string(request)
+          unless request.nil?
+            PkiBuilder.new.
+                append(:cardHolderName, request[:cardHolderName]).
+                append(:cardNumber, request[:cardNumber]).
+                append(:expireYear, request[:expireYear]).
+                append(:expireMonth, request[:expireMonth]).
+                append(:cvc, request[:cvc]).
+                append(:registerCard, request[:registerCard]).
+                append(:cardAlias, request[:cardAlias]).
+                append(:cardToken, request[:cardToken]).
+                append(:cardUserKey, request[:cardUserKey]).
+                get_request_string
+          end
+        end
+      end
+
+      class Buyer
+        def self.to_pki_string(request)
+          unless request.nil?
+            PkiBuilder.new.
+                append(:id, request[:id]).
+                append(:name, request[:name]).
+                append(:surname, request[:surname]).
+                append(:identityNumber, request[:identityNumber]).
+                append(:email, request[:email]).
+                append(:gsmNumber, request[:gsmNumber]).
+                append(:registrationDate, request[:registrationDate]).
+                append(:lastLoginDate, request[:lastLoginDate]).
+                append(:registrationAddress, request[:registrationAddress]).
+                append(:city, request[:city]).
+                append(:country, request[:country]).
+                append(:zipCode, request[:zipCode]).
+                append(:ip, request[:ip]).
+                get_request_string
+          end
+        end
+      end
+
+      class Address
+        def self.to_pki_string(request)
+          unless request.nil?
+            PkiBuilder.new.
+                append(:address, request[:address]).
+                append(:zipCode, request[:zipCode]).
+                append(:contactName, request[:contactName]).
+                append(:city, request[:city]).
+                append(:country, request[:country]).
+                get_request_string
+          end
+        end
+      end
+
+      class Basket
+        def self.to_pki_string(request)
+          unless request.nil?
+            basket_items = Array.new
+            request.each do |item|
+              item_pki = PkiBuilder.new.
+                  append(:id, item[:id]).
+                  append(:price, item[:price]).
+                  append(:name, item[:name]).
+                  append(:category1, item[:category1]).
+                  append(:category2, item[:category2]).
+                  append(:itemType, item[:itemType]).
+                  append(:subMerchantKey, item[:subMerchantKey]).
+                  append(:subMerchantPrice, item[:subMerchantPrice]).
+                  append(:ip, item[:ip]).
+                  get_request_string
+              basket_items << item_pki
+            end
+            basket_items
+          end
+        end
+      end
+
+      def create_purchase_pki_string(params)
+        @purchase_pki_string = PkiBuilder.new.
+            append(:locale, params[:locale]).
+            append(:conversationId, params[:conversationId]).
+            append(:price, params[:price]).
+            append(:paidPrice, params[:paidPrice]).
+            append(:installment, params[:installment]).
+            append(:paymentChannel, params[:paymentChannel]).
+            append(:basketId, params[:basketId]).
+            append(:paymentGroup, params[:paymentGroup]).
+            append(:paymentCard, PaymentCard.to_pki_string(params[:paymentCard])).
+            append(:buyer, Buyer.to_pki_string(params[:buyer])).
+            append(:shippingAddress, Address.to_pki_string(params[:shippingAddress])).
+            append(:billingAddress, Address.to_pki_string(params[:billingAddress])).
+            append_array(:basketItems, Basket.to_pki_string(params[:basketItems])).
+            append(:paymentSource, params[:paymentSource]).
+            append(:currency, params[:currency]).
+            append(:posOrderId, params[:posOrderId]).
+            append(:connectorName, params[:connectorName]).
+            get_request_string
+      end
+
+      def create_void_pki_string(params)
+        @void_pki_string = PkiBuilder.new.
+            append(:locale, params[:locale]).
+            append(:conversationId, params[:conversationId]).
+            append(:paymentId, params[:paymentId]).
+            append(:ip, params[:ip]).
+            get_request_string
+      end
+
+      def crate_hash(options={}, random_header_value, pki_string)
         key = options[:api_id] || @api_id
         secret_key =options[:secret] || @secret
-        hash = Digest::SHA1.base64digest("#{key}#{random_header_value}#{secret_key}#{@pki_string}")
+        hash = Digest::SHA1.base64digest("#{key}#{random_header_value}#{secret_key}#{pki_string}")
         RequestHelper.format_header_string(key, hash)
       end
 
-      def headers(options = {})
-        random_header_value = RandomStringGenerator.random_string(RequestHelper::RANDOM_STRING_SIZE)
-        headers = {
-            "Authorization" => crate_hash(options, random_header_value),
+      def headers(options = {}, pki_string)
+        random_header_value = SecureRandom.hex(RequestHelper::RANDOM_STRING_SIZE)
+        {
+            "Authorization" => crate_hash(options, random_header_value, pki_string),
             "x-iyzi-rnd" => random_header_value.to_s,
             "accept" => "application/json",
             "content-type" => "application/json"
         }
-        headers
       end
 
-      def api_request(method, endpoint, parameters = nil, options = {})
+      def api_request(method, endpoint, parameters = nil, options = {}, pki_string)
         url= (test? ? self.test_url : self.live_url)
-        create_pki_string(parameters)
-        response = ssl_request(method, url + endpoint, parameters.to_json, headers(options))
-        response
+        ssl_request(method, url + endpoint, parameters.to_json, headers(options, pki_string))
       end
 
-      def commit(method, endpoint, parameters = nil, options = {})
-        response = api_request(method, endpoint, parameters, options)
+      def commit(method, endpoint, parameters = nil, options = {}, pki_string)
+        response = api_request(method, endpoint, parameters, options, pki_string)
         result = parse(response)
         if result['status'] == 'success'
           Response.new(true, message_from_transaction_result(result), result, response_options(result))
         else
-          Response.new(false, message_from_transaction_result(result), result, {})
+          Response.new(false, message_from_transaction_result(result), result, response_options(result))
         end
       end
 

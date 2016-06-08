@@ -2,18 +2,19 @@
 require 'test_helper'
 
 class IyzicoTest < Test::Unit::TestCase
+  include CommStub
   def setup
     @gateway = IyzicoGateway.new(api_id: 'mrI3mIMuNwGiIxanQslyJBRYa8nYrCU5', secret: '9lkVluNHBABPw0LIvyn50oYZcrSJ8oNo')
-    @credit_card = credit_card
+    @credit_card = credit_card('5528790000000008')
     @declined_card = credit_card('42424242424242')
     @amount = 0.1
 
     @options = {
-        order_id: '1',
+        order_id: '',
         billing_address: address,
         shipping_address: address,
         description: 'Store Purchase',
-        ip: "127.0.0.1",
+        ip: '127.0.0.1',
         customer: 'Jim Smith',
         email: 'dharmesh.vasani@multidots.in',
         phone: '9898912233',
@@ -26,30 +27,20 @@ class IyzicoTest < Test::Unit::TestCase
                     :category2 => 'Usb / Cable',
                     :id => 'BI103',
                     :price => 0.38,
-                    :itemType => 'PHYSICAL',
-                    :subMerchantKey => 'nm57s4v5mk2652k87g5728cc56nh23',
-                    :subMerchantPrice => 0.37
+                    :itemType => 'PHYSICAL'
                 }]
     }
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
   end
 
-  def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(invalid_card_number_response)
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
-    assert_failure response
-    assert_equal "5152", response.params["errorCode"]
-  end
-
   def test_failed_purchase_with_declined_credit_card
-    @gateway.expects(:ssl_post).returns(invalid_card_number_response)
+    @gateway.expects(:ssl_request).returns(failed_purchase_response_invalid_card_number)
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_instance_of Response, response
     assert_failure response
@@ -57,15 +48,14 @@ class IyzicoTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
   end
 
-
   def test_failed_authorize
-    @gateway.expects(:ssl_post).returns(invalid_card_number_response)
+    @gateway.expects(:ssl_request).returns(failed_purchase_response_invalid_card_number)
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_instance_of Response, response
     assert_failure response
@@ -73,46 +63,50 @@ class IyzicoTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    @gateway.expects(:ssl_post).returns(successful_void_response)
-    result = @gateway.authorize(@amount, @credit_card, @options)
-    response = @gateway.void(result.authorization)
+    @gateway.expects(:ssl_request).returns(successful_void_response)
+    response = @gateway.void("123456")
     assert_instance_of Response, response
     assert_success response
   end
 
   def test_failed_void_with_empty_payment_id
-    @gateway.expects(:ssl_post).returns(invalid_signature_response)
+    @gateway.expects(:ssl_request).returns(failed_void_response)
     response = @gateway.void("", options={})
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "1000", response.params["errorCode"]
+    assert_equal "5002", response.params["errorCode"]
   end
 
   def test_failed_void
-    @gateway.expects(:ssl_post).returns(failed_void_response)
+    @gateway.expects(:ssl_request).returns(failed_void_response)
     authorization = 4374
     response = @gateway.void(authorization, options={})
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "5088", response.params["errorCode"]
+    assert_equal "5002", response.params["errorCode"]
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).returns(successful_verify_response)
-    response = @gateway.verify(@credit_card, @options)
-    assert_instance_of Response, response
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
 
   def test_successful_verify_with_failed_void
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, failed_void_response)
+    assert_success response
+    assert_equal "Transaction success", response.message
   end
 
   def test_failed_verify
-    @gateway.expects(:ssl_post).returns(failed_verify_response)
-    response = @gateway.verify(@declined_card, @options)
-    assert_instance_of Response, response
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_success response
+    assert_equal "Gecersiz imza", response.message
   end
 
   def test_default_currency
@@ -134,29 +128,30 @@ class IyzicoTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
+    "{\"status\":\"success\",\"locale\":\"tr\",\"systemTime\":1465300344785,\"conversationId\":\"123456789\",\"price\":1.0,\"paidPrice\":1.1,\"installment\":1,\"paymentId\":\"363\",\"fraudStatus\":1,\"merchantCommissionRate\":10.00000000,\"merchantCommissionRateAmount\":0.1,\"iyziCommissionRateAmount\":0.03245000,\"iyziCommissionFee\":0.29500000,\"cardType\":\"CREDIT_CARD\",\"cardAssociation\":\"MASTER_CARD\",\"cardFamily\":\"Paraf\",\"binNumber\":\"552879\",\"basketId\":\"B67832\",\"currency\":\"TRY\",\"itemTransactions\":[{\"itemId\":\"BI101\",\"paymentTransactionId\":\"900\",\"transactionStatus\":2,\"price\":0.3,\"paidPrice\":0.33000000,\"merchantCommissionRate\":10.00000000,\"merchantCommissionRateAmount\":0.03000000,\"iyziCommissionRateAmount\":0.00973500,\"iyziCommissionFee\":0.08850000,\"blockageRate\":10.00000000,\"blockageRateAmountMerchant\":0.03300000,\"blockageRateAmountSubMerchant\":0,\"blockageResolvedDate\":\"2016-06-22 14:52:24\",\"subMerchantPrice\":0,\"subMerchantPayoutRate\":0E-8,\"subMerchantPayoutAmount\":0,\"merchantPayoutAmount\":0.19876500,\"convertedPayout\":{\"paidPrice\":0.33000000,\"iyziCommissionRateAmount\":0.00973500,\"iyziCommissionFee\":0.08850000,\"blockageRateAmountMerchant\":0.03300000,\"blockageRateAmountSubMerchant\":0E-8,\"subMerchantPayoutAmount\":0E-8,\"merchantPayoutAmount\":0.19876500,\"iyziConversionRate\":0,\"iyziConversionRateAmount\":0,\"currency\":\"TRY\"}},{\"itemId\":\"BI102\",\"paymentTransactionId\":\"901\",\"transactionStatus\":2,\"price\":0.5,\"paidPrice\":0.55000000,\"merchantCommissionRate\":10.00000000,\"merchantCommissionRateAmount\":0.05000000,\"iyziCommissionRateAmount\":0.01622500,\"iyziCommissionFee\":0.14750000,\"blockageRate\":10.00000000,\"blockageRateAmountMerchant\":0.05500000,\"blockageRateAmountSubMerchant\":0,\"blockageResolvedDate\":\"2016-06-22 14:52:24\",\"subMerchantPrice\":0,\"subMerchantPayoutRate\":0E-8,\"subMerchantPayoutAmount\":0,\"merchantPayoutAmount\":0.33127500,\"convertedPayout\":{\"paidPrice\":0.55000000,\"iyziCommissionRateAmount\":0.01622500,\"iyziCommissionFee\":0.14750000,\"blockageRateAmountMerchant\":0.05500000,\"blockageRateAmountSubMerchant\":0E-8,\"subMerchantPayoutAmount\":0E-8,\"merchantPayoutAmount\":0.33127500,\"iyziConversionRate\":0,\"iyziConversionRateAmount\":0,\"currency\":\"TRY\"}},{\"itemId\":\"BI103\",\"paymentTransactionId\":\"902\",\"transactionStatus\":2,\"price\":0.2,\"paidPrice\":0.22000000,\"merchantCommissionRate\":10.00000000,\"merchantCommissionRateAmount\":0.02000000,\"iyziCommissionRateAmount\":0.00649000,\"iyziCommissionFee\":0.05900000,\"blockageRate\":10.00000000,\"blockageRateAmountMerchant\":0.02200000,\"blockageRateAmountSubMerchant\":0,\"blockageResolvedDate\":\"2016-06-22 14:52:24\",\"subMerchantPrice\":0,\"subMerchantPayoutRate\":0E-8,\"subMerchantPayoutAmount\":0,\"merchantPayoutAmount\":0.13251000,\"convertedPayout\":{\"paidPrice\":0.22000000,\"iyziCommissionRateAmount\":0.00649000,\"iyziCommissionFee\":0.05900000,\"blockageRateAmountMerchant\":0.02200000,\"blockageRateAmountSubMerchant\":0E-8,\"subMerchantPayoutAmount\":0E-8,\"merchantPayoutAmount\":0.13251000,\"iyziConversionRate\":0,\"iyziConversionRateAmount\":0,\"currency\":\"TRY\"}}]}"
   end
 
-  def invalid_signature_response
-    {"status"=>"failure", "errorCode"=>"1000", "errorMessage"=>"Geçersiz imza", "locale"=>"tr", "systemTime"=>1451901922908, "conversationId"=>"shopify_1"}
+  def failed_purchase_response_invalid_signature
+    "{\"status\":\"failure\",\"errorCode\":\"1000\",\"errorMessage\":\"Gecersiz imza\",\"locale\":\"tr\",\"systemTime\":1465306093157,\"conversationId\":\"123456789\",\"paymentId\":\"\"}"
   end
 
-  def invalid_card_number_response
-    {"status"=>"failure",  "errorCode"=>"12", "errorMessage"=>"Kart numarası geçersizdir", "locale"=>"tr",  "systemTime"=>1451977893269, "conversationId"=>"shopify_1"}
+  def failed_purchase_response_invalid_card_number
+    "{\"status\":\"failure\",\"errorCode\":\"12\",\"errorMessage\":\"Kart numaras\xC4\xB1 ge\xC3\xA7ersizdir\",\"locale\":\"tr\",\"systemTime\":1465304881116,\"conversationId\":\"123456789\"}"
   end
 
   def successful_authorize_response
+    "{\"status\":\"success\",\"locale\":\"tr\",\"systemTime\":1465300344785,\"conversationId\":\"123456789\",\"price\":1.0,\"paidPrice\":1.1,\"installment\":1,\"paymentId\":\"363\",\"fraudStatus\":1,\"merchantCommissionRate\":10.00000000,\"merchantCommissionRateAmount\":0.1,\"iyziCommissionRateAmount\":0.03245000,\"iyziCommissionFee\":0.29500000,\"cardType\":\"CREDIT_CARD\",\"cardAssociation\":\"MASTER_CARD\",\"cardFamily\":\"Paraf\",\"binNumber\":\"552879\",\"basketId\":\"B67832\",\"currency\":\"TRY\",\"itemTransactions\":[{\"itemId\":\"BI101\",\"paymentTransactionId\":\"900\",\"transactionStatus\":2,\"price\":0.3,\"paidPrice\":0.33000000,\"merchantCommissionRate\":10.00000000,\"merchantCommissionRateAmount\":0.03000000,\"iyziCommissionRateAmount\":0.00973500,\"iyziCommissionFee\":0.08850000,\"blockageRate\":10.00000000,\"blockageRateAmountMerchant\":0.03300000,\"blockageRateAmountSubMerchant\":0,\"blockageResolvedDate\":\"2016-06-22 14:52:24\",\"subMerchantPrice\":0,\"subMerchantPayoutRate\":0E-8,\"subMerchantPayoutAmount\":0,\"merchantPayoutAmount\":0.19876500,\"convertedPayout\":{\"paidPrice\":0.33000000,\"iyziCommissionRateAmount\":0.00973500,\"iyziCommissionFee\":0.08850000,\"blockageRateAmountMerchant\":0.03300000,\"blockageRateAmountSubMerchant\":0E-8,\"subMerchantPayoutAmount\":0E-8,\"merchantPayoutAmount\":0.19876500,\"iyziConversionRate\":0,\"iyziConversionRateAmount\":0,\"currency\":\"TRY\"}},{\"itemId\":\"BI102\",\"paymentTransactionId\":\"901\",\"transactionStatus\":2,\"price\":0.5,\"paidPrice\":0.55000000,\"merchantCommissionRate\":10.00000000,\"merchantCommissionRateAmount\":0.05000000,\"iyziCommissionRateAmount\":0.01622500,\"iyziCommissionFee\":0.14750000,\"blockageRate\":10.00000000,\"blockageRateAmountMerchant\":0.05500000,\"blockageRateAmountSubMerchant\":0,\"blockageResolvedDate\":\"2016-06-22 14:52:24\",\"subMerchantPrice\":0,\"subMerchantPayoutRate\":0E-8,\"subMerchantPayoutAmount\":0,\"merchantPayoutAmount\":0.33127500,\"convertedPayout\":{\"paidPrice\":0.55000000,\"iyziCommissionRateAmount\":0.01622500,\"iyziCommissionFee\":0.14750000,\"blockageRateAmountMerchant\":0.05500000,\"blockageRateAmountSubMerchant\":0E-8,\"subMerchantPayoutAmount\":0E-8,\"merchantPayoutAmount\":0.33127500,\"iyziConversionRate\":0,\"iyziConversionRateAmount\":0,\"currency\":\"TRY\"}},{\"itemId\":\"BI103\",\"paymentTransactionId\":\"902\",\"transactionStatus\":2,\"price\":0.2,\"paidPrice\":0.22000000,\"merchantCommissionRate\":10.00000000,\"merchantCommissionRateAmount\":0.02000000,\"iyziCommissionRateAmount\":0.00649000,\"iyziCommissionFee\":0.05900000,\"blockageRate\":10.00000000,\"blockageRateAmountMerchant\":0.02200000,\"blockageRateAmountSubMerchant\":0,\"blockageResolvedDate\":\"2016-06-22 14:52:24\",\"subMerchantPrice\":0,\"subMerchantPayoutRate\":0E-8,\"subMerchantPayoutAmount\":0,\"merchantPayoutAmount\":0.13251000,\"convertedPayout\":{\"paidPrice\":0.22000000,\"iyziCommissionRateAmount\":0.00649000,\"iyziCommissionFee\":0.05900000,\"blockageRateAmountMerchant\":0.02200000,\"blockageRateAmountSubMerchant\":0E-8,\"subMerchantPayoutAmount\":0E-8,\"merchantPayoutAmount\":0.13251000,\"iyziConversionRate\":0,\"iyziConversionRateAmount\":0,\"currency\":\"TRY\"}}]}"
   end
 
   def failed_authorize_response
-    {"status"=>"failure", "errorCode"=>"1000", "errorMessage"=>"Geçersiz imza", "locale"=>"tr", "systemTime"=>1451898355612, "conversationId"=>"shopify_1"}
+    "{\"status\":\"failure\",\"errorCode\":\"1000\",\"errorMessage\":\"Gecersiz imza\",\"locale\":\"tr\",\"systemTime\":1465306093157,\"conversationId\":\"123456789\",\"paymentId\":\"\"}"
   end
 
   def successful_void_response
-    {"status"=>"success", "locale"=>"tr", "systemTime"=>1451901238711, "paymentId"=>"4374", "price"=>0.1}
+    "{\"status\":\"success\",\"locale\":\"tr\",\"systemTime\":1451901238711,\"paymentId\":\"4374\",\"price\":0.1}"
   end
 
   def failed_void_response
-    {"status"=>"failure", "errorCode"=>"5088", "errorMessage"=>"", "locale"=>"tr", "systemTime"=>1451895765449, "conversationId"=>"shopify_1"}
+    "{\"status\":\"failure\",\"errorCode\":\"5002\",\"errorMessage\":\"paymentId g\xC3\xB6nderilmesi zorunludur\",\"locale\":\"tr\",\"systemTime\":1465306093157,\"conversationId\":\"123456789\",\"paymentId\":\"\"}"
   end
-
 end
