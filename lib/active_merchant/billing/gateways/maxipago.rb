@@ -59,6 +59,24 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<merchantKey>)[^<]*(</merchantKey>))i, '\1[FILTERED]\2').
+          gsub(%r((<number>)[^<]*(</number>))i, '\1[FILTERED]\2').
+          gsub(%r((<cvvNumber>)[^<]*(</cvvNumber>))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def commit(action)
