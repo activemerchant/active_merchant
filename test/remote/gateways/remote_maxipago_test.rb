@@ -6,7 +6,7 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
 
     @amount = 1000
     @invalid_amount = 2009
-    @credit_card = credit_card('4111111111111111')
+    @credit_card = credit_card('4111111111111111', verification_value: '444')
     @invalid_card = credit_card('4111111111111111', year: Time.now.year - 1)
 
     @options = {
@@ -90,6 +90,29 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
     refund = @gateway.refund(refund_amount, purchase.authorization, @options)
     assert_failure refund
     assert_equal "The Return amount is greater than the amount that can be returned.", refund.message
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "AUTHORIZED", response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@invalid_card, @options)
+    assert_failure response
+    assert_equal "The transaction has an expired credit card.", response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@gateway.options[:password], clean_transcript)
   end
 
   def test_invalid_login
