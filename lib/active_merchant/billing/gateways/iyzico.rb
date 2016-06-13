@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
         billing_data = options[:billing_address] || options[:address]
         buyer[:id] = options[:customer]
         buyer[:name]= options[:name]
-        buyer[:surname]= options[:name]
+        buyer[:surname]= options[:surname]
         buyer[:identityNumber]= "SHOPIFY_#{options[:name]}"
         buyer[:email] = options[:email]
         unless billing_data.nil?
@@ -194,7 +194,8 @@ module ActiveMerchant #:nodoc:
         request[:installment] = 1
         request[:paymentChannel] ='WEB'
         request[:basketId] = options[:order_id]
-        request[:paymentGroup] ='LISTING'
+        request[:paymentGroup] ='PRODUCT'
+        request[:paymentSource] = "SHOPIFY-ACTIVEMERCHANT-#{ActiveMerchant::VERSION}"
         # create payment card dto
         add_card_data(request, payment)
 

@@ -4,7 +4,7 @@ require 'test_helper'
 class IyzicoTest < Test::Unit::TestCase
   include CommStub
   def setup
-    @gateway = IyzicoGateway.new(api_id: 'mrI3mIMuNwGiIxanQslyJBRYa8nYrCU5', secret: '9lkVluNHBABPw0LIvyn50oYZcrSJ8oNo')
+    @gateway = IyzicoGateway.new(api_id: 'sandbox-aKksNes17V1KPuAA1xw3Y431INO9iU8P', secret: 'sandbox-c5mxNw5RsciXzwCp1Sw9Pm4IZUSweBcM')
     @credit_card = credit_card('5528790000000008')
     @declined_card = credit_card('42424242424242')
     @amount = 0.1
