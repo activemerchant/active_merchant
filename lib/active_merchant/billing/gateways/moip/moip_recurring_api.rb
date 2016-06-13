@@ -105,7 +105,8 @@ module ActiveMerchant #:nodoc:
 
       def cancel_recurring(subscription_code)
         response = Moip::Assinaturas::Subscription.cancel(subscription_code, moip_auth: moip_auth)
-        Response.new(response[:success], nil, response, test: test?)
+        Response.new(response[:success], nil, response, subscription_action: 'cancel',
+          authorization: subscription_code,test: test?)
       end
 
       private

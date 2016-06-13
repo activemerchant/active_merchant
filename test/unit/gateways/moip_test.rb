@@ -111,6 +111,8 @@ class MoipTest < Test::Unit::TestCase
     Moip::Assinaturas::Subscription.expects(:cancel).returns(successful_cancel_recurring_response)
     response = @gateway.cancel_recurring('subscription_code')
     assert_success response
+    assert_equal 'cancel', response.subscription_action
+    assert_equal 'subscription_code', response.authorization
   end
 
   private
