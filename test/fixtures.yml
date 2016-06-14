@@ -539,7 +539,7 @@ openpay:
 opp:
   user_id: '8a8294174b7ecb28014b9699220015cc'
   password: 'sy6KJsT8'
-  entity_id: '8a8294174d0a8edd014d242337942575' 
+  entity_id: '8a8294174d0a8edd014d242337942575'
 
 optimal_payment:
   store_id: test
@@ -959,6 +959,11 @@ swipe_checkout:
   login: 2077103073D8B5
   api_key: f2fe4efd5033edfaed9e4aad319ef4d34536a10eea07f90f182616d7216ae2b8
   region: NZ
+
+# Working credentials, no need to replace
+telr:
+  merchant_id: 16715
+  api_key: WZV7W#gbMVw^kSBk
 
 tns:
   userid: TESTSPREEDLY01
