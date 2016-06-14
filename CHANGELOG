@@ -7,6 +7,7 @@
 * MiGS: Handle IDR currency [curiousepic]
 * Migs: Add support for void [mohsenottello]
 * Jetpay: Support endpoint for Canada [shasum]
+* Telr: Add gateway support [curiousepic]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
