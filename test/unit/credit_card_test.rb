@@ -193,6 +193,7 @@ class CreditCardTest < Test::Unit::TestCase
   def test_should_correctly_identify_card_brand
     assert_equal 'visa',             CreditCard.brand?('4242424242424242')
     assert_equal 'american_express', CreditCard.brand?('341111111111111')
+    (222100..272099).each {|bin| assert_equal 'master', CreditCard.brand?(bin.to_s + '1111111111'), "Failed with BIN #{bin}"}
     assert_nil CreditCard.brand?('')
   end
 
@@ -218,6 +219,19 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal errors[:verification_value], ['should be 4 digits']
 
     card.verification_value = '1234'
+    assert_valid card
+  end
+
+  def test_should_be_valid_when_not_requiring_a_verification_value
+    CreditCard.require_verification_value = true
+    card = credit_card('4242424242424242', :verification_value => nil, :require_verification_value => false)
+    assert_valid card
+
+    card.verification_value = '1234'
+    errors = assert_not_valid card
+    assert_equal errors[:verification_value], ['should be 3 digits']
+
+    card.verification_value = '123'
     assert_valid card
   end
 

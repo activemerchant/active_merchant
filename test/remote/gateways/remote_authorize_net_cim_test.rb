@@ -331,6 +331,29 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.params['payment_profile']['customer_payment_profile_id'] =~ /\d+/, 'The customer_payment_profile_id should be a number'
     assert_equal "XXXX#{@credit_card.last_digits}", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in #{@credit_card.last_digits}"
     assert_equal @profile[:payment_profiles][:customer_type], response.params['payment_profile']['customer_type']
+    assert_equal 'XXXX', response.params['payment_profile']['payment']['credit_card']['expiration_date']
+  end
+
+  def test_successful_get_customer_payment_profile_unmasked_request
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    assert customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
+
+    assert response = @gateway.get_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :customer_payment_profile_id => customer_payment_profile_id,
+      :unmask_expiration_date => true
+    )
+
+    assert response.test?
+    assert_success response
+    assert_nil response.authorization
+    assert response.params['payment_profile']['customer_payment_profile_id'] =~ /\d+/, 'The customer_payment_profile_id should be a number'
+    assert_equal "XXXX#{@credit_card.last_digits}", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in #{@credit_card.last_digits}"
+    assert_equal @profile[:payment_profiles][:customer_type], response.params['payment_profile']['customer_type']
+    assert_equal formatted_expiration_date(@credit_card), response.params['payment_profile']['payment']['credit_card']['expiration_date']
   end
 
   def test_successful_get_customer_shipping_address_request

@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
 
         options[:name] = credit_card.name if options[:name].blank? && credit_card
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
-          add_credit_card(xml, credit_card) if credit_card
+          add_credit_card(xml, credit_card, options) if credit_card
         end
         commit(request, options.merge(:request_type => :recurring))
       end
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
             end
 
             xml.tag! 'Tender' do
-              add_credit_card(xml, credit_card)
+              add_credit_card(xml, credit_card, options)
             end
           end
         end
@@ -187,13 +187,26 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def add_credit_card(xml, credit_card)
+      def add_credit_card(xml, credit_card, options = {})
         xml.tag! 'Card' do
           xml.tag! 'CardType', credit_card_type(credit_card)
           xml.tag! 'CardNum', credit_card.number
           xml.tag! 'ExpDate', expdate(credit_card)
           xml.tag! 'NameOnCard', credit_card.first_name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
+
+          if options[:three_d_secure]
+            three_d_secure = options[:three_d_secure]
+            xml.tag! 'BuyerAuthResult' do
+              xml.tag! 'Status', three_d_secure[:status] unless three_d_secure[:status].blank?
+              xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
+              xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
+              xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
+              xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+              xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+              xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+            end
+          end
 
           if requires_start_date_or_issue_number?(credit_card)
             xml.tag!('ExtData', 'Name' => 'CardStart', 'Value' => startdate(credit_card)) unless credit_card.start_month.blank? || credit_card.start_year.blank?

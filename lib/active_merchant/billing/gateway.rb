@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
     # * <tt>:zip</tt> - The zip or postal code of the customer.
     # * <tt>:phone</tt> - The phone number of the customer.
     #
-    # == Implmenting new gateways
+    # == Implementing new gateways
     #
     # See the {ActiveMerchant Guide to Contributing}[https://github.com/activemerchant/active_merchant/wiki/Contributing]
     #
@@ -57,7 +57,6 @@ module ActiveMerchant #:nodoc:
       include CreditCardFormatting
 
       DEBIT_CARDS = [ :switch, :solo ]
-      CURRENCIES_WITHOUT_FRACTIONS = [ 'BIF', 'BYR', 'CLP', 'CVE', 'DJF', 'GNF', 'HUF', 'ISK', 'JPY', 'KMF', 'KRW', 'PYG', 'RWF', 'TWD', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' ]
 
       CREDIT_DEPRECATION_MESSAGE = "Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead."
       RECURRING_DEPRECATION_MESSAGE = "Recurring functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it."
@@ -91,7 +90,8 @@ module ActiveMerchant #:nodoc:
         :card_declined => 'card_declined',
         :processing_error => 'processing_error',
         :call_issuer => 'call_issuer',
-        :pickup_card => 'pick_up_card'
+        :pickup_card => 'pick_up_card',
+        :config_error => 'config_error'
       }
 
       cattr_reader :implementations
@@ -119,6 +119,9 @@ module ActiveMerchant #:nodoc:
       class_attribute :supported_cardtypes
       self.supported_cardtypes = []
 
+      class_attribute :currencies_without_fractions
+      self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF HUF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+
       class_attribute :homepage_url
       class_attribute :display_name
 
@@ -131,7 +134,7 @@ module ActiveMerchant #:nodoc:
       # The application making the calls to the gateway
       # Useful for things like the PayPal build notation (BN) id fields
       class_attribute :application_id, instance_writer: false
-      self.application_id = 'ActiveMerchant'
+      self.application_id = nil
 
       attr_reader :options
 
@@ -143,10 +146,6 @@ module ActiveMerchant #:nodoc:
       def self.card_brand(source)
         result = source.respond_to?(:brand) ? source.brand : source.type
         result.to_s.downcase
-      end
-
-      def self.non_fractional_currency?(currency)
-        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
       end
 
       def self.supported_countries=(country_codes)
@@ -254,10 +253,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def non_fractional_currency?(currency)
+        self.currencies_without_fractions.include?(currency.to_s)
+      end
+
       def localized_amount(money, currency)
         amount = amount(money)
 
-        return amount unless Gateway.non_fractional_currency?(currency)
+        return amount unless non_fractional_currency?(currency)
 
         if self.money_format == :cents
           sprintf("%.0f", amount.to_f / 100)
@@ -273,6 +276,15 @@ module ActiveMerchant #:nodoc:
       def truncate(value, max_size)
         return nil unless value
         value.to_s[0, max_size]
+      end
+
+      def split_names(full_name)
+        names = (full_name || "").split
+        return [nil, nil] if names.size == 0
+
+        last_name  = names.pop
+        first_name = names.join(" ")
+        [first_name, last_name]
       end
 
       def requires_start_date_or_issue_number?(credit_card)

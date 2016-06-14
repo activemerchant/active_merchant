@@ -12,10 +12,10 @@ module ActiveMerchant #:nodoc:
       base.retry_safe = false
 
       base.class_attribute :open_timeout
-      base.open_timeout = 60
+      base.open_timeout = Connection::OPEN_TIMEOUT
 
       base.class_attribute :read_timeout
-      base.read_timeout = 60
+      base.read_timeout = Connection::READ_TIMEOUT
 
       base.class_attribute :max_retries
       base.max_retries = Connection::MAX_RETRIES

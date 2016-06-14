@@ -91,7 +91,10 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((card_number\\?":\\?")[^"\\]*)i, '\1[FILTERED]').
-          gsub(%r((cvv2\\?":\\?")[^"\\]*)i, '\1[FILTERED]')
+          gsub(%r((cvv2\\?":\\?")\d+[^"\\]*)i, '\1[FILTERED]').
+          gsub(%r((cvv2\\?":)null), '\1[BLANK]').
+          gsub(%r((cvv2\\?":\\?")\\?"), '\1[BLANK]"').
+          gsub(%r((cvv2\\?":\\?")\s+), '\1[BLANK]')
       end
       private
 
@@ -140,7 +143,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         {
           "Content-Type" => "application/json",
-          "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
+          "Authorization" => "Basic " + Base64.strict_encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Openpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Openpay-Client-User-Agent" => user_agent
         }

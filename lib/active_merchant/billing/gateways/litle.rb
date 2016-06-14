@@ -3,7 +3,7 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
-      SCHEMA_VERSION = '8.18'
+      SCHEMA_VERSION = '9.4'
 
       self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
       self.live_url = 'https://payments.litle.com/vap/communicator/online'
@@ -103,13 +103,17 @@ module ActiveMerchant #:nodoc:
         commit(void_type(kind), request)
       end
 
-      def store(creditcard, options = {})
+      def store(payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.registerTokenRequest(transaction_attributes(options)) do
             doc.orderId(truncate(options[:order_id], 24))
-            doc.accountNumber(creditcard.number)
-            doc.cardValidationNum(creditcard.verification_value) if creditcard.verification_value
+            if payment_method.is_a?(String)
+              doc.paypageRegistrationId(payment_method)
+            else
+              doc.accountNumber(payment_method.number)
+              doc.cardValidationNum(payment_method.verification_value) if payment_method.verification_value
+            end
           end
         end
 
@@ -196,6 +200,11 @@ module ActiveMerchant #:nodoc:
             doc.expDate(exp_date(payment_method))
             doc.cardValidationNum(payment_method.verification_value)
           end
+          if payment_method.is_a?(NetworkTokenizationCreditCard)
+            doc.cardholderAuthentication do
+              doc.authenticationValue(payment_method.payment_cryptogram)
+            end
+          end
         end
       end
 
@@ -234,6 +243,8 @@ module ActiveMerchant #:nodoc:
       def add_order_source(doc, payment_method, options)
         if options[:order_source]
           doc.orderSource(options[:order_source])
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :apple_pay
+          doc.orderSource('applepay')
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.orderSource('retail')
         else

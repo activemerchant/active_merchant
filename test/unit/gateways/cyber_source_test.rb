@@ -4,7 +4,7 @@ class CyberSourceTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = CyberSourceGateway.new(
       :login => 'l',
@@ -12,6 +12,7 @@ class CyberSourceTest < Test::Unit::TestCase
     )
 
     @amount = 100
+    @customer_ip = '127.0.0.1'
     @credit_card = credit_card('4111111111111111', :brand => 'visa')
     @declined_card = credit_card('801111111111111', :brand => 'visa')
     @check = check()
@@ -28,6 +29,7 @@ class CyberSourceTest < Test::Unit::TestCase
                },
 
                :email => 'someguy1232@fakeemail.net',
+               :ip => @customer_ip,
                :order_id => '1000',
                :line_items => [
                    {
@@ -72,6 +74,32 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
     assert response.test?
   end
+
+  def test_purchase_includes_customer_ip
+    customer_ip_regexp = /<ipAddress>#{@customer_ip}<\//
+    @gateway.expects(:ssl_post).
+      with(anything, regexp_matches(customer_ip_regexp), anything).
+      returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_includes_mdd_fields
+    stub_comms do
+      @gateway.purchase(100, @credit_card, order_id: "1", mdd_field_2: "CustomValue2", mdd_field_3: "CustomValue3")
+    end.check_request do |endpoint, data, headers|
+      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_includes_mdd_fields
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: "1", mdd_field_2: "CustomValue2", mdd_field_3: "CustomValue3")
+    end.check_request do |endpoint, data, headers|
+      assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
 
   def test_successful_check_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)

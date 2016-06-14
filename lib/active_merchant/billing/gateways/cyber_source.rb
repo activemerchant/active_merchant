@@ -30,10 +30,10 @@ module ActiveMerchant #:nodoc:
     # * The order of the XML elements does matter, make sure to follow the order in
     #   the documentation exactly.
     class CyberSourceGateway < Gateway
-      self.test_url = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
-      self.live_url = 'https://ics2ws.ic3.com/commerce/1.x/transactionProcessor'
+      self.test_url = 'https://ics2wstesta.ic3.com/commerce/1.x/transactionProcessor'
+      self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = "1.109"
+      XSD_VERSION = "1.121"
 
       # visa, master, american_express, discover
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -261,6 +261,7 @@ module ActiveMerchant #:nodoc:
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
         xml.target!
@@ -291,6 +292,7 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_mdd_fields(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
         else
@@ -460,6 +462,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
           xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
           xml.tag! 'email',                 options[:email]
+          xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
         end
@@ -472,6 +475,15 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
           xml.tag!('cvNumber', creditcard.verification_value) unless (@options[:ignore_cvv] || creditcard.verification_value.blank? )
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
+        end
+      end
+
+      def add_mdd_fields(xml, options)
+        xml.tag! 'merchantDefinedData' do
+          (1..20).each do |each|
+            key = "mdd_field_#{each}".to_sym
+            xml.tag!("field#{each}", options[key]) if options[key]
+          end
         end
       end
 
@@ -671,7 +683,11 @@ module ActiveMerchant #:nodoc:
       # Contact CyberSource, make the SOAP request, and parse the reply into a
       # Response object
       def commit(request, options)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
+        begin
+          response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
+        rescue ResponseError => e
+          response = parse(e.response.body)
+        end
 
         success = response[:decision] == "ACCEPT"
         message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]
