@@ -120,7 +120,6 @@ module ActiveMerchant #:nodoc:
       #
       # You must supply an :order_id in the options hash
       def authorize(money, creditcard_or_reference, options = {})
-        requires!(options,  :order_id)
         setup_address_hash(options)
         commit(build_auth_request(money, creditcard_or_reference, options), options )
       end
@@ -139,7 +138,6 @@ module ActiveMerchant #:nodoc:
       # You must supply an order_id in the options hash
       # options[:pinless_debit_card] => true # attempts to process as pinless debit card
       def purchase(money, payment_method_or_reference, options = {})
-        requires!(options, :order_id)
         setup_address_hash(options)
         commit(build_purchase_request(money, payment_method_or_reference, options), options)
       end
@@ -161,7 +159,6 @@ module ActiveMerchant #:nodoc:
 
       # Adds credit to a subscription (stand alone credit).
       def credit(money, reference, options = {})
-        requires!(options, :order_id)
         commit(build_credit_request(money, reference, options), options)
       end
 
@@ -169,7 +166,6 @@ module ActiveMerchant #:nodoc:
       # To charge the card while creating a profile, pass
       # options[:setup_fee] => money
       def store(payment_method, options = {})
-        requires!(options, :order_id)
         setup_address_hash(options)
         commit(build_create_subscription_request(payment_method, options), options)
       end
@@ -442,7 +438,7 @@ module ActiveMerchant #:nodoc:
 
       def add_merchant_data(xml, options)
         xml.tag! 'merchantID', @options[:login]
-        xml.tag! 'merchantReferenceCode', options[:order_id]
+        xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
         xml.tag! 'clientLibrary' ,'Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion',  VERSION
         xml.tag! 'clientEnvironment' , RUBY_PLATFORM

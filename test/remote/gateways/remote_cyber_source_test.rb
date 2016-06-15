@@ -114,7 +114,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.params['totalTaxAmount']
     assert_not_equal "0", response.params['totalTaxAmount']
     assert_success response
-    assert response.test?
   end
 
   def test_successful_purchase
@@ -124,27 +123,30 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_sans_options
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+  end
+
   def test_successful_purchase_with_billing_address_override
     @options[:billing_address] = address
     @options[:email] = 'override@example.com'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert response.test?
   end
 
   def test_successful_pinless_debit_card_puchase
     assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(:pinless_debit_card => true))
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert response.test?
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_equal 'Invalid account number', response.message
     assert_failure response
-    assert response.test?
   end
 
   def test_authorize_and_capture
@@ -187,7 +189,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, response.authorization)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert response.test?
   end
 
   def test_successful_validate_pinless_debit_card
