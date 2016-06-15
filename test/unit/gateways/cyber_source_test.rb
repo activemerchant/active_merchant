@@ -219,14 +219,6 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_requires_error_on_purchase_without_order_id
-    assert_raise(ArgumentError){ @gateway.purchase(@amount, @credit_card, @options.delete_if{|key, val| key == :order_id}) }
-  end
-
-  def test_requires_error_on_authorization_without_order_id
-    assert_raise(ArgumentError){ @gateway.purchase(@amount, @credit_card, @options.delete_if{|key, val| key == :order_id}) }
-  end
-
   def test_requires_error_on_tax_calculation_without_line_items
     assert_raise(ArgumentError){ @gateway.calculate_tax(@credit_card, @options.delete_if{|key, val| key == :line_items})}
   end

@@ -19,7 +19,7 @@
 * Stripe: Interpret string input to store method as token identifier [bizla]
 * MaxiPago: Add verify and scrub [shasum]
 * CyberSource: Assign default with override for billing address and email [shasum]
-
+* CyberSource: Assign default order_id [duff]
 
 == Version 1.59.0 (May 18, 2016)
 * Orbital: Allow AVS parts to be sent sans country [duff]
