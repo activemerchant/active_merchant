@@ -13,8 +13,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :billing_address => address(country: "US", state: "NC"),
-
       :order_id => generate_unique_id,
       :line_items => [
         {
@@ -32,16 +30,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
         }
       ],
       :currency => 'USD',
-      :email => 'someguy1232@fakeemail.net',
       :ignore_avs => 'true',
       :ignore_cvv => 'true'
     }
 
     @subscription_options = {
       :order_id => generate_unique_id,
-      :email => 'someguy1232@fakeemail.net',
       :credit_card => @credit_card,
-      :billing_address => address,
       :subscription => {
         :frequency => "weekly",
         :start_date => Date.today.next_week,
@@ -123,6 +118,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_billing_address_override
+    @options[:billing_address] = address
+    @options[:email] = 'override@example.com'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response

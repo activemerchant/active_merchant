@@ -17,18 +17,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @declined_card = credit_card('801111111111111', :brand => 'visa')
     @check = check()
 
-    @options = { :billing_address => {
-                  :address1 => '1234 My Street',
-                  :address2 => 'Apt 1',
-                  :company => 'Widgets Inc',
-                  :city => 'Ottawa',
-                  :state => 'ON',
-                  :zip => 'K1C2N6',
-                  :country => 'Canada',
-                  :phone => '(555)555-5555'
-               },
-
-               :email => 'someguy1232@fakeemail.net',
+    @options = {
                :ip => @customer_ip,
                :order_id => '1000',
                :line_items => [
@@ -51,10 +40,8 @@ class CyberSourceTest < Test::Unit::TestCase
 
     @subscription_options = {
       :order_id => generate_unique_id,
-      :email => 'someguy1232@fakeemail.net',
       :credit_card => @credit_card,
       :setup_fee => 100,
-      :billing_address => address,
       :subscription => {
         :frequency => "weekly",
         :start_date => Date.today.next_week,
