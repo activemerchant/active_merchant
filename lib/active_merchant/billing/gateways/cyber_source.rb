@@ -252,9 +252,16 @@ module ActiveMerchant #:nodoc:
       private
 
       # Create all address hash key value pairs so that we still function if we
-      # were only provided with one or two of them
+      # were only provided with one or two of them or even none
       def setup_address_hash(options)
-        options[:billing_address] = options[:billing_address] || options[:address] || {}
+        default_address = {
+          :address1 => 'Unspecified',
+          :city => 'Unspecified',
+          :state => 'NC',
+          :zip => '00000',
+          :country => 'US'
+        }
+        options[:billing_address] = options[:billing_address] || options[:address] || default_address
         options[:shipping_address] = options[:shipping_address] || {}
       end
 
@@ -461,7 +468,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'company',               address[:company]                 unless address[:company].blank?
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
           xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
-          xml.tag! 'email',                 options[:email]
+          xml.tag! 'email',                 options[:email] || 'null@cybersource.com'
           xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?

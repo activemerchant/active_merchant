@@ -18,6 +18,7 @@
 * MaxiPago: Allow processor_id override [duff]
 * Stripe: Interpret string input to store method as token identifier [bizla]
 * MaxiPago: Add verify and scrub [shasum]
+* CyberSource: Assign default with override for billing address and email [shasum]
 
 
 == Version 1.59.0 (May 18, 2016)
