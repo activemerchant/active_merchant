@@ -78,11 +78,11 @@ class RemoteIyzicoTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'success', response.params['status']
-    assert_success auth
+    assert_success response
 
-    assert void = @gateway.void(auth.authorization)
+    assert void = @gateway.void(response.authorization)
     assert_success void
   end
 
@@ -90,7 +90,7 @@ class RemoteIyzicoTest < Test::Unit::TestCase
     response = @gateway.void('')
     assert_equal 'failure', response.params['status']
     assert_failure response
-    assert_equal "Geçersiz imza", response.message
+    assert_equal "paymentId gönderilmesi zorunludur", response.message
   end
 
   def test_successful_verify
@@ -103,7 +103,7 @@ class RemoteIyzicoTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_equal 'failure', response.params['status']
     assert_failure response
-    assert_match "Kart numarası geçersizdir", response.message
+    assert_match "Kart limiti yetersiz, yetersiz bakiye", response.message
   end
 
   def test_invalid_login

@@ -24,21 +24,21 @@ module ActiveMerchant #:nodoc:
         request = {}
         create_transaction_parameters(request, money, payment, options)
         create_purchase_pki_string(request)
-        commit(:post, '/payment/iyzipos/auth/ecom', request, options, @purchase_pki_string)
+        commit(:post, '/payment/auth', request, options, @purchase_pki_string)
       end
 
       def authorize(money, payment, options={})
         request = {}
         create_transaction_parameters(request, money, payment, options)
         create_purchase_pki_string(request)
-        commit(:post, '/payment/iyzipos/auth/ecom', request, options, @purchase_pki_string)
+        commit(:post, '/payment/auth', request, options, @purchase_pki_string)
       end
 
       def void(authorization, options={})
         request= {}
         create_cancel_request(request, authorization, options)
         create_void_pki_string(request)
-        commit(:post, '/payment/iyzipos/cancel', request, options, @void_pki_string)
+        commit(:post, '/payment/cancel', request, options, @void_pki_string)
       end
 
       def verify(credit_card, options={})
