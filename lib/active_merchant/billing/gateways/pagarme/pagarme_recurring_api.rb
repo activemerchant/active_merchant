@@ -10,11 +10,10 @@ module ActiveMerchant #:nodoc:
       def recurring(amount, credit_card, options = {})
         requires!(options, :payment_method)
 
-
         params = {
             payment_method: options[:payment_method],
             customer: ensure_customer_created(options),
-            plan: ensure_plan_created(options[:plan_code], amount, options[:plan])
+            plan: options[:plan_code]
         }
 
         if options[:card_hash].present?
@@ -67,7 +66,6 @@ module ActiveMerchant #:nodoc:
         commit(:post, "subscriptions/#{invoice_id}/cancel", params)
       end
 
-
       def invoice(invoice_id)
         response = commit(:get, "transactions/#{invoice_id}", nil)
         Response.new(true, nil, {invoice: invoice_to_response(response.params)})
@@ -113,23 +111,6 @@ module ActiveMerchant #:nodoc:
       def create_customer(customer, address)
         params = customer_params(customer, address)
         PagarMe::Customer.new(params).create.to_hash
-      end
-
-      def ensure_plan_created(plan_code, amount, options)
-        plan_response(PagarMe::Plan.find_by_id(plan_code))
-      rescue
-        create_plan(options, amount)
-      end
-
-      def create_plan(params, amount)
-        requires!(options, :name, :days)
-
-        params = {
-            :name => params[:name],
-            :days => params[:days],
-            :amount => amount,
-        }
-        PagarMe::Plan.new(params).to_hash
       end
 
     end

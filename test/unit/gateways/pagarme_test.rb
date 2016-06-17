@@ -249,83 +249,187 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
 
-  def test_successful_recurring
-    @gateway.expects(:ssl_request).once.returns(successful_recurring_response)
+  # def test_successful_recurring
+  #   @gateway.expects(:ssl_request).once.returns(successful_recurring_response)
+  #
+  #   @options = {
+  #       order_id: '1',
+  #       ip: '127.0.0.1',
+  #       customer: {
+  #           document_number: "94123506518",
+  #           id: "70941",
+  #           :document_number => "18152564000105",
+  #           :name => "nome do cliente",
+  #           :email => "eee@email.com",
+  #           :born_at => 13121988,
+  #           :gender => "M",
+  #           :phone => {
+  #               :ddi => 55,
+  #               :ddd => 11,
+  #               :number => 999887766
+  #           },
+  #           :address => {
+  #               :street => "rua qualquer",
+  #               :complement => "apto",
+  #               :number => 13,
+  #               :district => "pinheiros",
+  #               :city => "sao paulo",
+  #               :state => "SP",
+  #               :zipcode => "05444040",
+  #               :country => "Brasil"
+  #           }
+  #       },
+  #       :card_number => "4901720080344448",
+  #       :card_holder_name => "Jose da Silva",
+  #       :card_expiration_month => "10",
+  #       :card_expiration_year => "21",
+  #       :card_cvv => "314",
+  #       plan_code: 40408,
+  #       payment_method: 'credit_card',
+  #       invoice: '1',
+  #       merchant: 'Richard\'s',
+  #       description: 'Store Purchase',
+  #       email: 'suporte@pagar.me',
+  #       billing_address: address()
+  #       #card_hash: "card_ci6y37hc00030a416wrxsmzyi"
+  #   }
+  #   response = @gateway.recurring(@amount, @credit_card, @options)
+  #
+  #   assert_instance_of Response, response
+  #   #assert_success response
+  #
+  #   assert_equal 'credit_card', response.params["payment_method"]
+  #   assert_equal 'paid', response.params["status"]
+  #   assert_equal 'Transação aprovada', response.message
+  #   assert response.test?
+  # end
+  #
+  # def test_get_invoice
+  #   @gateway.expects(:ssl_request).returns(success_invoice_response)
+  #
+  #   response = @gateway.invoice("502012")
+  #
+  #   assert_instance_of Response, response
+  #   #assert_success response
+  #
+  #   assert_equal 'credit_card', response.params["payment_method"]
+  #   assert_equal 'paid', response.params["action"]
+  #   assert response.test?
+  #
+  # end
+  #
+  #
+  # def test_get_invoices
+  #
+  #   # @gateway.expects(:ssl_post).returns(success_invoice_response)
+  #
+  #   response = @gateway.invoices('58706')
+  #
+  #   puts response.params
+  # end
 
-    @options = {
-        order_id: '1',
-        ip: '127.0.0.1',
-        customer: {
-            document_number: "94123506518",
-            id: "70941",
-            :document_number => "18152564000105",
-            :name => "nome do cliente",
-            :email => "eee@email.com",
-            :born_at => 13121988,
-            :gender => "M",
-            :phone => {
-                :ddi => 55,
-                :ddd => 11,
-                :number => 999887766
-            },
-            :address => {
-                :street => "rua qualquer",
-                :complement => "apto",
-                :number => 13,
-                :district => "pinheiros",
-                :city => "sao paulo",
-                :state => "SP",
-                :zipcode => "05444040",
-                :country => "Brasil"
-            }
-        },
-        :card_number => "4901720080344448",
-        :card_holder_name => "Jose da Silva",
-        :card_expiration_month => "10",
-        :card_expiration_year => "21",
-        :card_cvv => "314",
-        plan_code: 40408,
-        payment_method: 'credit_card',
-        invoice: '1',
-        merchant: 'Richard\'s',
-        description: 'Store Purchase',
-        email: 'suporte@pagar.me',
-        billing_address: address()
-        #card_hash: "card_ci6y37hc00030a416wrxsmzyi"
+  def test_success_find_plan
+    @gateway.expects(:ssl_request).returns(success_plan_response)
+
+    response = @gateway.find_plan(13731)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'Plano Diamond', response.params["name"]
+    assert_equal 30, response.params["days"]
+    assert response.test?
+  end
+
+  def test_failed_find_plan
+    @gateway.expects(:ssl_request).returns(failed_find_plan_response)
+
+    response = @gateway.find_plan(137352)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'not_found', response.params["errors"][0]["type"]
+    assert_equal 'Plan não encontrado', response.params["errors"][0]["message"]
+    assert response.test?
+  end
+
+  def test_success_create_plan
+    @gateway.expects(:ssl_request).returns(success_plan_response)
+
+    params_plan = {
+        name: "Plano Diamond",
+        days: "30"
     }
-    response = @gateway.recurring(@amount, @credit_card, @options)
+
+    response = @gateway.create_plan(params_plan, @amount)
 
     assert_instance_of Response, response
     #assert_success response
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'paid', response.params["status"]
-    assert_equal 'Transação aprovada', response.message
+    assert_equal 'Plano Diamond', response.params["name"]
+    assert_equal 30, response.params["days"]
     assert response.test?
   end
 
-  def test_get_invoice
-    @gateway.expects(:ssl_request).returns(success_invoice_response)
+  def test_failed_create_plan
+    @gateway.expects(:ssl_request).returns(failed_create_plan_response)
 
-    response = @gateway.invoice("502012")
+    params_plan = {}
+
+    response = @gateway.create_plan(params_plan, @amount)
 
     assert_instance_of Response, response
     #assert_success response
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'paid', response.params["action"]
-    assert response.test?
+    assert_equal 'amount', response.params["errors"][0]["parameter_name"]
+    assert_equal 'invalid_parameter', response.params["errors"][0]["type"]
+    assert_equal 'valor está faltando', response.params["errors"][0]["message"]
 
+    assert_equal 'days', response.params["errors"][1]["parameter_name"]
+    assert_equal 'invalid_parameter', response.params["errors"][1]["type"]
+    assert_equal 'número de dias está faltando', response.params["errors"][1]["message"]
+
+    assert_equal 'name', response.params["errors"][2]["parameter_name"]
+    assert_equal 'invalid_parameter', response.params["errors"][2]["type"]
+    assert_equal 'nome está faltando', response.params["errors"][2]["message"]
   end
 
+  def test_success_update_plan
+    @gateway.expects(:ssl_request).returns(success_plan_update_response)
 
-  def test_get_invoices
+    params_plan = {
+        name: "Plano Diamond Platinum",
+        days: 25
+    }
 
- # @gateway.expects(:ssl_post).returns(success_invoice_response)
+    response = @gateway.update_plan(13731, params_plan)
 
-  response = @gateway.invoices('58706')
+    assert_instance_of Response, response
+    #assert_success response
 
-  puts response.params
+    assert_equal 'Plano Diamond Platinum', response.params["name"]
+    assert_equal 25, response.params["days"]
+    assert response.test?
+  end
+
+  def test_failed_update_plan_plan_not_found
+    @gateway.expects(:ssl_request).returns(failed_update_plan_plan_not_found_response)
+
+    params_plan = {
+        name: "Plano Diamond Gold",
+        days: 25
+    }
+
+    response = @gateway.update_plan(1373222, params_plan)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'not_found', response.params["errors"][0]['type']
+    assert_equal nil, response.params["errors"][0]['parameter_name']
+    assert_equal 'Plan not found.', response.params["errors"][0]['message']
+    assert response.test?
   end
 
   # def test_get_payments
@@ -369,6 +473,102 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   private
+
+  def success_plan_update_response
+    <<-SUCCESS_UPDATE_PLAN_RESPONSE
+    {
+        "object": "plan",
+        "id": 13731,
+        "amount": 31000,
+        "days": 25,
+        "name": "Plano Diamond Platinum",
+        "trial_days": 7,
+        "date_created": "2015-03-03T17:31:47.000Z",
+        "payment_methods": [
+            "boleto"
+        ],
+        "color": "gold",
+        "charges": null,
+        "installments": 1
+    }
+    SUCCESS_UPDATE_PLAN_RESPONSE
+  end
+
+  def success_plan_response
+    <<-SUCCESS_PLAN_RESPONSE
+    {
+        "object": "plan",
+        "id": 13731,
+        "amount": 31000,
+        "days": 30,
+        "name": "Plano Diamond",
+        "trial_days": 7,
+        "date_created": "2015-03-03T17:31:47.000Z",
+        "payment_methods": [
+            "boleto"
+        ],
+        "color": "gold",
+        "charges": null,
+        "installments": 1
+    }
+    SUCCESS_PLAN_RESPONSE
+  end
+
+  def failed_find_plan_response
+    <<-FAILED_FIND_PLAN_RESPONSE
+    {
+       "errors":[
+          {
+             "type":"not_found",
+             "parameter_name":null,
+             "message":"Plan não encontrado"
+          }
+       ],
+       "url":"/plans/34234",
+       "method":"get"
+    }
+    FAILED_FIND_PLAN_RESPONSE
+  end
+
+  def failed_update_plan_plan_not_found_response
+    <<-FAILED_FIND_PLAN_RESPONSE
+    {
+       "errors":[
+          {
+             "type":"not_found",
+             "parameter_name":null,
+             "message":"Plan not found."
+          }
+       ]
+    }
+    FAILED_FIND_PLAN_RESPONSE
+  end
+
+  def failed_create_plan_response
+    <<-FAILED_FIND_PLAN_RESPONSE
+    {
+       "errors":[
+          {
+             "parameter_name":"amount",
+             "type":"invalid_parameter",
+             "message":"valor está faltando"
+          },
+          {
+             "parameter_name":"days",
+             "type":"invalid_parameter",
+             "message":"número de dias está faltando"
+          },
+          {
+             "parameter_name":"name",
+             "type":"invalid_parameter",
+             "message":"nome está faltando"
+          }
+       ],
+       "url":"/plans",
+       "method":"post"
+    }
+    FAILED_FIND_PLAN_RESPONSE
+  end
 
   def success_invoice_response
     <<-SUCCESS_INVOICE_RESPONSE

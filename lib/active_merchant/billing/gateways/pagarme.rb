@@ -77,6 +77,30 @@ module ActiveMerchant #:nodoc:
         commit(:post, "transactions/#{authorization}/refund", post)
       end
 
+      def create_plan(params, amount)
+        params = plan_params(params, amount)
+
+        commit(:post, "plans", params)
+      end
+
+      def find_plan(plan_code)
+        commit(:get, "plans/#{plan_code}", nil)
+      end
+
+      def update_plan(plan_code, params)
+        plan = {}
+
+        if params.has_key?('name')
+          plan.name = params[:name]
+        end
+
+        if params.has_key?('trial_days')
+          plan.trial_days = params[:trial_days]
+        end
+
+        commit(:put, "plans/#{plan_code}", plan)
+      end
+
       def verify(payment_method, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(127, payment_method, options) }
