@@ -38,6 +38,12 @@ module ActiveMerchant #:nodoc:
             'boleto' => 'boleto'
         }
 
+        INTERVAL_MAP = {
+          'monthly' => ['MONTH', 1],
+          'quarterly' => ['MONTH', 3],
+          'semesterly' => ['MONTH', 6],
+          'yearly' => ['YEAR', 1]
+        }
 
       end
     end

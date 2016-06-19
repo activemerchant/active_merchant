@@ -77,28 +77,18 @@ module ActiveMerchant #:nodoc:
         commit(:post, "transactions/#{authorization}/refund", post)
       end
 
-      def create_plan(params, amount)
-        params = plan_params(params, amount)
-
-        commit(:post, "plans", params)
+      def create_plan(params)
+        commit(:post, "plans", plan_params(params))
       end
 
       def find_plan(plan_code)
         commit(:get, "plans/#{plan_code}", nil)
       end
 
-      def update_plan(plan_code, params)
-        plan = {}
+      def update_plan(params)
+        plan_code = params[:plan_code]
 
-        if params.has_key?('name')
-          plan.name = params[:name]
-        end
-
-        if params.has_key?('trial_days')
-          plan.trial_days = params[:trial_days]
-        end
-
-        commit(:put, "plans/#{plan_code}", plan)
+        commit(:put, "plans/#{plan_code}", plan_params(params))
       end
 
       def verify(payment_method, options={})
@@ -206,7 +196,8 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: authorization_from(response),
           test: test?,
-          error_code: error_code_from(response)
+          error_code: error_code_from(response),
+          plan_code: plan_code_from(response)
         )
       end
 
@@ -260,6 +251,10 @@ module ActiveMerchant #:nodoc:
           msg = json_error(response)
           msg["errors"][0]["message"]
         end
+      end
+
+      def plan_code_from(response)
+         response["object"] == "plan" && response["id"] || nil
       end
 
       def authorization_from(response)

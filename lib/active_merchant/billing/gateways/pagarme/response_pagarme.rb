@@ -268,31 +268,46 @@ module ActiveMerchant #:nodoc:
 
         end
 
-        def plan_params(params, amount)
-          
+        def plan_params(params)
+          unit, length, days = INTERVAL_MAP[params[:period]]
+
           plan_params = {
-              :name => params[:name],
-              :days => params[:days],
-              :amount => amount,
+              :name => "ONE INVOICE FOR #{length} #{unit} #{params[:plan_code]}",
           }
 
-          if params.has_key?('trial_days')
-            plan_params[:trial_days] = params[:trial_days]
+          if params.key?(:name)
+            plan_params[:name] = params[:name]
           end
 
-          if params.has_key?('payment_methods')
+          if params.key?(:price)
+            plan_params[:amount] = params[:price]
+          end
+
+          if params.key?(:amount)
+            plan_params[:amount] = params[:price]
+          end
+
+          if params.key?(:days)
+            plan_params[:days] = params[:days]
+          end
+
+          if params.key?(:trials)
+            plan_params[:trial_days] = params[:trials]
+          end
+
+          if params.key?(:payment_methods)
             plan_params[:payment_methods] = params[:payment_methods]
           end
 
-          if params.has_key?('color')
+          if params.key?(:color)
             plan_params[:color] = params[:color]
           end
 
-          if params.has_key?('charges')
-            plan_params[:charges] = params[:charges]
+          if params.key?(:cycles)
+            plan_params[:charges] = params[:cycles]
           end
 
-          if params.has_key?('installments')
+          if params.key?(:installments)
             plan_params[:installments] = params[:installments]
           end
 

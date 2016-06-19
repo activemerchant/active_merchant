@@ -196,19 +196,6 @@ class RemotePagarmeTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:api_key], transcript)
   end
 
-  # def test_successful_recurring
-  #
-  #   response = @gateway.recurring(@amount, @credit_card, @options_recurring)
-  #
-  #   assert_instance_of Response, response
-  #   assert_success response
-  #
-  #   assert_equal 'credit_card', response.params["payment_method"]
-  #   assert_equal 'paid', response.params["status"]
-  #   assert_equal 'Transação aprovada', response.message
-  #   assert response.test?
-  # end
-  #
   def test_get_invoice
     response = @gateway.invoice("502012")
 
@@ -347,6 +334,123 @@ class RemotePagarmeTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal 'Assinatura já cancelada.', response.params['errors'][0]['message']
+  end
+
+
+  def test_success_find_plan
+    response = @gateway.find_plan(45052)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal "ONE INVOICE FOR 1 MONTH ", response.params["name"]
+    assert_equal 30, response.params["days"]
+    assert_equal 45052, response.plan_code
+
+    assert response.test?
+  end
+
+  # verificar como tratar isso
+  # def test_failed_find_plan_on_nil_param
+  #   response = @gateway.find_plan(nil)
+  #
+  #   assert_instance_of Response, response
+  #   #assert_success response
+  #
+  #   assert_equal 'internal_error', response.params["errors"][0]["type"]
+  #   assert_equal 'Internal server error.', response.params["errors"][0]["message"]
+  #   assert_equal nil, response.plan_code
+  #   assert response.test?
+  #
+  # end
+
+  def test_failed_find_plan_on_plan_not_exists
+    response = @gateway.find_plan(137352)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'not_found', response.params["errors"][0]["type"]
+    assert_equal 'Plan não encontrado', response.params["errors"][0]["message"]
+    assert_equal nil, response.plan_code
+    assert response.test?
+  end
+
+  def test_success_create_plan
+    params_plan = {
+        days: "30",
+        price: @amount,
+        period: 'monthly'
+    }
+
+    response = @gateway.create_plan(params_plan)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'ONE INVOICE FOR 1 MONTH ', response.params["name"]
+    assert_equal 30, response.params["days"]
+    assert_not_nil response.plan_code
+    assert response.test?
+  end
+
+  def test_failed_create_plan
+    params_plan = {}
+
+    response = @gateway.create_plan(params_plan)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'amount', response.params["errors"][0]["parameter_name"]
+    assert_equal 'invalid_parameter', response.params["errors"][0]["type"]
+    assert_equal 'valor está faltando', response.params["errors"][0]["message"]
+
+    assert_equal 'days', response.params["errors"][1]["parameter_name"]
+    assert_equal 'invalid_parameter', response.params["errors"][1]["type"]
+    assert_equal 'número de dias está faltando', response.params["errors"][1]["message"]
+  end
+
+  def test_success_update_plan
+
+    params_plan = {
+        name: "Plano Diamond Platinum",
+        trials: 1,
+        plan_code: 45053
+    }
+
+    response = @gateway.update_plan(params_plan)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'Plano Diamond Platinum', response.params["name"]
+    assert_equal 1, response.params["trial_days"]
+    assert_not_nil response.plan_code
+    assert_equal 45053, response.plan_code
+
+    assert response.test?
+  end
+
+  def test_failed_update_plan_plan_not_found
+
+    params_plan = {
+        name: "Plano Diamond Gold",
+        trials: 25,
+        plan_code: 1373222
+    }
+
+    response = @gateway.update_plan(params_plan)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'not_found', response.params["errors"][0]['type']
+    assert_equal 'Plan not found.', response.params["errors"][0]['message']
+    assert_equal nil, response.params["errors"][0]['parameter_name']
+    assert_equal nil, response.plan_code
+
+    assert response.test?
   end
 
 

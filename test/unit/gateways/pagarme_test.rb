@@ -341,7 +341,21 @@ class PagarmeTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_failed_find_plan
+  # verificar esse cara
+  # def test_failed_find_plan_on_nil_param
+  #   @gateway.expects(:ssl_request).returns(failed_find_plan_response_on_nil_param)
+  #
+  #   response = @gateway.find_plan(nil)
+  #
+  #   assert_instance_of Response, response
+  #   #assert_success response
+  #
+  #   assert_equal 'internal_error', response.params["errors"][0]["type"]
+  #   assert_equal 'Internal server error.', response.params["errors"][0]["message"]
+  #   assert response.test?
+  # end
+
+  def test_failed_find_plan_on_plan_not_exists
     @gateway.expects(:ssl_request).returns(failed_find_plan_response)
 
     response = @gateway.find_plan(137352)
@@ -359,10 +373,11 @@ class PagarmeTest < Test::Unit::TestCase
 
     params_plan = {
         name: "Plano Diamond",
-        days: "30"
+        days: "30",
+        price: @amount
     }
 
-    response = @gateway.create_plan(params_plan, @amount)
+    response = @gateway.create_plan(params_plan)
 
     assert_instance_of Response, response
     #assert_success response
@@ -377,7 +392,7 @@ class PagarmeTest < Test::Unit::TestCase
 
     params_plan = {}
 
-    response = @gateway.create_plan(params_plan, @amount)
+    response = @gateway.create_plan(params_plan)
 
     assert_instance_of Response, response
     #assert_success response
@@ -400,10 +415,11 @@ class PagarmeTest < Test::Unit::TestCase
 
     params_plan = {
         name: "Plano Diamond Platinum",
-        days: 25
+        days: 25,
+        plan_code: 13731
     }
 
-    response = @gateway.update_plan(13731, params_plan)
+    response = @gateway.update_plan(params_plan)
 
     assert_instance_of Response, response
     #assert_success response
@@ -418,17 +434,18 @@ class PagarmeTest < Test::Unit::TestCase
 
     params_plan = {
         name: "Plano Diamond Gold",
-        days: 25
+        days: 25,
+        plan_code: 1373222
     }
 
-    response = @gateway.update_plan(1373222, params_plan)
+    response = @gateway.update_plan(params_plan)
 
     assert_instance_of Response, response
     #assert_success response
 
     assert_equal 'not_found', response.params["errors"][0]['type']
-    assert_equal nil, response.params["errors"][0]['parameter_name']
     assert_equal 'Plan not found.', response.params["errors"][0]['message']
+    assert_equal nil, response.params["errors"][0]['parameter_name']
     assert response.test?
   end
 
@@ -528,6 +545,22 @@ class PagarmeTest < Test::Unit::TestCase
        "method":"get"
     }
     FAILED_FIND_PLAN_RESPONSE
+  end
+
+  def failed_find_plan_response_on_nil_param
+    <<-FAILED_FIND_PLAN_RESPONSE_ON_NIL_PARAM
+    {
+       "errors":[
+          {
+             "type":"internal_error",
+             "parameter_name":null,
+             "message":"Internal server error."
+          }
+       ],
+       "url":"/plans/nil",
+       "method":"get"
+    }
+    FAILED_FIND_PLAN_RESPONSE_ON_NIL_PARAM
   end
 
   def failed_update_plan_plan_not_found_response
