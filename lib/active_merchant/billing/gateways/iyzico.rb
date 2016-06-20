@@ -228,24 +228,39 @@ module ActiveMerchant #:nodoc:
           @request_string = request_string
         end
 
-        def append_super(super_request_string)
-          unless super_request_string.nil?
-
-            s = super_request_string[1..-2]
-            if s.length > 0
-              result = @request_string + s
-              result << ','
-            end
-            @request_string = result
-          end
-          self
-        end
-
         def append(key, value = nil)
           unless value.nil?
             append_key_value(key, value)
           end
           self
+        end
+
+        def append_price(key, value = nil)
+          unless value.nil?
+            append_key_value(key, format_price(value))
+          end
+          self
+        end
+
+        def format_price(price)
+          unless price.include? '.'
+            price = price+'.0'
+          end
+          sub_str_index = 0
+          price_reversed = price.reverse
+          i=0
+          while i < price.size do
+            if price_reversed[i] == '0'
+              sub_str_index = i + 1
+            elsif price_reversed[i] == '.'
+              price_reversed = '0' + price_reversed
+              break
+            else
+              break
+            end
+            i+=1
+          end
+          (price_reversed[sub_str_index..-1]).reverse
         end
 
         def append_array(key, array = nil)
@@ -353,7 +368,7 @@ module ActiveMerchant #:nodoc:
             request.each do |item|
               item_pki = PkiBuilder.new.
                   append(:id, item[:id]).
-                  append(:price, item[:price]).
+                  append_price(:price, item[:price].to_s).
                   append(:name, item[:name]).
                   append(:category1, item[:category1]).
                   append(:category2, item[:category2]).
@@ -373,8 +388,8 @@ module ActiveMerchant #:nodoc:
         @purchase_pki_string = PkiBuilder.new.
             append(:locale, params[:locale]).
             append(:conversationId, params[:conversationId]).
-            append(:price, params[:price]).
-            append(:paidPrice, params[:paidPrice]).
+            append_price(:price, params[:price].to_s).
+            append_price(:paidPrice, params[:paidPrice].to_s).
             append(:installment, params[:installment]).
             append(:paymentChannel, params[:paymentChannel]).
             append(:basketId, params[:basketId]).
