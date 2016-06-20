@@ -137,6 +137,23 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_without_decision_manager
+    @options[:decision_manager_enabled] = 'false'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_decision_manager_profile
+    @options[:decision_manager_enabled] = 'true'
+    @options[:decision_manager_profile] = 'Regular'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
   def test_successful_pinless_debit_card_puchase
     assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(:pinless_debit_card => true))
     assert_equal 'Successful transaction', response.message
