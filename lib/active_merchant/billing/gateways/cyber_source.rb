@@ -264,6 +264,7 @@ module ActiveMerchant #:nodoc:
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
@@ -295,6 +296,7 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
@@ -478,6 +480,13 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
           xml.tag!('cvNumber', creditcard.verification_value) unless (@options[:ignore_cvv] || creditcard.verification_value.blank? )
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
+        end
+      end
+
+      def add_decision_manager_fields(xml, options)
+        xml.tag! 'decisionManager' do
+          xml.tag! 'enabled', options[:decision_manager_enabled] if options[:decision_manager_enabled]
+          xml.tag! 'profile', options[:decision_manager_profile] if options[:decision_manager_profile]
         end
       end
 

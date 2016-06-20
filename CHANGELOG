@@ -21,6 +21,7 @@
 * CyberSource: Assign default with override for billing address and email [shasum]
 * CyberSource: Assign default order_id [duff]
 * TNS: Support asia_pacific endpoint [curiousepic]
+* CyberSource: Add decision manager optional fields [shasum]
 
 == Version 1.59.0 (May 18, 2016)
 * Orbital: Allow AVS parts to be sent sans country [duff]
