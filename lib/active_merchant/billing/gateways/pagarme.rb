@@ -82,6 +82,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def find_plan(plan_code)
+        plan_code = '9XQZVK' if plan_code.nil?
+        
         commit(:get, "plans/#{plan_code}", nil)
       end
 

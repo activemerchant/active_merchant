@@ -28,31 +28,8 @@ module ActiveMerchant #:nodoc:
       def update(invoice_id, options)
         requires!(options, :payment_method)
 
-        params = {}
-
-        if options[:payment_method].present?
-          params[:payment_method] = options[:payment_method]
-        end
-
-        if options[:plan_id].present?
-          params[:plan_id] = options[:plan_id]
-        end
-
-        if options[:card_id].present?
-          params[:card_id] = options[:card_id]
-        end
-
-        if options[:card_hash].present?
-          params[:card_hash] = options[:card_hash]
-        end
-
-        if options[:card_number].present?
-          params[:card_number] = options[:card_number]
-        end
-
-        if options[:card_holder_name].present?
-          params[:card_holder_name] = options[:card_holder_name]
-        end
+        acceptable_options = %i(payment_method plan_id card_id card_hash card_number card_holder_name)
+        params = options.select { |k,v| acceptable_options.include?(k) && v.present? }
 
         if options[:card_expiration_date].present? && expiration_date(options[:card_expiration_date])
           params[:card_expiration_date] = options[:card_expiration_date]
@@ -61,7 +38,7 @@ module ActiveMerchant #:nodoc:
         commit(:put, "subscriptions/#{invoice_id}", params)
       end
 
-      def cancel(invoice_id)
+      def cancel_subscription(invoice_id)
         params = {}
         commit(:post, "subscriptions/#{invoice_id}/cancel", params)
       end

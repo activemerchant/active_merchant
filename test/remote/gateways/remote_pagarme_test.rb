@@ -54,8 +54,8 @@ class RemotePagarmeTest < Test::Unit::TestCase
         :card_expiration_month => "10",
         :card_expiration_year => "21",
         :card_cvv => "314",
-        plan_code: 40408,
-        payment_method: 'boleto',
+        plan_code: 41682,
+        payment_method: 'credit_card',
         invoice: '1',
         merchant: 'Richard\'s',
         description: 'Store Purchase',
@@ -63,6 +63,18 @@ class RemotePagarmeTest < Test::Unit::TestCase
         billing_address: address(),
         #card_hash: "card_ciovmgj16000e3w6e879dy79m"
     }
+  end
+
+  def test_successful_recurring
+    response = @gateway.recurring(@amount, @credit_card, @options_recurring)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'credit_card', response.params["payment_method"]
+    assert_equal 'paid', response.params["status"]
+    assert_equal 'Transação aprovada', response.message
+    assert response.test?
   end
 
   def test_successful_purchase
@@ -318,7 +330,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
 
   # # só da pra testar uma vez devido ir na api e voltar.
   # def test_cancel
-  #   response = @gateway.cancel(58709)
+  #   response = @gateway.cancel_subscription(58709)
   #   assert_instance_of Response, response
   #   assert_success response
   #
@@ -329,7 +341,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
   #
 
   def test_cancel_already_canceled
-    response = @gateway.cancel(58163)
+    response = @gateway.cancel_subscription(58163)
     assert_instance_of Response, response
     assert_failure response
 

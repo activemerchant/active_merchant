@@ -341,19 +341,18 @@ class PagarmeTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  # verificar esse cara
-  # def test_failed_find_plan_on_nil_param
-  #   @gateway.expects(:ssl_request).returns(failed_find_plan_response_on_nil_param)
-  #
-  #   response = @gateway.find_plan(nil)
-  #
-  #   assert_instance_of Response, response
-  #   #assert_success response
-  #
-  #   assert_equal 'internal_error', response.params["errors"][0]["type"]
-  #   assert_equal 'Internal server error.', response.params["errors"][0]["message"]
-  #   assert response.test?
-  # end
+  def test_failed_find_plan_on_nil_param
+    @gateway.expects(:ssl_request).returns(failed_find_plan_response_on_nil_param)
+
+    response = @gateway.find_plan(nil)
+
+    assert_instance_of Response, response
+    #assert_success response
+
+    assert_equal 'internal_error', response.params["errors"][0]["type"]
+    assert_equal 'Internal server error.', response.params["errors"][0]["message"]
+    assert response.test?
+  end
 
   def test_failed_find_plan_on_plan_not_exists
     @gateway.expects(:ssl_request).returns(failed_find_plan_response)
