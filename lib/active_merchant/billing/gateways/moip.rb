@@ -55,11 +55,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def update_plan(params)
-        response = commit(:put, '/assinaturas/v1/plans', plan_params(params))
-
-        if response[:success]
-          find_plan(params[:plan_code])
-        end
+        commit(:put, '/assinaturas/v1/plans', plan_params(params))
       end
 
       def find_plan(plan_code)
