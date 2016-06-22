@@ -23,11 +23,11 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
-        requires!(options, :api_key)
-        @api_key = options[:api_key]
-        @pagarme_service = PagarmeService.new(@api_key)
+        requires!(options, :username)
+        @username = options[:username]
+        @pagarme_service = PagarmeService.new(@username)
 
-        PagarMe.api_key = @api_key
+        PagarMe.api_key = @username
         super
       end
 
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
 
       def find_plan(plan_code)
         plan_code = '9XQZVK' if plan_code.nil?
-        
+
         commit(:get, "plans/#{plan_code}", nil)
       end
 
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         {
-          "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":x").strip,
+          "Authorization" => "Basic " + Base64.encode64(@username.to_s + ":x").strip,
           "User-Agent" => "Pagar.me/1 ActiveMerchant/#{ActiveMerchant::VERSION}",
           "Accept-Encoding" => "deflate"
         }
@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?()
-        @api_key.start_with?("ak_test")
+        @username.start_with?("ak_test")
       end
 
       def error_code_from(response)

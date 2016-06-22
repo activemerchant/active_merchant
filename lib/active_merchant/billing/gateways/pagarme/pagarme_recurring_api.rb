@@ -11,9 +11,9 @@ module ActiveMerchant #:nodoc:
         requires!(options, :payment_method)
 
         params = {
-            payment_method: options[:payment_method],
-            customer: ensure_customer_created(options),
-            plan: options[:plan_code]
+          payment_method: options[:payment_method],
+          customer: ensure_customer_created(options),
+          plan_id: options[:plan_code]
         }
 
         if options[:card_hash].present?
@@ -22,7 +22,15 @@ module ActiveMerchant #:nodoc:
           add_credit_card(params, credit_card)
         end
 
-        commit(:post, 'subscriptions', params)
+        response = commit(:post, 'subscriptions', params)
+
+        Response.new(
+          response.success?,
+          response.message,
+          subscription_to_response(response.params),
+          payment_action: set_payment_action(response),
+          test: response.test?
+        )
       end
 
       def update(invoice_id, options)
@@ -66,10 +74,14 @@ module ActiveMerchant #:nodoc:
 
       def subscription_details(subscription_code)
         response = PagarMe::Subscription.find_by_id(subscription_code)
-        Response.new(true, nil, subscription_response(response))
+        Response.new(true, nil, subscription_to_response(response))
       end
 
       private
+
+      def set_payment_action(response)
+        response.params.key?('current_transaction') && !response.params['current_transaction'].empty?
+      end
 
       def expiration_date(date)
         if /((1[0-2]|0[1-9])([0-9]){2})/ =~ date

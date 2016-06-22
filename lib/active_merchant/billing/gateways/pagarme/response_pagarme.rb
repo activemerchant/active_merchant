@@ -196,74 +196,74 @@ module ActiveMerchant #:nodoc:
           return {} unless response
 
           {
-              object: response.object,
+              object: response['object'],
               plan: plan_response(response),
-              id: response.id,
+              id: response['id'],
               current_transaction: transaction_response_subscription(response),
-              postback_url: response.postback_url,
-              payment_method: response.payment_method,
-              current_period_start: response.current_period_start,
-              current_period_end: response.current_period_end,
-              charges: response.charges,
-              action: SUBSCRIPTION_STATUS[response.status],
-              created_at: response.date_created,
+              postback_url: response['postback_url'],
+              payment_method: response['payment_method'],
+              current_period_start: response['current_period_start'],
+              current_period_end: response['current_period_end'],
+              charges: response['charges'],
+              action: SUBSCRIPTION_STATUS[response['status']],
+              created_at: response['date_created'],
               phone: phone_response_invoice(response),
               address: address_response_invoice(response),
               customer: customer_response_invoice(response),
               card: card_response_invoice(response),
-              metadata: default_object_if_empty(response.metadata),
+              metadata: default_object_if_empty(response['metadata']),
           }
 
         end
 
         def transaction_response_subscription(response)
-          return {} unless response.current_transaction
+          return {} unless response['current_transaction']
 
           {
-              object: response.current_transaction.object,
-              status: INVOICE_STATUS_MAP[response.current_transaction.status],
-              refuse_reason: response.current_transaction.refuse_reason,
-              status_reason: response.current_transaction.status_reason,
-              acquirer_response_code: response.current_transaction.acquirer_response_code,
-              acquirer_name: response.current_transaction.acquirer_name,
-              authorization_code: response.current_transaction.authorization_code,
-              soft_descriptor: response.current_transaction.soft_descriptor,
-              tid: response.current_transaction.tid,
-              nsu: response.current_transaction.nsu,
-              created_at: response.current_transaction.date_created,
-              updated_at: response.current_transaction.date_updated,
-              amount: response.current_transaction.amount,
-              installments: response.current_transaction.installments,
-              id: response.current_transaction.id,
-              cost: response.current_transaction.cost,
-              postback_url: response.current_transaction.postback_url,
-              payment_method: response.current_transaction.payment_method,
-              antifraud_score: response.current_transaction.antifraud_score,
-              boleto_url: response.current_transaction.boleto_url,
-              boleto_barcode: response.current_transaction.boleto_barcode,
-              boleto_expiration_date: response.current_transaction.boleto_expiration_date,
-              referer: response.current_transaction.referer,
-              ip: response.current_transaction.ip,
-              subscription_id: response.current_transaction.subscription_id,
-              metadata: default_object_if_empty(response.current_transaction.metadata),
+              object: response['current_transaction']['object'],
+              status: INVOICE_STATUS_MAP[response['current_transaction']['status']],
+              refuse_reason: response['current_transaction']['refuse_reason'],
+              status_reason: response['current_transaction']['status_reason'],
+              acquirer_response_code: response['current_transaction']['acquirer_response_code'],
+              acquirer_name: response['current_transaction']['acquirer_name'],
+              authorization_code: response['current_transaction']['authorization_code'],
+              soft_descriptor: response['current_transaction']['soft_descriptor'],
+              tid: response['current_transaction']['tid'],
+              nsu: response['current_transaction']['nsu'],
+              created_at: response['current_transaction']['date_created'],
+              updated_at: response['current_transaction']['date_updated'],
+              amount: response['current_transaction']['amount'],
+              installments: response['current_transaction']['installments'],
+              id: response['current_transaction']['id'],
+              cost: response['current_transaction']['cost'],
+              postback_url: response['current_transaction']['postback_url'],
+              payment_method: response['current_transaction']['payment_method'],
+              antifraud_score: response['current_transaction']['antifraud_score'],
+              boleto_url: response['current_transaction']['boleto_url'],
+              boleto_barcode: response['current_transaction']['boleto_barcode'],
+              boleto_expiration_date: response['current_transaction']['boleto_expiration_date'],
+              referer: response['current_transaction']['referer'],
+              ip: response['current_transaction']['ip'],
+              subscription_id: response['current_transaction']['subscription_id'],
+              metadata: default_object_if_empty(response['current_transaction']['metadata']),
           }
         end
 
         def plan_response(response)
-          return {} unless response.plan
+          return {} unless response['plan']
 
           {
-              object: response.plan.object,
-              id: response.plan.id,
-              amount: response.plan.amount,
-              days: response.plan.days,
-              name: response.plan.name,
-              trial_days: response.plan.trial_days,
-              created_at: response.plan.date_created,
-              payment_methods: response.plan.payment_methods,
-              color: response.plan.color,
-              charges: response.plan.charges,
-              installments: response.plan.installments
+              object: response['plan']['object'],
+              id: response['plan']['id'],
+              amount: response['plan']['amount'],
+              days: response['plan']['days'],
+              name: response['plan']['name'],
+              trial_days: response['plan']['trial_days'],
+              created_at: response['plan']['date_created'],
+              payment_methods: response['plan']['payment_methods'],
+              color: response['plan']['color'],
+              charges: response['plan']['charges'],
+              installments: response['plan']['installments']
           }
 
         end
