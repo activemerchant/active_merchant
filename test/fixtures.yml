@@ -532,6 +532,10 @@ orbital_gateway:
   password: PASSWORD
   merchant_id: MERCHANTID
 
+ # Working credentials, no need to replace
+pagarme:
+  username: 'ak_test_MVaWkL5h7ToJYVFSlo8QUOQHXagIfh'
+
 # Working credentials, no need to replace
 pago_facil:
   branch_id: 60f961360ca187d533d5adba7d969d6334771370

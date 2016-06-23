@@ -1,60 +1,11 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module MoipRecurringApi #:nodoc:
-      INTERVAL_MAP = {
-        'monthly' => ['MONTH', 1],
-        'quarterly' => ['MONTH', 3],
-        'semesterly' => ['MONTH', 6],
-        'yearly' => ['YEAR', 1]
-      }
-
-      INVOICE_TO_SUBSCRIPTION_STATUS_MAP = {
-        1 => :process,
-        2 => :process,
-        3 => :confirm,
-        4 => :canceled,
-        5 => :process
-      }
-
-      SUBSCRIPTION_STATUS_MAP = {
-        'active'    => :confirm,
-        'suspended' => :cancel,
-        'expired'   => :process,
-        'overdue'   => :process,
-        'canceled'  => :cancel,
-        'trial'     => :no_wait_process
-      }
-
-      INVOICE_STATUS_MAP = {
-        1 => :open,
-        2 => :wait_confirmation,
-        3 => :confirm,
-        4 => :not_pay,
-        5 => :expire
-      }
-
-      PAYMENT_STATUS_MAP = {
-        1 => :authorize,
-        2 => :initiate,
-        3 => :wait_boleto,
-        4 => :confirm,
-        5 => :cancel,
-        6 => :wait_analysis,
-        7 => :reverse,
-        9 => :refund,
-        10 => :wait_boleto
-      }
-
-      PAYMENT_METHOD_MAP = {
-        1 => 'credit_card',
-        2 => 'boleto'
-      }
 
       def recurring(amount, credit_card, options = {})
         moip_plan_code = "PLAN-CODE-#{options[:subscription][:plan_code]}"
 
         cust = ensure_customer_created(options, credit_card)
-        plan = ensure_plan_created(moip_plan_code, amount, options)
 
         params = {
           code: options[:transaction_id],
@@ -67,9 +18,9 @@ module ActiveMerchant #:nodoc:
 
         if resp[:success]
           Response.new(resp[:success], resp[:subscription][:message],
-            resp, test: test?, authorization: resp[:subscription][:code],
-            subscription_action: subscription_action_from(resp),
-            next_charge_at: next_charge_at(resp))
+          resp, test: test?, authorization: resp[:subscription][:code],
+          subscription_action: subscription_action_from(resp),
+          next_charge_at: next_charge_at(resp))
         else
           Response.new(resp[:success], resp[:message], resp)
         end
@@ -98,9 +49,9 @@ module ActiveMerchant #:nodoc:
       def subscription_details(subscription_code)
         response = Moip::Assinaturas::Subscription.details(subscription_code, moip_auth: moip_auth)
         Response.new(response[:success], nil, response,
-                     test: test?,
-                     subscription_action: SUBSCRIPTION_STATUS_MAP[response[:subscription][:status].downcase],
-                     next_charge_at: next_invoice_date(response[:subscription][:next_invoice_date]))
+        test: test?,
+        subscription_action: SUBSCRIPTION_STATUS_MAP[response[:subscription][:status].downcase],
+        next_charge_at: next_invoice_date(response[:subscription][:next_invoice_date]))
       end
 
       def cancel_recurring(subscription_code)
@@ -117,23 +68,11 @@ module ActiveMerchant #:nodoc:
 
       def ensure_customer_created(options, credit_card)
         return if Moip::Assinaturas::Customer.details(customer_code(options),
-                                                      moip_auth: moip_auth)[:success]
+        moip_auth: moip_auth)[:success]
 
         create_customer(options[:customer], options[:address], credit_card)
       rescue
         create_customer(options[:customer], options[:address], credit_card)
-      end
-
-      def ensure_plan_created(moip_plan_code, amount, options)
-        plan = Moip::Assinaturas::Plan.details(moip_plan_code, moip_auth: moip_auth)
-
-        if plan[:success]
-          try_update_plan(plan, moip_plan_code, amount, options[:subscription])
-        else
-          create_plan(moip_plan_code, amount, options[:subscription])
-        end
-      rescue
-        create_plan(moip_plan_code, amount, options[:subscription])
       end
 
       def create_customer(customer, address, credit_card)
@@ -168,116 +107,76 @@ module ActiveMerchant #:nodoc:
               expiration_year: credit_card.year - 2000
             }
           }
-        }, true, moip_auth: moip_auth)
-      end
+          }, true, moip_auth: moip_auth)
+        end
 
-      def try_update_plan(moip_plan, moip_plan_code, amount, subscription)
-        plan_attributes = plan_params(moip_plan_code, amount, subscription)
+        def customer_code(options)
+          @customer_code ||= "ED#{options[:customer][:id]}"
+        end
 
-        if plan_changed?(moip_plan[:plan], plan_attributes)
-          response = Moip::Assinaturas::Plan.update(plan_attributes, moip_auth: moip_auth)
+        def subscription_action_from(response)
+          return :fail unless response[:success]
 
-          if response[:success]
-            Moip::Assinaturas::Plan.details(moip_plan_code, moip_auth: moip_auth)
-          else
-            plan
+          INVOICE_TO_SUBSCRIPTION_STATUS_MAP[response[:subscription][:invoice][:status][:code]]
+        end
+
+        def next_charge_at(response)
+          return nil unless response[:success]
+
+          Date.new(response[:subscription][:next_invoice_date][:year],
+          response[:subscription][:next_invoice_date][:month],
+          response[:subscription][:next_invoice_date][:day])
+        end
+
+        def invoices_to_response(response)
+          return {} unless response[:success]
+
+          response[:invoices].map do |invoice|
+            {
+              'id' => invoice[:id],
+              'amount' => invoice[:amount],
+              'created_at' => created_at(invoice[:creation_date]),
+              'action' => INVOICE_STATUS_MAP[invoice[:status][:code]],
+              'occurrence' => invoice[:occurrence]
+            }
           end
-        else
-          plan
         end
-      end
 
-      def plan_changed?(plan, plan_attributes)
-        plan['amount']             != plan_attributes[:amount]            ||
-        plan['interval']['unit']   != plan_attributes[:interval][:unit]   ||
-        plan['interval']['length'] != plan_attributes[:interval][:length] ||
-        plan['trial']['days']      != plan_attributes[:trial][:days]      ||
-        plan['trial']['enabled']   != plan_attributes[:trial][:enabled]   ||
-        plan['billing_cycles']     != plan_attributes[:billing_cycles]
-      end
+        def invoice_to_response(response)
+          return {} unless response[:success]
 
-      def create_plan(moip_plan_code, amount, subscription)
-        Moip::Assinaturas::Plan.create(plan_params(moip_plan_code, amount, subscription),
-          moip_auth: moip_auth)
-      end
-
-      def plan_params(moip_plan_code, amount, subscription)
-        unit, length = INTERVAL_MAP[subscription[:period]]
-
-        plan_attributes = {
-          code: moip_plan_code,
-          name: "ONE INVOICE FOR #{length} #{unit} #{moip_plan_code}",
-          description: 'PLAN USED TO CREATE SUBSCRIPTIONS BY EDOOLS',
-          amount: amount,
-          status: 'ACTIVE',
-          interval: {
-            unit: unit,
-            length: length
-          },
-          trial: {
-            days: subscription[:trials],
-            enabled: subscription[:trials].present? && subscription[:trials] > 0
-          }
-        }
-
-        plan_attributes[:billing_cycles] = subscription[:cycles] if subscription[:cycles]
-
-        plan_attributes
-      end
-
-      def customer_code(options)
-        @customer_code ||= "ED#{options[:customer][:id]}"
-      end
-
-      def subscription_action_from(response)
-        return :fail unless response[:success]
-
-        INVOICE_TO_SUBSCRIPTION_STATUS_MAP[response[:subscription][:invoice][:status][:code]]
-      end
-
-      def next_charge_at(response)
-        return nil unless response[:success]
-
-        Date.new(response[:subscription][:next_invoice_date][:year],
-                 response[:subscription][:next_invoice_date][:month],
-                 response[:subscription][:next_invoice_date][:day])
-      end
-
-      def invoices_to_response(response)
-        return {} unless response[:success]
-
-        response[:invoices].map do |invoice|
           {
-            'id' => invoice[:id],
-            'amount' => invoice[:amount],
-            'created_at' => created_at(invoice[:creation_date]),
-            'action' => INVOICE_STATUS_MAP[invoice[:status][:code]],
-            'occurrence' => invoice[:occurrence]
+            'id' => response[:invoice][:id],
+            'amount' => response[:invoice][:amount],
+            'created_at' => created_at(response[:invoice][:creation_date]),
+            'action' => INVOICE_STATUS_MAP[response[:invoice][:status][:code]],
+            'occurrence' => response[:invoice][:occurrence]
           }
         end
-      end
 
-      def invoice_to_response(response)
-        return {} unless response[:success]
+        def created_at(creation_date)
+          DateTime.new(creation_date[:year], creation_date[:month], creation_date[:day],
+          creation_date[:hour], creation_date[:minute], creation_date[:second], '-03:00')
+        end
 
-        {
-          'id' => response[:invoice][:id],
-          'amount' => response[:invoice][:amount],
-          'created_at' => created_at(response[:invoice][:creation_date]),
-          'action' => INVOICE_STATUS_MAP[response[:invoice][:status][:code]],
-          'occurrence' => response[:invoice][:occurrence]
-        }
-      end
+        def payments_to_response(response)
+          return {} unless response[:success]
 
-      def created_at(creation_date)
-        DateTime.new(creation_date[:year], creation_date[:month], creation_date[:day],
-                     creation_date[:hour], creation_date[:minute], creation_date[:second], '-03:00')
-      end
+          response[:payments].map do |payment|
+            {
+              'id' => payment[:id],
+              'created_at' => created_at(payment[:creation_date]),
+              'action' => PAYMENT_STATUS_MAP[payment[:status][:code]],
+              'payment_method' => PAYMENT_METHOD_MAP[payment[:payment_method][:code]]
+            }
+          end
+        end
 
-      def payments_to_response(response)
-        return {} unless response[:success]
+        def payment_to_response(response)
+          return {} unless response[:success]
 
-        response[:payments].map do |payment|
+          payment = response[:payment]
+
           {
             'id' => payment[:id],
             'created_at' => created_at(payment[:creation_date]),
@@ -285,24 +184,10 @@ module ActiveMerchant #:nodoc:
             'payment_method' => PAYMENT_METHOD_MAP[payment[:payment_method][:code]]
           }
         end
-      end
 
-      def payment_to_response(response)
-        return {} unless response[:success]
-
-        payment = response[:payment]
-
-        {
-          'id' => payment[:id],
-          'created_at' => created_at(payment[:creation_date]),
-          'action' => PAYMENT_STATUS_MAP[payment[:status][:code]],
-          'payment_method' => PAYMENT_METHOD_MAP[payment[:payment_method][:code]]
-        }
-      end
-
-      def next_invoice_date(invoice_date)
-        DateTime.new(invoice_date[:year], invoice_date[:month], invoice_date[:day], 0, 0, 0, '-03:00')
+        def next_invoice_date(invoice_date)
+          DateTime.new(invoice_date[:year], invoice_date[:month], invoice_date[:day], 0, 0, 0, '-03:00')
+        end
       end
     end
   end
-end
