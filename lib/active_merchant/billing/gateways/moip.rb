@@ -2,6 +2,7 @@
 require 'moip-assinaturas'
 
 require File.dirname(__FILE__) + '/moip/moip_core'
+require File.dirname(__FILE__) + '/moip/moip_status'
 require File.dirname(__FILE__) + '/moip/moip_recurring_api'
 
 Moip::Assinaturas.config do |config|
@@ -13,6 +14,7 @@ end
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MoipGateway < Gateway
+      include MoipStatus
       include MoipCore
       include MoipRecurringApi
 
@@ -48,14 +50,51 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      private
-        def authenticate(money, payment_method, options = {})
-          commit(:post, 'xml', build_url('authenticate'), build_authenticate_request(money, options), add_authentication, payment_method)
-        end
+      def create_plan(params)
+        commit(:post, '/assinaturas/v1/plans', plan_params(params))
+      end
 
-        def pay(amount, authorization, options = {})
-          commit(:get, 'json', build_url('pay', build_pay_params(authorization, options)), nil, {}, nil, authorization)
-        end
+      def update_plan(params)
+        commit(:put, '/assinaturas/v1/plans', plan_params(params))
+      end
+
+      def find_plan(plan_code)
+        commit(:get, "/assinaturas/v1/plans/#{plan_code}", nil)
+      end
+
+      def plan_params(params)
+        unit, length = INTERVAL_MAP[params[:period]]
+        moip_plan_code = params[:plan_code]
+
+        plan_attributes = {
+          code: moip_plan_code,
+          name: "ONE INVOICE FOR #{length} #{unit} #{moip_plan_code}",
+          description: 'PLAN USED TO CREATE SUBSCRIPTIONS BY EDOOLS',
+          amount: params[:price],
+          status: 'ACTIVE',
+          interval: {
+            unit: unit,
+            length: length
+          },
+          trial: {
+            days: params[:trials],
+            enabled: params[:trials].present? && params[:trials] > 0
+          }
+        }
+
+        plan_attributes[:billing_cycles] = params[:cycles] if params[:cycles]
+
+        plan_attributes
+      end
+
+      private
+      def authenticate(money, payment_method, options = {})
+        commit(:post, 'xml', build_url('authenticate'), build_authenticate_request(money, options), add_authentication, payment_method)
+      end
+
+      def pay(amount, authorization, options = {})
+        commit(:get, 'json', build_url('pay', build_pay_params(authorization, options)), nil, {}, nil, authorization)
+      end
     end
   end
 end
