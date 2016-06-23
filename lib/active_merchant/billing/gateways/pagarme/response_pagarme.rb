@@ -31,25 +31,24 @@ module ActiveMerchant #:nodoc:
         end
 
         def customer_params(customer, address)
+          zipcode = address[:zip_code] || address[:zipcode]
+          phone   = phone_formatted(customer[:phone])
+
           {
-              :document_number => customer[:document_number],
-              :name => customer[:name],
-              :email => customer[:email],
-              :address => {
-                  :street => address[:street],
-                  :complementary => address[:complement],
-                  :street_number => address[:number],
-                  :neighborhood => address[:district],
-                  :city => address[:city],
-                  :state => address[:state],
-                  :zipcode => address[:zipcode],
-                  :country => "Brasil"
-              },
-              :phone => {
-                  :ddi => customer[:phone][:ddi],
-                  :ddd => customer[:phone][:ddd],
-                  :number => customer[:phone][:number]
-              }
+            document_number: customer[:legal_identifier],
+            name: customer[:name],
+            email: customer[:email],
+            phone: phone,
+            address: {
+              street: address[:street],
+              complementary: address[:complement],
+              street_number: address[:number],
+              neighborhood: address[:district],
+              city: address[:city],
+              state: address[:state],
+              zipcode: zipcode,
+              country: "Brasil"
+            }
           }
         end
 
@@ -205,7 +204,7 @@ module ActiveMerchant #:nodoc:
               current_period_start: response['current_period_start'],
               current_period_end: response['current_period_end'],
               charges: response['charges'],
-              action: SUBSCRIPTION_STATUS[response['status']],
+              action: SUBSCRIPTION_STATUS_MAP[response['status']],
               created_at: response['date_created'],
               phone: phone_response_invoice(response),
               address: address_response_invoice(response),
@@ -272,48 +271,29 @@ module ActiveMerchant #:nodoc:
           unit, length, days = INTERVAL_MAP[params[:period]]
 
           plan_params = {
-              :name => "ONE INVOICE FOR #{length} #{unit} #{params[:plan_code]}",
+            name:            "ONE INVOICE FOR #{length} #{unit} #{params[:plan_code]}",
+            days:            days,
+            amount:          params[:price],
+            trial_days:      params[:trials],
+            payment_methods: params[:payment_methods],
+            charges:         params[:cycles],
+            color:           params[:color],
+            installments:    params[:installments]
           }
-
-          if params.key?(:name)
-            plan_params[:name] = params[:name]
-          end
-
-          if params.key?(:price)
-            plan_params[:amount] = params[:price]
-          end
-
-          if params.key?(:amount)
-            plan_params[:amount] = params[:price]
-          end
-
-          if params.key?(:days)
-            plan_params[:days] = params[:days]
-          end
-
-          if params.key?(:trials)
-            plan_params[:trial_days] = params[:trials]
-          end
-
-          if params.key?(:payment_methods)
-            plan_params[:payment_methods] = params[:payment_methods]
-          end
-
-          if params.key?(:color)
-            plan_params[:color] = params[:color]
-          end
-
-          if params.key?(:cycles)
-            plan_params[:charges] = params[:cycles]
-          end
-
-          if params.key?(:installments)
-            plan_params[:installments] = params[:installments]
-          end
 
           plan_params
         end
 
+        def phone_formatted(phone)
+          phone  = phone.strip.gsub(/\D/, '')
+          ddd    = phone.first(2)
+          number = phone.last(phone.size-2)
+
+          {
+            ddd:    ddd,
+            number: number
+          }
+        end
       end
     end
   end

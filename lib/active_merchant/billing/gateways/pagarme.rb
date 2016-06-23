@@ -118,8 +118,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method)
-        post[:payment_method] = 'credit_card'
-        add_credit_card(post, payment_method)
+        if payment_method == :boleto
+          post[:payment_method] = payment_method
+        else
+          post[:payment_method] = 'credit_card'
+
+          add_credit_card(post, payment_method)
+        end
       end
 
       def add_credit_card(post, credit_card)
@@ -222,15 +227,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        success_purchase = response.key?("status") && response["status"] == "paid"
-        success_authorize = response.key?("status") && response["status"] == "authorized"
-        success_refund = response.key?("status") && response["status"] == "refunded"
+        success_subscription = response["object"] && response["object"] == "subscription"
+        success_plan         = response["object"] && response["object"] == "plan"
+        success_purchase     = response["status"] && response["status"] == "paid"
+        success_authorize    = response["status"] && response["status"] == "authorized"
+        success_refund       = response["status"] && response["status"] == "refunded"
 
-        success_purchase || success_authorize || success_refund
+        success_subscription || success_plan || success_purchase || success_authorize || success_refund
       end
 
       def failure_from(response)
-        response.key?("status") && response["status"] == "refused"
+        response["status"] && response["status"] == "refused"
       end
 
       def message_from(response)
@@ -265,7 +272,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def test?()
+      def test?
         @username.start_with?("ak_test")
       end
 
