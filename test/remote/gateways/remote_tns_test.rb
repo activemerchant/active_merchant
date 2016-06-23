@@ -1,6 +1,9 @@
 require 'test_helper'
 
 class RemoteTnsTest < Test::Unit::TestCase
+
+  # Test credentials will fail OpenSSL certificate verification
+  # To test, in connection.rb, configure_ssl's verify_mode must be VERIFY_NONE
   def setup
     @gateway = TnsGateway.new(fixtures(:tns))
 
@@ -39,8 +42,6 @@ class RemoteTnsTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
-  # The region-specific credentials will fail OpenSSL certificate verification
-  # To test, in connection.rb, configure_ssl's verify_mode must be VERIFY_NONE
   def test_successful_purchase_with_region
     @gateway = TnsGateway.new(fixtures(:tns_ap).merge(region: 'asia_pacific'))
 
