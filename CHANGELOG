@@ -22,6 +22,8 @@
 * CyberSource: Assign default order_id [duff]
 * TNS: Support asia_pacific endpoint [curiousepic]
 * CyberSource: Add decision manager optional fields [shasum]
+* CyberSource: Add decision manager optional fields [shasum]
+* TNS: Add support for TLS v1.2 [curiousepic]
 
 == Version 1.59.0 (May 18, 2016)
 * Orbital: Allow AVS parts to be sent sans country [duff]
