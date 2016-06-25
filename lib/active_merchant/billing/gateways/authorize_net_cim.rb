@@ -47,7 +47,8 @@ module ActiveMerchant #:nodoc:
         :update_customer_payment_profile => 'updateCustomerPaymentProfile',
         :update_customer_shipping_address => 'updateCustomerShippingAddress',
         :create_customer_profile_transaction => 'createCustomerProfileTransaction',
-        :validate_customer_payment_profile => 'validateCustomerPaymentProfile'
+        :validate_customer_payment_profile => 'validateCustomerPaymentProfile',
+        :get_transaction_details => 'getTransactionDetails'  #This one is the added method for active merchant CIM gateway module
       }
 
       CIM_TRANSACTION_TYPES = {
@@ -455,6 +456,23 @@ module ActiveMerchant #:nodoc:
         commit(:create_customer_profile_transaction, request)
       end
 
+
+      # Retrieve an existing transaction details from CIM account
+      #
+      # To get the transaction details from the gateway , merchant needs to enable `transaction details API` under account section by answering secret question
+      #
+      # Returns a Response object that contains the result of the transaction in <tt> params </tt>
+      #
+      # ==== Options
+      #
+      # * <tt>:transId</tt>  -- A hash containing transaction ID of the original transaction as `trans_id`. (REQUIRED)
+      
+      def get_transaction_details(options)
+        requires!(options, :trans_id)
+        request = build_request(:get_transaction_details, options)
+        commit(:get_transaction_details, request)
+      end
+
       # Verifies an existing customer payment profile by generating a test transaction
       #
       # Returns a Response object that contains the result of the transaction in <tt>params['direct_response']</tt>
@@ -623,6 +641,13 @@ module ActiveMerchant #:nodoc:
 
         xml.target!
       end
+
+      def build_get_transaction_details_request(xml, options)
+        xml.tag!('transId',options[:trans_id])
+        xml.target!
+      end
+
+      
 
       def build_validate_customer_payment_profile_request(xml, options)
         xml.tag!('customerProfileId', options[:customer_profile_id])
