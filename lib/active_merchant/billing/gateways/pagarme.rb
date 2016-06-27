@@ -227,13 +227,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        success_subscription = response["object"] && response["object"] == "subscription"
-        success_plan         = response["object"] && response["object"] == "plan"
-        success_purchase     = response["status"] && response["status"] == "paid"
-        success_authorize    = response["status"] && response["status"] == "authorized"
-        success_refund       = response["status"] && response["status"] == "refunded"
+        success = ["subscription", "plan", "transaction"]
 
-        success_subscription || success_plan || success_purchase || success_authorize || success_refund
+        success.include? response["object"]
       end
 
       def failure_from(response)

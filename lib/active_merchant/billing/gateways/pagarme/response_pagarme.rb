@@ -6,27 +6,26 @@ module ActiveMerchant #:nodoc:
       module ResponsePagarme #:nodoc:
         include ActiveMerchant::Billing::PagarmeRecurringApi::StatusPagarme
 
-
         def customer_response(customer)
           {
-              :document_number => customer.document_number,
-              :name => customer.name,
-              :email => customer.email,
-              :address => {
-                  :street => customer.addresses[0].street,
-                  :complementary => customer.addresses[0].complementary,
-                  :street_number => customer.addresses[0].street_number,
-                  :neighborhood => customer.addresses[0].neighborhood,
-                  :city => customer.addresses[0].city,
-                  :state => customer.addresses[0].state,
-                  :zipcode => customer.addresses[0].zipcode,
-                  :country => "Brasil"
-              },
-              :phone => {
-                  :ddi => customer.phones[0].ddi,
-                  :ddd => customer.phones[0].ddd,
-                  :number => customer.phones[0].number
-              }
+            document_number: customer['document_number'],
+            name: customer['name'],
+            email: customer['email'],
+            address: {
+              street: customer['addresses'][0]['street'],
+              complementary: customer['addresses'][0]['complementary'],
+              street_number: customer['addresses'][0]['street_number'],
+              neighborhood: customer['addresses'][0]['neighborhood'],
+              city: customer['addresses'][0]['city'],
+              state: customer['addresses'][0]['state'],
+              zipcode: customer['addresses'][0]['zipcode'],
+              country: "Brasil"
+            },
+            phone: {
+              ddi: customer['phones'][0]['ddi'],
+              ddd: customer['phones'][0]['ddd'],
+              number: customer['phones'][0]['number']
+            }
           }
         end
 

@@ -17,11 +17,11 @@ module ActiveMerchant #:nodoc:
         }
 
         if options[:payment_method] == 'credit_card'
-          if options[:card_hash].present?
-            params[:card_id] = options[:card_hash]
-          else
+          # if options[:card_hash].present?
+          #   params[:card_hash] = options[:card_hash]
+          # else
             add_credit_card(params, credit_card)
-          end
+          # end
         end
 
         response            = commit(:post, 'subscriptions', params)
@@ -97,13 +97,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def ensure_customer_created(options)
-        customer_response(PagarMe::Customer.find_by_id(options[:customer][:id]))
-      rescue
-        create_customer(options[:customer], options[:address])
+        customer = create_customer(options[:customer], options[:address])
+
+        customer['addresses'] ? customer_response(customer) : customer
       end
 
       def create_customer(customer, address)
         params = customer_params(customer, address)
+
         PagarMe::Customer.new(params).create.to_hash
       end
     end
