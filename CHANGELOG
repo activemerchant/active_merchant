@@ -25,6 +25,7 @@
 * CyberSource: Add decision manager optional fields [shasum]
 * TNS: Add support for TLS v1.2 [curiousepic]
 * QuickpayV7: Default description field for store operation [duff]
+* Elavon: Support customer_number field [duff]
 
 == Version 1.59.0 (May 18, 2016)
 * Orbital: Allow AVS parts to be sent sans country [duff]
