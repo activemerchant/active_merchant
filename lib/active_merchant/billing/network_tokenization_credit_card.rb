@@ -27,6 +27,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def credit_card?
+        true
+      end
+
       def type
         "network_tokenization"
       end

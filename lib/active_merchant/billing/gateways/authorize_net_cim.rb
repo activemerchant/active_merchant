@@ -864,10 +864,12 @@ module ActiveMerchant #:nodoc:
         response_params['direct_response'] = parse_direct_response(response_params['direct_response']) if response_params['direct_response']
         transaction_id = response_params['direct_response']['transaction_id'] if response_params['direct_response']
 
-        Response.new(success, message, response_params,
-          :test => test_mode,
-          :authorization => transaction_id || response_params['customer_profile_id'] || (response_params['profile'] ? response_params['profile']['customer_profile_id'] : nil)
-        )
+        response_options = {}
+        response_options[:test] = test_mode
+        response_options[:authorization] = transaction_id || response_params['customer_profile_id'] || (response_params['profile'] ? response_params['profile']['customer_profile_id'] : nil)
+        response_options[:error_code] = response_params['messages']['message']['code'] unless success
+
+        Response.new(success, message, response_params, response_options)
       end
 
       def tag_unless_blank(xml, tag_name, data)

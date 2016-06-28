@@ -444,4 +444,11 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = StripeGateway.new(login: 'an_unknown_api_key')
+    assert !gateway.verify_credentials
+  end
+
 end

@@ -1,5 +1,32 @@
 = ActiveMerchant CHANGELOG
 
+* Orbital: Fix CC num leak on profile calls [drewblas]
+* VisaNetPeru: Add ability to refund [duff]
+* AuthorizeNet: Fix store using new profile [duff]
+* Clearhaus: Support private key for signature [curiousepic]
+* Clearhaus: Copy private_key when stripping [curiousepic]
+* Quickpay v10: Remove amount requirement for store [curiousepic]
+* Orbital: Add support for the BRL currency [duff]
+* GlobalTransport: Require TLSv1 [duff]
+* Openpay: Allow currency to be specified [darkaz]
+* DataCash: Use API version 2 [curiousepic]
+* Stripe: Support verify_credentials [duff]
+* AuthorizeNet: Support verify_credentials [duff]
+* BraintreeBlue: Support verify_credentials [duff]
+* Redsys: Added SAR currency [agseco]
+* MaxiPago: add void and refund [shasum]
+* MaxiPago: Allow processor_id override [duff]
+* Stripe: Interpret string input to store method as token identifier [bizla]
+* MaxiPago: Add verify and scrub [shasum]
+* CyberSource: Assign default with override for billing address and email [shasum]
+* CyberSource: Assign default order_id [duff]
+* TNS: Support asia_pacific endpoint [curiousepic]
+* CyberSource: Add decision manager optional fields [shasum]
+* CyberSource: Add decision manager optional fields [shasum]
+* TNS: Add support for TLS v1.2 [curiousepic]
+* QuickpayV7: Default description field for store operation [duff]
+
+== Version 1.59.0 (May 18, 2016)
 * Orbital: Allow AVS parts to be sent sans country [duff]
 * SecureNet: Return the right error message for declines [duff]
 * Moneris: Add verify [anellis]
@@ -49,6 +76,8 @@
 * AuthorizeNet: Truncate nameOnAccount field [duff]
 * Tns: Fix ipAddress field [duff]
 * WorldNet: New gateway support [varyonic]
+* BraintreeBlue: Allow channel override [duff]
+* MerchantWarrior: Use Truncated Order Id [ThereExistsX]
 
 
 == Version 1.58.0 (March 1, 2016)

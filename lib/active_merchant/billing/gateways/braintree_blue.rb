@@ -6,7 +6,9 @@ rescue LoadError
   raise "Could not load the braintree gem.  Use `gem install braintree` to install it."
 end
 
-raise "Need braintree gem 2.x.y. Run `gem install braintree --version '~>2.0'` to get the correct version." unless Braintree::Version::Major == 2
+unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 4
+  raise "Need braintree gem >= 2.4.0. Run `gem install braintree --version '~>2.4'` to get the correct version."
+end
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -173,6 +175,18 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def verify_credentials
+        begin
+          @braintree_gateway.transaction.find("non_existent_token")
+        rescue Braintree::AuthenticationError
+          return false
+        rescue Braintree::NotFoundError
+          return true
+        end
+
+        true
+      end
+
       private
 
       def check_customer_exists(customer_vault_id)
@@ -311,10 +325,12 @@ module ActiveMerchant #:nodoc:
       def message_from_result(result)
         if result.success?
           "OK"
-        elsif result.errors.size == 0 && result.credit_card_verification
+        elsif result.errors.any?
+          result.errors.map { |e| "#{e.message} (#{e.code})" }.join(" ")
+        elsif result.credit_card_verification
           "Processor declined: #{result.credit_card_verification.processor_response_text} (#{result.credit_card_verification.processor_response_code})"
         else
-          result.errors.map { |e| "#{e.message} (#{e.code})" }.join(" ")
+          result.message.to_s
         end
       end
 
@@ -572,7 +588,9 @@ module ActiveMerchant #:nodoc:
         end
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
-        parameters[:channel] = application_id if application_id.present? && application_id != "ActiveMerchant"
+
+        channel = @options[:channel] || application_id
+        parameters[:channel] = channel if channel
 
         if options[:descriptor_name] || options[:descriptor_phone] || options[:descriptor_url]
           parameters[:descriptor] = {

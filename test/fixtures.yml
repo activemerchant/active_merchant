@@ -166,12 +166,12 @@ checkout_v2:
 
 # Working credentials, no need to replace
 clearhaus: &clearhaus
-  api_key: d966051d-b7fd-4054-b4a6-22c4ff4d4701
-  mpi_api_key: f21d07e4-be0a-4cd3-9dcb-9461dac1c90d
+  api_key: a2c583e7-23f2-4097-b327-84a87128cfb4
 
 clearhaus_secure:
   <<: *clearhaus
-  signing_key: |
+  signing_key: 7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2
+  private_key: |
     -----BEGIN RSA PRIVATE KEY-----
     MIIBOwIBAAJBALYK0zmwuYkH3YWcFNLLddx5cwDxEY7Gi1xITuQqRrU4yD3uSw+J
     WYKknb4Tbndb6iEHY+e6gIGD+49TojnNeIUCAwEAAQJARyuYRRe4kcBHdPL+mSL+
@@ -555,6 +555,10 @@ orbital_gateway:
   merchant_id: MERCHANTID
 
 # Working credentials, no need to replace
+pagarme:
+    api_key: 'ak_test_e1QGU2gL98MDCHZxHLJ9sofPUFJ7tH'
+
+# Working credentials, no need to replace
 pago_facil:
   branch_id: 60f961360ca187d533d5adba7d969d6334771370
   merchant_id: 62ad6f592ecf2faa87ef2437ed85a4d175e73c58
@@ -777,7 +781,7 @@ quickpay:
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
 
 quickpay_v10_api_key:
-  api_key: "03508e7791ba6c9d0e6830716e650f35c4342c4b3576723ad556e236ca4c7788"
+  api_key: "6e4e4f0a7cf692b0118ffe2c56c45b0cd3171badf65626de2ead023fd99b8bbc"
 
 # To get the right apikey, log in to the manager.
 # Go to Indstillinger > API adgang and make sure you have the right key in the fixture.
@@ -962,6 +966,10 @@ swipe_checkout:
 tns:
   userid: TESTSPREEDLY01
   password: 3f34fe50334fbe6cbe04c283411a5860
+
+tns_ap:
+  userid: TESTUNISOLMAA01
+  password: b7f8119fda3bd27c17656badb52c95bb
 
 trans_first:
   login: 45567

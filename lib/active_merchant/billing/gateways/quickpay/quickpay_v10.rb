@@ -118,10 +118,8 @@ module ActiveMerchant
         end
 
         def authorize_store(identification, credit_card, options = {})
-          requires!(options, :amount)
           post = {}
 
-          add_amount(post, nil, options)
           add_credit_card_or_reference(post, credit_card, options)
           commit(synchronized_path("/cards/#{identification}/authorize"), post)
         end

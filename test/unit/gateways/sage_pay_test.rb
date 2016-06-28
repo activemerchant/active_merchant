@@ -89,9 +89,25 @@ class SagePayTest < Test::Unit::TestCase
     @gateway.send(:add_amount, {}, @amount, @options)
   end
 
+  def test_paypal_callback_url_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(paypal_callback_url: 'callback.com')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/PayPalCallbackURL=callback\.com/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_basket_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(basket: 'A1.2 Basket section')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/Basket=A1\.2\+Basket\+section/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_gift_aid_payment_is_submitted
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({:gift_aid_payment => 1}))
+      purchase_with_options(gift_aid_payment: 1)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/GiftAidPayment=1/, data)
     end.respond_with(successful_purchase_response)
@@ -99,15 +115,97 @@ class SagePayTest < Test::Unit::TestCase
 
   def test_apply_avscv2_is_submitted
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({:apply_avscv2 => 1}))
+      purchase_with_options(apply_avscv2: 1)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/ApplyAVSCV2=1/, data)
     end.respond_with(successful_purchase_response)
   end
 
+  def test_disable_3d_security_flag_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(apply_3d_secure: 1)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/Apply3DSecure=1/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_account_type_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(account_type: 'M')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/AccountType=M/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_billing_agreement_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(billing_agreement: 1)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/BillingAgreement=1/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_store_token_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(store: true)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/CreateToken=1/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_basket_xml_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(basket_xml: 'A1.3 BasketXML section')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/BasketXML=A1\.3\+BasketXML\+section/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_customer_xml_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(customer_xml: 'A1.4 CustomerXML section')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/CustomerXML=A1\.4\+CustomerXML\+section/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_surcharge_xml_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(surcharge_xml: 'A1.1 SurchargeXML section')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/SurchargeXML=A1\.1\+SurchargeXML\+section/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_vendor_data_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(vendor_data: 'any data')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/VendorData=any\+data/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_language_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(language: 'FR')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/Language=FR/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_website_is_submitted
+    stub_comms(@gateway, :ssl_request) do
+      purchase_with_options(website: 'transaction-origin.com')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/Website=transaction-origin\.com/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_FIxxxx_optional_fields_are_submitted
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({:recipient_account_number => '1234567890', :recipient_surname => 'Withnail', :recipient_postcode => 'AB11AB', :recipient_dob => '19701223'}))
+      purchase_with_options(recipient_account_number: '1234567890',
+        recipient_surname: 'Withnail', recipient_postcode: 'AB11AB',
+        recipient_dob: '19701223')
     end.check_request do |method, endpoint, data, headers|
       assert_match(/FIRecipientAcctNumber=1234567890/, data)
       assert_match(/FIRecipientSurname=Withnail/, data)
@@ -116,17 +214,9 @@ class SagePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_disable_3d_security_flag_is_submitted
-    stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge({:apply_3d_secure => 1}))
-    end.check_request do |method, endpoint, data, headers|
-      assert_match(/Apply3DSecure=1/, data)
-    end.respond_with(successful_purchase_response)
-  end
-
   def test_description_is_truncated
     stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, @options.merge(description: "SagePay transactions fail if the description is more than 100 characters. Therefore, we truncate it to 100 characters."))
+      purchase_with_options(description: "SagePay transactions fail if the description is more than 100 characters. Therefore, we truncate it to 100 characters.")
     end.check_request do |method, endpoint, data, headers|
       assert_match(/&Description=SagePay\+transactions\+fail\+if\+the\+description\+is\+more\+than\+100\+characters.\+Therefore%2C\+we\+truncate\+it\+&/, data)
     end.respond_with(successful_purchase_response)
@@ -189,6 +279,10 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   private
+
+  def purchase_with_options(optional)
+    @gateway.purchase(@amount, @credit_card, @options.merge(optional))
+  end
 
   def successful_purchase_response
     <<-RESP

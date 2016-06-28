@@ -159,6 +159,38 @@ class TnsTest < Test::Unit::TestCase
     assert_equal "FAILURE - DECLINED", response.message
   end
 
+  def test_north_america_region_url
+    @gateway = TnsGateway.new(
+      userid: 'userid',
+      password: 'password',
+      region: 'north_america'
+    )
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/secure.na.tnspayments.com/, endpoint)
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+  end
+
+  def test_asia_pacific_region_url
+    @gateway = TnsGateway.new(
+      userid: 'userid',
+      password: 'password',
+      region: 'asia_pacific'
+    )
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/secure.ap.tnspayments.com/, endpoint)
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+  end
+
   private
 
   def successful_authorize_response

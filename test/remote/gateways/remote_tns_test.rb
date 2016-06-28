@@ -1,11 +1,15 @@
 require 'test_helper'
 
 class RemoteTnsTest < Test::Unit::TestCase
+
+  # Test credentials will fail OpenSSL certificate verification
+  # To test, in connection.rb, configure_ssl's verify_mode must be VERIFY_NONE
   def setup
     @gateway = TnsGateway.new(fixtures(:tns))
 
     @amount = 100
     @credit_card = credit_card('5123456789012346')
+    @ap_credit_card = credit_card('5424180279791732', month: 05, year: 2017, verification_value: 222)
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -38,6 +42,13 @@ class RemoteTnsTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
+  def test_successful_purchase_with_region
+    @gateway = TnsGateway.new(fixtures(:tns_ap).merge(region: 'asia_pacific'))
+
+    assert response = @gateway.purchase(@amount, @ap_credit_card, @options.merge(currency: "AUD"))
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
 
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)

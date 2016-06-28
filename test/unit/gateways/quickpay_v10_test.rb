@@ -7,7 +7,7 @@ class QuickpayV10Test < Test::Unit::TestCase
     @gateway = QuickpayV10Gateway.new(:api_key => 'APIKEY')
     @credit_card = credit_card('4242424242424242')
     @amount = 100
-    @options = { :order_id => '1', :billing_address => address}
+    @options = { :order_id => '1', :billing_address => address, :customer_ip => '1.1.1.1' }
   end
 
   def parse body
@@ -48,8 +48,10 @@ class QuickpayV10Test < Test::Unit::TestCase
       assert_equal 1145, response.authorization
       assert response.test?
     end.check_request do |endpoint, data, headers|
-      if parse(data)['order_id']
+      parsed_data = parse(data)
+      if parsed_data['order_id']
         assert_match %r{/payments}, endpoint
+        assert_match "1.1.1.1", @options[:customer_ip]
       else
         assert_match %r{/payments/\d+/authorize}, endpoint
       end
@@ -86,7 +88,7 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def test_successful_store
     stub_comms do
-      assert response = @gateway.store(@credit_card, @options.merge(:amount => @amount))
+      assert response = @gateway.store(@credit_card, @options)
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|
