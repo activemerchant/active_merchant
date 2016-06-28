@@ -36,7 +36,12 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
     more_options = {
       order_id: '2',
       ip: "127.0.0.1",
-      email: "joe@example.com",
+      billing_address: address({
+        city:     'Hollywood',
+        state:    'CA',
+        zip:      '90210',
+        country:  'USA',
+        email: "joe@example.com",}),
       program_code: '1',
       pay_code: 'IGS25XX46027DCP',
       market_source: SecureRandom.uuid
