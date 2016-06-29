@@ -14,7 +14,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
       @declined_card = credit_card('4242424242424242', {
         first_name: 'Richard',
         last_name: 'Deschamps',
-        :verification_value => '688'
+        :verification_value => '6881'
         })
 
         @options = {
@@ -262,6 +262,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
 
       def test_failed_verify
         response = @gateway.verify(@declined_card, @options)
+        puts response.message
         assert_failure response
         assert_equal 'Transação recusada', response.message
       end

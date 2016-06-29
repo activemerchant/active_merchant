@@ -228,8 +228,13 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         success = ["subscription", "plan", "transaction"]
+        status = ["paid","authorized","refunded"]
 
-        success.include? response["object"]
+        success.include?(response["object"]) && status_verify(status,response) || success.include?(response["object"])
+      end
+
+      def status_verify(status, response)
+        response.key?('status') && status.include?(response['status'])
       end
 
       def failure_from(response)
