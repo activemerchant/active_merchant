@@ -268,10 +268,12 @@ module ActiveMerchant #:nodoc:
         end
 
         def plan_params(params)
+
           unit, length, days = INTERVAL_MAP[params[:period]]
+          default_name = "ONE INVOICE FOR #{length} #{unit} #{params[:plan_code]}"
 
           plan_params = {
-            name:            "ONE INVOICE FOR #{length} #{unit} #{params[:plan_code]}",
+            name:            params[:name] || default_name,
             days:            days,
             amount:          params[:price],
             trial_days:      params[:trials],
@@ -286,8 +288,8 @@ module ActiveMerchant #:nodoc:
 
         def phone_formatted(phone)
           phone  = phone.strip.gsub(/\D/, '')
-          ddd    = phone.first(2)
-          number = phone.last(phone.size-2)
+          ddd    = phone[0..1]
+          number = phone[2..phone.size]
 
           {
             ddd:    ddd,

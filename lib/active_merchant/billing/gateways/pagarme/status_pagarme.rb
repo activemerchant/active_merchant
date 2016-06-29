@@ -24,22 +24,22 @@ module ActiveMerchant #:nodoc:
         }
 
         INVOICE_STATUS_MAP = {
-            'processing' => 'processing',
-            'authorized' => 'authorized',
-            'paid' => 'paid',
-            'refunded' => 'refunded',
-            'waiting_payment' => 'waiting_payment',
-            'pending_refund' => 'pending_refund',
-            'refused' => 'refused',
-            'waiting_funds' => 'waiting_funds'
+            'processing' => :open,
+            'authorized' => :confirm,
+            'paid' => :confirm,
+            'refunded' => :not_pay,
+            'waiting_payment' => :wait_confirmation,
+            'pending_refund' => :wait_confirmation,
+            'refused' => :not_pay,
+            'waiting_funds' => :wait_confirmation
         }
 
         INVOICE_STATUS_REASON_MAP = {
-            'acquirer' => 'acquirer',
-            'antifraud' => 'antifraud',
-            'internal_error' => 'internal_error',
-            'no_acquirer' => 'no_acquirer',
-            'acquirer_timeout' => 'acquirer_timeout'
+            'acquirer' => :acquirer,
+            'antifraud' => :antifraud,
+            'internal_error' => :internal_error,
+            'no_acquirer' => :no_acquirer,
+            'acquirer_timeout' => :acquirer_timeout
         }
 
         PAYMENT_METHOD_MAP = {
