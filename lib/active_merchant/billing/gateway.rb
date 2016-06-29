@@ -76,6 +76,7 @@ module ActiveMerchant #:nodoc:
       # :processing_error - Processor error
       # :call_issuer - Transaction requires voice authentication, call issuer
       # :pickup_card - Issuer requests that you pickup the card from merchant
+      # :test_mode_live_card - Card was declined. Request was in test mode, but used a non test card.
 
       STANDARD_ERROR_CODE = {
         :incorrect_number => 'incorrect_number',
@@ -91,7 +92,8 @@ module ActiveMerchant #:nodoc:
         :processing_error => 'processing_error',
         :call_issuer => 'call_issuer',
         :pickup_card => 'pick_up_card',
-        :config_error => 'config_error'
+        :config_error => 'config_error',
+        :test_mode_live_card => 'test_mode_live_card'
       }
 
       cattr_reader :implementations

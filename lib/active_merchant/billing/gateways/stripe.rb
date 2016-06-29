@@ -42,7 +42,8 @@ module ActiveMerchant #:nodoc:
         'card_declined' => STANDARD_ERROR_CODE[:card_declined],
         'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
         'processing_error' => STANDARD_ERROR_CODE[:processing_error],
-        'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin]
+        'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin],
+        'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card]
       }
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
