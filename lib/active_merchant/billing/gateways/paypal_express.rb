@@ -44,6 +44,12 @@ module ActiveMerchant #:nodoc:
         commit 'SetExpressCheckout', build_setup_request('Sale', money, options)
       end
 
+      def setup_order(money, options = {})
+        requires!(options, :return_url, :cancel_return_url)
+
+        commit 'SetExpressCheckout', build_setup_request('Order', money, options)
+      end
+
       def details_for(token)
         commit 'GetExpressCheckoutDetails', build_get_details_request(token)
       end

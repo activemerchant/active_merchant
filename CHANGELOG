@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* PayPal: add 'Order' feature [garytaylor]
 * Moneris: add scrubbing support [bruno]
 * Litle: add scrubbing support [bruno]
 * Sage: Add support for scrubbing [bruno]
