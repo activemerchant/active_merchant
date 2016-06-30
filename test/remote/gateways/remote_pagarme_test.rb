@@ -262,7 +262,6 @@ class RemotePagarmeTest < Test::Unit::TestCase
 
       def test_failed_verify
         response = @gateway.verify(@declined_card, @options)
-        puts response.message
         assert_failure response
         assert_equal 'Transação recusada', response.message
       end
@@ -503,7 +502,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
       def test_success_update_plan
 
         params_plan = {
-            name: "Plano Diamond Platinum 1352",
+            name: "Plano Diamond Platinum 135212",
             trials: 1,
             plan_code: 45058
         }
@@ -513,7 +512,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
         assert_instance_of Response, response
         assert_success response
 
-        assert_equal 'Plano Diamond Platinum 1352', response.params["name"]
+        assert_equal 'Plano Diamond Platinum 135212', response.params["name"]
         assert_equal 1, response.params["trial_days"]
         assert_not_nil response.plan_code
         assert_equal 45058, response.plan_code
@@ -543,12 +542,13 @@ class RemotePagarmeTest < Test::Unit::TestCase
       end
 
       def test_success_find_plan_updated
+        sleep 4
         response = @gateway.find_plan(45058)
 
         assert_instance_of Response, response
         assert_success response
 
-        assert_equal "Plano Diamond Platinum 1352", response.params["name"]
+        assert_equal "Plano Diamond Platinum 135212", response.params["name"]
         assert_equal 1, response.params["trial_days"]
         assert_equal 45058, response.plan_code
 
