@@ -61,6 +61,11 @@ class CitrusHelperTest < Test::Unit::TestCase
 	assert_equal 'some_return_url', @helper.fields['returnUrl']
   end
   
+  def test_notify_url_fields
+    @helper.notify_url 'some_notify_url'
+	assert_equal 'some_notify_url', @helper.fields['notifyUrl']
+  end
+  
   def test_unknown_mapping
     assert_nothing_raised do
       @helper.company_address :address => '500 Dwemthy Fox Road'

@@ -13,17 +13,15 @@ module ActiveMerchant #:nodoc:
         mattr_accessor :production_url
         mattr_accessor :pmt_url
 		
-		
-        self.sandbox_url = 'https://sandbox.citruspay.com/'
-        self.staging_url = 'https://stg.citruspay.com/'
-        self.production_url = 'https://www.citruspay.com/'
-        
-		
+        self.sandbox_url = 'https://sandbox.citruspay.com/sslperf/'
+        self.staging_url = 'https://stg.citruspay.com/sslperf/'
+        self.production_url = 'https://www.citruspay.com/sslperf/'
+      
         def self.service_url
           mode = ActiveMerchant::Billing::Base.integration_mode
           case mode
           when :production
-            self.production_url + self.pmt_url   
+            self.production_url + self.pmt_url
           when :test
             self.sandbox_url + self.pmt_url
           when :staging

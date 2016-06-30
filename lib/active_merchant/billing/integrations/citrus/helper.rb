@@ -17,6 +17,7 @@ module ActiveMerchant #:nodoc:
 
 		  mapping :checksum, 'secSignature'
           mapping :return_url, 'returnUrl'
+          mapping :notify_url, 'notifyUrl'
 		  
 		  
 		  def initialize(order, account, options = {})

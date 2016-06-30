@@ -13,14 +13,14 @@ class CitrusModuleTest < Test::Unit::TestCase
   def test_service_url_method
   	Citrus.pmt_url=@pmt_url
 	ActiveMerchant::Billing::Base.integration_mode = :test
-    assert_equal 'https://sandbox.citruspay.com/gqwnliur74', Citrus.service_url
+    assert_equal 'https://sandbox.citruspay.com/sslperf/gqwnliur74', Citrus.service_url
 	p Citrus.service_url
   end
   
   def test_production_service_url_method
   	Citrus.pmt_url=@pmt_url
 	ActiveMerchant::Billing::Base.integration_mode = :production
-    assert_equal 'https://www.citruspay.com/gqwnliur74', Citrus.service_url
+    assert_equal 'https://www.citruspay.com/sslperf/gqwnliur74', Citrus.service_url
     p Citrus.service_url
   end
 
