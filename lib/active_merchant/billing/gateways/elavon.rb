@@ -330,7 +330,19 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters)
         result = preamble
         result.merge!(parameters)
-        result.collect { |key, value| "ssl_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        result.collect { |key, value| post_data_string(key, value) }.join("&")
+      end
+
+      def post_data_string(key, value)
+        if custom_field?(key)
+          "#{key}=#{CGI.escape(value.to_s)}"
+        else
+          "ssl_#{key}=#{CGI.escape(value.to_s)}"
+        end
+      end
+
+      def custom_field?(field_name)
+        field_name == :customer_number
       end
 
       def preamble
@@ -357,4 +369,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
