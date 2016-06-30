@@ -369,14 +369,13 @@ module ActiveMerchant #:nodoc:
             card[:cvc] = creditcard.verification_value if creditcard.verification_value?
             card[:name] = creditcard.name if creditcard.name
           end
-          post[:card] = card
 
-          if creditcard.is_a?(NetworkTokenizationCreditCard) && creditcard.source == :apple_pay
-            post[:three_d_secure] = {
-              apple_pay:  true,
-              cryptogram: creditcard.payment_cryptogram
-            }
+          if creditcard.is_a?(NetworkTokenizationCreditCard)
+            card[:cryptogram] = creditcard.payment_cryptogram
+            card[:eci] = creditcard.eci
+            card[:tokenization_method] = creditcard.source.to_s
           end
+          post[:card] = card
 
           add_address(post, options)
         elsif creditcard.kind_of?(String)
