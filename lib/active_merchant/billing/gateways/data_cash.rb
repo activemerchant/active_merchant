@@ -162,7 +162,27 @@ module ActiveMerchant
         commit(request)
       end
 
+      def query(reference)
+        request = query_request(reference)
+        commit(request)
+      end
+
       private
+
+      def query_request(reference)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag! :Request do
+          add_authentication(xml)
+          xml.tag! :Transaction do
+            xml.tag! :HistoricTxn do
+              xml.tag! :reference, reference
+              xml.tag! :method, 'query'
+            end
+          end
+        end
+        xml.target!
+      end
 
       def threedsecure_authorization_request(reference, pares_message = nil)
         xml = Builder::XmlMarkup.new :indent => 2
@@ -181,7 +201,6 @@ module ActiveMerchant
           end
         end
         xml.target!
-
       end
 
       # Create the xml document for a 'cancel' or 'fulfill' transaction.
