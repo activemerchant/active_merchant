@@ -204,7 +204,9 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response),
           test: test?,
           error_code: error_code_from(response),
-          plan_code: plan_code_from(response)
+          plan_code: plan_code_from(response),
+          external_url: boleto_url_from(response),
+          payment_action: payment_action_from(response),
         )
       end
 
@@ -228,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         success = ["subscription", "plan", "transaction"]
-        status = ["paid","authorized","refunded"]
+        status = ["paid", "authorized", "refunded", "waiting_payment"]
 
         if success.include?(response["object"])
           response["object"] == "transaction" ? status.include?(response['status']) : true
@@ -263,6 +265,16 @@ module ActiveMerchant #:nodoc:
 
       def plan_code_from(response)
          response["object"] == "plan" && response["id"] || nil
+      end
+
+      def boleto_url_from(response)
+         response["object"] == "transaction" && response["boleto_url"] || nil
+      end
+
+      def payment_action_from(response)
+         if response["object"] == "transaction" && response["status"]
+           PAYMENT_STATUS_MAP[response["status"]]
+         end
       end
 
       def authorization_from(response)
