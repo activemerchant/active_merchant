@@ -14,7 +14,6 @@ end
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MoipGateway < Gateway
-      include MoipStatus
       include MoipCore
       include MoipRecurringApi
 
