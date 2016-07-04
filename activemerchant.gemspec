@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
   s.add_dependency('nokogiri', "~> 1.4")
   s.add_dependency('moip-assinaturas', "~> 0.6.0")
   s.add_dependency('pagarme', "~> 2.1.2")
-  s.add_dependency('httparty', "~> 0.13.7")
+  s.add_dependency('httparty', "~> 0.13.5")
 
   s.add_development_dependency('rake')
   s.add_development_dependency('test-unit', '~> 3')

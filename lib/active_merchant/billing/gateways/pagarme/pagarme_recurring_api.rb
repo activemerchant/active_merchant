@@ -13,24 +13,33 @@ module ActiveMerchant #:nodoc:
         params = {
           payment_method: options[:payment_method],
           customer: ensure_customer_created(options),
-          plan_id: options[:plan_code]
+          plan_id: options["subscription"]["plan_code"],
         }
 
-        if options[:card_hash].present?
-          params[:card_id] = options[:card_hash]
-        else
-          add_credit_card(params, credit_card)
+        if options[:payment_method] == 'credit_card'
+          # if options[:card_hash].present?
+          #   params[:card_hash] = options[:card_hash]
+          # else
+            add_credit_card(params, credit_card)
+          # end
         end
 
-        response = commit(:post, 'subscriptions', params)
+        response            = commit(:post, 'subscriptions', params)
+        response_options    = {
+          authorization:       response.params['id'],
+          subscription_action: SUBSCRIPTION_STATUS_MAP[response.params['status']],
+          test:                response.test?
+        }
 
-        Response.new(
-          response.success?,
-          response.message,
-          subscription_to_response(response.params),
-          payment_action: set_payment_action(response),
-          test: response.test?
-        )
+        current_transaction = response.params['current_transaction']
+
+        if current_transaction.present?
+          response_options[:payment_action] = PAYMENT_STATUS_MAP[current_transaction["status"]]
+          response_options[:boleto_url]     = current_transaction['boleto_url']
+        end
+
+        Response.new(response.success?, response.message,
+          subscription_to_response(response.params), response_options)
       end
 
       def update(invoice_id, options)
@@ -79,10 +88,6 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def set_payment_action(response)
-        response.params.key?('current_transaction') && !response.params['current_transaction'].empty?
-      end
-
       def expiration_date(date)
         if /((1[0-2]|0[1-9])([0-9]){2})/ =~ date
           date
@@ -92,16 +97,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def ensure_customer_created(options)
-        customer_response(PagarMe::Customer.find_by_id(options[:customer][:id]))
-      rescue
-        create_customer(options[:customer], options[:customer][:address])
+        customer = create_customer(options[:customer], options[:address])
+
+        customer['addresses'] ? customer_response(customer) : customer
       end
 
       def create_customer(customer, address)
         params = customer_params(customer, address)
+
         PagarMe::Customer.new(params).create.to_hash
       end
-
     end
   end
 end

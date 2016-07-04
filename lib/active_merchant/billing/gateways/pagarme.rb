@@ -118,8 +118,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method)
-        post[:payment_method] = 'credit_card'
-        add_credit_card(post, payment_method)
+        if payment_method == :boleto
+          post[:payment_method] = payment_method
+        else
+          post[:payment_method] = 'credit_card'
+
+          add_credit_card(post, payment_method)
+        end
       end
 
       def add_credit_card(post, credit_card)
@@ -199,7 +204,9 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response),
           test: test?,
           error_code: error_code_from(response),
-          plan_code: plan_code_from(response)
+          plan_code: plan_code_from(response),
+          external_url: boleto_url_from(response),
+          payment_action: payment_action_from(response),
         )
       end
 
@@ -222,15 +229,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        success_purchase = response.key?("status") && response["status"] == "paid"
-        success_authorize = response.key?("status") && response["status"] == "authorized"
-        success_refund = response.key?("status") && response["status"] == "refunded"
+        success = ["subscription", "plan", "transaction"]
+        status = ["paid", "authorized", "refunded", "waiting_payment"]
 
-        success_purchase || success_authorize || success_refund
+        if success.include?(response["object"])
+          response["object"] == "transaction" ? status.include?(response['status']) : true
+        end
       end
 
       def failure_from(response)
-        response.key?("status") && response["status"] == "refused"
+        response["status"] && response["status"] == "refused"
       end
 
       def message_from(response)
@@ -259,13 +267,23 @@ module ActiveMerchant #:nodoc:
          response["object"] == "plan" && response["id"] || nil
       end
 
+      def boleto_url_from(response)
+         response["object"] == "transaction" && response["boleto_url"] || nil
+      end
+
+      def payment_action_from(response)
+         if response["object"] == "transaction" && response["status"]
+           PAYMENT_STATUS_MAP[response["status"]]
+         end
+      end
+
       def authorization_from(response)
         if success_from(response)
           response["id"]
         end
       end
 
-      def test?()
+      def test?
         @username.start_with?("ak_test")
       end
 
