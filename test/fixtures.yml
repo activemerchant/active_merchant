@@ -672,6 +672,13 @@ payscout:
   username: demo
   password: password
 
+# Working credentials, no need to replace
+payu_co:
+  key: 6u39nqhq8ftd0hlvnjfs66eh8c
+  login: 11959c415b33d0c
+  account_id: 500538
+  merchant_id: 500238
+
 # There are all kind of special options that must be set on a test account, and
 # PayU is not transparent about what they are. At this point you need to tell
 # them specifically that the account will be used with Spreedly, which should
@@ -679,6 +686,12 @@ payscout:
 payu_in:
   key: KEY
   salt: SALT
+
+payu_latam:
+  key: 6u39nqhq8ftd0hlvnjfs66eh8c
+  login: 11959c415b33d0c
+  account_id: 500538
+  merchant_id: 500238
 
 payway:
   username:
