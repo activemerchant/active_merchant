@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class RemoteStripeApplePayTest < Test::Unit::TestCase
+  CHARGE_ID_REGEX = /ch_[a-zA-Z\d]{24}/
+
   def setup
     @gateway = StripeGateway.new(fixtures(:stripe))
     @amount = 100
