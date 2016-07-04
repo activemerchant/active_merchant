@@ -1,6 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module MoipRecurringApi #:nodoc:
+      include MoipStatus
 
       def recurring(amount, credit_card, options = {})
         moip_plan_code = "PLAN-CODE-#{options[:subscription][:plan_code]}"
