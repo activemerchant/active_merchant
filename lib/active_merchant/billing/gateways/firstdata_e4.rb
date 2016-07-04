@@ -2,8 +2,10 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FirstdataE4Gateway < Gateway
       # TransArmor support requires v11 or lower
-      self.test_url = "https://api.demo.globalgatewaye4.firstdata.com/transaction/v11"
-      self.live_url = "https://api.globalgatewaye4.firstdata.com/transaction/v11"
+      API_VERSION = 13
+      HMAC_SERVICE_ID = "GGE4_API"
+      self.test_url = "https://api.demo.globalgatewaye4.firstdata.com/transaction/v#{API_VERSION}"
+      self.live_url = "https://api.globalgatewaye4.firstdata.com/transaction/v#{API_VERSION}"
 
       TRANSACTIONS = {
         sale:          "00",
@@ -15,9 +17,10 @@ module ActiveMerchant #:nodoc:
         store:         "05"
       }
 
+      CONTENT_TYPE = 'application/xml'
       POST_HEADERS = {
-        "Accepts" => "application/xml",
-        "Content-Type" => "application/xml"
+        "Accepts"      => CONTENT_TYPE,
+        "Content-Type" => CONTENT_TYPE
       }
 
       SUCCESS = "true"
@@ -72,7 +75,7 @@ module ActiveMerchant #:nodoc:
       #                         (Found in your administration terminal settings)
       # * <tt>:password</tt> -- The terminal password (not your account password)
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :login, :password, :hmac_key_id, :hmac_key)
         @options = options
 
         super
@@ -324,8 +327,17 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, request, credit_card = nil)
         url = (test? ? self.test_url : self.live_url)
+        request_body = build_request(action, request)
+        x_gge4_date = Time.now.utc.iso8601
+        x_gge4_content_sha1 = OpenSSL::Digest::SHA1.hexdigest(request_body).downcase
+        hmac = calc_cuthorization_hmac('POST', CONTENT_TYPE, x_gge4_content_sha1, x_gge4_date, "/transaction/v#{API_VERSION}")
+        additional_headers = {
+          'authorization'       => "#{HMAC_SERVICE_ID} #{@options[:hmac_key_id]}:#{hmac}",
+          'x-gge4-date'         => x_gge4_date,
+          'x-gge4-content-sha1' => x_gge4_content_sha1
+        }
         begin
-          response = parse(ssl_post(url, build_request(action, request), POST_HEADERS))
+          response = parse(ssl_post(url, request_body, POST_HEADERS.merge(additional_headers)))
         rescue ResponseError => e
           response = parse_error(e.response)
         end
@@ -423,6 +435,15 @@ module ActiveMerchant #:nodoc:
         root.elements.to_a.each do |node|
           response[node.name.gsub(/EXact/, "Exact").underscore.to_sym] = (node.text || "").strip
         end
+      end
+
+      def calc_cuthorization_hmac(request_method, content_type, content_sha1, time, request_url)
+        data = request_method + "\n" +
+               content_type   + "\n" +
+               content_sha1   + "\n" +
+               time           + "\n" +
+               request_url
+        Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha1'), @options[:hmac_key], data))
       end
     end
   end
