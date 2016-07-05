@@ -96,10 +96,10 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
          force_utf8(transcript).
-          gsub(%r((&?M_id=)[^&]*), '\1[FILTERED]').
-          gsub(%r((&?M_key=)[^&]*), '\1[FILTERED]').
-          gsub(%r((&?C_cardnumber=)[^&]*), '\1[FILTERED]').
-          gsub(%r((%?C_cvv=)[^&]*), '\1[FILTERED]').
+          gsub(%r((M_id=)[^&]*), '\1[FILTERED]').
+          gsub(%r((M_key=)[^&]*), '\1[FILTERED]').
+          gsub(%r((C_cardnumber=)[^&]*), '\1[FILTERED]').
+          gsub(%r((C_cvv=)[^&]*), '\1[FILTERED]').
           gsub(%r((<ns1:CARDNUMBER>).+(</ns1:CARDNUMBER>)), '\1[FILTERED]\2').
           gsub(%r((<ns1:M_ID>).+(</ns1:M_ID>)), '\1[FILTERED]\2').
           gsub(%r((<ns1:M_KEY>).+(</ns1:M_KEY>)), '\1[FILTERED]\2')
