@@ -314,6 +314,14 @@ class SageGatewayTest < Test::Unit::TestCase
     assert_equal 'Failed', response.message
   end
 
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
+
   private
   def successful_authorization_response
     "\002A911911APPROVED                        00MX001234567890\0341000\0340\034\003"
@@ -427,5 +435,57 @@ class SageGatewayTest < Test::Unit::TestCase
   </soap:Body>
 </soap:Envelope>
     XML
+  end
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+opening connection to www.sagepayments.net:443...
+opened
+starting SSL for www.sagepayments.net:443...
+SSL established
+<- "POST /cgi-bin/eftBankcard.dll?transaction HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.sagepayments.net\r\nContent-Length: 444\r\n\r\n"
+<- "C_name=Longbob+Longsen&C_cardnumber=4111111111111111&C_exp=0917&C_cvv=123&T_amt=1.00&T_ordernum=1741a24e00a5a5f11653&C_address=456+My+Street&C_city=Ottawa&C_state=ON&C_zip=K1C2N6&C_country=CA&C_telephone=%28555%29555-5555&C_fax=%28555%29555-6666&C_email=longbob%40example.com&C_ship_name=Jim+Smith&C_ship_address=456+My+Street&C_ship_city=Ottawa&C_ship_state=ON&C_ship_zip=K1C2N6&C_ship_country=CA&M_id=214282982451&M_key=Z5W2S8J7X8T5&T_code=01"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Content-Type: text/html\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "Vary: Accept-Encoding\r\n"
+-> "Server: \r\n"
+-> "X-AspNet-Version: \r\n"
+-> "X-Powered-By: ASP.NET\r\n"
+-> "Date: Thu, 30 Jun 2016 02:58:40 GMT\r\n"
+-> "Connection: close\r\n"
+-> "Content-Length: 185\r\n"
+-> "\r\n"
+reading 185 bytes...
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x04\x00\xED\xBD\a`\x1CI\x96%&/m\xCA{\x7FJ\xF5J\xD7\xE0t\xA1\b\x80`\x13$\xD8\x90@\x10\xEC\xC1\x88\xCD\xE6\x92\xEC\x1DiG#)\xAB*\x81\xCAeVe]f\x16@\xCC\xED\x9D\xBC\xF7\xDE{\xEF\xBD\xF7\xDE{\xEF\xBD\xF7\xBA;\x9DN'\xF7\xDF\xFF?\\fd\x01l\xF6\xCEJ\xDA\xC9\x9E!\x80\xAA\xC8\x1F?~|\x1F?\"~\xAD\xE3\x1D<\xBB\xC7/_\xBE\xFA\xF2'O\x9F\xA6\xF4\a\xFD\x99v\x9F\xDD\x9D/\xE8\xAB\xCF?}\xF3\xF9\x17\xEF\xCE\xBF;\xDF\xF9\x9Dv\x1F\xEC\xEFf{\xFB\xF9\xCENv?\xBB\x7F\xBE\xBB\xFB\xE9\xFD{\xBF\xD3\xCE\xEF\xF4k\xFF?XI\x04rQ\x00\x00\x00"
+read 185 bytes
+Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+opening connection to www.sagepayments.net:443...
+opened
+starting SSL for www.sagepayments.net:443...
+SSL established
+<- "POST /cgi-bin/eftBankcard.dll?transaction HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.sagepayments.net\r\nContent-Length: 444\r\n\r\n"
+<- "C_name=Longbob+Longsen&C_cardnumber=[FILTERED]&C_exp=0917&C_cvv=[FILTERED]&T_amt=1.00&T_ordernum=1741a24e00a5a5f11653&C_address=456+My+Street&C_city=Ottawa&C_state=ON&C_zip=K1C2N6&C_country=CA&C_telephone=%28555%29555-5555&C_fax=%28555%29555-6666&C_email=longbob%40example.com&C_ship_name=Jim+Smith&C_ship_address=456+My+Street&C_ship_city=Ottawa&C_ship_state=ON&C_ship_zip=K1C2N6&C_ship_country=CA&M_id=[FILTERED]&M_key=[FILTERED]&T_code=01"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Content-Type: text/html\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "Vary: Accept-Encoding\r\n"
+-> "Server: \r\n"
+-> "X-AspNet-Version: \r\n"
+-> "X-Powered-By: ASP.NET\r\n"
+-> "Date: Thu, 30 Jun 2016 02:58:40 GMT\r\n"
+-> "Connection: close\r\n"
+-> "Content-Length: 185\r\n"
+-> "\r\n"
+reading 185 bytes...
+-> \"\u001F?\b\u0000\u0000\u0000\u0000\u0000\u0004\u0000??\a`\u001CI?%&/m?{\u007FJ?J??t?\b?`\u0013$?@\u0010??????\u001DiG#)?*??eVe]f\u0016@????{???{???;?N'????\\fd\u0001l??J??!???\u001F?~|\u001F?\"~??\u001D<??/_???'O???\a??v??/???}??\u0017??;???v\u001F??f{???Nv??\u007F?????{?????k??XI\u0004rQ\u0000\u0000\u0000\"
+read 185 bytes
+Conn close
+    POST_SCRUBBED
   end
 end
