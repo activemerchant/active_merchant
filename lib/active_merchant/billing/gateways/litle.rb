@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
         add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
-        add_payment_method(doc, payment_method)
+        add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
         add_debt_repayment(doc, options)
@@ -193,10 +193,13 @@ module ActiveMerchant #:nodoc:
         doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
-      def add_payment_method(doc, payment_method)
+      def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
+            if options[:exp_month] && options[:exp_year]
+              doc.expDate(exp_date(options[:exp_month], options[:exp_year]))
+            end
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
@@ -206,7 +209,7 @@ module ActiveMerchant #:nodoc:
           doc.card do
             doc.type_(CARD_TYPE[payment_method.brand])
             doc.number(payment_method.number)
-            doc.expDate(exp_date(payment_method))
+            doc.expDate(exp_date(payment_method.month, payment_method.year))
             doc.cardValidationNum(payment_method.verification_value)
           end
           if payment_method.is_a?(NetworkTokenizationCreditCard)
@@ -271,8 +274,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def exp_date(payment_method)
-        "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
+      def exp_date(month, year)
+        "#{format(month, :two_digits)}#{format(year, :two_digits)}"
       end
 
       def parse(kind, xml)
