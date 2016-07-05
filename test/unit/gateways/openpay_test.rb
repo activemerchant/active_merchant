@@ -62,7 +62,7 @@ class OpenpayTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    @gateway.expects(:ssl_request).returns(successful_purchase_response('cancelled'))
+    @gateway.expects(:ssl_request).returns(successful_void_response)
     authorization = 'tay1mauq3re4iuuk8bm4'
 
     assert response = @gateway.void(authorization)
@@ -93,6 +93,21 @@ class OpenpayTest < Test::Unit::TestCase
     assert response = @gateway.refund(@refund_amount, 'tei4hnvyp4agt5ecnbow')
     assert_failure response
     assert !response.authorization
+  end
+
+  def test_successful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorization_response, successful_void_response)
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, successful_void_response)
+    assert_failure response
+    assert_not_nil response.message
   end
 
   def test_successful_purchase_with_card_id
@@ -400,6 +415,10 @@ class OpenpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_void_response
+    successful_purchase_response('cancelled')
+  end
+
   def failed_purchase_response
     <<-RESPONSE
 {
@@ -408,6 +427,18 @@ class OpenpayTest < Test::Unit::TestCase
     "http_code": 402,
     "error_code": 3001,
     "request_id": "337cf033-9cd6-4314-a880-c71700e1625f"
+}
+    RESPONSE
+  end
+
+  def failed_authorize_response
+    <<-RESPONSE
+{
+    "category":"gateway",
+    "description":"The card is not supported on online transactions",
+    "http_code":412,
+    "error_code":3008,
+    "request_id":"a4001ef2-7613-4ec8-a23b-4de45154dbe4"
 }
     RESPONSE
   end

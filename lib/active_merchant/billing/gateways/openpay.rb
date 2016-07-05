@@ -52,6 +52,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options)
       end
 
+      def verify(credit_card, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def store(creditcard, options = {})
         card_params = {}
         add_creditcard(card_params, creditcard, options)
