@@ -1,7 +1,38 @@
+require File.dirname(__FILE__) + '/moip_status'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module MoipRecurringApi #:nodoc:
       include MoipStatus
+
+      def create_plan(plan_params)
+        params = plan_params(plan_params)
+        params[:code] = "PLAN-CODE-#{plan_params[:plan_code]}" if plan_params[:plan_code]
+
+        moip_response = Moip::Assinaturas::Plan.create(params, moip_auth: moip_auth)
+        build_response_plan(moip_response)
+      end
+
+      def find_plan(plan_code)
+        plan_code = '9XQZVK' if plan_code.nil?
+
+        moip_response = Moip::Assinaturas::Plan.details(plan_code, moip_auth: moip_auth)
+        build_response_plan(moip_response)
+      end
+
+      def update_plan(params)
+
+        begin
+          moip_response = Moip::Assinaturas::Plan.update(plan_params(params), moip_auth: moip_auth)
+          success, message = [true, 'Plano atualizado com sucesso.']
+          body = moip_response
+        rescue
+          success, message = [false, 'Erro ao atualizar plano.']
+          body = { success: false, message: 'Ocorreu um erro no retorno do webservice.'}
+        end
+
+          Response.new(success, message, body, test: test?)
+      end
+
 
       def recurring(amount, credit_card, options = {})
         moip_plan_code = "PLAN-CODE-#{options[:subscription][:plan_code]}"
@@ -59,6 +90,15 @@ module ActiveMerchant #:nodoc:
         response = Moip::Assinaturas::Subscription.cancel(subscription_code, moip_auth: moip_auth)
         Response.new(response[:success], nil, response, subscription_action: 'cancel',
           authorization: subscription_code,test: test?)
+      end
+
+      def build_response_plan(response)
+        if response[:success]
+          Response.new(response[:success], response[:plan][:message],
+            response, test: test?)
+        else
+          Response.new(response[:success], response[:message], response, test: test?)
+        end
       end
 
       private
@@ -127,6 +167,32 @@ module ActiveMerchant #:nodoc:
           Date.new(response[:subscription][:next_invoice_date][:year],
           response[:subscription][:next_invoice_date][:month],
           response[:subscription][:next_invoice_date][:day])
+      end
+
+      def plan_params(params)
+        unit, length = INTERVAL_MAP[params[:period]]
+
+        plan_attributes = {
+          name: "ONE INVOICE FOR #{length} #{unit} #{params[:plan_code]}",
+          description: 'PLAN USED TO CREATE SUBSCRIPTIONS BY EDOOLS',
+          amount: params[:price],
+          status: 'ACTIVE',
+            interval: {
+              unit: unit,
+              length: length
+            },
+            trial: {
+              days: params[:trials],
+              enabled: params[:trials].present? && params[:trials] > 0
+            }
+          }
+
+          plan_attributes[:code] = params[:plan_code] if params[:plan_code]
+          plan_attributes[:trial][:hold_setup_fee] = params[:hold_setup_fee] if params[:hold_setup_fee]
+          plan_attributes[:payment_method] = params[:payment_method] if params[:payment_method]
+          plan_attributes[:billing_cycles] = params[:cycles] if params[:cycles]
+
+          plan_attributes
         end
 
         def invoices_to_response(response)
