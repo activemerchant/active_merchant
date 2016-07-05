@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Sage: Add support for scrubbing [bruno]
 * Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]
 * Openpay: Add support for verify [duff]
 * Clearhaus: Fix refund of captures [duff]
