@@ -14,7 +14,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
       @declined_card = credit_card('4242424242424242', {
         first_name: 'Richard',
         last_name: 'Deschamps',
-        :verification_value => '688'
+        :verification_value => '6881'
         })
 
         @options = {
@@ -26,35 +26,33 @@ class RemotePagarmeTest < Test::Unit::TestCase
           order_id: '1',
           ip: '127.0.0.1',
           customer: {
-            document_number: "94123506518",
+            legal_identifier: "94123506518",
             id: "71097",
             :document_number => "18152564000105",
             :name => "Joao Da Silva",
             :email => "joao@gmail.com",
             :born_at => 13121988,
             :gender => "M",
-            :phone => {
-              :ddi => 55,
-              :ddd => 11,
-              :number => 999887766
-            },
-            :address => {
-              :street => "rua qualquer",
-              :complement => "apto",
-              :number => 13,
-              :district => "pinheiros",
-              :city => "sao paulo",
-              :state => "SP",
-              :zipcode => "05444040",
-              :country => "Brasil"
-            }
+            :phone => '(11) 99988-7766',
+          },
+          :address => {
+            :street => "rua qualquer",
+            :complement => "apto",
+            :number => 13,
+            :district => "pinheiros",
+            :city => "sao paulo",
+            :state => "SP",
+            :zipcode => "05444040",
+            :country => "Brasil"
           },
           :card_number => "4901720080344448",
           :card_holder_name => "Jose da Silva",
           :card_expiration_month => "10",
           :card_expiration_year => "21",
           :card_cvv => "314",
-          plan_code: 41682,
+          'subscription' => {
+              'plan_code' => 41682
+          },
           payment_method: 'credit_card',
           invoice: '1',
           merchant: 'Richard\'s',
@@ -72,7 +70,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
         assert_success response
 
         assert_equal 'credit_card', response.params["payment_method"]
-        assert_equal 'paid', response.params["action"]
+        assert_equal :confirm, response.params["action"]
         assert_equal 'Transação aprovada', response.message
 
         assert_nil response.params["current_transaction"][:boleto_url]
@@ -97,7 +95,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
       end
 
       def test_failed_recurring_credit_card_when_plan_code_is_invalid
-        @options_recurring[:plan_code] = '999999'
+        @options_recurring['subscription']['plan_code'] = '999999'
 
         response = @gateway.recurring(@amount, @credit_card, @options_recurring)
 
@@ -115,10 +113,10 @@ class RemotePagarmeTest < Test::Unit::TestCase
         response = @gateway.recurring(@amount, @credit_card, @options_recurring)
 
         assert_instance_of Response, response
-        #assert_success response
+        assert_success response
 
         assert_equal 'boleto', response.params["payment_method"]
-        assert_equal 'unpaid', response.params["action"]
+        assert_equal :cancel, response.params["action"]
 
         assert_not_nil response.params["current_transaction"][:boleto_url]
         assert_not_nil response.params["current_transaction"][:boleto_barcode]
@@ -144,7 +142,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
 
       def test_failed_recurring_boleto_when_plan_code_is_invalid
         @options_recurring[:payment_method] = 'boleto'
-        @options_recurring[:plan_code] = '999999'
+        @options_recurring['subscription']['plan_code'] = '999999'
 
         response = @gateway.recurring(@amount, @credit_card, @options_recurring)
 
@@ -294,7 +292,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
         assert_success response
 
         assert_equal 'credit_card', response.params['invoice'][:payment_method]
-        assert_equal 'paid', response.params['invoice'][:action]
+        assert_equal :confirm, response.params['invoice'][:action]
       end
 
 
@@ -353,7 +351,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
       assert_success response
 
       assert_equal 15151, response.params['payment'][:amount]
-      assert_equal 'waiting_funds', response.params['payment'][:action]
+      assert_equal :wait_confirmation, response.params['payment'][:action]
       assert_equal 29006, response.params['payment'][:id]
 
       end
@@ -432,7 +430,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
         response = @gateway.find_plan(45052)
 
         assert_instance_of Response, response
-        #assert_success response
+        assert_success response
 
         assert_equal "ONE INVOICE FOR 1 MONTH ", response.params["name"]
         assert_equal 30, response.params["days"]
@@ -441,25 +439,24 @@ class RemotePagarmeTest < Test::Unit::TestCase
         assert response.test?
       end
 
-      # verificar como tratar isso
-      # def test_failed_find_plan_on_nil_param
-      #   response = @gateway.find_plan(nil)
-      #
-      #   assert_instance_of Response, response
-      #   #assert_success response
-      #
-      #   assert_equal 'internal_error', response.params["errors"][0]["type"]
-      #   assert_equal 'Internal server error.', response.params["errors"][0]["message"]
-      #   assert_equal nil, response.plan_code
-      #   assert response.test?
-      #
-      # end
+      def test_failed_find_plan_on_nil_param
+        response = @gateway.find_plan(nil)
+
+        assert_instance_of Response, response
+        assert_failure response
+
+        assert_equal 'internal_error', response.params["errors"][0]["type"]
+        assert_equal 'Internal server error.', response.params["errors"][0]["message"]
+        assert_equal nil, response.plan_code
+        assert response.test?
+
+      end
 
       def test_failed_find_plan_on_plan_not_exists
         response = @gateway.find_plan(137352)
 
         assert_instance_of Response, response
-        #assert_success response
+        assert_failure response
 
         assert_equal 'not_found', response.params["errors"][0]["type"]
         assert_equal 'Plan não encontrado', response.params["errors"][0]["message"]
@@ -477,7 +474,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
         response = @gateway.create_plan(params_plan)
 
         assert_instance_of Response, response
-        #assert_success response
+        assert_success response
 
         assert_equal 'ONE INVOICE FOR 1 MONTH ', response.params["name"]
         assert_equal 30, response.params["days"]
@@ -491,7 +488,7 @@ class RemotePagarmeTest < Test::Unit::TestCase
         response = @gateway.create_plan(params_plan)
 
         assert_instance_of Response, response
-        #assert_success response
+        assert_failure response
 
         assert_equal 'amount', response.params["errors"][0]["parameter_name"]
         assert_equal 'invalid_parameter', response.params["errors"][0]["type"]
@@ -505,20 +502,20 @@ class RemotePagarmeTest < Test::Unit::TestCase
       def test_success_update_plan
 
         params_plan = {
-            name: "Plano Diamond Platinum",
+            name: "Plano Diamond Platinum 135212",
             trials: 1,
-            plan_code: 45053
+            plan_code: 45058
         }
 
         response = @gateway.update_plan(params_plan)
 
         assert_instance_of Response, response
-        #assert_success response
+        assert_success response
 
-        assert_equal 'Plano Diamond Platinum', response.params["name"]
+        assert_equal 'Plano Diamond Platinum 135212', response.params["name"]
         assert_equal 1, response.params["trial_days"]
         assert_not_nil response.plan_code
-        assert_equal 45053, response.plan_code
+        assert_equal 45058, response.plan_code
 
         assert response.test?
       end
@@ -534,12 +531,26 @@ class RemotePagarmeTest < Test::Unit::TestCase
         response = @gateway.update_plan(params_plan)
 
         assert_instance_of Response, response
-        #assert_success response
+        assert_failure response
 
         assert_equal 'not_found', response.params["errors"][0]['type']
         assert_equal 'Plan not found.', response.params["errors"][0]['message']
         assert_equal nil, response.params["errors"][0]['parameter_name']
         assert_equal nil, response.plan_code
+
+        assert response.test?
+      end
+
+      def test_success_find_plan_updated
+        sleep 4
+        response = @gateway.find_plan(45058)
+
+        assert_instance_of Response, response
+        assert_success response
+
+        assert_equal "Plano Diamond Platinum 135212", response.params["name"]
+        assert_equal 1, response.params["trial_days"]
+        assert_equal 45058, response.plan_code
 
         assert response.test?
       end

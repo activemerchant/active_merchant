@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
     class Response
       attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result,
                   :error_code, :emv_authorization, :payment_action, :external_url,
-                  :subscription_action, :next_charge_at, :plan_code
+                  :subscription_action, :next_charge_at, :plan_code, :boleto_url
 
       def success?
         @success
@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
         @subscription_action = options[:subscription_action]
         @next_charge_at = options[:next_charge_at]
         @plan_code = options[:plan_code]
+        @boleto_url = options[:boleto_url]
 
         @avs_result = if options[:avs_result].kind_of?(AVSResult)
           options[:avs_result].to_hash

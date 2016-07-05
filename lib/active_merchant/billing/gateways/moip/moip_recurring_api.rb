@@ -50,9 +50,9 @@ module ActiveMerchant #:nodoc:
 
         if resp[:success]
           Response.new(resp[:success], resp[:subscription][:message],
-            resp, test: test?, authorization: resp[:subscription][:code],
-            subscription_action: subscription_action_from(resp),
-            next_charge_at: next_charge_at(resp))
+          resp, test: test?, authorization: resp[:subscription][:code],
+          subscription_action: subscription_action_from(resp),
+          next_charge_at: next_charge_at(resp))
         else
           Response.new(resp[:success], resp[:message], resp)
         end
@@ -81,9 +81,9 @@ module ActiveMerchant #:nodoc:
       def subscription_details(subscription_code)
         response = Moip::Assinaturas::Subscription.details(subscription_code, moip_auth: moip_auth)
         Response.new(response[:success], nil, response,
-          test: test?,
-          subscription_action: SUBSCRIPTION_STATUS_MAP[response[:subscription][:status].downcase],
-          next_charge_at: next_invoice_date(response[:subscription][:next_invoice_date]))
+        test: test?,
+        subscription_action: SUBSCRIPTION_STATUS_MAP[response[:subscription][:status].downcase],
+        next_charge_at: next_invoice_date(response[:subscription][:next_invoice_date]))
       end
 
       def cancel_recurring(subscription_code)
@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
 
       def ensure_customer_created(options, credit_card)
         return if Moip::Assinaturas::Customer.details(customer_code(options),
-          moip_auth: moip_auth)[:success]
+        moip_auth: moip_auth)[:success]
 
         create_customer(options[:customer], options[:address], credit_card)
       rescue
@@ -139,32 +139,32 @@ module ActiveMerchant #:nodoc:
             state: address[:state],
             country: "BRA",
             zipcode: address[:zip_code]
-            },
-            billing_info: {
-              credit_card: {
-                holder_name: credit_card.name,
-                number: credit_card.number,
-                expiration_month: credit_card.month,
-                expiration_year: credit_card.year - 2000
-              }
+          },
+          billing_info: {
+            credit_card: {
+              holder_name: credit_card.name,
+              number: credit_card.number,
+              expiration_month: credit_card.month,
+              expiration_year: credit_card.year - 2000
             }
-            }, true, moip_auth: moip_auth)
-      end
+          }
+          }, true, moip_auth: moip_auth)
+        end
 
-      def customer_code(options)
-        @customer_code ||= "ED#{options[:customer][:id]}"
-      end
+        def customer_code(options)
+          @customer_code ||= "ED#{options[:customer][:id]}"
+        end
 
-      def subscription_action_from(response)
-        return :fail unless response[:success]
+        def subscription_action_from(response)
+          return :fail unless response[:success]
 
-        INVOICE_TO_SUBSCRIPTION_STATUS_MAP[response[:subscription][:invoice][:status][:code]]
-      end
+          INVOICE_TO_SUBSCRIPTION_STATUS_MAP[response[:subscription][:invoice][:status][:code]]
+        end
 
-      def next_charge_at(response)
-        return nil unless response[:success]
+        def next_charge_at(response)
+          return nil unless response[:success]
 
-        Date.new(response[:subscription][:next_invoice_date][:year],
+          Date.new(response[:subscription][:next_invoice_date][:year],
           response[:subscription][:next_invoice_date][:month],
           response[:subscription][:next_invoice_date][:day])
       end
@@ -223,7 +223,7 @@ module ActiveMerchant #:nodoc:
 
         def created_at(creation_date)
           DateTime.new(creation_date[:year], creation_date[:month], creation_date[:day],
-            creation_date[:hour], creation_date[:minute], creation_date[:second], '-03:00')
+          creation_date[:hour], creation_date[:minute], creation_date[:second], '-03:00')
         end
 
         def payments_to_response(response)
