@@ -1,6 +1,38 @@
+require File.dirname(__FILE__) + '/moip_status'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module MoipRecurringApi #:nodoc:
+      include MoipStatus
+
+      def create_plan(plan_params)
+        params = plan_params(plan_params)
+        params[:code] = "PLAN-CODE-#{plan_params[:plan_code]}" if plan_params[:plan_code]
+
+        moip_response = Moip::Assinaturas::Plan.create(params, moip_auth: moip_auth)
+        build_response_plan(moip_response)
+      end
+
+      def find_plan(plan_code)
+        plan_code = '9XQZVK' if plan_code.nil?
+
+        moip_response = Moip::Assinaturas::Plan.details(plan_code, moip_auth: moip_auth)
+        build_response_plan(moip_response)
+      end
+
+      def update_plan(params)
+
+        begin
+          moip_response = Moip::Assinaturas::Plan.update(plan_params(params), moip_auth: moip_auth)
+          success, message = [true, 'Plano atualizado com sucesso.']
+          body = moip_response
+        rescue
+          success, message = [false, 'Erro ao atualizar plano.']
+          body = { success: false, message: 'Ocorreu um erro no retorno do webservice.'}
+        end
+
+          Response.new(success, message, body, test: test?)
+      end
+
 
       def recurring(amount, credit_card, options = {})
         moip_plan_code = "PLAN-CODE-#{options[:subscription][:plan_code]}"
@@ -18,9 +50,9 @@ module ActiveMerchant #:nodoc:
 
         if resp[:success]
           Response.new(resp[:success], resp[:subscription][:message],
-          resp, test: test?, authorization: resp[:subscription][:code],
-          subscription_action: subscription_action_from(resp),
-          next_charge_at: next_charge_at(resp))
+            resp, test: test?, authorization: resp[:subscription][:code],
+            subscription_action: subscription_action_from(resp),
+            next_charge_at: next_charge_at(resp))
         else
           Response.new(resp[:success], resp[:message], resp)
         end
@@ -49,15 +81,24 @@ module ActiveMerchant #:nodoc:
       def subscription_details(subscription_code)
         response = Moip::Assinaturas::Subscription.details(subscription_code, moip_auth: moip_auth)
         Response.new(response[:success], nil, response,
-        test: test?,
-        subscription_action: SUBSCRIPTION_STATUS_MAP[response[:subscription][:status].downcase],
-        next_charge_at: next_invoice_date(response[:subscription][:next_invoice_date]))
+          test: test?,
+          subscription_action: SUBSCRIPTION_STATUS_MAP[response[:subscription][:status].downcase],
+          next_charge_at: next_invoice_date(response[:subscription][:next_invoice_date]))
       end
 
       def cancel_recurring(subscription_code)
         response = Moip::Assinaturas::Subscription.cancel(subscription_code, moip_auth: moip_auth)
         Response.new(response[:success], nil, response, subscription_action: 'cancel',
           authorization: subscription_code,test: test?)
+      end
+
+      def build_response_plan(response)
+        if response[:success]
+          Response.new(response[:success], response[:plan][:message],
+            response, test: test?)
+        else
+          Response.new(response[:success], response[:message], response, test: test?)
+        end
       end
 
       private
@@ -68,7 +109,7 @@ module ActiveMerchant #:nodoc:
 
       def ensure_customer_created(options, credit_card)
         return if Moip::Assinaturas::Customer.details(customer_code(options),
-        moip_auth: moip_auth)[:success]
+          moip_auth: moip_auth)[:success]
 
         create_customer(options[:customer], options[:address], credit_card)
       rescue
@@ -98,34 +139,60 @@ module ActiveMerchant #:nodoc:
             state: address[:state],
             country: "BRA",
             zipcode: address[:zip_code]
-          },
-          billing_info: {
-            credit_card: {
-              holder_name: credit_card.name,
-              number: credit_card.number,
-              expiration_month: credit_card.month,
-              expiration_year: credit_card.year - 2000
+            },
+            billing_info: {
+              credit_card: {
+                holder_name: credit_card.name,
+                number: credit_card.number,
+                expiration_month: credit_card.month,
+                expiration_year: credit_card.year - 2000
+              }
             }
-          }
-          }, true, moip_auth: moip_auth)
-        end
+            }, true, moip_auth: moip_auth)
+      end
 
-        def customer_code(options)
-          @customer_code ||= "ED#{options[:customer][:id]}"
-        end
+      def customer_code(options)
+        @customer_code ||= "ED#{options[:customer][:id]}"
+      end
 
-        def subscription_action_from(response)
-          return :fail unless response[:success]
+      def subscription_action_from(response)
+        return :fail unless response[:success]
 
-          INVOICE_TO_SUBSCRIPTION_STATUS_MAP[response[:subscription][:invoice][:status][:code]]
-        end
+        INVOICE_TO_SUBSCRIPTION_STATUS_MAP[response[:subscription][:invoice][:status][:code]]
+      end
 
-        def next_charge_at(response)
-          return nil unless response[:success]
+      def next_charge_at(response)
+        return nil unless response[:success]
 
-          Date.new(response[:subscription][:next_invoice_date][:year],
+        Date.new(response[:subscription][:next_invoice_date][:year],
           response[:subscription][:next_invoice_date][:month],
           response[:subscription][:next_invoice_date][:day])
+      end
+
+      def plan_params(params)
+        unit, length = INTERVAL_MAP[params[:period]]
+
+        plan_attributes = {
+          name: "ONE INVOICE FOR #{length} #{unit} #{params[:plan_code]}",
+          description: 'PLAN USED TO CREATE SUBSCRIPTIONS BY EDOOLS',
+          amount: params[:price],
+          status: 'ACTIVE',
+            interval: {
+              unit: unit,
+              length: length
+            },
+            trial: {
+              days: params[:trials],
+              enabled: params[:trials].present? && params[:trials] > 0
+            }
+          }
+
+          plan_attributes[:code] = params[:plan_code] if params[:plan_code]
+          plan_attributes[:trial][:hold_setup_fee] = params[:hold_setup_fee] if params[:hold_setup_fee]
+          plan_attributes[:payment_method] = params[:payment_method] if params[:payment_method]
+          plan_attributes[:billing_cycles] = params[:cycles] if params[:cycles]
+
+          plan_attributes
         end
 
         def invoices_to_response(response)
@@ -156,7 +223,7 @@ module ActiveMerchant #:nodoc:
 
         def created_at(creation_date)
           DateTime.new(creation_date[:year], creation_date[:month], creation_date[:day],
-          creation_date[:hour], creation_date[:minute], creation_date[:second], '-03:00')
+            creation_date[:hour], creation_date[:minute], creation_date[:second], '-03:00')
         end
 
         def payments_to_response(response)

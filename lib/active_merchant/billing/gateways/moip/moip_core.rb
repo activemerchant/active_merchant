@@ -4,8 +4,7 @@ module ActiveMerchant #:nodoc:
       URL_ACTIONS = {
           'authenticate'  => '/ws/alpha/EnviarInstrucao/Unica',
           'pay'           => '/rest/pagamento?callback=?',
-          'query'         => '/ws/alpha/ConsultarInstrucao/',
-          'plans'         => '/assinaturas/v1/plans'
+          'query'         => '/ws/alpha/ConsultarInstrucao/'
       }
 
       CARD_BRAND = {

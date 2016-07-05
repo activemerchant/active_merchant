@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module MoipStatus #:nodoc:
-      
+
       INTERVAL_MAP = {
         'monthly' => ['MONTH', 1],
         'quarterly' => ['MONTH', 3],
