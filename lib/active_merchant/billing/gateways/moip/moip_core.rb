@@ -212,8 +212,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, format, url, parameters, headers = {}, payment_method = nil, authorization = nil)
         response = send("parse_#{format}", ssl_request(method, url, parameters, headers))
-        puts '-----'
-        puts response
         params = params_from(response)
         Response.new(success?(response),
                      message_from(response),

@@ -192,6 +192,7 @@ class RemoteMoipTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal "Plano criado com sucesso", response.message
+    assert_not_nil response.plan_code
     assert_true response.test?
 
   end
@@ -205,6 +206,7 @@ class RemoteMoipTest < Test::Unit::TestCase
     }
 
     response = @gateway.create_plan(params_plan)
+    assert_not_nil response.plan_code
     assert_success response
 
     plan_response = response.params['plan']
@@ -233,6 +235,7 @@ class RemoteMoipTest < Test::Unit::TestCase
 
     assert_equal "Plano atualizado com sucesso.", response.message
     assert_true response.params['success']
+    assert_not_nil response.plan_code
     assert_true response.test?
 
   end
