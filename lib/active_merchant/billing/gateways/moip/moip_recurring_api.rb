@@ -9,6 +9,8 @@ module ActiveMerchant #:nodoc:
         params[:code] = "PLAN-CODE-#{plan_params[:plan_code]}" if plan_params[:plan_code]
 
         moip_response = Moip::Assinaturas::Plan.create(params, moip_auth: moip_auth)
+        moip_response[:code] = params[:code]
+
         build_response_plan(moip_response)
       end
 
@@ -30,7 +32,7 @@ module ActiveMerchant #:nodoc:
           body = { success: false, message: 'Ocorreu um erro no retorno do webservice.'}
         end
 
-          Response.new(success, message, body, test: test?)
+          Response.new(success, message, body, test: test?, plan_code: plan_code_from(params))
       end
 
 
@@ -95,10 +97,14 @@ module ActiveMerchant #:nodoc:
       def build_response_plan(response)
         if response[:success]
           Response.new(response[:success], response[:plan][:message],
-            response, test: test?)
+            response, test: test?, plan_code: plan_code_from(response))
         else
           Response.new(response[:success], response[:message], response, test: test?)
         end
+      end
+
+      def plan_code_from(response)
+         response && response["code"] || response[:code] || response[:plan_code] || nil
       end
 
       private
