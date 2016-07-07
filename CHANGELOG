@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* Openpay: Add support for verify [duff]
+* Clearhaus: Fix refund of captures [duff]
+
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
 * VisaNetPeru: Add ability to refund [duff]
@@ -40,7 +43,6 @@
 * Map test_mode_live_card code to new standard error code [berkcaputcu]
 * Elavon: Pass customer_number correctly [duff]
 * Stripe: add SG to supported_countries attribute [timbeiko]
-* Openpay: Add support for verify [duff]
 
 == Version 1.59.0 (May 18, 2016)
 * Orbital: Allow AVS parts to be sent sans country [duff]
