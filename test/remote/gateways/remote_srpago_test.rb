@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class RemoteCardStreamTest < Test::Unit::TestCase
+class RemoteSrpagoTest < Test::Unit::TestCase
   def setup
     @gateway = SrPagoGateway.new(fixtures(:srpago))
 
