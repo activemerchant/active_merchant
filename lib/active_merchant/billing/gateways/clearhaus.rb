@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           test: test?,
           error_code: error_code_from(response)
         )
@@ -193,8 +193,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response)
-        response['id']
+      def authorization_from(action, response)
+        id_of_auth_for_capture(action) || response['id']
+      end
+
+      def id_of_auth_for_capture(action)
+        match = action.match(/authorizations\/(.+)\/captures/)
+        return nil unless match
+
+        match.captures.first
       end
 
       def generate_signature(body)

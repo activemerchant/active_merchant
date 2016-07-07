@@ -146,6 +146,16 @@ class RemoteClearhausTest < Test::Unit::TestCase
     assert_equal 'invalid transaction id', response.message
   end
 
+  def test_successful_refund_of_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount, capture.authorization)
+    assert_success refund
+    assert_equal 'Approved', refund.message
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

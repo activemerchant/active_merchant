@@ -98,12 +98,15 @@ class ClearhausTest < Test::Unit::TestCase
   end
 
   def test_successful_capture
-    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    auth_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth_response
 
-    response = @gateway.capture(@amount, @credit_card, @options)
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    response = @gateway.capture(@amount, auth_response.authorization, @options)
     assert_success response
 
-    assert_equal 'd8e92a70-3030-4d4d-8ad2-684b230c1bed', response.authorization
+    assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization, "It's acutally the id of the original auth"
     assert response.test?
   end
 
