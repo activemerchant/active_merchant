@@ -13,9 +13,10 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'BRL'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
-
       self.homepage_url = 'https://pagar.me/'
+      self.display_fullname = 'Pagar.me'
       self.display_name = 'Pagar.me'
+      self.display_logo = 'https://cdn.edools.com/assets/images/gateways/pagarMe.png'
 
       STANDARD_ERROR_CODE_MAPPING = {
         'refused' => STANDARD_ERROR_CODE[:card_declined],
@@ -34,6 +35,8 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options={})
         post = {}
         add_amount(post, money)
+        add_installments(post, options)
+        add_soft_descriptor(post, options)
         add_payment_method(post, payment_method)
         add_metadata(post, options)
 
@@ -43,6 +46,8 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment_method, options={})
         post = {}
         add_amount(post, money)
+        add_installments(post, options)
+        add_soft_descriptor(post, options)
         add_payment_method(post, payment_method)
         add_metadata(post, options)
 
@@ -115,6 +120,14 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money)
         post[:amount] = amount(money)
+      end
+
+      def add_installments(post, options={})
+        post[:installments] = options["credit_card"].try(:[], "installments")
+      end
+
+      def add_soft_descriptor(post, options={})
+        post[:soft_descriptor] = options["extras"].try(:[], "soft_descriptor")
       end
 
       def add_payment_method(post, payment_method)
