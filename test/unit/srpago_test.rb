@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class CardStreamTest < Test::Unit::TestCase
+class SrpagoTest < Test::Unit::TestCase
   def setup
     @gateway = SrPagoGateway.new(apì_key: "3d388696-2d3d-480c-84af-0f779b4b7a23", api_secret: "r/7LmW2Y)$m3?jC(/lw*")
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
