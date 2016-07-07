@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options={})
         post = {}
         add_amount(post, money)
+        add_installments(post, options)
         add_payment_method(post, payment_method)
         add_metadata(post, options)
 
@@ -43,6 +44,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment_method, options={})
         post = {}
         add_amount(post, money)
+        add_installments(post, options)
         add_payment_method(post, payment_method)
         add_metadata(post, options)
 
@@ -115,6 +117,10 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money)
         post[:amount] = amount(money)
+      end
+
+      def add_installments(post, options={})
+        post[:installments] = options["credit_card"].try(:[], "installments")
       end
 
       def add_payment_method(post, payment_method)
