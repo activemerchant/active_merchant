@@ -220,6 +220,7 @@ module ActiveMerchant #:nodoc:
           plan_code: plan_code_from(response),
           external_url: boleto_url_from(response),
           payment_action: payment_action_from(response),
+          subscription_action: subscription_action_from(response)
         )
       end
 
@@ -239,6 +240,10 @@ module ActiveMerchant #:nodoc:
             "message" => msg
           }]
         }
+      end
+
+      def subscription_action_from(response)
+        SUBSCRIPTION_STATUS_MAP[response['status']] if response['status']
       end
 
       def success_from(response)

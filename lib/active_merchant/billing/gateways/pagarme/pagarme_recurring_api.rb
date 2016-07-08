@@ -55,8 +55,9 @@ module ActiveMerchant #:nodoc:
         commit(:put, "subscriptions/#{invoice_id}", params)
       end
 
-      def cancel_subscription(invoice_id)
+      def cancel_recurring(invoice_id)
         params = {}
+
         commit(:post, "subscriptions/#{invoice_id}/cancel", params)
       end
 
