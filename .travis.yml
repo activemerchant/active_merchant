@@ -24,5 +24,4 @@ matrix:
 
 notifications:
   email:
-  - payments-dev@shopify.com
   - nathaniel@talbott.ws
