@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(BR)
       self.supported_cardtypes = %i(visa master american_express diners_club hipercard elo hiper)
-      self.supported_banks = %i(itau santander banco_do_brasil bradesco banrisul)
+      self.supported_banks = %i(itau banco_do_brasil bradesco banrisul)
       self.supported_boletos = %i(bradesco)
       self.homepage_url = 'https://www.moip.com.br/'
       self.display_fullname = 'Moip Pagamentos S/A'
