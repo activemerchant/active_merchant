@@ -6,7 +6,11 @@ module ActiveMerchant #:nodoc:
 
       def create_plan(plan_params)
         params = plan_params(plan_params)
-        params[:code] = "PLAN-CODE-#{plan_params[:plan_code]}" if plan_params[:plan_code]
+
+        if plan_params[:plan_code]
+          code = "PLAN-CODE-#{plan_params[:plan_code]}"
+          params[:code] = code.gsub("-", "").gsub(".", "")
+        end
 
         moip_response = Moip::Assinaturas::Plan.create(params, moip_auth: moip_auth)
         moip_response[:code] = params[:code]
@@ -22,7 +26,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def update_plan(params)
-
         begin
           moip_response = Moip::Assinaturas::Plan.update(plan_params(params), moip_auth: moip_auth)
           success, message = [true, 'Plano atualizado com sucesso.']
@@ -32,18 +35,16 @@ module ActiveMerchant #:nodoc:
           body = { success: false, message: 'Ocorreu um erro no retorno do webservice.'}
         end
 
-          Response.new(success, message, body, test: test?, plan_code: plan_code_from(params))
+        Response.new(success, message, body, test: test?, plan_code: plan_code_from(params))
       end
 
 
       def recurring(amount, credit_card, options = {})
-        moip_plan_code = "PLAN-CODE-#{options[:subscription][:plan_code]}"
-
         cust = ensure_customer_created(options, credit_card)
 
         params = {
           code: options[:transaction_id],
-          plan: { code: moip_plan_code },
+          plan: { code: options[:subscription][:plan_code] },
           amount: amount,
           customer: { code: customer_code(options) }
         }
