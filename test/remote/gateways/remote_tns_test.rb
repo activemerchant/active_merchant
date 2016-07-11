@@ -2,9 +2,8 @@ require 'test_helper'
 
 class RemoteTnsTest < Test::Unit::TestCase
 
-  # Test credentials will fail OpenSSL certificate verification
-  # To test, in connection.rb, configure_ssl's verify_mode must be VERIFY_NONE
   def setup
+    TnsGateway.ssl_strict = false # TNS sandbox has an improperly installed cert
     @gateway = TnsGateway.new(fixtures(:tns))
 
     @amount = 100
@@ -17,6 +16,10 @@ class RemoteTnsTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+  end
+
+  def teardown
+    TnsGateway.ssl_strict = true
   end
 
   def test_successful_purchase
