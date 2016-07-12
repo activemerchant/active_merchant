@@ -3,6 +3,7 @@
 * Openpay: Add support for verify [duff]
 * Clearhaus: Fix refund of captures [duff]
 * TNS: Try TLS v1 [duff]
+* PaypalExpress: Add SoftDescriptor field [talyssonoc]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
