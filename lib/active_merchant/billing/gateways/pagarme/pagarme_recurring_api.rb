@@ -17,18 +17,22 @@ module ActiveMerchant #:nodoc:
         }
 
         if options[:payment_method] == 'credit_card'
-          # if options[:card_hash].present?
-          #   params[:card_hash] = options[:card_hash]
-          # else
+          if options[:card_id].present?
+            params[:card_id] = options[:card_id]
+          elsif options[:card_hash].present?
+            params[:card_hash] = options[:card_hash]
+          else
             add_credit_card(params, credit_card)
-          # end
+          end
         end
 
         response            = commit(:post, 'subscriptions', params)
+        card_id             = response.params["card"] && response.params["card"]["id"] || nil
         response_options    = {
           authorization:       response.params['id'],
           subscription_action: SUBSCRIPTION_STATUS_MAP[response.params['status']],
-          test:                response.test?
+          test:                response.test?,
+          card_id:             card_id
         }
 
         current_transaction = response.params['current_transaction']

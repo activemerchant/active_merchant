@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_installments(post, options)
         add_soft_descriptor(post, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_metadata(post, options)
 
         commit(:post, 'transactions', post)
@@ -130,13 +130,19 @@ module ActiveMerchant #:nodoc:
         post[:soft_descriptor] = options["extras"].try(:[], "soft_descriptor")
       end
 
-      def add_payment_method(post, payment_method)
+      def add_payment_method(post, payment_method, options)
         if payment_method == :boleto
           post[:payment_method] = payment_method
         else
           post[:payment_method] = 'credit_card'
 
-          add_credit_card(post, payment_method)
+          if options["card_id"].present?
+            post[:card_id] = options["card_id"]
+          elsif options["card_hash"].present?
+            post[:card_hash] = options["card_hash"]
+          else
+            add_credit_card(post, payment_method)
+          end
         end
       end
 
@@ -191,15 +197,20 @@ module ActiveMerchant #:nodoc:
 
       def api_request(method, endpoint, parameters = nil, options = {})
         raw_response = response = nil
+
         begin
-          raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(options))
+          raw_response = ssl_request(method, self.live_url + endpoint,
+            post_data(parameters), headers(options))
+
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
+
           response = response_error(raw_response)
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
+
         response
       end
 
@@ -220,7 +231,8 @@ module ActiveMerchant #:nodoc:
           plan_code: plan_code_from(response),
           external_url: boleto_url_from(response),
           payment_action: payment_action_from(response),
-          subscription_action: subscription_action_from(response)
+          subscription_action: subscription_action_from(response),
+          card_id: card_id_from(response)
         )
       end
 
@@ -279,6 +291,10 @@ module ActiveMerchant #:nodoc:
           msg = json_error(response)
           msg["errors"][0]["message"]
         end
+      end
+
+      def card_id_from(response)
+         response["object"] == "transaction" && response["card"] && response["card"]["id"] || nil
       end
 
       def plan_code_from(response)
