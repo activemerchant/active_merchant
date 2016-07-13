@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]
 * Openpay: Add support for verify [duff]
 * Clearhaus: Fix refund of captures [duff]
 * TNS: Try TLS v1 [duff]
