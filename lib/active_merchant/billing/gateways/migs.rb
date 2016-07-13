@@ -25,6 +25,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
       self.money_format = :cents
+      self.currencies_without_fractions = %w(IDR)
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://mastercard.com/mastercardsps'
@@ -189,7 +190,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_amount(post, money, options)
-        post[:Amount] = amount(money)
+        post[:Amount] = localized_amount(money, options[:currency])
         post[:Currency] = options[:currency] if options[:currency]
       end
 
