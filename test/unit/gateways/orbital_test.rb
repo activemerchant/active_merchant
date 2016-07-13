@@ -1,4 +1,4 @@
-# encoding: UTF-8
+# encoding: utf-8
 
 require 'test_helper'
 require 'nokogiri'
@@ -483,6 +483,22 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_allow_sending_avs_parts_when_no_country_specified
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:country => nil))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<AVSzip>K1C2N6/, data)
+      assert_match(/<AVSaddress1>456 My Street/, data)
+      assert_match(/<AVSaddress2>Apt 1/, data)
+      assert_match(/<AVScity>Ottawa/, data)
+      assert_match(/<AVSstate>ON/, data)
+      assert_match(/<AVSphoneNum>5555555555/, data)
+      assert_match(/<AVSname>Longbob Longsen/, data)
+      assert_match(/<AVScountryCode(\/>|><\/AVScountryCode>)/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_american_requests_adhere_to_xml_schema
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address)
@@ -617,6 +633,21 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_nil response.params['account_num']
+  end
+
+  def test_cc_account_num_is_removed_from_response
+    @gateway.expects(:ssl_post).returns(successful_profile_response)
+
+    response = nil
+
+    assert_deprecation_warning do
+      response = @gateway.add_customer_profile(credit_card,
+          :billing_address => address)
+    end
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_nil response.params['cc_account_num']
   end
 
   def test_successful_verify

@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class MerchantESolutionsTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.mode = :test
 
@@ -33,6 +35,19 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_purchase_with_long_order_id_truncates_id
+    options = {order_id: "thisislongerthan17characters"}
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes("invoice_number=thisislongerthan1"),
+      )
+    ).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
   end
 
   def test_authorization
@@ -124,6 +139,24 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal response.cvv_result['code'], "N"
     assert_equal response.cvv_result['message'], "CVV does not match"
+  end
+
+  def test_visa_3dsecure_params_submitted
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:xid => '1', :cavv => '2'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/xid=1/, data)
+      assert_match(/cavv=2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_mastercard_3dsecure_params_submitted
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:ucaf_collection_ind => '1', :ucaf_auth_data => '2'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/ucaf_collection_ind=1/, data)
+      assert_match(/ucaf_auth_data=2/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_supported_countries

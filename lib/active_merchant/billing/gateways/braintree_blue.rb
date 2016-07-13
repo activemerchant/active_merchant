@@ -6,7 +6,9 @@ rescue LoadError
   raise "Could not load the braintree gem.  Use `gem install braintree` to install it."
 end
 
-raise "Need braintree gem 2.x.y. Run `gem install braintree --version '~>2.0'` to get the correct version." unless Braintree::Version::Major == 2
+unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 4
+  raise "Need braintree gem >= 2.4.0. Run `gem install braintree --version '~>2.4'` to get the correct version."
+end
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -173,6 +175,18 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def verify_credentials
+        begin
+          @braintree_gateway.transaction.find("non_existent_token")
+        rescue Braintree::AuthenticationError
+          return false
+        rescue Braintree::NotFoundError
+          return true
+        end
+
+        true
+      end
+
       private
 
       def check_customer_exists(customer_vault_id)
@@ -311,17 +325,19 @@ module ActiveMerchant #:nodoc:
       def message_from_result(result)
         if result.success?
           "OK"
-        elsif result.errors.size == 0 && result.credit_card_verification
+        elsif result.errors.any?
+          result.errors.map { |e| "#{e.message} (#{e.code})" }.join(" ")
+        elsif result.credit_card_verification
           "Processor declined: #{result.credit_card_verification.processor_response_text} (#{result.credit_card_verification.processor_response_code})"
         else
-          result.errors.map { |e| "#{e.message} (#{e.code})" }.join(" ")
+          result.message.to_s
         end
       end
 
       def response_from_result(result)
         Response.new(result.success?, message_from_result(result),
           { braintree_transaction: transaction_hash(result) },
-          { authorization: (result.transaction.id if result.success?) }
+          { authorization: (result.transaction.id if result.transaction) }
          )
       end
 
@@ -334,10 +350,8 @@ module ActiveMerchant #:nodoc:
 
       def response_options(result)
         options = {}
-        if result.success?
-          options[:authorization] = result.transaction.id
-        end
         if result.transaction
+          options[:authorization] = result.transaction.id
           options[:avs_result] = { code: avs_code_from(result.transaction) }
           options[:cvv_result] = result.transaction.cvv_response_code
         end
@@ -554,13 +568,15 @@ module ActiveMerchant #:nodoc:
             :last_name => credit_card_or_vault_id.last_name
           )
           if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
-            parameters[:apple_pay_card] = {
-              :number => credit_card_or_vault_id.number,
-              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-              :expiration_year => credit_card_or_vault_id.year.to_s,
-              :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
-              :cryptogram => credit_card_or_vault_id.payment_cryptogram
-            }
+            if credit_card_or_vault_id.source == :apple_pay
+              parameters[:apple_pay_card] = {
+                :number => credit_card_or_vault_id.number,
+                :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+                :expiration_year => credit_card_or_vault_id.year.to_s,
+                :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
+                :cryptogram => credit_card_or_vault_id.payment_cryptogram
+              }
+            end
           else
             parameters[:credit_card] = {
               :number => credit_card_or_vault_id.number,
@@ -572,12 +588,15 @@ module ActiveMerchant #:nodoc:
         end
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
-        parameters[:channel] = application_id if application_id.present? && application_id != "ActiveMerchant"
 
-        if options[:descriptor_name] || options[:descriptor_phone]
+        channel = @options[:channel] || application_id
+        parameters[:channel] = channel if channel
+
+        if options[:descriptor_name] || options[:descriptor_phone] || options[:descriptor_url]
           parameters[:descriptor] = {
             name: options[:descriptor_name],
-            phone: options[:descriptor_phone]
+            phone: options[:descriptor_phone],
+            url: options[:descriptor_url]
           }
         end
 

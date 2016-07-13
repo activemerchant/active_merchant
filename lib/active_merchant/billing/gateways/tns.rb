@@ -1,19 +1,27 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class TnsGateway < Gateway
+      class_attribute :live_na_url, :live_ap_url
+
       self.display_name = 'TNS'
       self.homepage_url = 'http://www.tnsi.com/'
 
       # Testing is partitioned by account.
-      self.live_url = 'https://secure.na.tnspayments.com/api/rest/version/22/'
+      self.live_na_url = 'https://secure.na.tnspayments.com/api/rest/version/22/'
+      self.live_ap_url = 'https://secure.ap.tnspayments.com/api/rest/version/22/'
 
       self.supported_countries = %w(AR AU BR FR DE HK MX NZ SG GB US)
 
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :laser]
 
+      self.ssl_version = :TLSv1_2
+
       def initialize(options={})
         requires!(options, :userid, :password)
+
+        options[:region] = 'north_america' unless options[:region]
+
         super
       end
 
@@ -122,7 +130,7 @@ module ActiveMerchant #:nodoc:
           billing[:phone]                   = billing_address[:phone]
 
           customer[:email]                  = options[:email] if options[:email]
-          customer[:ipaddress]              = options[:ip] if options[:ip]
+          customer[:ipAddress]              = options[:ip] if options[:ip]
         end
 
         if(shipping_address = options[:shipping_address])
@@ -174,7 +182,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_url(orderid, transactionid)
-        "#{live_url}merchant/#{@options[:userid]}/order/#{orderid}/transaction/#{transactionid}"
+        base_url = @options[:region] == 'asia_pacific' ? live_ap_url : live_na_url
+        "#{base_url}merchant/#{@options[:userid]}/order/#{orderid}/transaction/#{transactionid}"
       end
 
       def build_request(post = {})

@@ -21,12 +21,11 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      CURRENCIES_WITHOUT_FRACTIONS = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF)
-
-      self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE US)
+      self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE SG US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
+      self.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW MGA PYG RWF VND VUV XAF XOF XPF)
 
       self.homepage_url = 'https://stripe.com/'
       self.display_name = 'Stripe'
@@ -43,7 +42,13 @@ module ActiveMerchant #:nodoc:
         'card_declined' => STANDARD_ERROR_CODE[:card_declined],
         'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
         'processing_error' => STANDARD_ERROR_CODE[:processing_error],
-        'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin]
+        'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin],
+        'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card]
+      }
+
+      BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
+        "personal" => "individual",
+        "business" => "company",
       }
 
       def initialize(options = {})
@@ -80,6 +85,11 @@ module ActiveMerchant #:nodoc:
       #
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, payment, options = {})
+        if ach?(payment)
+          direct_bank_error = "Direct bank account transactions are not supported. Bank accounts must be stored and verified before use."
+          return Response.new(false, direct_bank_error)
+        end
+
         MultiResponse.run do |r|
           if payment.is_a?(ApplePayPaymentToken)
             r.process { tokenize_apple_pay_token(payment) }
@@ -155,24 +165,33 @@ module ActiveMerchant #:nodoc:
 
       # Note: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
       def store(payment, options = {})
-        card_params = {}
+        params = {}
         post = {}
 
         if payment.is_a?(ApplePayPaymentToken)
           token_exchange_response = tokenize_apple_pay_token(payment)
-          card_params = { card: token_exchange_response.params["token"]["id"] } if token_exchange_response.success?
+          params = { card: token_exchange_response.params["token"]["id"] } if token_exchange_response.success?
+        elsif payment.is_a?(StripePaymentToken)
+          add_payment_token(params, payment, options)
+        elsif payment.is_a?(Check)
+          bank_token_response = tokenize_bank_account(payment)
+          return bank_token_response unless bank_token_response.success?
+          params = { source: bank_token_response.params["token"]["id"] }
         else
-          add_creditcard(card_params, payment, options)
+          add_creditcard(params, payment, options)
         end
 
         post[:validate] = options[:validate] unless options[:validate].nil?
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
 
-        if options[:customer]
+        if options[:account]
+          add_external_account(post, params, payment)
+          commit(:post, "accounts/#{CGI.escape(options[:account])}/external_accounts", post, options)
+        elsif options[:customer]
           MultiResponse.run(:first) do |r|
             # The /cards endpoint does not update other customer parameters.
-            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", card_params, options) }
+            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
 
             if options[:set_default] and r.success? and !r.params['id'].blank?
               post[:default_card] = r.params['id']
@@ -183,7 +202,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         else
-          commit(:post, 'customers', post.merge(card_params), options)
+          commit(:post, 'customers', post.merge(params), options)
         end
       end
 
@@ -216,6 +235,16 @@ module ActiveMerchant #:nodoc:
         else
           Response.new(success, token_response["error"]["message"])
         end
+      end
+
+      def verify_credentials
+        begin
+          ssl_get(live_url + "charges/nonexistent", headers)
+        rescue ResponseError => e
+          return false if e.response.code.to_i == 401
+        end
+
+        true
       end
 
       def supports_scrubbing?
@@ -258,7 +287,6 @@ module ActiveMerchant #:nodoc:
         unless emv_payment?(payment)
           add_amount(post, money, options, true)
           add_customer_data(post, options)
-          add_metadata(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
@@ -266,6 +294,7 @@ module ActiveMerchant #:nodoc:
           add_flags(post, options)
         end
 
+        add_metadata(post, options)
         add_application_fee(post, options)
         add_destination(post, options)
         post
@@ -288,6 +317,13 @@ module ActiveMerchant #:nodoc:
       def add_expand_parameters(post, options)
         post[:expand] ||= []
         post[:expand].concat(Array.wrap(options[:expand]).map(&:to_sym)).uniq!
+      end
+
+      def add_external_account(post, card_params, payment)
+        external_account = {}
+        external_account[:object] ="card"
+        external_account[:currency] = (options[:currency] || currency(payment)).downcase
+        post[:external_account] = external_account.merge(card_params[:card])
       end
 
       def add_customer_data(post, options)
@@ -314,7 +350,8 @@ module ActiveMerchant #:nodoc:
         card = {}
         if emv_payment?(creditcard)
           add_emv_creditcard(post, creditcard.icc_data)
-          post[:card][:read_method] = "contactless" if creditcard.contactless
+          post[:card][:read_method] = "contactless" if creditcard.contactless_emv
+          post[:card][:read_method] = "contactless_magstripe_mode" if creditcard.contactless_magstripe
           if creditcard.encrypted_pin_cryptogram.present? && creditcard.encrypted_pin_ksn.present?
             post[:card][:encrypted_pin] = creditcard.encrypted_pin_cryptogram
             post[:card][:encrypted_pin_key_id] = creditcard.encrypted_pin_ksn
@@ -323,7 +360,8 @@ module ActiveMerchant #:nodoc:
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
             card[:fallback_reason] = creditcard.fallback_reason if creditcard.fallback_reason
-            card[:read_method] = "contactless" if creditcard.contactless
+            card[:read_method] = "contactless" if creditcard.contactless_emv
+            post[:read_method] = "contactless_magstripe_mode" if creditcard.contactless_magstripe
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
@@ -333,7 +371,7 @@ module ActiveMerchant #:nodoc:
           end
           post[:card] = card
 
-          if creditcard.is_a?(NetworkTokenizationCreditCard)
+          if creditcard.is_a?(NetworkTokenizationCreditCard) && creditcard.source == :apple_pay
             post[:three_d_secure] = {
               apple_pay:  true,
               cryptogram: creditcard.payment_cryptogram
@@ -423,6 +461,7 @@ module ActiveMerchant #:nodoc:
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
         headers.merge!("Idempotency-Key" => idempotency_key) if idempotency_key
+        headers.merge!("Stripe-Account" => options[:stripe_account]) if options[:stripe_account]
         headers
       end
 
@@ -506,10 +545,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def non_fractional_currency?(currency)
-        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
-      end
-
       def emv_payment?(payment)
         payment.respond_to?(:emv?) && payment.emv?
       end
@@ -531,6 +566,39 @@ module ActiveMerchant #:nodoc:
         error_code = STANDARD_ERROR_CODE_MAPPING[decline_code]
         error_code ||= STANDARD_ERROR_CODE_MAPPING[code]
         error_code
+      end
+
+      def tokenize_bank_account(bank_account, options = {})
+        account_holder_type = BANK_ACCOUNT_HOLDER_TYPE_MAPPING[bank_account.account_holder_type]
+
+        post = {
+          bank_account: {
+            account_number: bank_account.account_number,
+            country: 'US',
+            currency: 'usd',
+            routing_number: bank_account.routing_number,
+            name: bank_account.name,
+            account_holder_type: account_holder_type,
+          }
+        }
+
+        token_response = api_request(:post, "tokens?#{post_data(post)}")
+        success = token_response["error"].nil?
+
+        if success && token_response["id"]
+          Response.new(success, nil, token: token_response)
+        else
+          Response.new(success, token_response["error"]["message"])
+        end
+      end
+
+      def ach?(payment_method)
+        case payment_method
+        when String, nil
+          false
+        else
+          card_brand(payment_method) == "check"
+        end
       end
     end
   end

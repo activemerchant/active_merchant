@@ -11,6 +11,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111112')
 
     @options = {
+      :order_id => '123',
       :billing_address => {
         :name     => 'John Doe',
         :address1 => '123 State Street',
@@ -39,7 +40,14 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Card No. Error', response.message
+    assert_equal 'Invalid card number', response.message
+  end
+
+  def test_purchase_with_long_order_id
+    options = {order_id: "thisislongerthan17characters"}
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
   end
 
   def test_authorize_and_capture
@@ -49,7 +57,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', auth.message
     assert auth.authorization
     let_mes_catch_up
-    assert capture = @gateway.capture(amount, auth.authorization)
+    assert capture = @gateway.capture(amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'This transaction has been approved', capture.message
   end
@@ -149,7 +157,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   def test_successful_cvv_check
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
-    assert_equal 'Match', response.cvv_result['message']
+    assert_equal 'CVV matches', response.cvv_result['message']
   end
 
   def test_unsuccessful_cvv_check
@@ -180,5 +188,14 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Failed with 404 Not Found', response.message
+  end
+
+  def test_successful_purchase_with_3dsecure_params
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      { :xid => 'ERERERERERERERERERERERERERE=',
+        :cavv => 'ERERERERERERERERERERERERERE='
+      }))
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
   end
 end

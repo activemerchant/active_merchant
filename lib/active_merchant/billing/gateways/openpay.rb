@@ -105,6 +105,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:order_id] = options[:order_id]
         post[:device_session_id] = options[:device_session_id]
+        post[:currency] = (options[:currency] || currency(money)).upcase
         add_creditcard(post, creditcard, options)
         post
       end
@@ -143,7 +144,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         {
           "Content-Type" => "application/json",
-          "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
+          "Authorization" => "Basic " + Base64.strict_encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Openpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Openpay-Client-User-Agent" => user_agent
         }

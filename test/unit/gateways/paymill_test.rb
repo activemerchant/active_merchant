@@ -31,6 +31,13 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal '000.100.201', response.params['transaction']['processing']['return']['code']
   end
 
+  def test_broken_gateway
+    @gateway.expects(:raw_ssl_request).returns(broken_gateway_response)
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_failure response
+    assert_equal "File not found.\n", response.message
+  end
+
   def test_failed_purchase
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, failed_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
@@ -735,6 +742,10 @@ class PaymillTest < Test::Unit::TestCase
     MockResponse.new 412, %[{"error":"Amount to high","exception":"refund_amount_to_high"}]
   end
 
+  def broken_gateway_response
+    MockResponse.new(404, "File not found.\n")
+  end
+
   def failed_capture_response
     MockResponse.new 409, %[{"error":"Preauthorization has already been used","exception":"preauthorization_already_used"}]
   end
@@ -747,22 +758,4 @@ class PaymillTest < Test::Unit::TestCase
     "connection_uri=https://test-token.paymill.com?account.number=[FILTERED]&account.expiry.month=09&account.expiry.year=2016&account.verification=[FILTERED]"
   end
 
-  class MockResponse
-    attr_reader :code, :body
-    def self.succeeded(body)
-      MockResponse.new(200, body)
-    end
-
-    def self.failed(body)
-      MockResponse.new(422, body)
-    end
-
-    def initialize(code, body, headers={})
-      @code, @body, @headers = code, body, headers
-    end
-
-    def [](header)
-      @headers[header]
-    end
-  end
 end

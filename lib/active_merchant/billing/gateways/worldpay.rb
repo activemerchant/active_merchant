@@ -8,6 +8,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_countries = %w(HK GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser, :switch]
+      self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'Worldpay Global'
 
@@ -62,6 +63,13 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run do |r|
           r.process{inquire_request(authorization, options, "CAPTURED", "SETTLED", "SETTLED_BY_MERCHANT")}
           r.process{refund_request(money, authorization, options)}
+        end
+      end
+
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
@@ -129,7 +137,7 @@ module ActiveMerchant #:nodoc:
       def build_authorization_request(money, payment_method, options)
         build_request do |xml|
           xml.tag! 'submit' do
-            xml.tag! 'order', {'orderCode' => options[:order_id], 'installationId' => @options[:inst_id]}.reject{|_,v| !v} do
+            xml.tag! 'order', order_tag_attributes(options) do
               xml.description(options[:description].blank? ? "Purchase" : options[:description])
               add_amount(xml, money, options)
               if options[:order_content]
@@ -142,6 +150,10 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
+      end
+
+      def order_tag_attributes(options)
+        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject{|_,v| !v}
       end
 
       def build_capture_request(money, authorization, options)
@@ -170,12 +182,11 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(xml, money, options)
         currency = options[:currency] || currency(money)
-        amount   = localized_amount(money, currency)
 
         amount_hash = {
-          :value => amount,
+          :value => amount(money),
           'currencyCode' => currency,
-          'exponent' => 2
+          'exponent' => non_fractional_currency?(currency) ? 0 : 2
         }
 
         if options[:debit_credit_indicator]
@@ -329,13 +340,6 @@ module ActiveMerchant #:nodoc:
       def encoded_credentials
         credentials = "#{@options[:login]}:#{@options[:password]}"
         "Basic #{[credentials].pack('m').strip}"
-      end
-
-      def localized_amount(money, currency)
-        amount = amount(money)
-        return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
-
-        amount.to_i / 100 * 100
       end
     end
   end

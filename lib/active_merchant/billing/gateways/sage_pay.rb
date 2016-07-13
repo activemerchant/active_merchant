@@ -36,13 +36,31 @@ module ActiveMerchant #:nodoc:
         :jcb => "JCB"
       }
 
-      ELECTRON = /^(424519|42496[23]|450875|48440[6-8]|4844[1-5][1-5]|4917[3-5][0-9]|491880)\d{10}(\d{3})?$/
-
       AVS_CVV_CODE = {
         "NOTPROVIDED" => nil,
         "NOTCHECKED" => 'X',
         "MATCHED" => 'Y',
         "NOTMATCHED" => 'N'
+      }
+
+      OPTIONAL_REQUEST_FIELDS = {
+        paypal_callback_url: :PayPalCallbackURL,
+        basket: :Basket,
+        gift_aid_payment: :GiftAidPayment ,
+        apply_avscv2: :ApplyAVSCV2 ,
+        apply_3d_secure: :Apply3DSecure,
+        account_type: :AccountType,
+        billing_agreement: :BillingAgreement,
+        basket_xml: :BasketXML,
+        customer_xml: :CustomerXML,
+        surcharge_xml: :SurchargeXML,
+        vendor_data: :VendorData,
+        language: :Language,
+        website: :Website,
+        recipient_account_number: :FIRecipientAcctNumber ,
+        recipient_surname: :FIRecipientSurname ,
+        recipient_postcode: :FIRecipientPostcode ,
+        recipient_dob: :FIRecipientDoB
       }
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :switch, :solo, :maestro, :diners_club]
@@ -197,14 +215,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_optional_data(post, options)
-        add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
-        add_pair(post, :ApplyAVSCV2, options[:apply_avscv2]) unless options[:apply_avscv2].blank?
-        add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
         add_pair(post, :CreateToken, 1) unless options[:store].blank?
-        add_pair(post, :FIRecipientAcctNumber, options[:recipient_account_number])
-        add_pair(post, :FIRecipientSurname, options[:recipient_surname])
-        add_pair(post, :FIRecipientPostcode, options[:recipient_postcode])
-        add_pair(post, :FIRecipientDoB, options[:recipient_dob])
+
+        OPTIONAL_REQUEST_FIELDS.each do |gateway_option, sagepay_field|
+          add_pair(post, sagepay_field, options[gateway_option])
+        end
       end
 
       def add_address(post, options)
@@ -292,8 +307,7 @@ module ActiveMerchant #:nodoc:
 
         card_type = card_brand(credit_card).to_sym
 
-        # Check if it is an electron card
-        if card_type == :visa && credit_card.number =~ ELECTRON
+        if card_type == :visa && credit_card.electron?
           CREDIT_CARDS[:electron]
         else
           CREDIT_CARDS[card_type]
@@ -393,10 +407,6 @@ module ActiveMerchant #:nodoc:
         post[key] = value if !value.blank? || options[:required]
       end
 
-      def localized_amount(money, currency)
-        amount = amount(money)
-        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s) ? amount.split('.').first : amount
-      end
     end
 
   end

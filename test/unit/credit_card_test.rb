@@ -193,6 +193,7 @@ class CreditCardTest < Test::Unit::TestCase
   def test_should_correctly_identify_card_brand
     assert_equal 'visa',             CreditCard.brand?('4242424242424242')
     assert_equal 'american_express', CreditCard.brand?('341111111111111')
+    (222100..272099).each {|bin| assert_equal 'master', CreditCard.brand?(bin.to_s + '1111111111'), "Failed with BIN #{bin}"}
     assert_nil CreditCard.brand?('')
   end
 

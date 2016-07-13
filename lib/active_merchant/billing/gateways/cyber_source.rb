@@ -30,10 +30,10 @@ module ActiveMerchant #:nodoc:
     # * The order of the XML elements does matter, make sure to follow the order in
     #   the documentation exactly.
     class CyberSourceGateway < Gateway
-      self.test_url = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
-      self.live_url = 'https://ics2ws.ic3.com/commerce/1.x/transactionProcessor'
+      self.test_url = 'https://ics2wstesta.ic3.com/commerce/1.x/transactionProcessor'
+      self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = "1.109"
+      XSD_VERSION = "1.121"
 
       # visa, master, american_express, discover
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -120,7 +120,6 @@ module ActiveMerchant #:nodoc:
       #
       # You must supply an :order_id in the options hash
       def authorize(money, creditcard_or_reference, options = {})
-        requires!(options,  :order_id)
         setup_address_hash(options)
         commit(build_auth_request(money, creditcard_or_reference, options), options )
       end
@@ -139,7 +138,6 @@ module ActiveMerchant #:nodoc:
       # You must supply an order_id in the options hash
       # options[:pinless_debit_card] => true # attempts to process as pinless debit card
       def purchase(money, payment_method_or_reference, options = {})
-        requires!(options, :order_id)
         setup_address_hash(options)
         commit(build_purchase_request(money, payment_method_or_reference, options), options)
       end
@@ -161,7 +159,6 @@ module ActiveMerchant #:nodoc:
 
       # Adds credit to a subscription (stand alone credit).
       def credit(money, reference, options = {})
-        requires!(options, :order_id)
         commit(build_credit_request(money, reference, options), options)
       end
 
@@ -169,7 +166,6 @@ module ActiveMerchant #:nodoc:
       # To charge the card while creating a profile, pass
       # options[:setup_fee] => money
       def store(payment_method, options = {})
-        requires!(options, :order_id)
         setup_address_hash(options)
         commit(build_create_subscription_request(payment_method, options), options)
       end
@@ -252,15 +248,24 @@ module ActiveMerchant #:nodoc:
       private
 
       # Create all address hash key value pairs so that we still function if we
-      # were only provided with one or two of them
+      # were only provided with one or two of them or even none
       def setup_address_hash(options)
-        options[:billing_address] = options[:billing_address] || options[:address] || {}
+        default_address = {
+          :address1 => 'Unspecified',
+          :city => 'Unspecified',
+          :state => 'NC',
+          :zip => '00000',
+          :country => 'US'
+        }
+        options[:billing_address] = options[:billing_address] || options[:address] || default_address
         options[:shipping_address] = options[:shipping_address] || {}
       end
 
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_decision_manager_fields(xml, options)
+        add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
         add_business_rules_data(xml, creditcard_or_reference, options)
         xml.target!
@@ -291,6 +296,8 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_decision_manager_fields(xml, options)
+        add_mdd_fields(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
         else
@@ -433,7 +440,7 @@ module ActiveMerchant #:nodoc:
 
       def add_merchant_data(xml, options)
         xml.tag! 'merchantID', @options[:login]
-        xml.tag! 'merchantReferenceCode', options[:order_id]
+        xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
         xml.tag! 'clientLibrary' ,'Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion',  VERSION
         xml.tag! 'clientEnvironment' , RUBY_PLATFORM
@@ -459,7 +466,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'company',               address[:company]                 unless address[:company].blank?
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
           xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
-          xml.tag! 'email',                 options[:email]
+          xml.tag! 'email',                 options[:email] || 'null@cybersource.com'
           xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
@@ -473,6 +480,22 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
           xml.tag!('cvNumber', creditcard.verification_value) unless (@options[:ignore_cvv] || creditcard.verification_value.blank? )
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
+        end
+      end
+
+      def add_decision_manager_fields(xml, options)
+        xml.tag! 'decisionManager' do
+          xml.tag! 'enabled', options[:decision_manager_enabled] if options[:decision_manager_enabled]
+          xml.tag! 'profile', options[:decision_manager_profile] if options[:decision_manager_profile]
+        end
+      end
+
+      def add_mdd_fields(xml, options)
+        xml.tag! 'merchantDefinedData' do
+          (1..20).each do |each|
+            key = "mdd_field_#{each}".to_sym
+            xml.tag!("field#{each}", options[key]) if options[key]
+          end
         end
       end
 
@@ -672,7 +695,11 @@ module ActiveMerchant #:nodoc:
       # Contact CyberSource, make the SOAP request, and parse the reply into a
       # Response object
       def commit(request, options)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
+        begin
+          response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
+        rescue ResponseError => e
+          response = parse(e.response.body)
+        end
 
         success = response[:decision] == "ACCEPT"
         message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]

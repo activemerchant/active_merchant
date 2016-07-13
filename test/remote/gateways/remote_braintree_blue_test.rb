@@ -334,6 +334,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_unsuccessful_purchase_declined
     assert response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
+    assert response.authorization.present?
     assert_equal '2000 Do Not Honor', response.message
   end
 
@@ -591,7 +592,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_authorize_with_descriptor
-    assert auth = @gateway.authorize(@amount, @credit_card, descriptor_name: "company*theproduct", descriptor_phone: "1331131131")
+    assert auth = @gateway.authorize(@amount, @credit_card, descriptor_name: "company*theproduct", descriptor_phone: "1331131131", descriptor_url: "company.com")
     assert_success auth
   end
 
@@ -611,6 +612,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
+
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = BraintreeGateway.new(merchant_id: "UNKNOWN", public_key: "UNKONWN", private_key: "UNKONWN")
+    assert !gateway.verify_credentials
+  end
+
 
   private
   def assert_avs(address1, zip, expected_avs_code)

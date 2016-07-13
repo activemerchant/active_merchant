@@ -4,7 +4,7 @@ class ClearhausTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = ClearhausGateway.new(api_key: 'test_key', mpi_api_key: 'test_mpi_key')
+    @gateway = ClearhausGateway.new(api_key: 'test_key')
     @credit_card = credit_card
     @amount = 100
 
@@ -13,6 +13,8 @@ class ClearhausTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @test_signing_key = "7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2"
   end
 
   def test_successful_purchase
@@ -61,7 +63,7 @@ class ClearhausTest < Test::Unit::TestCase
 
   def test_additional_params
     stub_comms do
-      response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '123', description: 'test'))
+      response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: '123', text_on_statement: 'test'))
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|
@@ -207,7 +209,7 @@ class ClearhausTest < Test::Unit::TestCase
   end
 
   def test_signing_request
-    gateway = ClearhausGateway.new(api_key: 'test_key', signing_key: test_private_signing_key)
+    gateway = ClearhausGateway.new(api_key: 'test_key', signing_key: @test_signing_key, private_key: test_private_key)
     card = credit_card('4111111111111111', month: '06', year: '2018', verification_value: '123')
     options = { currency: 'EUR', ip: '1.1.1.1' }
 
@@ -219,9 +221,41 @@ class ClearhausTest < Test::Unit::TestCase
       assert response.test?
     end.check_request do |method, endpoint, data, headers|
       assert headers["Signature"]
-      assert_match %r{test_key RS256-hex}, headers["Signature"]
+      assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers["Signature"]
       assert_match %r{02f56ed1f6c60cdefd$}, headers["Signature"]
     end.respond_with(successful_authorize_response)
+  end
+
+  def test_cleans_whitespace_from_private_key
+    private_key_with_whitespace = "     #{test_private_key}     "
+    gateway = ClearhausGateway.new(api_key: 'test_key', signing_key: @test_signing_key, private_key: private_key_with_whitespace)
+    card = credit_card('4111111111111111', month: '06', year: '2018', verification_value: '123')
+    options = { currency: 'EUR', ip: '1.1.1.1' }
+
+    stub_comms gateway, :ssl_request do
+      response = gateway.authorize(2050, card, options)
+      assert_success response
+
+      assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization
+      assert response.test?
+    end.check_request do |method, endpoint, data, headers|
+      assert headers["Signature"]
+      assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers["Signature"]
+      assert_match %r{02f56ed1f6c60cdefd$}, headers["Signature"]
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_unsuccessful_signing_request_with_invalid_key
+    gateway = ClearhausGateway.new(api_key: "test_key",  signing_key: @test_signing_key, private_key: "foo")
+
+    # stub actual network access, but this shouldn't be reached
+    gateway.stubs(:ssl_post).returns(nil)
+
+    card = credit_card("4111111111111111", month: "06", year: "2018", verification_value: "123")
+    options = { currency: "EUR", ip: "1.1.1.1" }
+
+    response = gateway.authorize(2050, card, options)
+    assert_failure response
   end
 
   def test_scrub
@@ -317,7 +351,7 @@ Conn close
     )
   end
 
-  def test_private_signing_key
+  def test_private_key
     %Q{-----BEGIN RSA PRIVATE KEY-----\nMIIBOwIBAAJBALYK0zmwuYkH3YWcFNLLddx5cwDxEY7Gi1xITuQqRrU4yD3uSw+J\nWYKknb4Tbndb6iEHY+e6gIGD+49TojnNeIUCAwEAAQJARyuYRRe4kcBHdPL+mSL+\nY0IAGkAlUyKAXYXPghidKD/v/oLrFaZWALGM2clv6UoYYpPnInSgbcud4sTcfeUm\nQQIhAN2JZ2qv0WGcbIopBpwpQ5jDxMGVkmkVVUEWWABGF8+pAiEA0lySxTELZm8b\nGx9UEDRghN+Qv/OuIKFldu1Ba4f8W30CIQCaQFIBtunTTVdF28r+cLzgYW9eWwbW\npEP4TdZ4WlW6AQIhAMDCTUdeUpjxlH/87BXROORozAXocBW8bvJUI486U5ctAiAd\nInviQqJd1KTGRDmWIGrE5YACVmW2JSszD9t5VKxkAA==\n-----END RSA PRIVATE KEY-----}
   end
 

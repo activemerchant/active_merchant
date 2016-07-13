@@ -154,7 +154,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "15378535", doc.at_xpath("//accountNumber").content
         assert_equal "Bank of Elbonia", doc.at_xpath("//bankName").content
         assert_equal "Jim Smith", doc.at_xpath("//nameOnAccount").content
-        assert_equal "WEB", doc.at_xpath("//echeckType").content
         assert_equal "1", doc.at_xpath("//checkNumber").content
         assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
@@ -176,7 +175,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "15378535", doc.at_xpath("//accountNumber").content
         assert_equal "Bank of Elbonia", doc.at_xpath("//bankName").content
         assert_equal "Jim Smith", doc.at_xpath("//nameOnAccount").content
-        assert_equal "WEB", doc.at_xpath("//echeckType").content
         assert_equal "1", doc.at_xpath("//checkNumber").content
         assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
@@ -510,6 +508,26 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_failure store
     assert_match(/The field length is invalid/, store.message)
     assert_equal("15", store.params["message_code"])
+  end
+
+  def test_successful_store_new_payment_profile
+    @gateway.expects(:ssl_post).returns(successful_store_new_payment_profile_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_equal "Successful", store.message
+    assert_equal "38392170", store.params["customer_profile_id"]
+    assert_equal "34896759", store.params["customer_payment_profile_id"]
+  end
+
+  def test_failed_store_new_payment_profile
+    @gateway.expects(:ssl_post).returns(failed_store_new_payment_profile_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_failure store
+    assert_equal "A duplicate customer payment profile already exists", store.message
+    assert_equal "38392767", store.params["customer_profile_id"]
+    assert_equal "34897359", store.params["customer_payment_profile_id"]
   end
 
   def test_address
@@ -905,6 +923,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(network_tokenization_not_supported_response)
 
     assert_instance_of FalseClass, response
+  end
+
+  def test_verify_good_credentials
+    @gateway.expects(:ssl_post).returns(credentials_are_legit_response)
+    assert @gateway.verify_credentials
+  end
+
+  def test_verify_bad_credentials
+    @gateway.expects(:ssl_post).returns(credentials_are_bogus_response)
+    assert !@gateway.verify_credentials
   end
 
   private
@@ -1719,6 +1747,40 @@ class AuthorizeNetTest < Test::Unit::TestCase
     eos
   end
 
+  def successful_store_new_payment_profile_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerPaymentProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <customerProfileId>38392170</customerProfileId>
+        <customerPaymentProfileId>34896759</customerPaymentProfileId>
+      </createCustomerPaymentProfileResponse>
+    eos
+  end
+
+  def failed_store_new_payment_profile_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerPaymentProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00039</code>
+            <text>A duplicate customer payment profile already exists.</text>
+          </message>
+        </messages>
+        <customerProfileId>38392767</customerProfileId>
+        <customerPaymentProfileId>34897359</customerPaymentProfileId>
+      </createCustomerPaymentProfileResponse>
+    eos
+  end
+
   def successful_purchase_using_stored_card_response
     <<-eos
       <?xml version="1.0" encoding="UTF-8"?>
@@ -1918,5 +1980,34 @@ class AuthorizeNetTest < Test::Unit::TestCase
     eos
   end
 
+  def credentials_are_legit_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <authenticateTestResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+      </authenticateTestResponse>
+    eos
+  end
+
+  def credentials_are_bogus_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <authenticateTestResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00007</code>
+            <text>User authentication failed due to invalid authentication values.</text>
+          </message>
+        </messages>
+      </authenticateTestResponse>
+    eos
+  end
 
 end

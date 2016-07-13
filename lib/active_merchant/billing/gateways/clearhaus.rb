@@ -37,21 +37,12 @@ module ActiveMerchant #:nodoc:
         50000 => 'Clearhaus error'
       }
 
-      # Create gateway
-      #
-      # options:
-      #       :api_key - merchant's Clearhaus API Key
-      #       :signing_key - merchant's private key for optionally signing request
       def initialize(options={})
         requires!(options, :api_key)
+        options[:private_key] = options[:private_key].strip if options[:private_key]
         super
       end
 
-      # Make a purchase (authorize and capture)
-      #
-      # amount         - The monetary amount of the transaction in cents.
-      # payment        - The CreditCard or the Clearhaus card token.
-      # options        - A standard ActiveMerchant options hash
       def purchase(amount, payment, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, payment, options) }
@@ -59,11 +50,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # Authorize a transaction.
-      #
-      # amount         - The monetary amount of the transaction in cents.
-      # payment        - The CreditCard or the Clearhaus card token.
-      # options        - A standard ActiveMerchant options hash  with optional pares
       def authorize(amount, payment, options={})
         post = {}
         add_invoice(post, amount, options)
@@ -83,23 +69,13 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      # Capture a pre-authorized transaction.
-      #
-      # amount         - The monetary amount of the transaction in cents.
-      # authorization  - The Clearhaus authorization id string.
-      # options        - A standard ActiveMerchant options hash
       def capture(amount, authorization, options={})
         post = {}
-        add_amount(post, amount, options)
+        add_invoice(post, amount, options)
 
         commit("/authorizations/#{authorization}/captures", post)
       end
 
-      # Refund a captured transaction (fully or partial).
-      #
-      # amount         - The monetary amount of the transaction in cents.
-      # authorization  - The Clearhaus authorization id string.
-      # options        - A standard ActiveMerchant options hash
       def refund(amount, authorization, options={})
         post = {}
         add_amount(post, amount, options)
@@ -118,10 +94,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # Tokenize credit card with Clearhaus.
-      #
-      # credit_card    - The CreditCard.
-      # options        - A standard ActiveMerchant options hash
       def store(credit_card, options={})
         post = {}
         add_payment(post, credit_card)
@@ -145,7 +117,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         add_amount(post, money, options)
         post[:reference] = options[:order_id] if options[:order_id]
-        post[:text_on_statement] = options[:description] if options[:description]
+        post[:text_on_statement] = options[:text_on_statement] if options[:text_on_statement]
       end
 
       def add_amount(post, amount, options)
@@ -182,8 +154,12 @@ module ActiveMerchant #:nodoc:
         headers = headers(@options[:api_key])
         body = parameters.to_query
 
-        if signing_key = @options[:signing_key]
-          headers["Signature"] = generate_signature(@options[:api_key], signing_key, body)
+        if @options[:signing_key] && @options[:private_key]
+          begin
+            headers["Signature"] = generate_signature(body)
+          rescue OpenSSL::PKey::RSAError => e
+            return Response.new(false, e.message)
+          end
         end
 
         response = begin
@@ -221,11 +197,11 @@ module ActiveMerchant #:nodoc:
         response['id']
       end
 
-      def generate_signature(api_key, signing_key, body)
-        key = OpenSSL::PKey::RSA.new(signing_key)
+      def generate_signature(body)
+        key = OpenSSL::PKey::RSA.new(@options[:private_key])
         hex = key.sign(OpenSSL::Digest.new('sha256'), body).unpack('H*').first
 
-        "#{api_key} RS256-hex #{hex}"
+        "#{@options[:signing_key]} RS256-hex #{hex}"
       end
 
       def error_code_from(response)

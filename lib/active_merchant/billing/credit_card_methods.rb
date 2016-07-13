@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
     module CreditCardMethods
       CARD_COMPANIES = {
         'visa'               => /^4\d{12}(\d{3})?(\d{3})?$/,
-        'master'             => /^(5[1-5]\d{4}|677189)\d{10}$/,
+        'master'             => /^(5[1-5]\d{4}|677189|222[1-9]\d{2}|22[3-9]\d{3}|2[3-6]\d{4}|27[01]\d{3}|2720\d{2})\d{10}$/,
         'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/,
         'american_express'   => /^3[47]\d{13}$/,
         'diners_club'        => /^3(0[0-5]|[68]\d)\d{11}$/,
@@ -17,12 +17,36 @@ module ActiveMerchant #:nodoc:
         'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/
       }
 
+      # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
+      ELECTRON_RANGES = [
+        [400115],
+        (400837..400839),
+        (412921..412923),
+        [417935],
+        (419740..419741),
+        (419773..419775),
+        [424519],
+        (424962..424963),
+        [437860],
+        [444000],
+        [459472],
+        (484406..484411),
+        (484413..484414),
+        (484418..484418),
+        (484428..484455),
+        (491730..491759),
+      ]
+
       def self.included(base)
         base.extend(ClassMethods)
       end
 
       def valid_month?(month)
         (1..12).include?(month.to_i)
+      end
+
+      def credit_card?
+        true
       end
 
       def valid_expiry_year?(year)
@@ -56,6 +80,11 @@ module ActiveMerchant #:nodoc:
 
       def valid_issue_number?(number)
         (number.to_s =~ /^\d{1,2}$/)
+      end
+
+      # Returns if the card matches known Electron BINs
+      def electron?
+        self.class.electron?(number)
       end
 
       module ClassMethods
@@ -104,6 +133,17 @@ module ActiveMerchant #:nodoc:
           return 'maestro' if number =~ card_companies['maestro']
 
           return nil
+        end
+
+        def electron?(number)
+          return false unless [16, 19].include?(number.length)
+
+          # don't recalculate for each range
+          bank_identification_number = first_digits(number).to_i
+
+          ELECTRON_RANGES.any? do |range|
+            range.include?(bank_identification_number)
+          end
         end
 
         def type?(number)

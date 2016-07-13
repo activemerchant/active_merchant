@@ -24,7 +24,39 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     @gateway.void(response.authorization)
   end
 
+  def test_successful_purchase_no_address
+    @options.delete(:billing_address)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.test?
+    assert_success response
+    assert !response.authorization.blank?
+
+    @gateway.void(response.authorization)
+  end
+
+  def test_successful_purchase_sans_cvv
+    @credit_card.verification_value = ""
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_successful_purchase_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert response.test?
+    assert_success response
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_echeck_no_address
+    @options.delete(:billing_address)
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert response.test?
+    assert_success response
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_echeck_defaults
+    @check = check(account_holder_type: nil, account_type: nil)
     assert response = @gateway.purchase(@amount, @check, @options)
     assert response.test?
     assert_success response
@@ -36,6 +68,14 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Insufficient funds', response.message
+  end
+
+  def test_successful_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
   end
 
   def test_successful_refund_with_echeck
@@ -53,5 +93,27 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(1100, @credit_card, @options)
     assert_failure response
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_transcript_scrubbing_echecks
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end
