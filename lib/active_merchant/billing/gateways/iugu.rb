@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
-        token = payment_token(payment, options)
+        token = request_payment_token(payment, options)
         post = create_post_for_auth(money, token, options)
         commit(:post, 'charge', post, options)
       end
@@ -42,26 +42,49 @@ module ActiveMerchant #:nodoc:
         capture(money, response.authorization, options)
       end
 
-      def payment_token(payment, options = {})
+      def store(payment, options = {})
+        response = store_client(options)
+        customer_id = response.params['id']
+
+        post = { description: options[:description],
+                 token: request_payment_token(payment, options) }
+
+        add_optional(post, options, :set_as_default)
+        commit(:post, "customers/#{customer_id}/payment_methods", post)
+      end
+
+      def unstore(options = {})
+        commit(:delete, "customers/#{options[:customer_id]}/payment_methods/#{options[:id]}")
+      end
+
+      def store_client(options = {})
         post = {}
-        token = payment
+        add_customer(post, options)
 
+        commit(:post, "customers", post)
+      end
+
+      def unstore_client(options = {})
+        commit(:delete, "customers/#{options[:id]}")
+      end
+
+      def request_payment_token(payment, options = {})
         if payment.is_a?(CreditCard)
-          add_creditcard(post, payment, options)
-          post[:test] = test?(options)
-          post[:method] = 'credit_card'
+          post = { test: test?(options), method: 'credit_card' }
+          add_creditcard(post, payment)
           response = commit(:post, "payment_token", post, options)
-          token = response.params['id']
+          response.params['id']
+        else
+          payment
         end
-
-        token
       end
 
       private
       def create_post_for_auth(money, payment, options)
         post = {}
 
-        add_customer(post, options)
+        add_address(post, options)
+        add_payer(post, options)
 
         if payment.present?
           post['token'] = payment
@@ -81,18 +104,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, options)
-        items = Array.wrap options[:items]
+        items = Array.wrap(options[:items])
         post["items"] = items
       end
 
       def add_customer(post, options)
+        post['email'] = options[:email]
+        add_optional(post, options, :name, :cpf_cnpj, :cc_emails, :notes)
+      end
+
+      def add_payer(post, options)
         payer = options[:payer]
         post['payer[cpf_cnpj]'] = payer[:cpf_cnpj]
         post['payer[name]'] = payer[:name]
         post['payer[phone_prefix]'] = payer[:phone_prefix]
         post['payer[phone]'] = payer[:phone]
         post['payer[email]'] = payer[:email]
+      end
 
+      def add_address(post, options)
         address = options[:billing_address] || options[:address] || {}
         post["payer[address][street]"] = address[:street]
         post["payer[address][number]"] = address[:number]
@@ -109,18 +139,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(post, options)
-        if address = options[:billing_address] || options[:address]
-          post['card']['address_line1'] = address[:address1] if address[:address1]
-          post['card']['address_line2'] = address[:address2] if address[:address2]
-          post['card']['address_country'] = address[:country] if address[:country]
-          post['card']['address_zip'] = address[:zip] if address[:zip]
-          post['card']['address_state'] = address[:state] if address[:state]
-          post['card']['address_city'] = address[:city] if address[:city]
-        end
-      end
-
-      def add_creditcard(post, creditcard, options)
+      def add_creditcard(post, creditcard)
         if creditcard.respond_to?(:number)
           post['data[number]'] = creditcard.number
           post['data[month]'] = creditcard.month
@@ -152,9 +171,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})
+        parameters = parameters.to_query if parameters.present?
         raw_response = response = nil
         begin
-          raw_response = ssl_request(method, self.live_url + endpoint, parameters.to_query, headers(options))
+          raw_response = ssl_request(method, self.live_url + endpoint, parameters, headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body

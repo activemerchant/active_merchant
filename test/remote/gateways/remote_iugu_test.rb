@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'byebug'
 
 class RemoteIuguTest < Test::Unit::TestCase
   def setup
@@ -14,8 +15,9 @@ class RemoteIuguTest < Test::Unit::TestCase
       email: 'test@test.com',
       ignore_due_email: true,
       due_date: 10.days.from_now,
-      items: [{price_cents: 100, quantity: 1, description: 'ActiveMerchant Test Purchase'},
-              {price_cents: 100, quantity: 2, description: 'ActiveMerchant Test Purchase'}],
+      description: 'Test Description',
+      items: [ { price_cents: 100, quantity: 1, description: 'ActiveMerchant Test Purchase'},
+               { price_cents: 100, quantity: 2, description: 'ActiveMerchant Test Purchase'} ],
       address: { email: 'test@test.com',
                  street: 'Street',
                  number: 1,
@@ -105,6 +107,28 @@ class RemoteIuguTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert response.test
-    assert_equal "Transação negada", response.message
+    assert_block do
+      ["Transaction declined", "Transação negada"].include?(response.message)
+    end
+  end
+
+  def test_successful_store
+    assert response = @gateway.store(@credit_card, @options)
+    assert_success response
+
+    assert response.params['id']
+    assert response.params['customer_id']
+
+    assert_equal response.authorization, response.params["id"]
+  end
+
+  def test_successful_unstore
+    response = @gateway.store(@credit_card, @options)
+    options = { id: response.params['id'], customer_id: response.params['customer_id'] }
+
+    assert response = @gateway.unstore(options)
+    assert_success response
+
+    assert response.params['id']
   end
 end
