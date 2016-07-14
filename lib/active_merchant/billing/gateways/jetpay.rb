@@ -1,11 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class JetpayGateway < Gateway
+      class_attribute :live_us_url, :live_ca_url
+
       self.test_url = 'https://test1.jetpay.com/jetpay'
-      self.live_url = 'https://gateway17.jetpay.com/jetpay'
+      self.live_us_url = 'https://gateway17.jetpay.com/jetpay'
+      self.live_ca_url = 'https://gateway17.jetpay.com/canada-bb'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'CA']
 
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -277,7 +280,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(money, request)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, request))
+        response = parse(ssl_post(url, request))
 
         success = success?(response)
         Response.new(success,
@@ -288,6 +291,11 @@ module ActiveMerchant #:nodoc:
           :avs_result => { :code => response[:avs] },
           :cvv_result => response[:cvv2]
         )
+      end
+
+      def url
+        live_url = @options[:region] == 'CA' ? live_ca_url : live_us_url
+        test? ? test_url : live_url
       end
 
       def parse(body)
