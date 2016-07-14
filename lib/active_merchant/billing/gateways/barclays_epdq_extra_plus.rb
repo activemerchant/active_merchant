@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ["GB"]
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro]
       self.default_currency = "GBP"
+      self.ssl_version = :TLSv1_2
     end
   end
 end
