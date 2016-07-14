@@ -27,12 +27,12 @@ module ActiveMerchant #:nodoc:
         end
 
         response            = commit(:post, 'subscriptions', params)
-        card_id             = response.params["card"] && response.params["card"]["id"] || nil
+        card                = response.params["card"]
         response_options    = {
           authorization:       response.params['id'],
           subscription_action: SUBSCRIPTION_STATUS_MAP[response.params['status']],
           test:                response.test?,
-          card_id:             card_id
+          card:                card
         }
 
         current_transaction = response.params['current_transaction']

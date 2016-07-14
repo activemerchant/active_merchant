@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
           external_url: boleto_url_from(response),
           payment_action: payment_action_from(response),
           subscription_action: subscription_action_from(response),
-          card_id: card_id_from(response)
+          card: card_from(response)
         )
       end
 
@@ -293,8 +293,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def card_id_from(response)
-         response["object"] == "transaction" && response["card"] && response["card"]["id"] || nil
+      def card_from(response)
+         response["object"] == "transaction" && response["card"] || nil
       end
 
       def plan_code_from(response)
