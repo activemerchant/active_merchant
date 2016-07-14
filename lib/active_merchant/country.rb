@@ -274,7 +274,7 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'SS', name: 'South Sudan', alpha3: 'SSD', numeric: '728' },
       { alpha2: 'ES', name: 'Spain', alpha3: 'ESP', numeric: '724' },
       { alpha2: 'LK', name: 'Sri Lanka', alpha3: 'LKA', numeric: '144' },
-      { alpha2: 'SD', name: 'Sudan', alpha3: 'SDN', numeric: '736' },
+      { alpha2: 'SD', name: 'Sudan', alpha3: 'SDN', numeric: '729' },
       { alpha2: 'SR', name: 'Suriname', alpha3: 'SUR', numeric: '740' },
       { alpha2: 'SJ', name: 'Svalbard and Jan Mayen', alpha3: 'SJM', numeric: '744' },
       { alpha2: 'SZ', name: 'Swaziland', alpha3: 'SWZ', numeric: '748' },
