@@ -444,15 +444,7 @@ micropayment:
   access_key: "0b4832ca37a31e748c4490b58d743986"
 
 # Working credentials, no need to replace
-migs_capture: # MiGS gateway for auth/capture mode
-  login: TESTH-STATION
-  password: 'F1CE6F32'
-  secure_hash: 'D8CF972645E69EA15A7D6005059E18DF'
-  advanced_login: activemerchant
-  advanced_password: test12345
-
-# Working credentials, no need to replace
-migs_purchase: # MiGS gateway for purchase mode
+migs:
   login: TESTH-STATION
   password: 'F1CE6F32'
   secure_hash: 'D8CF972645E69EA15A7D6005059E18DF'
