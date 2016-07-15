@@ -68,6 +68,18 @@ class RemoteMigsTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorize_fractional_currency
+    assert_success(result = @gateway.purchase(1234, @credit_card, @options.merge(:currency => 'USD')))
+    assert_equal "USD", result.params['amount_currency_code']
+    assert_equal "1234", result.params['amount_value']
+  end
+
+  def test_authorize_nonfractional_currency
+    assert_success(result = @capture_gateway.authorize(1234, @credit_card, @options.merge(:currency => 'IDR')))
+    assert_equal "IDR", result.params['amount_currency_code']
+    assert_equal "1234", result.params['amount_value']
+  end
+
   def test_failed_authorize
     assert response = @capture_gateway.authorize(@declined_amount, @credit_card, @options)
     assert_failure response
