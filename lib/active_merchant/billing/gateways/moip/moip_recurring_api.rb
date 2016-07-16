@@ -12,10 +12,14 @@ module ActiveMerchant #:nodoc:
           params[:code] = code.gsub("-", "").gsub(".", "")
         end
 
-        moip_response = Moip::Assinaturas::Plan.create(params, moip_auth: moip_auth)
-        moip_response[:code] = params[:code]
+        begin
+          moip_response = Moip::Assinaturas::Plan.create(params, moip_auth: moip_auth)
+          moip_response[:code] = params[:code]
 
-        build_response_plan(moip_response)
+          build_response_plan(moip_response)
+        rescue Moip::Assinaturas::WebServerResponseError => error
+          build_response_plan(error)
+        end
       end
 
       def find_plan(plan_code)
@@ -27,17 +31,21 @@ module ActiveMerchant #:nodoc:
 
       def update_plan(params)
         begin
-          moip_response = Moip::Assinaturas::Plan.update(plan_params(params), moip_auth: moip_auth)
+          plan_attributes = plan_params(params)
+          moip_response   = find_plan(plan_attributes[:code])
+          plan            = moip_response.params['plan']
+
+          plan_attributes.delete(:interval)
+          plan_attributes[:amount] = plan['amount']
+
+          moip_response    = Moip::Assinaturas::Plan.update(plan_attributes, moip_auth: moip_auth)
           success, message = [true, 'Plano atualizado com sucesso.']
-          body = moip_response
-        rescue
-          success, message = [false, 'Erro ao atualizar plano.']
-          body = { success: false, message: 'Ocorreu um erro no retorno do webservice.'}
+
+          Response.new(success, message, moip_response, test: test?, plan_code: plan_code_from(params))
+        rescue Moip::Assinaturas::WebServerResponseError => error
+          build_response_plan(error)
         end
-
-        Response.new(success, message, body, test: test?, plan_code: plan_code_from(params))
       end
-
 
       def recurring(amount, credit_card, options = {})
         cust = ensure_customer_created(options, credit_card)
@@ -96,11 +104,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_response_plan(response)
-        if response[:success]
+        if response.try(:[], :success)
           Response.new(response[:success], response[:plan][:message],
             response, test: test?, plan_code: plan_code_from(response))
+        elsif response.try(:message)
+          response = JSON.parse(response.message)
+
+          Response.new(false, response["ERROR"], response, test: test?)
         else
-          Response.new(response[:success], response[:message], response, test: test?)
+          Response.new(false, response[:errors].to_s, response, test: test?)
         end
       end
 
@@ -155,25 +167,25 @@ module ActiveMerchant #:nodoc:
               expiration_year: credit_card.year - 2000
             }
           }
-          }, true, moip_auth: moip_auth)
-        end
+        }, true, moip_auth: moip_auth)
+      end
 
-        def customer_code(options)
-          @customer_code ||= "ED#{options[:customer][:id]}"
-        end
+      def customer_code(options)
+        @customer_code ||= "ED#{options[:customer][:id]}"
+      end
 
-        def subscription_action_from(response)
-          return :fail unless response[:success]
+      def subscription_action_from(response)
+        return :fail unless response[:success]
 
-          INVOICE_TO_SUBSCRIPTION_STATUS_MAP[response[:subscription][:invoice][:status][:code]]
-        end
+        INVOICE_TO_SUBSCRIPTION_STATUS_MAP[response[:subscription][:invoice][:status][:code]]
+      end
 
-        def next_charge_at(response)
-          return nil unless response[:success]
+      def next_charge_at(response)
+        return nil unless response[:success]
 
-          Date.new(response[:subscription][:next_invoice_date][:year],
-          response[:subscription][:next_invoice_date][:month],
-          response[:subscription][:next_invoice_date][:day])
+        Date.new(response[:subscription][:next_invoice_date][:year],
+        response[:subscription][:next_invoice_date][:month],
+        response[:subscription][:next_invoice_date][:day])
       end
 
       def plan_params(params)
@@ -194,6 +206,7 @@ module ActiveMerchant #:nodoc:
             }
           }
 
+          plan_attributes[:setup_fee] = params[:fee] if params[:fee]
           plan_attributes[:code] = params[:plan_code] if params[:plan_code]
           plan_attributes[:trial][:hold_setup_fee] = params[:hold_setup_fee] if params[:hold_setup_fee]
           plan_attributes[:payment_method] = params[:payment_method] if params[:payment_method]
