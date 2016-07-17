@@ -48,24 +48,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def recurring(amount, credit_card, options = {})
-        cust = ensure_customer_created(options, credit_card)
+        begin
+          cust = ensure_customer_created(options, credit_card)
 
-        params = {
-          code: options[:transaction_id],
-          plan: { code: options[:subscription][:plan_code] },
-          amount: amount,
-          customer: { code: customer_code(options) }
-        }
+          params = {
+            code: options[:transaction_id],
+            plan: { code: options[:subscription][:plan_code] },
+            amount: amount,
+            customer: { code: customer_code(options) }
+          }
 
-        resp = Moip::Assinaturas::Subscription.create(params, false, moip_auth: moip_auth)
+          resp = Moip::Assinaturas::Subscription.create(params, false, moip_auth: moip_auth)
 
-        if resp[:success]
-          Response.new(resp[:success], resp[:subscription][:message],
-          resp, test: test?, authorization: resp[:subscription][:code],
-          subscription_action: subscription_action_from(resp),
-          next_charge_at: next_charge_at(resp))
-        else
-          Response.new(resp[:success], resp[:message], resp)
+          if resp[:success]
+            Response.new(resp[:success], resp[:subscription][:message],
+            resp, test: test?, authorization: resp[:subscription][:code],
+            subscription_action: subscription_action_from(resp),
+            next_charge_at: next_charge_at(resp))
+          else
+            Response.new(resp[:success], resp[:message], resp)
+          end
+        rescue Moip::Assinaturas::WebServerResponseError => error
+          build_response_error(error)
         end
       end
 
@@ -107,17 +111,23 @@ module ActiveMerchant #:nodoc:
         if response.try(:[], :success)
           Response.new(response[:success], response[:plan][:message],
             response, test: test?, plan_code: plan_code_from(response))
-        elsif response.try(:message)
+        else
+          build_response_error(response)
+        end
+      end
+
+      def plan_code_from(response)
+         response && response["code"] || response[:code] || response[:plan_code] || nil
+      end
+
+      def build_response_error(response)
+        if response.try(:message)
           response = JSON.parse(response.message)
 
           Response.new(false, response["ERROR"], response, test: test?)
         else
           Response.new(false, response[:errors].to_s, response, test: test?)
         end
-      end
-
-      def plan_code_from(response)
-         response && response["code"] || response[:code] || response[:plan_code] || nil
       end
 
       private
