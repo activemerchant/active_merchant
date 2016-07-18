@@ -8,6 +8,7 @@
 * Migs: Add support for void [mohsenottello]
 * Jetpay: Support endpoint for Canada [shasum]
 * Telr: Add gateway support [curiousepic]
+* Moneris: Fix unit test stubs [shasum]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
