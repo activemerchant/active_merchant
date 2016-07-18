@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
-        auth, amount, currency = split_authorization(authorization)
+        _, amount, currency = split_authorization(authorization)
         commit(:void) do |doc|
           add_invoice(doc, "void", amount.to_i, authorization, options.merge(currency: currency))
         end
@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(action, parsed, amount, currency),
           avs_result: avs_result(parsed),
           cvv_result: cvv_result(parsed),
-          error_code: error_code_from(parsed),
+          error_code: error_code_from(succeeded, parsed),
           test: test?
         )
       end
@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
-              name = "#{node.name.downcase}_#{childnode.name.downcase}"
+              name = "#{childnode.name.downcase}"
               response[name.to_sym] = childnode.text
             end
           end
@@ -234,7 +234,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, response, amount, currency)
-        auth = response[:auth_tranref]
+        auth = response[:tranref]
         auth = [auth, amount, currency].join('|')
         auth
       end
@@ -244,27 +244,29 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:auth_status] == "A"
+        response[:status] == "A"
       end
 
       def message_from(succeeded, response)
         if succeeded
           "Succeeded"
         else
-          response[:auth_message]
+          response[:message]
         end
       end
 
-      def error_code_from(response)
-        response[:auth_code]
+      def error_code_from(succeeded, response)
+        unless succeeded
+          response[:code]
+        end
       end
 
       def cvv_result(parsed)
-        CVVResult.new(CVC_CODE_TRANSLATOR[parsed[:auth_cvv]])
+        CVVResult.new(CVC_CODE_TRANSLATOR[parsed[:cvv]])
       end
 
       def avs_result(parsed)
-        AVSResult.new(code: AVS_CODE_TRANSLATOR[parsed[:auth_avs]])
+        AVSResult.new(code: AVS_CODE_TRANSLATOR[parsed[:avs]])
       end
 
       def headers
