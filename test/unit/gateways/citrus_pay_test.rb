@@ -1,9 +1,9 @@
 require 'test_helper'
 
-class TnsTest < Test::Unit::TestCase
+class CitrusPayTest < Test::Unit::TestCase
   include CommStub
   def setup
-    @gateway = TnsGateway.new(
+    @gateway = CitrusPayGateway.new(
       userid: 'userid',
       password: 'password'
     )
