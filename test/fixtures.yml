@@ -164,6 +164,10 @@ checkout:
 checkout_v2:
   secret_key: secret_key
 
+citrus_pay:
+  userid: CPF00001
+  password: 7c70414732de7e0ba3a04db5f24fcec8
+
 # Working credentials, no need to replace
 clearhaus: &clearhaus
   api_key: a2c583e7-23f2-4097-b327-84a87128cfb4

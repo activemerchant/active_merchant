@@ -1,16 +1,13 @@
 require 'test_helper'
 
-class RemoteTnsTest < Test::Unit::TestCase
-
+class RemoteCitrusPayTest < Test::Unit::TestCase
   def setup
-    TnsGateway.ssl_strict = false # Sandbox has an improperly installed cert
-    @gateway = TnsGateway.new(fixtures(:tns))
+    CitrusPayGateway.ssl_strict = false # Sandbox has an improperly installed cert
+    @gateway = CitrusPayGateway.new(fixtures(:citrus_pay))
 
     @amount = 100
-    @credit_card = credit_card('5123456789012346')
-    @ap_credit_card = credit_card('5424180279791732', month: 05, year: 2017, verification_value: 222)
-    @declined_card = credit_card('4000300011112220')
-
+    @credit_card = credit_card('4987654321098769')
+    @declined_card = credit_card('5019994000124034')
     @options = {
       order_id: generate_unique_id,
       billing_address: address,
@@ -19,7 +16,7 @@ class RemoteTnsTest < Test::Unit::TestCase
   end
 
   def teardown
-    TnsGateway.ssl_strict = true
+    CitrusPayGateway.ssl_strict = true
   end
 
   def test_successful_purchase
@@ -45,18 +42,10 @@ class RemoteTnsTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
-  def test_successful_purchase_with_region
-    @gateway = TnsGateway.new(fixtures(:tns_ap).merge(region: 'asia_pacific'))
-
-    assert response = @gateway.purchase(@amount, @ap_credit_card, @options.merge(currency: "AUD"))
-    assert_success response
-    assert_equal "Succeeded", response.message
-  end
-
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "FAILURE - DECLINED", response.message
+    assert_match /FAILURE/, response.message
   end
 
   def test_successful_authorize_and_capture
@@ -73,7 +62,7 @@ class RemoteTnsTest < Test::Unit::TestCase
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "FAILURE - DECLINED", response.message
+    assert_match /FAILURE/, response.message
   end
 
   def test_successful_refund
@@ -103,7 +92,7 @@ class RemoteTnsTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = TnsGateway.new(
+    gateway = CitrusPayGateway.new(
                 :userid => 'nosuch',
                 :password => 'thing'
               )
@@ -111,4 +100,5 @@ class RemoteTnsTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "ERROR - INVALID_REQUEST - Invalid credentials.", response.message
   end
+
 end
