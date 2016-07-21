@@ -8,6 +8,7 @@
 * JetPay V2: Add optional tax data to capture calls [shasum] #2445
 * Credorax: Add 3D Secure authentication fields [davidsantoso] #2446
 * Authorize.net: Pass Level 2 Data Fields [curiousepic] #2444
+* Quickpay V10: Fix store and token use for recurring payments [wsmoak] #2180
 
 == Version 1.66.0 (May 4, 2017)
 * Support Rails 5.1 [jhawthorn] #2407
