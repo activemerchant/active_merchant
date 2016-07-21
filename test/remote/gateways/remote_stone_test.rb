@@ -57,7 +57,7 @@ class RemoteStoneTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, captured.params)
     assert_failure response
-    assert_equal 'Erro no processamento.', response.message
+    assert_equal 'Ocorreu um erro ao tentar processar seu pagamento, tente novamente.', response.message
   end
 
   def test_successful_refund
@@ -75,7 +75,7 @@ class RemoteStoneTest < Test::Unit::TestCase
 
     response = @gateway.refund(@declined_amount, auth.params)
     assert_failure response
-    assert_equal 'Erro no processamento.', response.message
+    assert_equal 'Ocorreu um erro ao tentar processar seu pagamento, tente novamente.', response.message
   end
 
   def test_successful_void
@@ -93,7 +93,7 @@ class RemoteStoneTest < Test::Unit::TestCase
 
     response = @gateway.void(@declined_amount, auth.params)
     assert_failure response
-    assert_equal 'Erro no processamento.', response.message
+    assert_equal 'Ocorreu um erro ao tentar processar seu pagamento, tente novamente.', response.message
   end
 
   def test_successful_verify

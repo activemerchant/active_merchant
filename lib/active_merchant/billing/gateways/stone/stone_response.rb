@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message
-        error_message || transaction_message || "Erro no processamento."
+        error_message || transaction_message || "Ocorreu um erro ao tentar processar seu pagamento, tente novamente."
       end
 
       def authorization
