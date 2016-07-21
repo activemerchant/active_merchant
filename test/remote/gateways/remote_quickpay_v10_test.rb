@@ -174,6 +174,23 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_successful_store_and_reference_recurring_purchase
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert signup = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success signup
+    @options[:order_id] = generate_unique_id[0...10]
+    assert renewal = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success renewal
+  end
+
+  def test_successful_store_and_reference_authorize
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert authorization = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success authorization
+  end
+
   def test_successful_unstore
     assert response = @gateway.store(@valid_card, @options)
     assert_success response
