@@ -10,6 +10,7 @@
 * Telr: Add gateway support [curiousepic]
 * Moneris: Fix unit test stubs [shasum]
 * Stripe: Support new network tokenization API params [methodmissing]
+* Vanco: Improve handling of success determination [duff]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
