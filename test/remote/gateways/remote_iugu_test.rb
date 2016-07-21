@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'byebug'
 
 class RemoteIuguTest < Test::Unit::TestCase
   def setup
@@ -13,6 +12,7 @@ class RemoteIuguTest < Test::Unit::TestCase
     @options = {
       test: true,
       email: 'test@test.com',
+      plan_identifier: 'familia',
       ignore_due_email: true,
       due_date: 10.days.from_now,
       description: 'Test Description',
@@ -33,6 +33,7 @@ class RemoteIuguTest < Test::Unit::TestCase
     }
 
     @options_force_cc = @options.merge(payable_with: 'credit_card')
+    @options_for_subscription = { plan_identified: 'silver' }
   end
 
   def test_successful_authorize_with_bank_slip
@@ -98,14 +99,18 @@ class RemoteIuguTest < Test::Unit::TestCase
 
   def test_declined_authorize_with_credit_card
     assert response = @gateway.purchase(@amount, @declined_card, @options)
+
     assert_failure response
+
     assert response.test
     assert_equal "Transação negada", response.message
   end
 
   def test_declined_purchase_with_credit_card
     assert response = @gateway.purchase(@amount, @declined_card, @options)
+
     assert_failure response
+
     assert response.test
     assert_block do
       ["Transaction declined", "Transação negada"].include?(response.message)
@@ -113,7 +118,10 @@ class RemoteIuguTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@credit_card, @options)
+    response = @gateway.store_client(@options)
+    store_options = @options.merge(customer_id: response.authorization)
+    assert response = @gateway.store(@credit_card, store_options)
+
     assert_success response
 
     assert response.params['id']
@@ -123,12 +131,114 @@ class RemoteIuguTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    response = @gateway.store(@credit_card, @options)
-    options = { id: response.params['id'], customer_id: response.params['customer_id'] }
+    response = @gateway.store_client(@options)
+    store_options = @options.merge(customer_id: response.authorization)
+    response = @gateway.store(@credit_card, store_options)
+    unstore_options = { id: response.params['id'], customer_id: response.params['customer_id'] }
+    assert response = @gateway.unstore(unstore_options)
 
-    assert response = @gateway.unstore(options)
     assert_success response
 
     assert response.params['id']
+  end
+
+  def test_successful_store_client
+    assert response = @gateway.store_client(@options)
+    assert_success response
+
+    assert response.params['id']
+    assert response.params['email']
+
+    assert_equal response.authorization, response.params["id"]
+  end
+
+  def test_successful_unstore_client
+    assert response = @gateway.store_client(@options)
+    assert response = @gateway.unstore_client(id: response.authorization)
+    assert_success response
+
+    assert response.params['id']
+    assert response.params['email']
+  end
+
+  def test_successful_request_payment_token_from_card
+    assert response = @gateway.request_payment_token(@credit_card, @options)
+    assert response.is_a?(String)
+  end
+
+  def test_successful_request_payment_token_from_token
+    assert response = @gateway.request_payment_token('test_token', @options)
+    assert 'test_token', response
+  end
+
+  def test_successful_subscribe
+    assert response = @gateway.store_client(@options)
+    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+
+    assert_success response
+  end
+
+  def test_successful_subscribe_and_unsubscribe
+    assert response = @gateway.store_client(@options)
+    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.unsubscribe(id: response.authorization)
+
+    assert_success response
+  end
+
+  def test_successful_subscribe_and_suspend
+    assert response = @gateway.store_client(@options)
+    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.suspend_subscription(id: response.authorization)
+    assert response.params['suspended']
+
+    assert_success response
+  end
+
+  def test_successful_subscribe_and_suspend_and_unsubscribe
+    assert response = @gateway.store_client(@options)
+    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+
+    assert response = @gateway.suspend_subscription(id: response.authorization)
+    assert_success response
+
+    assert response = @gateway.unsubscribe(id: response.authorization)
+    assert_success response
+  end
+
+  def test_successful_subscribe_and_suspend_and_activate
+    assert response = @gateway.store_client(@options)
+    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+
+    assert response = @gateway.suspend_subscription(id: response.authorization)
+    assert_success response
+
+    assert response = @gateway.activate_subscription(id: response.authorization)
+    assert_success response
+  end
+
+  def test_successful_subscribe_and_suspend_and_activate_and_unsubscribe
+    assert response = @gateway.store_client(@options)
+    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+
+    assert response = @gateway.suspend_subscription(id: response.authorization)
+    assert_success response
+
+    assert response = @gateway.activate_subscription(id: response.authorization)
+    assert_success response
+
+    assert response = @gateway.activate_subscription(id: response.authorization)
+    assert_success response
+  end
+
+  def test_successful_subscribe_and_change
+    assert response = @gateway.store_client(@options)
+    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+
+    change_params = { id: response.authorization, plan_identifier: 'silver' }
+    assert response = @gateway.change_subscription(change_params)
+    assert_equal 'silver', response.params['plan_identifier']
+
+    assert_success response
   end
 end

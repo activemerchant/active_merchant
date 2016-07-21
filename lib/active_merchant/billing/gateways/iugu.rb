@@ -25,8 +25,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post = {}
-        commit(:post, "invoices/#{authorization}/capture", post, options)
+        commit(:post, "invoices/#{authorization}/capture", nil, options)
       end
 
       # To create a charge on a card or a token, call
@@ -43,25 +42,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment, options = {})
-        response = store_client(options)
-        customer_id = response.params['id']
+        customer_id = options.fetch(:customer_id)
 
         post = { description: options[:description],
                  token: request_payment_token(payment, options) }
 
         add_optional(post, options, :set_as_default)
-        commit(:post, "customers/#{customer_id}/payment_methods", post)
+        commit(:post, "customers/#{customer_id}/payment_methods", post, options)
       end
 
       def unstore(options = {})
-        commit(:delete, "customers/#{options[:customer_id]}/payment_methods/#{options[:id]}")
+        commit(:delete, "customers/#{options[:customer_id]}/payment_methods/#{options[:id]}", nil, options)
       end
 
       def store_client(options = {})
         post = {}
         add_customer(post, options)
 
-        commit(:post, "customers", post)
+        commit(:post, "customers", post, options)
       end
 
       def unstore_client(options = {})
@@ -79,6 +77,28 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def subscribe(options = {})
+        post = {}
+        add_subscription(post, options)
+        commit(:post, "subscriptions", post, options)
+      end
+
+      def unsubscribe(options = {})
+        commit(:delete, "subscriptions/#{options[:id]}", nil, options)
+      end
+
+      def suspend_subscription(options = {})
+        commit(:post, "subscriptions/#{options[:id]}/suspend", nil, options)
+      end
+
+      def activate_subscription(options = {})
+        commit(:post, "subscriptions/#{options[:id]}/activate", nil, options)
+      end
+
+      def change_subscription(options = {})
+        commit(:post, "subscriptions/#{options[:id]}/change_plan/#{options[:plan_identifier]}", nil, options)
+      end
+
       private
       def create_post_for_auth(money, payment, options)
         post = {}
@@ -88,15 +108,14 @@ module ActiveMerchant #:nodoc:
 
         if payment.present?
           post['token'] = payment
+        elsif options[:customer_payment_method_id]
+          post['customer_payment_method_id'] = options[:customer_payment_method_id]
         else
           post['method'] = 'bank_slip'
         end
 
-        unless post.has_key?(:invoice_id)
-          post['email'] = options[:email]
-          add_amount(post, options)
-        end
-
+        post['email'] = options.fetch(:email)
+        add_amount(post, options)
         add_optional(post, options, :invoice_id, :customer_id, :months,
                      :discount_cents, :bank_slip_extra_days)
 
@@ -150,20 +169,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_subscription(post, options)
+        post[:customer_id] = options.fetch(:customer_id)
+        add_optional(post, options, :plan_identifier, :expires_at, :only_on_charge_success,
+                     :payable_with, :credits_based, :price_cents, :credits_cycle, :credits_min)
+      end
+
       def parse(body)
         JSON.parse(body)
       end
 
       def headers(options = {})
         key = options[:key] || @api_key
-        {
-          'authorization' => 'Basic ' + Base64.encode64(key.to_s + ":"),
-          'accept' => 'application/json',
-          'accept_charset' => 'utf-8',
-          'user_agent' => 'Iugu ActiveMerchant',
-          'accept_language' => 'pt-br;q=0.9,pt-BR',
-          'content_type' => 'application/json; charset=utf-8'
-        }
+        { 'authorization' => 'Basic ' + Base64.encode64(key.to_s + ":") }
       end
 
       def api_version(options)
