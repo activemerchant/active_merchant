@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
           'trialing'        => :no_wait_process,
           'paid'            => :confirm,
           'pending_payment' => :process,
-          'unpaid'          => :cancel,
+          'unpaid'          => :process,
           'canceled'        => :cancel,
           'ended'           => :cancel
         }

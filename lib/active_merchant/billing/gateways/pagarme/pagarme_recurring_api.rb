@@ -8,42 +8,46 @@ module ActiveMerchant #:nodoc:
       include ActiveMerchant::Billing::PagarmeRecurringApi::ResponsePagarme
 
       def recurring(amount, credit_card, options = {})
-        requires!(options, :payment_method)
+        begin
+          requires!(options, :payment_method)
 
-        params = {
-          payment_method: options[:payment_method],
-          customer: ensure_customer_created(options),
-          plan_id: options["subscription"]["plan_code"],
-        }
+          params = {
+            payment_method: options[:payment_method],
+            customer: ensure_customer_created(options),
+            plan_id: options["subscription"]["plan_code"],
+          }
 
-        if options[:payment_method] == 'credit_card'
-          if options[:card_id].present?
-            params[:card_id] = options[:card_id]
-          elsif options[:card_hash].present?
-            params[:card_hash] = options[:card_hash]
-          else
-            add_credit_card(params, credit_card)
+          if options[:payment_method] == 'credit_card'
+            if options[:card_id].present?
+              params[:card_id] = options[:card_id]
+            elsif options[:card_hash].present?
+              params[:card_hash] = options[:card_hash]
+            else
+              add_credit_card(params, credit_card)
+            end
           end
+
+          response            = commit(:post, 'subscriptions', params)
+          card                = response.params["card"]
+          response_options    = {
+            authorization:       response.params['id'],
+            subscription_action: SUBSCRIPTION_STATUS_MAP[response.params['status']],
+            test:                response.test?,
+            card:                card
+          }
+
+          current_transaction = response.params['current_transaction']
+
+          if current_transaction.present?
+            response_options[:payment_action] = PAYMENT_STATUS_MAP[current_transaction["status"]]
+            response_options[:boleto_url]     = current_transaction['boleto_url']
+          end
+
+          Response.new(response.success?, response.message,
+            subscription_to_response(response.params), response_options)
+        rescue PagarMe::ResponseError => error
+          Response.new(false, error.message, {}, test: test?)
         end
-
-        response            = commit(:post, 'subscriptions', params)
-        card                = response.params["card"]
-        response_options    = {
-          authorization:       response.params['id'],
-          subscription_action: SUBSCRIPTION_STATUS_MAP[response.params['status']],
-          test:                response.test?,
-          card:                card
-        }
-
-        current_transaction = response.params['current_transaction']
-
-        if current_transaction.present?
-          response_options[:payment_action] = PAYMENT_STATUS_MAP[current_transaction["status"]]
-          response_options[:boleto_url]     = current_transaction['boleto_url']
-        end
-
-        Response.new(response.success?, response.message,
-          subscription_to_response(response.params), response_options)
       end
 
       def update(invoice_id, options)

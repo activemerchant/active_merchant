@@ -1,4 +1,5 @@
 require 'pagarme'
+require File.dirname(__FILE__) + '/pagarme/card_pagarme.rb'
 require File.dirname(__FILE__) + '/pagarme/pagarme_recurring_api.rb'
 require File.dirname(__FILE__) + '/pagarme/pagarme_service.rb'
 
@@ -6,6 +7,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PagarmeGateway < Gateway
       include PagarmeRecurringApi
+      include CardPagarme
 
       self.live_url = 'https://api.pagar.me/1/'
 
@@ -33,14 +35,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options={})
-        post = {}
-        add_amount(post, money)
-        add_installments(post, options)
-        add_soft_descriptor(post, options)
-        add_payment_method(post, payment_method, options)
-        add_metadata(post, options)
+        begin
+          post = {}
+          add_amount(post, money)
+          add_installments(post, options)
+          add_soft_descriptor(post, options)
+          add_payment_method(post, payment_method, options)
+          add_metadata(post, options)
+          add_customer(post, options)
 
-        commit(:post, 'transactions', post)
+          commit(:post, 'transactions', post)
+        rescue PagarMe::ResponseError => error
+          Response.new(false, error.message, {}, test: test?)
+        end
       end
 
       def authorize(money, payment_method, options={})
@@ -118,6 +125,10 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_customer(post, options={})
+        post[:customer] = customer_params(options['customer'], options['address'])
+      end
+
       def add_amount(post, money)
         post[:amount] = amount(money)
       end
@@ -147,21 +158,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(post, credit_card)
-        post[:card_number] = credit_card.number
-        post[:card_holder_name] = credit_card.name
-        post[:card_expiration_date] = "#{credit_card.month}/#{credit_card.year}"
-        post[:card_cvv] = credit_card.verification_value
+        post[:card_id] = create_card(credit_card)
       end
 
       def add_metadata(post, options={})
-        post[:metadata] = {}
-        post[:metadata][:order_id] = options[:order_id]
-        post[:metadata][:ip] = options[:ip]
-        post[:metadata][:customer] = options[:customer]
-        post[:metadata][:invoice] = options[:invoice]
-        post[:metadata][:merchant] = options[:merchant]
+        post[:metadata]               = {}
+        post[:metadata][:order_id]    = options[:order_id]
+        post[:metadata][:ip]          = options[:ip]
+        post[:metadata][:merchant]    = options[:merchant]
         post[:metadata][:description] = options[:description]
-        post[:metadata][:email] = options[:email]
+        post[:metadata][:invoice]     = options[:invoice]
+        post[:metadata][:email]       = options[:email]
       end
 
       def parse(body)

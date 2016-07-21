@@ -30,11 +30,12 @@ module ActiveMerchant #:nodoc:
         end
 
         def customer_params(customer, address)
-          zipcode = address[:zip_code] || address[:zipcode]
-          phone   = phone_formatted(customer[:phone])
+          zipcode  = address[:zip_code] || address[:zipcode]
+          phone    = phone_formatted(customer[:phone])
+          document = document_number_formatted(customer[:legal_identifier])
 
           {
-            document_number: customer[:legal_identifier],
+            document_number: document,
             name: customer[:name],
             email: customer[:email],
             phone: phone,
@@ -294,6 +295,10 @@ module ActiveMerchant #:nodoc:
             ddd:    ddd,
             number: number
           }
+        end
+
+        def document_number_formatted(legal_identifier)
+          legal_identifier.strip.gsub(/\D/, '')
         end
       end
     end
