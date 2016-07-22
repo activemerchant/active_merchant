@@ -462,7 +462,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'city',                  address[:city]
           xml.tag! 'state',                 address[:state]
           xml.tag! 'postalCode',            address[:zip]
-          xml.tag! 'country',               address[:country]
+          xml.tag! 'country',               lookup_country_code(address[:country]) unless address[:country].blank?
           xml.tag! 'company',               address[:company]                 unless address[:company].blank?
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
           xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
@@ -667,6 +667,11 @@ module ActiveMerchant #:nodoc:
 
       def add_validate_pinless_debit_service(xml)
         xml.tag!'pinlessDebitValidateService', {'run' => 'true'}
+      end
+
+      def lookup_country_code(country_field)
+        country_code = Country.find(country_field) rescue nil
+        country_code.code(:alpha2)
       end
 
       # Where we actually build the full SOAP request using builder
