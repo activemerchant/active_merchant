@@ -315,31 +315,17 @@ module ActiveMerchant #:nodoc:
       def message_from(action, success, response)
         case action
         when 'store'
-          if success
-            response["code"]
-          elsif response["error"]
-            response["error"]
-          elsif response["creditCardToken"]
-            response["creditCardToken"]["errorDescription"]
-          else
-            "FAILED"
-          end
+          return response["code"] if success
+          error_description = response["creditCardToken"]["errorDescription"] if response["creditCardToken"]
+          response["error"] || error_description || "FAILED"
         when 'verify_credentials'
-          if success
-            "VERIFIED"
-          else
-            "FAILED"
-          end
+          return "VERIFIED" if success
+          "FAILED"
         else
-          if success
-            response["transactionResponse"]["responseCode"]
-          elsif response["error"]
-            response["error"]
-          elsif response["transactionResponse"]
-            response["transactionResponse"]["responseMessage"] || response["transactionResponse"]["responseCode"]
-          else
-            "FAILED"
-          end
+          response_message = response["transactionResponse"]["responseMessage"] if response["transactionResponse"]
+          response_code = response["transactionResponse"]["responseCode"] if response["transactionResponse"]
+          return response_code if success
+          response["error"] || response_message || response_code || "FAILED"
         end
       end
 
