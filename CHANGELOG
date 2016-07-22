@@ -13,6 +13,7 @@
 * Vanco: Improve handling of success determination [duff]
 * PayU Latam: Add new gateway [shasum]
 * Find countries if they are differently cased [curiousepic]
+* CyberSource: Look up alpha2 country code [curiousepic]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
