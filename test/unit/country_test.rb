@@ -32,6 +32,11 @@ class CountryTest < Test::Unit::TestCase
     assert_equal 'Canada', country.to_s
   end
 
+  def test_find_country_by_lowercase_name
+    country = ActiveMerchant::Country.find('bosnia and herzegovina')
+    assert_equal 'Bosnia and Herzegovina', country.to_s
+  end
+
   def test_find_unknown_country_name
     assert_raises(ActiveMerchant::InvalidCountryCodeError) do
       ActiveMerchant::Country.find('Asskickistan')

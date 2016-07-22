@@ -321,7 +321,7 @@ module ActiveMerchant #:nodoc:
         country_code = CountryCode.new(name)
         country = COUNTRIES.detect{|c| c[country_code.format] == upcase_name }
       else
-        country = COUNTRIES.detect{|c| c[:name] == name }
+        country = COUNTRIES.detect{|c| c[:name].upcase == name.upcase }
       end
       raise InvalidCountryCodeError, "No country could be found for the country #{name}" if country.nil?
       Country.new(country.dup)
