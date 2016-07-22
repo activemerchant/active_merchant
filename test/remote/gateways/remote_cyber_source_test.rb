@@ -137,6 +137,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_long_country_name
+    @options[:billing_address] = address(country: "united states", state: "NC")
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+  end
+
   def test_successful_purchase_without_decision_manager
     @options[:decision_manager_enabled] = 'false'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
