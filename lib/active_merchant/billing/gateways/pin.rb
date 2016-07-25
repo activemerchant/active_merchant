@@ -44,9 +44,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'customers', post, options)
       end
 
-      # Refund a transaction, note that the money attribute is ignored at the
-      # moment as the API does not support partial refunds. The parameter is
-      # kept for compatibility reasons
+      # Refund a transaction
       def refund(money, token, options = {})
         commit(:post, "charges/#{CGI.escape(token)}/refunds", { :amount => amount(money) }, options)
       end
