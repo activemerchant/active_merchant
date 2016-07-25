@@ -33,7 +33,8 @@ module ActiveMerchant #:nodoc:
             authorization:       response.params['id'],
             subscription_action: SUBSCRIPTION_STATUS_MAP[response.params['status']],
             test:                response.test?,
-            card:                card
+            card:                card,
+            invoice_id:          response.params['id']
           }
 
           current_transaction = response.params['current_transaction']
@@ -71,9 +72,21 @@ module ActiveMerchant #:nodoc:
 
       def invoice(invoice_id)
         response = commit(:get, "transactions/#{invoice_id}", nil)
+
         Response.new(true, nil, {invoice: invoice_to_response(response.params)})
       end
 
+      def last_payment_from_invoice(invoice_id)
+        response     = PagarMe::Subscription.find_by_id(invoice_id)
+        last_payment = response.transactions.last
+        last_code    = last_payment.status
+        options      = {
+          test: test?,
+          payment_action: PAYMENT_STATUS_MAP[last_code]
+        }
+
+        Response.new(response[:success], nil, payment_to_response(last_payment), options)
+      end
 
       def invoices(subscription_id)
         response = service_pagarme.invoices_by_subscription(subscription_id)

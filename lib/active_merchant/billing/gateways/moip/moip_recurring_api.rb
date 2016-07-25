@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
             Response.new(resp[:success], resp[:subscription][:message],
             resp, test: test?, authorization: resp[:subscription][:code],
             subscription_action: subscription_action_from(resp),
-            next_charge_at: next_charge_at(resp))
+            next_charge_at: next_charge_at(resp), invoice_id: invoice_id_from(resp))
           else
             Response.new(resp[:success], resp[:message], resp)
           end
@@ -81,6 +81,18 @@ module ActiveMerchant #:nodoc:
       def invoice(invoice_id)
         response = Moip::Assinaturas::Invoice.details(invoice_id, moip_auth: moip_auth)
         Response.new(response[:success], nil, invoice_to_response(response), test: test?)
+      end
+
+      def last_payment_from_invoice(invoice_id)
+        response     = Moip::Assinaturas::Payment.list(invoice_id, moip_auth: moip_auth)
+        last_payment = response[:payments].last
+        last_code    = last_payment['status']['code']
+        options      = {
+          test: test?,
+          payment_action: PAYMENT_STATUS_MAP[last_code]
+        }
+
+        Response.new(response[:success], nil, payment_to_response(last_payment), options)
       end
 
       def payments(invoice_id)
@@ -114,6 +126,10 @@ module ActiveMerchant #:nodoc:
         else
           build_response_error(response)
         end
+      end
+
+      def invoice_id_from(response)
+        response && response[:subscription] && response[:subscription]['invoice']['id']
       end
 
       def plan_code_from(response)
