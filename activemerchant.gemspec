@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 2'
 
-  s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'lib/**/*', 'vendor/**/*']
+  s.files = Dir['CHANGELOG.rdoc', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'
 
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
