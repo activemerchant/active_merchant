@@ -121,17 +121,13 @@ module ActiveMerchant #:nodoc:
       # You must supply an :order_id in the options hash
       def authorize(money, creditcard_or_reference, options = {})
         setup_address_hash(options)
-        commit(build_auth_request(money, creditcard_or_reference, options), options )
-      end
-
-      def auth_reversal(money, identification, options = {})
-        commit(build_auth_reversal_request(money, identification, options), options)
+        commit(build_auth_request(money, creditcard_or_reference, options), :authorize, money, options )
       end
 
       # Capture an authorization that has previously been requested
       def capture(money, authorization, options = {})
         setup_address_hash(options)
-        commit(build_capture_request(money, authorization, options), options)
+        commit(build_capture_request(money, authorization, options), :capture, money, options)
       end
 
       # Purchase is an auth followed by a capture
@@ -139,15 +135,15 @@ module ActiveMerchant #:nodoc:
       # options[:pinless_debit_card] => true # attempts to process as pinless debit card
       def purchase(money, payment_method_or_reference, options = {})
         setup_address_hash(options)
-        commit(build_purchase_request(money, payment_method_or_reference, options), options)
+        commit(build_purchase_request(money, payment_method_or_reference, options), :purchase, money, options)
       end
 
       def void(identification, options = {})
-        commit(build_void_request(identification, options), options)
+          commit(build_void_request(identification, options), :void, nil, options)
       end
 
       def refund(money, identification, options = {})
-        commit(build_refund_request(money, identification, options), options)
+        commit(build_refund_request(money, identification, options), :refund, money, options)
       end
 
       def verify(payment, options = {})
@@ -159,7 +155,7 @@ module ActiveMerchant #:nodoc:
 
       # Adds credit to a subscription (stand alone credit).
       def credit(money, reference, options = {})
-        commit(build_credit_request(money, reference, options), options)
+        commit(build_credit_request(money, reference, options), :credit, money, options)
       end
 
       # Stores a customer subscription/profile with type "on-demand".
@@ -167,26 +163,26 @@ module ActiveMerchant #:nodoc:
       # options[:setup_fee] => money
       def store(payment_method, options = {})
         setup_address_hash(options)
-        commit(build_create_subscription_request(payment_method, options), options)
+        commit(build_create_subscription_request(payment_method, options), :store, nil, options)
       end
 
       # Updates a customer subscription/profile
       def update(reference, creditcard, options = {})
         requires!(options, :order_id)
         setup_address_hash(options)
-        commit(build_update_subscription_request(reference, creditcard, options), options)
+        commit(build_update_subscription_request(reference, creditcard, options), :update, nil, options)
       end
 
       # Removes a customer subscription/profile
       def unstore(reference, options = {})
         requires!(options, :order_id)
-        commit(build_delete_subscription_request(reference, options), options)
+        commit(build_delete_subscription_request(reference, options), :unstore, nil, options)
       end
 
       # Retrieves a customer subscription/profile
       def retrieve(reference, options = {})
         requires!(options, :order_id)
-        commit(build_retrieve_subscription_request(reference, options), options)
+        commit(build_retrieve_subscription_request(reference, options), :retrieve, nil, options)
       end
 
       # CyberSource requires that you provide line item information for tax
@@ -218,13 +214,13 @@ module ActiveMerchant #:nodoc:
       def calculate_tax(creditcard, options)
         requires!(options,  :line_items)
         setup_address_hash(options)
-        commit(build_tax_calculation_request(creditcard, options), options)
+        commit(build_tax_calculation_request(creditcard, options), :calculate_tax, nil, options)
       end
 
       # Determines if a card can be used for Pinless Debit Card transactions
       def validate_pinless_debit_card(creditcard, options = {})
         requires!(options, :order_id)
-        commit(build_validate_pinless_debit_request(creditcard,options), options)
+        commit(build_validate_pinless_debit_request(creditcard,options), :validate_pinless_debit_card, nil, options)
       end
 
       def supports_scrubbing?
@@ -308,20 +304,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_void_request(identification, options)
-        order_id, request_id, request_token = identification.split(";")
+        order_id, request_id, request_token, action, money, currency  = identification.split(";")
         options[:order_id] = order_id
 
         xml = Builder::XmlMarkup.new :indent => 2
-        add_void_service(xml, request_id, request_token)
-        xml.target!
-      end
-
-      def build_auth_reversal_request(money, identification, options)
-        order_id, request_id, request_token = identification.split(";")
-        options[:order_id] = order_id
-        xml = Builder::XmlMarkup.new :indent => 2
-        add_purchase_data(xml, money, true, options)
-        add_auth_reversal_service(xml, request_id, request_token)
+        if action == "capture"
+          add_void_service(xml, request_id, request_token)
+        else
+          add_purchase_data(xml, money, true, options.merge(:currency => currency || default_currency))
+          add_auth_reversal_service(xml, request_id, request_token)
+        end
         xml.target!
       end
 
@@ -449,7 +441,7 @@ module ActiveMerchant #:nodoc:
       def add_purchase_data(xml, money = 0, include_grand_total = false, options={})
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
-          xml.tag!('grandTotalAmount', amount(money))  if include_grand_total
+          xml.tag!('grandTotalAmount', amount(money.to_i))  if include_grand_total
         end
       end
 
@@ -699,7 +691,7 @@ module ActiveMerchant #:nodoc:
 
       # Contact CyberSource, make the SOAP request, and parse the reply into a
       # Response object
-      def commit(request, options)
+      def commit(request, action, amount, options)
         begin
           response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
         rescue ResponseError => e
@@ -708,7 +700,7 @@ module ActiveMerchant #:nodoc:
 
         success = response[:decision] == "ACCEPT"
         message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]
-        authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken] ].compact.join(";") : nil
+        authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken], action, amount, options[:currency]].compact.join(";") : nil
 
         Response.new(success, message, response,
           :test => test?,
