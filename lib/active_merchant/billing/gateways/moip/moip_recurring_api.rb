@@ -218,8 +218,8 @@ module ActiveMerchant #:nodoc:
         unit, length = INTERVAL_MAP[params[:period]]
 
         plan_attributes = {
-          name: "ONE INVOICE FOR #{length} #{unit} #{params[:plan_code]}",
-          description: 'PLAN USED TO CREATE SUBSCRIPTIONS BY EDOOLS',
+          name: params[:name],
+          description: 'Plano usado para assinaturas',
           amount: params[:price],
           status: 'ACTIVE',
             interval: {
