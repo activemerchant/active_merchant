@@ -19,7 +19,7 @@ module ActiveMerchant
         add_invoice(post, amount, options)
         add_reference(post, *new_authorization)
         add_payment_method(post, payment_method)
-        add_customer_data(post, options)
+        add_customer_data(post, payment_method, options)
 
         commit('authorize', post)
       end
@@ -28,7 +28,7 @@ module ActiveMerchant
         post = new_post
         add_invoice(post, amount, options, :transaction)
         add_reference(post, *next_authorization(authorization))
-        add_customer_data(post, options)
+        add_customer_data(post, nil, options)
 
         commit('capture', post)
       end
@@ -37,7 +37,7 @@ module ActiveMerchant
         post = new_post
         add_invoice(post, amount, options, :transaction)
         add_reference(post, *next_authorization(authorization))
-        add_customer_data(post, options)
+        add_customer_data(post, nil, options)
 
         commit('refund', post)
       end
@@ -68,6 +68,7 @@ module ActiveMerchant
           },
           customer: {},
           billing: {},
+          device: {},
           shipping: {},
           transaction: {},
         }
@@ -96,11 +97,18 @@ module ActiveMerchant
         post[:sourceOfFunds][:provided][:card].merge!(card)
       end
 
-      def add_customer_data(post, options)
+      def add_customer_data(post, payment_method, options)
         billing = {}
         shipping = {}
         customer = {}
-        if(billing_address = (options[:billing_address] || options[:address]))
+        device = {}
+
+        customer[:firstName] = payment_method.first_name if payment_method
+        customer[:lastName] = payment_method.last_name if payment_method
+        customer[:email] = options[:email] if options[:email]
+        device[:ipAddress] = options[:ip] if options[:ip]
+
+        if (billing_address = options[:billing_address])
           billing[:address] = {}
           billing[:address][:street]        = billing_address[:address1]
           billing[:address][:street2]       = billing_address[:address2]
@@ -108,13 +116,10 @@ module ActiveMerchant
           billing[:address][:stateProvince] = billing_address[:state]
           billing[:address][:postcodeZip]   = billing_address[:zip]
           billing[:address][:country]       = country_code(billing_address[:country])
-          billing[:phone]                   = billing_address[:phone]
-
-          customer[:email]                  = options[:email] if options[:email]
-          customer[:ipAddress]              = options[:ip] if options[:ip]
+          customer[:phone]                  = billing_address[:phone]
         end
 
-        if(shipping_address = options[:shipping_address])
+        if (shipping_address = options[:shipping_address])
           shipping[:address] = {}
           shipping[:address][:street]        = shipping_address[:address1]
           shipping[:address][:street2]       = shipping_address[:address2]
@@ -129,6 +134,7 @@ module ActiveMerchant
         end
         post[:billing].merge!(billing)
         post[:shipping].merge!(shipping)
+        post[:device].merge!(device)
         post[:customer].merge!(customer)
       end
 
@@ -152,7 +158,7 @@ module ActiveMerchant
         rescue ResponseError => e
           raw = parse(e.response.body)
         end
-        succeeded = success_from(raw['result'])
+        succeeded = success_from(raw)
         Response.new(
           succeeded,
           message_from(succeeded, raw),
@@ -183,7 +189,7 @@ module ActiveMerchant
       end
 
       def success_from(response)
-        response == 'SUCCESS'
+        response['result'] == "SUCCESS"
       end
 
       def message_from(succeeded, response)

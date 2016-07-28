@@ -5,11 +5,11 @@ module ActiveMerchant
 
       class_attribute :live_na_url, :live_ap_url, :test_na_url, :test_ap_url
 
-      self.live_na_url = 'https://secure.na.tnspayments.com/api/rest/version/22/'
-      self.test_na_url = 'https://secure.na.tnspayments.com/api/rest/version/22/'
+      self.live_na_url = 'https://secure.na.tnspayments.com/api/rest/version/36/'
+      self.test_na_url = 'https://secure.na.tnspayments.com/api/rest/version/36/'
 
-      self.live_ap_url = 'https://secure.ap.tnspayments.com/api/rest/version/22/'
-      self.test_ap_url = 'https://secure.ap.tnspayments.com/api/rest/version/22/'
+      self.live_ap_url = 'https://secure.ap.tnspayments.com/api/rest/version/36/'
+      self.test_ap_url = 'https://secure.ap.tnspayments.com/api/rest/version/36/'
 
       self.display_name = 'TNS'
       self.homepage_url = 'http://www.tnsi.com/'
