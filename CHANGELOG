@@ -18,7 +18,7 @@
 * CitrusPay: Add gateway [duff]
 * TNS and CitrusPay: Update to version 36 of the API [duff]
 * TNS and CitrusPay: Support scrub and verify_credentials [duff]
-
+* CardStream: Add MXN currency code [curiousepic]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
