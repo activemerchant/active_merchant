@@ -25,6 +25,7 @@ module ActiveMerchant #:nodoc:
         "HKD" => "344",
         "ICK" => "352",
         "JPY" => "392",
+        "MXN" => "484",
         "NOK" => "578",
         "NZD" => "554",
         "SEK" => "752",
