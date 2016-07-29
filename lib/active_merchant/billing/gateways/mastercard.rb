@@ -56,6 +56,17 @@ module ActiveMerchant
         end
       end
 
+      def verify_credentials
+        url = build_url(SecureRandom.uuid, "nonexistent")
+        begin
+          ssl_get(url, headers)
+        rescue ResponseError => e
+          return false if e.response.code.to_i == 401
+        end
+
+        true
+      end
+
       def supports_scrubbing?
         true
       end
@@ -157,12 +168,15 @@ module ActiveMerchant
       rescue InvalidCountryCodeError
       end
 
-      def commit(action, post)
-        url = build_url(post.delete(:orderid), post.delete(:transactionid))
-        headers = {
+      def headers
+        {
           'Authorization' => 'Basic ' + Base64.encode64("merchant.#{@options[:userid]}:#{@options[:password]}").strip.delete("\r\n"),
           'Content-Type' => 'application/json',
         }
+      end
+
+      def commit(action, post)
+        url = build_url(post.delete(:orderid), post.delete(:transactionid))
         post[:apiOperation] = action.upcase
         begin
           raw = parse(ssl_request(:put, url, build_request(post), headers))

@@ -101,4 +101,23 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
     assert_equal "ERROR - INVALID_REQUEST - Invalid credentials.", response.message
   end
 
+  def test_transcript_scrubbing
+    card = credit_card("4987654321098769", verification_value: "134")
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = CitrusPayGateway.new(userid: 'unknown', password: 'unknown')
+    assert !gateway.verify_credentials
+  end
+
 end
