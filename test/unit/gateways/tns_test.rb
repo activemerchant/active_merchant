@@ -189,7 +189,28 @@ class TnsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
+
+  def pre_scrubbed
+    %q[
+      D, {"provided":{"card":{"expiry":{"year":"17","month":"09"},"number":"5123456789012346","securityCode":"123"}},"type":"CARD"}
+      <- transaction/1 HTTP/1.1\r\nAuthorization: Basic bWVyY2hhbnQuVEVTVFNQUkVFRExZMDE6M2YzNGZlNTAzMzRmYmU2Y2JlMDRjMjgzNDExYTU4NjA=\r\nContent-Type:
+      <- {\"order\":{\"amount\":\"1.00\",\"currency\":\"USD\"},\"sourceOfFunds\":{\"provided\":{\"card\":{\"expiry\":{\"year\":\"17\",\"month\":\"09\"},\"number\":\"5123456789012346\",\"securityCode\":\"123\"}},\"type\":\"CARD\"}
+    ]
+  end
+
+  def post_scrubbed
+    %q[
+      D, {"provided":{"card":{"expiry":{"year":"17","month":"09"},"number":"[FILTERED]","securityCode":"[FILTERED]"}},"type":"CARD"}
+      <- transaction/1 HTTP/1.1\r\nAuthorization: Basic [FILTERED]Content-Type:
+      <- {\"order\":{\"amount\":\"1.00\",\"currency\":\"USD\"},\"sourceOfFunds\":{\"provided\":{\"card\":{\"expiry\":{\"year\":\"17\",\"month\":\"09\"},\"number\":\"[FILTERED]\",\"securityCode\":\"[FILTERED]\"}},\"type\":\"CARD\"}
+    ]
+  end
 
   def successful_authorize_response
     %(
