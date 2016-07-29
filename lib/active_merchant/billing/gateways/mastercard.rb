@@ -56,6 +56,17 @@ module ActiveMerchant
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic ).*\\r\\n), '\1[FILTERED]').
+          gsub(%r(("number"?\\?":"?\\?")\d*), '\1[FILTERED]').
+          gsub(%r(("securityCode"?\\?":"?\\?")\d*), '\1[FILTERED]')
+      end
+
       private
       def new_post
         {

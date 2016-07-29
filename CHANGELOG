@@ -17,6 +17,7 @@
 * MONEI: Update supported countries list [davidgf]
 * CitrusPay: Add gateway [duff]
 * TNS and CitrusPay: Update to version 36 of the API [duff]
+* TNS and CitrusPay: Support scrub [duff]
 
 
 == Version 1.60.0 (July 4, 2016)
