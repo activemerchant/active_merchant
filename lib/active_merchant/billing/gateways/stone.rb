@@ -102,7 +102,8 @@ module ActiveMerchant #:nodoc:
         if card.is_a? String
           creditcard['InstantBuyKey'] = card
         else
-          creditcard['CreditCardBrand'] = card.brand
+          brand = card.brand == 'master' ? 'mastercard' : card.brand
+          creditcard['CreditCardBrand'] = brand
           creditcard['CreditCardNumber'] = card.number
           creditcard['ExpMonth'] = card.expiry_date.month
           creditcard['ExpYear'] = card.expiry_date.year
