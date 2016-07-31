@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         '043' => 'Inactive Operation',
         '044' => 'Token name does not exist',
         '045' => 'Merchant does not have the token service
-                  and yet “token_name” was sent',
+                  and yet "token_name" was sent',
         '046' => 'Channel is not configured for the selected payment option',
         '048' => 'Operation amount exceeds the captured amount',
         '051' => 'Acquirer bank is facing technical difficulties,
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
         '062' => 'Token has been created',
         '063' => 'Token has been updated',
         '064' => '3-D Secure check requested',
-        '065' => 'Transaction waiting for payer’s action',
+        '065' => 'Transaction waiting for payer\'s action',
         '066' => 'Merchant reference already exists',
         '068' => 'SDK service is inactive',
         '070' => 'device_id mismatch',
