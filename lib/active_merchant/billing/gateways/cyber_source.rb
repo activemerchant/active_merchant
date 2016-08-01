@@ -1,16 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # See the remote and mocked unit test files for example usage.  Pay special
-    # attention to the contents of the options hash.
-    #
     # Initial setup instructions can be found in
     # http://cybersource.com/support_center/implementation/downloads/soap_api/SOAP_toolkits.pdf
-    #
-    # Debugging
-    # If you experience an issue with this gateway be sure to examine the
-    # transaction information from a general transaction search inside the
-    # CyberSource Business Center for the full error messages including field
-    # names.
     #
     # Important Notes
     # * For checks you can purchase and store.
@@ -35,14 +26,12 @@ module ActiveMerchant #:nodoc:
 
       XSD_VERSION = "1.121"
 
-      # visa, master, american_express, discover
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG)
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.cybersource.com'
       self.display_name = 'CyberSource'
 
-      # map credit card to the CyberSource expected representation
       @@credit_card_codes = {
         :visa  => '001',
         :master => '002',
@@ -50,7 +39,6 @@ module ActiveMerchant #:nodoc:
         :discover => '004'
       }
 
-      # map response codes to something humans can read
       @@response_codes = {
         :r100 => "Successful transaction",
         :r101 => "Request is missing one or more required fields" ,
@@ -116,22 +104,16 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      # Request an authorization for an amount from CyberSource
-      #
-      # You must supply an :order_id in the options hash
       def authorize(money, creditcard_or_reference, options = {})
         setup_address_hash(options)
         commit(build_auth_request(money, creditcard_or_reference, options), :authorize, money, options )
       end
 
-      # Capture an authorization that has previously been requested
       def capture(money, authorization, options = {})
         setup_address_hash(options)
         commit(build_capture_request(money, authorization, options), :capture, money, options)
       end
 
-      # Purchase is an auth followed by a capture
-      # You must supply an order_id in the options hash
       # options[:pinless_debit_card] => true # attempts to process as pinless debit card
       def purchase(money, payment_method_or_reference, options = {})
         setup_address_hash(options)
@@ -139,7 +121,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(identification, options = {})
-          commit(build_void_request(identification, options), :void, nil, options)
+        commit(build_void_request(identification, options), :void, nil, options)
       end
 
       def refund(money, identification, options = {})
