@@ -90,22 +90,24 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal false,  response.success?
   end
 
-  def test_authorize_and_auth_reversal
+  def test_authorize_and_void
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal 'Successful transaction', auth.message
     assert_success auth
-    assert auth.test?
-
-    assert auth_reversal = @gateway.auth_reversal(@amount, auth.authorization)
-    assert_equal 'Successful transaction', auth_reversal.message
-    assert_success auth_reversal
-    assert auth_reversal.test?
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_equal 'Successful transaction', void.message
+    assert_success void
+    assert void.test?
   end
 
-  def test_successful_authorization_and_failed_auth_reversal
-    assert auth_reversal = @gateway.auth_reversal(@amount, "UnknownAuth")
-    assert_failure auth_reversal
-    assert_equal 'One or more fields contains invalid data', auth_reversal.message
+  def test_capture_and_void
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+    assert void = @gateway.void(capture.authorization, @options)
+    assert_equal 'Successful transaction', void.message
+    assert_success void
+    assert void.test?
   end
 
   def test_successful_tax_calculation
