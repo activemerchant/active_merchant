@@ -20,6 +20,7 @@
 * TNS and CitrusPay: Support scrub and verify_credentials [duff]
 * CardStream: Add MXN currency code [curiousepic]
 * CyberSource: Combine auth_reversal with Void [curiousepic]
+* SagePay: Fix truncation [duff]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
