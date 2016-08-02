@@ -175,6 +175,12 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      def truncate(value, max_size)
+        return nil unless value
+        return value.to_s if CGI.escape(value.to_s).length <= max_size
+        truncate(value.to_s.chop, max_size)
+      end
+
       def add_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';')
 
