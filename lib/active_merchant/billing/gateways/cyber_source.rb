@@ -226,6 +226,11 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def verify_credentials
+        response = void("0")
+        response.params["reasonCode"] == "102"
+      end
+
       private
 
       # Create all address hash key value pairs so that we still function if we
