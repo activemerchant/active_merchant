@@ -22,6 +22,7 @@
 * CyberSource: Combine auth_reversal with Void [curiousepic]
 * SagePay: Fix truncation [duff]
 * CyberSource: Use localized_amount [curiousepic]
+* CyberSource, Paymill, Payflow: Add verify_credentials [duff]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]

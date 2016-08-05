@@ -77,12 +77,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify_credentials
-        begin
-          response = void("0")
-          return false if ["01", "04"].include?(response.error_code)
-        end
-
-        true
+        response = void("0")
+        !["01", "04"].include?(response.error_code)
       end
 
       def supports_scrubbing?

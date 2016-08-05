@@ -294,6 +294,13 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success credit
   end
 
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = PayflowGateway.new(login: "unknown_login", password: "unknown_password", partner: "PayPal")
+    assert !gateway.verify_credentials
+  end
+
   def test_purchase_and_refund_with_three_d_secure_option
     amount = 100
 
