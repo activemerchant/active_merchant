@@ -508,6 +508,15 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_void_with_metadata
+    @gateway.expects(:ssl_request).with do |_, _, post, _|
+      post.include?("metadata[first_value]=true")
+    end.returns(successful_purchase_response(true))
+
+    assert response = @gateway.void('ch_test_charge', {metadata: {first_value: true}})
+    assert_success response
+  end
+
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response)
 
