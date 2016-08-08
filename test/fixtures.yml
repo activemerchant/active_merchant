@@ -505,6 +505,10 @@ netaxept:
   login: LOGIN
   password: PASSWORD
 
+netbanx:
+  api_key: APIKEY
+  account_number: ACCOUNTNUMBER
+
 # Working credentials, no need to replace
 # Contact Netbilling for login info to the admin area
 netbilling:
