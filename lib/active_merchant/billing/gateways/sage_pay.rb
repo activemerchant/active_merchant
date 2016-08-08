@@ -178,7 +178,12 @@ module ActiveMerchant #:nodoc:
       def truncate(value, max_size)
         return nil unless value
         return value.to_s if CGI.escape(value.to_s).length <= max_size
-        truncate(value.to_s.chop, max_size)
+
+        if value.size > max_size
+          truncate(super(value, max_size), max_size)
+        else
+          truncate(value.to_s.chop, max_size)
+        end
       end
 
       def add_reference(post, identification)
