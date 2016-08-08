@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://worldnettps.com/'
       self.display_name = 'WorldNet'
 
-      self.supported_countries = ['IE', 'GB', 'US']
+      self.supported_countries = %w(IE GB US)
       self.default_currency = 'EUR'
 
       CARD_TYPES = {
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
-        add_address(post, options)
+        add_address(post, payment, options)
         add_customer_data(post, options)
 
         commit('PAYMENT', post)
@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
-        add_address(post, options)
+        add_address(post, payment, options)
         add_customer_data(post, options)
 
         commit('PREAUTH', post)
@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
         commit('REFUND', post)
       end
 
-      def void(authorization, options = {})
+      def void(authorization, _options = {})
         post = {}
         post[:uniqueref] = authorization
         commit('VOID', post)
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
         post[:ipaddress] = options[:ip]
       end
 
-      def add_address(post, options)
+      def add_address(post, _creditcard, options)
         address = options[:billing_address] || options[:address]
         return unless address
         post[:address1] = address[:address1]

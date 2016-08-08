@@ -25,7 +25,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
-    assert_match %r(^deposit\|[0-9]{9}$), response.authorization
+    assert response.authorization
     assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert response.test?
   end
@@ -54,14 +54,14 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
-    assert_match %r(^authorize\|[0-9]{9}$), response.authorization
+    assert response.authorization
     assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert_equal "1.00", response.params["data"]["IMP_AUTORIZADO"]
 
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal "OK", capture.message
-    assert_match %r(^deposit\|[0-9]{9}$), capture.authorization
+    assert capture.authorization
     assert_equal @options[:order_id], capture.params["externalTransactionId"]
   end
 
@@ -87,10 +87,25 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    invalid_purchase_number = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
-    response = @gateway.capture("authorize" + "|" + invalid_purchase_number)
+    response = @gateway.capture("900000044")
     assert_failure response
-    assert_equal "[ \"NUMORDEN " + invalid_purchase_number + " no se encuentra registrado\", \"No se realizo el deposito\" ]", response.message
+    assert_match /NUMORDEN 900000044 no se encuentra registrado/, response.message
+    assert_equal 400, response.error_code
+  end
+
+  def test_successful_refund
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    refund = @gateway.refund(@amount, response.authorization)
+    assert_success refund
+    assert_equal "OK", refund.message
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(@amount, "900000044" )
+    assert_failure response
+    assert_match /NUMORDEN 900000044 no se encuentra registrado/, response.message
     assert_equal 400, response.error_code
   end
 
@@ -101,25 +116,12 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     void = @gateway.void(response.authorization)
     assert_success void
     assert_equal "OK", void.message
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-
-    void = @gateway.void(response.authorization)
-    assert_success void
-    assert_equal "OK", void.message
   end
 
   def test_failed_void
-    invalid_purchase_number = (SecureRandom.random_number(900_000_000) + 100_000_000).to_s
-    response = @gateway.void("authorize" + "|" + invalid_purchase_number)
+    response = @gateway.void("900000044")
     assert_failure response
-    assert_equal "[ \"NUMORDEN no se encuentra registrado.\", \"No se ha realizado la anulacion del pedido\" ]", response.message
-    assert_equal 400, response.error_code
-
-    response = @gateway.void("deposit" + "|" + invalid_purchase_number)
-    assert_failure response
-    assert_equal "[ \"NUMORDEN " + invalid_purchase_number + " no se encuentra registrado\", \"No se realizo la anulacion del deposito\" ]", response.message
+    assert_match /NUMORDEN no se encuentra registrado/, response.message
     assert_equal 400, response.error_code
   end
 
@@ -136,16 +138,6 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_equal 400, response.error_code
     assert_equal "Operacion Denegada.", response.message
   end
-
-  # def test_dump_transcript
-  #   #skip("Transcript scrubbing for this gateway has been tested.")
-
-  #   # This test will run a purchase transaction on your gateway
-  #   # and dump a transcript of the HTTP conversation so that
-  #   # you can use that transcript as a reference while
-  #   # implementing your scrubbing logic
-  #   dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
-  # end
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do

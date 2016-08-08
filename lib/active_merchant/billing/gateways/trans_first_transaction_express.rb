@@ -512,7 +512,7 @@ module ActiveMerchant #:nodoc:
           if (billing_address = options[:billing_address])
             doc["v1"].phone do
               doc["v1"].type (options[:phone_number_type] || "4")
-              doc["v1"].nr billing_address[:phone].gsub(/\D/, '')
+              doc["v1"].nr billing_address[:phone].gsub(/\D/, '') if billing_address[:phone]
             end
             doc["v1"].addrLn1 billing_address[:address1]
             doc["v1"].addrLn2 billing_address[:address2]

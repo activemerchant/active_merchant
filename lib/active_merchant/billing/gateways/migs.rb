@@ -25,6 +25,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
       self.money_format = :cents
+      self.currencies_without_fractions = %w(IDR)
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://mastercard.com/mastercardsps'
@@ -99,6 +100,17 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_advanced_user(post)
         add_standard_parameters('refund', post, options[:unique_id])
+
+        commit(post)
+      end
+
+      def void(authorization, options = {})
+        requires!(@options, :advanced_login, :advanced_password)
+
+        post = options.merge(:TransNo => authorization)
+
+        add_advanced_user(post)
+        add_standard_parameters('voidAuthorisation', post, options[:unique_id])
 
         commit(post)
       end
@@ -189,7 +201,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_amount(post, money, options)
-        post[:Amount] = amount(money)
+        post[:Amount] = localized_amount(money, options[:currency])
         post[:Currency] = options[:currency] if options[:currency]
       end
 

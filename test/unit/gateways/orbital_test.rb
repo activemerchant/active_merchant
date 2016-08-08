@@ -635,6 +635,21 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_nil response.params['account_num']
   end
 
+  def test_cc_account_num_is_removed_from_response
+    @gateway.expects(:ssl_post).returns(successful_profile_response)
+
+    response = nil
+
+    assert_deprecation_warning do
+      response = @gateway.add_customer_profile(credit_card,
+          :billing_address => address)
+    end
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_nil response.params['cc_account_num']
+  end
+
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(credit_card, @options)

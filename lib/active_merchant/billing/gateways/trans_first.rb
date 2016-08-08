@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_payment(post, payment)
         add_address(post, options)
-        add_invoice(post, options) if payment.is_a?(CreditCard)
+        add_invoice(post, options) if payment.credit_card?
         add_pair(post, :RefID, options[:order_id], required: true)
 
         commit((payment.is_a?(Check) ? :purchase_echeck : :purchase), post)
@@ -237,4 +237,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

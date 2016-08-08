@@ -30,6 +30,8 @@ module ActiveMerchant #:nodoc:
     #   puts response.authorization # Retrieve the unique transaction ID returned by Elavon
     #
     class ElavonGateway < Gateway
+      include Empty
+
       class_attribute :test_url, :live_url, :delimiter, :actions
 
       self.test_url = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do'
@@ -212,8 +214,8 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(form,options)
-        form[:invoice_number] = (options[:order_id] || options[:invoice]).to_s.slice(0, 10)
-        form[:description] = options[:description].to_s.slice(0, 255)
+        form[:invoice_number] = truncate((options[:order_id] || options[:invoice]), 10)
+        form[:description] = truncate(options[:description], 255)
       end
 
       def add_approval_code(form, authorization)
@@ -236,8 +238,8 @@ module ActiveMerchant #:nodoc:
           add_verification_value(form, creditcard)
         end
 
-        form[:first_name] = creditcard.first_name.to_s.slice(0, 20)
-        form[:last_name] = creditcard.last_name.to_s.slice(0, 30)
+        form[:first_name] = truncate(creditcard.first_name, 20)
+        form[:last_name] = truncate(creditcard.last_name, 30)
       end
 
       def add_token(form, token)
@@ -250,8 +252,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(form, options)
-        form[:email] = options[:email].to_s.slice(0, 100) unless options[:email].blank?
-        form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
+        form[:email] = truncate(options[:email], 100) unless empty?(options[:email])
+        form[:customer_code] = truncate(options[:customer], 10) unless empty?(options[:customer])
+        form[:customer_number] = options[:customer_number] unless empty?(options[:customer_number])
       end
 
       def add_salestax(form, options)
@@ -262,27 +265,27 @@ module ActiveMerchant #:nodoc:
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
-          form[:avs_address]    = billing_address[:address1].to_s.slice(0, 30)
-          form[:address2]       = billing_address[:address2].to_s.slice(0, 30)
-          form[:avs_zip]        = billing_address[:zip].to_s.gsub(/[^a-zA-Z0-9]/, '').slice(0, 9)
-          form[:city]           = billing_address[:city].to_s.slice(0, 30)
-          form[:state]          = billing_address[:state].to_s.slice(0, 10)
-          form[:company]        = billing_address[:company].to_s.slice(0, 50)
-          form[:phone]          = billing_address[:phone].to_s.slice(0, 20)
-          form[:country]        = billing_address[:country].to_s.slice(0, 50)
+          form[:avs_address]    = truncate(billing_address[:address1], 30)
+          form[:address2]       = truncate(billing_address[:address2], 30)
+          form[:avs_zip]        = truncate(billing_address[:zip].to_s.gsub(/[^a-zA-Z0-9]/, ''), 9)
+          form[:city]           = truncate(billing_address[:city], 30)
+          form[:state]          = truncate(billing_address[:state], 10)
+          form[:company]        = truncate(billing_address[:company], 50)
+          form[:phone]          = truncate(billing_address[:phone], 20)
+          form[:country]        = truncate(billing_address[:country], 50)
         end
 
         if shipping_address = options[:shipping_address]
           first_name, last_name = split_names(shipping_address[:name])
-          form[:ship_to_first_name]     = first_name.to_s.slice(0, 20)
-          form[:ship_to_last_name]      = last_name.to_s.slice(0, 30)
-          form[:ship_to_address1]       = shipping_address[:address1].to_s.slice(0, 30)
-          form[:ship_to_address2]       = shipping_address[:address2].to_s.slice(0, 30)
-          form[:ship_to_city]           = shipping_address[:city].to_s.slice(0, 30)
-          form[:ship_to_state]          = shipping_address[:state].to_s.slice(0, 10)
-          form[:ship_to_company]        = shipping_address[:company].to_s.slice(0, 50)
-          form[:ship_to_country]        = shipping_address[:country].to_s.slice(0, 50)
-          form[:ship_to_zip]            = shipping_address[:zip].to_s.slice(0, 10)
+          form[:ship_to_first_name]     = truncate(first_name, 20)
+          form[:ship_to_last_name]      = truncate(last_name, 30)
+          form[:ship_to_address1]       = truncate(shipping_address[:address1], 30)
+          form[:ship_to_address2]       = truncate(shipping_address[:address2], 30)
+          form[:ship_to_city]           = truncate(shipping_address[:city], 30)
+          form[:ship_to_state]          = truncate(shipping_address[:state], 10)
+          form[:ship_to_company]        = truncate(shipping_address[:company], 50)
+          form[:ship_to_country]        = truncate(shipping_address[:country], 50)
+          form[:ship_to_zip]            = truncate(shipping_address[:zip], 10)
         end
       end
 
@@ -327,7 +330,19 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters)
         result = preamble
         result.merge!(parameters)
-        result.collect { |key, value| "ssl_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        result.collect { |key, value| post_data_string(key, value) }.join("&")
+      end
+
+      def post_data_string(key, value)
+        if custom_field?(key)
+          "#{key}=#{CGI.escape(value.to_s)}"
+        else
+          "ssl_#{key}=#{CGI.escape(value.to_s)}"
+        end
+      end
+
+      def custom_field?(field_name)
+        field_name == :customer_number
       end
 
       def preamble
@@ -338,7 +353,7 @@ module ActiveMerchant #:nodoc:
           'result_format' => 'ASCII'
         }
 
-        result['user_id'] = @options[:user] unless @options[:user].blank?
+        result['user_id'] = @options[:user] unless empty?(@options[:user])
         result
       end
 
@@ -354,4 +369,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

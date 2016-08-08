@@ -32,8 +32,6 @@ module ActiveMerchant #:nodoc:
         add_payment_method(params, payment_method)
         add_antifraud_data(params, options)
         params[:email] = options[:email] || 'unknown@email.com'
-
-        # No vaulting for now
         params[:createAlias] = false
 
         commit("authorize", params)
@@ -41,24 +39,20 @@ module ActiveMerchant #:nodoc:
 
       def capture(authorization, options={})
         params = {}
-        _, purchase_number = split_authorization(authorization)
-        params[:purchaseNumber] = purchase_number
-        params[:externalTransactionId] = options[:order_id]
+        add_auth_order_id(params, authorization, options)
         commit("deposit", params)
       end
 
       def void(authorization, options={})
         params = {}
-        action, purchase_number = split_authorization(authorization)
-        params[:purchaseNumber] = purchase_number
-        params[:externalTransactionId] = options[:order_id]
+        add_auth_order_id(params, authorization, options)
+        commit("void", params)
+      end
 
-        case action
-        when "authorize"
-          commit("void", params)
-        when "deposit"
-          commit("cancelDeposit", params)
-        end
+      def refund(amount, authorization, options={})
+        params = {}
+        add_auth_order_id(params, authorization, options)
+        commit("cancelDeposit", params)
       end
 
       def verify(credit_card, options={})
@@ -91,6 +85,11 @@ module ActiveMerchant #:nodoc:
         params[:externalTransactionId] = options[:order_id]
         params[:amount] = amount(money)
         params[:currencyId] = CURRENCY_CODES[options[:currency] || currency(money)]
+      end
+
+      def add_auth_order_id(params, authorization, options)
+        params[:purchaseNumber] = authorization
+        params[:externalTransactionId] = options[:order_id]
       end
 
       def add_payment_method(params, payment_method)
@@ -134,7 +133,7 @@ module ActiveMerchant #:nodoc:
             message_from(response),
             response,
             :test => test?,
-            :authorization => authorization_from(action, params),
+            :authorization => authorization_from(params),
             :error_code => response["errorCode"]
           )
         end
@@ -149,26 +148,18 @@ module ActiveMerchant #:nodoc:
 
       def url(action, params)
         if (action == "authorize")
-          url = base_url() + "/" + @options[:merchant_id]
+          "#{base_url}/#{@options[:merchant_id]}"
         else
-          url = base_url() + "/" + @options[:merchant_id] + "/" + action + "/" + params[:purchaseNumber]
+          "#{base_url}/#{@options[:merchant_id]}/#{action}/#{params[:purchaseNumber]}"
         end
       end
 
       def method(action)
-        if (action == "authorize")
-          method = :post
-        else
-          method = :put
-        end
+        (action == "authorize") ? :post : :put
       end
 
-      def split_authorization(authorization)
-        authorization.split("|")
-      end
-
-      def authorization_from(action, params)
-        action + "|" + (params[:purchaseNumber] || '')
+      def authorization_from(params)
+        params[:purchaseNumber]
       end
 
       def base_url
