@@ -215,8 +215,9 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_description_is_truncated
+    huge_description = "SagePay transactions fail if the déscription is more than 100 characters. Therefore, we truncate it to 100 characters." + " Lots more text " * 1000
     stub_comms(@gateway, :ssl_request) do
-      purchase_with_options(description: "SagePay transactions fail if the déscription is more than 100 characters. Therefore, we truncate it to 100 characters.")
+      purchase_with_options(description: huge_description)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/&Description=SagePay\+transactions\+fail\+if\+the\+d%C3%A9scription\+is\+more\+than\+100\+characters.\+Therefore%2C\+we\+trunc&/, data)
     end.respond_with(successful_purchase_response)
