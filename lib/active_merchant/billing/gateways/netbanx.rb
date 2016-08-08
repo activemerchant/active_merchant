@@ -167,8 +167,9 @@ module ActiveMerchant #:nodoc:
           :street  => address[:address1],
           :city    => address[:city],
           :zip     => address[:zip],
-          :country => country.code(:alpha2).value
         }
+        mapped.merge!({:country => country.code(:alpha2).value}) unless country.blank?
+
         mapped
       end
 
