@@ -121,6 +121,17 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_successful_void_with_metadata
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    assert void = @gateway.void(response.authorization, metadata: { test_metadata: 123 })
+    assert void.test?
+    assert_success void
+    assert_equal "123", void.params["metadata"]["test_metadata"]
+  end
+
   def test_unsuccessful_void
     assert void = @gateway.void("active_merchant_fake_charge")
     assert_failure void
