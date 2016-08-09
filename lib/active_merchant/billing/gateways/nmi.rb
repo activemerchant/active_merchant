@@ -101,6 +101,11 @@ module ActiveMerchant #:nodoc:
         commit("add_customer", post)
       end
 
+      def verify_credentials
+        response = void("0")
+        response.message != "Authentication Failed"
+      end
+
       def supports_scrubbing?
         true
       end
