@@ -217,6 +217,15 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = FirstdataE4Gateway.new(login: 'unknown', password: 'unknown')
+    assert !gateway.verify_credentials
+    gateway = FirstdataE4Gateway.new(login: fixtures(:firstdata_e4)[:login], password: 'unknown')
+    assert !gateway.verify_credentials
+  end
+
   def test_dump_transcript
     # See firstdata_e4_test.rb for an example of a scrubbed transcript
   end
