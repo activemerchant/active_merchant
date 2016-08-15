@@ -5,8 +5,8 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
     @gateway = PaymentSolutionsGateway.new(fixtures(:payment_solutions))
 
     @amount = 100
-    @declined_amount = 200
-    @credit_card = credit_card('4222222222222')
+    @declined_amount = 200000
+    @credit_card = credit_card('4111111111111111')
     @options = {
       order_id: SecureRandom.hex(10),
       billing_address: address({
@@ -29,7 +29,7 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'This transaction has been approved.', response.message
+    assert_equal 'This Transaction has been approved.', response.message
   end
 
   def test_successful_purchase_with_more_options
@@ -51,7 +51,7 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'This transaction has been approved.', response.message
+    assert_equal 'This Transaction has been approved.', response.message
   end
 
   def test_successful_purchase_recurring
@@ -70,7 +70,7 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'This transaction has been approved.', response.message
+    assert_equal 'This Transaction has been approved.', response.message
   end
 
 
