@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
         commit('res_update_cc', post)
       end
 
-     def supports_scrubbing?
+      def supports_scrubbing?
         true
       end
 
