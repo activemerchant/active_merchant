@@ -9,7 +9,6 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ["US", "FI", "NO", "SE", "GB"]
       self.default_currency = "USD"
       self.money_format = :cents
-      self.ssl_version = :TLSv1
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       def initialize(options={})
