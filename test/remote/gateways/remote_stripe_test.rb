@@ -20,7 +20,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     @options = {
       :currency => "USD",
       :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com'
+      :email => 'wow@example.com',
+      :billing_address => address()
     }
   end
 
@@ -462,4 +463,22 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
+  def test_level_III
+    # added_params = {
+    #   :level3 => {
+    #     :merchant_reference => 1,
+    #     :shipping_address_zip => 94110,
+    #     :shipping_amount => 0,
+    #     :line_items => {
+    #       product_code: 1,
+    #       product_description: "A product",
+    #       quantity: 1,
+    #     }
+    #   }
+    # }
+    # @options.merge!(added_params)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
 end
