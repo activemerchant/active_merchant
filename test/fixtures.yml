@@ -591,6 +591,12 @@ pay_junction:
   login: 'pj-ql-01'
   password: 'pj-ql-01p'
 
+# Working credentials, no need to replace
+pay_junction_v2:
+  api_login: 'pj-ql-01'
+  api_password: 'pj-ql-01p'
+  api_key: ''
+
 pay_secure:
   login: LOGIN
   password: PASSWORD
