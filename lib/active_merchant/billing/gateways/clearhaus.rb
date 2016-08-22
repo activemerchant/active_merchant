@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
                                   'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'GB']
 
       self.default_currency    = 'EUR'
+      self.currencies_without_fractions = %w(JPY)
       self.supported_cardtypes = [:visa, :master]
 
       self.homepage_url = 'https://www.clearhaus.com'
@@ -121,7 +122,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, amount, options)
-        post[:amount]   = amount(amount)
+        post[:amount]   = localized_amount(amount, options[:currency] || default_currency)
         post[:currency] = (options[:currency] || default_currency)
       end
 

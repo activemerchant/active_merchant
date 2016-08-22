@@ -183,6 +183,12 @@ class RemoteClearhausTest < Test::Unit::TestCase
     assert_match %r{Invalid card number}, response.message
   end
 
+  def test_successful_authorize_with_nonfractional_currency
+    assert response = @gateway.authorize(100, @credit_card, @options.merge(:currency => 'JPY'))
+    assert_equal 1, response.params['amount']
+    assert_success response
+  end
+
   def test_invalid_login
     gateway = ClearhausGateway.new(api_key: 'test')
 

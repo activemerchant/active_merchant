@@ -29,6 +29,7 @@
 * CyberSource, Paymill, Payflow: Add verify_credentials [duff]
 * Litle: Retain amount to send in auth reversals [curiousepic]
 * Migs: Support some additional fields [duff]
+* Clearhaus: Use localized amount [curiouspic]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
