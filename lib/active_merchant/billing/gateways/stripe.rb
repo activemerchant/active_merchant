@@ -485,6 +485,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
+        add_level_iii_data(parameters, options) if (method == :post) && (url == "charges")
         response = api_request(method, url, parameters, options)
 
         success = !response.key?("error")
@@ -503,6 +504,48 @@ module ActiveMerchant #:nodoc:
           :emv_authorization => emv_authorization_from_response(response),
           :error_code => success ? nil : error_code_from(response)
         )
+      end
+
+      def add_level_iii_data(post, options)
+        # Hard coded, no validations, just to see that it gets added
+        post[:level3] = {}
+        post[:level3][:merchant_reference] = 55823
+        post[:level3][:shipping_address_zip]=94110
+        post[:level3][:shipping_amount]=0
+
+        # This one produces the following error:
+        # "Array must contain only hashes"
+        post[:level3][:line_items] = {
+          :product_code => 1
+        }
+        # So does this (while removing lines 511-514)
+        # post[:level3] = {
+        #   "merchant_reference" => 4444,
+        #   "shipping_address_zip" => 94014,
+        #   "shipping_amount" => 0,
+        #   "line_items" => [{
+        #     "quantity" => 0,
+        #     "product_code" => "11234"
+        #   }]
+        # }
+
+
+        # This one produces the following error:
+        # "Invalid keys: all first indices must be numeric, you provided product_code"
+        # OR
+        # "Invalid array"
+        # post[:level3][:line_items] = []
+        # post[:level3][:line_items][0] = {
+        #     :product_code => 12343,
+        #     :product_description => "fun",
+        #     :unit_cost => 60,
+        #     :quantity => 1,
+        #     :tax_amount => 0,
+        #     :discount_amount => 0
+        # }
+
+        # toggling this and/or sending just post[:level3] does not help
+        post[:level3][:line_items] = encode_parameters(post[:level3][:line_items])
       end
 
       def authorization_from(success, url, method, response)
@@ -600,6 +643,60 @@ module ActiveMerchant #:nodoc:
           card_brand(payment_method) == "check"
         end
       end
+
+    def encode_parameters(params)
+      flatten_params(params).
+        map { |k,v| "#{url_encode(k)}=#{url_encode(v)}" }.join('&')
+    end
+
+    # Encodes a string in a way that makes it suitable for use in a set of
+    # query parameters in a URI or in a set of form parameters in a request
+    # body.
+    def url_encode(key)
+      CGI.escape(key.to_s).
+        # Don't use strict form encoding by changing the square bracket control
+        # characters back to their literals. This is fine by the server, and
+        # makes these parameter strings easier to read.
+        gsub('%5B', '[').gsub('%5D', ']')
+    end
+
+    def flatten_params(params, parent_key=nil)
+      result = []
+
+      # do not sort the final output because arrays (and arrays of hashes
+      # especially) can be order sensitive, but do sort incoming parameters
+      params.sort_by { |(k, _)| k.to_s }.each do |key, value|
+        calculated_key = parent_key ? "#{parent_key}[#{key}]" : "#{key}"
+        if value.is_a?(Hash)
+          result += flatten_params(value, calculated_key)
+        elsif value.is_a?(Array)
+          result += flatten_params_array(value, calculated_key)
+        else
+          result << [calculated_key, value]
+        end
+      end
+
+      result
+    end
+
+    def flatten_params_array(value, calculated_key)
+      result = []
+      value.each do |elem|
+        if elem.is_a?(Hash)
+          result += flatten_params(elem, "#{calculated_key}[]")
+        elsif elem.is_a?(Array)
+          result += flatten_params_array(elem, calculated_key)
+        else
+          result << ["#{calculated_key}[]", elem]
+        end
+      end
+      result
+    end
+
+
+
+
+
     end
   end
 end
