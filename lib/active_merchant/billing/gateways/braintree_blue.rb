@@ -576,6 +576,14 @@ module ActiveMerchant #:nodoc:
                 :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
                 :cryptogram => credit_card_or_vault_id.payment_cryptogram
               }
+          elsif credit_card_or_vault_id.source == :android_pay
+              parameters[:android_pay_card] = {
+                :number => credit_card_or_vault_id.number,
+                :cryptogram => credit_card_or_vault_id.payment_cryptogram,
+                :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+                :expiration_year => credit_card_or_vault_id.year.to_s,
+                :google_transaction_id => options[:google_transaction_id]
+              }
             end
           else
             parameters[:credit_card] = {
