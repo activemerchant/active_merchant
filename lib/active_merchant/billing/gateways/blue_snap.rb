@@ -5,7 +5,7 @@ module ActiveMerchant
     class BlueSnapGateway < Gateway
       self.test_url = "https://sandbox.bluesnap.com/services/2"
       self.live_url = "https://ws.bluesnap.com/services/2"
-      self.supported_countries = %w(US GB)
+      self.supported_countries = %w(US CA GB AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE)
 
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
