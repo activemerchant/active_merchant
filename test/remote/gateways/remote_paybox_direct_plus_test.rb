@@ -2,10 +2,10 @@
 
 require 'test_helper'
 
-class RemotePayboxDirectTest < Test::Unit::TestCase
+class RemotePayboxDirectPlusTest < Test::Unit::TestCase
 
   def setup
-    @gateway = PayboxDirectGateway.new(fixtures(:paybox_direct))
+    @gateway = PayboxDirectPlusGateway.new(fixtures(:paybox_direct_plus))
 
     @amount = 100
     @credit_card = credit_card('1111222233334444')
@@ -90,7 +90,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PayboxDirectGateway.new(
+    gateway = PayboxDirectPlusGateway.new(
                 login: '199988899',
                 password: '1999888F',
                 rang: 100
@@ -101,7 +101,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   end
 
   def test_invalid_login_without_rang
-    gateway = PayboxDirectGateway.new(
+    gateway = PayboxDirectPlusGateway.new(
                 login: '199988899',
                 password: '1999888F',
               )
