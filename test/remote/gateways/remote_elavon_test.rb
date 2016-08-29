@@ -196,4 +196,21 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert response.test?
     assert_match %r{invalid}i, response.message
   end
+
+  def test_successful_query
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.query(auth.params['txn_id'])
+
+    assert response.test?
+    assert_equal 'APPROVAL', response.message
+    assert response.authorization
+  end
+
+  def test_unsuccessful_query
+    assert response = @gateway.query("ABC")
+
+    assert_failure response
+    assert response.test?
+    assert_equal 'The transaction ID is invalid for this transaction type', response.message
+  end
 end
