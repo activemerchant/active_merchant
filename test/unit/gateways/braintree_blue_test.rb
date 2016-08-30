@@ -638,10 +638,11 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :transaction_id     => "123",
       :eci                => "05",
       :payment_cryptogram => "111111111100cryptogram",
-      :source             => :android_pay
+      :source             => :android_pay,
+      :transaction_id     => '1234567890'
     )
 
-    response = @gateway.authorize(100, credit_card, :test => true, :order_id => '1', :google_transaction_id => '1234567890')
+    response = @gateway.authorize(100, credit_card, :test => true, :order_id => '1')
     assert_equal "transaction_id", response.authorization
   end
 
