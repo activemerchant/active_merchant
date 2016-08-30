@@ -374,11 +374,11 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       :payment_cryptogram => "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
       :month              => "01",
       :year               => "2024",
-      :source             => :android_pay
+      :source             => :android_pay,
+      :transaction_id     => "123456789"
     )
-    options = @options.merge({ :google_transaction_id => "123456789" })
 
-    assert auth = @gateway.authorize(@amount, credit_card, options)
+    assert auth = @gateway.authorize(@amount, credit_card, @options)
     assert_success auth
     assert_equal '1000 Approved', auth.message
     assert auth.authorization
