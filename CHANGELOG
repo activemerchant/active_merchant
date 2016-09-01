@@ -2,6 +2,7 @@
 
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
 * CitrusPay: Add 3DSecureId field [davidsantoso]
+* Monei: Add US and CA as new supported countries [davidgf] #2209
 
 == Version 1.61.0 (November 7, 2016)
 * Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]
