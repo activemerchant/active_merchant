@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         'USUAL_DATE' => :undoc_usual_date, # Not found in the bp20rebadmin API doc.
       }
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url        = 'http://www.bluepay.com/'
       self.display_name        = 'BluePay'
