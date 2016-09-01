@@ -3,7 +3,7 @@ require 'test_helper'
 class PagarmeTest < Test::Unit::TestCase
   def setup
     #ak_test_e1QGU2gL98MDCHZxHLJ9sofPUFJ7tH
-    @gateway = PagarmeGateway.new(api_key: 'ak_test_MVaWkL5h7ToJYVFSlo8QUOQHXagIfh')
+    @gateway = PagarmeGateway.new(username: 'ak_test_47vpijcN54kvjmoniEvvVR6UuuJH4V')
 
     @credit_card = credit_card('4242424242424242', {
         first_name: 'Richard',
@@ -249,60 +249,60 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
 
-  # def test_successful_recurring
-  #   @gateway.expects(:ssl_request).once.returns(successful_recurring_response)
-  #
-  #   @options = {
-  #       order_id: '1',
-  #       ip: '127.0.0.1',
-  #       customer: {
-  #           document_number: "94123506518",
-  #           id: "70941",
-  #           :document_number => "18152564000105",
-  #           :name => "nome do cliente",
-  #           :email => "eee@email.com",
-  #           :born_at => 13121988,
-  #           :gender => "M",
-  #           :phone => {
-  #               :ddi => 55,
-  #               :ddd => 11,
-  #               :number => 999887766
-  #           },
-  #           :address => {
-  #               :street => "rua qualquer",
-  #               :complement => "apto",
-  #               :number => 13,
-  #               :district => "pinheiros",
-  #               :city => "sao paulo",
-  #               :state => "SP",
-  #               :zipcode => "05444040",
-  #               :country => "Brasil"
-  #           }
-  #       },
-  #       :card_number => "4901720080344448",
-  #       :card_holder_name => "Jose da Silva",
-  #       :card_expiration_month => "10",
-  #       :card_expiration_year => "21",
-  #       :card_cvv => "314",
-  #       plan_code: 40408,
-  #       payment_method: 'credit_card',
-  #       invoice: '1',
-  #       merchant: 'Richard\'s',
-  #       description: 'Store Purchase',
-  #       email: 'suporte@pagar.me',
-  #       billing_address: address()
-  #       #card_hash: "card_ci6y37hc00030a416wrxsmzyi"
-  #   }
-  #   response = @gateway.recurring(@amount, @credit_card, @options)
-  #
-  #   assert_instance_of Response, response
-  #   #assert_success response
-  #
-  #   assert_equal 'credit_card', response.params["payment_method"]
-  #   assert_equal 'paid', response.params["status"]
-  #   assert_equal 'Transação aprovada', response.message
-  #   assert response.test?
-  # end
+  def test_successful_recurring
+    @gateway.expects(:ssl_request).returns(successful_recurring_response)
+
+    @options = {
+        order_id: '1',
+        ip: '127.0.0.1',
+        customer: {
+          document_number: "94123506518",
+          id: "70941",
+          legal_identifier: "18152564000105",
+          name: "nome do cliente",
+          email: "eee@email.com",
+          born_at: 13121988,
+          gender: "M",
+          :phone => {
+            :ddi => 55,
+            :ddd => 11,
+            :number => 999887766
+          }
+        },
+        address: {
+          street: "rua qualquer",
+          complement: "apto",
+          number: 13,
+          district: "pinheiros",
+          city: "sao paulo",
+          state: "SP",
+          zipcode: "05444040",
+          country: "Brasil"
+        },
+        card_number: "4901720080344448",
+        card_holder_name: "Jose da Silva",
+        card_expiration_month: "10",
+        card_expiration_year: "21",
+        card_cvv: "314",
+        plan_code: 40408,
+        payment_method: 'credit_card',
+        invoice: '1',
+        merchant: 'Richard\'s',
+        description: 'Store Purchase',
+        email: 'suporte@pagar.me',
+        billing_address: address(),
+        card_hash: "card_ci6y37hc00030a416wrxsmzyi"
+    }
+    response = @gateway.recurring(@amount, @credit_card, @options)
+
+    assert_instance_of Response, response
+    binding.pry
+
+    assert_equal 'credit_card', response.params["payment_method"]
+    assert_equal 'paid', response.params["status"]
+    assert_equal 'Transação aprovada', response.message
+    assert response.test?
+  end
   #
   # def test_get_invoice
   #   @gateway.expects(:ssl_request).returns(success_invoice_response)
@@ -860,10 +860,10 @@ class PagarmeTest < Test::Unit::TestCase
       },
       "postback_url": "http://requestb.in/zyn5obzy",
       "payment_method": "credit_card",
-      "current_period_start": null,
-      "current_period_end": null,
-      "charges": 0,
-        "status": "paid",
+      "current_period_start": "2015-04-14T20:17:18.000Z",
+      "current_period_end": "2015-05-14T20:17:18.000Z",
+      "charges": 2,
+      "status": "paid",
       "date_created": "2015-04-14T20:17:19.000Z",
       "phone": null,
       "address": null,
