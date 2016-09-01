@@ -34,7 +34,8 @@ module ActiveMerchant #:nodoc:
             subscription_action: SUBSCRIPTION_STATUS_MAP[response.params['status']],
             test:                response.test?,
             card:                card,
-            invoice_id:          response.params['id']
+            invoice_id:          response.params['id'],
+            next_charge_at:      response.params['current_period_end']
           }
 
           current_transaction = response.params['current_transaction']
