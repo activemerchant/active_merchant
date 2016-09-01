@@ -35,6 +35,7 @@
 * BlueSnap: Update countries list [shasum]
 * NMI, FirstData: Support verify_credentials [curiousepic]
 * Braintree Blue: Get Android Pay tx id from payment method, not options [mrezentes]
+* BluePay: Add Canada to supported countries list [shasum]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
