@@ -178,8 +178,7 @@ module ActiveMerchant #:nodoc:
         request_params[:currency] = options[:currency] || default_currency
         request_params[:customer_email] = options[:email]
         request_params[:customer_name] = options[:name] if options.key?(:name)
-        request_params[:customer_ip] = options[:name] if options.key?(:ip)
-        request_params[:customer_name] = options[:name] if options.key?(:name)
+        request_params[:customer_ip] = options[:ip] if options.key?(:ip)
         request_params[:order_description] = options[:description] if options.key?(:description)
         request_params[:return_url] = options[:return_url] if options.key?(:return_url)
         commit(request_params)
