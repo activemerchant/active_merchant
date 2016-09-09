@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-     def store(creditcard, options = {})
+      def store(creditcard, options = {})
         card_params = {}
         add_creditcard(card_params, creditcard, options)
         card = card_params[:card]
