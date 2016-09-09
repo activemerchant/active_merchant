@@ -149,8 +149,11 @@ class OpenpayTest < Test::Unit::TestCase
 
   def test_successful_store_new_card
     @gateway.expects(:ssl_request).returns(successful_new_card)
-
-    assert response = @gateway.store(@credit_card, customer: 'a2b79p8xmzeyvmolqfja')
+    @options[:customer] = {
+      id: "a2b79p8xmzeyvmolqfja"
+    }
+    
+    assert response = @gateway.store(@credit_card, @options)
     assert_success response
 
     assert_equal 'kgipbqixvjg3gbzowl7l', response.authorization
