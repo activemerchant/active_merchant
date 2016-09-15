@@ -324,6 +324,10 @@ flo2cash_simple:
   password: ANOTHERCREDENTIAL
   account_id: ANOTHERCREDENTIAL
 
+flow:
+  api_key: SOMECREDENTIAL
+  organization: SOMEORGANIZATION
+
 forte:
   location_id: "176008"
   account_id: "300111"
