@@ -117,17 +117,6 @@ class OpenpayTest < Test::Unit::TestCase
     assert_not_nil response.message
   end
 
-  def test_successful_purchase_with_card_id
-    @gateway.expects(:ssl_request).returns(successful_purchase_response)
-
-    assert response = @gateway.purchase(@amount, {credit_card: 'a2b79p8xmzeyvmolqfja'}, @options)
-    assert_instance_of Response, response
-    assert_success response
-
-    assert_equal 'tay1mauq3re4iuuk8bm4', response.authorization
-    assert response.test?
-  end
-
   def test_succesful_store_new_customer_with_card
     @gateway.expects(:ssl_request).twice.returns(successful_new_customer, successful_new_card)
     @options[:email] = 'john@gmail.com'
@@ -149,9 +138,7 @@ class OpenpayTest < Test::Unit::TestCase
 
   def test_successful_store_new_card
     @gateway.expects(:ssl_request).returns(successful_new_card)
-    @options[:customer] = {
-      id: "a2b79p8xmzeyvmolqfja"
-    }
+    @options[:customer_id] = "a2b79p8xmzeyvmolqfja"
     
     assert response = @gateway.store(@credit_card, @options)
     assert_success response

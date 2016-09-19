@@ -69,11 +69,11 @@ module ActiveMerchant #:nodoc:
         card = card_params[:card]
 
         if is_customer(options)
-          commit(:post, "customers/#{CGI.escape(options[:customer][:id])}/cards", card, options)
+          commit(:post, "customers/#{CGI.escape(options[:customer_id])}/cards", card, options)
         else
-          requires!(options, :email, :name)
+          requires!(options, :email)
           post = {}
-          post[:name] = options[:name]
+          post[:name] = creditcard.first_name || email
           post[:email] = options[:email]
           post[:requires_account] = false
           MultiResponse.run(:first) do |r|
@@ -119,24 +119,21 @@ module ActiveMerchant #:nodoc:
         post[:device_session_id] = options[:device_session_id]
         post[:currency] = (options[:currency] || currency(money)).upcase
         post[:metadata] = options[:metadata]
-        add_customer(post, options)
+        add_customer(post, creditcard, options)
         add_creditcard(post, creditcard, options)
         post
       end
 
-      def add_customer(post, options)
+      def add_customer(post, creditcard, options)
           if !is_customer(options)
             if(email = options[:email])
               customer = {}
               customer[:email] = email
-              if (customer_opt = options[:customer])
-                customer[:external_id] = customer_opt[:external_id] if customer_opt[:external_id]
-                customer[:name] = customer_opt[:name] if customer_opt[:name]
-                customer[:last_name] = customer_opt[:last_name] if customer_opt[:last_name]
-                customer[:phone_number] = customer_opt[:phone_number] if customer_opt[:phone_number]
-              else 
-                #Customer name is required
-                customer[:name] = options[:order_id] || email
+              customer[:name] = creditcard.first_name if creditcard
+              customer[:last_name] = creditcard.last_name if creditcard
+              customer[:external_id] = options[:customer_external_id]
+              if (address = (options[:billing_address] || options[:address]))
+                customer[:phone_number] = address[:phone]
               end
               add_shipment_address(customer, options)
               post[:customer] = customer
@@ -190,14 +187,14 @@ module ActiveMerchant #:nodoc:
       
       def get_path(resource, options) 
         if is_customer(options)
-          "customers/#{CGI.escape(options[:customer][:id])}/" + resource
+          "customers/#{CGI.escape(options[:customer_id])}/" + resource
         else
           resource
         end
       end
 
       def is_customer(options) 
-        return options[:customer].present? && options[:customer].kind_of?(Hash) && options[:customer][:id].present?
+        return options[:customer_id].present?
       end
 
       def headers(options = {})
