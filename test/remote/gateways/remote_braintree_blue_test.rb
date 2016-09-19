@@ -27,6 +27,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal('510510', response.params["braintree_customer"]["credit_cards"].first["bin"])
     assert_match %r{^\d+$}, response.params["customer_vault_id"]
     assert_equal response.params["customer_vault_id"], response.authorization
+    assert_match %r{^\w+$}, response.params["credit_card_token"]
+    assert_equal response.params["credit_card_token"], response.params["braintree_customer"]["credit_cards"].first["token"]
   end
 
   def test_successful_authorize
@@ -84,6 +86,19 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '1000 Approved', response.message
     assert_equal 'submitted_for_settlement', response.params["braintree_transaction"]["status"]
     assert_equal customer_vault_id, response.params["braintree_transaction"]["customer_details"]["id"]
+  end
+
+  def test_successful_purchase_using_card_token
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal 'OK', response.message
+    credit_card_token = response.params["credit_card_token"]
+    assert_match %r{^\w+$}, credit_card_token
+
+    assert response = @gateway.purchase(@amount, credit_card_token, :payment_method_token => true)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params["braintree_transaction"]["status"]
   end
 
   def test_successful_verify
