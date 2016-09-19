@@ -62,6 +62,14 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
 
+      def credit(money, creditcard, options = {})
+        post = payment_request(money, options)
+        post[:amount] = amount_hash(money, options[:currency])
+        post[:card] = credit_card_hash(creditcard)
+
+        commit('refundWithData', post)
+      end
+
       def void(identification, options = {})
         requires!(options, :order_id)
 
@@ -137,6 +145,8 @@ module ActiveMerchant #:nodoc:
         case e.response.code
         when '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)
+        when '403'
+          return Response.new(false, 'Not allowed', {}, :test => test?)
         when '422'
           return Response.new(false, 'Unprocessable Entity', {}, :test => test?)
         when '500'
@@ -198,6 +208,7 @@ module ActiveMerchant #:nodoc:
       def success_from(response)
         return true if response.has_key?('authCode')
         return true if response['result'] == 'Success'
+        return true if response['resultCode'] == 'Received'
         successful_responses = %w([capture-received] [cancel-received] [refund-received])
         successful_responses.include?(response['response'])
       end
