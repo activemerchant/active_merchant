@@ -39,6 +39,7 @@
 * Linkpoint: Clean whitespace from PEM [curiousepic]
 * Credorax: Add gateway support [davidsantoso]
 * Barclay SmartPay: Add support for credit [shasum]
+* Stripe: Update supported countries list [shasum]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
