@@ -159,7 +159,7 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_void
-    assert void = @gateway.void("123456789012345360;authorization")
+    assert void = @gateway.void("123456789012345360;authorization;100")
     assert_failure void
     assert_equal 'No transaction found with specified litleTxnId', void.message
   end

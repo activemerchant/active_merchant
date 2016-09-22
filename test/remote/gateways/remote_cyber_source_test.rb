@@ -251,6 +251,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorize_with_nonfractional_currency
+    assert response = @gateway.authorize(100, @credit_card, @options.merge(:currency => 'JPY'))
+    assert_equal "1", response.params['amount']
+    assert_success response
+  end
+
   def test_successful_subscription_authorization
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
@@ -356,4 +362,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.success?
     assert response.test?
   end
+
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = CyberSourceGateway.new(login: "an_unknown_login", password: "unknown_password")
+    assert !gateway.verify_credentials
+  end
+
 end

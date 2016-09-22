@@ -28,7 +28,10 @@ module ActiveMerchant #:nodoc:
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG)
+
       self.default_currency = 'USD'
+      self.currencies_without_fractions = %w(JPY)
+
       self.homepage_url = 'http://www.cybersource.com'
       self.display_name = 'CyberSource'
 
@@ -223,6 +226,11 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def verify_credentials
+        response = void("0")
+        response.params["reasonCode"] == "102"
+      end
+
       private
 
       # Create all address hash key value pairs so that we still function if we
@@ -403,7 +411,7 @@ module ActiveMerchant #:nodoc:
       def add_line_item_data(xml, options)
         options[:line_items].each_with_index do |value, index|
           xml.tag! 'item', {'id' => index} do
-            xml.tag! 'unitPrice', amount(value[:declared_value])
+            xml.tag! 'unitPrice', localized_amount(value[:declared_value].to_i, options[:currency] || default_currency)
             xml.tag! 'quantity', value[:quantity]
             xml.tag! 'productCode', value[:code] || 'shipping_only'
             xml.tag! 'productName', value[:description]
@@ -423,7 +431,7 @@ module ActiveMerchant #:nodoc:
       def add_purchase_data(xml, money = 0, include_grand_total = false, options={})
         xml.tag! 'purchaseTotals' do
           xml.tag! 'currency', options[:currency] || currency(money)
-          xml.tag!('grandTotalAmount', amount(money.to_i))  if include_grand_total
+          xml.tag!('grandTotalAmount', localized_amount(money.to_i, options[:currency] || default_currency))  if include_grand_total
         end
       end
 
@@ -599,7 +607,7 @@ module ActiveMerchant #:nodoc:
           end
 
           xml.tag! 'status',            options[:subscription][:status]                         if options[:subscription][:status]
-          xml.tag! 'amount',            amount(options[:subscription][:amount])                 if options[:subscription][:amount]
+          xml.tag! 'amount',            localized_amount(options[:subscription][:amount].to_i, options[:currency] || default_currency) if options[:subscription][:amount]
           xml.tag! 'numberOfPayments',  options[:subscription][:occurrences]                    if options[:subscription][:occurrences]
           xml.tag! 'automaticRenew',    options[:subscription][:automatic_renew]                if options[:subscription][:automatic_renew]
           xml.tag! 'frequency',         options[:subscription][:frequency]                      if options[:subscription][:frequency]

@@ -79,6 +79,20 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_credit_response)
+
+    response = @gateway.credit(nil, @credit_card, @options)
+    assert_failure response
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
@@ -164,6 +178,14 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
   def failed_refund_response
     'validation 100 No amount specified'
+  end
+
+  def successful_credit_response
+    'fraudResult.accountScore=70&fraudResult.results.0.accountScore=20&fraudResult.results.0.checkId=2&fraudResult.results.0.name=CardChunkUsage&fraudResult.results.1.accountScore=25&fraudResult.results.1.checkId=4&fraudResult.results.1.name=HolderNameUsage&fraudResult.results.2.accountScore=25&fraudResult.results.2.checkId=8&fraudResult.results.2.name=ShopperEmailUsage&fraudResult.results.3.accountScore=0&fraudResult.results.3.checkId=1&fraudResult.results.3.name=PaymentDetailRefCheck&fraudResult.results.4.accountScore=0&fraudResult.results.4.checkId=13&fraudResult.results.4.name=IssuerRefCheck&fraudResult.results.5.accountScore=0&fraudResult.results.5.checkId=15&fraudResult.results.5.name=IssuingCountryReferral&fraudResult.results.6.accountScore=0&fraudResult.results.6.checkId=26&fraudResult.results.6.name=ShopperEmailRefCheck&fraudResult.results.7.accountScore=0&fraudResult.results.7.checkId=27&fraudResult.results.7.name=PmOwnerRefCheck&fraudResult.results.8.accountScore=0&fraudResult.results.8.checkId=56&fraudResult.results.8.name=ShopperReferenceTrustCheck&fraudResult.results.9.accountScore=0&fraudResult.results.9.checkId=10&fraudResult.results.9.name=HolderNameContainsNumber&fraudResult.results.10.accountScore=0&fraudResult.results.10.checkId=11&fraudResult.results.10.name=HolderNameIsOneWord&fraudResult.results.11.accountScore=0&fraudResult.results.11.checkId=21&fraudResult.results.11.name=EmailDomainValidation&pspReference=8514743049239955&resultCode=Received'
+  end
+
+  def failed_credit_response
+    'errorType=validation&errorCode=137&message=Invalid+amount+specified&status=422'
   end
 
   def successful_void_response

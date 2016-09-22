@@ -64,6 +64,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_standard_parameters('pay', post, options[:unique_id])
+        add_3ds(post, options)
 
         commit(post)
       end
@@ -212,6 +213,15 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:OrderInfo] = options[:order_id]
+      end
+
+      def add_3ds(post, options)
+        post[:VerType] = options[:ver_type] if options[:ver_type]
+        post[:VerToken] = options[:ver_token] if options[:ver_token]
+        post["3DSXID"] = options[:three_ds_xid] if options[:three_ds_xid]
+        post["3DSECI"] = options[:three_ds_eci] if options[:three_ds_eci]
+        post["3DSenrolled"] = options[:three_ds_enrolled] if options[:three_ds_enrolled]
+        post["3DSstatus"] = options[:three_ds_status] if options[:three_ds_status]
       end
 
       def add_creditcard(post, creditcard)

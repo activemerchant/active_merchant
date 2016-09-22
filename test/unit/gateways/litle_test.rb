@@ -32,7 +32,7 @@ class LitleTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "100000000000000006;sale", response.authorization
+    assert_equal "100000000000000006;sale;100", response.authorization
     assert response.test?
   end
 
@@ -122,7 +122,7 @@ class LitleTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "100000000000000001;authorization", response.authorization
+    assert_equal "100000000000000001;authorization;100", response.authorization
     assert response.test?
 
     capture = stub_comms do
@@ -159,7 +159,7 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
-    assert_equal "100000000000000006;sale", response.authorization
+    assert_equal "100000000000000006;sale;100", response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -186,7 +186,7 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "100000000000000001;authorization", response.authorization
+    assert_equal "100000000000000001;authorization;100", response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -202,7 +202,7 @@ class LitleTest < Test::Unit::TestCase
       @gateway.refund(@amount, "SomeAuthorization")
     end.respond_with(successful_refund_response)
 
-    assert_equal "100000000000000003;credit", refund.authorization
+    assert_equal "100000000000000003;credit;", refund.authorization
 
     void = stub_comms do
       @gateway.void(refund.authorization)
@@ -215,7 +215,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_failed_void_of_authorization
     response = stub_comms do
-      @gateway.void("123456789012345360;authorization")
+      @gateway.void("123456789012345360;authorization;100")
     end.respond_with(failed_void_of_authorization_response)
 
     assert_failure response
@@ -225,7 +225,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_failed_void_of_other_things
     response = stub_comms do
-      @gateway.void("123456789012345360;credit")
+      @gateway.void("123456789012345360;credit;100")
     end.respond_with(failed_void_of_other_things_response)
 
     assert_failure response

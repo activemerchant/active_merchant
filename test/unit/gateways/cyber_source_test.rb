@@ -323,7 +323,6 @@ class CyberSourceTest < Test::Unit::TestCase
     stub_comms do
       @gateway.store(@credit_card, @subscription_options)
     end.check_request do |endpoint, data, headers|
-      assert_match %r(<grandTotalAmount>1.00<\/grandTotalAmount>), data
       assert_match %r(<amount>1.00<\/amount>), data
     end.respond_with(successful_update_subscription_response)
   end
@@ -391,6 +390,17 @@ class CyberSourceTest < Test::Unit::TestCase
     )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  def test_nonfractional_currency_handling
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r(<grandTotalAmount>1</grandTotalAmount>), request_body
+      assert_match %r(<currency>JPY</currency>), request_body
+      true
+    end.returns(successful_nonfractional_authorization_response)
+
+    assert response = @gateway.authorize(100, @credit_card, @options.merge(currency: "JPY"))
     assert_success response
   end
 
@@ -563,6 +573,14 @@ class CyberSourceTest < Test::Unit::TestCase
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-753384332"><wsu:Created>2016-07-25T20:50:50.583Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.121"><c:merchantReferenceCode>bb3b1bb530192c9dd20f121686c91c40</c:merchantReferenceCode><c:requestID>4694798504476543904007</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj//wSR/QLVu2z/GtIOIkG7Nm4bNW7KPRrRY0mvYS4YB0I7QFLgkgkAA0gAwfwyaSZbpAdvSeeBOR/QLVqII/qE+QAA3yVt</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:voidReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2016-07-25T20:50:50Z</c:requestDateTime><c:amount>1.00</c:amount><c:currency>usd</c:currency></c:voidReply></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def successful_nonfractional_authorization_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Header>
+<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-32551101"><wsu:Created>2007-07-12T18:31:53.838Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>TEST11111111111</c:merchantReferenceCode><c:requestID>1842651133440156177166</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/</c:requestToken><c:purchaseTotals><c:currency>JPY</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1</c:amount><c:authorizationCode>004542</c:authorizationCode><c:avsCode>A</c:avsCode><c:avsCodeRaw>I7</c:avsCodeRaw><c:authorizedDateTime>2007-07-12T18:31:53Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>23439130C40VZ2FB</c:reconciliationID></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
     XML
   end
 end

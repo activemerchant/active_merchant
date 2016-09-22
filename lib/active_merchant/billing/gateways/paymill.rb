@@ -62,6 +62,16 @@ module ActiveMerchant #:nodoc:
           gsub(/(account.verification=)(\d*)/, '\1[FILTERED]')
       end
 
+      def verify_credentials
+        begin
+          ssl_get(live_url + "transactions/nonexistent", headers)
+        rescue ResponseError => e
+          return false if e.response.code.to_i == 401
+        end
+
+        true
+      end
+
       private
 
       def add_credit_card(post, credit_card)
