@@ -3,7 +3,7 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FatZebraGateway < Gateway
-      self.live_url    = "https://gateway.fatzebra.com.au/v1.0"
+      self.live_url = "https://gateway.fatzebra.com.au/v1.0"
       self.test_url = "https://gateway.sandbox.fatzebra.com.au/v1.0"
 
       self.supported_countries = ['AU']
@@ -121,10 +121,16 @@ module ActiveMerchant #:nodoc:
 
       def add_extra_options(post, options)
         extra = {}
-        extra[:name] = options[:merchant] if options[:merchant]
-        extra[:location] = options[:merchant_location] if options[:merchant_location]
         extra[:ecm] = "32" if options[:recurring]
+        add_descriptor(extra, options)
         post[:extra] = extra if extra.any?
+      end
+
+      def add_descriptor(extra, options)
+        descriptor = {}
+        descriptor[:name] = options[:merchant] if options[:merchant]
+        descriptor[:location] = options[:merchant_location] if options[:merchant_location]
+        extra[:descriptor] = descriptor if descriptor.any?
       end
 
       def add_order_id(post, options)
