@@ -1,3 +1,11 @@
+require 'active_support/core_ext/hash/slice'
+
+begin
+  require 'flowcommerce'
+rescue LoadError
+  raise "Could not load the flowcommerce gem. Use `gem install flowcommerce` to install it."
+end
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FlowGateway < Gateway
@@ -10,57 +18,144 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://flow.io/'
       self.display_name = 'Flow.io'
 
-      STANDARD_ERROR_CODE_MAPPING = {}
+      STANDARD_ERROR_CODE_MAPPING = {
+        'expired' => STANDARD_ERROR_CODE[:expired_card],
+        'declined' => STANDARD_ERROR_CODE[:card_declined],
+        'cvv' => STANDARD_ERROR_CODE[:invalid_cvc],
+        'fraud' => STANDARD_ERROR_CODE[:processing_error],
+        'pending_call_bank' => STANDARD_ERROR_CODE[:call_issuer],
+        'invalid_number' => STANDARD_ERROR_CODE[:invalid_number],
+        'invalid_expiration' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        'no_account' => STANDARD_ERROR_CODE[:incorrect_number]
+      }
+
+      AVS_CODE_TRANSLATOR = {
+        'match' => 'Y',
+        'no_match' => 'N',
+      }
 
       def initialize(options={})
         requires!(options, :api_key, :organization)
         @api_key = options[:api_key]
         @organization = options[:organization]
+        @client = FlowCommerce.instance(token: @api_key)
 
         super
       end
 
-      def purchase(money, payment, options={})
+      def store(payment, options = {})
         post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
+        post[:number] = payment.number
+        post[:expiration_month] = payment.month
+        post[:expiration_year] = payment.year
+        post[:name] = payment.name
+        post[:cvv] = payment.verification_value if payment.verification_value?
+        add_address(post, :address, options)
 
-        commit('sale', post)
+        card_form = Io::Flow::V0::Models::CardForm.new(post)
+
+        card = @client.cards.post(@organization, card_form)
+        success = card.respond_to?(:token)
+        Response.new(
+          success,
+          success ? "Transaction approved" : "Card store failed",
+          { object: card },
+        )
+      end
+
+      def purchase(money, payment, options={})
+        MultiResponse.run do |r|
+          r.process { authorize(money, payment, options) }
+          if r.success?
+            authorization = r.authorization
+            r.process { capture(money, authorization, options) }
+          end
+        end.responses.last
       end
 
       def authorize(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
+        add_address(post, :destination, options)
         add_customer_data(post, options)
 
-        commit('authonly', post)
+        commit do
+          if payment.respond_to?(:number)
+            response = store(payment, options)
+            unless response.success?
+              return response
+            end
+            payment = response.params["object"].token
+          end
+          add_payment(post, payment)
+
+          authorization_form = Io::Flow::V0::Models::DirectAuthorizationForm.new(post)
+          auth = @client.authorizations.post(@organization, authorization_form)
+          success = auth.respond_to?(:result) && auth.result.status.value == "authorized"
+          Response.new(
+            success,
+            success ? "Transaction approved" : "Your card was declined",
+            { object: auth },
+            authorization: auth.id,
+            avs_result: AVSResult.new(code: avs_code_from_auth(auth)),
+            cvv_result: CVVResult.new(cvv_code_from_auth(auth)),
+            error_code: success ? nil : error_code_from(auth)
+          )
+        end
       end
 
       def capture(money, authorization, options={})
-        commit('capture', post)
+        post = {}
+        add_invoice(post, money, options)
+        post[:authorization_id] = authorization
+        capture_form = Io::Flow::V0::Models::CaptureForm.new(post)
+        commit do
+          capture = @client.captures.post(@organization, capture_form)
+          Response.new(
+            true,
+            "Transaction approved",
+            { object: capture },
+            authorization: capture.authorization.id
+          )
+        end
       end
 
       def refund(money, authorization, options={})
-        commit('refund', post)
+        post = {}
+        add_invoice(post, money, options)
+        post[:authorization_id] = authorization
+        refund_form = Io::Flow::V0::Models::RefundForm.new(post)
+        refund = @client.refunds.post(@organization, refund_form)
+
+        success = true
+
+        Response.new(
+          success,
+          "Transaction approved",
+          { object: refund },
+          authorization: refund.authorization.id,
+        )
       end
 
       def void(authorization, options={})
-        commit('void', post)
+        commit do
+          @client.authorizations.delete_by_key(@organization, authorization)
+          # TODO test invalid void
+          success = true
+
+          Response.new(success, "Transaction approved")
+        end
       end
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(options.fetch(:amount, 50), credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
       def supports_scrubbing?
-        true
+        false
       end
 
       def scrub(transcript)
@@ -70,36 +165,72 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer_data(post, options)
+        requires!(options, :customer)
+        post.merge!(options.slice(:ip, :attributes))
+
+        if options[:customer] || options[:email]
+          post[:customer] = {}
+        end
+        if customer = options[:customer]
+          post[:customer][:name] = {}
+          post[:customer][:name][:first] = customer[:first_name]
+          post[:customer][:name][:last] = customer[:last_name]
+        end
+        post[:customer][:email] = options[:email] if options[:email]
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, key, options)
+        if address = options[:billing_address] || options[:address]
+          post[key] = {}
+          post[key][:streets] = []
+          post[key][:streets] << address[:address1] if address[:address1]
+          post[key][:streets] << address[:address2] if address[:address2]
+          post[key][:country] = address[:country] if address[:country]
+          post[key][:postal] = address[:zip] if address[:zip]
+          post[key][:province] = address[:state] if address[:state]
+          post[key][:city] = address[:city] if address[:city]
+        end
       end
 
       def add_invoice(post, money, options)
-        post[:amount] = amount(money)
-        post[:currency] = (options[:currency] || currency(money))
+        currency = options[:currency] || currency(money)
+        post[:amount] = localized_amount(money, currency)
+        post[:currency] = currency
       end
 
       def add_payment(post, payment)
+        if payment.kind_of?(String)
+          post[:token] = payment
+        end
       end
 
       def parse(body)
         {}
       end
 
-      def commit(action, parameters)
-        response = parse(ssl_post(live_url + action, post_data(action, parameters)))
+      def api_endpoint
+        live_url + @organization + "/"
+      end
 
+      def commit(&block)
+        yield
+        # TODO: fetch the response here and build response object here
+      rescue Io::Flow::V0::HttpClient::ServerError => e
         Response.new(
-          success_from(response),
-          message_from(response),
-          response,
-          authorization: authorization_from(response),
-          avs_result: AVSResult.new(code: response["some_avs_response_key"]),
-          cvv_result: CVVResult.new(response["some_cvv_response_key"]),
-          test: test?,
-          error_code: error_code_from(response)
+          false,
+          message_from_exception(e),
+          { object: e }
         )
+        # Response.new(
+        #   success_from(response),
+        #   message_from(response),
+        #   response,
+        #   authorization: authorization_from(response),
+        #   avs_result: AVSResult.new(code: response["some_avs_response_key"]),
+        #   cvv_result: CVVResult.new(response["some_cvv_response_key"]),
+        #   test: test?,
+        #   error_code: error_code_from(response)
+        # )
       end
 
       def success_from(response)
@@ -111,12 +242,36 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response)
       end
 
-      def post_data(action, parameters = {})
+      def avs_code_from_auth(auth)
+        if auth.result.avs
+          code = auth.result.avs.code.value
+          # TODO: check other things such as partial address etc...
+          AVS_CODE_TRANSLATOR[code]
+        end
+      end
+
+      def cvv_code_from_auth(auth)
+        decline_code = auth.result.decline_code
+        if decline_code && decline_code.value == 'cvv'
+          'N'
+        else
+          'M'
+        end
       end
 
       def error_code_from(response)
-        unless success_from(response)
-          # TODO: lookup error code for this response
+        code = response.result.status
+        decline_code = response.result.decline_code
+        error_code = STANDARD_ERROR_CODE_MAPPING[decline_code.value] if decline_code
+        error_code ||= STANDARD_ERROR_CODE_MAPPING[code.value]
+        error_code
+      end
+
+      def message_from_exception(ex)
+        if ex.code == 422
+          ex.body_json.first["message"]
+        else
+          ex.details
         end
       end
     end

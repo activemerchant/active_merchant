@@ -5,51 +5,100 @@ class RemoteFlowTest < Test::Unit::TestCase
     @gateway = FlowGateway.new(fixtures(:flow))
 
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
+    @credit_card = credit_card('4111111111111111')
+    @declined_card = credit_card('4012888888881881')
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      currency: 'USD',
+      customer: {
+        first_name: 'Joe',
+        last_name: 'Smith'
+      }
     }
   end
 
-  def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
+  def test_successful_store
+    assert response = @gateway.store(@credit_card)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    card = response.params["object"]
+    assert card.id
+    assert card.token
+    assert_equal @credit_card.last_digits, card.last4
+    assert_equal @credit_card.brand, card.type.value
+    assert_equal @credit_card.name, card.name
+    assert_equal @credit_card.month, card.expiration.month
+    assert_equal @credit_card.year, card.expiration.year
+  end
+
+  def test_successful_authorize_and_capture_from_stored_card
+    response = @gateway.store(@credit_card)
+    assert_success response
+    card = response.params["object"]
+
+    auth = @gateway.authorize(@amount, card.token, @options)
+    assert_success auth
+    authorization = auth.params["object"]
+
+    assert response = @gateway.capture(@amount, auth.authorization)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    capture = response.params["object"]
+    assert capture.key
+    assert capture.id
+    assert_equal @amount, capture.amount.to_i * 100
+    assert_equal @options[:currency], capture.currency
+    assert_equal authorization.id, capture.authorization.id
+  end
+
+  def test_successful_purchase
+    response = @gateway.store(@credit_card)
+    assert_success response
+    card = response.params["object"]
+
+    response = @gateway.purchase(@amount, card.token, @options)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    capture = response.params["object"]
+    assert capture.key
+    assert capture.id
+    assert capture.authorization.id
+    assert_equal @amount, capture.amount.to_i * 100
+    assert_equal @options[:currency], capture.currency
   end
 
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
       ip: "127.0.0.1",
-      email: "joe@example.com"
+      email: "joe@example.com",
+      customer: {
+        first_name: "Joe",
+        last_name: "Smith"
+      }
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'Transaction approved', response.message
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    # 2026 means AVS pass, auth decline due to fraud
+    response = @gateway.purchase(202600, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  end
-
-  def test_successful_authorize_and_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'Your card was declined', response.message
+    assert_equal 'processing_error', response.error_code
+    assert_equal 'M', response.cvv_result['code']
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @declined_card, @options)
+    # 2025 means AVS pass, auth decline due to CVC check
+    response = @gateway.authorize(202500, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
+    assert_equal 'Your card was declined', response.message
+    assert_equal 'invalid_cvc', response.error_code
+    assert_equal 'N', response.cvv_result['code']
   end
 
   def test_partial_capture
@@ -61,76 +110,81 @@ class RemoteFlowTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, '')
+    response = @gateway.capture(@amount, 'invalida authorization')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
+    assert_equal 'Authorization ID not found', response.message
   end
 
   def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
-    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
+    assert response = @gateway.refund(@amount, response.authorization)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    refund = response.params["object"]
+    assert_equal @amount, refund.amount.to_i * 100
+    assert_equal @options[:currency], refund.currency
+    assert_equal 1, refund.captures.length
   end
 
-  def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
+ #  def test_partial_refund
+ #    purchase = @gateway.purchase(@amount, @credit_card, @options)
+ #    assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
-    assert_success refund
-  end
+ #    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+ #    assert_success refund
+ #  end
 
-  def test_failed_refund
-    response = @gateway.refund(@amount, '')
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
-  end
+ #  def test_failed_refund
+ #    response = @gateway.refund(@amount, '')
+ #    assert_failure response
+ #    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
+ #  end
 
   def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    card = response.params["object"]
+    response = @gateway.authorize(@amount, card.token, @options)
+    assert_success response
 
-    assert void = @gateway.void(auth.authorization)
-    assert_success void
-    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
+    assert response = @gateway.void(response.authorization)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
   end
 
-  def test_failed_void
+  def test_failed_void_with_empty_authorization
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
+    assert_equal 'Not Found', response.message
+  end
+
+  def test_failed_void_with_invalid_authorization
+    response = @gateway.void('invalid')
+    assert_failure response
+    assert_equal 'Not Found', response.message
   end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
+    assert_match %r{Transaction approved}, response.message
   end
 
   def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
+    response = @gateway.verify(@declined_card, @options.merge(amount: 202000))
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+    assert_match %r{Your card was declined}, response.message
+    assert_match "expired_card", response.error_code
   end
 
   def test_invalid_login
-    gateway = FlowGateway.new(login: '', password: '')
+    gateway = FlowGateway.new(api_key: 'foobar', organization: 'invalid')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
-  end
-
-  def test_dump_transcript
-    # This test will run a purchase transaction on your gateway
-    # and dump a transcript of the HTTP conversation so that
-    # you can use that transcript as a reference while
-    # implementing your scrubbing logic.  You can delete
-    # this helper after completing your scrub implementation.
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+    assert_match %r{Not Found}, response.message
   end
 
   def test_transcript_scrubbing
@@ -141,7 +195,6 @@ class RemoteFlowTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:api_key], transcript)
   end
-
 end

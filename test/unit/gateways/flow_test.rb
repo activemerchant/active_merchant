@@ -2,31 +2,39 @@ require 'test_helper'
 
 class FlowTest < Test::Unit::TestCase
   def setup
-    @gateway = FlowGateway.new(some_credential: 'login', another_credential: 'password')
+    @gateway = FlowGateway.new(api_key: 'test', organization: 'org-test')
     @credit_card = credit_card
     @amount = 100
 
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      customer: {}
     }
+
+    @internal_client = @gateway.instance_variable_get(:@client)
   end
 
-  def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
+  def test_successful_purchase_with_token
+    auths_stub = stub(:authorizations)
+    @internal_client.expects(:authorizations).returns(auths_stub)
+    auths_stub.expects(:post).with('org-test', anything).returns(successful_authorize_response)
+    captures_stub = stub(:captures)
+    @internal_client.expects(:captures).returns(captures_stub)
+    captures_stub.expects(:post).with('org-test', anything).returns(successful_capture_response)
+    response = @gateway.purchase(@amount, 'card-token', @options)
     assert_success response
 
-    assert_equal 'REPLACE', response.authorization
-    assert response.test?
+    assert_equal 'auth-id', response.authorization
   end
 
-  def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  def test_failed_purchase_with_failed_authorization
+    auths_stub = stub(:authorizations)
+    @internal_client.expects(:authorizations).returns(auths_stub)
+    auths_stub.expects(:post).with('org-test', anything).returns(failed_authorize_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, 'card-token', @options)
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
@@ -64,50 +72,66 @@ class FlowTest < Test::Unit::TestCase
   def test_failed_verify
   end
 
-  def test_scrub
-    assert @gateway.supports_scrubbing?
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  end
-
   private
 
-  def pre_scrubbed
-    %q(
-      Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    )
-  end
-
-  def post_scrubbed
-    %q(
-      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-      Things to scrub:
-        - Credit card number
-        - CVV
-        - Sensitive authentication details
-    )
-  end
-
-  def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_flow_test.rb \
-        -n test_successful_purchase
-    )
-  end
-
-  def failed_purchase_response
-  end
-
   def successful_authorize_response
+    Io::Flow::V0::Models::Authorization.new(
+      id: 'auth-id',
+      key: 'auth-id',
+      card: Io::Flow::V0::Models::CardReference.new(
+        id: 'card-id',
+        token: 'card-token'
+      ),
+      amount: BigDecimal.new(@amount),
+      currency: 'USD',
+      customer: Io::Flow::V0::Models::Customer.new(
+        name: Io::Flow::V0::Models::Name.new(first: 'Joe', last: 'Smith'),
+      ),
+      attributes: {},
+      result: Io::Flow::V0::Models::AuthorizationResult.new(
+        status: Io::Flow::V0::Models::AuthorizationStatus.new('authorized'),
+        decline_code: nil,
+        avs: Io::Flow::V0::Models::Avs.new(
+          code: Io::Flow::V0::Models::AvsCode.new('match')
+        ),
+      )
+    )
   end
 
   def failed_authorize_response
+    Io::Flow::V0::Models::Authorization.new(
+      id: 'auth-id',
+      key: 'auth-id',
+      card: Io::Flow::V0::Models::CardReference.new(
+        id: 'card-id',
+        token: 'card-token'
+      ),
+      amount: BigDecimal.new(@amount),
+      currency: 'USD',
+      customer: Io::Flow::V0::Models::Customer.new(
+        name: Io::Flow::V0::Models::Name.new(first: 'Joe', last: 'Smith'),
+      ),
+      attributes: {},
+      result: Io::Flow::V0::Models::AuthorizationResult.new(
+        status: Io::Flow::V0::Models::AuthorizationStatus.new('declined'),
+        decline_code: Io::Flow::V0::Models::AuthorizationDeclineCode.new('error'),
+        avs: Io::Flow::V0::Models::Avs.new(
+          code: Io::Flow::V0::Models::AvsCode.new('match')
+        )
+      )
+    )
   end
 
   def successful_capture_response
+    Io::Flow::V0::Models::Capture.new(
+      id: 'capture-id',
+      key: 'capture-id',
+      authorization: Io::Flow::V0::Models::AuthorizationReference.new(
+        id: 'auth-id'
+      ),
+      amount: BigDecimal.new(100, 2),
+      currency: 'USD'
+    )
   end
 
   def failed_capture_response
