@@ -56,6 +56,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
   def test_successful_store
     assert response = @gateway.store(credit_card, @options)
     assert_success = response
+    assert response.authorization =~ /crd\./
   end
 
   def test_unsuccessful_store
@@ -70,7 +71,11 @@ class RemoteBanwireTest < Test::Unit::TestCase
     clean_transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, clean_transcript)
-    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+    # we force the check on the param name since the test card number from Banwire contains the
+    # same digits we are trying to verify are not present, the response from the gateway
+    # contains the last few digits from the card, which are the same as the CVV.
+    # If we supply a different CVV, say 888, Banwire fails the test transactions.
+    assert_scrubbed("card_ccv2=#{@credit_card.verification_value.to_s}", clean_transcript)
   end
 
 end
