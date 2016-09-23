@@ -32,6 +32,13 @@ module ActiveMerchant #:nodoc:
       AVS_CODE_TRANSLATOR = {
         'match' => 'Y',
         'no_match' => 'N',
+        'unsupported' => 'E',
+        'name: false, address: true, postal: false' => 'A',
+        'name: false, address: false, postal: true' => 'Z',
+        'name: false, address: true, postal: true' => 'H',
+        'name: true, address: false, postal: false' => 'K',
+        'name: true, address: true, postal: false' => 'O',
+        'name: true, address: false, postal: true' => 'L',
       }
 
       def initialize(options={})
@@ -243,11 +250,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def avs_code_from_auth(auth)
-        if auth.result.avs
-          code = auth.result.avs.code.value
-          # TODO: check other things such as partial address etc...
-          AVS_CODE_TRANSLATOR[code]
+        return nil unless auth.result.avs
+        avs = auth.result.avs
+        code = avs.code.value
+        if code == 'partial'
+          code = 'name: %s, address: %s, postal: %s' % [avs.name, avs.address, avs.postal]
         end
+        AVS_CODE_TRANSLATOR[code]
       end
 
       def cvv_code_from_auth(auth)
