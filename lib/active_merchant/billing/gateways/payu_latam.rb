@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = "https://sandbox.api.payulatam.com/payments-api/4.0/service.cgi"
       self.live_url = "https://api.payulatam.com/payments-api/4.0/service.cgi"
 
-      self.supported_countries = ["AR", "BR", "CO", "MX", "PA", "PE"]
+      self.supported_countries = ["AR", "BR", "CL", "CO", "MX", "PA", "PE"]
       self.default_currency = "USD"
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
