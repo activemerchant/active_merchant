@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         post[:expiration_year] = payment.year
         post[:name] = payment.name
         post[:cvv] = payment.verification_value if payment.verification_value?
-        add_address(post, :address, options)
+        add_address(post, :address, options[:billing_address])
 
         card_form = Io::Flow::V0::Models::CardForm.new(post)
 
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_address(post, :destination, options)
+        add_address(post, :destination, options[:shipping_address])
         add_customer_data(post, options)
 
         commit do
@@ -186,8 +186,8 @@ module ActiveMerchant #:nodoc:
         post[:customer][:email] = options[:email] if options[:email]
       end
 
-      def add_address(post, key, options)
-        if address = options[:billing_address] || options[:address]
+      def add_address(post, key, address)
+        if address
           post[key] = {}
           post[key][:streets] = []
           post[key][:streets] << address[:address1] if address[:address1]
