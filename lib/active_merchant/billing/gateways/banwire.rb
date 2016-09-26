@@ -2,7 +2,10 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BanwireGateway < Gateway
       URL = 'https://banwire.com/api.pago_pro'
-      URL_STORE = 'https://cr.banwire.com/?action=card'
+      # the &exists=1 additional parameter is supplied to ensure
+      # that repeated attempts to store the same PAN will not yield
+      # an exception and instead will return the token again
+      URL_STORE = 'https://cr.banwire.com/?action=card&exists=1'
 
       self.supported_countries = ['MX']
       self.supported_cardtypes = [:visa, :master, :american_express]
