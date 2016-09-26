@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def avs_code_from_auth(auth)
-        return nil unless auth.result.avs
+        return AVS_CODE_TRANSLATOR['match'] unless auth.result.avs
         avs = auth.result.avs
         code = avs.code.value
         if code == 'partial'
