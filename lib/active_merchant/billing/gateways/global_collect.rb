@@ -80,7 +80,9 @@ module ActiveMerchant #:nodoc:
         "visa" => "1",
         "american_express" => "2",
         "master" => "3",
-        "discover" => "128"
+        "discover" => "128",
+        "jcb" => "125",
+        "diners_club" => "132"
       }
 
       def add_order(post, money, options)
