@@ -94,7 +94,8 @@ class FlowTest < Test::Unit::TestCase
         avs: Io::Flow::V0::Models::Avs.new(
           code: Io::Flow::V0::Models::AvsCode.new('match')
         ),
-      )
+      ),
+      created_at: Time.now.iso8601
     )
   end
 
@@ -118,7 +119,8 @@ class FlowTest < Test::Unit::TestCase
         avs: Io::Flow::V0::Models::Avs.new(
           code: Io::Flow::V0::Models::AvsCode.new('match')
         )
-      )
+      ),
+      created_at: Time.now.iso8601
     )
   end
 
@@ -130,7 +132,8 @@ class FlowTest < Test::Unit::TestCase
         id: 'auth-id'
       ),
       amount: BigDecimal.new(100, 2),
-      currency: 'USD'
+      currency: 'USD',
+      created_at: Time.now.iso8601
     )
   end
 
