@@ -52,16 +52,16 @@ module ActiveMerchant #:nodoc:
 
       def store(payment, options = {})
         post = {}
-        post[:number] = payment.number
-        post[:expiration_month] = payment.month
-        post[:expiration_year] = payment.year
-        post[:name] = payment.name
-        post[:cvv] = payment.verification_value if payment.verification_value?
-        add_address(post, :address, options[:billing_address])
+        add_credit_card(post, payment)
+        if payment.respond_to?(:number)
+          add_address(post, :address, options[:billing_address])
+          card_form = Io::Flow::V0::Models::CardForm.new(post)
+          card = @client.cards.post(@organization, card_form)
+        else
+          nonce_form = Io::Flow::V0::Models::CardNonceForm.new(post)
+          card = @client.cards.post_nonces(@organization, nonce_form)
+        end
 
-        card_form = Io::Flow::V0::Models::CardForm.new(post)
-
-        card = @client.cards.post(@organization, card_form)
         success = card.respond_to?(:token)
         Response.new(
           success,
@@ -170,6 +170,18 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_credit_card(post, credit_card)
+        if credit_card.respond_to?(:number)
+          post[:number] = credit_card.number
+          post[:expiration_month] = credit_card.month
+          post[:expiration_year] = credit_card.year
+          post[:name] = credit_card.name
+          post[:cvv] = credit_card.verification_value if credit_card.verification_value?
+        elsif credit_card.is_a?(String)
+          post[:token] = credit_card
+        end
+      end
 
       def add_customer_data(post, options)
         requires!(options, :customer)
