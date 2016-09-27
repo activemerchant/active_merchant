@@ -238,7 +238,7 @@ module ActiveMerchant #:nodoc:
         Response.new(
           false,
           message_from_exception(e),
-          { object: e }
+          { object: e.body_json }
         )
         # Response.new(
         #   success_from(response),
