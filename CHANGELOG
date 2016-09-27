@@ -45,6 +45,7 @@
 * Braintree Blue: Add remote test to verify card token [shasum]
 * Fat Zebra: Fix improper descriptor nesting [curiousepic]
 * SecurionPay: Update supported countries list [shasum]
+* GlobalCollect: Update credit card brand list [curiousepic]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
