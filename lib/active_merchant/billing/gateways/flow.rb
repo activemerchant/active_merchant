@@ -238,7 +238,7 @@ module ActiveMerchant #:nodoc:
         Response.new(
           false,
           message_from_exception(e),
-          { object: e.body_json }
+          { object: e.body.present? ? e.body_json : {} } # Need to check body before parse JSON...this will be fixed later by flow
         )
         # Response.new(
         #   success_from(response),
@@ -290,7 +290,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from_exception(ex)
         if ex.code == 422
-          ex.body_json.first["message"]
+          ex.body_json["messages"].first
         else
           ex.details
         end
