@@ -82,9 +82,17 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options={})
         post = {}
-        add_invoice(post, money, options)
-        add_address(post, :destination, options[:shipping_address])
-        add_customer_data(post, options)
+        if money.nil?
+          requires!(options, :order_id)
+          post[:order_number] = options[:order_id]
+          post.merge!(options.slice(:ip, :attributes))
+          auth_form_klass = Io::Flow::V0::Models::MerchantOfRecordAuthorizationForm
+        else
+          add_invoice(post, money, options)
+          add_address(post, :destination, options[:shipping_address])
+          add_customer_data(post, options)
+          auth_form_klass = Io::Flow::V0::Models::DirectAuthorizationForm
+        end
 
         commit do
           if payment.respond_to?(:number)
@@ -96,7 +104,7 @@ module ActiveMerchant #:nodoc:
           end
           add_payment(post, payment)
 
-          authorization_form = Io::Flow::V0::Models::DirectAuthorizationForm.new(post)
+          authorization_form = auth_form_klass.new(post)
           auth = @client.authorizations.post(@organization, authorization_form)
           success = auth.respond_to?(:result) && auth.result.status.value == "authorized"
           Response.new(
@@ -238,7 +246,8 @@ module ActiveMerchant #:nodoc:
         Response.new(
           false,
           message_from_exception(e),
-          { object: e.body.present? ? e.body_json : {} } # Need to check body before parse JSON...this will be fixed later by flow
+          { object: e.body.present? ? e.body_json : {} }, # Need to check body before parse JSON...this will be fixed later by flow
+          error_code: e.code == 422 ? e.body_json["code"] : nil
         )
         # Response.new(
         #   success_from(response),

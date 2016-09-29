@@ -51,6 +51,17 @@ class RemoteFlowTest < Test::Unit::TestCase
     assert_equal authorization.id, capture.authorization.id
   end
 
+  def test_failed_authorize_with_merchant_of_record
+    response = @gateway.store(@credit_card)
+    assert_success response
+    card = response.params['object']
+
+    response = @gateway.authorize(nil, card.token, @options.merge(order_id: "ORD-123"))
+    assert_failure response
+    assert_equal "Order number either does not exist or you are not authorized to access this order", response.message
+    assert_equal "generic_error", response.error_code
+  end
+
   def test_successful_purchase
     response = @gateway.store(@credit_card)
     assert_success response
