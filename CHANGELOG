@@ -24,6 +24,7 @@
 * Kushki: Remove body from void call [shasum] #2348
 * TransFirst Transaction Express: Don't send order_id with refunds [curiousepic] #2350
 * WePay: Update API version [shasum] #2349
+* USA ePay Advanced: Add quick_update_customer action [joshreeves] #2229
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
