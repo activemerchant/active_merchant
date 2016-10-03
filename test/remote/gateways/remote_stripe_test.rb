@@ -191,6 +191,90 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "refund", response.responses.last.params["object"]
   end
 
+  def test_successful_verify_cad
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "cad"))
+    assert_success response
+    assert_equal 100, response.params["amount"]
+    assert_equal "cad", response.params["currency"]
+  end
+
+  def test_successful_verify_gbp
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "gbp"))
+    assert_success response
+    assert_equal 60, response.params["amount"]
+    assert_equal "gbp", response.params["currency"]
+  end
+
+  def test_successful_verify_eur
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "eur"))
+    assert_success response
+    assert_equal 100, response.params["amount"]
+    assert_equal "eur", response.params["currency"]
+  end
+
+  def test_successful_verify_dkk
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "dkk"))
+    assert_success response
+    assert_equal 500, response.params["amount"]
+    assert_equal "dkk", response.params["currency"]
+  end
+
+  def test_successful_verify_nok
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "nok"))
+    assert_success response
+    assert_equal 600, response.params["amount"]
+    assert_equal "nok", response.params["currency"]
+  end
+
+  def test_successful_verify_sek
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "sek"))
+    assert_success response
+    assert_equal 600, response.params["amount"]
+    assert_equal "sek", response.params["currency"]
+  end
+
+  def test_successful_verify_chf
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "chf"))
+    assert_success response
+    assert_equal 100, response.params["amount"]
+    assert_equal "chf", response.params["currency"]
+  end
+
+  def test_successful_verify_aud
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "aud"))
+    assert_success response
+    assert_equal 100, response.params["amount"]
+    assert_equal "aud", response.params["currency"]
+  end
+
+  def test_successful_verify_jpy
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "jpy"))
+    assert_success response
+    assert_equal 100, response.params["amount"]
+    assert_equal "jpy", response.params["currency"]
+  end
+
+  def test_successful_verify_mxn
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "mxn"))
+    assert_success response
+    assert_equal 2000, response.params["amount"]
+    assert_equal "mxn", response.params["currency"]
+  end
+
+  def test_successful_verify_sgd
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "sgd"))
+    assert_success response
+    assert_equal 100, response.params["amount"]
+    assert_equal "sgd", response.params["currency"]
+  end
+
+  def test_successful_verify_hkd
+    assert response = @gateway.verify(@credit_card, @options.merge(currency: "hkd"))
+    assert_success response
+    assert_equal 800, response.params["amount"]
+    assert_equal "hkd", response.params["currency"]
+  end
+
   def test_unsuccessful_verify
     assert response = @gateway.verify(@declined_card, @options)
     assert_failure response
