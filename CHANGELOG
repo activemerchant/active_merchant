@@ -50,6 +50,7 @@
 * Clearhaus: Update list of non fractal currencies [curiousepic]
 * CyberSource: Increase merchant defined data fields [davidsantoso]
 * Stripe: Increase authorize amount during verify [davidsantoso]
+* Stripe: Set minimum authorize amount depending on currency [davidsantoso]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
