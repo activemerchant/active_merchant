@@ -8,6 +8,7 @@ class RemoteElementTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @check = check
     @options = {
+      order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -37,6 +38,12 @@ class RemoteElementTest < Test::Unit::TestCase
     assert_success response
 
     response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_shipping_address
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address(address1: "Shipping")))
     assert_success response
     assert_equal 'Approved', response.message
   end
