@@ -36,6 +36,21 @@ class RemoteIuguTest < Test::Unit::TestCase
     @options_for_subscription = { plan_identified: 'silver' }
   end
 
+  def test_successful_purchase_with_credit_card
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+
+    assert response.authorization
+    assert response.test
+
+    assert_equal 'test@test.com', response.params['email']
+    assert_equal 300, response.params["items_total_cents"]
+    assert_equal 2, response.params["items"].size
+    assert_equal response.authorization, response.params["id"]
+    assert_match(/iugu\.com/, response.params["secure_url"])
+  end
+
   def test_successful_authorize_with_bank_slip
     assert response = @gateway.authorize(@amount, nil, @options)
 
@@ -82,30 +97,6 @@ class RemoteIuguTest < Test::Unit::TestCase
     assert response.test
   end
 
-  def test_successful_purchase_with_credit_card
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
-
-    assert_success response
-
-    assert response.authorization
-    assert response.test
-
-    assert_equal 'test@test.com', response.params['email']
-    assert_equal 300, response.params["items_total_cents"]
-    assert_equal 2, response.params["items"].size
-    assert_equal response.authorization, response.params["id"]
-    assert_match(/iugu\.com/, response.params["secure_url"])
-  end
-
-  def test_declined_authorize_with_credit_card
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
-
-    assert_failure response
-
-    assert response.test
-    assert_equal "Transação negada", response.message
-  end
-
   def test_declined_purchase_with_credit_card
     assert response = @gateway.purchase(@amount, @declined_card, @options)
 
@@ -117,9 +108,18 @@ class RemoteIuguTest < Test::Unit::TestCase
     end
   end
 
+  def test_declined_authorize_with_credit_card
+    assert response = @gateway.purchase(@amount, @declined_card, @options)
+
+    assert_failure response
+
+    assert response.test
+    assert_equal "Transação negada", response.message
+  end
+
   def test_successful_store
     response = @gateway.store_client(@options)
-    store_options = @options.merge(customer_id: response.authorization)
+    store_options = @options.merge(customer: response.authorization)
     assert response = @gateway.store(@credit_card, store_options)
 
     assert_success response
@@ -132,9 +132,9 @@ class RemoteIuguTest < Test::Unit::TestCase
 
   def test_successful_unstore
     response = @gateway.store_client(@options)
-    store_options = @options.merge(customer_id: response.authorization)
+    store_options = @options.merge(customer: response.authorization)
     response = @gateway.store(@credit_card, store_options)
-    unstore_options = { id: response.params['id'], customer_id: response.params['customer_id'] }
+    unstore_options = { id: response.params['id'], customer: response.params['customer_id'] }
     assert response = @gateway.unstore(unstore_options)
 
     assert_success response
@@ -161,26 +161,26 @@ class RemoteIuguTest < Test::Unit::TestCase
     assert response.params['email']
   end
 
-  def test_successful_request_payment_token_from_card
-    assert response = @gateway.request_payment_token(@credit_card, @options)
+  def test_successful_generate_token_from_card
+    assert response = @gateway.generate_token(@credit_card, @options)
     assert response.is_a?(String)
   end
 
-  def test_successful_request_payment_token_from_token
-    assert response = @gateway.request_payment_token('test_token', @options)
+  def test_successful_generate_token_from_token
+    assert response = @gateway.generate_token('test_token', @options)
     assert 'test_token', response
   end
 
   def test_successful_subscribe
     assert response = @gateway.store_client(@options)
-    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.subscribe(@options.merge(customer: response.authorization))
 
     assert_success response
   end
 
   def test_successful_subscribe_and_unsubscribe
     assert response = @gateway.store_client(@options)
-    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.subscribe(@options.merge(customer: response.authorization))
     assert response = @gateway.unsubscribe(id: response.authorization)
 
     assert_success response
@@ -188,7 +188,7 @@ class RemoteIuguTest < Test::Unit::TestCase
 
   def test_successful_subscribe_and_suspend
     assert response = @gateway.store_client(@options)
-    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.subscribe(@options.merge(customer: response.authorization))
     assert response = @gateway.suspend_subscription(id: response.authorization)
     assert response.params['suspended']
 
@@ -197,7 +197,7 @@ class RemoteIuguTest < Test::Unit::TestCase
 
   def test_successful_subscribe_and_suspend_and_unsubscribe
     assert response = @gateway.store_client(@options)
-    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.subscribe(@options.merge(customer: response.authorization))
 
     assert response = @gateway.suspend_subscription(id: response.authorization)
     assert_success response
@@ -208,7 +208,7 @@ class RemoteIuguTest < Test::Unit::TestCase
 
   def test_successful_subscribe_and_suspend_and_activate
     assert response = @gateway.store_client(@options)
-    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.subscribe(@options.merge(customer: response.authorization))
 
     assert response = @gateway.suspend_subscription(id: response.authorization)
     assert_success response
@@ -219,7 +219,7 @@ class RemoteIuguTest < Test::Unit::TestCase
 
   def test_successful_subscribe_and_suspend_and_activate_and_unsubscribe
     assert response = @gateway.store_client(@options)
-    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.subscribe(@options.merge(customer: response.authorization))
 
     assert response = @gateway.suspend_subscription(id: response.authorization)
     assert_success response
@@ -233,7 +233,7 @@ class RemoteIuguTest < Test::Unit::TestCase
 
   def test_successful_subscribe_and_change
     assert response = @gateway.store_client(@options)
-    assert response = @gateway.subscribe(@options.merge(customer_id: response.authorization))
+    assert response = @gateway.subscribe(@options.merge(customer: response.authorization))
 
     change_params = { id: response.authorization, plan_identifier: 'silver' }
     assert response = @gateway.change_subscription(change_params)

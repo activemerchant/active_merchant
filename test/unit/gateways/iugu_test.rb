@@ -49,10 +49,10 @@ class IuguTest < Test::Unit::TestCase
   end
 
   def test_successful_store_with_card
-    @gateway.expects(:request_payment_token).returns('test_payment_token')
+    @gateway.expects(:generate_token).returns('test_payment_token')
     @gateway.expects(:ssl_request).returns(successful_store_response)
 
-    store_options = @options.merge(customer_id: 'customer_test_id')
+    store_options = @options.merge(customer: 'customer_test')
     assert response = @gateway.store(@credit_card, store_options)
     assert_instance_of Response, response
     assert_success response
@@ -64,7 +64,7 @@ class IuguTest < Test::Unit::TestCase
   def test_successful_store_with_token
     @gateway.expects(:ssl_request).returns(successful_store_response)
 
-    store_options = @options.merge(customer_id: 'customer_test_id')
+    store_options = @options.merge(customer: 'customer_test_id')
     assert response = @gateway.store('test_payment_token', store_options)
     assert_instance_of Response, response
     assert_success response
@@ -73,7 +73,7 @@ class IuguTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_failed_store_without_customer_id
+  def test_failed_store_without_customer
     assert_raises KeyError do
       @gateway.store('test_payment_token', @options)
     end
@@ -90,7 +90,7 @@ class IuguTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_authorization_with_customer_id
+  def test_successful_authorization_with_customer
     @gateway.expects(:ssl_request).returns(successful_authorization_response)
 
     authorize_options = @options.merge(customer_payment_method_id: 'test_payment_id')
@@ -145,19 +145,19 @@ class IuguTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_request_payment_token
-    @gateway.expects(:ssl_request).returns(successful_request_payment_token_response)
+  def test_successful_generate_token
+    @gateway.expects(:ssl_request).returns(successful_generate_token_response)
 
-    assert token = @gateway.request_payment_token(@credit_card, @options)
+    assert token = @gateway.generate_token(@credit_card, @options)
     assert_instance_of String, token
 
     assert_equal 'test_token_id', token
   end
 
-  def test_successful_request_payment_token_with_string
+  def test_successful_generate_token_with_string
     @gateway.expects(:ssl_request).never
 
-    assert token = @gateway.request_payment_token('test_token_id', @options)
+    assert token = @gateway.generate_token('test_token_id', @options)
     assert_instance_of String, token
 
     assert_equal 'test_token_id', token
@@ -166,14 +166,14 @@ class IuguTest < Test::Unit::TestCase
   def test_successful_subscribe
     @gateway.expects(:ssl_request).returns(successful_subscribe_response)
 
-    assert response = @gateway.subscribe(@options.merge(customer_id: 'test_customer_id'))
+    assert response = @gateway.subscribe(@options.merge(customer: 'test_customer'))
     assert_instance_of Response, response
 
     assert_equal 'successful_authorization', response.authorization
     assert response.test?
   end
 
-  def test_failed_subscribe_without_customer_id
+  def test_failed_subscribe_without_customer
     assert_raises KeyError do
       @gateway.subscribe(@options)
     end
@@ -228,7 +228,7 @@ class IuguTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_request_payment_token_response
+  def successful_generate_token_response
     <<-RESPONSE
       {
           "id": "test_token_id",

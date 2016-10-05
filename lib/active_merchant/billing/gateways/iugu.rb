@@ -18,16 +18,6 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, payment, options = {})
-        token = request_payment_token(payment, options)
-        post = create_post_for_auth(money, token, options)
-        commit(:post, 'charge', post, options)
-      end
-
-      def capture(money, authorization, options = {})
-        commit(:post, "invoices/#{authorization}/capture", nil, options)
-      end
-
       # To create a charge on a card or a token, call
       #
       #   purchase(money, card_or_token, { ... })
@@ -41,18 +31,28 @@ module ActiveMerchant #:nodoc:
         capture(money, response.authorization, options)
       end
 
+      def authorize(money, payment, options = {})
+        token = generate_token(payment, options)
+        post = create_post_for_auth(money, token, options)
+        commit(:post, 'charge', post, options)
+      end
+
+      def capture(money, authorization, options = {})
+        commit(:post, "invoices/#{authorization}/capture", nil, options)
+      end
+
       def store(payment, options = {})
-        customer_id = options.fetch(:customer_id)
+        customer = options.fetch(:customer)
 
         post = { description: options[:description],
-                 token: request_payment_token(payment, options) }
+                 token: generate_token(payment, options) }
 
         add_optional(post, options, :set_as_default)
-        commit(:post, "customers/#{customer_id}/payment_methods", post, options)
+        commit(:post, "customers/#{customer}/payment_methods", post, options)
       end
 
       def unstore(options = {})
-        commit(:delete, "customers/#{options[:customer_id]}/payment_methods/#{options[:id]}", nil, options)
+        commit(:delete, "customers/#{options[:customer]}/payment_methods/#{options[:id]}", nil, options)
       end
 
       def store_client(options = {})
@@ -66,15 +66,14 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "customers/#{options[:id]}")
       end
 
-      def request_payment_token(payment, options = {})
+      def generate_token(payment, options = {})
         if payment.is_a?(CreditCard)
-          post = { test: test?(options), method: 'credit_card' }
-          add_creditcard(post, payment)
+          post = create_post_for_token(payment)
           response = commit(:post, "payment_token", post, options)
-          response.params['id']
-        else
-          payment
+          payment = response.params['id']
         end
+
+        String(payment)
       end
 
       def subscribe(options = {})
@@ -100,12 +99,32 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      def create_post_for_token(creditcard)
+        post = { test: test?(options), method: 'credit_card' }
+
+        post['data[number]'] = creditcard.number
+        post['data[month]'] = creditcard.month
+        post['data[year]'] = creditcard.year
+        post['data[verification_value]'] = creditcard.verification_value
+        post['data[first_name]'] = creditcard.first_name
+        post['data[last_name]'] = creditcard.last_name
+
+        post
+      end
+
       def create_post_for_auth(money, payment, options)
-        post = {}
+        post = { 'email' => options.fetch(:email) }
 
-        add_address(post, options)
+        add_payment_method(post, payment, options)
+        add_amount(post, options)
         add_payer(post, options)
+        add_optional(post, options, :invoice, :customer, :months,
+                     :discount_cents, :bank_slip_extra_days)
 
+        post
+      end
+
+      def add_payment_method(post, payment, options)
         if payment.present?
           post['token'] = payment
         elsif options[:customer_payment_method_id]
@@ -113,18 +132,11 @@ module ActiveMerchant #:nodoc:
         else
           post['method'] = 'bank_slip'
         end
-
-        post['email'] = options.fetch(:email)
-        add_amount(post, options)
-        add_optional(post, options, :invoice_id, :customer_id, :months,
-                     :discount_cents, :bank_slip_extra_days)
-
-        post
       end
 
       def add_amount(post, options)
         items = Array.wrap(options[:items])
-        post["items"] = items
+        post['items'] = items
       end
 
       def add_customer(post, options)
@@ -134,21 +146,30 @@ module ActiveMerchant #:nodoc:
 
       def add_payer(post, options)
         payer = options[:payer]
-        post['payer[cpf_cnpj]'] = payer[:cpf_cnpj]
-        post['payer[name]'] = payer[:name]
-        post['payer[phone_prefix]'] = payer[:phone_prefix]
-        post['payer[phone]'] = payer[:phone]
-        post['payer[email]'] = payer[:email]
+        if payer
+          post['payer[cpf_cnpj]'] = payer[:cpf_cnpj]
+          post['payer[name]'] = payer[:name]
+          post['payer[phone_prefix]'] = payer[:phone_prefix]
+          post['payer[phone]'] = payer[:phone]
+          post['payer[email]'] = payer[:email]
+          add_address(post, options)
+        end
       end
 
       def add_address(post, options)
         address = options[:billing_address] || options[:address] || {}
-        post["payer[address][street]"] = address[:street]
-        post["payer[address][number]"] = address[:number]
-        post["payer[address][city]"] = address[:city]
-        post["payer[address][state]"] = address[:state]
-        post["payer[address][country]"] = address[:country]
-        post["payer[address][zip_code]"] = address[:zip_code]
+        post['payer[address][street]'] = address[:street]
+        post['payer[address][number]'] = address[:number]
+        post['payer[address][city]'] = address[:city]
+        post['payer[address][state]'] = address[:state]
+        post['payer[address][country]'] = address[:country]
+        post['payer[address][zip_code]'] = address[:zip_code]
+      end
+
+      def add_subscription(post, options)
+        post['customer_id'] = options.fetch(:customer)
+        add_optional(post, options, :plan_identifier, :expires_at, :only_on_charge_success,
+                     :payable_with, :credits_based, :price_cents, :credits_cycle, :credits_min)
       end
 
       def add_optional(post, options, *params)
@@ -158,34 +179,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(post, creditcard)
-        if creditcard.respond_to?(:number)
-          post['data[number]'] = creditcard.number
-          post['data[month]'] = creditcard.month
-          post['data[year]'] = creditcard.year
-          post['data[verification_value]'] = creditcard.verification_value
-          post['data[first_name]'] = creditcard.first_name
-          post['data[last_name]'] = creditcard.last_name
-        end
-      end
-
-      def add_subscription(post, options)
-        post[:customer_id] = options.fetch(:customer_id)
-        add_optional(post, options, :plan_identifier, :expires_at, :only_on_charge_success,
-                     :payable_with, :credits_based, :price_cents, :credits_cycle, :credits_min)
-      end
-
       def parse(body)
         JSON.parse(body)
       end
 
       def headers(options = {})
         key = options[:key] || @api_key
-        { 'authorization' => 'Basic ' + Base64.encode64(key.to_s + ":") }
+        { 'authorization' => 'Basic ' + Base64.encode64(key.to_s + ':') }
       end
 
       def api_version(options)
-        options[:version] || @options[:version] || "V1"
+        options[:version] || @options[:version] || 'V1'
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})
@@ -238,11 +242,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def json_error(raw_response)
-        msg = 'Invalid response received from the Iugu API.'
+        msg = "Invalid response received from the Iugu API."
         msg += " (The raw response returned by the API was #{raw_response.inspect})"
         {
-          "errors" => {
-            "message" => msg
+          'errors' => {
+            'message' => msg
           }
         }
       end
@@ -252,12 +256,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from_response(response)
-        if response.key?("success")
-          response["success"]
-        elsif response['message'] == "Transação negada"
+        if response.key?('success')
+          response['success']
+        elsif response['message'] == 'Transação negada'
           false
         else
-          !(response["errors"] && response["errors"].present?)
+          !(response['errors'] && response['errors'].present?)
         end
       end
 
