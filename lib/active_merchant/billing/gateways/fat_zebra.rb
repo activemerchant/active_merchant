@@ -122,6 +122,9 @@ module ActiveMerchant #:nodoc:
       def add_extra_options(post, options)
         extra = {}
         extra[:ecm] = "32" if options[:recurring]
+        extra[:cavv] = options[:cavv] if options[:cavv]
+        extra[:xid] = options[:cavv] if options[:xid]
+        extra[:sli] = options[:sli] if options[:sli]
         add_descriptor(extra, options)
         post[:extra] = extra if extra.any?
       end
