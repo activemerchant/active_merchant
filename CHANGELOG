@@ -52,6 +52,7 @@
 * Stripe: Increase authorize amount during verify [davidsantoso]
 * Stripe: Set minimum authorize amount depending on currency [davidsantoso]
 * Element: Pass order_id and shipping address [curiousepic]
+* Fat Zebra: Add cavv, xid, and sli fields [curiousepic]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
