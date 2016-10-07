@@ -147,6 +147,9 @@ module ActiveMerchant #:nodoc:
               end
               add_payment_method(xml, money, payment_method, options)
               add_email(xml, options)
+              if options[:hcg_additional_data]
+                add_hcg_additional_data(xml, options)
+              end
             end
           end
         end
@@ -250,6 +253,14 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'state', address[:state]
             xml.tag! 'countryCode', address[:country]
             xml.tag! 'telephoneNumber', address[:phone] if address[:phone]
+          end
+        end
+      end
+
+      def add_hcg_additional_data(xml, options)
+        xml.tag! 'hcgAdditionalData' do
+          options[:hcg_additional_data].each do |k, v|
+            xml.tag! "param", {name: k.to_s}, v
           end
         end
       end
