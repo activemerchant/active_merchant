@@ -54,6 +54,7 @@
 * Element: Pass order_id and shipping address [curiousepic]
 * Fat Zebra: Add cavv, xid, and sli fields [curiousepic]
 * Worldpay: Add hcgAdditionalData element [davidsantoso]
+* Redsys: Added DOP and CRC currency [davidsantoso]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
