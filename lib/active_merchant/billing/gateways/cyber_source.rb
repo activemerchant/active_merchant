@@ -653,7 +653,7 @@ module ActiveMerchant #:nodoc:
 
       def lookup_country_code(country_field)
         country_code = Country.find(country_field) rescue nil
-        country_code.code(:alpha2)
+        country_code.code(:alpha2) if country_code
       end
 
       # Where we actually build the full SOAP request using builder
