@@ -27,12 +27,12 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        action = 'ProcessPurchase'
         if payment_method.is_a?(String)
           add_card_token(post, payment_method)
           action = 'ProcessPurchaseByToken'
         else
           add_payment_method(post, payment_method)
+          action = 'ProcessPurchase'
         end
         add_customer_data(post, options)
 
@@ -69,10 +69,11 @@ module ActiveMerchant #:nodoc:
       def store(payment_method, options={})
         post = {}
         add_payment_method(post, payment_method)
-        action = 'AddCard'
         if options[:order_id].present?
           add_unique_reference(post, options[:order_id])
           action = 'AddCardWithUniqueReference'
+        else
+          action = 'AddCard'
         end
 
         commit(action, post)
@@ -133,7 +134,8 @@ module ActiveMerchant #:nodoc:
         post[:OriginalTransactionId] = authorization
       end
 
-      # helper used throughout to verify if we're 
+      # helper used throughout to verify if we're calling any of the
+      # store related actions
       def store_action?(action)
         %w(AddCard AddCardWithUniqueReference RemoveCard).include? action
       end
@@ -142,6 +144,12 @@ module ActiveMerchant #:nodoc:
         host = (test? ? 'demo' : 'secure')
 
         "https://#{host}.flo2cash.co.nz/ccws/tokenmanagement.asmx"
+      end
+
+      def payment_url
+        host = (test? ? 'demo' : 'secure')
+
+        "https://#{host}.flo2cash.co.nz/ws/paymentws.asmx"
       end
 
       def set_endpoint(action)
@@ -211,7 +219,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        (store_action?(action) ? store_url : (test? ? test_url : live_url))
+        if store_action?(action)
+          store_url
+        else
+          payment_url
+        end
       end
 
       def parse(body, action)
