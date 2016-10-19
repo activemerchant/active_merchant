@@ -7,6 +7,7 @@ class RemoteFlo2cashTest < Test::Unit::TestCase
     @gateway = Flo2cashGateway.new(fixtures(:flo2cash))
 
     @amount = 100
+    @declined_amount = 110
     @credit_card = credit_card('5123456789012346', brand: :master, month: 5, year: 2017, verification_value: 111)
     @declined_card = credit_card('4000300011112220')
 
@@ -35,10 +36,10 @@ class RemoteFlo2cashTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Transaction Declined - Bank Error', response.message
-    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.responses.first.error_code
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -89,5 +90,66 @@ class RemoteFlo2cashTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_successful_store
+    # AddCardWithUniqueReference
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_match %r(^\d+$), response.authorization
+
+    # AddCard
+    options = {}
+    response = @gateway.store(@credit_card, options)
+    assert_success response
+    assert_match %r(^\d+$), response.authorization
+  end
+
+  def test_failed_store
+    options = {}
+    response = @gateway.store(credit_card('40003000'), options)
+    assert_failure response
+    assert_equal 'Card number must be a valid credit card number', response.message
+  end
+
+  def test_successful_unstore
+    # AddCard
+    options = {}
+    response = @gateway.store(@credit_card, options)
+    assert_success response
+    assert_match %r(^\d+$), response.authorization
+
+    unstore_response = @gateway.unstore(response.authorization)
+    assert_success unstore_response
+  end
+
+  def test_failed_unstore
+    response = @gateway.unstore('12345')
+    assert_failure response
+    assert_equal 'Card token not found', response.message
+  end
+
+  def test_successful_purchase_with_token
+    # AddCard
+    options = {}
+    response = @gateway.store(@credit_card, options)
+    assert_success response
+    assert_match %r(^\d+$), response.authorization
+
+    response_purchase = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success response_purchase
+    assert_equal 'Succeeded', response_purchase.message
+  end
+
+  def test_failed_purchase_with_token
+    # AddCard
+    options = {}
+    response = @gateway.store(@credit_card, options)
+    assert_success response
+    assert_match %r(^\d+$), response.authorization
+
+    response_purchase = @gateway.purchase(@amount, '12345', @options)
+    assert_failure response_purchase
+    assert_equal 'Card token not found', response_purchase.message
   end
 end
