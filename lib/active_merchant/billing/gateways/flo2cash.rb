@@ -25,10 +25,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
+        post = {}
+        add_invoice(post, amount, options)
+        if payment_method.is_a?(String)
+          add_card_token(post, payment_method)
+          action = 'ProcessPurchaseByToken'
+        else
+          add_payment_method(post, payment_method)
+          action = 'ProcessPurchase'
         end
+        add_customer_data(post, options)
+
+        commit(action, post)
       end
 
       def authorize(amount, payment_method, options={})
@@ -37,7 +45,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("ProcessAuthorise", post)
+        commit('ProcessAuthorise', post)
       end
 
       def capture(amount, authorization, options={})
@@ -56,6 +64,26 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
 
         commit("ProcessRefund", post)
+      end
+
+      def store(payment_method, options={})
+        post = {}
+        add_payment_method(post, payment_method)
+        if options[:order_id].present?
+          add_unique_reference(post, options[:order_id])
+          action = 'AddCardWithUniqueReference'
+        else
+          action = 'AddCard'
+        end
+
+        commit(action, post)
+      end
+
+      def unstore(authorization, options={})
+        post = {}
+        add_card_token(post, authorization)
+
+        commit('RemoveCard', post)
       end
 
       def supports_scrubbing?
@@ -85,7 +113,7 @@ module ActiveMerchant #:nodoc:
         post[:CardType] = BRAND_MAP[payment_method.brand.to_s]
         post[:CardExpiry] = format(payment_method.month, :two_digits) + format(payment_method.year, :two_digits)
         post[:CardHolderName] = payment_method.name
-        post[:CardCSC] = payment_method.verification_value
+        post[:CardCSC] = payment_method.verification_value if payment_method.verification_value
       end
 
       def add_customer_data(post, options)
@@ -94,18 +122,50 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_unique_reference(post, order_id)
+        post[:UniqueReference] = order_id
+      end
+
+      def add_card_token(post, authorization)
+        post[:CardToken] = authorization
+      end
+
       def add_reference(post, authorization)
         post[:OriginalTransactionId] = authorization
+      end
+
+      # helper used throughout to verify if we're calling any of the
+      # store related actions
+      def store_action?(action)
+        %w(AddCard AddCardWithUniqueReference RemoveCard).include? action
+      end
+
+      def store_url
+        host = (test? ? 'demo' : 'secure')
+
+        "https://#{host}.flo2cash.co.nz/ccws/tokenmanagement.asmx"
+      end
+
+      def payment_url
+        host = (test? ? 'demo' : 'secure')
+
+        "https://#{host}.flo2cash.co.nz/ws/paymentws.asmx"
+      end
+
+      def set_endpoint(action)
+        store_action?(action) ? 'creditcardwebservice' : 'paymentwebservice'
       end
 
       def commit(action, post)
         post[:Username] = @options[:username]
         post[:Password] = @options[:password]
-        post[:AccountId] = @options[:account_id]
+        post[:AccountId] = @options[:account_id] unless store_action?(action)
 
-        data = build_request(action, post)
+        endpoint = set_endpoint(action)
+
+        data = build_request(action, endpoint, post)
         begin
-          raw = parse(ssl_post(url, data, headers(action)), action)
+          raw = parse(ssl_post(url(action), data, headers(action, endpoint)), action)
         rescue ActiveMerchant::ResponseError => e
           if(e.response.code == "500" && e.response.body.start_with?("<?xml"))
             raw = parse(e.response.body, action)
@@ -114,39 +174,43 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        succeeded = success_from(raw[:status])
+        succeeded = if store_action?(action)
+            success_from(raw["#{action.underscore}_result".to_sym])
+          else
+            success_from(raw[:status])
+          end
         Response.new(
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(action, raw[:transaction_id], post[:OriginalTransactionId]),
+          :authorization => authorization_from(action, raw, post[:OriginalTransactionId]),
           :error_code => error_code_from(succeeded, raw),
           :test => test?
         )
       end
 
-      def headers(action)
+      def headers(action, endpoint)
         {
           'Content-Type'  => 'application/soap+xml; charset=utf-8',
-          'SOAPAction'    => %{"http://www.flo2cash.co.nz/webservices/paymentwebservice/#{action}"}
+          'SOAPAction'    => %{"http://www.flo2cash.co.nz/webservices/#{endpoint}/#{action}"}
         }
       end
 
-      def build_request(action, post)
+      def build_request(action, endpoint, post)
         xml = Builder::XmlMarkup.new :indent => 2
         post.each do |field, value|
           xml.tag!(field, value)
         end
         body = xml.target!
-        envelope_wrap(action, body)
+        envelope_wrap(action, endpoint, body)
       end
 
-      def envelope_wrap(action, body)
+      def envelope_wrap(action, endpoint, body)
         <<-EOS
 <?xml version="1.0" encoding="utf-8"?>
 <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
   <soap12:Body>
-    <#{action} xmlns="http://www.flo2cash.co.nz/webservices/paymentwebservice">
+    <#{action} xmlns="http://www.flo2cash.co.nz/webservices/#{endpoint}">
       #{body}
     </#{action}>
   </soap12:Body>
@@ -154,8 +218,12 @@ module ActiveMerchant #:nodoc:
         EOS
       end
 
-      def url
-        (test? ? test_url : live_url)
+      def url(action)
+        if store_action?(action)
+          store_url
+        else
+          payment_url
+        end
       end
 
       def parse(body, action)
@@ -178,8 +246,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # response will contain the card token when calling a `store` action
+      # unfortunately the Flo2Cash doesn't seem to have a value one can use
+      # to verify success in the AddCard* methods
       def success_from(response)
-        response == 'SUCCESSFUL'
+        response == 'SUCCESSFUL' || response =~ /^\d+$/ || response == 'true'
       end
 
       def message_from(succeeded, response)
@@ -190,12 +261,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(action, current, original)
+      def authorization_from(action, raw, original)
         # Refunds require the authorization from the authorize() of the MultiResponse.
         if action == 'ProcessCapture'
           original
+        elsif store_action?(action)
+          raw["#{action.underscore}_result".to_sym]
         else
-          current
+          raw[:transaction_id]
         end
       end
 
@@ -205,6 +278,7 @@ module ActiveMerchant #:nodoc:
         'Insufficient Funds' => STANDARD_ERROR_CODE[:card_declined],
         'Transaction Declined - Bank Error' => STANDARD_ERROR_CODE[:processing_error],
         'No Reply from Bank' => STANDARD_ERROR_CODE[:processing_error],
+        'Card number must be a valid credit card number' => STANDARD_ERROR_CODE[:invalid_number],
       }
 
       def error_code_from(succeeded, response)
