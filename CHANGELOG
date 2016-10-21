@@ -58,6 +58,7 @@
 * TransFirsTransactionExpress: Remove blank cvv element [davidsantoso]
 * PayU Latam: Update supported countries list [shasum]
 * TransFirsTransactionExpress: Take into account blank string CVV [davidsantoso]
+* Barclaycard SmartPay: Update supported countries [shasum]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
