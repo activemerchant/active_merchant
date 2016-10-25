@@ -212,14 +212,19 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, format, url, parameters, headers = {}, payment_method = nil, authorization = nil)
         response = send("parse_#{format}", ssl_request(method, url, parameters, headers))
-        params = params_from(response)
-        Response.new(success?(response),
-                     message_from(response),
-                     params,
-                     :test => test?,
-                     :authorization => authorization || authorization_from(response),
-                     :payment_action => status_action_from(response, payment_method),
-                     :external_url => params[:url])
+
+        if response['ConsultarTokenResponse'] && response['ConsultarTokenResponse']['RespostaConsultar'] &&
+          response['ConsultarTokenResponse']['RespostaConsultar'].keys == ['ID', 'Status']
+
+          Response.new(success?(response), {}, {}, test: test?)
+        else
+          params = params_from(response)
+
+          Response.new(success?(response), message_from(response), params, test: test?,
+            authorization: authorization || authorization_from(response),
+            payment_action: status_action_from(response, payment_method),
+            external_url: params[:url])
+        end
       end
 
       def parse_json(body)
