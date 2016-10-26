@@ -276,7 +276,9 @@ module ActiveMerchant #:nodoc:
           response['EnviarInstrucaoUnicaResponse']['Resposta']['Token']
         else
           if @query
-            response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['CodigoMoIP']
+            payments = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']
+
+            payments.is_a?(Array) ? payments.last['CodigoMoIP'] : payments['CodigoMoIP']
           else
             response['CodigoMoIP']
           end
@@ -286,14 +288,17 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         if @query
           message = {}
-          status = REXML::XPath.each(@xml, '//Status[@Tipo]').first
+          status  = REXML::XPath.each(@xml, '//Status[@Tipo]').first
 
-          code = status.attribute('Tipo').value.strip
-          description = status.attribute('Classificacao').value.strip if code == '5'
+          code        = status.attribute('Tipo').value.try(:strip)
+          description = status.attribute('Classificacao').value.try(:strip) if code == '5'
 
           message[:description] = description
-          message[:code] = code
-          message[:status] = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
+          message[:code]        = code
+
+          payments         = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']
+          message[:status] = payments.is_a?(Array) ? payments.last['Status'].try(:strip) : payments['Status'].try(:strip)
+
           message
         else
           response['Mensagem'] || response[:erro] || response[:status] || (response['EnviarInstrucaoUnicaResponse'] && response['EnviarInstrucaoUnicaResponse']['Resposta']['Erro'])
@@ -310,9 +315,11 @@ module ActiveMerchant #:nodoc:
 
       def status_action_from(response, payment_method)
         status = if response['Status']
-                   response['Status']
+                    response['Status']
                  elsif @query
-                   response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status']
+                    payments = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']
+
+                    payments.is_a?(Array) ? payments.last['Status'].try(:strip) : payments['Status'].try(:strip)
                  end
 
         if status
