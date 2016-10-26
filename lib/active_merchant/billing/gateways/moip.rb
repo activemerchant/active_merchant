@@ -44,12 +44,20 @@ module ActiveMerchant #:nodoc:
 
       def details(token)
         @query = true
-        response = commit(:get, 'xml', build_url('query', token), nil, add_authentication)
+
+        begin
+          response = commit(:get, 'xml', build_url('query', token), nil, add_authentication)
+        rescue
+          response = Response.new(true, {}, {}, test: false)
+        end
+
         @query = false
+
         response
       end
 
       private
+
       def authenticate(money, payment_method, options = {})
         commit(:post, 'xml', build_url('authenticate'), build_authenticate_request(money, options), add_authentication, payment_method)
       end
