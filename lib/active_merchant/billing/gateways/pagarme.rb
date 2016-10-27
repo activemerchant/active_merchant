@@ -34,6 +34,16 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def details(id)
+        begin
+          response = PagarMe::Transaction.find_by_id(id)
+
+          Response.new(true, '', {}, payment_action: PAYMENT_STATUS_MAP[response.status], test: test?)
+        rescue PagarMe::ResponseError => error
+          Response.new(false, error.message, {}, test: test?)
+        end
+      end
+
       def purchase(money, payment_method, options={})
         begin
           post = {}
