@@ -61,6 +61,7 @@
 * Barclaycard SmartPay: Update supported countries [shasum]
 * Worldpay: Report error code [curiousepic]
 * CitrusPay: Update URL to current API version [davidsantoso]
+* Conekta: Add void action [MauricioMurga]
 
 == Version 1.60.0 (July 4, 2016)
 * Orbital: Fix CC num leak on profile calls [drewblas]
