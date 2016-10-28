@@ -126,7 +126,11 @@ module ActiveMerchant #:nodoc:
         post[:orderid] = options[:order_id]
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
-        post[:billing_method] = "recurring" if options[:recurring]
+        if options[:recurring]
+          post[:billing_method] = 'recurring'
+          post[:recurring] = options[:recurring]
+          post[:plan_id] = options[:plan_id] if options[:plan_id]
+        end
         if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
           post[:dup_seconds] = dup_seconds
         end
