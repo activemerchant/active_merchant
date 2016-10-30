@@ -34,7 +34,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
-        commit("sale", post)
+        type = options[:plan_id] ? nil : "sale"
+        commit(type, post)
       end
 
       def authorize(amount, payment_method, options={})
@@ -122,14 +123,16 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(post, money, options)
-        post[:amount] = amount(money)
+        post[:amount] = amount(money) unless options[:plan_id]
         post[:orderid] = options[:order_id]
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
         if options[:recurring]
           post[:billing_method] = 'recurring'
           post[:recurring] = options[:recurring]
-          post[:plan_id] = options[:plan_id] if options[:plan_id]
+          if options[:plan_id]
+            post[:plan_id] = options[:plan_id]
+          end
         end
         if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
           post[:dup_seconds] = dup_seconds
@@ -206,8 +209,7 @@ module ActiveMerchant #:nodoc:
         "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
       end
 
-      def commit(action, params)
-
+      def commit(action = nil, params = {})
         params[action == "add_customer" ? :customer_vault : :type] = action
         params[:username] = @options[:login]
         params[:password] = @options[:password]
@@ -262,7 +264,6 @@ module ActiveMerchant #:nodoc:
           response[:responsetext]
         end
       end
-
     end
   end
 end
