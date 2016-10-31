@@ -48,6 +48,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.respond_with(failed_authorize_response)
+    assert_equal '7', response.error_code
     assert_failure response
   end
 
