@@ -308,6 +308,7 @@ module ActiveMerchant #:nodoc:
           message,
           raw,
           :authorization => authorization_from(raw),
+          :error_code => error_code_from(success, raw),
           :test => test?)
 
       rescue ActiveMerchant::ResponseError => e
@@ -335,6 +336,12 @@ module ActiveMerchant #:nodoc:
         end
 
         [ success, message ]
+      end
+
+      def error_code_from(success, raw)
+        unless success == "SUCCESS"
+          raw[:iso8583_return_code_code] || raw[:error_code] || nil
+        end
       end
 
       def required_status_message(raw, success_criteria)
