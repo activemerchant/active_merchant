@@ -160,9 +160,11 @@ class RemoteFlowTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, card.token, @options)
     assert_success response
 
-    assert response = @gateway.void(response.authorization)
+    authorization = response.authorization
+    assert response = @gateway.void(authorization)
     assert_success response
     assert_equal 'Transaction approved', response.message
+    assert_equal authorization, response.authorization
   end
 
   def test_failed_void_with_empty_authorization

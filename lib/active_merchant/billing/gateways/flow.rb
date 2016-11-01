@@ -155,10 +155,13 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         commit do
           @client.authorizations.delete_by_key(@organization, authorization)
-          # TODO test invalid void
-          success = true
 
-          Response.new(success, "Transaction approved")
+          Response.new(
+            true,
+            "Transaction approved",
+            {},
+            authorization: authorization
+          )
         end
       end
 
