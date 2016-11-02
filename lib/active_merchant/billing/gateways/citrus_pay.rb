@@ -5,11 +5,11 @@ module ActiveMerchant
 
       class_attribute :live_na_url, :live_ap_url, :test_na_url, :test_ap_url
 
-      self.test_na_url = 'https://test-gateway.mastercard.com/api/rest/version/36/'
-      self.test_ap_url = 'https://test-gateway.mastercard.com/api/rest/version/36/'
+      self.test_na_url = 'https://test-gateway.mastercard.com/api/rest/version/39/'
+      self.test_ap_url = 'https://test-gateway.mastercard.com/api/rest/version/39/'
 
-      self.live_na_url = 'https://na-gateway.mastercard.com/api/rest/version/36/'
-      self.live_ap_url = 'https://ap-gateway.mastercard.com/api/rest/version/36/'
+      self.live_na_url = 'https://na-gateway.mastercard.com/api/rest/version/39/'
+      self.live_ap_url = 'https://ap-gateway.mastercard.com/api/rest/version/39/'
 
       self.display_name = 'Citrus Pay'
       self.homepage_url = 'http://www.citruspay.com/'
