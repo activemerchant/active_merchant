@@ -19,6 +19,7 @@
 * Orbital: Add support for CLP currency [curiousepic]
 * Authorize.net: Add line item fields and additional transaction settings [shasum]
 * Authorize.net: Pass through `header_email_receipt` [shasum]
+* Stripe: Scrub additional network tokenization related sensitive data [jasonwebster] #2251
 
 == Version 1.61.0 (November 7, 2016)
 * Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]
