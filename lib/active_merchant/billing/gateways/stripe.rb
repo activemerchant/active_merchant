@@ -389,7 +389,7 @@ module ActiveMerchant #:nodoc:
 
           if creditcard.is_a?(NetworkTokenizationCreditCard)
             card[:cryptogram] = creditcard.payment_cryptogram
-            card[:eci] = creditcard.eci
+            card[:eci] = creditcard.eci.rjust(2, '0') if creditcard.eci =~ /^[0-9]+$/
             card[:tokenization_method] = creditcard.source.to_s
           end
           post[:card] = card
