@@ -762,6 +762,19 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @emv_credit_card.icc_data, post[:card][:emv_auth_data]
   end
 
+  def test_add_creditcard_pads_eci_value
+    post = {}
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: "111111111100cryptogram",
+      verification_value: nil,
+      eci: "7"
+    )
+
+    @gateway.send(:add_creditcard, post, credit_card, {})
+
+    assert_equal "07", post[:card][:eci]
+  end
+
   def test_application_fee_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({:application_fee => 144}))
