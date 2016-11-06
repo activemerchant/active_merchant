@@ -140,16 +140,15 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         post[:authorization_id] = authorization
         refund_form = Io::Flow::V0::Models::RefundForm.new(post)
-        refund = @client.refunds.post(@organization, refund_form)
-
-        success = true
-
-        Response.new(
-          success,
-          "Transaction approved",
-          { object: refund },
-          authorization: refund.authorization.id,
-        )
+        commit do
+          refund = @client.refunds.post(@organization, refund_form)
+          Response.new(
+            true,
+            "Transaction approved",
+            { object: refund },
+            authorization: refund.id,
+          )
+        end
       end
 
       def void(authorization, options={})

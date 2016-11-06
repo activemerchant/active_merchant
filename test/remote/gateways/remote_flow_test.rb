@@ -46,7 +46,7 @@ class RemoteFlowTest < Test::Unit::TestCase
     capture = response.params["object"]
     assert capture.key
     assert capture.id
-    assert_equal @amount, capture.amount.to_i * 100
+    assert_equal @amount, capture.amount.to_f * 100
     assert_equal @options[:currency], capture.currency
     assert_equal authorization.id, capture.authorization.id
   end
@@ -74,7 +74,7 @@ class RemoteFlowTest < Test::Unit::TestCase
     assert capture.key
     assert capture.id
     assert capture.authorization.id
-    assert_equal @amount, capture.amount.to_i * 100
+    assert_equal @amount, capture.amount.to_f * 100
     assert_equal @options[:currency], capture.currency
   end
 
@@ -134,24 +134,31 @@ class RemoteFlowTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Transaction approved', response.message
     refund = response.params["object"]
-    assert_equal @amount, refund.amount.to_i * 100
+    assert_equal response.authorization, refund.id
+    assert_equal @amount, refund.amount.to_f * 100
     assert_equal @options[:currency], refund.currency
     assert_equal 1, refund.captures.length
   end
 
- #  def test_partial_refund
- #    purchase = @gateway.purchase(@amount, @credit_card, @options)
- #    assert_success purchase
+  def test_partial_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
- #    assert refund = @gateway.refund(@amount-1, purchase.authorization)
- #    assert_success refund
- #  end
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+    assert_success refund
+    assert_equal 'Transaction approved', refund.message
+    refund_object = refund.params["object"]
+    assert_equal refund.authorization, refund_object.id
+    assert_equal @amount - 1, refund_object.amount.to_f * 100
+    assert_equal @options[:currency], refund_object.currency
+    assert_equal 1, refund_object.captures.length
+  end
 
- #  def test_failed_refund
- #    response = @gateway.refund(@amount, '')
- #    assert_failure response
- #    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
- #  end
+  def test_failed_refund
+    response = @gateway.refund(@amount, '')
+    assert_failure response
+    assert_equal 'No captures with remaining funds found', response.message
+  end
 
   def test_successful_void
     assert response = @gateway.store(@credit_card)
