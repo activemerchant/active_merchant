@@ -248,7 +248,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "incorrect_number", response.error_code
     assert_equal "27", response.params["message_code"]
     assert_equal "6", response.params["response_reason_code"]
-    assert_match /but street address not verified/, response.avs_result["message"]
+    assert_match /Address not verified/, response.avs_result["message"]
   end
 
   def test_successful_purchase_using_stored_card_new_payment_profile
@@ -291,7 +291,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "incorrect_number", response.error_code
     assert_equal "27", response.params["message_code"]
     assert_equal "6", response.params["response_reason_code"]
-    assert_match /but street address not verified/, response.avs_result["message"]
+    assert_match /Address not verified/, response.avs_result["message"]
   end
 
   def test_failed_capture_using_stored_card
