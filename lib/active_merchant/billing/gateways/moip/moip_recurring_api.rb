@@ -209,9 +209,15 @@ module ActiveMerchant #:nodoc:
       def next_charge_at(response)
         return nil unless response[:success]
 
-        Date.new(response[:subscription][:next_invoice_date][:year],
-        response[:subscription][:next_invoice_date][:month],
-        response[:subscription][:next_invoice_date][:day])
+        if response[:subscription]
+          subscription = response[:subscription].symbolize_keys
+
+          if subscription[:next_invoice_date]
+            next_invoice = subscription[:next_invoice_date].symbolize_keys
+
+            Date.new(next_invoice[:year], next_invoice[:month], next_invoice[:day])
+          end
+        end
       end
 
       def plan_params(params)
