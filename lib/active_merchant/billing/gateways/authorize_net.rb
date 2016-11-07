@@ -16,6 +16,25 @@ module ActiveMerchant
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
 
+      # Authorize.net has slightly different definitions for returned AVS codes
+      # that have been mapped to the closest equivalent AM standard AVSResult codes
+      # Authorize.net's descriptions noted below
+      STANDARD_AVS_CODE_MAPPING = {
+        'A' => 'A', # Street Address: Match -- First 5 Digits of ZIP: No Match
+        'B' => 'I', # Address not provided for AVS check or street address match, postal code could not be verified
+        'E' => 'E', # AVS Error
+        'G' => 'G', # Non U.S. Card Issuing Bank
+        'N' => 'N', # Street Address: No Match -- First 5 Digits of ZIP: No Match
+        'P' => 'I', # AVS not applicable for this transaction
+        'R' => 'R', # Retry, System Is Unavailable
+        'S' => 'S', # AVS Not Supported by Card Issuing Bank
+        'U' => 'U', # Address Information For This Cardholder Is Unavailable
+        'W' => 'W', # Street Address: No Match -- All 9 Digits of ZIP: Match
+        'X' => 'X', # Street Address: Match -- All 9 Digits of ZIP: Match
+        'Y' => 'Y', # Street Address: Match - First 5 Digits of ZIP: Match
+        'Z' => 'Z'  # Street Address: No Match - First 5 Digits of ZIP: Match
+      }
+
       STANDARD_ERROR_CODE_MAPPING = {
         '36' => STANDARD_ERROR_CODE[:incorrect_number],
         '237' => STANDARD_ERROR_CODE[:invalid_number],
@@ -61,7 +80,7 @@ module ActiveMerchant
       TRANSACTION_ALREADY_ACTIONED = %w(310 311)
 
       CARD_CODE_ERRORS = %w(N S)
-      AVS_ERRORS = %w(A E N R W Z)
+      AVS_ERRORS = %w(A E I N R W Z)
       AVS_REASON_CODES = %w(27 45)
 
       TRACKS = {
@@ -596,7 +615,8 @@ module ActiveMerchant
         raw_response = ssl_post(url, post_data(action, &payload), headers)
         response = parse(action, raw_response)
 
-        avs_result = AVSResult.new(code: response[:avs_result_code])
+        avs_result_code = response[:avs_result_code].upcase if response[:avs_result_code]
+        avs_result = AVSResult.new(code: STANDARD_AVS_CODE_MAPPING[avs_result_code])
         cvv_result = CVVResult.new(response[:card_code])
         if using_live_gateway_in_test_mode?(response)
           Response.new(false, "Using a live Authorize.net account in Test Mode is not permitted.")
