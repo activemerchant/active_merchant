@@ -191,6 +191,14 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_equal 'test3', response.params['client_id']
   end
 
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
+
   private
 
   def successful_store_response
@@ -481,5 +489,51 @@ class SecurePayAuTest < Test::Unit::TestCase
 
   def failed_refund_response
     %(<?xml version="1.0" encoding="UTF-8" standalone="no"?><SecurePayMessage><MessageInfo><messageID>6bacab2b7ae1200d8099e0873e25bc</messageID><messageTimestamp>20102807071248484000+600</messageTimestamp><apiVersion>xml-4.2</apiVersion></MessageInfo><RequestType>Payment</RequestType><MerchantInfo><merchantID>CAX0001</merchantID></MerchantInfo><Status><statusCode>000</statusCode><statusDescription>Normal</statusDescription></Status><Payment><TxnList count="1"><Txn ID="1"><txnType>4</txnType><txnSource>23</txnSource><amount>101</amount><currency>AUD</currency><purchaseOrderNo>269061</purchaseOrderNo><approved>No</approved><responseCode>134</responseCode><responseText>Only $1.00 available for refund</responseText><thinlinkResponseCode>300</thinlinkResponseCode><thinlinkResponseText>000</thinlinkResponseText><thinlinkEventStatusCode>999</thinlinkEventStatusCode><thinlinkEventStatusText>Error - Transaction Already Fully Refunded/Only $x.xx Available for Refund</thinlinkEventStatusText><settlementDate/><txnID/><CreditCardInfo><pan>444433...111</pan><expiryDate>09/11</expiryDate><cardType>6</cardType><cardDescription>Visa</cardDescription></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>)
+  end
+
+  def pre_scrub
+    <<-XML
+    opening connection to api.securepay.com.au:443...
+    opened
+    starting SSL for api.securepay.com.au:443...
+    SSL established
+    <- "POST /test/payment HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.securepay.com.au\r\nContent-Length: 710\r\n\r\n"
+    <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811005228628453+000</messageTimestamp><timeoutValue>60</timeoutValue><apiVersion>xml-4.2</apiVersion></MessageInfo><MerchantInfo><merchantID>ABC0030</merchantID><password>abc123</password></MerchantInfo><RequestType>Payment</RequestType><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><CreditCardInfo><cardNumber>4242424242424242</cardNumber><expiryDate>09/15</expiryDate><cvv>123</cvv></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Content-Type: text/xml;charset=ISO-8859-1\r\n"
+    -> "Content-Length: 1148\r\n"
+    -> "Date: Tue, 08 Nov 2016 00:52:30 GMT\r\n"
+    -> "Connection: close\r\n"
+    -> "Server: Apache\r\n"
+    -> "Set-Cookie: ltm_api.securepay.com.au=1073719488.36895.0000; path=/\r\n"
+    -> "\r\n"
+    reading 1148 bytes...
+    -> "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811115230823000+660</messageTimestamp><apiVersion>xml-4.2</apiVersion></MessageInfo><RequestType>Payment</RequestType><MerchantInfo><merchantID>ABC0030</merchantID></MerchantInfo><Status><statusCode>000</statusCode><statusDescription>Normal</statusDescription></Status><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><approved>Yes</approved><responseCode>00</responseCode><responseText>Approved</responseText><thinlinkResponseCode>100</thinlinkResponseCode><thinlinkResponseText>000</thinlinkResponseText><thinlinkEventStatusCode>000</thinlinkEventStatusCode><thinlinkEventStatusText>Normal</thinlinkEventStatusText><settlementDate>20161108</settlementDate><txnID>123822</txnID><CreditCardInfo><pan>424242...242</pan><expiryDate>09/15</expiryDate><cardType>6</cardType><cardDescription>Visa</cardDescription></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
+    read 1148 bytes
+    Conn close
+    XML
+  end
+
+  def post_scrub
+    <<-XML
+    opening connection to api.securepay.com.au:443...
+    opened
+    starting SSL for api.securepay.com.au:443...
+    SSL established
+    <- "POST /test/payment HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.securepay.com.au\r\nContent-Length: 710\r\n\r\n"
+    <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811005228628453+000</messageTimestamp><timeoutValue>60</timeoutValue><apiVersion>xml-4.2</apiVersion></MessageInfo><MerchantInfo><merchantID>[FILTERED]</merchantID><password>[FILTERED]</password></MerchantInfo><RequestType>Payment</RequestType><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><CreditCardInfo><cardNumber>[FILTERED]</cardNumber><expiryDate>09/15</expiryDate><cvv>[FILTERED]</cvv></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Content-Type: text/xml;charset=ISO-8859-1\r\n"
+    -> "Content-Length: 1148\r\n"
+    -> "Date: Tue, 08 Nov 2016 00:52:30 GMT\r\n"
+    -> "Connection: close\r\n"
+    -> "Server: Apache\r\n"
+    -> "Set-Cookie: ltm_api.securepay.com.au=1073719488.36895.0000; path=/\r\n"
+    -> "\r\n"
+    reading 1148 bytes...
+    -> "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811115230823000+660</messageTimestamp><apiVersion>xml-4.2</apiVersion></MessageInfo><RequestType>Payment</RequestType><MerchantInfo><merchantID>[FILTERED]</merchantID></MerchantInfo><Status><statusCode>000</statusCode><statusDescription>Normal</statusDescription></Status><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><approved>Yes</approved><responseCode>00</responseCode><responseText>Approved</responseText><thinlinkResponseCode>100</thinlinkResponseCode><thinlinkResponseText>000</thinlinkResponseText><thinlinkEventStatusCode>000</thinlinkEventStatusCode><thinlinkEventStatusText>Normal</thinlinkEventStatusText><settlementDate>20161108</settlementDate><txnID>123822</txnID><CreditCardInfo><pan>424242...242</pan><expiryDate>09/15</expiryDate><cardType>6</cardType><cardDescription>Visa</cardDescription></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
+    read 1148 bytes
+    Conn close
+    XML
   end
 end
