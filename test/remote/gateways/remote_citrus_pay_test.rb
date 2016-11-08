@@ -42,6 +42,17 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
+  def test_adds_3dsecure_id_to_authorize
+    more_options = @options.merge({
+      ip: "127.0.0.1",
+      email: "joe@example.com",
+      threed_secure_id: "abc123"
+    })
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(more_options))
+    assert_match "No check has been performed for this merchant and 3D Secure Id.", response.message
+  end
+
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
