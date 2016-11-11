@@ -1,6 +1,6 @@
 require 'active_merchant/billing/gateways/migs/migs_codes'
 
-require 'digest/md5' # Used in add_secure_hash
+require 'openssl' # Used in add_secure_hash
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -8,6 +8,7 @@ module ActiveMerchant #:nodoc:
       include MigsCodes
 
       API_VERSION = 1
+      HASH_ALGORITHM = 'SHA256'
 
       class_attribute :server_hosted_url, :merchant_hosted_url
 
@@ -290,12 +291,12 @@ module ActiveMerchant #:nodoc:
 
       def add_secure_hash(post)
         post[:SecureHash] = calculate_secure_hash(post, @options[:secure_hash])
+        post[:SecureHashType] = HASH_ALGORITHM
       end
 
       def calculate_secure_hash(post, secure_hash)
-        sorted_values = post.sort_by(&:to_s).map(&:last)
-        input = secure_hash + sorted_values.join
-        Digest::MD5.hexdigest(input).upcase
+        input = post.sort.map { |(k, v)| "vpc_#{k}=#{v}" }.join('&')
+        OpenSSL::HMAC.hexdigest(HASH_ALGORITHM, [secure_hash].pack('H*'), input).upcase
       end
     end
   end
