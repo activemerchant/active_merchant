@@ -36,15 +36,29 @@ class BraintreeTest < Test::Unit::TestCase
   end
 
   def test_supports_network_tokenization_when_not_supported
-    gateway = BraintreeGateway.new(
+    response = ActiveMerchant::Billing::Response.new(false,
+      'Merchant account does not support payment instrument. (91577)',
+      {"braintree_transaction"=>{"processor_response_code"=>"91577"}}, error_code: 91577)
+    gateway.stubs(authorize: response)
+    assert_equal false, gateway.supports_network_tokenization?
+  end
+
+  def test_supports_network_tokenization_should_raise_when_network_error
+    response = ActiveMerchant::Billing::Response.new(false,
+      'Merchant account does not support payment instrument. (91577)',
+      {"braintree_invalid_response"=> nil})
+    assert_raises ActiveMerchant::InvalidResponseError do
+      gateway.supports_network_tokenization?
+    end
+  end
+
+  private
+
+  def gateway
+    @gateway ||= BraintreeGateway.new(
       :merchant_id => 'MERCHANT_ID',
       :public_key => 'PUBLIC_KEY',
       :private_key => 'PRIVATE_KEY'
     )
-    response = ActiveMerchant::Billing::Response.new(false,
-      'Merchant account does not support payment instrument. (91577)',
-      {"braintree_transaction"=>{"processor_response_code"=>"91577"}})
-    gateway.stubs(authorize: response)
-    assert_equal false, gateway.supports_network_tokenization?
   end
 end
