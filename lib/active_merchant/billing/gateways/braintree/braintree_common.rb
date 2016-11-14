@@ -27,7 +27,7 @@ module BraintreeCommon
   def supports_network_tokenization?
     response = authorize(1, ActiveMerchant::Billing::NetworkTokenizationCreditCard.test_credit_card)
     response_code = response.params['braintree_transaction'].try(:[], 'processor_response_code')
-    raise(ActiveMerchant::InvalidResponseError, response.message) unless response_code
+    raise(ActiveMerchant::ActiveMerchantError, response.message) unless response_code
 
     response_code != ERROR_CODES.fetch(:payment_instrument_not_supported)
   end

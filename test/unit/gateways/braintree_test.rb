@@ -44,10 +44,8 @@ class BraintreeTest < Test::Unit::TestCase
   end
 
   def test_supports_network_tokenization_should_raise_when_network_error
-    response = ActiveMerchant::Billing::Response.new(false,
-      'Merchant account does not support payment instrument. (91577)',
-      {"braintree_invalid_response"=> nil})
-    assert_raises ActiveMerchant::InvalidResponseError do
+    Braintree::Http.any_instance.expects(:post).raises(Braintree::ServerError)
+    assert_raises ActiveMerchant::ActiveMerchantError do
       gateway.supports_network_tokenization?
     end
   end
