@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
           add_order_id(xml, authorization)
           add_reference_num(xml, options)
           xml.payment do
-            add_amount(xml, money)
+            add_amount(xml, money, options)
           end
         end
       end
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
           add_order_id(xml, authorization)
           add_reference_num(xml, options)
           xml.payment do
-            add_amount(xml, money)
+            add_amount(xml, money, options)
           end
         end
       end
@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
           end
         end
         xml.payment do
-          add_amount(xml, money)
+          add_amount(xml, money, options)
           add_installments(xml, options)
         end
         add_billing_address(xml, creditcard, options)
@@ -173,8 +173,9 @@ module ActiveMerchant #:nodoc:
         xml.referenceNum(options[:order_id] || generate_unique_id)
       end
 
-      def add_amount(xml, money)
+      def add_amount(xml, money, options)
         xml.chargeTotal(amount(money))
+        xml.currencyCode(options[:currency] || currency(money) || default_currency)
       end
 
       def add_processor_id(xml)
