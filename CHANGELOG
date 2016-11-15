@@ -11,6 +11,7 @@
 * Stripe: Ensure ECI values for tokenized cards are padded [jasonwebster] #2250
 * Forte: Fix incorrect authorization_code response mapping [davidsantoso]
 * maxiPago: Send currency with request [curiousepic]
+* Credorax: Map order_id to field H9 [curiousepic]
 
 == Version 1.61.0 (November 7, 2016)
 * Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]

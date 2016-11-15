@@ -8,6 +8,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @credit_card = credit_card('5223450000000007', verification_value: "090", month: "12", year: "2025")
     @declined_card = credit_card('4000300011112220')
     @options = {
+      order_id: "1",
       currency: "EUR",
       billing_address: address,
       description: 'Store Purchase'
@@ -23,6 +24,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+    assert_equal "1", response.params["H9"]
     assert_equal "Succeeded", response.message
   end
 
