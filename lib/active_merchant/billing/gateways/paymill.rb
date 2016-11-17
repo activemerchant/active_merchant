@@ -74,11 +74,15 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_credit_card(post, credit_card)
+      def add_credit_card(post, credit_card, money, options)
+        post['account.holder'] = (@credit_card.try(:holder) || nil)
         post['account.number'] = credit_card.number
         post['account.expiry.month'] = sprintf("%.2i", credit_card.month)
         post['account.expiry.year'] = sprintf("%.4i", credit_card.year)
         post['account.verification'] = credit_card.verification_value
+        post['account.email'] = (options[:email] || nil)
+        post['presentation.amount3D'] = (amount(money) * 100)
+        post['presentation.currency3D'] = (options[:currency] || currency(money))
       end
 
       def headers
@@ -127,7 +131,7 @@ module ActiveMerchant #:nodoc:
           self.send("#{action}_with_token", money, payment_method, options)
         else
           MultiResponse.run do |r|
-            r.process { save_card(payment_method) }
+            r.process { save_card(payment_method, money, options) }
             r.process { self.send("#{action}_with_token", money, r.authorization, options) }
           end
         end
@@ -153,10 +157,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'preauthorizations', post)
       end
 
-      def save_card(credit_card)
+      def save_card(credit_card, money, options)
         post = {}
 
-        add_credit_card(post, credit_card)
+        add_credit_card(post, credit_card, money, options)
         post['channel.id'] = @options[:public_key]
         post['jsonPFunction'] = 'jsonPFunction'
         post['transaction.mode'] = (test? ? 'CONNECTOR_TEST' : 'LIVE')
