@@ -200,18 +200,27 @@ module ActiveMerchant #:nodoc:
           brand, token = split_authorization(payment_method)
           credit_card = {}
           credit_card[:securityCode] = options[:cvv] if options[:cvv]
+          credit_card[:processWithoutCvv2] = options[:process_without_cvv2] if options[:process_without_cvv2]
           post[:transaction][:creditCard] = credit_card
           post[:transaction][:creditCardTokenId] = token
           post[:transaction][:paymentMethod] = brand.upcase
         else
           credit_card = {}
           credit_card[:number] = payment_method.number
-          credit_card[:securityCode] = payment_method.verification_value
+          credit_card[:securityCode] = payment_method.verification_value || options[:cvv]
+          credit_card[:processWithoutCvv2] = options[:process_without_cvv2] if options[:process_without_cvv2]
+          credit_card[:processWithoutCvv2] = true if credit_card[:processWithoutCvv2].blank? && credit_card[:securityCode].blank?
+          credit_card[:securityCode] = security_code_from(payment_method) if credit_card[:securityCode].blank?
           credit_card[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
           credit_card[:name] = payment_method.name.strip
           post[:transaction][:creditCard] = credit_card
           post[:transaction][:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
         end
+      end
+
+      def security_code_from(payment_method)
+        return "0000" if BRAND_MAP[payment_method.brand.to_s] == "AMEX"
+        "000"
       end
 
       def add_payer(post, options)
