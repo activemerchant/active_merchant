@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Recurly payment gateway added
+* Added subscriptions to NMI
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
 * CitrusPay: Add 3DSecureId field [davidsantoso]
 * CyberSource: Only get alpha2 country code when it's a known country [bruno] #2238
