@@ -20,6 +20,7 @@ module ActiveMerchant
         add_reference(post, *new_authorization)
         add_payment_method(post, payment_method)
         add_customer_data(post, payment_method, options)
+        add_3dsecure_id(post, options)
 
         commit('authorize', post)
       end
@@ -29,6 +30,7 @@ module ActiveMerchant
         add_invoice(post, amount, options, :transaction)
         add_reference(post, *next_authorization(authorization))
         add_customer_data(post, nil, options)
+        add_3dsecure_id(post, options)
 
         commit('capture', post)
       end
@@ -158,6 +160,11 @@ module ActiveMerchant
         post[:shipping].merge!(shipping)
         post[:device].merge!(device)
         post[:customer].merge!(customer)
+      end
+
+      def add_3dsecure_id(post, options)
+        return unless options[:threed_secure_id]
+        post.merge!({"3DSecureId" => options[:threed_secure_id]})
       end
 
       def country_code(country)

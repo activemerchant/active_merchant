@@ -33,6 +33,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
+    assert_equal '5', response.error_code
     assert_equal 'REFUSED', response.message
   end
 
