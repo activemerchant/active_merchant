@@ -189,7 +189,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['US', 'CA', 'SG', 'AU'], PayflowGateway.supported_countries
+    assert_equal ['US', 'CA', 'NZ', 'AU'], PayflowGateway.supported_countries
   end
 
   def test_supported_card_types
@@ -621,7 +621,7 @@ class PayflowTest < Test::Unit::TestCase
 </XMLPayResponse>
     XML
   end
-  
+
   def assert_three_d_secure(xml_doc, buyer_auth_result_path)
     assert_equal 'Y', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
     assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text

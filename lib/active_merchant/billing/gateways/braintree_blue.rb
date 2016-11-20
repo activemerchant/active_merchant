@@ -6,7 +6,9 @@ rescue LoadError
   raise "Could not load the braintree gem.  Use `gem install braintree` to install it."
 end
 
-raise "Need braintree gem 2.x.y. Run `gem install braintree --version '~>2.0'` to get the correct version." unless Braintree::Version::Major == 2
+unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 4
+  raise "Need braintree gem >= 2.4.0. Run `gem install braintree --version '~>2.4'` to get the correct version."
+end
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -173,6 +175,18 @@ module ActiveMerchant #:nodoc:
         true
       end
 
+      def verify_credentials
+        begin
+          @braintree_gateway.transaction.find("non_existent_token")
+        rescue Braintree::AuthenticationError
+          return false
+        rescue Braintree::NotFoundError
+          return true
+        end
+
+        true
+      end
+
       private
 
       def check_customer_exists(customer_vault_id)
@@ -311,10 +325,12 @@ module ActiveMerchant #:nodoc:
       def message_from_result(result)
         if result.success?
           "OK"
-        elsif result.errors.size == 0 && result.credit_card_verification
+        elsif result.errors.any?
+          result.errors.map { |e| "#{e.message} (#{e.code})" }.join(" ")
+        elsif result.credit_card_verification
           "Processor declined: #{result.credit_card_verification.processor_response_text} (#{result.credit_card_verification.processor_response_code})"
         else
-          result.errors.map { |e| "#{e.message} (#{e.code})" }.join(" ")
+          result.message.to_s
         end
       end
 
@@ -559,6 +575,14 @@ module ActiveMerchant #:nodoc:
                 :expiration_year => credit_card_or_vault_id.year.to_s,
                 :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
                 :cryptogram => credit_card_or_vault_id.payment_cryptogram
+              }
+          elsif credit_card_or_vault_id.source == :android_pay
+              parameters[:android_pay_card] = {
+                :number => credit_card_or_vault_id.number,
+                :cryptogram => credit_card_or_vault_id.payment_cryptogram,
+                :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+                :expiration_year => credit_card_or_vault_id.year.to_s,
+                :google_transaction_id => credit_card_or_vault_id.transaction_id
               }
             end
           else

@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE US)
+      self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
@@ -42,12 +42,29 @@ module ActiveMerchant #:nodoc:
         'card_declined' => STANDARD_ERROR_CODE[:card_declined],
         'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
         'processing_error' => STANDARD_ERROR_CODE[:processing_error],
-        'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin]
+        'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin],
+        'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card]
       }
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
         "personal" => "individual",
         "business" => "company",
+      }
+
+      MINIMUM_AUTHORIZE_AMOUNTS = {
+        "USD" => 100,
+        "CAD" => 100,
+        "GBP" => 60,
+        "EUR" => 100,
+        "DKK" => 500,
+        "NOK" => 600,
+        "SEK" => 600,
+        "CHF" => 100,
+        "AUD" => 100,
+        "JPY" => 100,
+        "MXN" => 2000,
+        "SGD" => 100,
+        "HKD" => 800
       }
 
       def initialize(options = {})
@@ -116,6 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         post = {}
+        post[:metadata] = options[:metadata] if options[:metadata]
         post[:expand] = [:charge]
         commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options)
       end
@@ -140,7 +158,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(50, payment, options) }
+          r.process { authorize(auth_minimum_amount(options), payment, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -167,16 +185,15 @@ module ActiveMerchant #:nodoc:
         params = {}
         post = {}
 
-        if card_brand(payment) == "check"
-          bank_token_response = tokenize_bank_account(payment)
-          if bank_token_response.success?
-            params = { source: bank_token_response.params["token"]["id"] }
-          else
-            return bank_token_response
-          end
-        elsif payment.is_a?(ApplePayPaymentToken)
+        if payment.is_a?(ApplePayPaymentToken)
           token_exchange_response = tokenize_apple_pay_token(payment)
           params = { card: token_exchange_response.params["token"]["id"] } if token_exchange_response.success?
+        elsif payment.is_a?(StripePaymentToken)
+          add_payment_token(params, payment, options)
+        elsif payment.is_a?(Check)
+          bank_token_response = tokenize_bank_account(payment)
+          return bank_token_response unless bank_token_response.success?
+          params = { source: bank_token_response.params["token"]["id"] }
         else
           add_creditcard(params, payment, options)
         end
@@ -237,6 +254,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify_credentials
+        begin
+          ssl_get(live_url + "charges/nonexistent", headers)
+        rescue ResponseError => e
+          return false if e.response.code.to_i == 401
+        end
+
+        true
+      end
+
       def supports_scrubbing?
         true
       end
@@ -277,7 +304,6 @@ module ActiveMerchant #:nodoc:
         unless emv_payment?(payment)
           add_amount(post, money, options, true)
           add_customer_data(post, options)
-          add_metadata(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
@@ -285,6 +311,7 @@ module ActiveMerchant #:nodoc:
           add_flags(post, options)
         end
 
+        add_metadata(post, options)
         add_application_fee(post, options)
         add_destination(post, options)
         post
@@ -359,14 +386,13 @@ module ActiveMerchant #:nodoc:
             card[:cvc] = creditcard.verification_value if creditcard.verification_value?
             card[:name] = creditcard.name if creditcard.name
           end
-          post[:card] = card
 
-          if creditcard.is_a?(NetworkTokenizationCreditCard) && creditcard.source == :apple_pay
-            post[:three_d_secure] = {
-              apple_pay:  true,
-              cryptogram: creditcard.payment_cryptogram
-            }
+          if creditcard.is_a?(NetworkTokenizationCreditCard)
+            card[:cryptogram] = creditcard.payment_cryptogram
+            card[:eci] = creditcard.eci.rjust(2, '0') if creditcard.eci =~ /^[0-9]+$/
+            card[:tokenization_method] = creditcard.source.to_s
           end
+          post[:card] = card
 
           add_address(post, options)
         elsif creditcard.kind_of?(String)
@@ -589,6 +615,11 @@ module ActiveMerchant #:nodoc:
         else
           card_brand(payment_method) == "check"
         end
+      end
+
+      def auth_minimum_amount(options)
+        return 100 unless options[:currency]
+        return MINIMUM_AUTHORIZE_AMOUNTS[options[:currency].upcase] || 100
       end
     end
   end

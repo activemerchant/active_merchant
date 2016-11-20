@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(CA PR US)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.ssl_version = :TLSv1
 
       self.homepage_url = 'https://www.globalpaymentsinc.com'
       self.display_name = 'Global Transport'

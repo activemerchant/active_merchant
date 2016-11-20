@@ -620,7 +620,7 @@ module ActiveMerchant #:nodoc:
         add_optional_fields(xml,
                             %w{n2:NoteText          n2:PaymentAction
                                n2:TransactionId     n2:AllowedPaymentMethod
-                               n2:PaymentRequestID  },
+                               n2:PaymentRequestID  n2:SoftDescriptor  },
                             options)
       end
 

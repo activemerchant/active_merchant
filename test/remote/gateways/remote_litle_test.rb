@@ -159,7 +159,7 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_void
-    assert void = @gateway.void("123456789012345360;authorization")
+    assert void = @gateway.void("123456789012345360;authorization;100")
     assert_failure void
     assert_equal 'No transaction found with specified litleTxnId', void.message
   end
@@ -295,4 +295,16 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal '1', store_response.params['response']
   end
 
+  def test_purchase_scrubbing
+    credit_card = CreditCard.new(@credit_card_hash.merge(verification_value: '999'))
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(10010, credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end

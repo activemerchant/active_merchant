@@ -147,6 +147,9 @@ module ActiveMerchant #:nodoc:
               end
               add_payment_method(xml, money, payment_method, options)
               add_email(xml, options)
+              if options[:hcg_additional_data]
+                add_hcg_additional_data(xml, options)
+              end
             end
           end
         end
@@ -254,6 +257,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_hcg_additional_data(xml, options)
+        xml.tag! 'hcgAdditionalData' do
+          options[:hcg_additional_data].each do |k, v|
+            xml.tag! "param", {name: k.to_s}, v
+          end
+        end
+      end
+
       def address_with_defaults(address)
         address ||= {}
         address.delete_if { |_, v| v.blank? }
@@ -297,6 +308,7 @@ module ActiveMerchant #:nodoc:
           message,
           raw,
           :authorization => authorization_from(raw),
+          :error_code => error_code_from(success, raw),
           :test => test?)
 
       rescue ActiveMerchant::ResponseError => e
@@ -324,6 +336,12 @@ module ActiveMerchant #:nodoc:
         end
 
         [ success, message ]
+      end
+
+      def error_code_from(success, raw)
+        unless success == "SUCCESS"
+          raw[:iso8583_return_code_code] || raw[:error_code] || nil
+        end
       end
 
       def required_status_message(raw, success_criteria)

@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
-      self.supported_countries = ['AR', 'AT', 'BE', 'BR', 'CA', 'CH', 'CL', 'CN', 'CO', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'HK', 'ID', 'IE', 'IL', 'IN', 'IT', 'JP', 'KR', 'LU', 'MX', 'MY', 'NL', 'NO', 'PA', 'PE', 'PH', 'PL', 'PT', 'RU', 'SE', 'SG', 'TH', 'TR', 'TW', 'US', 'VN', 'ZA']
+      self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'GE', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
       self.default_currency = 'EUR'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
@@ -60,6 +60,14 @@ module ActiveMerchant #:nodoc:
         post[:modificationAmount] = amount_hash(money, options[:currency])
 
         commit('refund', post)
+      end
+
+      def credit(money, creditcard, options = {})
+        post = payment_request(money, options)
+        post[:amount] = amount_hash(money, options[:currency])
+        post[:card] = credit_card_hash(creditcard)
+
+        commit('refundWithData', post)
       end
 
       def void(identification, options = {})
@@ -137,6 +145,8 @@ module ActiveMerchant #:nodoc:
         case e.response.code
         when '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)
+        when '403'
+          return Response.new(false, 'Not allowed', {}, :test => test?)
         when '422'
           return Response.new(false, 'Unprocessable Entity', {}, :test => test?)
         when '500'
@@ -198,6 +208,7 @@ module ActiveMerchant #:nodoc:
       def success_from(response)
         return true if response.has_key?('authCode')
         return true if response['result'] == 'Success'
+        return true if response['resultCode'] == 'Received'
         successful_responses = %w([capture-received] [cancel-received] [refund-received])
         successful_responses.include?(response['response'])
       end

@@ -90,7 +90,29 @@ module ActiveMerchant #:nodoc:
         vault.unstore(identification, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+         force_utf8(transcript).
+          gsub(%r((M_id=)[^&]*), '\1[FILTERED]').
+          gsub(%r((M_key=)[^&]*), '\1[FILTERED]').
+          gsub(%r((C_cardnumber=)[^&]*), '\1[FILTERED]').
+          gsub(%r((C_cvv=)[^&]*), '\1[FILTERED]').
+          gsub(%r((<ns1:CARDNUMBER>).+(</ns1:CARDNUMBER>)), '\1[FILTERED]\2').
+          gsub(%r((<ns1:M_ID>).+(</ns1:M_ID>)), '\1[FILTERED]\2').
+          gsub(%r((<ns1:M_KEY>).+(</ns1:M_KEY>)), '\1[FILTERED]\2')
+      end
+
       private
+
+      # use the same method as in pay_conex
+      def force_utf8(string)
+        return nil unless string
+        binary = string.encode("BINARY", invalid: :replace, undef: :replace, replace: "?")   # Needed for Ruby 2.0 since #encode is a no-op if the string is already UTF-8. It's not needed for Ruby 2.1 and up since it's not a no-op there.
+        binary.encode("UTF-8", invalid: :replace, undef: :replace, replace: "?")
+      end
 
       def add_credit_card(post, credit_card)
         post[:C_name]       = credit_card.name
@@ -109,22 +131,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_check_customer_data(post, options)
-        # Required  Customer Type – (NACHA Transaction Class)
-        # CCD for Commercial, Merchant Initiated
-        # PPD for Personal, Merchant Initiated
-        # WEB for Internet, Consumer Initiated
-        # RCK for Returned Checks
-        # ARC for Account Receivable Entry
-        # TEL for TelephoneInitiated
+        # Required  Customer Type – (NACHA Transaction Class)
+        # CCD for Commercial, Merchant Initiated
+        # PPD for Personal, Merchant Initiated
+        # WEB for Internet, Consumer Initiated
+        # RCK for Returned Checks
+        # ARC for Account Receivable Entry
+        # TEL for TelephoneInitiated
         post[:C_customer_type] = "WEB"
 
-        # Optional  10  Digit Originator  ID – Assigned  By for  each transaction  class  or  business  purpose. If  not provided, the default Originator ID for the specific  Customer Type will be applied. 
+        # Optional  10  Digit Originator  ID – Assigned  By for  each transaction  class  or  business  purpose. If  not provided, the default Originator ID for the specific  Customer Type will be applied.
         post[:C_originator_id] = options[:originator_id]
 
-        # Optional  Transaction Addenda
+        # Optional  Transaction Addenda
         post[:T_addenda] = options[:addenda]
 
-        # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes ) 
+        # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes )
         post[:C_ssn] = options[:ssn].to_s.gsub(/[^\d]/, '')
 
         post[:C_dl_state_code] = options[:drivers_license_state]
@@ -136,8 +158,8 @@ module ActiveMerchant #:nodoc:
         date.respond_to?(:strftime) ? date.strftime("%m/%d/%Y") : date
       end
 
-      # DDA for Checking
-      # SAV for Savings 
+      # DDA for Checking
+      # SAV for Savings
       def account_type(check)
         case check.account_type
         when 'checking' then 'DDA'
