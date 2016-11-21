@@ -14,6 +14,7 @@
 * Credorax: Map order_id to field H9 [curiousepic]
 * Authorize.net: Remove duplicate country GB [shasum]
 * PayU Latam: Add processWithoutCvv2 field [shasum]
+* Fat Zebra: De-nest soft descriptor fields [curiousepic]
 
 == Version 1.61.0 (November 7, 2016)
 * Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]
