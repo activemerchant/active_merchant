@@ -72,6 +72,7 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'AD', name: 'Andorra', alpha3: 'AND', numeric: '020' },
       { alpha2: 'AO', name: 'Angola', alpha3: 'AGO', numeric: '024' },
       { alpha2: 'AI', name: 'Anguilla', alpha3: 'AIA', numeric: '660' },
+      { alpha2: 'AQ', name: 'Antarctica', alpha3: 'ATA', numeric: '010' },
       { alpha2: 'AG', name: 'Antigua and Barbuda', alpha3: 'ATG', numeric: '028' },
       { alpha2: 'AR', name: 'Argentina', alpha3: 'ARG', numeric: '032' },
       { alpha2: 'AM', name: 'Armenia', alpha3: 'ARM', numeric: '051' },
@@ -90,6 +91,7 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'BM', name: 'Bermuda', alpha3: 'BMU', numeric: '060' },
       { alpha2: 'BT', name: 'Bhutan', alpha3: 'BTN', numeric: '064' },
       { alpha2: 'BO', name: 'Bolivia', alpha3: 'BOL', numeric: '068' },
+      { alpha2: 'BQ', name: 'Bonaire, Sint Eustatius and Saba', alpha3: 'BES', numeric: '535' },
       { alpha2: 'BA', name: 'Bosnia and Herzegovina', alpha3: 'BIH', numeric: '070' },
       { alpha2: 'BW', name: 'Botswana', alpha3: 'BWA', numeric: '072' },
       { alpha2: 'BV', name: 'Bouvet Island', alpha3: 'BVD', numeric: '074' },
@@ -262,15 +264,17 @@ module ActiveMerchant #:nodoc:
       { alpha2: 'SC', name: 'Seychelles', alpha3: 'SYC', numeric: '690' },
       { alpha2: 'SL', name: 'Sierra Leone', alpha3: 'SLE', numeric: '694' },
       { alpha2: 'SG', name: 'Singapore', alpha3: 'SGP', numeric: '702' },
+      { alpha2: 'SX', name: 'Sint Maarten', alpha3: 'SXM', numeric: '534' },
       { alpha2: 'SK', name: 'Slovakia', alpha3: 'SVK', numeric: '703' },
       { alpha2: 'SI', name: 'Slovenia', alpha3: 'SVN', numeric: '705' },
       { alpha2: 'SB', name: 'Solomon Islands', alpha3: 'SLB', numeric: '090' },
       { alpha2: 'SO', name: 'Somalia', alpha3: 'SOM', numeric: '706' },
       { alpha2: 'ZA', name: 'South Africa', alpha3: 'ZAF', numeric: '710' },
       { alpha2: 'GS', name: 'South Georgia and the South Sandwich Islands', alpha3: 'SGS', numeric: '239' },
+      { alpha2: 'SS', name: 'South Sudan', alpha3: 'SSD', numeric: '728' },
       { alpha2: 'ES', name: 'Spain', alpha3: 'ESP', numeric: '724' },
       { alpha2: 'LK', name: 'Sri Lanka', alpha3: 'LKA', numeric: '144' },
-      { alpha2: 'SD', name: 'Sudan', alpha3: 'SDN', numeric: '736' },
+      { alpha2: 'SD', name: 'Sudan', alpha3: 'SDN', numeric: '729' },
       { alpha2: 'SR', name: 'Suriname', alpha3: 'SUR', numeric: '740' },
       { alpha2: 'SJ', name: 'Svalbard and Jan Mayen', alpha3: 'SJM', numeric: '744' },
       { alpha2: 'SZ', name: 'Swaziland', alpha3: 'SWZ', numeric: '748' },
@@ -321,7 +325,7 @@ module ActiveMerchant #:nodoc:
         country_code = CountryCode.new(name)
         country = COUNTRIES.detect{|c| c[country_code.format] == upcase_name }
       else
-        country = COUNTRIES.detect{|c| c[:name] == name }
+        country = COUNTRIES.detect{|c| c[:name].upcase == name.upcase }
       end
       raise InvalidCountryCodeError, "No country could be found for the country #{name}" if country.nil?
       Country.new(country.dup)

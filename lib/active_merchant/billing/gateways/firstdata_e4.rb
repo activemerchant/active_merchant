@@ -129,6 +129,11 @@ module ActiveMerchant #:nodoc:
         commit(:store, build_store_request(credit_card, options), credit_card)
       end
 
+      def verify_credentials
+        response = void("0")
+        response.message != "Unauthorized Request. Bad or missing credentials."
+      end
+
       def supports_scrubbing?
         true
       end

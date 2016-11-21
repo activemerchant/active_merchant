@@ -22,15 +22,15 @@ module ActiveMerchant
 
       def purchase(money, payment_method, options={})
         MultiResponse.run do |r|
-          r.process { commit(login_request) }
-          r.process { commit(purchase_request(money, payment_method, r.params["response_sessionid"], options)) }
+          r.process { login }
+          r.process { commit(purchase_request(money, payment_method, r.params["response_sessionid"], options), :response_transactionref) }
         end
       end
 
       def refund(money, authorization, options={})
         MultiResponse.run do |r|
-          r.process { commit(login_request) }
-          r.process { commit(refund_request(money, authorization, r.params["response_sessionid"])) }
+          r.process { login }
+          r.process { commit(refund_request(money, authorization, r.params["response_sessionid"]), :response_creditrequestreceived) }
         end
       end
 
@@ -89,10 +89,10 @@ module ActiveMerchant
         end
       end
 
-      def commit(request)
+      def commit(request, success_field_name)
         response = parse(ssl_post(url, request, headers))
+        succeeded = success_from(response, success_field_name)
 
-        succeeded = success_from(response)
         Response.new(
           succeeded,
           message_from(succeeded, response),
@@ -102,8 +102,8 @@ module ActiveMerchant
         )
       end
 
-      def success_from(response)
-        !response[:response_errors]
+      def success_from(response, success_field_name)
+        !empty?(response[success_field_name])
       end
 
       def message_from(succeeded, response)
@@ -250,6 +250,10 @@ module ActiveMerchant
 
       def add_client_id(doc)
         doc.ClientID(@options[:client_id])
+      end
+
+      def login
+        commit(login_request, :response_sessionid)
       end
 
       def login_request

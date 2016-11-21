@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
         # Set the default partner to PayPal
         base.partner = 'PayPal'
 
-        base.supported_countries = ['US', 'CA', 'SG', 'AU']
+        base.supported_countries = ['US', 'CA', 'NZ', 'AU']
 
         base.class_attribute :timeout
         base.timeout = 60

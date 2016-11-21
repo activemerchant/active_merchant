@@ -209,6 +209,15 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_success @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = NmiGateway.new(login: 'unknown', password: 'unknown')
+    assert !gateway.verify_credentials
+    gateway = NmiGateway.new(login: fixtures(:nmi)[:login], password: 'unknown')
+    assert !gateway.verify_credentials
+  end
+
   def test_card_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

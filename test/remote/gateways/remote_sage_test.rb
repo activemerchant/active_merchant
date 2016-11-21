@@ -192,4 +192,26 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'SECURITY VIOLATION', response.message
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visa, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@visa.number, transcript)
+    assert_scrubbed(@visa.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_transcript_scrubbing_store
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@visa, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@visa.number, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
 end

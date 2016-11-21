@@ -162,6 +162,19 @@ module ActiveMerchant #:nodoc:
         commit('res_update_cc', post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<store_id>).+(</store_id>)), '\1[FILTERED]\2').
+          gsub(%r((<api_token>).+(</api_token>)), '\1[FILTERED]\2').
+          gsub(%r((<pan>).+(</pan>)), '\1[FILTERED]\2').
+          gsub(%r((<cvd_value>).+(</cvd_value>)), '\1[FILTERED]\2').
+          gsub(%r((<cavv>).+(</cavv>)), '\1[FILTERED]\2')
+      end
+
       private # :nodoc: all
 
       def expdate(creditcard)

@@ -163,4 +163,11 @@ class RemotePaymillTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = PaymillGateway.new(public_key: "unknown_key", private_key: "unknown_key")
+    assert !gateway.verify_credentials
+  end
+
 end

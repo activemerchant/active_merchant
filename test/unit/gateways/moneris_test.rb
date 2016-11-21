@@ -245,7 +245,7 @@ class MonerisTest < Test::Unit::TestCase
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', avs_enabled: true)
 
     billing_address = address(address1: "1234 Anystreet", address2: "")
-    stub_comms do
+    stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: "1")
     end.check_request do |endpoint, data, headers|
       assert_match(%r{avs_street_number>1234<}, data)
@@ -257,7 +257,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_avs_enabled_but_not_provided
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', avs_enabled: true)
 
-    stub_comms do
+    stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
     end.check_request do |endpoint, data, headers|
       assert_no_match(%r{avs_street_number>}, data)
@@ -323,6 +323,14 @@ class MonerisTest < Test::Unit::TestCase
       assert_match "<pos_code>00</pos_code>", data
       assert_match "<track2>Track Data</track2>", data
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
   end
 
   private
@@ -569,5 +577,61 @@ class MonerisTest < Test::Unit::TestCase
 
   def xml_capture_fixture
    '<request><store_id>store1</store_id><api_token>yesguy</api_token><preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></preauth></request>'
+  end
+
+  def pre_scrub
+    <<-pre_scrub
+      opening connection to esqa.moneris.com:443...
+      opened
+      starting SSL for esqa.moneris.com:443...
+      SSL established
+      <- "POST /gateway2/servlet/MpgRequest HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: esqa.moneris.com\r\nContent-Length: 176\r\n\r\n"
+      <- "<request><store_id>store1</store_id><api_token>yesguy</api_token><res_add_cc><pan>4242424242424242</pan><expdate>1705</expdate><crypt_type>7</crypt_type></res_add_cc></request>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 16 May 2016 02:35:23 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/html\r\n"
+      -> "Set-Cookie: TS011902c9=01649737b1334cfbe6b21538231fb4ad142215050461293f17e2dc76d7821e71c2f25055ea; Path=/\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "391\r\n"
+      reading 913 bytes...
+      -> "<?xml version=\"1.0\"?><response><receipt><DataKey>LAmXQeZwdtzUtz1QI1vF6etR2</DataKey><ReceiptId>null</ReceiptId><ReferenceNum>null</ReferenceNum><ResponseCode>001</ResponseCode><ISO>null</ISO><AuthCode>null</AuthCode><Message>Successfully registered CC details.</Message><TransTime>22:35:23</TransTime><TransDate>2016-05-15</TransDate><TransType>null</TransType><Complete>true</Complete><TransAmount>null</TransAmount><CardType>null</CardType><TransID>null</TransID><TimedOut>false</TimedOut><CorporateCard>null</CorporateCard><RecurSuccess>null</RecurSuccess><AvsResultCode>null</AvsResultCode><CvdResultCode>null</CvdResultCode><ResSuccess>true</ResSuccess><PaymentType>cc</PaymentType><IsVisaDebit>null</IsVisaDebit><ResolveData><cust_id></cust_id><phone></phone><email></email><note></note><crypt_type>7</crypt_type><masked_pan>4242***4242</masked_pan><expdate>1705</expdate></ResolveData></receipt></response>"
+      read 913 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    pre_scrub
+  end
+
+  def post_scrub
+    <<-post_scrub
+      opening connection to esqa.moneris.com:443...
+      opened
+      starting SSL for esqa.moneris.com:443...
+      SSL established
+      <- "POST /gateway2/servlet/MpgRequest HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: esqa.moneris.com\r\nContent-Length: 176\r\n\r\n"
+      <- "<request><store_id>[FILTERED]</store_id><api_token>[FILTERED]</api_token><res_add_cc><pan>[FILTERED]</pan><expdate>1705</expdate><crypt_type>7</crypt_type></res_add_cc></request>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 16 May 2016 02:35:23 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/html\r\n"
+      -> "Set-Cookie: TS011902c9=01649737b1334cfbe6b21538231fb4ad142215050461293f17e2dc76d7821e71c2f25055ea; Path=/\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "391\r\n"
+      reading 913 bytes...
+      -> "<?xml version=\"1.0\"?><response><receipt><DataKey>LAmXQeZwdtzUtz1QI1vF6etR2</DataKey><ReceiptId>null</ReceiptId><ReferenceNum>null</ReferenceNum><ResponseCode>001</ResponseCode><ISO>null</ISO><AuthCode>null</AuthCode><Message>Successfully registered CC details.</Message><TransTime>22:35:23</TransTime><TransDate>2016-05-15</TransDate><TransType>null</TransType><Complete>true</Complete><TransAmount>null</TransAmount><CardType>null</CardType><TransID>null</TransID><TimedOut>false</TimedOut><CorporateCard>null</CorporateCard><RecurSuccess>null</RecurSuccess><AvsResultCode>null</AvsResultCode><CvdResultCode>null</CvdResultCode><ResSuccess>true</ResSuccess><PaymentType>cc</PaymentType><IsVisaDebit>null</IsVisaDebit><ResolveData><cust_id></cust_id><phone></phone><email></email><note></note><crypt_type>7</crypt_type><masked_pan>4242***4242</masked_pan><expdate>1705</expdate></ResolveData></receipt></response>"
+      read 913 bytes
+      reading 2 bytes...
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    post_scrub
   end
 end

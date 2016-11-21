@@ -84,6 +84,7 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_CODES = {
         "AUD" => '036',
+        "BRL" => '986',
         "CAD" => '124',
         "CZK" => '203',
         "DKK" => '208',
@@ -103,6 +104,7 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_EXPONENTS = {
         "AUD" => '2',
+        "BRL" => '2',
         "CAD" => '2',
         "CZK" => '2',
         "DKK" => '2',
@@ -177,7 +179,7 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
-      SENSITIVE_FIELDS = [:account_num]
+      SENSITIVE_FIELDS = [:account_num, :cc_account_num]
 
       def initialize(options = {})
         requires!(options, :merchant_id)
@@ -291,6 +293,19 @@ module ActiveMerchant #:nodoc:
         options = {:customer_profile_action => DELETE, :customer_ref_num => customer_ref_num}
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<OrbitalConnectionUsername>).+(</OrbitalConnectionUsername>)), '\1[FILTERED]\2').
+          gsub(%r((<OrbitalConnectionPassword>).+(</OrbitalConnectionPassword>)), '\1[FILTERED]\2').
+          gsub(%r((<AccountNum>).+(</AccountNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
+          gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2')
       end
 
       private

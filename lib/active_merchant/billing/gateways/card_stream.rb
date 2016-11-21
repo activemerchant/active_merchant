@@ -25,6 +25,7 @@ module ActiveMerchant #:nodoc:
         "HKD" => "344",
         "ICK" => "352",
         "JPY" => "392",
+        "MXN" => "484",
         "NOK" => "578",
         "NZD" => "554",
         "SEK" => "752",
@@ -87,6 +88,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, credit_card_or_reference, options = {})
         post = {}
+        add_pair(post, :captureDelay, 0)
         add_amount(post, money, options)
         add_invoice(post, credit_card_or_reference, money, options)
         add_credit_card_or_reference(post, credit_card_or_reference)
