@@ -1,174 +1,170 @@
-#
-# Move that class to activemerchant gem
-#
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class RecurlyGateway < Gateway
-      preference :api_key,   :string
-      preference :subdomain, :string
-      preference :currency,  :string, :default => 'USD'
+      include Empty
 
-      attr_accessible :preferred_api_key, :preferred_subdomain, :preferred_currency
+      API_VERSION = '2.4'.freeze
 
-      after_find :update_recurly_config
+      self.default_currency = 'USD'
+      self.money_format = :cents
+      self.supported_countries = ['US']
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.homepage_url = 'https://recurly.com/'
+      self.display_name = 'Recurly'
 
-      def provider_class
-        self.class
+      def initialize(options = {})
+        requires!(options, :subdomain, :api_key, :public_key)
+        super
       end
 
-      def payment_profiles_supported?
+      def purchase(amount, payment_method, options={})
+        post = {}
+        add_amount(post, amount, options)
+        add_payment_method(post, payment_method, options)
+        add_customer_data(post, options)
+        type = subscription?(options) ? 'subscriptions' : 'transactions'
+        commit(type, post)
+      end
+
+      def verify_credentials
+        response = void("0")
+        response.message != "Authentication Failed"
+      end
+
+      def supports_scrubbing?
         true
       end
 
-      # Recurly doesn't support authorize
-      def authorize(amount, creditcard, gateway_options)
-        raise "Recurly doesn't support authorize"
-      end
-
-      def purchase(amount, creditcard, gateway_options)
-        create_transaction(amount, creditcard, gateway_options)
-      end
-
-      # Recurly doesn't support capture
-      def capture(authorization, creditcard, gateway_options)
-        raise "Recurly doesn't support capture"
-      end
-
-      def credit(amount, creditcard, response_code, gateway_options)
-        transaction = Recurly::Transaction.find(response_code)
-        transaction.refund(amount)
-
-        if transaction.status == 'success'
-          message = 'refund success!'
-        else
-          message = 'refund failed!'
-        end
-
-        ActiveMerchant::Billing::Response.new(transaction.status == 'success', message, {},
-          :authorization => transaction.uuid,
-          :avs_result => {:street_match => transaction.avs_result }
-        )
-      end
-
-      def void(response_code, creditcard, gateway_options)
-        transaction = Recurly::Transaction.find(response_code)
-
-        if transaction.refund
-          message = 'void success!'
-        else
-          message = 'void failed!'
-        end
-
-        ActiveMerchant::Billing::Response.new(transaction.status == 'void', message, {},
-          :authorization => transaction.uuid,
-          :avs_result => {:street_match => transaction.avs_result }
-        )
-      end
-
-      def create_profile(payment)
-        return unless payment.source.gateway_customer_profile_id.nil?
-
-        begin
-          account = Recurly::Account.find(payment.order.user_id)
-          account.billing_info = billing_info_for(payment).merge(address_info_for(payment))
-          account.billing_info.save
-        rescue Recurly::Resource::NotFound => e
-          account = Recurly::Account.create(
-            :account_code => payment.order.user_id,
-            :email        => payment.order.email,
-            :first_name   => payment.order.bill_address.try(:firstname),
-            :last_name    => payment.order.bill_address.try(:lastname),
-            :address      => address_info_for(payment),
-            :billing_info => billing_info_for(payment)
-          )
-        end
-
-        if account.errors.present?
-          payment.send(:gateway_error, account.errors.full_messages.join('. '))
-        else
-          payment.source.update_attributes!(:gateway_customer_profile_id => account.account_code)
-        end
-
-      rescue Recurly::Transaction::Error => e
-        payment.send(:gateway_error, e.message)
+      def scrub(transcript)
+        transcript.
+          gsub(%r((password=)\w+), '\1[FILTERED]').
+          gsub(%r((number=)\d+), '\1[FILTERED]').
+          gsub(%r((cvv=)\d+), '\1[FILTERED]').
+          gsub(%r((verification_value=)\d+), '\1[FILTERED]')
       end
 
       private
 
-      def update_recurly_config
-        Recurly.subdomain        =  preferred_subdomain
-        Recurly.api_key          =  preferred_api_key
-        Recurly.default_currency =  preferred_currency
-      end
-
-      # Create a transaction on a creditcard
-      def create_transaction(amount, creditcard, options = {})
-        account = Recurly::Account.find(creditcard.gateway_customer_profile_id)
-
-        transaction = account.transactions.create(
-          :amount_in_cents => amount,
-          :currency        => preferred_currency
-        )
-
-        if transaction.errors
-          message = transaction.errors.full_messages.join('. ')
+      def add_amount(post, money, options)
+        if subscription?(options)
+          post[:plan_code] = options[:plan_code]
         else
-          message = 'transaction success!'
+          post[:amount_in_cents] = amount(money) unless subscription?(options)
         end
+        post[:currency] = options[:currency] || currency(money)
+      end
 
-        ActiveMerchant::Billing::Response.new(transaction.status == 'success', message, {},
-          :authorization => transaction.uuid,
-          :avs_result => {:street_match => transaction.avs_result }
+      def add_customer_data(post, options)
+        %i(account_code first_name last_name).each do |option|
+          post[:account][option] = options[option] if options[option].present?
+        end
+        if(billing_address = options[:billing_address] || options[:address])
+          post[:account][:billing_info].merge!(billing_address)
+        end
+        if(shipping_address = options[:shipping_address])
+          post[:shipping_address] = billing_address
+        end
+      end
+
+      def add_payment_method(post, payment_method, options)
+        post[:account] = {}
+        post[:account][:billing_info] = {}
+        if(payment_method.is_a?(String))
+          post[:account][:billing_info][:token_id] ||= payment_method
+        else
+          post[:account][:billing_info][:number] = payment_method.number
+          post[:account][:billing_info][:month] = payment_method.month
+          post[:account][:billing_info][:year] = payment_method.year
+          unless empty?(payment_method.verification_value)
+            post[:account][:billing_info][:verification_value] = payment_method.verification_value
+          end
+        end
+      end
+
+      #
+      # Adds tags to xml recursive
+      #
+      def add_tag_recursive(xml, data)
+        data.each do |key, value|
+          if data[key].is_a?(Hash)
+            xml.tag!(key) do
+              add_tag_recursive(xml, data[key])
+            end
+          else
+            xml.tag!(key, value.is_a?(String)? CGI.escape(value) : value)
+          end
+        end
+      end
+
+      def authorization_from(response)
+        response[:uuid]
+      end
+
+      def build_xml_request(action, data)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag!(action.to_sym) do
+          add_tag_recursive(xml, data)
+        end
+      end
+
+      def commit(endpoint, params = {})
+        response = parse(ssl_post(url + endpoint, build_xml_request(endpoint.singularize, params), headers))
+        Response.new(
+          success_from(response),
+          message_from(response),
+          response,
+          authorization: authorization_from(response),
+          test: test?
         )
       end
 
-      def address_info_for(payment)
-        address = payment.order.bill_address
-
-        info = {
-          address1: address.address1,
-          address2: address.address2,
-          city: address.city,
-          zip: address.zipcode
+      def headers
+        {
+          'Authorization' => 'Basic ' + Base64.encode64(@options[:api_key]),
+          'Content-Type'  => 'application/xml; charset=utf-8',
+          'Accept' => 'application/xml',
+          'X-Api-Version' => API_VERSION
         }
-
-        if country = address.country
-          info.merge!(country: country.name)
-        end
-
-        if state = address.state
-          info.merge!(state: state.name)
-        end
-
-        info
       end
 
-      def billing_info_for(payment)
-        address = payment.order.bill_address
-        card    = payment.source
+      def message_from(response)
+        response[:status]
+      end
 
-        info = {
-          first_name: address.firstname,
-          last_name:  address.lastname,
-          address1:   address.address1,
-          address2:   address.address2,
-          city:       address.city,
-          zip:        address.zipcode,
-          number:     card.number,
-          month:      card.month,
-          year:       card.year,
-          verification_value: card.verification_value
-        }
+      def parse(body)
+        return {} if body.blank?
+        xml = REXML::Document.new(body)
 
-        if country = address.country
-          info.merge!(country: country.name)
+        response = {}
+        xml.root.elements.to_a.each do |node|
+          parse_element(response, node)
+        end
+        response
+      end
+
+      def parse_element(response, node)
+        if node.has_attributes?
+          node.attributes.each{|name, value| response["#{node.name}_#{name}".underscore.to_sym] = value }
         end
 
-        if state = address.state
-          info.merge!(state: state.name)
+        if node.has_elements?
+          node.elements.each{|element| parse_element(response, element) }
+        else
+          response[node.name.underscore.to_sym] = node.text
         end
+      end
 
-        info
+      def subscription?(options)
+        options[:plan_code].present?
+      end
+
+      def success_from(response)
+        response[:uuid].present?
+      end
+
+      def url
+        "https://#{@options[:subdomain]}.recurly.com/v2/"
       end
     end
   end
