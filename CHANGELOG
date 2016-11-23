@@ -17,6 +17,7 @@
 * Fat Zebra: De-nest soft descriptor fields [curiousepic]
 * Credorax: Only pass c5 field for billing address1 [davidsantoso]
 * Orbital: Add support for CLP currency [curiousepic]
+* Authorize.net: Add line item fields and additional transaction settings [shasum]
 
 == Version 1.61.0 (November 7, 2016)
 * Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]
