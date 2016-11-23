@@ -159,6 +159,7 @@ module ActiveMerchant
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
+            add_line_items(xml, options)
             add_settings(xml, payment, options)
             add_user_fields(xml, amount, options)
           end
@@ -232,6 +233,7 @@ module ActiveMerchant
           add_invoice(xml, options)
           add_customer_data(xml, payment, options)
           add_market_type_device_type(xml, payment, options)
+          add_line_items(xml, options)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
         end
@@ -345,6 +347,23 @@ module ActiveMerchant
         end
       end
 
+      def add_line_items(xml, options)
+        return unless options[:line_items]
+        xml.lineItems do
+          options[:line_items].each do |line_item|
+            xml.lineItem do
+              line_item.each do |key, value|
+                xml.send(camel_case_lower(key), value)
+              end
+            end
+          end
+        end
+      end
+
+      def camel_case_lower(key)
+        String(key).split('_').inject([]){ |buffer,e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
+      end
+
       def add_settings(xml, source, options)
         xml.transactionSettings do
           if options[:recurring]
@@ -364,6 +383,18 @@ module ActiveMerchant
           elsif self.class.duplicate_window
             ActiveMerchant.deprecated "Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead."
             set_duplicate_window(xml, self.class.duplicate_window)
+          end
+          if options[:email_customer]
+            xml.setting do
+              xml.settingName("emailCustomer")
+              xml.settingValue("true")
+            end
+          end
+          if options[:header_email_receipt]
+            xml.setting do
+              xml.settingName("headerEmailReceipt")
+              xml.settingValue("true")
+            end
           end
         end
       end
@@ -584,7 +615,6 @@ module ActiveMerchant
           end
         end
       end
-
 
       def names_from(payment_source, address, options)
         if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)

@@ -28,6 +28,25 @@ class AuthorizeNetTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @additional_options = {
+      line_items: [
+        {
+          item_id: "1",
+          name: "mug",
+          description: "coffee",
+          quantity: "100",
+          unit_price: "10"
+        },
+        {
+          item_id: "2",
+          name: "vase",
+          description: "floral",
+          quantity: "200",
+          unit_price: "20"
+        }
+      ]
+    }
   end
 
   def test_add_swipe_data_with_bad_data
@@ -274,10 +293,49 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_passes_partial_auth
     stub_comms do
-      @gateway.purchase(100, credit_card, disable_partial_auth: true)
+      @gateway.purchase(@amount, credit_card, disable_partial_auth: true)
     end.check_request do |endpoint, data, headers|
       assert_match(/<settingName>allowPartialAuth<\/settingName>/, data)
       assert_match(/<settingValue>false<\/settingValue>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_email_customer
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, email_customer: true)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<settingName>emailCustomer<\/settingName>/, data)
+      assert_match(/<settingValue>true<\/settingValue>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_header_email_receipt
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, header_email_receipt: true)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<settingName>headerEmailReceipt<\/settingName>/, data)
+      assert_match(/<settingValue>true<\/settingValue>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_line_items
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, @options.merge(@additional_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<lineItems>/, data)
+      assert_match(/<lineItem>/, data)
+      assert_match(/<itemId>#{@additional_options[:line_items][0][:item_id]}<\/itemId>/, data)
+      assert_match(/<name>#{@additional_options[:line_items][0][:name]}<\/name>/, data)
+      assert_match(/<description>#{@additional_options[:line_items][0][:description]}<\/description>/, data)
+      assert_match(/<quantity>#{@additional_options[:line_items][0][:quantity]}<\/quantity>/, data)
+      assert_match(/<unitPrice>#{@additional_options[:line_items][0][:unit_price]}<\/unitPrice>/, data)
+      assert_match(/<\/lineItem>/, data)
+      assert_match(/<itemId>#{@additional_options[:line_items][1][:item_id]}<\/itemId>/, data)
+      assert_match(/<name>#{@additional_options[:line_items][1][:name]}<\/name>/, data)
+      assert_match(/<description>#{@additional_options[:line_items][1][:description]}<\/description>/, data)
+      assert_match(/<quantity>#{@additional_options[:line_items][1][:quantity]}<\/quantity>/, data)
+      assert_match(/<unitPrice>#{@additional_options[:line_items][1][:unit_price]}<\/unitPrice>/, data)
+      assert_match(/<\/lineItems>/, data)
     end.respond_with(successful_purchase_response)
   end
 
