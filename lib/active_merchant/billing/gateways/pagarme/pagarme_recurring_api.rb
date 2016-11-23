@@ -91,21 +91,25 @@ module ActiveMerchant #:nodoc:
 
       def invoices(subscription_id)
         response = service_pagarme.invoices_by_subscription(subscription_id)
+
         Response.new(true, nil, {invoices:  invoices_to_response(response)})
       end
 
       def payments(invoice_id)
         response = service_pagarme.payments_from_invoice(invoice_id)
+
         Response.new(true, nil, { payments: payments_to_response(response) })
       end
 
-      def payment(invoice_id, payment_id)
-        response = service_pagarme.payment_from_invoice(invoice_id, payment_id)
+      def payment(payment_id)
+        response = service_pagarme.payment(payment_id)
+
         Response.new(true, nil, { payment: payment_to_response(response) })
       end
 
       def subscription_details(subscription_code)
         response = PagarMe::Subscription.find_by_id(subscription_code)
+
         Response.new(true, nil, subscription_to_response(response))
       end
 
