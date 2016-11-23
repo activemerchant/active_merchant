@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
           return {} unless response
 
           {
-              id: response['id'],
+              id: response["subscription_id"],
               amount: response['amount'],
               created_at: response['date_created'],
               action: INVOICE_STATUS_MAP[response['status']],
@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
           {
               object: response['object'],
               id: response['id'],
-              action: INVOICE_STATUS_MAP[response['status']],
+              action: PAYMENT_STATUS_MAP[response['status']],
               amount: response['amount'],
               fee: response['fee'],
               installment: response['installment'],
