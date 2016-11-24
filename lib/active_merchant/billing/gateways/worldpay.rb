@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
 
         amount_hash = {
-          :value => amount(money),
+          :value => localized_amount(money, currency),
           'currencyCode' => currency,
           'exponent' => non_fractional_currency?(currency) ? 0 : 2
         }
