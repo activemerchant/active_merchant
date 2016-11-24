@@ -27,10 +27,11 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         requires!(options, :username)
-        @username = options[:username]
-        @pagarme_service = PagarmeService.new(@username)
 
-        PagarMe.api_key = @username
+        @username        = options[:username]
+        @pagarme_service = PagarmeService.new(@username)
+        PagarMe.api_key  = @username
+
         super
       end
 

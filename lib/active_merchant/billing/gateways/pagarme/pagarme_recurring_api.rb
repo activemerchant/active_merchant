@@ -108,9 +108,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def subscription_details(subscription_code)
-        response = PagarMe::Subscription.find_by_id(subscription_code)
+        response     = PagarMe::Subscription.find_by_id(subscription_code)
+        subscription = subscription_to_response(response)
 
-        Response.new(true, nil, subscription_to_response(response))
+        Response.new(true, nil, subscription, test: test?,
+          subscription_action: subscription[:action],
+          next_charge_at: subscription[:current_period_end])
       end
 
       private
