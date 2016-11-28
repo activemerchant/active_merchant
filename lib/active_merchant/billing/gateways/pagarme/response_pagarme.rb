@@ -298,7 +298,11 @@ module ActiveMerchant #:nodoc:
         end
 
         def document_number_formatted(legal_identifier)
-          legal_identifier.strip.gsub(/\D/, '')
+          if legal_identifier.present?
+            legal_identifier
+          else
+            '000.000.000-00'
+          end.strip.gsub(/\D/, '')
         end
       end
     end
