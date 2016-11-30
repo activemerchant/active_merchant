@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_soft_descriptor(post, options={})
-        post[:soft_descriptor] = options["extras"].try(:[], "soft_descriptor")
+        # post[:soft_descriptor] = options["extras"].try(:[], "soft_descriptor")
       end
 
       def add_payment_method(post, payment_method, options)
