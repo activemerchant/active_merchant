@@ -11,6 +11,11 @@
 # Paste any required PEM certificates after the pem key.
 #
 
+adyen:
+  username: ''
+  password: ''
+  merchant_account: ''
+
 allied_wallet:
   site_id: site_id
   merchant_id: merchant_id
