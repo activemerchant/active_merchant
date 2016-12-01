@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
 
           Response.new(response.success?, response.message,
             subscription_to_response(response.params), response_options)
-        rescue PagarMe::ResponseError => error
+        rescue => error
           Response.new(false, error.message, {}, test: test?)
         end
       end
