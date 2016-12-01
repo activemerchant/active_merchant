@@ -137,7 +137,10 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer(post, options={})
-        post[:customer] = customer_params(options['customer'], options['address'])
+        customer = options[:customer] || options['customer']
+        address  = options[:address] || options['address']
+
+        post[:customer] = customer_params(customer, address)
       end
 
       def add_amount(post, money)
@@ -158,8 +161,8 @@ module ActiveMerchant #:nodoc:
         else
           post[:payment_method] = 'credit_card'
 
-          if options["card_id"].present?
-            post[:card_id] = options["card_id"]
+          if options[:card_id].present?
+            post[:card_id] = options[:card_id]
           elsif options["card_hash"].present?
             post[:card_hash] = options["card_hash"]
           else
