@@ -311,10 +311,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_passes_header_email_receipt
     stub_comms do
-      @gateway.purchase(@amount, credit_card, header_email_receipt: true)
+      @gateway.purchase(@amount, credit_card, header_email_receipt: "yet another field")
     end.check_request do |endpoint, data, headers|
       assert_match(/<settingName>headerEmailReceipt<\/settingName>/, data)
-      assert_match(/<settingValue>true<\/settingValue>/, data)
+      assert_match(/<settingValue>yet another field<\/settingValue>/, data)
     end.respond_with(successful_purchase_response)
   end
 
