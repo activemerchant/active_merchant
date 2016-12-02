@@ -393,7 +393,7 @@ module ActiveMerchant
           if options[:header_email_receipt]
             xml.setting do
               xml.settingName("headerEmailReceipt")
-              xml.settingValue("true")
+              xml.settingValue(options[:header_email_receipt])
             end
           end
         end
