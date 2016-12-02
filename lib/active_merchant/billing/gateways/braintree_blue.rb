@@ -171,8 +171,17 @@ module ActiveMerchant #:nodoc:
       end
       alias_method :delete, :unstore
 
+      def network_tokenization_supported
+        result = Braintree::MerchantGateway.new(@braintree_gateway).provision_raw_apple_pay
+        if result.success?
+          result.supported_networks.map { |brand| format_card_brand(brand) }
+        else
+          []
+        end
+      end
+
       def supports_network_tokenization?
-        true
+        network_tokenization_supported.present?
       end
 
       def verify_credentials
@@ -609,6 +618,19 @@ module ActiveMerchant #:nodoc:
         end
 
         parameters
+      end
+
+      def format_card_brand(card_brand)
+        case card_brand
+        when 'visa'
+          :visa
+        when 'mastercard'
+          :master
+        when 'amex'
+          :american_express
+        when 'discover'
+          :discover
+        end
       end
     end
   end

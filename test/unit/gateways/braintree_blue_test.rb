@@ -646,8 +646,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal "transaction_id", response.authorization
   end
 
-  def test_supports_network_tokenization
+  def test_supports_network_tokenization_true
+    @gateway.stubs(network_tokenization_supported: [:visa])
     assert_instance_of TrueClass, @gateway.supports_network_tokenization?
+  end
+
+  def test_supports_network_tokenization_false
+    @gateway.stubs(network_tokenization_supported: [])
+    assert_instance_of FalseClass, @gateway.supports_network_tokenization?
   end
 
   def test_unsuccessful_transaction_returns_id_when_available
