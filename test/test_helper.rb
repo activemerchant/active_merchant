@@ -157,6 +157,7 @@ module ActiveMerchant
         :first_name => 'Longbob',
         :last_name => 'Longsen',
         :verification_value => options[:verification_value] || '123',
+        :email => 'Longbob.Longse@example.com',
         :brand => 'visa'
       }.update(options)
 
