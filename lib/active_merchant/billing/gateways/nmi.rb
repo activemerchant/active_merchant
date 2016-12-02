@@ -130,7 +130,8 @@ module ActiveMerchant #:nodoc:
         if options[:recurring]
           post[:billing_method] = 'recurring'
           post[:recurring] = options[:recurring]
-          post[:plan_id] = options[:plan_id] if options[:plan_id]
+          post[:plan_id] = options[:plan_id] if options[:plan_id].present?
+          post[:start_date] = options[:start_date] if options[:start_date].present?
         end
         if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
           post[:dup_seconds] = dup_seconds
@@ -211,6 +212,9 @@ module ActiveMerchant #:nodoc:
         params[action == "add_customer" ? :customer_vault : :type] = action
         params[:username] = @options[:login]
         params[:password] = @options[:password]
+
+        puts '!!!!!!!!!!!!!!!!!!!!!!!!!!!! commit'
+        puts post_data(action, params)
 
         raw_response = ssl_post(url, post_data(action, params), headers)
         response = parse(raw_response)
