@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
         add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
-        add_payment_method(doc, payment_method)
+        add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
         add_debt_repayment(doc, options)
@@ -184,10 +184,11 @@ module ActiveMerchant #:nodoc:
         doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
-      def add_payment_method(doc, payment_method)
+      def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
+            doc.expDate(options[:expiration_date]) if options[:expiration_date].present?
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
