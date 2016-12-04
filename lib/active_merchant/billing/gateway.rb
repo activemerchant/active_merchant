@@ -65,10 +65,10 @@ module ActiveMerchant #:nodoc:
       #
       # :incorrect_number - Card number does not comply with ISO/IEC 7812 numbering standard
       # :invalid_number - Card number was not matched by processor
-      # :invalid_expiry_date - Expiry date deos not match correct formatting
+      # :invalid_expiry_date - Expiry date does not match correct formatting
       # :invalid_cvc - Security codes does not match correct format (3-4 digits)
       # :expired_card - Card number is expired
-      # :incorrect_cvc - Secerity code was not matched by the processor
+      # :incorrect_cvc - Security code was not matched by the processor
       # :incorrect_zip - Zip code is not in correct format
       # :incorrect_address - Billing address info was not matched by the processor
       # :incorrect_pin - Card PIN is incorrect
