@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
 * CitrusPay: Add 3DSecureId field [davidsantoso]
 * CyberSource: Only get alpha2 country code when it's a known country [bruno] #2238
