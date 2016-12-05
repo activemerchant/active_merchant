@@ -84,7 +84,6 @@ class FatZebraTest < Test::Unit::TestCase
 
     assert_equal '001-P-12345AA', response.authorization
     assert response.test?
-
   end
 
   def test_successful_authorization

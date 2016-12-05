@@ -474,7 +474,7 @@ module ActiveMerchant #:nodoc:
 
       def add_mdd_fields(xml, options)
         xml.tag! 'merchantDefinedData' do
-          (1..20).each do |each|
+          (1..100).each do |each|
             key = "mdd_field_#{each}".to_sym
             xml.tag!("field#{each}", options[key]) if options[key]
           end

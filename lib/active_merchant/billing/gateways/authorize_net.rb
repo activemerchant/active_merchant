@@ -8,13 +8,32 @@ module ActiveMerchant
       self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.live_url = 'https://api2.authorize.net/xml/v1/request.api'
 
-      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK EE ES FI FR GB GB GI GR HU IE IL IS IT LI LT LU LV MC MT NL NO PL PT RO SE SI SK SM TR US VA)
+      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK EE ES FI FR GB GI GR HU IE IL IS IT LI LT LU LV MC MT NL NO PL PT RO SE SI SK SM TR US VA)
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
 
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
+
+      # Authorize.net has slightly different definitions for returned AVS codes
+      # that have been mapped to the closest equivalent AM standard AVSResult codes
+      # Authorize.net's descriptions noted below
+      STANDARD_AVS_CODE_MAPPING = {
+        'A' => 'A', # Street Address: Match -- First 5 Digits of ZIP: No Match
+        'B' => 'I', # Address not provided for AVS check or street address match, postal code could not be verified
+        'E' => 'E', # AVS Error
+        'G' => 'G', # Non U.S. Card Issuing Bank
+        'N' => 'N', # Street Address: No Match -- First 5 Digits of ZIP: No Match
+        'P' => 'I', # AVS not applicable for this transaction
+        'R' => 'R', # Retry, System Is Unavailable
+        'S' => 'S', # AVS Not Supported by Card Issuing Bank
+        'U' => 'U', # Address Information For This Cardholder Is Unavailable
+        'W' => 'W', # Street Address: No Match -- All 9 Digits of ZIP: Match
+        'X' => 'X', # Street Address: Match -- All 9 Digits of ZIP: Match
+        'Y' => 'Y', # Street Address: Match - First 5 Digits of ZIP: Match
+        'Z' => 'Z'  # Street Address: No Match - First 5 Digits of ZIP: Match
+      }
 
       STANDARD_ERROR_CODE_MAPPING = {
         '36' => STANDARD_ERROR_CODE[:incorrect_number],
@@ -61,7 +80,7 @@ module ActiveMerchant
       TRANSACTION_ALREADY_ACTIONED = %w(310 311)
 
       CARD_CODE_ERRORS = %w(N S)
-      AVS_ERRORS = %w(A E N R W Z)
+      AVS_ERRORS = %w(A E I N R W Z)
       AVS_REASON_CODES = %w(27 45)
 
       TRACKS = {
@@ -140,6 +159,7 @@ module ActiveMerchant
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
+            add_line_items(xml, options)
             add_settings(xml, payment, options)
             add_user_fields(xml, amount, options)
           end
@@ -213,6 +233,7 @@ module ActiveMerchant
           add_invoice(xml, options)
           add_customer_data(xml, payment, options)
           add_market_type_device_type(xml, payment, options)
+          add_line_items(xml, options)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
         end
@@ -326,6 +347,23 @@ module ActiveMerchant
         end
       end
 
+      def add_line_items(xml, options)
+        return unless options[:line_items]
+        xml.lineItems do
+          options[:line_items].each do |line_item|
+            xml.lineItem do
+              line_item.each do |key, value|
+                xml.send(camel_case_lower(key), value)
+              end
+            end
+          end
+        end
+      end
+
+      def camel_case_lower(key)
+        String(key).split('_').inject([]){ |buffer,e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
+      end
+
       def add_settings(xml, source, options)
         xml.transactionSettings do
           if options[:recurring]
@@ -345,6 +383,18 @@ module ActiveMerchant
           elsif self.class.duplicate_window
             ActiveMerchant.deprecated "Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead."
             set_duplicate_window(xml, self.class.duplicate_window)
+          end
+          if options[:email_customer]
+            xml.setting do
+              xml.settingName("emailCustomer")
+              xml.settingValue("true")
+            end
+          end
+          if options[:header_email_receipt]
+            xml.setting do
+              xml.settingName("headerEmailReceipt")
+              xml.settingValue(options[:header_email_receipt])
+            end
           end
         end
       end
@@ -566,7 +616,6 @@ module ActiveMerchant
         end
       end
 
-
       def names_from(payment_source, address, options)
         if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
           first_name, last_name = split_names(address[:name])
@@ -596,7 +645,8 @@ module ActiveMerchant
         raw_response = ssl_post(url, post_data(action, &payload), headers)
         response = parse(action, raw_response)
 
-        avs_result = AVSResult.new(code: response[:avs_result_code])
+        avs_result_code = response[:avs_result_code].upcase if response[:avs_result_code]
+        avs_result = AVSResult.new(code: STANDARD_AVS_CODE_MAPPING[avs_result_code])
         cvv_result = CVVResult.new(response[:card_code])
         if using_live_gateway_in_test_mode?(response)
           Response.new(false, "Using a live Authorize.net account in Test Mode is not permitted.")

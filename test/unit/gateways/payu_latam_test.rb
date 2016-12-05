@@ -8,6 +8,8 @@ class PayuLatamTest < Test::Unit::TestCase
     @credit_card = credit_card("4097440000000004", verification_value: "444", first_name: "APPROVED", last_name: "")
     @declined_card = credit_card("4097440000000004", verification_value: "333", first_name: "REJECTED", last_name: "")
     @pending_card = credit_card("4097440000000004", verification_value: "222", first_name: "PENDING", last_name: "")
+    @no_cvv_visa_card = credit_card("4097440000000004", verification_value: " ")
+    @no_cvv_amex_card = credit_card("4097440000000004", verification_value: " ", brand: "american_express")
 
     @options = {
       currency: "ARS",
@@ -70,6 +72,40 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_verify_bad_credentials
     @gateway.expects(:ssl_post).returns(credentials_are_bogus_response)
     assert !@gateway.verify_credentials
+  end
+
+  def test_request_using_visa_card_with_no_cvv
+    @gateway.expects(:ssl_post).with { |url, body, headers|
+      body.match '"securityCode":"000"'
+      body.match '"processWithoutCvv2":true'
+    }.returns(successful_purchase_response)
+    response = @gateway.purchase(@amount, @no_cvv_visa_card, @options)
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert response.test?
+  end
+
+  def test_request_using_amex_card_with_no_cvv
+    @gateway.expects(:ssl_post).with { |url, body, headers|
+      body.match '"securityCode":"0000"'
+      body.match '"processWithoutCvv2":true'
+    }.returns(successful_purchase_response)
+    response = @gateway.purchase(@amount, @no_cvv_amex_card, @options)
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert response.test?
+  end
+
+  def test_request_passes_cvv_option
+    @gateway.expects(:ssl_post).with { |url, body, headers|
+      body.match '"securityCode":"777"'
+      !body.match '"processWithoutCvv2"'
+    }.returns(successful_purchase_response)
+    options = @options.merge(cvv: "777")
+    response = @gateway.purchase(@amount, @no_cvv_visa_card, options)
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert response.test?
   end
 
   def test_scrub

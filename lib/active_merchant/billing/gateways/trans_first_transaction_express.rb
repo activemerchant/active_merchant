@@ -486,7 +486,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(doc, payment_method)
         doc["v1"].card {
           doc["v1"].pan payment_method.number
-          doc["v1"].sec payment_method.verification_value
+          doc["v1"].sec payment_method.verification_value if payment_method.verification_value?
           doc["v1"].xprDt expiration_date(payment_method)
         }
       end

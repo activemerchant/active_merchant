@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
                                   'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'GB']
 
       self.default_currency    = 'EUR'
-      self.currencies_without_fractions = %w(JPY)
+      self.currencies_without_fractions = %w(BIF BYR DJF GNF JPY KMF KRW PYG RWF VND VUV XAF XOF XPF)
       self.supported_cardtypes = [:visa, :master]
 
       self.homepage_url = 'https://www.clearhaus.com'

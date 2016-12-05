@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         reference_action = add_reference(post, authorization)
         add_echo(post, options)
-        post[:a1] = options[:order_id] || generate_unique_id
+        post[:a1] = generate_unique_id
 
         commit(:void, post, reference_action)
       end
@@ -109,8 +109,9 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         post[:a4] = amount(money)
-        post[:a1] = options[:order_id] || generate_unique_id
+        post[:a1] = generate_unique_id
         post[:a5] = options[:currency] || currency(money)
+        post[:h9] = options[:order_id]
       end
 
       CARD_TYPES = {
@@ -131,9 +132,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:d1] = options[:ip] || '127.0.0.1'
         if (billing_address = options[:billing_address])
-          # Credorax has separate fields for street number and street name
-          post[:c4] = billing_address[:address1].split.first
-          post[:c5] = billing_address[:address1].split.drop(1).join(" ")
+          post[:c5] = billing_address[:address1]
           post[:c7] = billing_address[:city]
           post[:c10] = billing_address[:zip]
           post[:c8] = billing_address[:state]

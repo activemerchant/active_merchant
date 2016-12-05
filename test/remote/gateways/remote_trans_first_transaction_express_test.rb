@@ -41,6 +41,39 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
+  def test_successful_purchase_without_cvv
+    credit_card_opts = {
+      :number => 4485896261017708,
+      :month => Date.new((Time.now.year + 1), 9, 30).month,
+      :year => Date.new((Time.now.year + 1), 9, 30).year,
+      :first_name => 'Longbob',
+      :last_name => 'Longsen',
+      :brand => 'visa'
+    }
+
+    credit_card = CreditCard.new(credit_card_opts)
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
+  def test_successful_purchase_with_empty_string_cvv
+    credit_card_opts = {
+      :number => 4485896261017708,
+      :month => Date.new((Time.now.year + 1), 9, 30).month,
+      :year => Date.new((Time.now.year + 1), 9, 30).year,
+      :first_name => 'Longbob',
+      :last_name => 'Longsen',
+      :verification_value => '',
+      :brand => 'visa'
+    }
+
+    credit_card = CreditCard.new(credit_card_opts)
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
   def test_partial_purchase
     response = @gateway.purchase(@partial_amount, @credit_card, @options)
     assert_success response

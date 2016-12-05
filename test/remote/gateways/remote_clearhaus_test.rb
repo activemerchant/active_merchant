@@ -184,7 +184,7 @@ class RemoteClearhausTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_nonfractional_currency
-    assert response = @gateway.authorize(100, @credit_card, @options.merge(:currency => 'JPY'))
+    assert response = @gateway.authorize(100, @credit_card, @options.merge(:currency => 'KRW'))
     assert_equal 1, response.params['amount']
     assert_success response
   end

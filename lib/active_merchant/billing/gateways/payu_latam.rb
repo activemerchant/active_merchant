@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = "https://sandbox.api.payulatam.com/payments-api/4.0/service.cgi"
       self.live_url = "https://api.payulatam.com/payments-api/4.0/service.cgi"
 
-      self.supported_countries = ["AR", "BR", "CO", "MX", "PA", "PE"]
+      self.supported_countries = ["AR", "BR", "CL", "CO", "MX", "PA", "PE"]
       self.default_currency = "USD"
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
@@ -200,18 +200,32 @@ module ActiveMerchant #:nodoc:
           brand, token = split_authorization(payment_method)
           credit_card = {}
           credit_card[:securityCode] = options[:cvv] if options[:cvv]
+          credit_card[:processWithoutCvv2] = true if options[:cvv].blank?
           post[:transaction][:creditCard] = credit_card
           post[:transaction][:creditCardTokenId] = token
           post[:transaction][:paymentMethod] = brand.upcase
         else
           credit_card = {}
           credit_card[:number] = payment_method.number
-          credit_card[:securityCode] = payment_method.verification_value
+          credit_card[:securityCode] = add_security_code(payment_method, options)
           credit_card[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
           credit_card[:name] = payment_method.name.strip
+          credit_card[:processWithoutCvv2] = true if add_process_without_cvv2(payment_method, options)
           post[:transaction][:creditCard] = credit_card
           post[:transaction][:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
         end
+      end
+
+      def add_security_code(payment_method, options)
+        return payment_method.verification_value unless payment_method.verification_value.blank?
+        return options[:cvv] unless options[:cvv].blank?
+        return "0000" if BRAND_MAP[payment_method.brand.to_s] == "AMEX"
+        "000"
+      end
+
+      def add_process_without_cvv2(payment_method, options)
+        return true if payment_method.verification_value.blank? && options[:cvv].blank?
+        false
       end
 
       def add_payer(post, options)
