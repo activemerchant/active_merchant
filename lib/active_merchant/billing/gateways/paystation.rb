@@ -10,11 +10,15 @@ module ActiveMerchant #:nodoc:
       # an "error code" of "34" means "Future Payment Stored OK"
       SUCCESSFUL_FUTURE_PAYMENT = '34'
 
+      # Service name to use for HMAC Authentication - this seems to always be the literal
+      # string "paystation"
+      HMAC_WEB_SERVICE_NAME = "paystation"
+
       # TODO: check this with paystation
       self.supported_countries = ['NZ']
 
       # TODO: check this with paystation (amex and diners need to be enabled)
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
       self.homepage_url        = 'http://paystation.co.nz'
       self.display_name        = 'Paystation'
@@ -30,17 +34,25 @@ module ActiveMerchant #:nodoc:
       def authorize(money, credit_card, options = {})
         post = new_request
 
+        # common params to both 2&3 party requests
         add_invoice(post, options)
         add_amount(post, money, options)
-        add_credit_card(post, credit_card)
         add_authorize_flag(post, options)
+
+        if options[:two_party]
+          add_two_party(post, options)
+          add_credit_card(post, credit_card)
+        end
 
         commit(post)
       end
 
+      # This only a 2-party transaction so is not available
+      # to all merchants
       def capture(money, authorization_token, options = {})
         post = new_request
 
+        add_two_party(post, options)
         add_invoice(post, options)
         add_amount(post, money, options)
         add_authorization_token(post, authorization_token, options[:credit_card_verification])
@@ -51,13 +63,17 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_source, options = {})
         post = new_request
 
+        # common params to both 2&3 party requests
         add_invoice(post, options)
         add_amount(post, money, options)
 
-        if payment_source.is_a?(String)
-          add_token(post, payment_source)
-        else
-          add_credit_card(post, payment_source)
+        if options[:two_party]
+          add_two_party(post, options)
+          if payment_source.is_a?(String)
+            add_token(post, payment_source)
+          else
+            add_credit_card(post, payment_source)
+          end
         end
 
         add_customer_data(post, options) if options.has_key?(:customer)
@@ -68,16 +84,24 @@ module ActiveMerchant #:nodoc:
       def store(credit_card, options = {})
         post = new_request
 
+        # common params to both 2&3 party requests
         add_invoice(post, options)
-        add_credit_card(post, credit_card)
         store_credit_card(post, options)
+
+        if options[:two_party]
+          add_two_party(post, options)
+          add_credit_card(post, credit_card)
+        end
 
         commit(post)
       end
 
-
+      # This only a 2-party transaction so is not available
+      # to all merchants
       def refund(money, authorization, options={})
         post = new_request
+
+        add_two_party(post, options)
         add_amount(post, money, options)
         add_invoice(post, options)
         add_refund_specific_fields(post, authorization)
@@ -91,7 +115,6 @@ module ActiveMerchant #:nodoc:
           {
             :pi    => @options[:paystation_id], # paystation account id
             :gi    => @options[:gateway_id],    # paystation gateway id
-            "2p"   => "t",                      # two-party transaction type
             :nr    => "t",                      # -- redirect??
             :df    => "yymm"                    # date format: optional sometimes, required others
           }
@@ -145,6 +168,10 @@ module ActiveMerchant #:nodoc:
           post[:cu] = options[:currency] || currency(money)
         end
 
+        def add_two_party(post, options)
+          post["2p"] = "t"
+        end
+
         def parse(xml_response)
           response = {}
 
@@ -161,7 +188,17 @@ module ActiveMerchant #:nodoc:
           post[:tm] = "T" if test?
           pstn_prefix_params = post.collect { |key, value| "pstn_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
 
-          data     = ssl_post(self.live_url, "#{pstn_prefix_params}&paystation=_empty")
+          post_body = "#{pstn_prefix_params}&paystation=_empty"
+
+          # sign request if required
+          endpoint = if options[:hmac_authentication_key]
+            hmac_params = hmac_signature_params(post_body)
+            "#{self.live_url}?#{hmac_params.to_query}"
+          else
+            self.live_url
+          end
+
+          data     = ssl_post(endpoint, post_body)
           response = parse(data)
           message  = message_from(response)
 
@@ -172,7 +209,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def success?(response)
-          (response[:ec] == SUCCESSFUL_RESPONSE_CODE) || (response[:ec] == SUCCESSFUL_FUTURE_PAYMENT)
+          (response[:ec] == SUCCESSFUL_RESPONSE_CODE) || (response[:ec] == SUCCESSFUL_FUTURE_PAYMENT) || (response.key?(:digital_order))
         end
 
         def message_from(response)
@@ -183,11 +220,33 @@ module ActiveMerchant #:nodoc:
           "#{format(year, :two_digits)}#{format(month, :two_digits)}"
         end
 
+        # pstn_HMAC is the HMAC hash of a concatenation of 3 byte mapped values:
+        # - the timestamp,
+        # - the string "paystation" and the POST request body.
+        # This is generated using the SHA512 cryptographic algorithm and the HMAC authentication key provided by Paystation.
+        #
+        # string to hash = byte array of timestamp (integer/string) + byte array of 'paystation' (string) +byte array of request body (string)
+        #
+        def hmac_signature_params(post_body)
+          timestamp = Time.now.to_i
+          key       = options[:hmac_authentication_key]
+          payload   = "#{timestamp}#{HMAC_WEB_SERVICE_NAME}#{post_body}"
+          signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest::SHA512.new(key), key, payload)
+
+          {
+            "pstn_HMACTimestamp" => timestamp,
+            "pstn_HMAC"          => signature
+          }
+        end
+
     end
 
     class PaystationResponse < Response
       def token
         @params["future_payment_token"]
+      end
+      def transaction_url
+        @params["digital_order"]
       end
     end
   end
