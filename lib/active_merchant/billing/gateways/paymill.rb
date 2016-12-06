@@ -47,8 +47,8 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "preauthorizations/#{preauth(authorization)}")
       end
 
-      def store(credit_card, options={})
-        save_card(credit_card)
+        def store(credit_card, money, options={})
+          save_card(credit_card, money, options)
       end
 
       def supports_scrubbing
@@ -75,13 +75,13 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_credit_card(post, credit_card, money, options)
-        post['account.holder'] = (@credit_card.try(:name) || "")
+        post['account.holder'] = (credit_card.try(:name) || "")
         post['account.number'] = credit_card.number
         post['account.expiry.month'] = sprintf("%.2i", credit_card.month)
         post['account.expiry.year'] = sprintf("%.4i", credit_card.year)
         post['account.verification'] = credit_card.verification_value
-        post['account.email'] = (@credit_card.try(:email) || nil)
-        post['presentation.amount3D'] = (amount(money) * 100)
+        post['account.email'] = (credit_card.try(:email) || nil)
+        post['presentation.amount3D'] = (amount(money  * 100))
         post['presentation.currency3D'] = (options[:currency] || currency(money))
       end
 
