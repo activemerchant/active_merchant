@@ -132,9 +132,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:d1] = options[:ip] || '127.0.0.1'
         if (billing_address = options[:billing_address])
-          # Credorax has separate fields for street number and street name
-          post[:c4] = billing_address[:address1].split.first
-          post[:c5] = billing_address[:address1].split.drop(1).join(" ")
+          post[:c5] = billing_address[:address1]
           post[:c7] = billing_address[:city]
           post[:c10] = billing_address[:zip]
           post[:c8] = billing_address[:state]
