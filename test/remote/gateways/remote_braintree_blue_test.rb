@@ -17,8 +17,12 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     }
   end
 
-  def test_network_tokenization_supported
-    assert_includes @gateway.network_tokenization_supported, :visa
+  def test_supports_network_tokenization_brands
+    brands = @gateway.send(:supports_network_tokenization_brands)
+    assert_includes brands, :visa
+    assert_includes brands, :master
+    assert_includes brands, :american_express
+    assert_includes brands, :discover
   end
 
   def test_credit_card_details_on_store
