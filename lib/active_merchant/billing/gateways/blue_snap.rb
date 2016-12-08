@@ -142,11 +142,11 @@ module ActiveMerchant
       end
 
       def scrub(transcript)
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((<card-number>).+(</card-number>)), '\1[FILTERED]\2').
-          gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2')
-          # TODO: Add sensitive ach fields here
+        transcript.gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]')
+                  .gsub(%r((<card-number>).+(</card-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2')
+                  .gsub(%r((<account-number>).+(</account-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<routing-number>).+(</routing-number>)), '\1[FILTERED]\2')
       end
 
       private
