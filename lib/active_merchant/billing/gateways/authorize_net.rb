@@ -159,7 +159,6 @@ module ActiveMerchant
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
-            add_line_items(xml, options)
             add_settings(xml, payment, options)
             add_user_fields(xml, amount, options)
           end
@@ -233,7 +232,6 @@ module ActiveMerchant
           add_invoice(xml, options)
           add_customer_data(xml, payment, options)
           add_market_type_device_type(xml, payment, options)
-          add_line_items(xml, options)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
         end
@@ -344,19 +342,6 @@ module ActiveMerchant
           add_apple_pay_payment_token(xml, source)
         else
           add_credit_card(xml, source)
-        end
-      end
-
-      def add_line_items(xml, options)
-        return unless options[:line_items]
-        xml.lineItems do
-          options[:line_items].each do |line_item|
-            xml.lineItem do
-              line_item.each do |key, value|
-                xml.send(camel_case_lower(key), value)
-              end
-            end
-          end
         end
       end
 
@@ -574,6 +559,19 @@ module ActiveMerchant
         xml.order do
           xml.invoiceNumber(truncate(options[:order_id], 20))
           xml.description(truncate(options[:description], 255))
+        end
+
+        # Authorize.net API requires lineItems to be placed directly after order tag
+        if options[:line_items]
+          xml.lineItems do
+            options[:line_items].each do |line_item|
+              xml.lineItem do
+                line_item.each do |key, value|
+                  xml.send(camel_case_lower(key), value)
+                end
+              end
+            end
+          end
         end
       end
 
