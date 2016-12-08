@@ -33,6 +33,49 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_email_customer
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, email_customer: true)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_header_email_receipt
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, header_email_receipt: "subject line")
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_line_items
+    additional_options = {
+      email: "anet@example.com",
+      line_items: [
+        {
+          item_id: "1",
+          name: "mug",
+          description: "coffee",
+          quantity: "100",
+          unit_price: "10"
+        },
+        {
+          item_id: "2",
+          name: "vase",
+          description: "floral",
+          quantity: "200",
+          unit_price: "20"
+        }
+      ]
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(additional_options))
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -248,7 +291,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "incorrect_number", response.error_code
     assert_equal "27", response.params["message_code"]
     assert_equal "6", response.params["response_reason_code"]
-    assert_match /Address not verified/, response.avs_result["message"]
+    assert_match %r{Address not verified}, response.avs_result["message"]
   end
 
   def test_successful_purchase_using_stored_card_new_payment_profile
@@ -291,7 +334,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "incorrect_number", response.error_code
     assert_equal "27", response.params["message_code"]
     assert_equal "6", response.params["response_reason_code"]
-    assert_match /Address not verified/, response.avs_result["message"]
+    assert_match %r{Address not verified}, response.avs_result["message"]
   end
 
   def test_failed_capture_using_stored_card
@@ -303,7 +346,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
     capture = @gateway.capture(@amount + 4000, auth.authorization)
     assert_failure capture
-    assert_match /The amount requested for settlement cannot be greater/, capture.message
+    assert_match %r{The amount requested for settlement cannot be greater}, capture.message
   end
 
   def test_faux_successful_refund_using_stored_card
@@ -315,7 +358,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_failure refund
-    assert_match /does not meet the criteria for issuing a credit/, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+    assert_match %r{does not meet the criteria for issuing a credit}, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
   end
 
   def test_failed_refund_using_stored_card
