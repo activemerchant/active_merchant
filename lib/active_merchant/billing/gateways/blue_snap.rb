@@ -146,6 +146,7 @@ module ActiveMerchant
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<card-number>).+(</card-number>)), '\1[FILTERED]\2').
           gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2')
+          # TODO: Add sensitive ach fields here
       end
 
       private
@@ -195,9 +196,7 @@ module ActiveMerchant
         doc.send("first-name", card_or_ach.first_name)
         doc.send("last-name", card_or_ach.last_name)
         doc.email(options[:email]) if options[:email]
-        if options[:billing_address][:phone]
-          doc.send("phone", options[:billing_address][:phone])
-        end
+        doc.send("phone", options[:billing_address][:phone]) if options[:billing_address]
         add_address(doc, options)
       end
 
@@ -310,7 +309,7 @@ module ActiveMerchant
         )
       end
 
-      def commit(action, type, verb = :post)
+      def commit(action, type = nil, verb = :post)
         request = build_xml_request(action, type) { |doc| yield(doc) }
         response = api_request(action, request, verb, type)
         parsed = parse(response)
