@@ -1,0 +1,77 @@
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript" src="http://fancybox.net/js/fancybox-1.3.4/jquery.fancybox-1.3.4.pack.js"></script>
+<script
+src="https://api.veritrans.co.id/v2/assets/js/veritrans.min.js">
+</script>
+<link rel="stylesheet" href="http://fancybox.net/js/fancybox-1.3.4/jquery.fancybox-1.3.4.css" type="text/css" media="screen" />
+
+<div id="token-id"></div>
+
+<script type="text/javascript">
+  // Create the card object with the required fields
+  function card () {
+    return {
+      card_number: "4811111111111114",
+      card_cvv: "123",
+      card_exp_month: "01",
+      card_exp_year: "2020"
+    }
+  };
+
+  /*Create the callback response function.
+  NOTE: This example utilizes JQuery Fancybox.
+  You can use other javascript framework to display 3DS dialog*/
+
+  function callback(response) {
+    console.log(response);
+    if (response.redirect_url) {
+      // If 3Dsecure transaction. Open 3Dsecure dialog
+      console.log('Open Dialog 3Dsecure');
+      openDialog(response.redirect_url);
+
+    } else if (response.status_code == '200') {
+      // success 3d secure or success normal
+      //close 3d secure dialog if any
+      closeDialog();
+
+      // store token data in input #token_id
+      $("body").append(response.token_id);
+
+    } else {
+      // failed request token
+      //close 3d secure dialog if any
+      closeDialog();
+      $('#submit-button').removeAttr('disabled');
+      // Show status message.
+      $('#message').text(response.status_message);
+      console.log(JSON.stringify(response));
+    }
+  };
+
+  // Open 3DSecure dialog box
+  function openDialog(url) {
+    $.fancybox.open({
+      href: url,
+      type: 'iframe',
+      autoSize: false,
+      width: 400,
+      height: 420,
+      closeBtn: false,
+      modal: true
+    });
+  }
+
+  // Close 3DSecure dialog box
+  function closeDialog() {
+    $.fancybox.close();
+  };
+
+  // Sandbox API URL. TODO: Change with Production API URL when you're ready to go live.
+  Veritrans.url = "https://api.sandbox.veritrans.co.id/v2/token";
+
+  // TODO: Change with your actual client key that can be found at Merchant Administration Portal >> Settings >> Access Key
+  Veritrans.client_key = "VT-client-ZiKr3dq3HTywXpZP";
+
+  //Get token function to be triggered when click pay
+  Veritrans.token(card, callback);
+</script>
