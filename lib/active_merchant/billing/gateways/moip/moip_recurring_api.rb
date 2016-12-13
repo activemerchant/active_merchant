@@ -95,8 +95,8 @@ module ActiveMerchant #:nodoc:
         Response.new(response[:success], nil, payment_to_response(last_payment), options)
       end
 
-      def payments(invoice_id)
-        response = Moip::Assinaturas::Payment.list(invoice_id, moip_auth: moip_auth)
+      def payments(invoice)
+        response = Moip::Assinaturas::Payment.list(invoice.gateway_reference, moip_auth: moip_auth)
         Response.new(response[:success], nil, { payments: payments_to_response(response) }, test: test?)
       end
 

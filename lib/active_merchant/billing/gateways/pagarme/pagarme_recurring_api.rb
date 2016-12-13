@@ -90,15 +90,34 @@ module ActiveMerchant #:nodoc:
       end
 
       def invoices(subscription_id)
-        response = service_pagarme.invoices_by_subscription(subscription_id)
+        invoices      = []
+        subscription  = PagarMe::Subscription.find_by_id(subscription_id)
+        plan          = subscription.plan
+        invoice_start = Date.parse(subscription.date_created) + plan.trial_days
+        invoice_end   = invoice_start + plan.days
 
-        Response.new(true, nil, {invoices:  invoices_to_response(response)})
+        while invoice_start < Date.today
+          invoices << {
+            id: subscription_id,
+            created_at: invoice_start,
+            next_charge_at: invoice_end,
+            amount: plan.amount
+          }
+
+          invoice_start = invoice_end
+          invoice_end += plan.days
+        end
+
+        Response.new(true, nil, { invoices: invoices })
       end
 
-      def payments(invoice_id)
-        response = service_pagarme.payments_from_invoice(invoice_id)
+      def payments(invoice)
+        response = service_pagarme.payments_from_invoice(invoice.gateway_reference)
+        payments = []
+        payments = response.select { |payment| payment['date_created'] > invoice.created_at && payment['date_created'] < invoice.next_charge_at }
+        payments = payments.sort_by { |payment| payment['date_created'] }
 
-        Response.new(true, nil, { payments: payments_to_response(response) })
+        Response.new(true, nil, { payments: payments_to_response(payments) })
       end
 
       def payment(payment_id)
