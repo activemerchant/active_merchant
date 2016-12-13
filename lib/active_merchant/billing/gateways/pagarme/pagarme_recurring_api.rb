@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         invoice_start = Date.parse(subscription.date_created) + plan.trial_days
         invoice_end   = invoice_start + plan.days
 
-        while invoice_start < Date.today
+        while invoice_start < Time.now
           invoices << {
             id: subscription_id,
             created_at: invoice_start,
