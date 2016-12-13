@@ -250,7 +250,7 @@ module ActiveMerchant #:nodoc:
         def invoices_to_response(response)
           return {} unless response[:success]
 
-          invoices = response[:invoices].sort_by { |hsh| hsh[:creation_date] }
+          invoices = response[:invoices].sort_by { |hsh| created_at(hsh[:creation_date]) }
           invoices.map do |invoice|
             {
               'id' => invoice[:id],
@@ -282,7 +282,7 @@ module ActiveMerchant #:nodoc:
         def payments_to_response(response)
           return {} unless response[:success]
 
-          payments = response[:payments].sort_by { |hsh| hsh[:creation_date] }
+          payments = response[:payments].sort_by { |hsh| created_at(hsh[:creation_date]) }
           payments.map do |payment|
             {
               'id' => payment[:id],
