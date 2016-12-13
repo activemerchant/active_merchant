@@ -76,6 +76,17 @@ class RemotePagoFacilTest < Test::Unit::TestCase
     assert_equal 'Transaction has been successful!-Approved', response.message
   end
 
+  def test_successful_purchased_country_mx
+    @options[:billing_address].merge!(country: 'MX')
+
+    response = successful_response_to do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+
+    assert response.authorization
+    assert_equal 'Transaction has been successful!-Approved', response.message
+  end
+
   # Even when all the parameters are correct the PagoFacil's test service will
   # respond randomly (can be approved or declined). When for this reason the
   # service returns a "declined" response, the response should have the error
