@@ -191,11 +191,7 @@ module ActiveMerchant #:nodoc:
 
       def supports_network_tokenization_brands
         result = Braintree::MerchantGateway.new(@braintree_gateway).provision_raw_apple_pay
-        if result.success?
-          result.supported_networks.map { |brand| format_card_brand(brand) }
-        else
-          []
-        end
+        result.success? ? result.supported_networks : []
       end
 
       def check_customer_exists(customer_vault_id)
@@ -618,19 +614,6 @@ module ActiveMerchant #:nodoc:
         end
 
         parameters
-      end
-
-      def format_card_brand(card_brand)
-        case card_brand
-        when 'visa'
-          :visa
-        when 'mastercard'
-          :master
-        when 'amex'
-          :american_express
-        when 'discover'
-          :discover
-        end
       end
     end
   end
