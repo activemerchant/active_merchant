@@ -647,12 +647,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_supports_network_tokenization_true
-    @gateway.stubs(supports_network_tokenization_brands: [:visa])
+    mock_result = Braintree::SuccessfulResult.new(supported_networks: %w(visa))
+    Braintree::MerchantGateway.any_instance.expects(:provision_raw_apple_pay).returns(mock_result)
     assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
   def test_supports_network_tokenization_false
-    @gateway.stubs(supports_network_tokenization_brands: [])
+    mock_result = Braintree::ErrorResult.new(:gateway, :errors => {})
+    Braintree::MerchantGateway.any_instance.expects(:provision_raw_apple_pay).returns(mock_result)
     assert_instance_of FalseClass, @gateway.supports_network_tokenization?
   end
 
