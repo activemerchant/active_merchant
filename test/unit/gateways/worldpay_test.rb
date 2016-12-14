@@ -190,17 +190,6 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_non_fractional_amount_handling_with_moneylike
-    amount = OpenStruct.new(cents: 10000)
-    stub_comms do
-      @gateway.authorize(amount, @credit_card, @options.merge(currency: 'JPY'))
-    end.check_request do |endpoint, data, headers|
-      assert_tag_with_attributes 'amount',
-          {'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY'},
-        data
-    end.respond_with(successful_authorize_response)
-  end
-
   def test_currency_exponent_handling
     stub_comms do
       @gateway.authorize(10000, @credit_card, @options.merge(currency: :JPY))
