@@ -5,6 +5,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     @gateway = BlueSnapGateway.new(fixtures(:blue_snap))
 
     @amount = 100
+    @check = check('4099999992','011075150')
     @credit_card = credit_card('4263982640269299')
     @declined_card = credit_card('4917484589897107', month: 1, year: 2018)
     @options = { billing_address: address }
@@ -12,6 +13,12 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_ach_purchase
+    response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
