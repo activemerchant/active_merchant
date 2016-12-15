@@ -53,6 +53,16 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_authorize
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_authorize
+    response = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure response
+  end
   def test_successful_store
     response = @gateway.store(@credit_card, @options)
     assert_success response
