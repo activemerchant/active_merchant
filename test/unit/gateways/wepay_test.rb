@@ -17,32 +17,32 @@ class WepayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).at_most(2).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).at_most(3).returns(successful_capture_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "1117213582|200.00", response.authorization
+    assert_equal "1181910285|20.00", response.authorization
   end
 
   def test_failed_purchase
-    @gateway.expects(:ssl_post).at_most(2).returns(failed_purchase_response)
+    @gateway.expects(:ssl_post).at_most(2).returns(failed_capture_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
 
   def test_successful_purchase_with_token
-    @gateway.expects(:ssl_post).at_most(2).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).at_most(2).returns(successful_capture_response)
 
     response = @gateway.purchase(@amount, "1422891921", @options)
     assert_success response
 
-    assert_equal "1117213582|200.00", response.authorization
+    assert_equal "1181910285|20.00", response.authorization
   end
 
   def test_failed_purchase_with_token
-    @gateway.expects(:ssl_post).at_most(2).returns(failed_purchase_response)
+    @gateway.expects(:ssl_post).at_most(2).returns(failed_capture_response)
 
     response = @gateway.purchase(@amount, "1422891921", @options)
     assert_failure response
@@ -75,7 +75,7 @@ class WepayTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "checkout type parameter must be either GOODS, SERVICE, DONATION, or PERSONAL", response.message
+    assert_equal "Invalid credit card number", response.message
   end
 
   def test_successful_authorize_with_token
@@ -90,7 +90,7 @@ class WepayTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, "1422891921", @options)
     assert_failure response
-    assert_equal "checkout type parameter must be either GOODS, SERVICE, DONATION, or PERSONAL", response.message
+    assert_equal "Invalid credit card number", response.message
   end
 
   def test_successful_capture
@@ -101,9 +101,9 @@ class WepayTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    @gateway.expects(:ssl_post).at_most(2).returns(failed_capture_response)
+    @gateway.expects(:ssl_post).at_most(3).returns(failed_capture_response)
 
-    response = @gateway.capture("auth|amount", @options)
+    response = @gateway.capture(@amount, "auth|200.00", @options)
     assert_failure response
     assert_equal "Checkout object must be in state 'Reserved' to capture. Currently it is in state captured", response.message
   end
@@ -157,14 +157,6 @@ class WepayTest < Test::Unit::TestCase
     %({"error": "invalid_request","error_description": "Invalid credit card number","error_code": 1003})
   end
 
-  def successful_purchase_response
-    %({"checkout_id":1117213582,"checkout_uri":"https://stage.wepay.com/api/checkout/1117213582/974ff0c0"})
-  end
-
-  def failed_purchase_response
-    %({"error":"access_denied","error_description":"invalid account_id, account does not exist or does not belong to user","error_code":3002})
-  end
-
   def successful_refund_response
     %({"checkout_id":1852898602,"state":"refunded"})
   end
@@ -182,15 +174,15 @@ class WepayTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    %({"checkout_id":640816095,"checkout_uri":"https://stage.wepay.com/api/checkout/640816095/974ff0c0"})
+    %({\"checkout_id\":1181910285,\"account_id\":2080478981,\"type\":\"goods\",\"short_description\":\"Purchase\",\"currency\":\"USD\",\"amount\":20,\"state\":\"authorized\",\"soft_descriptor\":\"WPY*Spreedly\",\"create_time\":1481836590,\"gross\":20.88,\"reference_id\":null,\"callback_uri\":null,\"long_description\":null,\"delivery_type\":null,\"fee\":{\"app_fee\":0,\"processing_fee\":0.88,\"fee_payer\":\"payer\"},\"chargeback\":{\"amount_charged_back\":0,\"dispute_uri\":null},\"refund\":{\"amount_refunded\":0,\"refund_reason\":null},\"payment_method\":{\"type\":\"credit_card\",\"credit_card\":{\"id\":1929540809,\"data\":{\"emv_receipt\":null,\"signature_url\":null},\"auto_capture\":false}},\"hosted_checkout\":null,\"payer\":{\"email\":\"test@example.com\",\"name\":\"Longbob Longsen\",\"home_address\":null},\"npo_information\":null,\"payment_error\":null,\"in_review\":false,\"auto_release\":true})
   end
 
   def failed_authorize_response
-    %({"error":"invalid_request","error_description":"checkout type parameter must be either GOODS, SERVICE, DONATION, or PERSONAL","error_code":1003})
+    %({\"error\":\"invalid_request\",\"error_description\":\"Invalid credit card number\",\"error_code\":1003})
   end
 
   def successful_capture_response
-    %({"checkout_id":1852898602,"state":"captured"})
+    %({\"checkout_id\":1181910285,\"account_id\":2080478981,\"type\":\"goods\",\"short_description\":\"Purchase\",\"currency\":\"USD\",\"amount\":20,\"state\":\"authorized\",\"soft_descriptor\":\"WPY*Spreedly\",\"create_time\":1481836590,\"gross\":20.88,\"reference_id\":null,\"callback_uri\":null,\"long_description\":null,\"delivery_type\":null,\"fee\":{\"app_fee\":0,\"processing_fee\":0.88,\"fee_payer\":\"payer\"},\"chargeback\":{\"amount_charged_back\":0,\"dispute_uri\":null},\"refund\":{\"amount_refunded\":0,\"refund_reason\":null},\"payment_method\":{\"type\":\"credit_card\",\"credit_card\":{\"id\":1929540809,\"data\":{\"emv_receipt\":null,\"signature_url\":null},\"auto_capture\":false}},\"hosted_checkout\":null,\"payer\":{\"email\":\"test@example.com\",\"name\":\"Longbob Longsen\",\"home_address\":null},\"npo_information\":null,\"payment_error\":null,\"in_review\":false,\"auto_release\":true})
   end
 
   def failed_capture_response

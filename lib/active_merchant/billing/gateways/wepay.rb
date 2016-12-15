@@ -10,6 +10,8 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.display_name = 'WePay'
 
+      API_VERSION = "2016-12-07"
+
       def initialize(options = {})
         requires!(options, :client_id, :account_id, :access_token)
         super(options)
@@ -18,38 +20,47 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         post = {}
         if payment_method.is_a?(String)
-          purchase_with_token(post, money, payment_method, options)
+          MultiResponse.run do |r|
+            r.process { authorize_with_token(post, money, payment_method, options) }
+            r.process { capture(money, r.authorization, options) }
+          end
         else
           MultiResponse.run do |r|
             r.process { store(payment_method, options) }
-            r.process { purchase_with_token(post, money, split_authorization(r.authorization).first, options) }
+            r.process { authorize_with_token(post, money, r.authorization, options) }
+            r.process { capture(money, r.authorization, options) }
           end
         end
       end
 
       def authorize(money, payment_method, options = {})
-        post = {auto_capture: 0}
+        post = {}
         if payment_method.is_a?(String)
-          purchase_with_token(post, money, payment_method, options)
+          authorize_with_token(post, money, payment_method, options)
         else
           MultiResponse.run do |r|
             r.process { store(payment_method, options) }
-            r.process { purchase_with_token(post, money, split_authorization(r.authorization).first, options) }
+            r.process { authorize_with_token(post, money, r.authorization, options) }
           end
         end
       end
 
       def capture(money, identifier, options = {})
+        checkout_id, original_amount = split_authorization(identifier)
+
         post = {}
-        post[:checkout_id] = split_authorization(identifier).first
-        commit('/checkout/capture', post)
+        post[:checkout_id] = checkout_id
+        if(money && (original_amount != amount(money)))
+          post[:amount] = amount(money)
+        end
+        commit('/checkout/capture', post, options)
       end
 
       def void(identifier, options = {})
         post = {}
         post[:checkout_id] = split_authorization(identifier).first
         post[:cancel_reason] = (options[:description] || "Void")
-        commit('/checkout/cancel', post)
+        commit('/checkout/cancel', post, options)
       end
 
       def refund(money, identifier, options = {})
@@ -64,7 +75,7 @@ module ActiveMerchant #:nodoc:
         post[:app_fee] = options[:application_fee] if options[:application_fee]
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
         post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]
-        commit("/checkout/refund", post)
+        commit("/checkout/refund", post, options)
       end
 
       def store(creditcard, options = {})
@@ -76,8 +87,8 @@ module ActiveMerchant #:nodoc:
         post[:email] = options[:email] || "unspecified@example.com"
         post[:cc_number] = creditcard.number
         post[:cvv] = creditcard.verification_value unless options[:recurring]
-        post[:expiration_month] = "#{creditcard.month}"
-        post[:expiration_year] = "#{creditcard.year}"
+        post[:expiration_month] = creditcard.month
+        post[:expiration_year] = creditcard.year
         post[:original_ip] = options[:ip] if options[:ip]
         post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
         if(billing_address = (options[:billing_address] || options[:address]))
@@ -91,31 +102,31 @@ module ActiveMerchant #:nodoc:
             post[:address]["state"] = billing_address[:state]
           else
             post[:address]["region"] = billing_address[:state]
-            post[:address]["postcode"] = billing_address[:zip]
+            post[:address]["postal_code"] = billing_address[:zip]
           end
         end
 
         if options[:recurring] == true
           post[:client_secret] = @options[:client_secret]
-          commit('/credit_card/transfer', post)
+          commit('/credit_card/transfer', post, options)
         else
-          commit('/credit_card/create', post)
+          commit('/credit_card/create', post, options)
         end
       end
 
       private
 
-      def purchase_with_token(post, money, token, options)
+      def authorize_with_token(post, money, token, options)
         add_token(post, token)
         add_product_data(post, money, options)
-        commit('/checkout/create', post)
+        commit('/checkout/create', post, options)
       end
 
       def add_product_data(post, money, options)
         post[:account_id] = @options[:account_id]
         post[:amount] = amount(money)
         post[:short_description] = (options[:description] || "Purchase")
-        post[:type] = (options[:type] || "GOODS")
+        post[:type] = (options[:type] || "goods")
         post[:currency] = (options[:currency] || currency(money))
         post[:long_description] = options[:long_description] if options[:long_description]
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
@@ -136,8 +147,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_token(post, token)
-        post[:payment_method_id]   = token
-        post[:payment_method_type] = "credit_card"
+        payment_method = {}
+        payment_method[:type] = "credit_card"
+        payment_method[:credit_card] = {
+          id: token,
+          auto_capture: false
+        }
+
+        post[:payment_method] = payment_method
       end
 
       def parse(response)
@@ -149,7 +166,7 @@ module ActiveMerchant #:nodoc:
           response = parse(ssl_post(
             ((test? ? test_url : live_url) + action),
             params.to_json,
-            headers
+            headers(options)
           ))
         rescue ResponseError => e
           response = parse(e.response.body)
@@ -178,7 +195,8 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response, params)
         return response["credit_card_id"].to_s if response["credit_card_id"]
 
-        [response["checkout_id"], params[:amount]].join('|')
+        original_amount = response["amount"].nil? ? nil : sprintf("%0.02f", response["amount"])
+        [response["checkout_id"], original_amount].join('|')
       end
 
       def split_authorization(authorization)
@@ -192,12 +210,17 @@ module ActiveMerchant #:nodoc:
         return Response.new(false, message)
       end
 
-      def headers
+      def headers(options)
         {
           "Content-Type"  => "application/json",
           "User-Agent"    => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "Authorization" => "Bearer #{@options[:access_token]}"
+          "Authorization" => "Bearer #{@options[:access_token]}",
+          "Api-Version"   => api_version(options)
         }
+      end
+
+      def api_version(options)
+        options[:version] || API_VERSION
       end
     end
   end
