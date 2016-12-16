@@ -74,12 +74,7 @@ module ActiveMerchant
       def purchase(money, payment_method, options = {})
         type = payment_method.is_a?(Check) ? :check : :credit_card
         commit(:purchase, type) do |doc|
-          case type
-          when :credit_card
-            add_auth_purchase(doc, money, payment_method, options)
-          when :check
-            add_ach_purchase(doc, money, payment_method, options)
-          end
+          add_auth_purchase(doc, money, payment_method, options)
         end
       end
 
@@ -151,39 +146,34 @@ module ActiveMerchant
 
       private
 
-      def add_ach_purchase(doc, money, payment_method, options)
-        doc.send("recurring-transaction", options[:recurring] ? "RECURRING" : "ECOMMERCE")
-        add_order(doc, options)
-        add_amount(doc, money)
-        doc.send("transaction-fraud-info") do
-          doc.send("shopper-ip-address", options[:ip]) if options[:ip]
-        end
-
-        if payment_method.is_a?(String)
-          doc.send("vaulted-shopper-id", payment_method)
-        else
-          doc.send("payer-info") do
-            add_personal_info(doc, payment_method, options)
-          end
-          add_ach_info(doc, payment_method)
-        end
-      end
-
       def add_auth_purchase(doc, money, payment_method, options)
         doc.send("recurring-transaction", options[:recurring] ? "RECURRING" : "ECOMMERCE")
         add_order(doc, options)
         add_amount(doc, money)
+        add_fraud_info(doc, options)
+
+        doc.send("vaulted-shopper-id", payment_method) if payment_method.is_a? String
+        add_card_holder_info(doc, payment_method, options) if payment_method.is_a? CreditCard
+        add_payer_info(doc, payment_method, options) if payment_method.is_a? Check
+      end
+
+      def add_payer_info(doc, payment_method, options)
+        doc.send("payer-info") do
+          add_personal_info(doc, payment_method, options)
+        end
+        add_ach_info(doc, payment_method)
+      end
+
+      def add_card_holder_info(doc, payment_method, options)
+        doc.send("card-holder-info") do
+          add_personal_info(doc, payment_method, options)
+        end
+        add_credit_card(doc, payment_method)
+      end
+
+      def add_fraud_info(doc, options)
         doc.send("transaction-fraud-info") do
           doc.send("shopper-ip-address", options[:ip]) if options[:ip]
-        end
-
-        if payment_method.is_a?(String)
-          doc.send("vaulted-shopper-id", payment_method)
-        else
-          doc.send("card-holder-info") do
-            add_personal_info(doc, payment_method, options)
-          end
-          add_credit_card(doc, payment_method)
         end
       end
 
