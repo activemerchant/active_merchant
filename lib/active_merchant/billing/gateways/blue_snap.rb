@@ -34,7 +34,7 @@ module ActiveMerchant
         'ND' => 'P',
         'NM' => 'N',
         'NP' => 'S'
-      }
+      }.freeze
 
       AVS_CODE_TRANSLATOR = {
         'line1: U, zip: U, name: U' => 'I',
@@ -64,7 +64,7 @@ module ActiveMerchant
         'line1: N, zip: N, name: U' => 'N',
         'line1: N, zip: N, name: M' => 'K',
         'line1: N, zip: N, name: N' => 'N',
-      }
+      }.freeze
 
       def initialize(options={})
         requires!(options, :api_username, :api_password)
@@ -274,7 +274,7 @@ module ActiveMerchant
 
       def parse_element(parsed, node)
         if !node.elements.empty?
-          node.elements.each {|e| parse_element(parsed, e) }
+          node.elements.each { |e| parse_element(parsed, e) }
         else
           parsed[node.name.downcase] = node.text
         end
@@ -392,12 +392,12 @@ module ActiveMerchant
         when 200...300
           response
         else
-          raise ResponseError.new(response)
+          raise ResponseError, response
         end
       end
 
       def bad_authentication_response
-        { "description" => "Unable to authenticate.  Please check your credentials." }
+        {"description" => "Unable to authenticate.  Please check your credentials."}
       end
     end
   end
