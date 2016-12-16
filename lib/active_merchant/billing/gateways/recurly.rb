@@ -55,11 +55,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        %i(account_code first_name last_name).each do |option|
+        %i(account_code first_name last_name email).each do |option|
           post[:account][option] = options[option] if options[option].present?
         end
         if(billing_address = options[:billing_address] || options[:address])
           post[:account][:billing_info].merge!(billing_address)
+          post[:account][:billing_info][:phone] = options[:phone] if options[:phone].present?
         end
         if(shipping_address = options[:shipping_address])
           post[:shipping_address] = billing_address
@@ -69,6 +70,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(post, payment_method, options)
         post[:account] = {}
         post[:account][:billing_info] = {}
+        post[:description] = options[:description] if options[:description].present?
         if(payment_method.is_a?(String))
           post[:account][:billing_info][:token_id] ||= payment_method
         else
@@ -91,7 +93,7 @@ module ActiveMerchant #:nodoc:
               add_tag_recursive(xml, data[key])
             end
           else
-            xml.tag!(key, value.is_a?(String)? CGI.escape(value) : value)
+            xml.tag!(key, value)
           end
         end
       end
