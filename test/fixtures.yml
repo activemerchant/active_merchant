@@ -207,6 +207,13 @@ credorax:
   merchant_id: 'merchant_id'
   cipher_key: 'cipher_key'
 
+# Culqi does not provide public testing data
+culqi:
+  merchant_id: MERCHANT
+  terminal_id: TERMINAL
+  partner_id: PARTNER
+  secret_key: SECRET
+
 # To get 100% passing Cybersource remote tests, you must ask
 # Cybersource support to enable the recurring and pinless debit
 # services on your test account.
