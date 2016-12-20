@@ -346,6 +346,23 @@ class CreditCardTest < Test::Unit::TestCase
     c = CreditCard.new :name => "Twiggy"
     assert_equal "", c.first_name
     assert_equal "Twiggy", c.last_name
+    assert_equal "Twiggy", c.name
+  end
+
+  def test_should_remove_trailing_whitespace_on_name
+    c = CreditCard.new(:last_name => 'Herdman')
+    assert_equal "Herdman", c.name
+
+    c = CreditCard.new(:last_name => 'Herdman', first_name: '')
+    assert_equal "Herdman", c.name
+  end
+
+  def test_should_remove_leading_whitespace_on_name
+    c = CreditCard.new(:first_name => 'James')
+    assert_equal "James", c.name
+
+    c = CreditCard.new(:last_name => '', first_name: 'James')
+    assert_equal "James", c.name
   end
 
   # The following is a regression for a bug that raised an exception when

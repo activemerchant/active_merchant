@@ -6,6 +6,8 @@
 * PaymentExpress: Update supported countries [shasum]
 * CyberSource: Add Lebanon to supported countries [shasum]
 * Vanco: Update test URL [davidsantoso]
+* Remove leading or trailing whitespace from credit card name [davidsantoso]
+
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
