@@ -3,6 +3,7 @@
 == HEAD
 * AuthorizeNet: Fix line items quirk [shasum]
 * WePay: Update WePay to API version 2016-12-07 [davidsantoso]
+* PaymentExpress: Update supported countries [shasum]
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
