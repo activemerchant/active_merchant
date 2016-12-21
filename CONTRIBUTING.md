@@ -27,7 +27,7 @@ When submitting a pull request to resolve an issue:
 
 ## Gateway Placement within Shopify
 
-Placement within Shopfiy is available by invitation only at this time.
+Placement within Shopify is available by invitation only at this time.
 
 ## Version/Release Management
 
