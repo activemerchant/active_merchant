@@ -182,13 +182,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_match Gateway::STANDARD_ERROR_CODE[:invalid_cvc], response.error_code
   end
 
-  # def test_missing_cvc_for_purchase
-  #   @credit_card.verification_value = '004'
-  #   assert response = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_failure response
-  #   assert_match Gateway::STANDARD_ERROR_CODE[:invalid_cvc], response.error_code
-  # end
-
   def test_missing_address_for_purchase
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)

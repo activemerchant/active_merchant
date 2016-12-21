@@ -120,9 +120,6 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_verify_with_failed_void
-  end
-
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
