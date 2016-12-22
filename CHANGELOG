@@ -8,6 +8,7 @@
 * Vanco: Update test URL [davidsantoso]
 * Remove leading or trailing whitespace from credit card name [davidsantoso]
 * Culqi: Add new gateway [shasum]
+* WePay: Remove null address fields from request [davidsantoso]
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
