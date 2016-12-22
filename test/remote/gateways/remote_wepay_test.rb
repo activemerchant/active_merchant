@@ -42,6 +42,13 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_few_options
+    options = { address: { zip: "27701" }, email: "test@example.com" }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_purchase_sans_ccv
     @credit_card.verification_value = nil
     response = @gateway.purchase(@amount, @credit_card, @options)

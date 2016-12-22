@@ -91,19 +91,14 @@ module ActiveMerchant #:nodoc:
         post[:expiration_year] = creditcard.year
         post[:original_ip] = options[:ip] if options[:ip]
         post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
+
         if(billing_address = (options[:billing_address] || options[:address]))
-          post[:address] = {
-            "address1" => billing_address[:address1],
-            "city"     => billing_address[:city],
-            "country"  => billing_address[:country]
-          }
-          if(post[:country] == "US")
-            post[:address]["zip"] = billing_address[:zip]
-            post[:address]["state"] = billing_address[:state]
-          else
-            post[:address]["region"] = billing_address[:state]
-            post[:address]["postal_code"] = billing_address[:zip]
-          end
+          post[:address] = {}
+          post[:address]["address1"] = billing_address[:address1] if billing_address[:address1]
+          post[:address]["city"]     = billing_address[:city] if billing_address[:city]
+          post[:address]["country"]  = billing_address[:country]  if billing_address[:country]
+          post[:address]["region"]   = billing_address[:state]  if billing_address[:state]
+          post[:address]["postal_code"] = billing_address[:zip]
         end
 
         if options[:recurring] == true
