@@ -95,8 +95,8 @@ module ActiveMerchant #:nodoc:
         Response.new(response[:success], nil, payment_to_response(last_payment), options)
       end
 
-      def payments(invoice_id)
-        response = Moip::Assinaturas::Payment.list(invoice_id, moip_auth: moip_auth)
+      def payments(invoice)
+        response = Moip::Assinaturas::Payment.list(invoice.gateway_reference, moip_auth: moip_auth)
         Response.new(response[:success], nil, { payments: payments_to_response(response) }, test: test?)
       end
 
@@ -250,7 +250,8 @@ module ActiveMerchant #:nodoc:
         def invoices_to_response(response)
           return {} unless response[:success]
 
-          response[:invoices].map do |invoice|
+          invoices = response[:invoices].sort_by { |hsh| created_at(hsh[:creation_date]) }
+          invoices.map do |invoice|
             {
               'id' => invoice[:id],
               'amount' => invoice[:amount],
@@ -281,7 +282,8 @@ module ActiveMerchant #:nodoc:
         def payments_to_response(response)
           return {} unless response[:success]
 
-          response[:payments].map do |payment|
+          payments = response[:payments].sort_by { |hsh| created_at(hsh[:creation_date]) }
+          payments.map do |payment|
             {
               'id' => payment[:id],
               'created_at' => created_at(payment[:creation_date]),

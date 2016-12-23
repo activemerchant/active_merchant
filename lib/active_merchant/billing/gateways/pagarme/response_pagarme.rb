@@ -160,15 +160,16 @@ module ActiveMerchant #:nodoc:
               []
             end
           else
-            response.map(&method(:invoice_to_response))
+            invoices = response.sort_by { |hsh| hsh['date_created'] }
+            invoices.map(&method(:invoice_to_response))
           end
         end
-
 
         def payments_to_response(response)
           return {} unless response
 
-          response.map(&method(:payment_to_response))
+          payments = response.sort_by { |hsh| hsh['date_created'] }
+          payments.map(&method(:payment_to_response))
         end
 
         def payment_to_response(response)
