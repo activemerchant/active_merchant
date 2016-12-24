@@ -77,6 +77,7 @@ module ActiveMerchant #:nodoc:
       # :call_issuer - Transaction requires voice authentication, call issuer
       # :pickup_card - Issuer requests that you pickup the card from merchant
       # :test_mode_live_card - Card was declined. Request was in test mode, but used a non test card.
+      # :api_error - API responds with generic error
 
       STANDARD_ERROR_CODE = {
         :incorrect_number => 'incorrect_number',
@@ -93,7 +94,8 @@ module ActiveMerchant #:nodoc:
         :call_issuer => 'call_issuer',
         :pickup_card => 'pick_up_card',
         :config_error => 'config_error',
-        :test_mode_live_card => 'test_mode_live_card'
+        :test_mode_live_card => 'test_mode_live_card',
+        :api_error => 'api_error'
       }
 
       cattr_reader :implementations

@@ -711,6 +711,28 @@ class StripeTest < Test::Unit::TestCase
     assert_match(/^Invalid response received from the Stripe API/, response.message)
   end
 
+  def test_api_error_response
+    @gateway.expects(:ssl_request).returns(api_error_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:api_error], response.error_code
+    refute response.test? # unsuccessful request defaults to live
+    #assert_equal 'ch_test_charge', response.authorization
+  end
+
+  def test_test_mode_live_card_error_response
+    @gateway.expects(:ssl_request).returns(test_mode_live_card_error_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:test_mode_live_card], response.error_code
+    refute response.test? # unsuccessful request defaults to live
+    #assert_equal 'ch_test_charge', response.authorization
+  end
+
   def test_add_creditcard_with_credit_card
     post = {}
     @gateway.send(:add_creditcard, post, @credit_card, {})
@@ -2017,6 +2039,30 @@ class StripeTest < Test::Unit::TestCase
     <<-RESPONSE
     {
        foo : bar
+    }
+    RESPONSE
+  end
+
+  def api_error_response
+    <<-RESPONSE
+    {
+      "error": {
+        "type": "api_error",
+        "message": "This is a Stripe API error resposne"
+      }
+    }
+    RESPONSE
+  end
+
+  def test_mode_live_card_error_response
+    <<-RESPONSE
+    {
+      "error": {
+        "type": "card_error",
+        "code": "card_declined",
+        "decline_code": "test_mode_live_card",
+        "message": "Your request was in teset mode but used a non test card"
+      }
     }
     RESPONSE
   end

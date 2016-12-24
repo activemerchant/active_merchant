@@ -1,6 +1,7 @@
 require 'active_support/core_ext/hash/slice'
 
 module ActiveMerchant #:nodoc:
+
   module Billing #:nodoc:
     class StripeGateway < Gateway
       self.live_url = 'https://api.stripe.com/v1/'
@@ -43,7 +44,8 @@ module ActiveMerchant #:nodoc:
         'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
         'processing_error' => STANDARD_ERROR_CODE[:processing_error],
         'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin],
-        'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card]
+        'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card],
+        'api_error' => STANDARD_ERROR_CODE[:api_error]
       }
 
       BANK_ACCOUNT_HOLDER_TYPE_MAPPING = {
@@ -578,11 +580,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
+        type = response['error']['type']
         code = response['error']['code']
         decline_code = response['error']['decline_code'] if code == 'card_declined'
 
         error_code = STANDARD_ERROR_CODE_MAPPING[decline_code]
         error_code ||= STANDARD_ERROR_CODE_MAPPING[code]
+        error_code ||= STANDARD_ERROR_CODE_MAPPING[type]
         error_code
       end
 
