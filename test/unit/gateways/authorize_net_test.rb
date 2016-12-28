@@ -568,6 +568,27 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal("15", store.params["message_code"])
   end
 
+  def test_successful_unstore
+    response = stub_comms do
+      @gateway.unstore('35959426#32506918#cim_store')
+    end.check_request do |endpoint, data, headers|
+      doc = parse(data)
+      assert_equal "35959426", doc.at_xpath("//deleteCustomerProfileRequest/customerProfileId").content
+    end.respond_with(successful_unstore_response)
+
+    assert_success response
+    assert_equal "Successful", response.message
+  end
+
+  def test_failed_unstore
+    @gateway.expects(:ssl_post).returns(failed_unstore_response)
+
+    unstore = @gateway.unstore('35959426#32506918#cim_store')
+    assert_failure unstore
+    assert_match(/The record cannot be found/, unstore.message)
+    assert_equal("40", unstore.params["message_code"])
+  end
+
   def test_successful_store_new_payment_profile
     @gateway.expects(:ssl_post).returns(successful_store_new_payment_profile_response)
 
@@ -1849,6 +1870,36 @@ class AuthorizeNetTest < Test::Unit::TestCase
       <customerShippingAddressIdList />
       <validationDirectResponseList />
       </createCustomerProfileResponse>
+    eos
+  end
+
+  def successful_unstore_response
+    <<-eos
+      <?xml version="1.0" encoding="utf-8"?>
+      <deleteCustomerProfileResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+      </deleteCustomerProfileResponse>
+    eos
+  end
+
+  def failed_unstore_response
+    <<-eos
+      <?xml version="1.0" encoding="utf-8"?>
+      <deleteCustomerProfileResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00040</code>
+            <text>The record cannot be found.</text>
+          </message>
+        </messages>
+      </deleteCustomerProfileResponse>
     eos
   end
 
