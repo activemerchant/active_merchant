@@ -180,6 +180,12 @@ module ActiveMerchant
         end
       end
 
+      def unstore(authorization)
+        customer_profile_id, _, _ = split_authorization(authorization)
+
+        delete_customer_profile(customer_profile_id)
+      end
+
       def verify_credentials
         response = commit(:verify_credentials) { }
         response.success?
@@ -614,6 +620,12 @@ module ActiveMerchant
         end
       end
 
+      def delete_customer_profile(customer_profile_id)
+        commit(:cim_store_delete_customer) do |xml|
+          xml.customerProfileId(customer_profile_id)
+        end
+      end
+
       def names_from(payment_source, address, options)
         if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
           first_name, last_name = split_names(address[:name])
@@ -681,6 +693,8 @@ module ActiveMerchant
           "createCustomerProfileRequest"
         elsif action == :cim_store_update
           "createCustomerPaymentProfileRequest"
+        elsif action == :cim_store_delete_customer
+          "deleteCustomerProfileRequest"
         elsif action == :verify_credentials
           "authenticateTestRequest"
         elsif is_cim_action?(action)
@@ -825,7 +839,7 @@ module ActiveMerchant
       end
 
       def cim?(action)
-        (action == :cim_store) || (action == :cim_store_update)
+        (action == :cim_store) || (action == :cim_store_update) || (action == :cim_store_delete_customer)
       end
 
       def transaction_id_from(authorization)
