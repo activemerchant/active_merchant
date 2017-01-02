@@ -70,6 +70,18 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :description => 'AM test purchase'
     }
 
+    @visacredit_descriptor_options = {
+      :billing_address => {
+        :address1 => "Flat 6, Primrose Rise",
+        :address2 => "347 Lavender Road",
+        :city => "",
+        :state => "Northampton",
+        :zip => 'NN17 8YG '
+      },
+      :merchant_name => 'merchant',
+      :dynamic_descriptor => 'product'
+    }
+
     @visacredit_reference_options = {
       :order_id => generate_unique_id,
       :description => 'AM test purchase'
@@ -139,6 +151,14 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert_equal 'APPROVED', responseRefund.message
     assert_success responseRefund
     assert responseRefund.test?
+  end
+
+  def test_successful_visacreditcard_purchase_with_dynamic_descriptors
+    assert responsePurchase = @gateway.purchase(284, @visacreditcard, @visacredit_descriptor_options)
+    assert_equal 'APPROVED', responsePurchase.message
+    assert_success responsePurchase
+    assert responsePurchase.test?
+    assert !responsePurchase.authorization.blank?
   end
 
   def test_successful_visacreditcard_authorization_and_void
