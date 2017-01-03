@@ -719,7 +719,6 @@ class StripeTest < Test::Unit::TestCase
 
     assert_equal Gateway::STANDARD_ERROR_CODE[:api_error], response.error_code
     refute response.test? # unsuccessful request defaults to live
-    #assert_equal 'ch_test_charge', response.authorization
   end
 
   def test_test_mode_live_card_error_response
@@ -730,7 +729,6 @@ class StripeTest < Test::Unit::TestCase
 
     assert_equal Gateway::STANDARD_ERROR_CODE[:test_mode_live_card], response.error_code
     refute response.test? # unsuccessful request defaults to live
-    #assert_equal 'ch_test_charge', response.authorization
   end
 
   def test_add_creditcard_with_credit_card
@@ -2061,7 +2059,7 @@ class StripeTest < Test::Unit::TestCase
         "type": "card_error",
         "code": "card_declined",
         "decline_code": "test_mode_live_card",
-        "message": "Your request was in teset mode but used a non test card"
+        "message": "Your request was in test mode but used a non test card"
       }
     }
     RESPONSE
