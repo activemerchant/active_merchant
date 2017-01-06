@@ -93,8 +93,8 @@ module ActiveMerchant #:nodoc:
         invoices      = []
         subscription  = PagarMe::Subscription.find_by_id(subscription_id)
         plan          = subscription.plan
-        invoice_start = Date.parse(subscription.date_created) + plan.trial_days - 1.day
-        invoice_end   = invoice_start + plan.days
+        invoice_start = Date.parse(subscription.date_created) + plan.trial_days
+        invoice_end   = invoice_start + plan.days - 1.day
 
         while invoice_start < Time.now
           invoices << {
