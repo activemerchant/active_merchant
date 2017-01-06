@@ -12,6 +12,7 @@
 * Remove support for Ruby 2.0 [jasonwebster]
 * CardStream: Add dynamic descriptor option fields [curiousepic]
 * Wirecard: Send customer data in requests [davidsantoso]
+* Worldpay: Add session id attribute [shasum]
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
