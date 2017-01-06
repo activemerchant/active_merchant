@@ -223,8 +223,11 @@ module ActiveMerchant #:nodoc:
 
               add_address(xml, (options[:billing_address] || options[:address]))
             end
-            if options[:ip]
-              xml.tag! 'session', 'shopperIPAddress' => options[:ip]
+            if options[:ip] && options[:session_id]
+              xml.tag! 'session', 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
+            else
+              xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
+              xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
             end
           end
         end
