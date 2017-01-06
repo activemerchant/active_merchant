@@ -15,7 +15,8 @@ class RemoteWirecardTest < Test::Unit::TestCase
       order_id: 1,
       billing_address: address,
       description: 'Wirecard remote test purchase',
-      email: 'soleone@example.com'
+      email: 'soleone@example.com',
+      ip: '127.0.0.1'
     }
 
     @german_address = {

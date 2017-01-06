@@ -239,6 +239,7 @@ module ActiveMerchant #:nodoc:
             when :reversal
               xml.tag! 'GuWID', options[:preauthorization]
             end
+            add_customer_data(xml, options)
           end
         end
       end
