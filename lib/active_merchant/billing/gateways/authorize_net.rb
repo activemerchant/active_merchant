@@ -249,6 +249,7 @@ module ActiveMerchant
           xml.send(transaction_type) do
             xml.amount(amount(amount))
             add_payment_source(xml, payment)
+            add_settings(xml, payment, options)
             add_invoice(xml, options)
           end
         end
