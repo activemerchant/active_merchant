@@ -13,6 +13,7 @@
 * CardStream: Add dynamic descriptor option fields [curiousepic]
 * Wirecard: Send customer data in requests [davidsantoso]
 * Worldpay: Add session id attribute [shasum]
+* WePay: Build fee structure correctly [curiousepic]
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]

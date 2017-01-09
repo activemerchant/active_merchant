@@ -60,6 +60,12 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_purchase_with_fee
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(application_fee: 3, fee_payer: "payee"))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_authorize
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
