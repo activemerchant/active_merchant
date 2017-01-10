@@ -8,7 +8,7 @@ module ActiveMerchant
           'processing'      => :initiate,
           'chargedback'     => :cancel,
           'waiting_payment' => :wait_boleto,
-          'refused'         => :reverse,
+          'refused'         => :cancel,
           'refunded'        => :refund,
           'pending_refund'  => :wait_boleto
         }
