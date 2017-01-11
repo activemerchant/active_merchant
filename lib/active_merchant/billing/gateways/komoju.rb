@@ -86,10 +86,10 @@ module ActiveMerchant #:nodoc:
         post[:fraud_details] = details unless details.empty?
       end
 
-      def api_request(path, data)
+      def api_request(method, path, data)
         raw_response = nil
         begin
-          raw_response = ssl_post("#{url}#{path}", data, headers)
+          raw_response = ssl_request(method, "#{url}#{path}", data, headers)
         rescue ResponseError => e
           raw_response = e.response.body
         end
@@ -97,8 +97,8 @@ module ActiveMerchant #:nodoc:
         JSON.parse(raw_response)
       end
 
-      def commit(path, params)
-        response = api_request(path, params.to_json)
+      def commit(path, params, method = :post)
+        response = api_request(method, path, params.to_json)
         success = !response.key?("error")
         message = (success ? "Transaction succeeded" : response["error"]["message"])
         Response.new(

@@ -23,7 +23,7 @@ class KomojuTest < Test::Unit::TestCase
 
   def test_successful_credit_card_purchase
     successful_response = successful_credit_card_purchase_response
-    @gateway.expects(:ssl_post).returns(JSON.generate(successful_response))
+    @gateway.expects(:ssl_request).returns(JSON.generate(successful_response))
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -67,7 +67,7 @@ class KomojuTest < Test::Unit::TestCase
     raw_response.expects(:body).returns(JSON.generate(failed_purchase_response))
     exception = ActiveMerchant::ResponseError.new(raw_response)
 
-    @gateway.expects(:ssl_post).raises(exception)
+    @gateway.expects(:ssl_request).raises(exception)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -80,7 +80,7 @@ class KomojuTest < Test::Unit::TestCase
     raw_response.expects(:body).returns(JSON.generate(detected_fraud_response))
     exception = ActiveMerchant::ResponseError.new(raw_response)
 
-    @gateway.expects(:ssl_post).raises(exception)
+    @gateway.expects(:ssl_request).raises(exception)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -101,7 +101,7 @@ class KomojuTest < Test::Unit::TestCase
 
   def test_successful_credit_card_void
     successful_response = successful_credit_card_refund_response
-    @gateway.expects(:ssl_post).returns(JSON.generate(successful_response))
+    @gateway.expects(:ssl_request).returns(JSON.generate(successful_response))
 
     response = @gateway.void("7e8c55a54256ce23e387f2838c", @options)
     assert_success response
