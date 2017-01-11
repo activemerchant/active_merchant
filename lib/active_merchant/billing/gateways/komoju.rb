@@ -38,8 +38,9 @@ module ActiveMerchant #:nodoc:
         commit("/payments", post)
       end
 
-      def refund(money, identification, options = {})
-        commit("/payments/#{identification}/refund", {})
+      def refund(amount, identification, options = {})
+        params = { :amount => amount }
+        commit("/payments/#{identification}/refund", params)
       end
 
       def store(payment, options = {})

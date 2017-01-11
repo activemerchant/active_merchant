@@ -89,13 +89,13 @@ class KomojuTest < Test::Unit::TestCase
   end
 
   def test_successful_credit_card_refund
-    successful_response = successful_credit_card_refund_response
-    @gateway.expects(:ssl_post).returns(JSON.generate(successful_response))
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(10,  "7e8c55a54256ce23e387f2838c", @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match('"amount":10', data)
+    end.respond_with(JSON.generate(successful_credit_card_refund_response))
 
-    response = @gateway.refund(@amount,  "7e8c55a54256ce23e387f2838c", @options)
-    assert_success response
-
-    assert_equal successful_response["id"], response.authorization
+    assert_equal successful_credit_card_refund_response["id"], response.authorization
     assert response.test?
   end
 
