@@ -10,7 +10,8 @@ class KomojuTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :order_id => '1',
+      :order_id => '12345',
+      :locale => 'ja',
       :description => 'Store Purchase',
       :tax => "10",
       :ip => "192.168.0.1",
@@ -29,6 +30,19 @@ class KomojuTest < Test::Unit::TestCase
 
     assert_equal successful_response["id"], response.authorization
     assert response.test?
+  end
+
+  def test_successful_credit_card_purchase_options
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match('"amount":"100"', data)
+      assert_match('"locale":"ja"', data)
+      assert_match('"description":"Store Purchase"', data)
+      assert_match('"currency":"JPY"', data)
+      assert_match('"external_order_num":"12345"', data)
+      assert_match('"tax":"10"', data)
+    end.respond_with(JSON.generate(successful_credit_card_purchase_response))
   end
 
   def test_successful_credit_card_purchase_with_token

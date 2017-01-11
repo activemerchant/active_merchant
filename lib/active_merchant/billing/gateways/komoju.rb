@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         post = {}
         post[:amount] = amount(money)
+        post[:locale] = options[:locale] if options[:locale]
         post[:description] = options[:description]
         add_payment_details(post, payment, options)
         post[:currency] = options[:currency] || default_currency
