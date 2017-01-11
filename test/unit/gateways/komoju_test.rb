@@ -53,6 +53,15 @@ class KomojuTest < Test::Unit::TestCase
     end.respond_with(JSON.generate(successful_credit_card_purchase_response))
   end
 
+  def test_successful_store_payment_details
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/tokens$/, endpoint)
+      assert_match({ payment_details: request_payment_details }.to_json, data)
+    end.respond_with(JSON.generate(successful_credit_card_store_response))
+  end
+
   def test_failed_purchase
     raw_response = mock
     raw_response.expects(:body).returns(JSON.generate(failed_purchase_response))
@@ -100,13 +109,7 @@ class KomojuTest < Test::Unit::TestCase
       "amount" => 100,
       "tax" => 8,
       "payment_deadline" => nil,
-      "payment_details" => {
-        "type" => "credit_card",
-        "brand" => "visa",
-        "last_four_digits" => "2220",
-        "month" => 9,
-        "year" => 2016
-      },
+      "payment_details" => response_payment_details,
       "payment_method_fee" => 0,
       "total" => 108,
       "currency" => "JPY",
@@ -128,13 +131,7 @@ class KomojuTest < Test::Unit::TestCase
       "amount" => 100,
       "tax" => 8,
       "payment_deadline" => nil,
-      "payment_details" => {
-        "type" => "credit_card",
-        "brand" => "visa",
-        "last_four_digits" => "2220",
-        "month" => 9,
-        "year" => 2016
-      },
+      "payment_details" => response_payment_details,
       "payment_method_fee" => 0,
       "total" => 108,
       "currency" => "JPY",
@@ -145,6 +142,15 @@ class KomojuTest < Test::Unit::TestCase
         "order_id" => "262f2a92-542c-4b4e-a68b-5b6d54a438a8"
       },
       "created_at" => "2015-03-20T04:51:48Z"
+    }
+  end
+
+  def successful_credit_card_store_response
+    {
+      "id" => "tok_7e8a1078428bf050d7d9a867b436ff12f9aafc84d04ee83a4dec36beda14bb055uy99wsx59ekg0zacwvsfqezg",
+      "resource" => "token",
+      "created_at" => "2015-03-21T07:29:22Z",
+      "payment_details" => response_payment_details
     }
   end
 
@@ -165,6 +171,29 @@ class KomojuTest < Test::Unit::TestCase
         "message" => "The payment could not be completed.",
         "param" => nil
       }
+    }
+  end
+
+  def request_payment_details
+    {
+      "type" => "credit_card",
+      "number" => @credit_card.number,
+      "month" => @credit_card.month,
+      "year" => @credit_card.year,
+      "verification_value" => @credit_card.verification_value,
+      "given_name" => @credit_card.first_name,
+      "family_name" => @credit_card.last_name,
+      "email" => @options[:email]
+    }
+  end
+
+  def response_payment_details
+    {
+      "type" => "credit_card",
+      "brand" => "visa",
+      "last_four_digits" => @credit_card.number[-1..-4],
+      "month" => @credit_card.month,
+      "year" => @credit_card.year
     }
   end
 end
