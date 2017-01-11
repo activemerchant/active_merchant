@@ -43,6 +43,10 @@ module ActiveMerchant #:nodoc:
         commit("/payments/#{identification}/refund", params)
       end
 
+      def void(identification, options = {})
+        commit("/payments/#{identification}/refund", {})
+      end
+
       def store(payment, options = {})
         post = {}
         add_payment_details(post, payment, options)

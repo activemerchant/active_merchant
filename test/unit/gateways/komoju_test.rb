@@ -99,6 +99,16 @@ class KomojuTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_credit_card_void
+    successful_response = successful_credit_card_refund_response
+    @gateway.expects(:ssl_post).returns(JSON.generate(successful_response))
+
+    response = @gateway.void("7e8c55a54256ce23e387f2838c", @options)
+    assert_success response
+
+    assert_equal successful_response["id"], response.authorization
+  end
+
   private
 
   def successful_credit_card_purchase_response
