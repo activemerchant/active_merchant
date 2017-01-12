@@ -271,15 +271,17 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
+      assert_no_match %r(cardAddress), data
+      assert_no_match %r(address), data
       assert_no_match %r(firstName), data
       assert_no_match %r(lastName), data
+      assert_no_match %r(address1), data
       assert_no_match %r(address2), data
+      assert_no_match %r(postalCode), data
+      assert_no_match %r(city), data
+      assert_no_match %r(state), data
+      assert_no_match %r(countryCode), data
       assert_no_match %r(telephoneNumber), data
-      assert_match %r(<address1>N/A</address1>), data
-      assert_match %r(<city>N/A</city>), data
-      assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
-      assert_match %r(<countryCode>US</countryCode>), data
     end.respond_with(successful_authorize_response)
   end
 
