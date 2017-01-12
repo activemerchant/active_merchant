@@ -241,6 +241,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, address)
+        return unless address
+
         address = address_with_defaults(address)
 
         xml.tag! 'cardAddress' do
