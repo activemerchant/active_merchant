@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
-        type = options[:plan_id] ? nil : "sale"
+        type = options[:start_date] ? nil : "sale"
         commit(type, post)
       end
 
@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(post, money, options)
-        post[:amount] = amount(money) unless options[:plan_id]
+        post[:amount] = amount(money) unless options[:start_date].present?
         post[:orderid] = options[:order_id]
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
@@ -212,9 +212,6 @@ module ActiveMerchant #:nodoc:
         params[action == "add_customer" ? :customer_vault : :type] = action
         params[:username] = @options[:login]
         params[:password] = @options[:password]
-
-        puts '!!!!!!!!!!!!!!!!!!!!!!!!!!!! commit'
-        puts post_data(action, params)
 
         raw_response = ssl_post(url, post_data(action, params), headers)
         response = parse(raw_response)
