@@ -8,4 +8,4 @@ group :test, :remote_test do
   gem 'braintree', '>= 2.50.0'
 end
 
-gem 'rails', '~> 4.1.0'
+gem 'activesupport', '~> 4.1.0'
