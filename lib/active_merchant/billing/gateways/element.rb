@@ -274,6 +274,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(action, response, amount),
+          avs_result: success_from(response) ? avs_from(response) : nil,
+          cvv_result: success_from(response) ? cvv_from(response) : nil,
           test: test?
         )
       end
@@ -292,6 +294,14 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         response["expressresponsemessage"]
+      end
+
+      def avs_from(response)
+        AVSResult.new(code: response["card"]["avsresponsecode"]) if response["card"]
+      end
+
+      def cvv_from(response)
+        CVVResult.new(response["card"]["cvvresponsecode"]) if response["card"]
       end
 
       def split_authorization(authorization)
