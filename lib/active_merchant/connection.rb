@@ -177,19 +177,6 @@ module ActiveMerchant
       end
     end
 
-    def handle_response(response)
-      if @ignore_http_status then
-        return response.body
-      else
-        case response.code.to_i
-        when 200...300
-          response.body
-        else
-          raise ResponseError.new(response)
-        end
-      end
-    end
-
     def debug(message, tag = nil)
       log(:debug, message, tag)
     end

@@ -14,6 +14,7 @@
 * CyberSource: Remove extraneous parameter blocking echecks [chriscz] #2861
 * FirstPay: Update Fields For Recurring Payments [nfarve] #2940
 * BlueSnap: Update list of supported countries [curiousepic] #2942
+* Remove unused handle_response method [bl] #2309
 
 == Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909
