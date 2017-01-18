@@ -37,7 +37,6 @@ module ActiveMerchant #:nodoc:
     #   cc = CreditCard.new(
     #     :first_name         => 'Steve',
     #     :last_name          => 'Smith',
-    #     :email              => 'steve@example.com', # optional
     #     :month              => '9',
     #     :year               => '2017',
     #     :brand              => 'visa',
@@ -111,11 +110,6 @@ module ActiveMerchant #:nodoc:
         value = value && value.to_s.dup
         @brand = (value.respond_to?(:downcase) ? value.downcase : value)
       end
-
-      # Returns or sets the email of the card holder.
-      #
-      # @return [String]
-      attr_accessor :email
 
       # Returns or sets the first name of the card holder.
       #
@@ -230,11 +224,6 @@ module ActiveMerchant #:nodoc:
       # @return +true+ if the card has expired, +false+ otherwise
       def expired?
         expiry_date.expired?
-      end
-
-      # Returns whether the +email+ attribute has been set.
-      def email?
-        email.present?
       end
 
       # Returns whether either the +first_name+ or the +last_name+ attributes has been set.
