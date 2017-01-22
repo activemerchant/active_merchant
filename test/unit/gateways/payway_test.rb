@@ -218,6 +218,10 @@ class PaywayTest < Test::Unit::TestCase
     assert_match '00', response.params['response_code']
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
     def successful_response_store
@@ -274,5 +278,51 @@ class PaywayTest < Test::Unit::TestCase
  -ZJB9YPQZG+vWBdDSca3sUMtvFxpLUFwdKF5APSPOVnhbFJ3vSXY1ulP/R6XW9vnw
  -6kkQi2fHhU20ugMzp881Eixr+TjC0RvUerLG7g==
  ------END CERTIFICATE-----'
+    end
+
+    def transcript
+      %(
+opening connection to ccapi.client.qvalent.com:443...
+opened
+starting SSL for ccapi.client.qvalent.com:443...
+SSL established
+<- "POST /payway/ccapi HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ccapi.client.qvalent.com\r\nContent-Length: 300\r\n\r\n"
+<- "card.cardHolderName=Longbob+Longsen&card.PAN=4564710000000004&card.CVN=847&card.expiryYear=19&card.expiryMonth=02&order.ECI=SSL&order.amount=1100&card.currency=AUD&customer.orderNumber=eb3028119b1b5e9ced54&customer.username=foo&customer.password=bar&customer.merchant=TEST&order.type=capture"
+-> "HTTP/1.1 200 OK\r\n"
+-> "X-Server-Shutdown: false\r\n"
+-> "Content-Type: text/plain;charset=ISO-8859-1\r\n"
+-> "Content-Length: 278\r\n"
+-> "Date: Sun, 22 Jan 2017 22:04:48 GMT\r\n"
+-> "Connection: close\r\n"
+-> "Set-Cookie: TS019af3e9=016fc1dd2354ed655d391e1f1a0ab78b43858a2e03c14636ed86388c87c993d65730349f0a; Path=/; Secure; HTTPOnly\r\n"
+-> "\r\n"
+reading 278 bytes...
+-> "response.summaryCode=0&response.responseCode=08&response.text=Honour with identification&response.receiptNo=967370806&response.settlementDate=20170123&response.transactionDate=23-JAN-2017 09:04:47&response.cardSchemeName=VISA&response.creditGroup=VI/BC/MC&response.cvnResponse=M"
+read 278 bytes
+Conn close
+      )
+    end
+
+    def scrubbed_transcript
+      %(
+opening connection to ccapi.client.qvalent.com:443...
+opened
+starting SSL for ccapi.client.qvalent.com:443...
+SSL established
+<- "POST /payway/ccapi HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ccapi.client.qvalent.com\r\nContent-Length: 300\r\n\r\n"
+<- "card.cardHolderName=Longbob+Longsen&card.PAN=[FILTERED]&card.CVN=[FILTERED]&card.expiryYear=19&card.expiryMonth=02&order.ECI=SSL&order.amount=1100&card.currency=AUD&customer.orderNumber=eb3028119b1b5e9ced54&customer.username=foo&customer.password=[FILTERED]&customer.merchant=TEST&order.type=capture"
+-> "HTTP/1.1 200 OK\r\n"
+-> "X-Server-Shutdown: false\r\n"
+-> "Content-Type: text/plain;charset=ISO-8859-1\r\n"
+-> "Content-Length: 278\r\n"
+-> "Date: Sun, 22 Jan 2017 22:04:48 GMT\r\n"
+-> "Connection: close\r\n"
+-> "Set-Cookie: TS019af3e9=016fc1dd2354ed655d391e1f1a0ab78b43858a2e03c14636ed86388c87c993d65730349f0a; Path=/; Secure; HTTPOnly\r\n"
+-> "\r\n"
+reading 278 bytes...
+-> "response.summaryCode=0&response.responseCode=08&response.text=Honour with identification&response.receiptNo=967370806&response.settlementDate=20170123&response.transactionDate=23-JAN-2017 09:04:47&response.cardSchemeName=VISA&response.creditGroup=VI/BC/MC&response.cvnResponse=M"
+read 278 bytes
+Conn close
+      )
     end
 end
