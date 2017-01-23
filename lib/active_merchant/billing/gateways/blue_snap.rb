@@ -221,7 +221,7 @@ module ActiveMerchant
         doc.send("transaction-meta-data") do
           doc.send("meta-data") do
             doc.send("meta-key", "description")
-            doc.send("meta-value", truncate(description, 500))
+            doc.send("meta-value", truncate(description, 50))
             doc.send("meta-description", "Description")
           end
         end
