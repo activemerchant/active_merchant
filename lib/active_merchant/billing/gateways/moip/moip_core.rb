@@ -223,7 +223,8 @@ module ActiveMerchant #:nodoc:
           Response.new(success?(response), message_from(response), params, test: test?,
             authorization: authorization || authorization_from(response),
             payment_action: status_action_from(response, payment_method),
-            external_url: params[:url])
+            external_url: params[:url],
+            gateway_transaction_code: gateway_transaction_code_from(response))
         end
       end
 
@@ -275,6 +276,7 @@ module ActiveMerchant #:nodoc:
         if response.has_key?('EnviarInstrucaoUnicaResponse')
           response['EnviarInstrucaoUnicaResponse']['Resposta']['Token']
         else
+          
           if @query
             payments = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']
 
@@ -282,6 +284,20 @@ module ActiveMerchant #:nodoc:
           else
             response['CodigoMoIP']
           end
+        end
+      end
+
+      def gateway_transaction_code_from(response)
+        if !response.has_key?('EnviarInstrucaoUnicaResponse')          
+          if @query
+            payments = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']
+
+            payments.is_a?(Array) ? payments.last['CodigoMoIP'] : payments['CodigoMoIP']
+          else
+            response['CodigoMoIP']
+          end
+        else
+          nil
         end
       end
 

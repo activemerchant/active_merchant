@@ -247,19 +247,21 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters, options = {})
         response = api_request(method, url, parameters, options)
+        authorization = authorization_from(response)
 
         Response.new(
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization,
           test: test?,
           error_code: error_code_from(response),
           plan_code: plan_code_from(response),
           external_url: boleto_url_from(response),
           payment_action: payment_action_from(response),
           subscription_action: subscription_action_from(response),
-          card: card_from(response)
+          card: card_from(response),
+          gateway_transaction_code: authorization
         )
       end
 

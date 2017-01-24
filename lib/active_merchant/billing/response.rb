@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result,
                   :error_code, :emv_authorization, :payment_action, :external_url,
                   :subscription_action, :next_charge_at, :plan_code, :boleto_url,
-                  :card, :invoice_id
+                  :card, :invoice_id, :gateway_transaction_code
 
       def success?
         @success
@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
         @boleto_url          = options[:boleto_url]
         @card                = options[:card]
         @invoice_id          = options[:invoice_id]
+        @gateway_transaction_code = options[:gateway_transaction_code]
 
         @avs_result = if options[:avs_result].kind_of?(AVSResult)
           options[:avs_result].to_hash

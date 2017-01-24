@@ -296,7 +296,6 @@ class PagarmeTest < Test::Unit::TestCase
     response = @gateway.recurring(@amount, @credit_card, @options)
 
     assert_instance_of Response, response
-    binding.pry
 
     assert_equal 'credit_card', response.params["payment_method"]
     assert_equal 'paid', response.params["status"]
