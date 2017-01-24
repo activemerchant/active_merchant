@@ -76,7 +76,7 @@ class SagePayTest < Test::Unit::TestCase
     @amount = 100_00  # 100 YEN
     @options[:currency] = 'JPY'
 
-    @gateway.expects(:add_pair).with({}, :Amount, '100', :required => true)
+    @gateway.expects(:add_pair).with({}, :Amount, '10000', :required => true)
     @gateway.expects(:add_pair).with({}, :Currency, 'JPY', :required => true)
 
     @gateway.send(:add_amount, {}, @amount, @options)

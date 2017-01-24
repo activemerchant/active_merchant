@@ -431,7 +431,7 @@ class StripeTest < Test::Unit::TestCase
   def test_amount_localization
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
     @gateway.expects(:post_data).with do |params|
-      '4' == params[:amount]
+      '400' == params[:amount]
     end
 
     @options[:currency] = 'JPY'
