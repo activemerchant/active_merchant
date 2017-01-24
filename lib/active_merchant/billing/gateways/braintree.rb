@@ -10,8 +10,6 @@ module ActiveMerchant #:nodoc:
       def self.new(options={})
         if options.has_key?(:login)
           BraintreeOrangeGateway.new(options)
-        elsif options.has_key?(:access_token)
-          BraintreePinkGateway.new(options)
         else
           BraintreeBlueGateway.new(options)
         end
