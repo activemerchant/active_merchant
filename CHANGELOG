@@ -16,6 +16,7 @@
 * WePay: Build fee structure correctly [curiousepic]
 * Worldpay: Do not default address when not provided [shasum]
 * Element: Add AVS and CVV codes to response [shasum]
+* GlobalCollect: On purchase skip capture if not required [davidsantoso]
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
