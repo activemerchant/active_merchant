@@ -35,6 +35,16 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_purchase_does_not_run_capture_if_authorize_auto_captured
+    response = stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options)
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+    assert_equal "CAPTURE_REQUESTED", response.params["payment"]["status"]
+    assert_equal 1, response.responses.size
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@rejected_amount, @declined_card, @options)

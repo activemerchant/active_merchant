@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         MultiResponse.run do |r|
           r.process { authorize(money, payment, options) }
-          r.process { capture(money, r.authorization, options) }
+          r.process { capture(money, r.authorization, options) } unless capture_requested?(r)
         end
       end
 
@@ -289,6 +289,10 @@ EOS
 
       def nestable_hash
         Hash.new {|h,k| h[k] = Hash.new(&h.default_proc) }
+      end
+
+      def capture_requested?(response)
+        response.params.try(:[], "payment").try(:[], "status") == "CAPTURE_REQUESTED"
       end
     end
   end
