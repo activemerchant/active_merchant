@@ -123,6 +123,24 @@ class Cashnet < Test::Unit::TestCase
     assert_match %r{Unparsable response received}, response.message
   end
 
+  def test_passes_custcode_from_credentials
+    gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: "TheCustCode")
+    stub_comms(gateway, :ssl_request) do
+      gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/custcode=TheCustCode/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_allows_custcode_override
+    gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: "TheCustCode")
+    stub_comms(gateway, :ssl_request) do
+      gateway.purchase(@amount, @credit_card, custcode: "OveriddenCustCode")
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/custcode=OveriddenCustCode/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
   def expected_expiration_date
     '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]

@@ -127,6 +127,17 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_success @gateway.unstore(customer_stored.authorization)
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match /The card is not supported/, response.message
+  end
+
   def test_invalid_login
     gateway = OpenpayGateway.new(
       key: '123456789',
@@ -146,5 +157,35 @@ class RemoteOpenpayTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_nil_cvv_scrubbing
+    @credit_card.verification_value = nil
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_equal clean_transcript.include?('\"cvv2\":[BLANK]'), true
+  end
+
+  def test_empty_string_cvv_scrubbing
+    @credit_card.verification_value = ""
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_equal clean_transcript.include?('\"cvv2\":\"[BLANK]'), true
+  end
+
+  def test_whitespace_string_cvv_scrubbing
+    @credit_card.verification_value = "    "
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_equal clean_transcript.include?('\"cvv2\":\"[BLANK]'), true
   end
 end

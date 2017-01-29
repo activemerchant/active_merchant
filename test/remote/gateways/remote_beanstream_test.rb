@@ -103,6 +103,18 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_false capture.authorization.blank?
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@visa, @options)
+    assert_success response
+    assert_match "Approved", response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_amex, @options)
+    assert_failure response
+    assert_match 'DECLINE', response.message
+  end
+
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response

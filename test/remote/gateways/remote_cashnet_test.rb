@@ -28,6 +28,14 @@ class CashnetTest < Test::Unit::TestCase
     assert_equal 'Success', refund.message
   end
 
+  def test_successful_refund_with_options
+    assert purchase = @gateway.purchase(@amount, @credit_card, custcode: "TheCustCode")
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, email: "wow@example.com", custcode: "TheCustCode")
+    assert_success refund
+  end
+
   def test_failed_purchase
     assert response = @gateway.purchase(-44, @credit_card, @options)
     assert_failure response

@@ -78,6 +78,9 @@ module ActiveMerchant #:nodoc:
         post[:value] = amount(money)
         post[:trackId] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
+        post[:descriptor] = {}
+        post[:descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
+        post[:descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
       end
 
       def add_payment_method(post, payment_method)
@@ -100,7 +103,7 @@ module ActiveMerchant #:nodoc:
           post[:card][:billingDetails][:state] = address[:state]
           post[:card][:billingDetails][:country] = address[:country]
           post[:card][:billingDetails][:postcode] = address[:zip]
-          post[:card][:billingDetails][:phone] = { number: address[:phone] }
+          post[:card][:billingDetails][:phone] = { number: address[:phone] } unless address[:phone].blank?
         end
       end
 

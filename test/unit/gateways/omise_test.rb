@@ -349,7 +349,7 @@ class OmiseTest < Test::Unit::TestCase
           "description": "Charge for order 3947",
           "capture": true,
           "authorized": true,
-          "captured": true,
+          "paid": true,
           "transaction": "trxn_test_4zguktuecyuo77xgq38",
           "refunded": 0,
           "refunds": {
@@ -405,7 +405,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": null,
       "capture": true,
       "authorized": true,
-      "captured": true,
+      "paid": true,
       "transaction": "trxn_test_4zgf1d3f7t9k6gk8hn8",
       "refunded": 0,
       "refunds": {
@@ -504,7 +504,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": null,
       "capture": false,
       "authorized": true,
-      "captured": true,
+      "paid": true,
       "transaction": "trxn_test_4zmqf6njyokta57ljs1",
       "refunded": 0,
       "refunds": {
@@ -558,7 +558,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": null,
       "capture": false,
       "authorized": true,
-      "captured": false,
+      "paid": false,
       "transaction": null,
       "refunded": 0,
       "refunds": {
@@ -611,7 +611,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": "Charge for order 3947",
       "capture": false,
       "authorized": true,
-      "captured": true,
+      "paid": true,
       "transaction": "trxn_test_4z5gp0t3mpfsu28u8jo",
       "refunded": 0,
       "refunds": {
@@ -749,7 +749,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": "activemerchant testing",
       "capture": true,
       "authorized": false,
-      "captured": false,
+      "paid": false,
       "transaction": null,
       "refunded": 0,
       "refunds": {

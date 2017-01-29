@@ -27,12 +27,6 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert_equal 'USD', response.params['response']['currency']
   end
 
-  def test_successful_purchase_with_descriptor
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:merchant => 'Merchant', :merchant_location => 'Location'))
-    assert_success response
-    assert_equal 'Approved', response.message
-  end
-
   def test_unsuccessful_multi_currency_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'XYZ'))
     assert_failure response
@@ -107,11 +101,11 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   end
 
   def test_invalid_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    @gateway.purchase(@amount, @credit_card, @options)
 
     assert response = @gateway.refund(@amount, nil, @options)
     assert_failure response
-    assert_match %r{Original transaction is required}, response.message
+    assert_match %r{Invalid credit card for unmatched refund}, response.message
   end
 
   def test_store
@@ -125,6 +119,24 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert card = @gateway.store(@credit_card)
     assert purchase = @gateway.purchase(@amount, card.authorization, @options.merge(:cvv => 123))
     assert_success purchase
+  end
+
+  def test_successful_purchase_with_descriptor
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:merchant => 'Merchant', :merchant_location => 'Location'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_3DS_information
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:cavv => 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', :xid => 'MGVmMmNlMzI4NjAyOWU2ZDgwNTQ=', :sli => '05'))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_purchase_with_incomplete_3DS_information
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:cavv => 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', :sli => '05'))
+    assert_failure response
+    assert_match %r{Extra/xid is required for SLI 05}, response.message
   end
 
   def test_invalid_login

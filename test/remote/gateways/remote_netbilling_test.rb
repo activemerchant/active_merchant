@@ -16,7 +16,8 @@ class RemoteNetbillingTest < Test::Unit::TestCase
 
     @options = {
       :billing_address => @address,
-      :description => 'Internet purchase'
+      :description => 'Internet purchase',
+      :order_id => 987654321
     }
 
     @amount = 100

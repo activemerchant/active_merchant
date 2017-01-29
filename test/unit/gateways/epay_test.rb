@@ -2,7 +2,7 @@ require 'test_helper'
 
 class EpayTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = EpayGateway.new(
       :login    => '10100111001',

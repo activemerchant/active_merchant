@@ -44,10 +44,20 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal 'R50704213207145707', response.authorization
   end
 
+  def test_authorize_passes_ip_and_session_id
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(ip: '127.0.0.1', session_id: '0215ui8ib1'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<session shopperIPAddress="127.0.0.1" id="0215ui8ib1"\/>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.respond_with(failed_authorize_response)
+    assert_equal '7', response.error_code
     assert_failure response
   end
 
@@ -189,6 +199,16 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_currency_exponent_handling
+    stub_comms do
+      @gateway.authorize(10000, @credit_card, @options.merge(currency: :JPY))
+    end.check_request do |endpoint, data, headers|
+      assert_tag_with_attributes 'amount',
+          {'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY'},
+        data
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_address_handling
     stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge(billing_address: address))
@@ -251,15 +271,17 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
+      assert_no_match %r(cardAddress), data
+      assert_no_match %r(address), data
       assert_no_match %r(firstName), data
       assert_no_match %r(lastName), data
+      assert_no_match %r(address1), data
       assert_no_match %r(address2), data
+      assert_no_match %r(postalCode), data
+      assert_no_match %r(city), data
+      assert_no_match %r(state), data
+      assert_no_match %r(countryCode), data
       assert_no_match %r(telephoneNumber), data
-      assert_match %r(<address1>N/A</address1>), data
-      assert_match %r(<city>N/A</city>), data
-      assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
-      assert_match %r(<countryCode>US</countryCode>), data
     end.respond_with(successful_authorize_response)
   end
 
@@ -383,6 +405,27 @@ class WorldpayTest < Test::Unit::TestCase
     attributes.each do |attribute, value|
       assert_match %r(#{attribute}="#{value}"), m[1]
     end
+  end
+
+  def test_successful_verify
+    @gateway.expects(:ssl_post).times(3).returns(successful_authorize_response, successful_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_verify_with_failed_void
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_failure response
   end
 
   def test_transcript_scrubbing
@@ -619,6 +662,22 @@ class WorldpayTest < Test::Unit::TestCase
         </reply>
       </paymentService>
     RESPONSE
+  end
+
+  def failed_void_response
+    <<-REQUEST
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="CHARGEBEEM1">
+        <reply>
+          <orderStatus orderCode="non_existent_authorization">
+            <error code="5">
+              <![CDATA[Could not find payment for order]]>
+            </error>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    REQUEST
   end
 
   def sample_authorization_request

@@ -57,8 +57,7 @@ module ActiveMerchant #:nodoc:
 
         post[:company] = address[:company]
 
-        # groups all names after the first into the last name param
-        post[:first_name], post[:last_name] = address[:name].split(' ', 2)
+        post[:first_name], post[:last_name] = split_names(address[:name])
         post[:address] = "#{address[:address1]}, #{address[:address2]}"
         post[:city] = address[:city]
         post[:country] = address[:country]
