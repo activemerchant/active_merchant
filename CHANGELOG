@@ -17,8 +17,9 @@
 * Worldpay: Do not default address when not provided [shasum]
 * Element: Add AVS and CVV codes to response [shasum]
 * GlobalCollect: On purchase skip capture if not required [davidsantoso]
-* Stripe: Fix error in handling of track-only contactless EMV data
+* Stripe: Fix error in handling of track-only contactless EMV data [jasonwebster]
 * CardStream: Support PEN currency [shasum]
+* Firstdata E4 (Payeezy): Set correct ECI value for card present swipes [jasonwebster] #2318
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
