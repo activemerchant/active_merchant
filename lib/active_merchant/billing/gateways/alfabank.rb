@@ -41,6 +41,7 @@ module ActiveMerchant #:nodoc:
         add_return_url(post, options)
         add_amount(post, options)
         add_description(post, options)
+        add_session_timeout(post, options)
 
         commit('register', options[:amount], post)
       end
@@ -81,6 +82,10 @@ module ActiveMerchant #:nodoc:
 
       def add_description(post, options)
         post[:description] = options[:description]
+      end
+
+      def add_session_timeout(post, options)
+        post[:sessionTimeoutSecs] = options[:sessionTimeoutSecs]
       end
 
       def commit(action, money, parameters)
