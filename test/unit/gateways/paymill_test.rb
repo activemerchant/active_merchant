@@ -183,7 +183,7 @@ class PaymillTest < Test::Unit::TestCase
 
   def test_failed_store_with_invalid_credit_card
     @gateway.expects(:raw_ssl_request).returns(failed_store_response)
-    response = @gateway.store(@credit_card )
+    response = @gateway.store(@credit_card)
     assert_failure response
     assert_equal 'Account or Bank Details Incorrect', response.message
     assert_equal '000.100.201', response.params['transaction']['processing']['return']['code']

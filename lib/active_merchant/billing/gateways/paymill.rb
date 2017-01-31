@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment_method, options={} )
+      def purchase(money, payment_method, options={})
         action_with_token(:purchase, money, payment_method, options)
       end
 
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(credit_card, options={})
-          save_card(credit_card, options)
+        save_card(credit_card, options)
       end
 
       def supports_scrubbing
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_credit_card(post, credit_card,  options)
+      def add_credit_card(post, credit_card, options)
         post['account.holder'] = (credit_card.try(:name) || "")
         post['account.number'] = credit_card.number
         post['account.expiry.month'] = sprintf("%.2i", credit_card.month)
@@ -83,8 +83,6 @@ module ActiveMerchant #:nodoc:
         post['account.email'] = (options[:email] || nil)
         post['presentation.amount3D'] =  (options[:money] || nil)
         post['presentation.currency3D'] = (options[:currency] || currency( options[:money]))
-
-
       end
 
       def headers
@@ -132,11 +130,11 @@ module ActiveMerchant #:nodoc:
         case payment_method
         when String
           self.send("#{action}_with_token", money, payment_method, options)
-          else
-            MultiResponse.run do |r|
-            r.process { save_card(payment_method, options) }
-            r.process { self.send("#{action}_with_token", money, r.authorization, options) }
-          end
+        else
+          MultiResponse.run do |r|
+          r.process { save_card(payment_method, options) }
+          r.process { self.send("#{action}_with_token", money, r.authorization, options) }
+        end
         end
       end
 
@@ -163,7 +161,7 @@ module ActiveMerchant #:nodoc:
       def save_card(credit_card, options)
         post = {}
 
-        add_credit_card(post, credit_card,  options)
+        add_credit_card(post, credit_card, options)
         post['channel.id'] = @options[:public_key]
         post['jsonPFunction'] = 'jsonPFunction'
         post['transaction.mode'] = (test? ? 'CONNECTOR_TEST' : 'LIVE')

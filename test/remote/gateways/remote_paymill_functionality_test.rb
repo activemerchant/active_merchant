@@ -1,11 +1,9 @@
 require 'test_helper'
 require 'active_merchant'
+
 class PaymillTest < Test::Unit::TestCase
-
   def setup
-
     @gateway = PaymillGateway.new(:public_key => 'PUBLIC', :private_key => 'PRIVATE')
-
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
         :number => '4111111111111111',
         :month => '12',
@@ -13,16 +11,14 @@ class PaymillTest < Test::Unit::TestCase
         :first_name => 'Longbob',
         :last_name => 'Longsen',
         :verification_value => '123',
-        :brand => 'visa'
-    )
+        :brand => 'visa')
     @amount = 200
-
     @options = {
         :currency => 'USD',
         :email => 'Longbob.Longse@example.com'
     }
-
   end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -33,5 +29,4 @@ class PaymillTest < Test::Unit::TestCase
     assert_nil response.avs_result["message"]
     assert response.test?
   end
-
 end
