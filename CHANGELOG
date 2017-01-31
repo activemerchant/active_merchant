@@ -18,6 +18,7 @@
 * Element: Add AVS and CVV codes to response [shasum]
 * GlobalCollect: On purchase skip capture if not required [davidsantoso]
 * Stripe: Fix error in handling of track-only contactless EMV data
+* CardStream: Support PEN currency [shasum]
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
