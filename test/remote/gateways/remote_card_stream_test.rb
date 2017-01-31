@@ -266,7 +266,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
 
   def test_failed_visacreditcard_purchase_via_reference
     assert response = @gateway.purchase(142, 123, @visacredit_reference_options)
-    assert_equal 'DB ERROR', response.message
+    assert_match %r{INVALID_XREF}, response.message
     assert_failure response
     assert response.test?
   end
@@ -281,7 +281,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_failed_purchase_non_existent_currency
     assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: "CEO"))
     assert_failure response
-    assert_equal 'MISSING CURRENCYCODE', response.message
+    assert_match %r{MISSING_CURRENCYCODE}, response.message
   end
 
   def test_successful_visadebitcard_purchase
@@ -335,7 +335,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :shared_secret => ''
     )
     assert response = gateway.purchase(142, @mastercard, @mastercard_options)
-    assert_equal 'MISSING MERCHANTID', response.message
+    assert_match %r{MISSING_MERCHANTID}, response.message
     assert_failure response
   end
 
@@ -355,7 +355,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @mastercard_options)
     assert_failure response
-    assert_equal 'INVALID CARDNUMBER', response.message
+    assert_match %r{INVALID_CARDNUMBER}, response.message
   end
 
   def test_successful_3dsecure_purchase

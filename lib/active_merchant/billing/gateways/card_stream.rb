@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
         "MXN" => "484",
         "NOK" => "578",
         "NZD" => "554",
+        "PEN" => "604",
         "SEK" => "752",
         "SGD" => "702",
         "USD" => "840",
