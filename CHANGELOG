@@ -10,6 +10,7 @@
 * Linkpoint: Raise ArgumentError when trying to instantiate without `:pem` [jasonwebster] #2329
 * Base Gateway: Add new `unsupported_feature` standard error code [jasonwebster] #2322
 * Authorize.net: Use new `unsupported_feature` standard error code [jasonwebster] #2322
+* Kushki: Add new gateway [shasum] #2326
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
