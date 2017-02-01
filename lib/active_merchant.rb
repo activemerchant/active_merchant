@@ -44,6 +44,7 @@ require 'timeout'
 require 'socket'
 
 require 'active_merchant/network_connection_retries'
+require 'active_merchant/delete_with_body'
 require 'active_merchant/connection'
 require 'active_merchant/post_data'
 require 'active_merchant/posts_data'

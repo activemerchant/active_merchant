@@ -391,6 +391,10 @@ jetpay:
 komoju:
   login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3
 
+kushki:
+  public_merchant_id: "Your Public Merchant Id"
+  private_merchant_id: "Your Private Merchant Id"
+
 latitude19:
   account_number: "03022016"
   configuration_id: "380835424362"
