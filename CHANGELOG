@@ -1,27 +1,29 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.63.0 (February 2, 2017)
+* Authorize.net: Add #unstore support [jimryan] #2293
 * AuthorizeNet: Fix line items quirk [shasum]
-* WePay: Update WePay to API version 2016-12-07 [davidsantoso]
-* PaymentExpress: Update supported countries [shasum]
-* CyberSource: Add Lebanon to supported countries [shasum]
-* Vanco: Update test URL [davidsantoso]
-* Remove leading or trailing whitespace from credit card name [davidsantoso]
-* Culqi: Add new gateway [shasum]
-* WePay: Remove null address fields from request [davidsantoso]
-* Remove support for Ruby 2.0 [jasonwebster]
 * CardStream: Add dynamic descriptor option fields [curiousepic]
+* CardStream: Support PEN currency [shasum]
+* Culqi: Add new gateway [shasum]
+* CyberSource: Add Lebanon to supported countries [shasum]
+* Element: Add AVS and CVV codes to response [shasum]
+* Firstdata E4 (Payeezy): Set correct ECI value for card present swipes [jasonwebster] #2318
+* GlobalCollect: On purchase skip capture if not required [davidsantoso]
+* PaymentExpress: Update supported countries [shasum]
+* Remove leading or trailing whitespace from credit card name [davidsantoso]
+* Remove support for Ruby 2.0 [jasonwebster]
+* Secure Pay AU: Add scrubbing support to Secure Pay AU [bruno] #2253
+* Stripe: Fix error in handling of track-only contactless EMV data [jasonwebster]
+* Vanco: Update test URL [davidsantoso]
+* WePay: Build fee structure correctly [curiousepic]
+* WePay: Remove null address fields from request [davidsantoso]
+* WePay: Update WePay to API version 2016-12-07 [davidsantoso]
 * Wirecard: Send customer data in requests [davidsantoso]
 * Worldpay: Add session id attribute [shasum]
-* WePay: Build fee structure correctly [curiousepic]
 * Worldpay: Do not default address when not provided [shasum]
-* Element: Add AVS and CVV codes to response [shasum]
-* GlobalCollect: On purchase skip capture if not required [davidsantoso]
-* Stripe: Fix error in handling of track-only contactless EMV data [jasonwebster]
-* CardStream: Support PEN currency [shasum]
-* Firstdata E4 (Payeezy): Set correct ECI value for card present swipes [jasonwebster] #2318
-* Secure Pay AU: Add scrubbing support to Secure Pay AU [bruno] #2253
-* Authorize.net: Add #unstore support [jimryan] #2293
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
