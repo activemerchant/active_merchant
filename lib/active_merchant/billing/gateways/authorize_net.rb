@@ -36,24 +36,24 @@ module ActiveMerchant
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
-        '36' => STANDARD_ERROR_CODE[:incorrect_number],
-        '237' => STANDARD_ERROR_CODE[:invalid_number],
-        '2315' => STANDARD_ERROR_CODE[:invalid_number],
-        '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        '378' => STANDARD_ERROR_CODE[:invalid_cvc],
-        '38' => STANDARD_ERROR_CODE[:expired_card],
-        '2317' => STANDARD_ERROR_CODE[:expired_card],
-        '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
-        '227' => STANDARD_ERROR_CODE[:incorrect_address],
         '2127' => STANDARD_ERROR_CODE[:incorrect_address],
         '22' => STANDARD_ERROR_CODE[:card_declined],
+        '227' => STANDARD_ERROR_CODE[:incorrect_address],
         '23' => STANDARD_ERROR_CODE[:card_declined],
-        '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '2315' => STANDARD_ERROR_CODE[:invalid_number],
+        '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '2317' => STANDARD_ERROR_CODE[:expired_card],
         '235' => STANDARD_ERROR_CODE[:processing_error],
+        '237' => STANDARD_ERROR_CODE[:invalid_number],
         '24' => STANDARD_ERROR_CODE[:pickup_card],
+        '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
         '300' => STANDARD_ERROR_CODE[:config_error],
-        '384' => STANDARD_ERROR_CODE[:config_error]
+        '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '36' => STANDARD_ERROR_CODE[:incorrect_number],
+        '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '378' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '38' => STANDARD_ERROR_CODE[:expired_card],
+        '384' => STANDARD_ERROR_CODE[:config_error],
       }
 
       MARKET_TYPE = {
