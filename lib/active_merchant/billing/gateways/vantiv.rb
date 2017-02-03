@@ -11,6 +11,18 @@ module ActiveMerchant #:nodoc:
     class VantivGateway < Gateway
       SCHEMA_VERSION = "9.4"
 
+      SCRUBBED_PATTERNS = [
+        %r((<user>).+(</user>)),
+        %r((<password>).+(</password>)),
+        %r((<number>).+(</number>)),
+        %r((<cardValidationNum>).+(</cardValidationNum>)),
+        %r((<accountNumber>).+(</accountNumber>)),
+        %r((<paypageRegistrationId>).+(</paypageRegistrationId>)),
+        %r((<authenticationValue>).+(</authenticationValue>))
+      ].freeze
+
+      SCRUBBED_REPLACEMENT = "\\1[FILTERED]\\2"
+
       self.test_url = "https://www.testlitle.com/sandbox/communicator/online"
       self.live_url = "https://payments.litle.com/vap/communicator/online"
 
@@ -142,18 +154,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        filtered = "\1[FILTERED]\2"
-
-        transcript
-          .gsub(%r((<user>).+(</user>)), filtered)
-          .gsub(%r((<password>).+(</password>)), filtered)
-          .gsub(%r((<number>).+(</number>)), filtered)
-          .gsub(%r((<cardValidationNum>).+(</cardValidationNum>)), filtered)
-          .gsub(%r((<accountNumber>).+(</accountNumber>)), filtered)
-          .gsub(
-            %r((<paypageRegistrationId>).+(</paypageRegistrationId>)), filtered
-          )
-          .gsub(%r((<authenticationValue>).+(</authenticationValue>)), filtered)
+        SCRUBBED_PATTERNS.inject(transcript) do |text, pattern|
+          text.gsub(pattern, SCRUBBED_REPLACEMENT)
+        end
       end
 
     private

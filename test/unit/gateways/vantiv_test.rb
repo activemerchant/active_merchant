@@ -326,7 +326,7 @@ class VantivTest < Test::Unit::TestCase
   end
 
   def test_scrub
-    assert_equal @gateway.scrub(pre_scrub), post_scrub
+    assert_equal post_scrub, @gateway.scrub(pre_scrub)
   end
 
   def test_supports_scrubbing?
