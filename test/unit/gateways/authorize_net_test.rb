@@ -999,6 +999,23 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141794', response.authorization.split('#')[0]
   end
 
+  def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal credit_card.payment_cryptogram, doc.at_xpath("//creditCard/cryptogram").content
+        assert_equal credit_card.number, doc.at_xpath("//creditCard/cardNumber").content
+      end
+    end.respond_with(network_tokenization_not_supported_response)
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:unsupported_feature], response.error_code
+  end
+
   def test_supports_network_tokenization_true
     response = stub_comms do
       @gateway.supports_network_tokenization?
