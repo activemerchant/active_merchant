@@ -218,7 +218,10 @@ module ActiveMerchant #:nodoc:
       def add_address(xml, options)
         if address = options[:billing_address] || options[:address]
           xml.tag! "strAVSStreetAddress", address[:address1]
-          xml.tag! "strAVSZipCode", address[:zip]
+
+          if address[:country].upcase == 'US'
+            xml.tag! "strAVSZipCode", address[:zip]
+          end
         end
       end
 
