@@ -304,7 +304,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if parsed.empty?
-          %w(response message).each do |attribute|
+          %w[response message].each do |attribute|
             parsed[attribute.to_sym] = doc.xpath("//litleOnlineResponse").attribute(attribute).value
           end
         end
@@ -327,7 +327,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(kind, parsed)
         return (parsed[:response] == "000") unless kind == :registerToken
-        %w(000 801 802).include?(parsed[:response])
+        %w[000 801 802].include?(parsed[:response])
       end
 
       def authorization_from(kind, parsed, money)
