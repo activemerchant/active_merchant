@@ -142,7 +142,8 @@ module ActiveMerchant #:nodoc:
           .gsub(%r((<authenticationValue>).+(</authenticationValue>)), '\1[FILTERED]\2')
       end
 
-      private
+    private
+
       CARD_TYPE = {
         "visa"             => "VI",
         "master"           => "MC",
