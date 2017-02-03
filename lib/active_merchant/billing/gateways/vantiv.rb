@@ -27,12 +27,12 @@ module ActiveMerchant #:nodoc:
       #           :login         - The user.
       #           :password      - The password.
       #           :merchant_id   - The merchant id.
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :login, :password, :merchant_id)
         super
       end
 
-      def purchase(money, payment_method, options={})
+      def purchase(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.sale(transaction_attributes(options)) do
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         commit(:sale, request, money)
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.authorization(transaction_attributes(options)) do
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorization, request, money)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         transaction_id, _, _ = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         transaction_id, _, _ = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
 
         request = build_xml_request do |doc|
@@ -312,7 +312,7 @@ module ActiveMerchant #:nodoc:
         parsed
       end
 
-      def commit(kind, request, money=nil)
+      def commit(kind, request, money = nil)
         parsed = parse(kind, ssl_post(url, request, headers))
 
         options = {
