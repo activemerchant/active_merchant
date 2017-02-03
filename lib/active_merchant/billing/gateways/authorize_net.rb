@@ -49,6 +49,7 @@ module ActiveMerchant
         '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
         '300' => STANDARD_ERROR_CODE[:config_error],
         '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '3155' => STANDARD_ERROR_CODE[:unsupported_feature],
         '36' => STANDARD_ERROR_CODE[:incorrect_number],
         '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
         '378' => STANDARD_ERROR_CODE[:invalid_cvc],

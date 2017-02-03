@@ -9,6 +9,7 @@
 * PayU LATAM: Let Refund take amount value [curiousepic] #2334
 * Linkpoint: Raise ArgumentError when trying to instantiate without `:pem` [jasonwebster] #2329
 * Base Gateway: Add new `unsupported_feature` standard error code [jasonwebster] #2322
+* Authorize.net: Use new `unsupported_feature` standard error code [jasonwebster] #2322
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
