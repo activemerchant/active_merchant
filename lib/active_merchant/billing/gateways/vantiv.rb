@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
         "discover"         => "DI",
         "jcb"              => "JC",
         "diners_club"      => "DC"
-      }
+      }.freeze
 
       AVS_RESPONSE_CODE = {
           "00" => "Y",
@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
           "33" => "R",
           "34" => "I",
           "40" => "E"
-      }
+      }.freeze
 
       def void_type(kind)
         (kind == "authorization") ? :authReversal : :void
