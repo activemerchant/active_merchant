@@ -142,14 +142,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
+        filtered = "\1[FILTERED]\2"
+
         transcript
-          .gsub(%r((<user>).+(</user>)), '\1[FILTERED]\2')
-          .gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2')
-          .gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2')
-          .gsub(%r((<cardValidationNum>).+(</cardValidationNum>)), '\1[FILTERED]\2')
-          .gsub(%r((<accountNumber>).+(</accountNumber>)), '\1[FILTERED]\2')
-          .gsub(%r((<paypageRegistrationId>).+(</paypageRegistrationId>)), '\1[FILTERED]\2')
-          .gsub(%r((<authenticationValue>).+(</authenticationValue>)), '\1[FILTERED]\2')
+          .gsub(%r((<user>).+(</user>)), filtered)
+          .gsub(%r((<password>).+(</password>)), filtered)
+          .gsub(%r((<number>).+(</number>)), filtered)
+          .gsub(%r((<cardValidationNum>).+(</cardValidationNum>)), filtered)
+          .gsub(%r((<accountNumber>).+(</accountNumber>)), filtered)
+          .gsub(
+            %r((<paypageRegistrationId>).+(</paypageRegistrationId>)), filtered
+          )
+          .gsub(%r((<authenticationValue>).+(</authenticationValue>)), filtered)
       end
 
     private
@@ -205,11 +209,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_descriptor(doc, options)
-        if options[:descriptor_name] || options[:descriptor_phone]
-          doc.customBilling do
-            doc.phone(options[:descriptor_phone]) if options[:descriptor_phone]
-            doc.descriptor(options[:descriptor_name]) if options[:descriptor_name]
-          end
+        name = options[:descriptor_name]
+        phone = options[:descriptor_phone]
+
+        return unless name || phone
+
+        doc.customBilling do
+          doc.phone(options[:descriptor_phone]) if phone
+          doc.descriptor(options[:descriptor_name]) if name
         end
       end
 
@@ -300,7 +307,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def exp_date(payment_method)
-        "#{format(payment_method.month, :two_digits)}#{format(payment_method.year, :two_digits)}"
+        formatted_month = format(payment_method.month, :two_digits)
+        formatted_year = format(payment_method.year, :two_digits)
+
+        "#{formatted_month}#{formatted_year}"
       end
 
       def parse(kind, xml)
