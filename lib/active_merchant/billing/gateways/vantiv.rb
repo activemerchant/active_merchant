@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        transaction_id, _, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
 
         request = build_xml_request do |doc|
           add_authentication(doc)
@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        transaction_id, _, _ = split_authorization(authorization)
+        transaction_id, = split_authorization(authorization)
 
         request = build_xml_request do |doc|
           add_authentication(doc)
