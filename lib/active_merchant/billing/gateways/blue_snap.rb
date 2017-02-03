@@ -59,14 +59,18 @@ module ActiveMerchant
         'line1: N, zip: N, name: N' => 'N',
       }
 
+      attr_accessor :plan_id
+
       def initialize(options={})
         requires!(options, :api_username, :api_password)
         super
       end
 
       def purchase(money, payment_method, options={})
+        self.plan_id = options[:plan_id]
         commit(:purchase) do |doc|
           add_auth_purchase(doc, money, payment_method, options)
+          add_plan(doc, options)
         end
       end
 
@@ -151,6 +155,14 @@ module ActiveMerchant
           doc.send("card-holder-info") do
             add_personal_info(doc, payment_method, options)
           end
+          doc.send("payer-info") do
+            add_personal_info(doc, payment_method, options)
+          end
+          doc.send("payment-source") do
+            doc.send("credit-card-info") do
+              add_credit_card(doc, payment_method)
+            end
+          end
           add_credit_card(doc, payment_method)
         end
       end
@@ -158,6 +170,16 @@ module ActiveMerchant
       def add_amount(doc, money)
         doc.amount(amount(money))
         doc.currency(options[:currency] || currency(money))
+      end
+
+      #
+      # Adds plan id to doc
+      #
+      # @param doc [Nokogiri::XML] doc
+      # @param options [Hash] options
+      def add_plan(doc, options)
+        return unless options[:plan_id].present?
+        doc.send("plan-id", options[:plan_id])
       end
 
       def add_personal_info(doc, credit_card, options)
@@ -267,7 +289,15 @@ module ActiveMerchant
 
       def url(action = nil)
         base = test? ? test_url : live_url
-        resource = (action == :store) ? "vaulted-shoppers" : "transactions"
+        resource = if (action == :store)
+          "vaulted-shoppers"
+        elsif (action == :get_plans)
+          "recurring/plans"
+        elsif subscription?
+          "recurring/subscriptions"
+        else
+          "transactions"
+        end
         "#{base}/#{resource}"
       end
 
@@ -312,7 +342,12 @@ module ActiveMerchant
       end
 
       def root_element(action)
-        (action == :store) ? "vaulted-shopper" : "card-transaction"
+        case action
+        when :store
+          "vaulted-shopper"
+        else
+          subscription? ? "recurring-subscription" : "card-transaction"
+        end
       end
 
       def headers
@@ -341,7 +376,15 @@ module ActiveMerchant
       end
 
       def bad_authentication_response
-        { "description" => "Unable to authenticate.  Please check your credentials." }
+        { "description" => "Unable to authenticate. Please check your credentials." }
+      end
+
+      #
+      # Checks if this is subscription?
+      #
+      # @returns [Boolean] result 
+      def subscription?
+        plan_id.present?
       end
     end
   end
