@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
       }.freeze
 
       def void_type(kind)
-        (kind == "authorization") ? :authReversal : :void
+        kind == "authorization" ? :authReversal : :void
       end
 
       def add_authentication(doc)
@@ -293,7 +293,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml).remove_namespaces!
         doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             parsed[node.name.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -331,7 +331,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(kind, parsed, money)
-        (kind == :registerToken) ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
+        kind == :registerToken ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
       end
 
       def split_authorization(authorization)
