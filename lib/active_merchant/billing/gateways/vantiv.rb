@@ -16,7 +16,14 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ["US"]
       self.default_currency = "USD"
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.supported_cardtypes = [
+        :visa,
+        :master,
+        :american_express,
+        :discover,
+        :diners_club,
+        :jcb
+      ]
 
       self.homepage_url = "http://www.vantiv.com/"
       self.display_name = "Vantiv"
@@ -119,7 +126,10 @@ module ActiveMerchant #:nodoc:
               doc.paypageRegistrationId(payment_method)
             else
               doc.accountNumber(payment_method.number)
-              doc.cardValidationNum(payment_method.verification_value) if payment_method.verification_value
+
+              if payment_method.verification_value
+                doc.cardValidationNum(payment_method.verification_value)
+              end
             end
           end
         end
@@ -212,7 +222,8 @@ module ActiveMerchant #:nodoc:
           doc.token do
             doc.litleToken(payment_method)
           end
-        elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+        elsif payment_method.respond_to?(:track_data) &&
+              payment_method.track_data.present?
           doc.card do
             doc.track(payment_method.track_data)
           end
@@ -266,9 +277,11 @@ module ActiveMerchant #:nodoc:
       def add_order_source(doc, payment_method, options)
         if options[:order_source]
           doc.orderSource(options[:order_source])
-        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :apple_pay
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard) &&
+              payment_method.source == :apple_pay
           doc.orderSource("applepay")
-        elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+        elsif payment_method.respond_to?(:track_data) &&
+              payment_method.track_data.present?
           doc.orderSource("retail")
         else
           doc.orderSource("ecommerce")
@@ -276,7 +289,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_pos(doc, payment_method)
-        return unless payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+        return unless payment_method.respond_to?(:track_data) &&
+                      payment_method.track_data.present?
 
         doc.pos do
           doc.capability("magstripe")
@@ -306,7 +320,10 @@ module ActiveMerchant #:nodoc:
 
         if parsed.empty?
           %w[response message].each do |attribute|
-            parsed[attribute.to_sym] = doc.xpath("//litleOnlineResponse").attribute(attribute).value
+            parsed[attribute.to_sym] = doc
+                                       .xpath("//litleOnlineResponse")
+                                       .attribute(attribute)
+                                       .value
           end
         end
 
@@ -319,11 +336,18 @@ module ActiveMerchant #:nodoc:
         options = {
           authorization: authorization_from(kind, parsed, money),
           test: test?,
-          avs_result: { code: AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]] },
+          avs_result: {
+            code: AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]]
+          },
           cvv_result: parsed[:fraudResult_cardValidationResult]
         }
 
-        Response.new(success_from(kind, parsed), parsed[:message], parsed, options)
+        Response.new(
+          success_from(kind, parsed),
+          parsed[:message],
+          parsed,
+          options
+        )
       end
 
       def success_from(kind, parsed)
@@ -332,7 +356,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(kind, parsed, money)
-        kind == :registerToken ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
+        if kind == :registerToken
+          parsed[:litleToken]
+        else
+          "#{parsed[:litleTxnId]};#{kind};#{money}"
+        end
       end
 
       def split_authorization(authorization)
