@@ -6,6 +6,7 @@
 * Braintree Blue: Pass cardholder_name with card [curiousepic] #2324
 * Paymill: Send new required fields on tokenization requests [tschelabaumann] #2279
 * GlobalCollect: Pass options to Refund [curiousepic] #2330
+* PayU LATAM: Let Refund take amount value [curiousepic] #2334
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
