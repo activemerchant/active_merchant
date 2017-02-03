@@ -132,14 +132,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript.
-          gsub(%r((<user>).+(</user>)), '\1[FILTERED]\2').
-          gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
-          gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2').
-          gsub(%r((<cardValidationNum>).+(</cardValidationNum>)), '\1[FILTERED]\2').
-          gsub(%r((<accountNumber>).+(</accountNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<paypageRegistrationId>).+(</paypageRegistrationId>)), '\1[FILTERED]\2').
-          gsub(%r((<authenticationValue>).+(</authenticationValue>)), '\1[FILTERED]\2')
+        transcript
+          .gsub(%r((<user>).+(</user>)), '\1[FILTERED]\2')
+          .gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2')
+          .gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2')
+          .gsub(%r((<cardValidationNum>).+(</cardValidationNum>)), '\1[FILTERED]\2')
+          .gsub(%r((<accountNumber>).+(</accountNumber>)), '\1[FILTERED]\2')
+          .gsub(%r((<paypageRegistrationId>).+(</paypageRegistrationId>)), '\1[FILTERED]\2')
+          .gsub(%r((<authenticationValue>).+(</authenticationValue>)), '\1[FILTERED]\2')
       end
 
       private
