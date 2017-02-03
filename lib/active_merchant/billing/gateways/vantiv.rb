@@ -1,4 +1,4 @@
-require 'nokogiri'
+require "nokogiri"
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -8,17 +8,17 @@ module ActiveMerchant #:nodoc:
     # in 2012. The URLs and the XML format (LitleXML) still reference the old
     # name.
     class VantivGateway < Gateway
-      SCHEMA_VERSION = '9.4'
+      SCHEMA_VERSION = "9.4"
 
-      self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
-      self.live_url = 'https://payments.litle.com/vap/communicator/online'
+      self.test_url = "https://www.testlitle.com/sandbox/communicator/online"
+      self.live_url = "https://payments.litle.com/vap/communicator/online"
 
-      self.supported_countries = ['US']
-      self.default_currency = 'USD'
+      self.supported_countries = ["US"]
+      self.default_currency = "USD"
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
-      self.homepage_url = 'http://www.vantiv.com/'
-      self.display_name = 'Vantiv'
+      self.homepage_url = "http://www.vantiv.com/"
+      self.display_name = "Vantiv"
 
       # Public: Create a new Vantiv gateway.
       #
@@ -143,34 +143,34 @@ module ActiveMerchant #:nodoc:
 
       private
       CARD_TYPE = {
-        'visa'             => 'VI',
-        'master'           => 'MC',
-        'american_express' => 'AX',
-        'discover'         => 'DI',
-        'jcb'              => 'JC',
-        'diners_club'      => 'DC'
+        "visa"             => "VI",
+        "master"           => "MC",
+        "american_express" => "AX",
+        "discover"         => "DI",
+        "jcb"              => "JC",
+        "diners_club"      => "DC"
       }
 
       AVS_RESPONSE_CODE = {
-          '00' => 'Y',
-          '01' => 'X',
-          '02' => 'D',
-          '10' => 'Z',
-          '11' => 'W',
-          '12' => 'A',
-          '13' => 'A',
-          '14' => 'P',
-          '20' => 'N',
-          '30' => 'S',
-          '31' => 'R',
-          '32' => 'U',
-          '33' => 'R',
-          '34' => 'I',
-          '40' => 'E'
+          "00" => "Y",
+          "01" => "X",
+          "02" => "D",
+          "10" => "Z",
+          "11" => "W",
+          "12" => "A",
+          "13" => "A",
+          "14" => "P",
+          "20" => "N",
+          "30" => "S",
+          "31" => "R",
+          "32" => "U",
+          "33" => "R",
+          "34" => "I",
+          "40" => "E"
       }
 
       def void_type(kind)
-        (kind == 'authorization') ? :authReversal : :void
+        (kind == "authorization") ? :authReversal : :void
       end
 
       def add_authentication(doc)
@@ -265,11 +265,11 @@ module ActiveMerchant #:nodoc:
         if options[:order_source]
           doc.orderSource(options[:order_source])
         elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :apple_pay
-          doc.orderSource('applepay')
+          doc.orderSource("applepay")
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
-          doc.orderSource('retail')
+          doc.orderSource("retail")
         else
-          doc.orderSource('ecommerce')
+          doc.orderSource("ecommerce")
         end
       end
 
@@ -277,9 +277,9 @@ module ActiveMerchant #:nodoc:
         return unless payment_method.respond_to?(:track_data) && payment_method.track_data.present?
 
         doc.pos do
-          doc.capability('magstripe')
-          doc.entryMode('completeread')
-          doc.cardholderId('signature')
+          doc.capability("magstripe")
+          doc.entryMode("completeread")
+          doc.cardholderId("signature")
         end
       end
 
@@ -325,7 +325,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(kind, parsed)
-        return (parsed[:response] == '000') unless kind == :registerToken
+        return (parsed[:response] == "000") unless kind == :registerToken
         %w(000 801 802).include?(parsed[:response])
       end
 
@@ -334,14 +334,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        transaction_id, kind, money = authorization.to_s.split(';')
+        transaction_id, kind, money = authorization.to_s.split(";")
         [transaction_id, kind, money]
       end
 
       def transaction_attributes(options)
         attributes = {}
         attributes[:id] = truncate(options[:id] || options[:order_id], 24)
-        attributes[:reportGroup] = options[:merchant] || 'Default Report Group'
+        attributes[:reportGroup] = options[:merchant] || "Default Report Group"
         attributes[:customerId] = options[:customer]
         attributes.delete_if { |key, value| value == nil }
         attributes
@@ -357,7 +357,7 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request
         builder = Nokogiri::XML::Builder.new
-        builder.__send__('litleOnlineRequest', root_attributes) do |doc|
+        builder.__send__("litleOnlineRequest", root_attributes) do |doc|
           yield(doc)
         end
         builder.doc.root.to_xml
@@ -369,7 +369,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-Type' => 'text/xml'
+          "Content-Type" => "text/xml"
         }
       end
     end
