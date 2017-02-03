@@ -2,6 +2,11 @@ require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # Public: Vantiv gateway
+    #
+    # This gateway was previously known as `LitleGateway`. Vantiv bought Litle
+    # in 2012. The URLs and the XML format (LitleXML) still reference the old
+    # name.
     class VantivGateway < Gateway
       SCHEMA_VERSION = '9.4'
 
@@ -12,10 +17,10 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
-      self.homepage_url = 'http://www.litle.com/'
-      self.display_name = 'Litle & Co.'
+      self.homepage_url = 'http://www.vantiv.com/'
+      self.display_name = 'Vantiv'
 
-      # Public: Create a new Litle gateway.
+      # Public: Create a new Vantiv gateway.
       #
       # options - A hash of options:
       #           :login         - The user.
