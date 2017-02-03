@@ -318,8 +318,8 @@ module ActiveMerchant #:nodoc:
         options = {
           authorization: authorization_from(kind, parsed, money),
           test: test?,
-          :avs_result => { :code => AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]] },
-          :cvv_result => parsed[:fraudResult_cardValidationResult]
+          avs_result: { code: AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]] },
+          cvv_result: parsed[:fraudResult_cardValidationResult]
         }
 
         Response.new(success_from(kind, parsed), parsed[:message], parsed, options)
