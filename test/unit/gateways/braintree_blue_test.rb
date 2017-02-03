@@ -497,6 +497,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:zip => "1234567890"})
   end
 
+  def test_cardholder_name_passing_with_card
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:credit_card][:cardholder_name] == "Longbob Longsen")
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), :customer => {:first_name => "Longbob", :last_name => "Longsen"})
+  end
+
   def test_passes_recurring_flag
     @gateway = BraintreeBlueGateway.new(
       :merchant_id => 'test',

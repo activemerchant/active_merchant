@@ -573,7 +573,7 @@ module ActiveMerchant #:nodoc:
                 :number => credit_card_or_vault_id.number,
                 :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
                 :expiration_year => credit_card_or_vault_id.year.to_s,
-                :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
+                :cardholder_name => credit_card_or_vault_id.name,
                 :cryptogram => credit_card_or_vault_id.payment_cryptogram
               }
           elsif credit_card_or_vault_id.source == :android_pay
@@ -590,7 +590,8 @@ module ActiveMerchant #:nodoc:
               :number => credit_card_or_vault_id.number,
               :cvv => credit_card_or_vault_id.verification_value,
               :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-              :expiration_year => credit_card_or_vault_id.year.to_s
+              :expiration_year => credit_card_or_vault_id.year.to_s,
+              :cardholder_name => credit_card_or_vault_id.name
             }
           end
         end
