@@ -276,15 +276,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order_source(doc, payment_method, options)
-        if options[:order_source]
-          doc.orderSource(options[:order_source])
-        elsif payment_method_is_apple_pay?(payment_method)
-          doc.orderSource(SOURCE_APPLE_PAY)
-        elsif payment_method_has_track_data?(payment_method)
-          doc.orderSource(SOURCE_RETAIL)
-        else
-          doc.orderSource(SOURCE_ECOMMERCE)
-        end
+        source = if options[:order_source]
+                   options[:order_source]
+                 elsif payment_method_is_apple_pay?(payment_method)
+                   SOURCE_APPLE_PAY
+                 elsif payment_method_has_track_data?(payment_method)
+                   SOURCE_RETAIL
+                 else
+                   SOURCE_ECOMMERCE
+                 end
+
+        doc.orderSource(source)
       end
 
       def add_payment_method(doc, payment_method)
