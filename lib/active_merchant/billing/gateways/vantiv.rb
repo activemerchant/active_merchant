@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
           add_authentication(doc)
           doc.registerTokenRequest(transaction_attributes(options)) do
             doc.orderId(truncate(options[:order_id], 24))
-            if payment_method.is_a?(String)
+            if payment_method_is_paypage_registration_id?(payment_method)
               doc.paypageRegistrationId(payment_method)
             else
               doc.accountNumber(payment_method.number)
@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
+        return if payment_method_is_token?(payment_method)
 
         doc.billToAddress do
           doc.name(payment_method.name)
@@ -250,11 +250,9 @@ module ActiveMerchant #:nodoc:
       def add_order_source(doc, payment_method, options)
         if options[:order_source]
           doc.orderSource(options[:order_source])
-        elsif payment_method.is_a?(NetworkTokenizationCreditCard) &&
-              payment_method.source == :apple_pay
+        elsif payment_method_is_apple_pay?(payment_method)
           doc.orderSource("applepay")
-        elsif payment_method.respond_to?(:track_data) &&
-              payment_method.track_data.present?
+        elsif payment_method_has_track_data?(payment_method)
           doc.orderSource("retail")
         else
           doc.orderSource("ecommerce")
@@ -262,12 +260,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(doc, payment_method)
-        if payment_method.is_a?(String)
+        if payment_method_is_token?(payment_method)
           doc.token do
             doc.litleToken(payment_method)
           end
-        elsif payment_method.respond_to?(:track_data) &&
-              payment_method.track_data.present?
+        elsif payment_method_has_track_data?(payment_method)
           doc.card do
             doc.track(payment_method.track_data)
           end
@@ -278,7 +275,7 @@ module ActiveMerchant #:nodoc:
             doc.expDate(exp_date(payment_method))
             doc.cardValidationNum(payment_method.verification_value)
           end
-          if payment_method.is_a?(NetworkTokenizationCreditCard)
+          if payment_method_is_network_tokenized?(payment_method)
             doc.cardholderAuthentication do
               doc.authenticationValue(payment_method.payment_cryptogram)
             end
@@ -287,8 +284,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_pos(doc, payment_method)
-        return unless payment_method.respond_to?(:track_data) &&
-                      payment_method.track_data.present?
+        return unless payment_method_has_track_data?(payment_method)
 
         doc.pos do
           doc.capability("magstripe")
@@ -298,7 +294,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shipping_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
+        return if payment_method_is_token?(payment_method)
 
         doc.shipToAddress do
           add_address(doc, options[:shipping_address])
@@ -379,6 +375,30 @@ module ActiveMerchant #:nodoc:
         end
 
         parsed
+      end
+
+      def payment_method_has_track_data?(payment_method)
+        payment_method.respond_to?(:track_data) &&
+          payment_method.track_data.present?
+      end
+
+      def payment_method_is_apple_pay?(payment_method)
+        payment_method_is_network_tokenized?(payment_method) &&
+          payment_method.source == :apple_pay
+      end
+
+      def payment_method_is_network_tokenized?(payment_method)
+        payment_method.is_a?(NetworkTokenizationCreditCard)
+      end
+
+      # Limited support for paypage at this time - if string in that context
+      # then it's a paypage registration id
+      def payment_method_is_paypage_registration_id?(payment_method)
+        payment_method.is_a?(String)
+      end
+
+      def payment_method_is_token?(payment_method)
+        payment_method.is_a?(String)
       end
 
       def root_attributes
