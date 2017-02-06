@@ -210,16 +210,18 @@ module ActiveMerchant #:nodoc:
 
     private
 
-      def add_address(doc, address)
-        return unless address
-
-        doc.companyName(address[:company]) unless address[:company].blank?
+      # Private: Add address elements common to billing and shipping
+      def add_address(doc, address, customer, options)
+        doc.name(customer[:name]) unless customer[:name].blank?
+        doc.firstName(customer[:first_name]) unless customer[:first_name].blank?
+        doc.lastName(customer[:last_name]) unless customer[:last_name].blank?
         doc.addressLine1(address[:address1]) unless address[:address1].blank?
         doc.addressLine2(address[:address2]) unless address[:address2].blank?
         doc.city(address[:city]) unless address[:city].blank?
         doc.state(address[:state]) unless address[:state].blank?
         doc.zip(address[:zip]) unless address[:zip].blank?
         doc.country(address[:country]) unless address[:country].blank?
+        doc.email(options[:email]) unless options[:email].blank?
         doc.phone(address[:phone]) unless address[:phone].blank?
       end
 
@@ -228,7 +230,7 @@ module ActiveMerchant #:nodoc:
         doc.amount(money)
         add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
-        add_shipping_address(doc, payment_method, options)
+        add_shipping_address(doc, options)
         add_payment_method(doc, payment_method)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
@@ -242,14 +244,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # Private: Add billing address information
+      #
+      # The `billToAddress` element is always added
       def add_billing_address(doc, payment_method, options)
-        return if payment_method_is_token?(payment_method)
+        address = options[:billing_address] || {}
+        customer = address_customer(payment_method, address)
 
         doc.billToAddress do
-          doc.name(payment_method.name)
-          doc.email(options[:email]) if options[:email]
-
-          add_address(doc, options[:billing_address])
+          add_address(doc, address, customer, options)
+          doc.companyName(address[:company]) unless address[:company].blank?
         end
       end
 
@@ -317,11 +321,33 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_shipping_address(doc, payment_method, options)
-        return if payment_method_is_token?(payment_method)
+      # Private: Add shipping address information
+      def add_shipping_address(doc, options)
+        address = options[:shipping_address]
+        return if address.blank?
+
+        # Shipping address only accepts `name`
+        customer = { name: address[:name] }
 
         doc.shipToAddress do
-          add_address(doc, options[:shipping_address])
+          add_address(doc, address, customer, options)
+        end
+      end
+
+      # Private: Determine customer name attributes for an address
+      def address_customer(payment_method, address)
+        payment = {}
+
+        {}.tap do |customer|
+          %i[name first_name last_name].each do |attribute|
+            # Get value from payment method if possible
+            if payment_method_has_customer_name?(payment_method)
+              payment[attribute] = payment_method.public_send(attribute)
+            end
+
+            # Payment method information takes precendence over address
+            customer[attribute] = payment[attribute] || address[attribute]
+          end
         end
       end
 
@@ -405,6 +431,10 @@ module ActiveMerchant #:nodoc:
         end
 
         parsed
+      end
+
+      def payment_method_has_customer_name?(payment_method)
+        payment_method.respond_to?(:name)
       end
 
       def payment_method_has_track_data?(payment_method)
