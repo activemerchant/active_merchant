@@ -51,17 +51,6 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment_method, options = {})
-        request = build_xml_request do |doc|
-          add_authentication(doc)
-          doc.sale(transaction_attributes(options)) do
-            add_auth_purchase_params(doc, money, payment_method, options)
-          end
-        end
-
-        commit(:sale, request, money)
-      end
-
       def authorize(money, payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
@@ -93,6 +82,17 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
+      def purchase(money, payment_method, options = {})
+        request = build_xml_request do |doc|
+          add_authentication(doc)
+          doc.sale(transaction_attributes(options)) do
+            add_auth_purchase_params(doc, money, payment_method, options)
+          end
+        end
+
+        commit(:sale, request, money)
+      end
+
       def refund(money, authorization, options = {})
         transaction_id, = split_authorization(authorization)
 
@@ -108,25 +108,10 @@ module ActiveMerchant #:nodoc:
         commit(:credit, request)
       end
 
-      def verify(creditcard, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(0, creditcard, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+      def scrub(transcript)
+        SCRUBBED_PATTERNS.inject(transcript) do |text, pattern|
+          text.gsub(pattern, SCRUBBED_REPLACEMENT)
         end
-      end
-
-      def void(authorization, options = {})
-        transaction_id, kind, money = split_authorization(authorization)
-
-        request = build_xml_request do |doc|
-          add_authentication(doc)
-          doc.send(void_type(kind), transaction_attributes(options)) do
-            doc.litleTxnId(transaction_id)
-            doc.amount(money) if void_type(kind) == :authReversal
-          end
-        end
-
-        commit(void_type(kind), request)
       end
 
       def store(payment_method, options = {})
@@ -153,10 +138,25 @@ module ActiveMerchant #:nodoc:
         true
       end
 
-      def scrub(transcript)
-        SCRUBBED_PATTERNS.inject(transcript) do |text, pattern|
-          text.gsub(pattern, SCRUBBED_REPLACEMENT)
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(0, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
+      end
+
+      def void(authorization, options = {})
+        transaction_id, kind, money = split_authorization(authorization)
+
+        request = build_xml_request do |doc|
+          add_authentication(doc)
+          doc.send(void_type(kind), transaction_attributes(options)) do
+            doc.litleTxnId(transaction_id)
+            doc.amount(money) if void_type(kind) == :authReversal
+          end
+        end
+
+        commit(void_type(kind), request)
       end
 
     private
