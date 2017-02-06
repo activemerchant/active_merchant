@@ -161,15 +161,6 @@ module ActiveMerchant #:nodoc:
 
     private
 
-      CARD_TYPE = {
-        "visa"             => "VI",
-        "master"           => "MC",
-        "american_express" => "AX",
-        "discover"         => "DI",
-        "jcb"              => "JC",
-        "diners_club"      => "DC"
-      }.freeze
-
       AVS_RESPONSE_CODE = {
         "00" => "Y",
         "01" => "X",
@@ -188,15 +179,26 @@ module ActiveMerchant #:nodoc:
         "40" => "E"
       }.freeze
 
-      def void_type(kind)
-        kind == "authorization" ? :authReversal : :void
-      end
+      CARD_TYPE = {
+        "visa"             => "VI",
+        "master"           => "MC",
+        "american_express" => "AX",
+        "discover"         => "DI",
+        "jcb"              => "JC",
+        "diners_club"      => "DC"
+      }.freeze
 
-      def add_authentication(doc)
-        doc.authentication do
-          doc.user(@options[:login])
-          doc.password(@options[:password])
-        end
+      def add_address(doc, address)
+        return unless address
+
+        doc.companyName(address[:company]) unless address[:company].blank?
+        doc.addressLine1(address[:address1]) unless address[:address1].blank?
+        doc.addressLine2(address[:address2]) unless address[:address2].blank?
+        doc.city(address[:city]) unless address[:city].blank?
+        doc.state(address[:state]) unless address[:state].blank?
+        doc.zip(address[:zip]) unless address[:zip].blank?
+        doc.country(address[:country]) unless address[:country].blank?
+        doc.phone(address[:phone]) unless address[:phone].blank?
       end
 
       def add_auth_purchase_params(doc, money, payment_method, options)
@@ -211,6 +213,28 @@ module ActiveMerchant #:nodoc:
         add_debt_repayment(doc, options)
       end
 
+      def add_authentication(doc)
+        doc.authentication do
+          doc.user(@options[:login])
+          doc.password(@options[:password])
+        end
+      end
+
+      def add_billing_address(doc, payment_method, options)
+        return if payment_method.is_a?(String)
+
+        doc.billToAddress do
+          doc.name(payment_method.name)
+          doc.email(options[:email]) if options[:email]
+
+          add_address(doc, options[:billing_address])
+        end
+      end
+
+      def add_debt_repayment(doc, options)
+        doc.debtRepayment(true) if options[:debt_repayment] == true
+      end
+
       def add_descriptor(doc, options)
         name = options[:descriptor_name]
         phone = options[:descriptor_phone]
@@ -223,8 +247,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_debt_repayment(doc, options)
-        doc.debtRepayment(true) if options[:debt_repayment] == true
+      def add_order_source(doc, payment_method, options)
+        if options[:order_source]
+          doc.orderSource(options[:order_source])
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard) &&
+              payment_method.source == :apple_pay
+          doc.orderSource("applepay")
+        elsif payment_method.respond_to?(:track_data) &&
+              payment_method.track_data.present?
+          doc.orderSource("retail")
+        else
+          doc.orderSource("ecommerce")
+        end
       end
 
       def add_payment_method(doc, payment_method)
@@ -252,52 +286,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_billing_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
-
-        doc.billToAddress do
-          doc.name(payment_method.name)
-          doc.email(options[:email]) if options[:email]
-
-          add_address(doc, options[:billing_address])
-        end
-      end
-
-      def add_shipping_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
-
-        doc.shipToAddress do
-          add_address(doc, options[:shipping_address])
-        end
-      end
-
-      def add_address(doc, address)
-        return unless address
-
-        doc.companyName(address[:company]) unless address[:company].blank?
-        doc.addressLine1(address[:address1]) unless address[:address1].blank?
-        doc.addressLine2(address[:address2]) unless address[:address2].blank?
-        doc.city(address[:city]) unless address[:city].blank?
-        doc.state(address[:state]) unless address[:state].blank?
-        doc.zip(address[:zip]) unless address[:zip].blank?
-        doc.country(address[:country]) unless address[:country].blank?
-        doc.phone(address[:phone]) unless address[:phone].blank?
-      end
-
-      def add_order_source(doc, payment_method, options)
-        if options[:order_source]
-          doc.orderSource(options[:order_source])
-        elsif payment_method.is_a?(NetworkTokenizationCreditCard) &&
-              payment_method.source == :apple_pay
-          doc.orderSource("applepay")
-        elsif payment_method.respond_to?(:track_data) &&
-              payment_method.track_data.present?
-          doc.orderSource("retail")
-        else
-          doc.orderSource("ecommerce")
-        end
-      end
-
       def add_pos(doc, payment_method)
         return unless payment_method.respond_to?(:track_data) &&
                       payment_method.track_data.present?
@@ -309,11 +297,61 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_shipping_address(doc, payment_method, options)
+        return if payment_method.is_a?(String)
+
+        doc.shipToAddress do
+          add_address(doc, options[:shipping_address])
+        end
+      end
+
+      def authorization_from(kind, parsed, money)
+        if kind == :registerToken
+          parsed[:litleToken]
+        else
+          "#{parsed[:litleTxnId]};#{kind};#{money}"
+        end
+      end
+
+      def build_xml_request
+        builder = Nokogiri::XML::Builder.new
+        builder.__send__("litleOnlineRequest", root_attributes) do |doc|
+          yield(doc)
+        end
+        builder.doc.root.to_xml
+      end
+
+      def commit(kind, request, money = nil)
+        parsed = parse(kind, ssl_post(url, request, headers))
+
+        options = {
+          authorization: authorization_from(kind, parsed, money),
+          test: test?,
+          avs_result: {
+            code: AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]]
+          },
+          cvv_result: parsed[:fraudResult_cardValidationResult]
+        }
+
+        Response.new(
+          success_from(kind, parsed),
+          parsed[:message],
+          parsed,
+          options
+        )
+      end
+
       def exp_date(payment_method)
         formatted_month = format(payment_method.month, :two_digits)
         formatted_year = format(payment_method.year, :two_digits)
 
         "#{formatted_month}#{formatted_year}"
+      end
+
+      def headers
+        {
+          "Content-Type" => "text/xml"
+        }
       end
 
       def parse(kind, xml)
@@ -343,42 +381,22 @@ module ActiveMerchant #:nodoc:
         parsed
       end
 
-      def commit(kind, request, money = nil)
-        parsed = parse(kind, ssl_post(url, request, headers))
-
-        options = {
-          authorization: authorization_from(kind, parsed, money),
-          test: test?,
-          avs_result: {
-            code: AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]]
-          },
-          cvv_result: parsed[:fraudResult_cardValidationResult]
+      def root_attributes
+        {
+          merchantId: @options[:merchant_id],
+          version: SCHEMA_VERSION,
+          xmlns: "http://www.litle.com/schema"
         }
-
-        Response.new(
-          success_from(kind, parsed),
-          parsed[:message],
-          parsed,
-          options
-        )
-      end
-
-      def success_from(kind, parsed)
-        return (parsed[:response] == "000") unless kind == :registerToken
-        %w[000 801 802].include?(parsed[:response])
-      end
-
-      def authorization_from(kind, parsed, money)
-        if kind == :registerToken
-          parsed[:litleToken]
-        else
-          "#{parsed[:litleTxnId]};#{kind};#{money}"
-        end
       end
 
       def split_authorization(authorization)
         transaction_id, kind, money = authorization.to_s.split(";")
         [transaction_id, kind, money]
+      end
+
+      def success_from(kind, parsed)
+        return (parsed[:response] == "000") unless kind == :registerToken
+        %w[000 801 802].include?(parsed[:response])
       end
 
       def transaction_attributes(options)
@@ -390,30 +408,12 @@ module ActiveMerchant #:nodoc:
         attributes
       end
 
-      def root_attributes
-        {
-          merchantId: @options[:merchant_id],
-          version: SCHEMA_VERSION,
-          xmlns: "http://www.litle.com/schema"
-        }
-      end
-
-      def build_xml_request
-        builder = Nokogiri::XML::Builder.new
-        builder.__send__("litleOnlineRequest", root_attributes) do |doc|
-          yield(doc)
-        end
-        builder.doc.root.to_xml
-      end
-
       def url
         test? ? test_url : live_url
       end
 
-      def headers
-        {
-          "Content-Type" => "text/xml"
-        }
+      def void_type(kind)
+        kind == "authorization" ? :authReversal : :void
       end
     end
   end
