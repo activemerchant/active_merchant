@@ -6,10 +6,12 @@ class VantivTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
+    @merchant_id = "merchant_id"
+
     @gateway = VantivGateway.new(
       login: 'login',
       password: 'password',
-      merchant_id: 'merchant_id'
+      merchant_id: @merchant_id
     )
 
     @credit_card = credit_card
@@ -23,6 +25,29 @@ class VantivTest < Test::Unit::TestCase
       })
     @amount = 100
     @options = {}
+  end
+
+  def test_request_format
+    stub_comms do
+      # use purchase to test request format
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(
+        Regexp.new("<#{VantivGateway::XML_REQUEST_ROOT}"), data
+      )
+      assert_match(
+        Regexp.new("</#{VantivGateway::XML_REQUEST_ROOT}>"), data
+      )
+      assert_match(
+        Regexp.new(%(version="#{VantivGateway::SCHEMA_VERSION}")), data
+      )
+      assert_match(
+        Regexp.new(%(xmlns="#{VantivGateway::XML_NAMESPACE}")), data
+      )
+      assert_match(
+        Regexp.new(%(merchantId="#{@merchant_id}")), data
+      )
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_purchase
