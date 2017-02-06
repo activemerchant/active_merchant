@@ -107,8 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment_method, options = {})
-        request = build_xml_request do |doc|
-          add_authentication(doc)
+        request = build_authenticated_xml_request do |doc|
           doc.authorization(transaction_attributes(options)) do
             add_auth_purchase_params(doc, money, payment_method, options)
           end
@@ -120,8 +119,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         transaction_id, = split_authorization(authorization)
 
-        request = build_xml_request do |doc|
-          add_authentication(doc)
+        request = build_authenticated_xml_request do |doc|
           add_descriptor(doc, options)
           doc.capture_(transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
@@ -138,8 +136,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        request = build_xml_request do |doc|
-          add_authentication(doc)
+        request = build_authenticated_xml_request do |doc|
           doc.sale(transaction_attributes(options)) do
             add_auth_purchase_params(doc, money, payment_method, options)
           end
@@ -151,8 +148,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         transaction_id, = split_authorization(authorization)
 
-        request = build_xml_request do |doc|
-          add_authentication(doc)
+        request = build_authenticated_xml_request do |doc|
           add_descriptor(doc, options)
           doc.credit(transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
@@ -170,8 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment_method, options = {})
-        request = build_xml_request do |doc|
-          add_authentication(doc)
+        request = build_authenticated_xml_request do |doc|
           doc.registerTokenRequest(transaction_attributes(options)) do
             doc.orderId(truncate(options[:order_id], 24))
             if payment_method_is_paypage_registration_id?(payment_method)
@@ -203,8 +198,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
 
-        request = build_xml_request do |doc|
-          add_authentication(doc)
+        request = build_authenticated_xml_request do |doc|
           doc.send(void_type(kind), transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
             doc.amount(money) if void_type(kind) == :authReversal
@@ -336,6 +330,14 @@ module ActiveMerchant #:nodoc:
           parsed[:litleToken]
         else
           "#{parsed[:litleTxnId]};#{kind};#{money}"
+        end
+      end
+
+      # Private: Build the xml request and add authentication before yielding
+      def build_authenticated_xml_request
+        build_xml_request do |doc|
+          add_authentication(doc)
+          yield(doc)
         end
       end
 
