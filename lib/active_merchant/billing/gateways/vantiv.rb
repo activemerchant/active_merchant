@@ -188,6 +188,34 @@ module ActiveMerchant #:nodoc:
         "diners_club"      => "DC"
       }.freeze
 
+      DEFAULT_HEADERS = {
+        "Content-Type" => "text/xml"
+      }.freeze
+
+      DEFAULT_REPORT_GROUP = "Default Report Group"
+
+      POS_CAPABILITY = "magstripe"
+      POS_ENTRY_MODE = "completeread"
+      POS_CARDHOLDER_ID = "signature"
+
+      RESPONSE_CODE_APPROVED = "000"
+      RESPONSE_CODES_APPROVED = [
+        "000", # approved
+        "801", # account number registered
+        "802" # account number previously registered
+      ].freeze
+
+      SOURCE_APPLE_PAY = "applepay"
+      SOURCE_RETAIL = "retail"
+      SOURCE_ECOMMERCE = "ecommerce"
+
+      VOID_TYPE_AUTHORIZATION = "authorization"
+
+      XML_NAMESPACE = "http://www.litle.com/schema"
+      XML_REQUEST_ROOT = "litleOnlineRequest"
+      XML_RESPONSE_NODES = %w[message response].freeze
+      XML_RESPONSE_ROOT = "litleOnlineResponse"
+
       def add_address(doc, address)
         return unless address
 
@@ -251,11 +279,11 @@ module ActiveMerchant #:nodoc:
         if options[:order_source]
           doc.orderSource(options[:order_source])
         elsif payment_method_is_apple_pay?(payment_method)
-          doc.orderSource("applepay")
+          doc.orderSource(SOURCE_APPLE_PAY)
         elsif payment_method_has_track_data?(payment_method)
-          doc.orderSource("retail")
+          doc.orderSource(SOURCE_RETAIL)
         else
-          doc.orderSource("ecommerce")
+          doc.orderSource(SOURCE_ECOMMERCE)
         end
       end
 
@@ -287,9 +315,9 @@ module ActiveMerchant #:nodoc:
         return unless payment_method_has_track_data?(payment_method)
 
         doc.pos do
-          doc.capability("magstripe")
-          doc.entryMode("completeread")
-          doc.cardholderId("signature")
+          doc.capability(POS_CAPABILITY)
+          doc.entryMode(POS_ENTRY_MODE)
+          doc.cardholderId(POS_CARDHOLDER_ID)
         end
       end
 
@@ -311,7 +339,7 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request
         builder = Nokogiri::XML::Builder.new
-        builder.__send__("litleOnlineRequest", root_attributes) do |doc|
+        builder.__send__(XML_REQUEST_ROOT, root_attributes) do |doc|
           yield(doc)
         end
         builder.doc.root.to_xml
@@ -345,16 +373,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        {
-          "Content-Type" => "text/xml"
-        }
+        DEFAULT_HEADERS
       end
 
       def parse(kind, xml)
         parsed = {}
 
         doc = Nokogiri::XML(xml).remove_namespaces!
-        doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
+        doc.xpath("//#{XML_RESPONSE_ROOT}/#{kind}Response/*").each do |node|
           if node.elements.empty?
             parsed[node.name.to_sym] = node.text
           else
@@ -366,9 +392,9 @@ module ActiveMerchant #:nodoc:
         end
 
         if parsed.empty?
-          %w[response message].each do |attribute|
+          XML_RESPONSE_NODES.each do |attribute|
             parsed[attribute.to_sym] = doc
-                                       .xpath("//litleOnlineResponse")
+                                       .xpath("//#{XML_RESPONSE_ROOT}")
                                        .attribute(attribute)
                                        .value
           end
@@ -405,7 +431,7 @@ module ActiveMerchant #:nodoc:
         {
           merchantId: @options[:merchant_id],
           version: SCHEMA_VERSION,
-          xmlns: "http://www.litle.com/schema"
+          xmlns: XML_NAMESPACE
         }
       end
 
@@ -415,14 +441,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(kind, parsed)
-        return (parsed[:response] == "000") unless kind == :registerToken
-        %w[000 801 802].include?(parsed[:response])
+        approved = (parsed[:response] == RESPONSE_CODE_APPROVED)
+        return approved unless kind == :registerToken
+
+        RESPONSE_CODES_APPROVED.include?(parsed[:response])
       end
 
       def transaction_attributes(options)
         attributes = {}
         attributes[:id] = truncate(options[:id] || options[:order_id], 24)
-        attributes[:reportGroup] = options[:merchant] || "Default Report Group"
+        attributes[:reportGroup] = options[:merchant] || DEFAULT_REPORT_GROUP
         attributes[:customerId] = options[:customer]
         attributes.delete_if { |_key, value| value.nil? }
         attributes
@@ -433,7 +461,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void_type(kind)
-        kind == "authorization" ? :authReversal : :void
+        kind == VOID_TYPE_AUTHORIZATION ? :authReversal : :void
       end
     end
   end
