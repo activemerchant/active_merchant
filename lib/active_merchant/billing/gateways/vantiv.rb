@@ -9,20 +9,6 @@ module ActiveMerchant #:nodoc:
     # in 2012. The URLs and the XML format (LitleXML) still reference the old
     # name.
     class VantivGateway < Gateway
-      SCHEMA_VERSION = "9.4"
-
-      SCRUBBED_PATTERNS = [
-        %r((<user>).+(</user>)),
-        %r((<password>).+(</password>)),
-        %r((<number>).+(</number>)),
-        %r((<cardValidationNum>).+(</cardValidationNum>)),
-        %r((<accountNumber>).+(</accountNumber>)),
-        %r((<paypageRegistrationId>).+(</paypageRegistrationId>)),
-        %r((<authenticationValue>).+(</authenticationValue>))
-      ].freeze
-
-      SCRUBBED_REPLACEMENT = "\\1[FILTERED]\\2"
-
       self.test_url = "https://www.testlitle.com/sandbox/communicator/online"
       self.live_url = "https://payments.litle.com/vap/communicator/online"
 
@@ -39,6 +25,75 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = "http://www.vantiv.com/"
       self.display_name = "Vantiv"
+
+      AVS_RESPONSE_CODE = {
+        "00" => "Y",
+        "01" => "X",
+        "02" => "D",
+        "10" => "Z",
+        "11" => "W",
+        "12" => "A",
+        "13" => "A",
+        "14" => "P",
+        "20" => "N",
+        "30" => "S",
+        "31" => "R",
+        "32" => "U",
+        "33" => "R",
+        "34" => "I",
+        "40" => "E"
+      }.freeze
+
+      CARD_TYPE = {
+        "visa"             => "VI",
+        "master"           => "MC",
+        "american_express" => "AX",
+        "discover"         => "DI",
+        "jcb"              => "JC",
+        "diners_club"      => "DC"
+      }.freeze
+
+      DEFAULT_HEADERS = {
+        "Content-Type" => "text/xml"
+      }.freeze
+
+      DEFAULT_REPORT_GROUP = "Default Report Group"
+
+      POS_CAPABILITY = "magstripe"
+      POS_ENTRY_MODE = "completeread"
+      POS_CARDHOLDER_ID = "signature"
+
+      RESPONSE_CODE_APPROVED = "000"
+      RESPONSE_CODES_APPROVED = [
+        "000", # approved
+        "801", # account number registered
+        "802" # account number previously registered
+      ].freeze
+
+      SCHEMA_VERSION = "9.4"
+
+      SCRUBBED_PATTERNS = [
+        %r((<user>).+(</user>)),
+        %r((<password>).+(</password>)),
+        %r((<number>).+(</number>)),
+        %r((<cardValidationNum>).+(</cardValidationNum>)),
+        %r((<accountNumber>).+(</accountNumber>)),
+        %r((<paypageRegistrationId>).+(</paypageRegistrationId>)),
+        %r((<authenticationValue>).+(</authenticationValue>))
+      ].freeze
+
+      SCRUBBED_REPLACEMENT = "\\1[FILTERED]\\2"
+
+      SOURCE_APPLE_PAY = "applepay"
+      SOURCE_RETAIL = "retail"
+      SOURCE_ECOMMERCE = "ecommerce"
+
+      VOID_TYPE_AUTHORIZATION = "authorization"
+
+      XML_NAMESPACE = "http://www.litle.com/schema"
+      XML_REQUEST_ROOT = "litleOnlineRequest"
+      XML_RESPONSE_NODES = %w[message response].freeze
+      XML_RESPONSE_ROOT = "litleOnlineResponse"
 
       # Public: Create a new Vantiv gateway.
       #
@@ -160,61 +215,6 @@ module ActiveMerchant #:nodoc:
       end
 
     private
-
-      AVS_RESPONSE_CODE = {
-        "00" => "Y",
-        "01" => "X",
-        "02" => "D",
-        "10" => "Z",
-        "11" => "W",
-        "12" => "A",
-        "13" => "A",
-        "14" => "P",
-        "20" => "N",
-        "30" => "S",
-        "31" => "R",
-        "32" => "U",
-        "33" => "R",
-        "34" => "I",
-        "40" => "E"
-      }.freeze
-
-      CARD_TYPE = {
-        "visa"             => "VI",
-        "master"           => "MC",
-        "american_express" => "AX",
-        "discover"         => "DI",
-        "jcb"              => "JC",
-        "diners_club"      => "DC"
-      }.freeze
-
-      DEFAULT_HEADERS = {
-        "Content-Type" => "text/xml"
-      }.freeze
-
-      DEFAULT_REPORT_GROUP = "Default Report Group"
-
-      POS_CAPABILITY = "magstripe"
-      POS_ENTRY_MODE = "completeread"
-      POS_CARDHOLDER_ID = "signature"
-
-      RESPONSE_CODE_APPROVED = "000"
-      RESPONSE_CODES_APPROVED = [
-        "000", # approved
-        "801", # account number registered
-        "802" # account number previously registered
-      ].freeze
-
-      SOURCE_APPLE_PAY = "applepay"
-      SOURCE_RETAIL = "retail"
-      SOURCE_ECOMMERCE = "ecommerce"
-
-      VOID_TYPE_AUTHORIZATION = "authorization"
-
-      XML_NAMESPACE = "http://www.litle.com/schema"
-      XML_REQUEST_ROOT = "litleOnlineRequest"
-      XML_RESPONSE_NODES = %w[message response].freeze
-      XML_RESPONSE_ROOT = "litleOnlineResponse"
 
       def add_address(doc, address)
         return unless address
