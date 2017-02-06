@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AR','BR','MX','VE','CO']
       self.default_currency = 'ARS'
-      self.supported_cardtypes = [:visa, :master, :american_express, :naranja, :nativa, :tarshop, :cencosud, :cabal, :diners, :argencard, :cordial, :cordobesa, :cmr]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja, :nativa, :tarshop, :cencosud, :cabal,  :argencard, :cordial, :cordobesa, :cmr]
 
       self.homepage_url = 'https://www.mercadopago.com.ar/'
       self.display_name = 'Mercado Pago'
@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment,options)
         add_address(post, payment, options)
         add_customer_data(post, options)
 
@@ -39,10 +39,10 @@ module ActiveMerchant #:nodoc:
         params = {}
         params = {amount: amount(money).to_f} unless money.nil?
         unless authorization.present?
-          return Response.new(
+          return ActiveMerchant::Billing::Response.new(
               false,
               'Payment not found',
-              {status: 404},
+              {status: 'rejected'},
               authorization: nil,
               test: test?,
               error_code: 404
@@ -104,9 +104,11 @@ module ActiveMerchant #:nodoc:
         post[:notification_url] = options[:notification_url] if options.has_key?(:notification_url)
       end
 
-      def add_payment(post, payment)
-        post[:payment_method_id] = payment[:payment_method_id]
-        if payment[:card_token].present?
+      def add_payment(post, payment,options)
+        post[:payment_method_id] = payment.try(:brand) || payment[:brand]
+        post[:payment_method_id] = 'amex' if post[:payment_method_id] == 'american_express'
+        post[:payment_method_id] = 'diners' if post[:payment_method_id] == 'diners_club'
+        if !payment.respond_to?(:brand) && payment[:card_token].present?
           post[:token] = payment[:card_token]
         else
           response = get_token(payment,options)
@@ -115,7 +117,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def get_token(credit_card, options={})
-        commit(:post,"v1/card_tokens?access_token=#{@access_token}", credit_card,options)
+        card_info = {
+            payment_method_id: credit_card.brand,
+            email: options[:email],
+            cardNumber: credit_card.number,
+            security_code: credit_card.verification_value,
+            expiration_month: credit_card.month,
+            expiration_year: credit_card.year,
+            cardholder: {
+                name: credit_card.name,
+                identification: {
+                    number: options[:identification_number],
+                    type: options[:identification_type]
+                }
+            }
+        }
+        commit(:post, "v1/card_tokens?access_token=#{@access_token}", card_info, options)
       end
 
       def parse(body)
@@ -123,29 +140,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method = :post,action, parameters,options)
-        headers = { "Content-Type" => "application/json","x-idempotency-key" => "#{options[:idempotency_key] || rand(50000)}" }
+        headers = { "Content-Type" => "application/json","x-idempotency-key" => options[:order_id].to_s }
         begin
           response = parse(ssl_request(method,live_url+action, post_data(action, parameters),headers))
 
-          Response.new(
+          ActiveMerchant::Billing::Response.new(
             success_from(response),
             message_from(response),
             response,
             authorization: authorization_from(response),
-            avs_result: AVSResult.new(code: response["some_avs_response_key"]),
-            cvv_result: CVVResult.new(response["some_cvv_response_key"]),
             test: test?,
             error_code: error_code_from(response)
           )
         rescue ResponseError => e
           body = parse(e.response.body)
-          Response.new(
+          ActiveMerchant::Billing::Response.new(
               false,
               message_from(body),
               body,
               authorization: authorization_from(body),
-              avs_result: AVSResult.new(code: body["some_avs_response_key"]),
-              cvv_result: CVVResult.new(body["some_cvv_response_key"]),
               test: test?,
               error_code: error_code_from(body)
           )
@@ -154,7 +167,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return response['status'] != 'rejected' if response.has_key?('status')
+        return !['rejected',404].include?(response['status']) if response.has_key?('status')
         response['id'].present?
       end
 
@@ -172,7 +185,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         unless success_from(response)
-          # TODO: lookup error code for this response
+          response[:error]
         end
       end
 
