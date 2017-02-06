@@ -339,7 +339,7 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request
         builder = Nokogiri::XML::Builder.new
-        builder.__send__(XML_REQUEST_ROOT, root_attributes) do |doc|
+        builder.public_send(XML_REQUEST_ROOT, root_attributes) do |doc|
           yield(doc)
         end
         builder.doc.root.to_xml
