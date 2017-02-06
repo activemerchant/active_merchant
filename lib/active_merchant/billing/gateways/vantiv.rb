@@ -491,6 +491,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def url
+        return @options[:url] if @options[:url].present?
+
         test? ? test_url : live_url
       end
 
