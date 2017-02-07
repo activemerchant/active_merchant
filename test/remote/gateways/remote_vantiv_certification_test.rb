@@ -396,6 +396,98 @@ class RemoteVantivCertification < Test::Unit::TestCase
     assert_equal "Absolute Decline", response.params["message"]
   end
 
+  def test41
+    check = Check.new(
+      account_holder_type: "personal",
+      account_number: "10@BC99999",
+      account_type: "checking",
+      routing_number: "053100300"
+    )
+
+    options = {
+      billing_address: {
+        first_name: "Mike",
+        last_name: "Hammer",
+        middle_initial: "J"
+      },
+      order_id: "41",
+      order_source: "telephone"
+    }
+
+    response = @gateway.purchase(2008, check, options)
+    assert_equal "301", response.params["response"]
+    assert_equal "Invalid Account Number", response.params["message"]
+  end
+
+  def test42
+    check = Check.new(
+      account_holder_type: "personal",
+      account_number: "4099999992",
+      account_type: "checking",
+      routing_number: "011075150"
+    )
+
+    options = {
+      billing_address: {
+        first_name: "Tom",
+        last_name: "Black"
+      },
+      order_id: "42",
+      order_source: "telephone"
+    }
+
+    response = @gateway.purchase(2004, check, options)
+    assert_equal "000", response.params["response"]
+    assert_equal "Approved", response.params["message"]
+  end
+
+  def test43
+    check = Check.new(
+      account_holder_type: "business",
+      account_number: "6099999992",
+      account_type: "checking",
+      routing_number: "011075150"
+    )
+
+    options = {
+      billing_address: {
+        company_name: "Green Co",
+        first_name: "Peter",
+        last_name: "Green"
+      },
+      order_id: "43",
+      order_source: "telephone"
+    }
+
+    response = @gateway.purchase(2007, check, options)
+    assert_equal "000", response.params["response"]
+    assert_equal "Approved", response.params["message"]
+    # Test accountUpdater element?
+  end
+
+  def test44
+    check = Check.new(
+      account_holder_type: "business",
+      account_number: "9099999992",
+      account_type: "checking",
+      routing_number: "053133052"
+    )
+
+    options = {
+      billing_address: {
+        company_name: "Green Co",
+        first_name: "Peter",
+        last_name: "Green"
+      },
+      order_id: "44",
+      order_source: "telephone"
+    }
+
+    response = @gateway.purchase(2009, check, options)
+    assert_equal "900", response.params["response"]
+    assert_equal "Invalid Bank Routing Number", response.params["message"]
+  end
+
   # Explicit Token Registration Tests
   def test50
     credit_card = CreditCard.new(:number => '4457119922390123')
