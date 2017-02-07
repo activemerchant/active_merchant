@@ -547,7 +547,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
 
     # 1B: credit
     id = transaction_id
-    assert response = @gateway.credit(amount, response.authorization, {:id => id})
+    assert response = @gateway.refund(amount, response.authorization, {:id => id})
     assert_equal 'Approved', response.message
 
     # 1C: void
@@ -576,7 +576,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
 
     # 1B: credit
     id = transaction_id
-    assert response = @gateway.credit(amount, response.authorization, {:id => id})
+    assert response = @gateway.refund(amount, response.authorization, {:id => id})
     assert_equal 'Approved', response.message
 
     # 1C: void
