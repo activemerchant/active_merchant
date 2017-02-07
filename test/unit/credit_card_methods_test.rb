@@ -215,6 +215,20 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'switch', CreditCard.brand?(number)
   end
 
+  def test_16_digit_union_pay
+    number = '6200000000000000'
+    assert_equal 16, number.length
+    assert_equal 'union_pay', CreditCard.brand?(number)
+    assert CreditCard.valid_number?(number)
+  end
+
+  def test_19_digit_union_pay
+    number = '6200000000000000000'
+    assert_equal 19, number.length
+    assert_equal 'union_pay', CreditCard.brand?(number)
+    assert CreditCard.valid_number?(number)
+  end
+
   def test_electron_cards
     # return the card number so assert failures are easy to isolate
     electron_test = Proc.new do |card_number|

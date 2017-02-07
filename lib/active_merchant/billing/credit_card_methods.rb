@@ -18,6 +18,8 @@ module ActiveMerchant #:nodoc:
         'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/
       }
 
+      CHECKSUM_EXEMPTIONS = %w(union_pay)
+
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
       ELECTRON_RANGES = [
         [400115],
@@ -220,6 +222,8 @@ module ActiveMerchant #:nodoc:
         # Please see http://en.wikipedia.org/wiki/Luhn_algorithm for details.
         # This implementation is from the luhn_checksum gem, https://github.com/zendesk/luhn_checksum.
         def valid_checksum?(numbers) #:nodoc:
+          return true if checksum_exempt?(numbers)
+
           sum = 0
 
           odd = true
@@ -234,6 +238,12 @@ module ActiveMerchant #:nodoc:
           end
 
           sum % 10 == 0
+        end
+
+        def checksum_exempt?(number)
+          brand = brand?(number)
+
+          CHECKSUM_EXEMPTIONS.include?(brand)
         end
       end
     end
