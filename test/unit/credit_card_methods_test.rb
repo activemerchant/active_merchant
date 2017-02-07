@@ -179,11 +179,17 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def test_matching_discover_card
     assert_equal 'discover', CreditCard.brand?('6011000000000000')
     assert_equal 'discover', CreditCard.brand?('6500000000000000')
-    assert_equal 'discover', CreditCard.brand?('6221260000000000')
     assert_equal 'discover', CreditCard.brand?('6450000000000000')
 
+    assert_not_equal 'discover', CreditCard.brand?('6221260000000000')
     assert_not_equal 'discover', CreditCard.brand?('6010000000000000')
     assert_not_equal 'discover', CreditCard.brand?('6600000000000000')
+  end
+
+  def test_matching_union_pay_card
+    assert_equal 'union_pay', CreditCard.brand?('6211111111111111')
+    assert_equal 'union_pay', CreditCard.brand?('6233333333333333')
+    assert_equal 'union_pay', CreditCard.brand?('6221260000000000')
   end
 
   def test_matching_invalid_card
