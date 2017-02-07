@@ -488,6 +488,98 @@ class RemoteVantivCertification < Test::Unit::TestCase
     assert_equal "Invalid Bank Routing Number", response.params["message"]
   end
 
+  def test45
+    check = Check.new(
+      account_holder_type: "personal",
+      account_number: "10@BC99999",
+      account_type: "checking",
+      routing_number: "053100300"
+    )
+
+    options = {
+      billing_address: {
+        first_name: "John",
+        last_name: "Smith"
+      },
+      order_id: "45",
+      order_source: "telephone"
+    }
+
+    response = @gateway.refund(1001, check, options)
+    assert_equal "301", response.params["response"]
+    assert_equal "Invalid Account Number", response.params["message"]
+  end
+
+  def test46
+    check = Check.new(
+      account_holder_type: "business",
+      account_number: "3099999999",
+      account_type: "checking",
+      routing_number: "011075150"
+    )
+
+    options = {
+      billing_address: {
+        companyName: "Widget Inc",
+        first_name: "Robert",
+        last_name: "Jones"
+      },
+      order_id: "46",
+      order_source: "telephone"
+    }
+
+    response = @gateway.refund(1003, check, options)
+    assert_equal "000", response.params["response"]
+    assert_equal "Approved", response.params["message"]
+  end
+
+  def test47
+    check = Check.new(
+      account_holder_type: "business",
+      account_number: "6099999993",
+      account_type: "checking",
+      routing_number: "211370545"
+    )
+
+    options = {
+      billing_address: {
+        company_name: "Green Co",
+        first_name: "Peter",
+        last_name: "Green"
+      },
+      order_id: "47",
+      order_source: "telephone"
+    }
+
+    response = @gateway.refund(1007, check, options)
+    assert_equal "000", response.params["response"]
+    assert_equal "Approved", response.params["message"]
+    # Test accountUpdater element?
+  end
+
+  # If this test is wrong, it might need the txn ID generated from test 43
+  def test48
+    options = {
+      litle_txn_id: "430000000000000001",
+      order_id: "48"
+    }
+
+    response = @gateway.refund(2007, check, options)
+    assert_equal "000", response.params["response"]
+    assert_equal "Approved", response.params["message"]
+  end
+
+  def test49
+    options = {
+      litle_txn_id: "2",
+      order_id: "49"
+    }
+
+    response = @gateway.refund(2007, check, options)
+    assert_equal "360", response.params["response"]
+    assert_equal "No transaction found with specified litleTxnId", response.params["message"]
+  end
+
   # Explicit Token Registration Tests
   def test50
     credit_card = CreditCard.new(:number => '4457119922390123')
