@@ -136,7 +136,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     # 6: authorize
     assert response = @gateway.authorize(60060, credit_card, options)
     assert !response.success?
-    assert_equal '110', response.params['litleOnlineResponse']['authorizationResponse']['response']
+    assert_equal '110', response.params['response']
     assert_equal 'Insufficient Funds', response.message
     assert_equal "I", response.avs_result["code"]
     assert_equal "P", response.cvv_result["code"]
@@ -144,14 +144,14 @@ class RemoteVantivCertification < Test::Unit::TestCase
     # 6. sale
     assert response = @gateway.purchase(60060, credit_card, options)
     assert !response.success?
-    assert_equal '110', response.params['litleOnlineResponse']['saleResponse']['response']
+    assert_equal '110', response.params['response']
     assert_equal 'Insufficient Funds', response.message
     assert_equal "I", response.avs_result["code"]
     assert_equal "P", response.cvv_result["code"]
 
     # 6A. void
     assert response = @gateway.void(response.authorization, {:order_id => '6A'})
-    assert_equal '360', response.params['litleOnlineResponse']['voidResponse']['response']
+    assert_equal '360', response.params['response']
     assert_equal 'No transaction found with specified litleTxnId', response.message
   end
 
@@ -175,7 +175,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     # 7: authorize
     assert response = @gateway.authorize(70070, credit_card, options)
     assert !response.success?
-    assert_equal '301', response.params['litleOnlineResponse']['authorizationResponse']['response']
+    assert_equal '301', response.params['response']
     assert_equal 'Invalid Account Number', response.message
     assert_equal "I", response.avs_result["code"]
     assert_equal "N", response.cvv_result["code"]
@@ -186,7 +186,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     # 7. sale
     assert response = @gateway.purchase(70070, credit_card, options)
     assert !response.success?
-    assert_equal '301', response.params['litleOnlineResponse']['saleResponse']['response']
+    assert_equal '301', response.params['response']
     assert_equal 'Invalid Account Number', response.message
     assert_equal "I", response.avs_result["code"]
     assert_equal "N", response.cvv_result["code"]
@@ -212,7 +212,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     # 8: authorize
     assert response = @gateway.authorize(80080, credit_card, options)
     assert !response.success?
-    assert_equal '123', response.params['litleOnlineResponse']['authorizationResponse']['response']
+    assert_equal '123', response.params['response']
     assert_equal 'Call Discover', response.message
     assert_equal "I", response.avs_result["code"]
     assert_equal "P", response.cvv_result["code"]
@@ -223,7 +223,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     # 8: sale
     assert response = @gateway.purchase(80080, credit_card, options)
     assert !response.success?
-    assert_equal '123', response.params['litleOnlineResponse']['saleResponse']['response']
+    assert_equal '123', response.params['response']
     assert_equal 'Call Discover', response.message
     assert_equal "I", response.avs_result["code"]
     assert_equal "P", response.cvv_result["code"]
@@ -250,7 +250,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(90090, credit_card, options)
 
     assert !response.success?
-    assert_equal '303', response.params['litleOnlineResponse']['authorizationResponse']['response']
+    assert_equal '303', response.params['response']
     assert_equal 'Pick Up Card', response.message
     assert_equal "I", response.avs_result["code"]
 
@@ -260,7 +260,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     # 9: sale
     assert response = @gateway.purchase(90090, credit_card, options)
     assert !response.success?
-    assert_equal '303', response.params['litleOnlineResponse']['saleResponse']['response']
+    assert_equal '303', response.params['response']
     assert_equal 'Pick Up Card', response.message
     assert_equal "I", response.avs_result["code"]
   end
@@ -303,7 +303,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
 
     assert reversal_response = @gateway.void(auth_response.authorization, amount: 10000)
     assert !reversal_response.success?
-    assert_equal '336', reversal_response.params['litleOnlineResponse']['authReversalResponse']['response']
+    assert_equal '336', reversal_response.params['response']
   end
 
   # Explicit Token Registration Tests
@@ -538,25 +538,22 @@ class RemoteVantivCertification < Test::Unit::TestCase
     assert_equal 'Approved', response.message
     assert_equal assertions[:avs], response.avs_result["code"]
     assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
-    assert_equal options[:order_id], response.params['litleOnlineResponse']['authorizationResponse']['id']
+    assert_equal options[:order_id], response.params['orderId']
 
     # 1A: capture
     id = transaction_id
     assert response = @gateway.capture(amount, response.authorization, {:id => id})
     assert_equal 'Approved', response.message
-    assert_equal id, response.params['litleOnlineResponse']['captureResponse']['id']
 
     # 1B: credit
     id = transaction_id
     assert response = @gateway.credit(amount, response.authorization, {:id => id})
     assert_equal 'Approved', response.message
-    assert_equal id, response.params['litleOnlineResponse']['creditResponse']['id']
 
     # 1C: void
     id = transaction_id
     assert response = @gateway.void(response.authorization, {:id => id})
     assert_equal 'Approved', response.message
-    assert_equal id, response.params['litleOnlineResponse']['voidResponse']['id']
   end
 
   def authorize_avs_assertions(credit_card, options, assertions={})
@@ -565,7 +562,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     assert_equal assertions[:message] || 'Approved', response.message
     assert_equal assertions[:avs], response.avs_result["code"], caller.inspect
     assert_equal assertions[:cvv], response.cvv_result["code"], caller.inspect if assertions[:cvv]
-    assert_equal options[:order_id], response.params['litleOnlineResponse']['authorizationResponse']['id']
+    assert_equal options[:order_id], response.params['orderId']
   end
 
   def sale_assertions(amount, card, options, assertions)
@@ -575,19 +572,17 @@ class RemoteVantivCertification < Test::Unit::TestCase
     assert_equal 'Approved', response.message
     assert_equal assertions[:avs], response.avs_result["code"]
     assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
-    assert_equal options[:order_id], response.params['litleOnlineResponse']['saleResponse']['id']
+    assert_equal options[:order_id], response.params['orderId']
 
     # 1B: credit
     id = transaction_id
     assert response = @gateway.credit(amount, response.authorization, {:id => id})
     assert_equal 'Approved', response.message
-    assert_equal id, response.params['litleOnlineResponse']['creditResponse']['id']
 
     # 1C: void
     id = transaction_id
     assert response = @gateway.void(response.authorization, {:id => id})
     assert_equal 'Approved', response.message
-    assert_equal id, response.params['litleOnlineResponse']['voidResponse']['id']
   end
 
   def transaction_id
