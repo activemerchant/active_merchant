@@ -197,6 +197,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
+        money = options[:amount] if options[:amount].present?
 
         request = build_authenticated_xml_request do |doc|
           doc.send(void_type(kind), transaction_attributes(options)) do
