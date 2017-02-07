@@ -10,7 +10,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     credit_card = CreditCard.new(
       :number => '4457010000000009',
       :month => '01',
-      :year => '2014',
+      :year => '2021',
       :verification_value => '349',
       :brand => 'visa'
     )
@@ -18,7 +18,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     options = {
       :order_id => '1',
       :billing_address => {
-        :name => 'John Smith',
+        :name => 'John & Mary Smith',
         :address1 => '1 Main St.',
         :city => 'Burlington',
         :state => 'MA',
@@ -37,7 +37,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
 
   def test2
     credit_card = CreditCard.new(:number => '5112010000000003', :month => '02',
-                                 :year => '2014', :brand => 'master',
+                                 :year => '2021', :brand => 'master',
                                  :verification_value => '261')
 
     options = {
@@ -64,7 +64,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     credit_card = CreditCard.new(
       :number => '6011010000000003',
       :month => '03',
-      :year => '2014',
+      :year => '2021',
       :verification_value => '758',
       :brand => 'discover'
     )
@@ -92,7 +92,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     credit_card = CreditCard.new(
       :number => '375001000000005',
       :month => '04',
-      :year => '2014',
+      :year => '2021',
       :brand => 'american_express'
     )
 
@@ -118,7 +118,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
 
   def test6
     credit_card = CreditCard.new(:number => '4457010100000008', :month => '06',
-                                 :year => '2014', :brand => 'visa',
+                                 :year => '2021', :brand => 'visa',
                                  :verification_value => '992')
 
     options = {
@@ -157,7 +157,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
 
   def test7
     credit_card = CreditCard.new(:number => '5112010100000002', :month => '07',
-                                 :year => '2014', :brand => 'master',
+                                 :year => '2021', :brand => 'master',
                                  :verification_value => '251')
 
     options = {
@@ -194,7 +194,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
 
   def test8
     credit_card = CreditCard.new(:number => '6011010100000002', :month => '08',
-                                 :year => '2014', :brand => 'discover',
+                                 :year => '2021', :brand => 'discover',
                                  :verification_value => '184')
 
     options = {
@@ -231,7 +231,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
 
   def test9
     credit_card = CreditCard.new(:number => '375001010000003', :month => '09',
-                                 :year => '2014', :brand => 'american_express',
+                                 :year => '2021', :brand => 'american_express',
                                  :verification_value => '0421')
 
     options = {
@@ -268,7 +268,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
   # Authorization Reversal Tests
   def test34
     credit_card = CreditCard.new(:number => '6011010000000003', :month => '03',
-                                 :year => '2014', :brand => 'discover',
+                                 :year => '2021', :brand => 'discover',
                                  :verification_value => '758')
 
     options = {
@@ -286,11 +286,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     assert auth_response = @gateway.authorize(30030, credit_card, options)
     assert_success auth_response
 
-    credit_card = CreditCard.new(:number => '4024720001231239', :month => '12',
-                                 :year => '2014', :brand => 'visa')
-    assert auth_response2 = @gateway.authorize(18699, credit_card, :order_id => '29')
-
-    assert reversal_response = @gateway.void(auth_response2.authorization)
+    assert reversal_response = @gateway.void(auth_response.authorization)
     assert_success reversal_response
   end
 
@@ -300,8 +296,7 @@ class RemoteVantivCertification < Test::Unit::TestCase
     }
 
     credit_card = CreditCard.new(:number => '375000026600004', :month => '05',
-                                 :year => '2014', :brand => 'american_express',
-                                 :verification_value => '261')
+                                 :year => '2021', :brand => 'american_express')
 
     assert auth_response = @gateway.authorize(20500, credit_card, options)
     assert_success auth_response
