@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteVantivCertification < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    @gateway = VantivGateway.new(fixtures(:vantiv).merge(:url => "https://cert.litle.com/vap/communicator/online"))
+    @gateway = VantivGateway.new(fixtures(:vantiv).merge(:url => "https://transact-prelive.litle.com/vap/communicator/online"))
   end
 
   def test1
