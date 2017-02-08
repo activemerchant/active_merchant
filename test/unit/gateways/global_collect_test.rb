@@ -127,6 +127,14 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_refund_passes_currency_code
+    stub_comms do
+      @gateway.refund(@accepted_amount, '000000142800000000920000100001', {currency: 'COP'})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"currencyCode\":\"COP\"/, data)
+    end.respond_with(failed_refund_response)
+  end
+
   def test_failed_refund
     response = stub_comms do
       @gateway.refund(nil, "")
