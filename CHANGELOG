@@ -5,6 +5,7 @@
 * Omise: Enable Japan, JPY and JCB support [zdk] #2284
 * Braintree Blue: Pass cardholder_name with card [curiousepic] #2324
 * Paymill: Send new required fields on tokenization requests [tschelabaumann] #2279
+* GlobalCollect: Pass options to Refund [curiousepic] #2330
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
