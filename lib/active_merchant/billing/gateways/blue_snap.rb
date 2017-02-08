@@ -168,7 +168,7 @@ module ActiveMerchant
         doc.send("card-holder-info") do
           add_personal_info(doc, payment_method, options)
         end
-        add_credit_card(doc, payment_method)
+        add_credit_card(doc, payment_method, options)
       end
 
       def add_fraud_info(doc, options)
@@ -208,13 +208,23 @@ module ActiveMerchant
         doc.send("authorized-by-shopper", "true")
       end
 
-      def add_credit_card(doc, card)
+      def add_credit_card(doc, card, options = nil)
         doc.send("credit-card") do
-          doc.send("card-number", card.number)
-          doc.send("security-code", card.verification_value)
+          if options[:encrypted]
+            add_encrypted_fields(doc, card, options)
+          else
+            doc.send("card-number", card.number)
+            doc.send("security-code", card.verification_value)
+          end
           doc.send("expiration-month", card.month)
           doc.send("expiration-year", card.year)
         end
+      end
+
+      def add_encrypted_fields(doc, card, options)
+        doc.send("encrypted-card-number", options[:encrypted_number])
+        doc.send("encrypted-security-code", options[:encrypted_cvv])
+        doc.send("card-type", card.brand)
       end
 
       def add_description(doc, description)
