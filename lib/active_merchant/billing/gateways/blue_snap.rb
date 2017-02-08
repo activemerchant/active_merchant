@@ -185,9 +185,15 @@ module ActiveMerchant
       def add_personal_info(doc, card_or_ach, options)
         doc.send("first-name", card_or_ach.first_name)
         doc.send("last-name", card_or_ach.last_name)
+        add_company_name(doc, card_or_ach) if card_or_ach.is_a? Check
         doc.email(options[:email]) if options[:email]
         doc.send("phone", options[:billing_address][:phone]) if options[:billing_address]
         add_address(doc, options)
+      end
+
+      def add_company_name(doc, check)
+        return unless check.account_holder_type == 'business'
+        doc.send("company-name", check.name)
       end
 
       def add_account_type(doc, check)
