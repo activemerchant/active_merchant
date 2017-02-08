@@ -162,7 +162,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [NETPAY Gateway](http://www.netpay.com.mx) - MX
 * [NMI](http://nmi.com/) - US
 * [Ogone](http://www.ogone.com/) - BE, DE, FR, NL, AT, CH
-* [Omise](https://www.omise.co/) - TH
+* [Omise](https://www.omise.co/) - TH, JP
 * [Openpay](Openpay) - MX
 * [Optimal Payments](http://www.optimalpayments.com/) - CA, US, GB
 * [Orbital Paymentech](http://chasepaymentech.com/) - US, CA
