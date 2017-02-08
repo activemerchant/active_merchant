@@ -14,7 +14,7 @@
 adyen:
   username: ''
   password: ''
-  merchantAccount: ''
+  merchant_account: ''
 
 allied_wallet:
   site_id: site_id

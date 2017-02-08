@@ -19,9 +19,9 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @options = {
       reference: '345123',
-      shopperEmail: "john.smith@test.com",
-      shopperIP: "77.110.174.153",
-      shopperReference: "John Smith",
+      shopper_email: "john.smith@test.com",
+      shopper_ip: "77.110.174.153",
+      shopper_reference: "John Smith",
       :billing_address => address(),
     }
   end
@@ -131,7 +131,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = AdyenGateway.new(username: '', password: '', merchantAccount: '')
+    gateway = AdyenGateway.new(username: '', password: '', merchant_account: '')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

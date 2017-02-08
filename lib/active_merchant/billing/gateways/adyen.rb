@@ -26,15 +26,9 @@ module ActiveMerchant #:nodoc:
         '135' => STANDARD_ERROR_CODE[:incorrect_address],
       }
 
-      CUSTOMER_DATA = %i[
-        shopperEmail shopperIP shopperReference fraudOffset selectedBrand
-        deliveryDate riskdata.deliveryMethod merchantOrderReference
-        shopperInteraction selectedRecurringDetailReference
-      ]
-
       def initialize(options={})
-        requires!(options, :username, :password, :merchantAccount)
-        @username, @password, @merchantAccount = options.values_at(:username, :password, :merchantAccount)
+        requires!(options, :username, :password, :merchant_account)
+        @username, @password, @merchant_account = options.values_at(:username, :password, :merchant_account)
         super
       end
 
@@ -50,7 +44,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice(post, money, options)
         add_payment(post, payment)
-        add_customer_data(post, options)
+        add_extra_data(post, options)
         add_address(post, options)
         commit('authorise', post)
       end
@@ -58,7 +52,6 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options={})
         post = init_post(options)
         add_invoice_for_modification(post, money, authorization, options)
-        add_customer_data(post, options)
         add_references(post, authorization, options)
         commit('capture', post)
       end
@@ -96,8 +89,15 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_customer_data(post, options)
-        post.merge!(options.slice(*CUSTOMER_DATA))
+      def add_extra_data(post, options)
+        post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
+        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
+        post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
+        post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
+        post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
+        post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
+        post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
+        post[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
       end
 
       def add_address(post, options)
@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def basic_auth
-        Base64.encode64("#{@username}:#{@password}").strip.delete("\r\n")
+        Base64.strict_encode64("#{@username}:#{@password}")
       end
 
       def request_headers
@@ -212,7 +212,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def init_post(options = {})
-        {merchantAccount: options[:merchantAccount] || @merchantAccount}
+        {merchantAccount: options[:merchant_account] || @merchant_account}
       end
 
       def post_data(action, parameters = {})
