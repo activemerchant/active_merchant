@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Barclays ePDQ: removed because it has been replaced by a new API [bdewater] #2331
 * GlobalCollect: Truncate firstName field to 15 characters [davidsantoso]
 * Qvalent: Add soft descriptor fields. Add authorize, capture, and void [davidsantoso]
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272
