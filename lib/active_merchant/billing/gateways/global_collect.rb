@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
         post = nestable_hash
-        add_amount(post, money, options={})
+        add_amount(post, money, options)
         add_refund_customer_data(post, options)
         commit(:refund, post, authorization)
       end
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_amount(post, money, options)
+      def add_amount(post, money, options={})
         post["amountOfMoney"] = {
           "amount" => amount(money),
           "currencyCode" => options[:currency] || currency(money)
