@@ -71,7 +71,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
         @api_key = options[:login]
         @fee_refund_api_key = options[:fee_refund_login]
-
         super
       end
 
@@ -159,6 +158,7 @@ module ActiveMerchant #:nodoc:
       def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(auth_minimum_amount(options), payment, options) }
+          options[:idempotency_key] = nil
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end

@@ -12,6 +12,7 @@
 * Authorize.net: Use new `unsupported_feature` standard error code [jasonwebster] #2322
 * Kushki: Add new gateway [shasum] #2326
 * PayU LATAM: Count pending refunds as succeeded [curiousepic] #2336
+* Stripe: Remove idempotency key from verify [shasum] #2335
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
