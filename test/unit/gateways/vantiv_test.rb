@@ -27,86 +27,18 @@ class VantivTest < Test::Unit::TestCase
     @options = {}
   end
 
-  def test_xml__request_format
-    stub_commit do |_, data, _|
-      assert_match(%r(<#{VantivGateway::XML_REQUEST_ROOT}), data)
-      assert_match(%r(</#{VantivGateway::XML_REQUEST_ROOT}>), data)
-      assert_match(%r(version="#{VantivGateway::SCHEMA_VERSION}"), data)
-      assert_match(%r(xmlns="#{VantivGateway::XML_NAMESPACE}"), data)
-      assert_match(%r(merchantId="#{@merchant_id}"), data)
-    end
-
-    # Use `#purchase` to test request format
-    @gateway.purchase(@amount, @credit_card)
-  end
-
-  def test_purchase__credit_card_successful
+  ## authorize
+  def test_authorize__credit_card_failed
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.respond_with(successful_purchase_response)
-
-    assert_success response
-
-    assert_equal "100000000000000006;sale;100", response.authorization
-    assert response.test?
-  end
-
-  def test_purchase__credit_card_failed
-    response = stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.respond_with(failed_purchase_response)
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(failed_authorize_response)
 
     assert_failure response
     assert_equal "Insufficient Funds", response.message
     assert_equal "110", response.params["response"]
-    assert response.test?
   end
 
-  def test_purchase__credit_card_request_with_name_on_card
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
-      assert_match(%r(<billToAddress>\s*<name>Longbob Longsen<), data)
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_purchase__credit_card_request_with_order_id
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_id: "774488")
-    end.check_request do |endpoint, data, headers|
-      assert_match(/774488/, data)
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_purchase__credit_card_request_with_billing_address
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, billing_address: address)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/<billToAddress>.*Longbob Longsen.*Longbob.*Longsen/m, data)
-      assert_match(/<billToAddress>.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5.*Widgets/m, data)
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_purchase__credit_card_request_with_shipping_address
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, shipping_address: address)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/<shipToAddress>.*Jim Smith.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_authorize__credit_card_request_with_descriptor
-    stub_comms do
-      @gateway.authorize(@amount, @credit_card, {
-        descriptor_name: "Name", descriptor_phone: "Phone"
-      })
-    end.check_request do |endpoint, data, headers|
-      assert_match(%r(<customBilling>.*<descriptor>Name<)m, data)
-      assert_match(%r(<customBilling>.*<phone>Phone<)m, data)
-    end.respond_with(successful_authorize_response)
-  end
-
-  def test_authorize__credit_card_with_debt_repayment
+  def test_authorize__credit_card_request_with_debt_repayment
     stub_comms do
       @gateway.authorize(@amount, @credit_card, { debt_repayment: true })
     end.check_request do |endpoint, data, headers|
@@ -114,22 +46,27 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_purchase__apple_pay_payment_cryptogram
+  def test_authorize__credit_card_request_with_descriptor
     stub_comms do
-      @gateway.purchase(@amount, @decrypted_apple_pay)
+      @gateway.authorize(@amount, @credit_card, {
+                           descriptor_name: "Name", descriptor_phone: "Phone"
+                         })
     end.check_request do |endpoint, data, headers|
-      assert_match(/BwABBJQ1AgAAAAAgJDUCAAAAAAA=/, data)
-    end.respond_with(successful_purchase_response)
+      assert_match(%r(<customBilling>.*<descriptor>Name<)m, data)
+      assert_match(%r(<customBilling>.*<phone>Phone<)m, data)
+    end.respond_with(successful_authorize_response)
   end
 
-  def test_purchase__apple_pay_order_source
-    stub_comms do
-      @gateway.purchase(@amount, @decrypted_apple_pay)
-    end.check_request do |endpoint, data, headers|
-      assert_match "<orderSource>applepay</orderSource>", data
-    end.respond_with(successful_purchase_response)
-  end
+  ## capture
+  def test_capture__credit_card_failed
+    response = stub_comms do
+      @gateway.capture(@amount, @credit_card)
+    end.respond_with(failed_capture_response)
 
+    assert_failure response
+    assert_equal "No transaction found with specified litleTxnId", response.message
+    assert_equal "360", response.params["response"]
+  end
 
   def test_capture__credit_card_successful
     response = stub_comms do
@@ -150,27 +87,119 @@ class VantivTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_authorize__credit_card_failed
+  ## purchase
+  def test_purchase__apple_pay_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_apple_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>applepay</orderSource>", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__apple_pay_payment_cryptogram
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_apple_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/BwABBJQ1AgAAAAAgJDUCAAAAAAA=/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__credit_card_failed
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card)
-    end.respond_with(failed_authorize_response)
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(failed_purchase_response)
 
     assert_failure response
     assert_equal "Insufficient Funds", response.message
     assert_equal "110", response.params["response"]
+    assert response.test?
   end
 
-  def test_capture__credit_card_failed
+  def test_purchase__credit_card_request_with_billing_address
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, billing_address: address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<billToAddress>.*Longbob Longsen.*Longbob.*Longsen/m, data)
+      assert_match(/<billToAddress>.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5.*Widgets/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__credit_card_request_with_name_on_card
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<billToAddress>\s*<name>Longbob Longsen<), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__credit_card_request_with_order_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_id: "774488")
+    end.check_request do |endpoint, data, headers|
+      assert_match(/774488/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__credit_card_request_with_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_source: "recurring")
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>recurring</orderSource>", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__credit_card_request_with_shipping_address
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, shipping_address: address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<shipToAddress>.*Jim Smith.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__credit_card_request_with_track_data
+    @credit_card.track_data = "Track Data"
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<track>Track Data</track>", data
+      assert_match "<orderSource>retail</orderSource>", data
+      assert_match %r{<pos>.+<\/pos>}m, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__credit_card_request_without_track_data
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>ecommerce</orderSource>", data
+      assert %r{<pos>.+<\/pos>}m !~ data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase__credit_card_successful
     response = stub_comms do
-      @gateway.capture(@amount, @credit_card)
-    end.respond_with(failed_capture_response)
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal "100000000000000006;sale;100", response.authorization
+    assert response.test?
+  end
+
+  ## refund
+  def test_refund__authorization_failed
+    response = stub_comms do
+      @gateway.refund(@amount, "SomeAuthorization")
+    end.respond_with(failed_refund_response)
 
     assert_failure response
     assert_equal "No transaction found with specified litleTxnId", response.message
     assert_equal "360", response.params["response"]
   end
 
-  def test_refund__credit_card_successful
+  def test_refund__authorization_successful
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
@@ -186,10 +215,75 @@ class VantivTest < Test::Unit::TestCase
     assert_success refund
   end
 
-  def test_refund__authorization_failed
+  ## scrubbing
+  def test_scrub
+    assert_equal post_scrub, @gateway.scrub(pre_scrub)
+  end
+
+  def test_scrubbing_support
+    assert @gateway.supports_scrubbing?
+  end
+
+  ## store
+  def test_store__credit_card_failed
     response = stub_comms do
-      @gateway.refund(@amount, "SomeAuthorization")
-    end.respond_with(failed_refund_response)
+      @gateway.store(@credit_card)
+    end.respond_with(failed_store_response)
+
+    assert_failure response
+    assert_equal "Credit card number was invalid", response.message
+    assert_equal "820", response.params["response"]
+  end
+
+  def test_store__credit_card_successful
+    response = stub_comms do
+      @gateway.store(@credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<accountNumber>4242424242424242</, data)
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_equal "1111222233330123", response.authorization
+  end
+
+  def test_store__paypage_registration_id_successful
+    response = stub_comms do
+      @gateway.store("cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=")
+    end.respond_with(successful_store_paypage_response)
+
+    assert_success response
+    assert_equal "1111222233334444", response.authorization
+  end
+
+  ## verify
+  def test_verify__credit_card_failed
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, successful_void_of_auth_response)
+    assert_failure response
+    assert_equal "Insufficient Funds", response.message
+  end
+
+  def test_verify__credit_card_successful
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorize_response, successful_void_of_auth_response)
+    assert_success response
+  end
+
+  def test_verify__credit_card_with_failed_void_successful
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, failed_void_of_authorization_response)
+    assert_success response
+    assert_equal "Approved", response.message
+  end
+
+  ## void
+  def test_void__authorization_failed
+    response = stub_comms do
+      @gateway.void("123456789012345360;authorization;100")
+    end.respond_with(failed_void_of_authorization_response)
 
     assert_failure response
     assert_equal "No transaction found with specified litleTxnId", response.message
@@ -213,6 +307,16 @@ class VantivTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_void__refund_authorization_failed
+    response = stub_comms do
+      @gateway.void("123456789012345360;credit;100")
+    end.respond_with(failed_void_of_other_things_response)
+
+    assert_failure response
+    assert_equal "No transaction found with specified litleTxnId", response.message
+    assert_equal "360", response.params["response"]
+  end
+
   def test_void__refund_authorization_successful
     refund = stub_comms do
       @gateway.refund(@amount, "SomeAuthorization")
@@ -229,106 +333,18 @@ class VantivTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_void__authorization_failed
-    response = stub_comms do
-      @gateway.void("123456789012345360;authorization;100")
-    end.respond_with(failed_void_of_authorization_response)
+  ## xml
+  def test_xml__request_format
+    stub_commit do |_, data, _|
+      assert_match(%r(<#{VantivGateway::XML_REQUEST_ROOT}), data)
+      assert_match(%r(</#{VantivGateway::XML_REQUEST_ROOT}>), data)
+      assert_match(%r(version="#{VantivGateway::SCHEMA_VERSION}"), data)
+      assert_match(%r(xmlns="#{VantivGateway::XML_NAMESPACE}"), data)
+      assert_match(%r(merchantId="#{@merchant_id}"), data)
+    end
 
-    assert_failure response
-    assert_equal "No transaction found with specified litleTxnId", response.message
-    assert_equal "360", response.params["response"]
-  end
-
-  def test_void__refund_authorization_failed
-    response = stub_comms do
-      @gateway.void("123456789012345360;credit;100")
-    end.respond_with(failed_void_of_other_things_response)
-
-    assert_failure response
-    assert_equal "No transaction found with specified litleTxnId", response.message
-    assert_equal "360", response.params["response"]
-  end
-
-  def test_store__credit_card_successful
-    response = stub_comms do
-      @gateway.store(@credit_card)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/<accountNumber>4242424242424242</, data)
-    end.respond_with(successful_store_response)
-
-    assert_success response
-    assert_equal "1111222233330123", response.authorization
-  end
-
-  def test_store__paypage_registration_id_successful
-    response = stub_comms do
-      @gateway.store("cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=")
-    end.respond_with(successful_store_paypage_response)
-
-    assert_success response
-    assert_equal "1111222233334444", response.authorization
-  end
-
-  def test_store__credit_card_failed
-    response = stub_comms do
-      @gateway.store(@credit_card)
-    end.respond_with(failed_store_response)
-
-    assert_failure response
-    assert_equal "Credit card number was invalid", response.message
-    assert_equal "820", response.params["response"]
-  end
-
-  def test_verify__credit_card_successful
-    response = stub_comms do
-      @gateway.verify(@credit_card)
-    end.respond_with(successful_authorize_response, successful_void_of_auth_response)
-    assert_success response
-  end
-
-  def test_verify__credit_card_with_failed_void_successful
-    response = stub_comms do
-      @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorize_response, failed_void_of_authorization_response)
-    assert_success response
-    assert_equal "Approved", response.message
-  end
-
-  def test_verify__credit_card_failed
-    response = stub_comms do
-      @gateway.verify(@credit_card, @options)
-    end.respond_with(failed_authorize_response, successful_void_of_auth_response)
-    assert_failure response
-    assert_equal "Insufficient Funds", response.message
-  end
-
-  def test_purchase__credit_card_request_with_swipe_data
-    @credit_card.track_data = "Track Data"
-
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
-      assert_match "<track>Track Data</track>", data
-      assert_match "<orderSource>retail</orderSource>", data
-      assert_match %r{<pos>.+<\/pos>}m, data
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_purchase__credit_card_request_without_track_data
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
-      assert_match "<orderSource>ecommerce</orderSource>", data
-      assert %r{<pos>.+<\/pos>}m !~ data
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_purchase__credit_card_request_with_order_source
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_source: "recurring")
-    end.check_request do |endpoint, data, headers|
-      assert_match "<orderSource>recurring</orderSource>", data
-    end.respond_with(successful_purchase_response)
+    # Use `#purchase` to test request format
+    @gateway.purchase(@amount, @credit_card)
   end
 
   def test_xml_schema__validation_unsuccessful
@@ -340,15 +356,6 @@ class VantivTest < Test::Unit::TestCase
     assert_match(/^Error validating xml data against the schema/, response.message)
     assert_equal "1", response.params["response"]
   end
-
-  def test_scrub
-    assert_equal post_scrub, @gateway.scrub(pre_scrub)
-  end
-
-  def test_scrubbing_support
-    assert @gateway.supports_scrubbing?
-  end
-
 
   private
 
