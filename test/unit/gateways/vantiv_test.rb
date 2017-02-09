@@ -28,26 +28,16 @@ class VantivTest < Test::Unit::TestCase
   end
 
   def test_request_format
-    stub_comms do
-      # use purchase to test request format
-      @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
-      assert_match(
-        Regexp.new("<#{VantivGateway::XML_REQUEST_ROOT}"), data
-      )
-      assert_match(
-        Regexp.new("</#{VantivGateway::XML_REQUEST_ROOT}>"), data
-      )
-      assert_match(
-        Regexp.new(%(version="#{VantivGateway::SCHEMA_VERSION}")), data
-      )
-      assert_match(
-        Regexp.new(%(xmlns="#{VantivGateway::XML_NAMESPACE}")), data
-      )
-      assert_match(
-        Regexp.new(%(merchantId="#{@merchant_id}")), data
-      )
-    end.respond_with(successful_purchase_response)
+    stub_commit do |_, data, _|
+      assert_match(%r(<#{VantivGateway::XML_REQUEST_ROOT}), data)
+      assert_match(%r(</#{VantivGateway::XML_REQUEST_ROOT}>), data)
+      assert_match(%r(version="#{VantivGateway::SCHEMA_VERSION}"), data)
+      assert_match(%r(xmlns="#{VantivGateway::XML_NAMESPACE}"), data)
+      assert_match(%r(merchantId="#{@merchant_id}"), data)
+    end
+
+    # Use `#purchase` to test request format
+    @gateway.purchase(@amount, @credit_card)
   end
 
   def test_successful_purchase
@@ -361,6 +351,31 @@ class VantivTest < Test::Unit::TestCase
 
 
   private
+
+  # Private: Stub a method and yield arguments to block
+  #
+  # Uses mocha to stub out `stub_method` using `#with` to get the params
+  # which are yielded to the block in our tests.
+  def stub_and_yield_arguments(stub_method:, args_length:)
+    @gateway.stubs(stub_method).with do |*args|
+      yield(*args)
+      # `#with` requires we return true, check the length of args passed in
+      # which is just a nice check on our expectation of stubbing `commit`
+      args.length == args_length
+    end
+  end
+
+  # Private: Stub the `commit` method on the gateway and yield the arguments to the block
+  #
+  # The built-in `stub_comms` method requires that a response be returned
+  # and checked in order for the `#check_request` block to run. This is
+  # more than we need when we're simply checking if the request is being
+  # built correctly.
+  def stub_commit
+    stub_and_yield_arguments(stub_method: :commit, args_length: 3) do |*args|
+      yield(*args)
+    end
+  end
 
   def successful_purchase_response
     %(
