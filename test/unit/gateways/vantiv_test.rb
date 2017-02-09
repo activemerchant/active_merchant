@@ -39,22 +39,25 @@ class VantivTest < Test::Unit::TestCase
   end
 
   def test_authorize__credit_card_request_with_debt_repayment
-    stub_comms do
-      @gateway.authorize(@amount, @credit_card, { debt_repayment: true })
-    end.check_request do |endpoint, data, headers|
+    stub_commit do |_, data, _|
       assert_match(%r(<debtRepayment>true</debtRepayment>), data)
-    end.respond_with(successful_authorize_response)
+    end
+
+    @gateway.authorize(@amount, @credit_card, debt_repayment: true)
   end
 
   def test_authorize__credit_card_request_with_descriptor
-    stub_comms do
-      @gateway.authorize(@amount, @credit_card, {
-                           descriptor_name: "Name", descriptor_phone: "Phone"
-                         })
-    end.check_request do |endpoint, data, headers|
+    stub_commit do |_, data, _|
       assert_match(%r(<customBilling>.*<descriptor>Name<)m, data)
       assert_match(%r(<customBilling>.*<phone>Phone<)m, data)
-    end.respond_with(successful_authorize_response)
+    end
+
+    @gateway.authorize(
+      @amount,
+      @credit_card,
+      descriptor_name: "Name",
+      descriptor_phone: "Phone"
+    )
   end
 
   ## capture
@@ -88,20 +91,20 @@ class VantivTest < Test::Unit::TestCase
   end
 
   ## purchase
-  def test_purchase__apple_pay_order_source
-    stub_comms do
-      @gateway.purchase(@amount, @decrypted_apple_pay)
-    end.check_request do |endpoint, data, headers|
+  def test_purchase__apple_pay_request_order_source
+    stub_commit do |_, data, _|
       assert_match "<orderSource>applepay</orderSource>", data
-    end.respond_with(successful_purchase_response)
+    end
+
+    @gateway.purchase(@amount, @decrypted_apple_pay)
   end
 
-  def test_purchase__apple_pay_payment_cryptogram
-    stub_comms do
-      @gateway.purchase(@amount, @decrypted_apple_pay)
-    end.check_request do |endpoint, data, headers|
+  def test_purchase__apple_pay_request_payment_cryptogram
+    stub_commit do |_, data, _|
       assert_match(/BwABBJQ1AgAAAAAgJDUCAAAAAAA=/, data)
-    end.respond_with(successful_purchase_response)
+    end
+
+    @gateway.purchase(@amount, @decrypted_apple_pay)
   end
 
   def test_purchase__credit_card_failed
@@ -116,65 +119,68 @@ class VantivTest < Test::Unit::TestCase
   end
 
   def test_purchase__credit_card_request_with_billing_address
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, billing_address: address)
-    end.check_request do |endpoint, data, headers|
+    stub_commit do |_, data, _|
       assert_match(/<billToAddress>.*Longbob Longsen.*Longbob.*Longsen/m, data)
       assert_match(/<billToAddress>.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5.*Widgets/m, data)
-    end.respond_with(successful_purchase_response)
+    end
+
+    @gateway.purchase(@amount, @credit_card, billing_address: address)
   end
 
   def test_purchase__credit_card_request_with_name_on_card
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    stub_commit do |_, data, _|
       assert_match(%r(<billToAddress>\s*<name>Longbob Longsen<), data)
-    end.respond_with(successful_purchase_response)
+    end
+
+    @gateway.purchase(@amount, @credit_card)
   end
 
   def test_purchase__credit_card_request_with_order_id
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_id: "774488")
-    end.check_request do |endpoint, data, headers|
+    stub_commit do |_, data, _|
       assert_match(/774488/, data)
-    end.respond_with(successful_purchase_response)
+    end
+
+    @gateway.purchase(@amount, @credit_card, order_id: "774488")
   end
 
   def test_purchase__credit_card_request_with_order_source
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_source: "recurring")
-    end.check_request do |endpoint, data, headers|
+    stub_commit do |_, data, _|
       assert_match "<orderSource>recurring</orderSource>", data
-    end.respond_with(successful_purchase_response)
+    end
+
+    @gateway.purchase(@amount, @credit_card, order_source: "recurring")
   end
 
   def test_purchase__credit_card_request_with_shipping_address
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, shipping_address: address)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/<shipToAddress>.*Jim Smith.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
-    end.respond_with(successful_purchase_response)
+    stub_commit do |_, data, _|
+      assert_match(
+        /<shipToAddress>.*Jim Smith.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m,
+        data
+      )
+    end
+
+    @gateway.purchase(@amount, @credit_card, shipping_address: address)
   end
 
   def test_purchase__credit_card_request_with_track_data
     @credit_card.track_data = "Track Data"
 
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    stub_commit do |_, data, _|
       assert_match "<track>Track Data</track>", data
       assert_match "<orderSource>retail</orderSource>", data
       assert_match %r{<pos>.+<\/pos>}m, data
-    end.respond_with(successful_purchase_response)
+    end
+
+    @gateway.purchase(@amount, @credit_card)
   end
 
   def test_purchase__credit_card_request_without_track_data
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card)
-    end.check_request do |endpoint, data, headers|
+    stub_commit do |_, data, _|
       assert_match "<orderSource>ecommerce</orderSource>", data
       assert %r{<pos>.+<\/pos>}m !~ data
-    end.respond_with(successful_purchase_response)
+    end
+
+    @gateway.purchase(@amount, @credit_card)
   end
 
   def test_purchase__credit_card_successful
