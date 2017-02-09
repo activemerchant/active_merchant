@@ -27,7 +27,7 @@ class VantivTest < Test::Unit::TestCase
     @options = {}
   end
 
-  def test_request_format
+  def test_xml__request_format
     stub_commit do |_, data, _|
       assert_match(%r(<#{VantivGateway::XML_REQUEST_ROOT}), data)
       assert_match(%r(</#{VantivGateway::XML_REQUEST_ROOT}>), data)
@@ -40,7 +40,7 @@ class VantivTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card)
   end
 
-  def test_successful_purchase
+  def test_purchase__credit_card_successful
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
@@ -51,7 +51,7 @@ class VantivTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_failed_purchase
+  def test_purchase__credit_card_failed
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(failed_purchase_response)
@@ -62,7 +62,7 @@ class VantivTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_passing_name_on_card
+  def test_purchase__credit_card_request_with_name_on_card
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
@@ -70,7 +70,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_passing_order_id
+  def test_purchase__credit_card_request_with_order_id
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: "774488")
     end.check_request do |endpoint, data, headers|
@@ -78,7 +78,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_passing_billing_address
+  def test_purchase__credit_card_request_with_billing_address
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: address)
     end.check_request do |endpoint, data, headers|
@@ -87,7 +87,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_passing_shipping_address
+  def test_purchase__credit_card_request_with_shipping_address
     stub_comms do
       @gateway.purchase(@amount, @credit_card, shipping_address: address)
     end.check_request do |endpoint, data, headers|
@@ -95,7 +95,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_passing_descriptor
+  def test_authorize__credit_card_request_with_descriptor
     stub_comms do
       @gateway.authorize(@amount, @credit_card, {
         descriptor_name: "Name", descriptor_phone: "Phone"
@@ -106,7 +106,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_passing_debt_repayment
+  def test_authorize__credit_card_with_debt_repayment
     stub_comms do
       @gateway.authorize(@amount, @credit_card, { debt_repayment: true })
     end.check_request do |endpoint, data, headers|
@@ -114,7 +114,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_passing_payment_cryptogram
+  def test_purchase__apple_pay_payment_cryptogram
     stub_comms do
       @gateway.purchase(@amount, @decrypted_apple_pay)
     end.check_request do |endpoint, data, headers|
@@ -122,7 +122,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_add_applepay_order_source
+  def test_purchase__apple_pay_order_source
     stub_comms do
       @gateway.purchase(@amount, @decrypted_apple_pay)
     end.check_request do |endpoint, data, headers|
@@ -131,7 +131,7 @@ class VantivTest < Test::Unit::TestCase
   end
 
 
-  def test_successful_authorize_and_capture
+  def test_capture__credit_card_successful
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
@@ -150,7 +150,7 @@ class VantivTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_failed_authorize
+  def test_authorize__credit_card_failed
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(failed_authorize_response)
@@ -160,7 +160,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "110", response.params["response"]
   end
 
-  def test_failed_capture
+  def test_capture__credit_card_failed
     response = stub_comms do
       @gateway.capture(@amount, @credit_card)
     end.respond_with(failed_capture_response)
@@ -170,7 +170,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "360", response.params["response"]
   end
 
-  def test_successful_refund
+  def test_refund__credit_card_successful
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
@@ -186,7 +186,7 @@ class VantivTest < Test::Unit::TestCase
     assert_success refund
   end
 
-  def test_failed_refund
+  def test_refund__authorization_failed
     response = stub_comms do
       @gateway.refund(@amount, "SomeAuthorization")
     end.respond_with(failed_refund_response)
@@ -196,7 +196,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "360", response.params["response"]
   end
 
-  def test_successful_void_of_authorization
+  def test_void__authorization_successful
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
@@ -213,7 +213,7 @@ class VantivTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_successful_void_of_other_things
+  def test_void__refund_authorization_successful
     refund = stub_comms do
       @gateway.refund(@amount, "SomeAuthorization")
     end.respond_with(successful_refund_response)
@@ -229,7 +229,7 @@ class VantivTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_failed_void_of_authorization
+  def test_void__authorization_failed
     response = stub_comms do
       @gateway.void("123456789012345360;authorization;100")
     end.respond_with(failed_void_of_authorization_response)
@@ -239,7 +239,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "360", response.params["response"]
   end
 
-  def test_failed_void_of_other_things
+  def test_void__refund_authorization_failed
     response = stub_comms do
       @gateway.void("123456789012345360;credit;100")
     end.respond_with(failed_void_of_other_things_response)
@@ -249,7 +249,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "360", response.params["response"]
   end
 
-  def test_successful_store
+  def test_store__credit_card_successful
     response = stub_comms do
       @gateway.store(@credit_card)
     end.check_request do |endpoint, data, headers|
@@ -260,7 +260,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "1111222233330123", response.authorization
   end
 
-  def test_successful_store_with_paypage_registration_id
+  def test_store__paypage_registration_id_successful
     response = stub_comms do
       @gateway.store("cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=")
     end.respond_with(successful_store_paypage_response)
@@ -269,7 +269,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "1111222233334444", response.authorization
   end
 
-  def test_failed_store
+  def test_store__credit_card_failed
     response = stub_comms do
       @gateway.store(@credit_card)
     end.respond_with(failed_store_response)
@@ -279,14 +279,14 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "820", response.params["response"]
   end
 
-  def test_successful_verify
+  def test_verify__credit_card_successful
     response = stub_comms do
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, successful_void_of_auth_response)
     assert_success response
   end
 
-  def test_successful_verify_failed_void
+  def test_verify__credit_card_with_failed_void_successful
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_of_authorization_response)
@@ -294,7 +294,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "Approved", response.message
   end
 
-  def test_unsuccessful_verify
+  def test_verify__credit_card_failed
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorize_response, successful_void_of_auth_response)
@@ -302,7 +302,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "Insufficient Funds", response.message
   end
 
-  def test_add_swipe_data_with_creditcard
+  def test_purchase__credit_card_request_with_swipe_data
     @credit_card.track_data = "Track Data"
 
     stub_comms do
@@ -314,7 +314,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_order_source_with_creditcard_no_track_data
+  def test_purchase__credit_card_request_without_track_data
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
@@ -323,7 +323,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_order_source_override
+  def test_purchase__credit_card_request_with_order_source
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_source: "recurring")
     end.check_request do |endpoint, data, headers|
@@ -331,7 +331,7 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_unsuccessful_xml_schema_validation
+  def test_xml_schema__validation_unsuccessful
     response = stub_comms do
       @gateway.store(@credit_card)
     end.respond_with(unsuccessful_xml_schema_validation_response)
@@ -345,7 +345,7 @@ class VantivTest < Test::Unit::TestCase
     assert_equal post_scrub, @gateway.scrub(pre_scrub)
   end
 
-  def test_supports_scrubbing?
+  def test_scrubbing_support
     assert @gateway.supports_scrubbing?
   end
 
