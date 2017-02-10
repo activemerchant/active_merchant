@@ -14,6 +14,9 @@ class VantivTest < Test::Unit::TestCase
       merchant_id: @merchant_id
     )
 
+    # String returned from Vantiv as an "authorization"
+    @authorization = "100000000000000001;authorization;100"
+
     @credit_card = credit_card
     @apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
@@ -117,6 +120,26 @@ class VantivTest < Test::Unit::TestCase
   end
 
   ## capture
+  def test_capture__authorization_request
+    stub_commit do |_, data, _|
+      assert_match %r(<capture .*</capture>)m, data
+      assert_match %r(<litleTxnId>100000000000000001</litleTxnId>), data
+      assert_match %r(<amount>#{@amount}</amount>), data
+    end
+
+    @gateway.capture(@amount, @authorization)
+  end
+
+  def test_capture__authorization_request_without_amount
+    stub_commit do |_, data, _|
+      assert_match %r(<capture .*</capture>)m, data
+      assert_match %r(<litleTxnId>100000000000000001</litleTxnId>), data
+      assert_no_match %r(<amount>.*</amount>), data
+    end
+
+    @gateway.capture(nil, @authorization)
+  end
+
   def test_capture__credit_card_failed
     response = stub_comms do
       @gateway.capture(@amount, @credit_card)
