@@ -15,14 +15,15 @@ class VantivTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
-    @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+    @apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
         month: '01',
         year: '2012',
         brand: "visa",
         number:  "44444444400009",
         payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
-      })
+      }
+    )
     @amount = 100
     @options = {}
   end
@@ -34,13 +35,13 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Insufficient Funds", response.message
     assert_equal "110", response.params["response"]
+    assert_equal "Insufficient Funds", response.message
   end
 
   def test_authorize__credit_card_request_with_debt_repayment
     stub_commit do |_, data, _|
-      assert_match(%r(<debtRepayment>true</debtRepayment>), data)
+      assert_match %r(<debtRepayment>true</debtRepayment>), data
     end
 
     @gateway.authorize(@amount, @credit_card, debt_repayment: true)
@@ -48,8 +49,8 @@ class VantivTest < Test::Unit::TestCase
 
   def test_authorize__credit_card_request_with_descriptor
     stub_commit do |_, data, _|
-      assert_match(%r(<customBilling>.*<descriptor>Name<)m, data)
-      assert_match(%r(<customBilling>.*<phone>Phone<)m, data)
+      assert_match %r(<customBilling>.*<descriptor>Name<)m, data
+      assert_match %r(<customBilling>.*<phone>Phone<)m, data
     end
 
     @gateway.authorize(
@@ -67,8 +68,11 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(failed_capture_response)
 
     assert_failure response
-    assert_equal "No transaction found with specified litleTxnId", response.message
     assert_equal "360", response.params["response"]
+    assert_equal(
+      "No transaction found with specified litleTxnId",
+      response.message
+    )
   end
 
   def test_capture__credit_card_successful
@@ -96,7 +100,7 @@ class VantivTest < Test::Unit::TestCase
       assert_match "<orderSource>applepay</orderSource>", data
     end
 
-    @gateway.purchase(@amount, @decrypted_apple_pay)
+    @gateway.purchase(@amount, @apple_pay)
   end
 
   def test_purchase__apple_pay_request_payment_cryptogram
@@ -104,7 +108,7 @@ class VantivTest < Test::Unit::TestCase
       assert_match(/BwABBJQ1AgAAAAAgJDUCAAAAAAA=/, data)
     end
 
-    @gateway.purchase(@amount, @decrypted_apple_pay)
+    @gateway.purchase(@amount, @apple_pay)
   end
 
   def test_purchase__credit_card_failed
@@ -113,15 +117,18 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Insufficient Funds", response.message
     assert_equal "110", response.params["response"]
+    assert_equal "Insufficient Funds", response.message
     assert response.test?
   end
 
   def test_purchase__credit_card_request_with_billing_address
     stub_commit do |_, data, _|
       assert_match(/<billToAddress>.*Longbob Longsen.*Longbob.*Longsen/m, data)
-      assert_match(/<billToAddress>.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5.*Widgets/m, data)
+      assert_match(
+        /<billToAddress>.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5.*Widgets/m,
+        data
+      )
     end
 
     @gateway.purchase(@amount, @credit_card, billing_address: address)
@@ -189,7 +196,6 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-
     assert_equal "100000000000000006;sale;100", response.authorization
     assert response.test?
   end
@@ -201,8 +207,11 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(failed_refund_response)
 
     assert_failure response
-    assert_equal "No transaction found with specified litleTxnId", response.message
     assert_equal "360", response.params["response"]
+    assert_equal(
+      "No transaction found with specified litleTxnId",
+      response.message
+    )
   end
 
   def test_refund__authorization_successful
@@ -237,8 +246,8 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(failed_store_response)
 
     assert_failure response
-    assert_equal "Credit card number was invalid", response.message
     assert_equal "820", response.params["response"]
+    assert_equal "Credit card number was invalid", response.message
   end
 
   def test_store__credit_card_successful
@@ -253,8 +262,10 @@ class VantivTest < Test::Unit::TestCase
   end
 
   def test_store__paypage_registration_id_successful
+    id = "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg="
+
     response = stub_comms do
-      @gateway.store("cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=")
+      @gateway.store(id)
     end.respond_with(successful_store_paypage_response)
 
     assert_success response
@@ -265,7 +276,11 @@ class VantivTest < Test::Unit::TestCase
   def test_verify__credit_card_failed
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(failed_authorize_response, successful_void_of_auth_response)
+    end.respond_with(
+      failed_authorize_response,
+      successful_void_of_auth_response
+    )
+
     assert_failure response
     assert_equal "Insufficient Funds", response.message
   end
@@ -273,14 +288,22 @@ class VantivTest < Test::Unit::TestCase
   def test_verify__credit_card_successful
     response = stub_comms do
       @gateway.verify(@credit_card)
-    end.respond_with(successful_authorize_response, successful_void_of_auth_response)
+    end.respond_with(
+      successful_authorize_response,
+      successful_void_of_auth_response
+    )
+
     assert_success response
   end
 
   def test_verify__credit_card_with_failed_void_successful
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorize_response, failed_void_of_authorization_response)
+    end.respond_with(
+      successful_authorize_response,
+      failed_void_of_authorization_response
+    )
+
     assert_success response
     assert_equal "Approved", response.message
   end
@@ -292,8 +315,11 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(failed_void_of_authorization_response)
 
     assert_failure response
-    assert_equal "No transaction found with specified litleTxnId", response.message
     assert_equal "360", response.params["response"]
+    assert_equal(
+      "No transaction found with specified litleTxnId",
+      response.message
+    )
   end
 
   def test_void__authorization_successful
@@ -319,8 +345,11 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(failed_void_of_other_things_response)
 
     assert_failure response
-    assert_equal "No transaction found with specified litleTxnId", response.message
     assert_equal "360", response.params["response"]
+    assert_equal(
+      "No transaction found with specified litleTxnId",
+      response.message
+    )
   end
 
   def test_void__refund_authorization_successful
@@ -359,8 +388,11 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(unsuccessful_xml_schema_validation_response)
 
     assert_failure response
-    assert_match(/^Error validating xml data against the schema/, response.message)
     assert_equal "1", response.params["response"]
+    assert_match(
+      /^Error validating xml data against the schema/,
+      response.message
+    )
   end
 
   private
