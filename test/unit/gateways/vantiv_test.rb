@@ -75,6 +75,7 @@ class VantivTest < Test::Unit::TestCase
 
   def test_authorize__credit_card_request_with_debt_repayment
     stub_commit do |_, data, _|
+      assert_match %r(<authorization .*</authorization>)m, data
       assert_match %r(<debtRepayment>true</debtRepayment>), data
     end
 
@@ -83,6 +84,7 @@ class VantivTest < Test::Unit::TestCase
 
   def test_authorize__credit_card_request_with_descriptor
     stub_commit do |_, data, _|
+      assert_match %r(<authorization .*</authorization>)m, data
       assert_match %r(<customBilling>.*<descriptor>Name</descriptor>)m, data
       assert_match %r(<customBilling>.*<phone>Phone</phone>)m, data
     end
@@ -97,6 +99,7 @@ class VantivTest < Test::Unit::TestCase
 
   def test_authorize__credit_card_request_with_order_source
     stub_commit do |_, data, _|
+      assert_match %r(<authorization .*</authorization>)m, data
       assert_match %r(<orderSource>some-order-source</orderSource>), data
     end
 
