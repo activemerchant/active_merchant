@@ -200,11 +200,46 @@ class VantivTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase__credit_card_request
+    stub_commit do |_, data, _|
+      assert_match %r(<sale .*</sale>)m, data
+      assert_match %r(<orderId>this-must-be-truncated--</orderId>), data
+      assert_match %r(<amount>#{@amount}</amount>), data
+      assert_match %r(<orderSource>ecommerce</orderSource>), data
+      # address nodes
+      assert_match %r(<billToAddress>.*</billToAddress>)m, data
+      assert_match %r(<name>Longbob Longsen</name>), data
+      assert_match %r(<firstName>Longbob</firstName>), data
+      assert_match %r(<lastName>Longsen</lastName>), data
+      # card nodes
+      assert_match %r(<card>.*</card>)m, data
+      assert_match %r(<type>VI</type>), data
+      assert_match %r(<number>4242424242424242</number>), data
+      assert_match %r(<expDate>0918</expDate>), data
+      assert_match %r(<cardValidationNum>123</cardValidationNum>), data
+      # nodes that shouldn't be present by default
+      assert_no_match %r(<shipToAddress>), data
+      assert_no_match %r(<pos>), data
+      assert_no_match %r(<customBilling>), data
+      assert_no_match %r(<debtRepayment>), data
+    end
+
+    @gateway.purchase(
+      @amount,
+      @credit_card,
+      order_id: "this-must-be-truncated--to-24-chars"
+    )
+  end
+
   def test_purchase__credit_card_request_with_billing_address
     stub_commit do |_, data, _|
-      assert_match(/<billToAddress>.*Longbob Longsen.*Longbob.*Longsen/m, data)
+      assert_match %r(<sale .*</sale>)m, data
       assert_match(
-        /<billToAddress>.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5.*Widgets/m,
+        %r(<billToAddress>.*Longbob Longsen.*Longbob.*Longsen)m,
+        data
+      )
+      assert_match(
+        %r(<billToAddress>.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5.*Widgets)m,
         data
       )
     end
@@ -212,34 +247,35 @@ class VantivTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, billing_address: address)
   end
 
-  def test_purchase__credit_card_request_with_name_on_card
+  def test_purchase__credit_card_request_with_descriptor
     stub_commit do |_, data, _|
-      assert_match(%r(<billToAddress>\s*<name>Longbob Longsen<), data)
+      assert_match %r(<sale .*</sale>)m, data
+      assert_match %r(<customBilling>.*<descriptor>Name</descriptor>)m, data
+      assert_match %r(<customBilling>.*<phone>Phone</phone>)m, data
     end
 
-    @gateway.purchase(@amount, @credit_card)
-  end
-
-  def test_purchase__credit_card_request_with_order_id
-    stub_commit do |_, data, _|
-      assert_match(/774488/, data)
-    end
-
-    @gateway.purchase(@amount, @credit_card, order_id: "774488")
+    @gateway.purchase(
+      @amount,
+      @credit_card,
+      descriptor_name: "Name",
+      descriptor_phone: "Phone"
+    )
   end
 
   def test_purchase__credit_card_request_with_order_source
     stub_commit do |_, data, _|
-      assert_match "<orderSource>recurring</orderSource>", data
+      assert_match %r(<sale .*</sale>)m, data
+      assert_match %r(<orderSource>some-order-source</orderSource>), data
     end
 
-    @gateway.purchase(@amount, @credit_card, order_source: "recurring")
+    @gateway.purchase(@amount, @credit_card, order_source: "some-order-source")
   end
 
   def test_purchase__credit_card_request_with_shipping_address
     stub_commit do |_, data, _|
+      assert_match %r(<sale .*</sale>)m, data
       assert_match(
-        /<shipToAddress>.*Jim Smith.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m,
+        %r(<shipToAddress>.*Jim Smith.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5)m,
         data
       )
     end
@@ -248,21 +284,16 @@ class VantivTest < Test::Unit::TestCase
   end
 
   def test_purchase__credit_card_request_with_track_data
-    @credit_card.track_data = "Track Data"
+    @credit_card.track_data = "credit-card-track-data"
 
     stub_commit do |_, data, _|
-      assert_match "<track>Track Data</track>", data
-      assert_match "<orderSource>retail</orderSource>", data
-      assert_match %r{<pos>.+<\/pos>}m, data
-    end
-
-    @gateway.purchase(@amount, @credit_card)
-  end
-
-  def test_purchase__credit_card_request_without_track_data
-    stub_commit do |_, data, _|
-      assert_match "<orderSource>ecommerce</orderSource>", data
-      assert %r{<pos>.+<\/pos>}m !~ data
+      assert_match %r(<sale .*</sale>)m, data
+      assert_match(
+        %r(<card>.*<track>credit-card-track-data</track>.*</card>)m,
+        data
+      )
+      assert_match %r(<orderSource>retail</orderSource>), data
+      assert_match %r(<pos>.+<\/pos>)m, data
     end
 
     @gateway.purchase(@amount, @credit_card)
