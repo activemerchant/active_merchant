@@ -90,17 +90,17 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * +:request_id+    -- Optional. This is the customer generated request identifier.
-      #   If a request_id is not provided, one will be generated for you.
-      #   If it is provided, it must be unique. Attempting to re-use a request_id will result in a processing error.
-      # * +:currency+      -- Optional. Will default to 'AUD'.
-      # * +:entry_mode+    -- Optional. Represents the way in which the payment was collected. If provided, it must
-      #   be one of ENTRY_MODES. If +:entry_mode+ is not provided, +DEFAULT_ENTRY_MODE+ is used (see above).
-      # * +:email+         -- Optional. The email address of the card-holder.
-      # * +:order_id+      -- Optional. For reference only, the SecureCo gateway will link the payment to this information.
-      # * +:ip+            -- Optional. The IP address of the customer. Only relevant when +:entry_mode+ == 'ecommerce'
-      # * +:custom_fields+ -- Optional. A hash or 2d array of key-value pairs to attach to the order.
-      #   Like +:order_id+ above, this is only used for future reference.
+      # * +:request_id+    -- This is the customer generated request identifier. If a request_id is not provided, one
+      #                       will be generated for you. If it is provided, it must be unique. Attempting to re-use a
+      #                       request_id will result in a processing error.
+      # * +:currency+      -- Will default to 'AUD'.
+      # * +:entry_mode+    -- Represents the way in which the payment was collected. If provided, it must be one of
+      #                       ENTRY_MODES. If +:entry_mode+ is not provided, +DEFAULT_ENTRY_MODE+ is used (see above).
+      # * +:email+         -- The email address of the card-holder.
+      # * +:order_id+      -- For reference only, the SecureCo gateway will link the payment to this information.
+      # * +:ip+            -- The IP address of the customer. Only relevant when +:entry_mode+ == 'ecommerce'.
+      # * +:custom_fields+ -- A hash or 2d array of key-value pairs to attach to the order. Like +:order_id+ above,
+      #                       this is only used for future reference.
       #
       # ==== Minimal Example
       #
@@ -109,7 +109,11 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Full Example
       #
-      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(username: 'yourusername', password: 'somepassword', merchant_account_id: '00000000-0000-0000-0000-000000000000')
+      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(
+      #      username: 'yourusername',
+      #      password: 'somepassword',
+      #      merchant_account_id: '00000000-0000-0000-0000-000000000000'
+      #    )
       #
       #    credit_card = ActiveMerchant::Billing::CreditCard.new(
       #      :brand      => 'visa',
@@ -167,17 +171,17 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * +:request_id+    -- Optional. This is the customer generated request identifier.
-      #   If a request_id is not provided, one will be generated for you.
-      #   If it is provided, it must be unique. Attempting to re-use a request_id will result in a processing error.
-      # * +:currency+      -- Optional. Will default to 'AUD'.
-      # * +:entry_mode+    -- Optional. Represents the way in which the payment was collected. If provided, it must
-      #   be one of ENTRY_MODES. If +:entry_mode+ is not provided, +DEFAULT_ENTRY_MODE+ is used (see above).
-      # * +:email+         -- Optional. The email address of the card-holder.
-      # * +:order_id+      -- Optional. For reference only, the SecureCo gateway will link the payment to this information.
-      # * +:ip+            -- Optional. The IP address of the customer. Only relevant when +:entry_mode+ == 'ecommerce'
-      # * +:custom_fields+ -- Optional. A hash or 2d array of key-value pairs to attach to the request.
-      #   Like +:order_id+ above, this is only used for future reference.
+      # * +:request_id+    -- This is the customer generated request identifier. If a request_id is not provided, one
+      #                       will be generated for you. If it is provided, it must be unique. Attempting to re-use a
+      #                       request_id will result in a processing error.
+      # * +:currency+      -- Will default to 'AUD'.
+      # * +:entry_mode+    -- Represents the way in which the payment was collected. If provided, it must be one of
+      #                       ENTRY_MODES. If +:entry_mode+ is not provided, +DEFAULT_ENTRY_MODE+ is used (see above).
+      # * +:email+         -- The email address of the card-holder.
+      # * +:order_id+      -- For reference only, the SecureCo gateway will link the payment to this information.
+      # * +:ip+            -- The IP address of the customer. Only relevant when +:entry_mode+ == 'ecommerce'
+      # * +:custom_fields+ -- A hash or 2d array of key-value pairs to attach to the request. Like +:order_id+ above,
+      #                       this is only used for future reference.
       #
       # ==== Minimal Example
       #
@@ -186,7 +190,11 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Full Example
       #
-      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(username: 'yourusername', password: 'somepassword', merchant_account_id: '00000000-0000-0000-0000-000000000000')
+      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(
+      #      username: 'yourusername',
+      #      password: 'somepassword',
+      #      merchant_account_id: '00000000-0000-0000-0000-000000000000'
+      #    )
       #
       #    credit_card = ActiveMerchant::Billing::CreditCard.new(
       #      :brand      => 'visa',
@@ -239,20 +247,23 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * +money+          -- Mandatory. Integer value of cents to claim. Must be equal to or less than the amount requested in the preceding +authorize+ request.
-      #   Also accepts +:full_amount+ when you want to capture the full amount
+      # * +money+          -- Mandatory. Integer value of cents to claim. Must be equal to or less than the amount
+      #                       requested in the preceding +authorize+ request. Also accepts +:full_amount+ for when you
+      #                       want to capture the full amount.
       # * +authorization+  -- Mandatory. The authorization credentials produced by a successful +authorize+ request
       # * +options+        -- Optional. A hash of options. See below.
       #
       # ==== Options
       #
-      # * +:request_id+    -- Optional. This is the customer generated request identifier.
-      #   If a request_id is not provided, one will be generated for you.
-      #   If it is provided, it must be unique. Attempting to re-use a request_id will result in a processing error.
-      # * +:currency+      -- Optional. Will default to 'AUD'. If the specified currency does not match the currency specified in the +authorize+ request, the gateway
-      #   will return an error. This field is ignored if +money+ is set to +:full_amount+
-      # * +:custom_fields+ -- Optional. A hash or 2d array of key-value pairs to attach to the request. If any custom fields were provided in the
-      #   preceding +authorize+ step they will be merged, with capture key/values taking precedence.
+      # * +:request_id+    -- This is the customer generated request identifier. If a request_id is not provided, one
+      #                       will be generated for you. If it is provided, it must be unique. Attempting to re-use a
+      #                       request_id will result in a processing error.
+      # * +:currency+      -- Will default to 'AUD'. If the specified currency does not match the currency specified in
+      #                       the +authorize+ request, the gateway will return an error. This field is ignored if
+      #                       +money+ is set to +:full_amount+.
+      # * +:custom_fields+ -- A hash or 2d array of key-value pairs to attach to the request. If any custom fields were
+      #                       provided in the preceding +authorize+ step they will be merged, with capture key/values
+      #                       taking precedence.
       #
       # ==== Minimal Examples
       #
@@ -264,7 +275,11 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Full Example
       #
-      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(username: 'yourusername', password: 'somepassword', merchant_account_id: '00000000-0000-0000-0000-000000000000')
+      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(
+      #      username: 'yourusername',
+      #      password: 'somepassword',
+      #      merchant_account_id: '00000000-0000-0000-0000-000000000000'
+      #    )
       #
       #    credit_card = ActiveMerchant::Billing::CreditCard.new(
       #      :brand      => 'visa',
@@ -285,7 +300,7 @@ module ActiveMerchant #:nodoc:
       #    raise "Failed authorization: #{authorization_response.message}" unless authorization_response.success?
       #
       #    capture_response = gateway.capture(:full_amount, authorization_response.authorization)
-      #    raise "Failed capture: #{capture_response.message}" unless capture_response.success?    
+      #    raise "Failed capture: #{capture_response.message}" unless capture_response.success?
       #
       def capture(money, authorization, options={})
         _, original_transaction_id = authorization.split ?|
@@ -307,32 +322,40 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * +money+          -- Mandatory. Integer value of cents to claim. Must be equal to or less than the amount requested in the preceding request.
-      #   Also accepts +:full_amount+ when you want to refund the full amount
-      # * +authorization+  -- Mandatory. The authorization credentials produced by a successful +purchase+ or +capture+ request
+      # * +money+          -- Mandatory. Integer value of cents to claim. Must be equal to or less than the amount
+      #                       requested in the preceding request. Also accepts +:full_amount+ for when you want to
+      #                       capture the full amount.
+      # * +authorization+  -- Mandatory. The authorization credentials produced by a successful +purchase+ or +capture+
+      #                       request.
       # * +options+        -- Optional. A hash of options. See below.
       #
       # ==== Options
       #
-      # * +:request_id+    -- Optional. This is the customer generated request identifier.
-      #   If a request_id is not provided, one will be generated for you.
-      #   If it is provided, it must be unique. Attempting to re-use a request_id will result in a processing error.
-      # * +:currency+      -- Optional. Will default to 'AUD'. If the specified currency does not match the currency specified in the preceding request, the gateway
-      #   will return an error. This field is ignored if +money+ is set to +:full_amount+
-      # * +:custom_fields+ -- Optional. A hash or 2d array of key-value pairs to attach to the request. If any custom fields were provided in the
-      #   preceding steps they will be merged, with refund key/values taking precedence.
+      # * +:request_id+    -- This is the customer generated request identifier. If a request_id is notprovided, one
+      #                       will be generated for you. If it is provided, it must be unique. Attempting to re-use a
+      #                       request_id will result in a processing error.
+      # * +:currency+      -- Will default to 'AUD'. If the specified currency does not match the currencyspecified in
+      #                       the preceding request, the gateway will return an error. This field is ignored if +money+
+      #                       is set to +:full_amount+.
+      # * +:custom_fields+ -- A hash or 2d array of key-value pairs to attach to the request. If any customfields were
+      #                       provided in the preceding steps they will be merged, with refund key/values taking
+      #                       precedence.
       #
       # ==== Minimal Examples
       #
       #    # Refund $10.00 of a previously successful purchase request
       #    response = gateway.refund(1000, purchase_response.authorization)
       #
-      #    # Capture the full amount of a previously successful capture request
-      #    response = gateway.capture(:full_amount, capture_response.authorization)
+      #    # Refund the full amount of a previously successful capture request
+      #    response = gateway.refund(:full_amount, capture_response.authorization)
       #
       # ==== Full Example
       #
-      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(username: 'yourusername', password: 'somepassword', merchant_account_id: '00000000-0000-0000-0000-000000000000')
+      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(
+      #      username: 'yourusername',
+      #      password: 'somepassword',
+      #      merchant_account_id: '00000000-0000-0000-0000-000000000000'
+      #    )
       #
       #    credit_card = ActiveMerchant::Billing::CreditCard.new(
       #      :brand      => 'visa',
@@ -354,11 +377,11 @@ module ActiveMerchant #:nodoc:
       #
       #    # Capture the full amount
       #    capture_response = gateway.capture(:full_amount, authorization_response.authorization)
-      #    raise "Failed capture: #{capture_response.message}" unless capture_response.success?    
+      #    raise "Failed capture: #{capture_response.message}" unless capture_response.success?
       #
       #    # Refund $5.00 of the capture
       #    refund_response = gateway.refund(500, capture_response.authorization)
-      #    raise "Failed refund: #{refund_response.message}" unless refund_response.success?   
+      #    raise "Failed refund: #{refund_response.message}" unless refund_response.success?
       #
       def refund(money, authorization, options={})
         trans_mapping = {
@@ -368,7 +391,9 @@ module ActiveMerchant #:nodoc:
         }
 
         original_transaction_type, original_transaction_id = authorization.split ?|
-        raise ArgumentError.new("Can't void \"#{original_transaction_type}\". Must be one of: #{trans_mapping.keys}") unless trans_mapping.key? original_transaction_type
+        unless trans_mapping.key? original_transaction_type
+          raise ArgumentError.new("Can't void \"#{original_transaction_type}\". Must be one of: #{trans_mapping.keys}")
+        end
         raise ArgumentError.new("Couldn't discern original transaction's id") unless original_transaction_id
 
         transaction_type = trans_mapping[original_transaction_type]
@@ -389,16 +414,18 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * +authorization+  -- Mandatory. The authorization credentials produced by a successful +purchase+, +authorize+ or +capture+ request.
+      # * +authorization+  -- Mandatory. The authorization credentials produced by a successful +purchase+, +authorize+
+      #                       or +capture+ request.
       # * +options+        -- Optional. A hash of options. See below.
       #
       # ==== Options
       #
-      # * +:request_id+    -- Optional. This is the customer generated request identifier.
-      #   If a request_id is not provided, one will be generated for you.
-      #   If it is provided, it must be unique. Attempting to re-use a request_id will result in a processing error.
-      # * +:custom_fields+ -- Optional. A hash or 2d array of key-value pairs to attach to the request. If any custom fields were provided in the
-      #   preceding steps they will be merged, with void key/values taking precedence.
+      # * +:request_id+    -- This is the customer generated request identifier. If a request_id is not provided, one
+      #                       will be generated for you. If it is provided, it must be unique. Attempting to re-use a
+      #                       request_id will result in a processing error.
+      # * +:custom_fields+ -- A hash or 2d array of key-value pairs to attach to the request. If any custom fields were
+      #                       provided in the preceding steps they will be merged, with void key/values taking
+      #                       precedence.
       #
       # ==== Minimal Example
       #
@@ -431,8 +458,9 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * +credit_card+    -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+
-      # * +options+        -- Optional. See the description of the +options+ parameter in the documentation for the +authorize+ and +void+ methods.
+      # * +credit_card+    -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+.
+      # * +options+        -- Optional. See the description of the +options+ parameter in the documentation for the
+      #                       +authorize+ and +void+ methods.
       #
       # ==== Minimal Example
       #
@@ -481,8 +509,12 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Full example
       #
-      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(username: 'username', password: 'password', merchant_account_id: '00000000-0000-0000-0000-000000000000')
-      #    
+      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(
+      #      username: 'yourusername',
+      #      password: 'somepassword',
+      #      merchant_account_id: '00000000-0000-0000-0000-000000000000'
+      #    )
+      #
       #    credit_card = ActiveMerchant::Billing::CreditCard.new(
       #      :brand      => 'visa',
       #      :number     => '4111 1111 1111 1111',
@@ -492,34 +524,65 @@ module ActiveMerchant #:nodoc:
       #      :last_name  => 'Bobsen',
       #      :verification_value => '123'
       #    )
-      #    
+      #
       #    [
-      #      ->(prev_response){ gateway.authorize(1000,       credit_card,                 custom_fields: {test1: "aut", test2: "aut"})},
-      #      ->(prev_response){ gateway.capture(:full_amount, prev_response.authorization, custom_fields: {test1: "cap", test3: "cap"})},
-      #      ->(prev_response){ gateway.refund(800,           prev_response.authorization, custom_fields: {test1: "ref", test4: "ref"})},
+      #      ->(prev_response) { gateway.authorize(
+      #         1000,
+      #         credit_card,
+      #         custom_fields: {
+      #           test1: "aut",
+      #           test2: "aut"
+      #         }
+      #      )},
+      #      ->(prev_response) { gateway.capture(
+      #         :full_amount,
+      #         prev_response.authorization,
+      #         custom_fields: {
+      #           test1: "cap",
+      #           test3: "cap"
+      #         }
+      #      )},
+      #      ->(prev_response) { gateway.refund(
+      #         800,
+      #         prev_response.authorization,
+      #         custom_fields: {
+      #           test1: "ref",
+      #           test4: "ref"
+      #         }
+      #      )},
       #    ].reduce([]) do |r, req_gen|
       #      r << req_gen.call(r.last)
       #    end.map do |response|
       #      gateway.get_payment_status_by_transaction_id response.params["transaction_id"]
-      #    end.each do |status|
-      #      pp status.params.slice 'transaction_type', 'transaction_state', 'completion_time_stamp', 'transaction_id', 'request_id'
+      #    end.each do |response|
+      #      pp response.params.slice *[
+      #        'transaction_type',
+      #        'transaction_state',
+      #        'completion_time_stamp',
+      #        'transaction_id',
+      #        'request_id',
+      #        'custom_fields',
+      #      ]
       #    end
-      #    
+      #
       #    # => {"transaction_type"=>"authorization",
       #    #  "transaction_state"=>"success",
-      #    #  "completion_time_stamp"=>"2017-02-09T01:44:24.000Z",
-      #    #  "transaction_id"=>"1f98496e-f00e-4967-a8ef-be6e7d2e3531",
-      #    #  "request_id"=>"488810f8367bf0334d8f056308e1f34f"}
+      #    #  "completion_time_stamp"=>"2017-02-10T01:04:01.000Z",
+      #    #  "transaction_id"=>"4e58e9c5-bd7c-496a-b238-89ba33568331",
+      #    #  "request_id"=>"52321770e70b7c8b6263348f70d1ae5b",
+      #    #  "custom_fields"=>{"test1"=>"aut", "test2"=>"aut"}}
       #    # {"transaction_type"=>"capture-authorization",
       #    #  "transaction_state"=>"success",
-      #    #  "completion_time_stamp"=>"2017-02-09T01:44:25.000Z",
-      #    #  "transaction_id"=>"ab545171-c413-48cf-ac21-8407b6393b46",
-      #    #  "request_id"=>"04fc42ac5caf786a27a84449a09b913e"}
+      #    #  "completion_time_stamp"=>"2017-02-10T01:04:03.000Z",
+      #    #  "transaction_id"=>"74c807d0-c1d6-4854-8657-0586352993a1",
+      #    #  "request_id"=>"4af5fad6620be2cb6ff1f06e2916d6b2",
+      #    #  "custom_fields"=>{"test1"=>"cap", "test3"=>"cap", "test2"=>"aut"}}
       #    # {"transaction_type"=>"refund-capture",
       #    #  "transaction_state"=>"success",
-      #    #  "completion_time_stamp"=>"2017-02-09T01:44:27.000Z",
-      #    #  "transaction_id"=>"462081e5-69e0-4da3-b996-39348216413d",
-      #    #  "request_id"=>"f53cbf82ee8618a4f441452cff6e2328"}
+      #    #  "completion_time_stamp"=>"2017-02-10T01:04:05.000Z",
+      #    #  "transaction_id"=>"7fa112bb-1478-4947-bc1d-1b13f4b3c078",
+      #    #  "request_id"=>"3ce8219372d3615d8e5530d2faf5d3f6",
+      #    #  "custom_fields"=>{"test1"=>"ref", "test4"=>"ref", "test3"=>"cap", "test2"=>"aut"}}
       #
       def get_payment_status_by_transaction_id(transaction_id)
         url = test? ? test_url : live_url
@@ -546,7 +609,7 @@ module ActiveMerchant #:nodoc:
       #
       #    # ⚡⚡⚡ NETWORK ERROR ⚡⚡⚡⚡
       #    # Did our purchase order reach the bank?
-      #    
+      #
       #    begin
       #      response = gateway.get_payment_status_by_request_id(request_id)
       #      puts "Order reached the gateway. The response was \"#{response.message}\""
@@ -580,22 +643,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        xml = Nokogiri::XML(body).remove_namespaces!
-
-        {
-          authorization_code:    'authorization-code',
-          card_token_id:         'card-token/token-id',
-          group_transaction_id:  'group-transaction-id',
-          message:               'statuses/status/@description',
-          request_id:            'request-id',
-          status_code:           'statuses/status/@code',
-          transaction_id:        'transaction-id',
-          transaction_state:     'transaction-state',
-          transaction_type:      'transaction-type',
-          completion_time_stamp: 'completion-time-stamp',
-        }.each_with_object({}) do |(key, xpath), obj|
-          obj[key] = xml.xpath('/payment/' + xpath).text
+        parsed = Hash.from_xml(body)
+        unless parsed.key? 'payment'
+          raise "Invalid response from gateway"
         end
+
+        parsed = parsed['payment']
+
+        if parsed.key? 'custom_fields'
+          parsed['custom_fields'] = parsed['custom_fields']['custom_field'].map do |field|
+            field.values_at 'field_name', 'field_value'
+          end.to_h
+        end
+
+        parsed
       end
 
       def commit(xml_request)
@@ -616,20 +677,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:transaction_state] == 'success'
+        response['transaction_state'] == 'success'
       end
 
       def message_from(response)
-        response[:message]
+        response["statuses"]["status"]["description"]
       end
 
       def authorization_from(response)
-        response.values_at(:transaction_type, :transaction_id).join ?|
+        response.values_at('transaction_type', 'transaction_id').join ?|
       end
 
       def error_code_from(response)
         unless success_from(response)
-          STANDARD_ERROR_CODE[ERROR_CODE_MAPPING[response[:status_code]] || DEFAULT_ERROR_CODE]
+          STANDARD_ERROR_CODE[ERROR_CODE_MAPPING[response["statuses"]["status"]["code"]] || DEFAULT_ERROR_CODE]
         end
       end
 
@@ -645,7 +706,9 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(xml, credit_card)
         card_type = BRAND_MAPPING[credit_card.brand]
-        raise ArgumentError.new("Invalid card brand: \"#{credit_card.brand}\". Must be one of: #{BRAND_MAPPING.keys}") if card_type.nil?
+        if card_type.nil?
+          raise ArgumentError.new("Invalid card brand: \"#{credit_card.brand}\". Must be one of: #{BRAND_MAPPING.keys}")
+        end
 
         xml.send('card') do
           xml.send('account-number',     credit_card.number)
@@ -672,7 +735,9 @@ module ActiveMerchant #:nodoc:
 
       def add_entry_mode(xml, entry_mode)
         entry_mode = options[:entry_mode] || DEFAULT_ENTRY_MODE
-        raise ArgumentError.new("Invalid entry mode: \"#{entry_mode}\". Must be one of: #{ENTRY_MODES}") unless ENTRY_MODES.include? entry_mode
+        unless ENTRY_MODES.include? entry_mode
+          raise ArgumentError.new("Invalid entry mode: \"#{entry_mode}\". Must be one of: #{ENTRY_MODES}")
+        end
         xml.send('entry-mode', entry_mode)
       end
 
@@ -689,7 +754,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_custom_fields(xml, custom_fields)
-        raise ArgumentError.new("Invalid custom fields: \"#{custom_fields.class}\". Must be a Hash or Array of Arrays") unless [Hash, Array].any? { |klass| custom_fields.is_a? klass }
+        unless [Hash, Array].any? { |klass| custom_fields.is_a? klass }
+          raise ArgumentError.new(
+            "Invalid custom fields: \"#{custom_fields.class}\". Must be a Hash or Array of Arrays"
+          )
+        end
         xml.send('custom-fields') do
           custom_fields.each do |key, value|
             xml.send('custom-field', 'field-name' => key, 'field-value' => value)
@@ -706,7 +775,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction_type(xml, transaction_type)
-        raise ArgumentError.new("Invalid transaction type: \"#{transaction_type}\". Must be one of: #{TRANSACTION_TYPES}") unless TRANSACTION_TYPES.include? transaction_type
+        unless TRANSACTION_TYPES.include? transaction_type
+          raise ArgumentError.new(
+            "Invalid transaction type: \"#{transaction_type}\". Must be one of: #{TRANSACTION_TYPES}"
+          )
+        end
         xml.send('transaction-type', transaction_type)
       end
 
