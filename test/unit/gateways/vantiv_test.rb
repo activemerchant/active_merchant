@@ -382,6 +382,17 @@ class VantivTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card)
   end
 
+  def test_xml__request_with_authentication
+    stub_commit do |_, data, |
+      assert_match %r(<authentication>.*</authentication>)m, data
+      assert_match %r(<user>login</user>), data
+      assert_match %r(<password>password</password>), data
+    end
+
+    # Use `#purchase` to test authentication
+    @gateway.purchase(@amount, @credit_card)
+  end
+
   def test_xml__request_with_transaction_attributes
     stub_commit do |_, data, |
       assert_match %r(id="MyOrderId\d"), data
