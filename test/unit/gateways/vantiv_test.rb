@@ -39,6 +39,37 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "Insufficient Funds", response.message
   end
 
+  def test_authorize__credit_card_request
+    stub_commit do |_, data, _|
+      assert_match %r(<authorization .*</authorization>)m, data
+      assert_match %r(<orderId>this-must-be-truncated--</orderId>), data
+      assert_match %r(<amount>#{@amount}</amount>), data
+      assert_match %r(<orderSource>ecommerce</orderSource>), data
+      # address nodes
+      assert_match %r(<billToAddress>.*</billToAddress>)m, data
+      assert_match %r(<name>Longbob Longsen</name>), data
+      assert_match %r(<firstName>Longbob</firstName>), data
+      assert_match %r(<lastName>Longsen</lastName>), data
+      # card nodes
+      assert_match %r(<card>.*</card>)m, data
+      assert_match %r(<type>VI</type>), data
+      assert_match %r(<number>4242424242424242</number>), data
+      assert_match %r(<expDate>0918</expDate>), data
+      assert_match %r(<cardValidationNum>123</cardValidationNum>), data
+      # nodes that shouldn't be present by default
+      assert_no_match %r(<shipToAddress>), data
+      assert_no_match %r(<pos>), data
+      assert_no_match %r(<customBilling>), data
+      assert_no_match %r(<debtRepayment>), data
+    end
+
+    @gateway.authorize(
+      @amount,
+      @credit_card,
+      order_id: "this-must-be-truncated--to-24-chars"
+    )
+  end
+
   def test_authorize__credit_card_request_with_debt_repayment
     stub_commit do |_, data, _|
       assert_match %r(<debtRepayment>true</debtRepayment>), data
@@ -49,8 +80,8 @@ class VantivTest < Test::Unit::TestCase
 
   def test_authorize__credit_card_request_with_descriptor
     stub_commit do |_, data, _|
-      assert_match %r(<customBilling>.*<descriptor>Name<)m, data
-      assert_match %r(<customBilling>.*<phone>Phone<)m, data
+      assert_match %r(<customBilling>.*<descriptor>Name</descriptor>)m, data
+      assert_match %r(<customBilling>.*<phone>Phone</phone>)m, data
     end
 
     @gateway.authorize(
@@ -59,6 +90,30 @@ class VantivTest < Test::Unit::TestCase
       descriptor_name: "Name",
       descriptor_phone: "Phone"
     )
+  end
+
+  def test_authorize__credit_card_request_with_order_source
+    stub_commit do |_, data, _|
+      assert_match %r(<orderSource>some-order-source</orderSource>), data
+    end
+
+    @gateway.authorize(@amount, @credit_card, order_source: "some-order-source")
+  end
+
+  def test_authorize__credit_card_request_with_track_data
+    @credit_card.track_data = "credit-card-track-data"
+
+    stub_commit do |_, data, _|
+      assert_match %r(<authorization .*</authorization>)m, data
+      assert_match(
+        %r(<card>.*<track>credit-card-track-data</track>.*</card>)m,
+        data
+      )
+      assert_match %r(<orderSource>retail</orderSource>), data
+      assert_match %r(<pos>.+<\/pos>)m, data
+    end
+
+    @gateway.authorize(@amount, @credit_card)
   end
 
   ## capture
@@ -390,6 +445,31 @@ class VantivTest < Test::Unit::TestCase
     end
 
     # Use `#purchase` to test authentication
+    @gateway.purchase(@amount, @credit_card)
+  end
+
+  # Some requests use a payment method that results in a `pos` node created.
+  # The values of the nodes below `<pos>` are the same regardless of the action
+  # or the payment method. (Probably always a credit card with track data).
+  def test_xml__request_with_pos
+    @credit_card.track_data = "credit-card-track-data"
+
+    stub_commit do |_, data, _|
+      assert_match %r(<pos>.+<\/pos>)m, data
+      assert_match(
+        %r(<capability>#{VantivGateway::POS_CAPABILITY}</capability>)m,
+        data
+      )
+      assert_match(
+        %r(<entryMode>#{VantivGateway::POS_ENTRY_MODE}</entryMode>)m,
+        data
+      )
+      assert_match(
+        %r(<cardholderId>#{VantivGateway::POS_CARDHOLDER_ID}</cardholderId>)m,
+        data
+      )
+    end
+
     @gateway.purchase(@amount, @credit_card)
   end
 
