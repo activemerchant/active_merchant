@@ -10,6 +10,7 @@ require 'yaml'
 require 'json'
 require 'active_merchant'
 require 'comm_stub'
+require 'pry'
 
 require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'
