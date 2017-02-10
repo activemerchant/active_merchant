@@ -84,7 +84,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:raw_ssl_request).returns(successful_void_response)
 
-    response = @gateway.void("Authorization")
+    response = @gateway.void("Authorization", credit_card)
     assert_success response
     assert_equal "1012082919", response.authorization
   end
@@ -92,7 +92,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:raw_ssl_request).returns(failed_void_response)
 
-    response = @gateway.void("Authorization")
+    response = @gateway.void("Authorization", credit_card)
     assert_failure response
     assert_equal "20008", response.error_code
   end

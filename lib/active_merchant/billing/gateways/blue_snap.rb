@@ -72,8 +72,8 @@ module ActiveMerchant
       end
 
       def purchase(money, payment_method, options = {})
-        type = payment_method.is_a?(Check) ? :check : :credit_card
-        commit(:purchase, type) do |doc|
+        payment_type = payment_method.is_a?(Check) ? :check : :credit_card
+        commit(:purchase, :post, payment_type) do |doc|
           add_auth_purchase(doc, money, payment_method, options)
         end
       end
@@ -99,8 +99,9 @@ module ActiveMerchant
         end
       end
 
-      def void(authorization, options = {})
-        commit(:void, :put) do |doc|
+      def void(authorization, payment_method, options = {})
+        payment_type = payment_method.is_a?(Check) ? :check : :credit_card
+        commit(:void, :put, payment_type) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
         end
@@ -216,7 +217,7 @@ module ActiveMerchant
 
       def add_credit_card(doc, card, options = nil)
         doc.send("credit-card") do
-          if options[:encrypted]
+          if options && options[:encrypted]
             add_encrypted_fields(doc, card, options)
           else
             doc.send("card-number", card.number)
@@ -228,7 +229,7 @@ module ActiveMerchant
       end
 
       def add_encrypted_fields(doc, card, options)
-        doc.send("encrypted-card-number", options[:encrypted_number])
+        doc.send("encrypted-card-number", options[:encrypted_cc])
         doc.send("encrypted-security-code", options[:encrypted_cvv])
         doc.send("card-type", card.brand)
       end
@@ -267,6 +268,10 @@ module ActiveMerchant
 
       def add_authorization(doc, authorization)
         doc.send("transaction-id", authorization)
+      end
+
+      def add_transaction_type(doc, authorization)
+        doc.send("")
       end
 
       def parse(response)
@@ -315,19 +320,19 @@ module ActiveMerchant
         )
       end
 
-      def commit(action, type = nil, verb = :post)
-        request = build_xml_request(action, type) { |doc| yield(doc) }
-        response = api_request(action, request, verb, type)
+      def commit(action, verb = :post, payment_type = nil)
+        request = build_xml_request(action, payment_type) { |doc| yield(doc) }
+        response = api_request(action, request, verb, payment_type)
         parsed = parse(response)
         succeeded = success_from(action, response)
         build_response(succeeded, action, parsed)
       end
 
-      def url(action = nil, type = nil)
+      def url(action = nil, payment_type = nil)
         base = test? ? test_url : live_url
         resource = if action == :store
                      "vaulted-shoppers"
-                   elsif type && type == :check
+                   elsif payment_type && payment_type == :check
                      "alt-transactions"
                    else
                      "transactions"
@@ -375,10 +380,10 @@ module ActiveMerchant
         }
       end
 
-      def root_element(action, type = nil)
+      def root_element(action, payment_type = nil)
         if action == :store
           "vaulted-shopper"
-        elsif type && type == :check
+        elsif payment_type && payment_type == :check
           "alt-transaction"
         else
           "card-transaction"
@@ -392,10 +397,10 @@ module ActiveMerchant
         }
       end
 
-      def build_xml_request(action, type = nil)
+      def build_xml_request(action, payment_type = nil)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__(root_element(action, type), root_attributes) do |doc|
-          if type == :credit_card
+        builder.__send__(root_element(action, payment_type), root_attributes) do |doc|
+          if payment_type == :credit_card
             doc.send("card-transaction-type", TRANSACTIONS[action]) if TRANSACTIONS[action]
           end
           yield(doc)
