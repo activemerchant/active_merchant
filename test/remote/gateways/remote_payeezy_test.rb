@@ -1,15 +1,22 @@
 require 'test_helper'
+require 'pry'
 
 class RemotePayeezyTest < Test::Unit::TestCase
   def setup
     @gateway = PayeezyGateway.new(fixtures(:payeezy))
     @credit_card = credit_card
+    @credit_card_token = CreditCardToken.new(
+      brand: 'visa',
+      value: '2537446225198291',
+      cardholder_name: 'John Smith',
+      exp_date: '1030'
+    )
     @bad_credit_card = credit_card('4111111111111113')
     @check = check
     @amount = 100
     @options = {
       :billing_address => address,
-      :merchant_ref => 'Store Purchase'
+      :merchant_ref => 'Acme Sock'
     }
   end
 
@@ -38,6 +45,19 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert auth.authorization
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
+  end
+
+  def test_authorize_and_capture_with_credit_card_token
+    assert auth = @gateway.authorize(@amount, @credit_card_token, @options)
+    assert_success auth
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth)
+    assert_success capture
+  end
+
+  def test_purchase_with_credit_card_token
+    assert response = @gateway.purchase(@amount, @credit_card_token, @options)
+    assert_success response
   end
 
   def test_failed_authorize

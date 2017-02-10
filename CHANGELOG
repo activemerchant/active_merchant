@@ -7,6 +7,9 @@
 * Paymill: Send new required fields on tokenization requests [tschelabaumann] #2279
 * GlobalCollect: Pass options to Refund [curiousepic] #2330
 
+== Version 1.63.1
+* Payeezy: Add support for authorization, purchase and capture via credit card token
+
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
 * AuthorizeNet: Fix line items quirk [shasum]
