@@ -382,6 +382,46 @@ class VantivTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card)
   end
 
+  def test_xml__request_with_transaction_attributes
+    stub_commit do |_, data, |
+      assert_match %r(id="MyOrderId\d"), data
+      assert_match %r(reportGroup="My Report Group\d"), data
+      assert_match %r(customerId="MyCustomerId\d"), data
+    end
+
+    # Use `#purchase` to test request format
+    @gateway.purchase(
+      @amount,
+      @credit_card,
+      id: "MyOrderId1",
+      merchant: "My Report Group1",
+      customer: "MyCustomerId1"
+    )
+
+    # Test other option names
+    @gateway.purchase(
+      @amount,
+      @credit_card,
+      order_id: "MyOrderId2",
+      merchant: "My Report Group2",
+      customer: "MyCustomerId2"
+    )
+  end
+
+  def test_xml__request_with_transaction_attributes_defaults
+    stub_commit do |_, data, |
+      assert_no_match %r(id=".*"), data
+      assert_match(
+        %r(reportGroup="#{VantivGateway::DEFAULT_REPORT_GROUP}"),
+        data
+      )
+      assert_no_match %r(customerId=".*"), data
+    end
+
+    # Use `#purchase` to test request format
+    @gateway.purchase(@amount, @credit_card)
+  end
+
   def test_xml_schema__validation_unsuccessful
     response = stub_comms do
       @gateway.store(@credit_card)
