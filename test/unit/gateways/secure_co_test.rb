@@ -160,43 +160,88 @@ class SecureCoTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_dependent_order_types
-    @gateway.expects(:ssl_post).twice.returns(successful_purchase_response)
-    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+  def test_refund_purchase
+    purchase_response = nil
+    stub_comms do
+      purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match '<transaction-type>purchase</transaction-type>', data
+    end.respond_with(successful_purchase_response)
+
     stub_comms do
       @gateway.refund(@amount, purchase_response.authorization, @options)
     end.check_request do |endpoint, data, headers|
       assert_match '<transaction-type>refund-purchase</transaction-type>', data
     end.respond_with(successful_refund_response)
+  end
 
-    @gateway.expects(:ssl_post).times(3).returns(successful_authorize_response).then.returns(successful_capture_response)
-    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
-    capture_response = @gateway.capture(@amount, authorize_response.authorization, @options)
+  def test_refund_capture
+    authorize_response = nil
+    stub_comms do
+      authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match '<transaction-type>authorization</transaction-type>', data
+    end.respond_with(successful_authorize_response)
+
+    capture_response = nil
+    stub_comms do
+      capture_response = @gateway.capture(@amount, authorize_response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match '<transaction-type>capture-authorization</transaction-type>', data
+    end.respond_with(successful_capture_response)
+
     stub_comms do
       @gateway.refund(@amount, capture_response.authorization, @options)
     end.check_request do |endpoint, data, headers|
       assert_match '<transaction-type>refund-capture</transaction-type>', data
     end.respond_with(successful_refund_response)
+  end
 
-    @gateway.expects(:ssl_post).twice.returns(successful_purchase_response)
-    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+  def test_void_purchase
+    purchase_response = nil
+    stub_comms do
+      purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match '<transaction-type>purchase</transaction-type>', data
+    end.respond_with(successful_purchase_response)
+
     stub_comms do
       @gateway.void(purchase_response.authorization, @options)
     end.check_request do |endpoint, data, headers|
       assert_match '<transaction-type>void-purchase</transaction-type>', data
     end.respond_with(successful_void_response)
+  end
 
-    @gateway.expects(:ssl_post).twice.returns(successful_authorize_response)
-    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+  def test_void_authorize
+    authorize_response = nil
+    stub_comms do
+      authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match '<transaction-type>authorization</transaction-type>', data
+    end.respond_with(successful_authorize_response)
+
     stub_comms do
       @gateway.void(authorize_response.authorization, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match '<transaction-type>void-authorize</transaction-type>', data
+      assert_match '<transaction-type>void-authorization</transaction-type>', data
     end.respond_with(successful_void_response)
+  end
 
-    @gateway.expects(:ssl_post).times(3).returns(successful_authorize_response).then.returns(successful_capture_response)
-    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
-    capture_response = @gateway.capture(@amount, authorize_response.authorization, @options)
+  def test_void_capture
+    authorize_response = nil
+    stub_comms do
+      authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match '<transaction-type>authorization</transaction-type>', data
+    end.respond_with(successful_authorize_response)
+
+    capture_response = nil
+    stub_comms do
+      capture_response = @gateway.capture(@amount, authorize_response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match '<transaction-type>capture-authorization</transaction-type>', data
+    end.respond_with(successful_capture_response)
+
     stub_comms do
       @gateway.void(capture_response.authorization, @options)
     end.check_request do |endpoint, data, headers|

@@ -304,7 +304,7 @@ module ActiveMerchant #:nodoc:
       #
       def capture(money, authorization, options={})
         _, original_transaction_id = authorization.split ?|
-        raise ArgumentError.new("Couldn't discern original transaction's id") unless original_transaction_id
+        raise ArgumentError.new("Couldn't discern original transaction id") unless original_transaction_id
 
         request = build_request('capture-authorization') do |xml|
           add_request_id(xml, options[:request_id])
@@ -392,9 +392,9 @@ module ActiveMerchant #:nodoc:
 
         original_transaction_type, original_transaction_id = authorization.split ?|
         unless trans_mapping.key? original_transaction_type
-          raise ArgumentError.new("Can't void \"#{original_transaction_type}\". Must be one of: #{trans_mapping.keys}")
+          raise ArgumentError.new("Can't refund \"#{original_transaction_type}\". Must be one of: #{trans_mapping.keys}")
         end
-        raise ArgumentError.new("Couldn't discern original transaction's id") unless original_transaction_id
+        raise ArgumentError.new("Couldn't discern original transaction id") unless original_transaction_id
 
         transaction_type = trans_mapping[original_transaction_type]
 
@@ -441,7 +441,7 @@ module ActiveMerchant #:nodoc:
 
         original_transaction_type, original_transaction_id = authorization.split ?|
         raise ArgumentError.new("Can't void \"#{original_transaction_type}\". Must be one of: #{trans_mapping.keys}") unless trans_mapping.key? original_transaction_type
-        raise ArgumentError.new("Couldn't discern original transaction's id") unless original_transaction_id
+        raise ArgumentError.new("Couldn't discern original transaction id") unless original_transaction_id
 
         transaction_type = trans_mapping[original_transaction_type]
 
