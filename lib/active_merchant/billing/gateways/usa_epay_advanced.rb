@@ -348,10 +348,70 @@ module ActiveMerchant #:nodoc:
       #  * Same as add_customer
       #
       def update_customer(options={})
+        ActiveMerchant.deprecated "update_customer is deprecated and will be removed from a future release of ActiveMerchant. Please use update instead."
         requires! options, :customer_number
 
         request = build_request(__method__, options)
         commit(__method__, request)
+      end
+
+      # Update a customer by replacing either all of the customer details or changing only a few fields
+      #
+      #
+      # ==== Identifier
+      # * <tt>:identifier</tt> -- customer number of the customer to be updated
+      #
+      # 
+      # To update only a few fields use this set of options
+      #
+      # ==== Options
+      # * <tt>:fields</tt> -- array of 2 element long arrays representing FieldValue object
+      #   * <tt>:Field</tt> -- name of the field
+      #   * <tt>:Value</tt> -- field value 
+      #
+      # To replace customer details use this set of options
+      #
+      # ==== Options
+      # * <tt>:id</tt> -- merchant assigned id
+      # * <tt>:notes</tt> -- notes about customer
+      # * <tt>:data</tt> -- base64 data about customer
+      # * <tt>:url</tt> -- customer website
+      # * <tt>:billing_address</tt> -- usual options
+      # * <tt>:payment_methods</tt> -- array of payment method hashes.
+      #   * <tt>:method</tt> -- credit_card or check
+      #   * <tt>:name</tt> -- optional name/label for the method
+      #   * <tt>:sort</tt> -- optional integer value specifying the backup sort order, 0 is default
+      #
+      # ==== Recurring Options
+      # * <tt>:enabled</tt> -- +true+ enables recurring
+      # * <tt>:schedule</tt> -- daily, weekly, bi-weekly (every two weeks), monthly, bi-monthly (every two months), quarterly, bi-annually (every six months), annually, first of month, last day of month
+      # * <tt>:number_left</tt> -- number of payments left; -1 for unlimited
+      # * <tt>:next</tt> -- date of next payment (Date/Time)
+      # * <tt>:amount</tt> -- amount of recurring payment
+      # * <tt>:tax</tt> -- tax portion of amount
+      # * <tt>:currency</tt> -- numeric currency code
+      # * <tt>:description</tt> -- description of transaction
+      # * <tt>:order_id</tt> -- transaction order id
+      # * <tt>:user</tt> -- merchant username assigned to transaction
+      # * <tt>:source</tt> -- name of source key assigned to billing
+      # * <tt>:send_receipt</tt> -- +true+ to send client a receipt
+      # * <tt>:receipt_note</tt> -- leave a note on the receipt
+      #
+      # ==== Point of Sale Options
+      # * <tt>:price_tier</tt> -- name of customer price tier
+      # * <tt>:tax_class</tt> -- tax class
+      # * <tt>:lookup_code</tt> -- lookup code from customer/member id card; barcode or magnetic stripe; can be assigned by merchant; defaults to system assigned if blank
+      #
+      # ==== Response
+      # * <tt>#message</tt> -- customer number assigned by gateway
+
+      def update(identifier, options={})
+        options.merge!(customer_number: identifier)
+        if options[:fields].blank?
+          update_customer(options)
+        else
+          quick_update_customer(options)
+        end
       end
 
       # Enable a customer for recurring billing.
@@ -945,6 +1005,15 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      #there is wrapper method named update that wraps this method and update_customer into one method
+      #update_customer is still public but is going to be deprecated.
+      def quick_update_customer(options={})
+        requires! options, :customer_number
+
+        request = build_request(__method__, options)
+        commit(__method__, request)
+      end
+
       # Build soap header, etc.
       def build_request(action, options = {})
         soap = Builder::XmlMarkup.new
@@ -1006,6 +1075,19 @@ module ActiveMerchant #:nodoc:
       def build_update_customer(soap, options)
         build_customer(soap, options, 'updateCustomer', true)
       end
+
+      def build_quick_update_customer_data(soap, options, type)
+        soap.tag! "ns1:#{type}" do
+          build_token soap, options
+          build_tag soap, :integer, 'CustNum', options[:customer_number]
+          build_quick_update_data soap, options
+        end
+      end
+
+      def build_quick_update_customer(soap, options)
+
+        build_quick_update_customer_data(soap, options, 'quickUpdateCustomer')
+      end      
 
       def build_enable_customer(soap, options)
         build_customer(soap, options, 'enableCustomer')
@@ -1213,6 +1295,26 @@ module ActiveMerchant #:nodoc:
           build_customer_payments soap, options
           build_custom_fields soap, options
         end
+      end
+
+      def build_quick_update_data(soap, options={})
+        soap.UpdateData 'SOAP-ENC:arrayType' => 'ns1:FieldValue[#{options[:fields].size}]', 'xsi:type' => 'ns1:FieldValueArray' do
+          options.each do |k,v|
+            if(k == :customer_number) then next end
+            fields_values = v
+            fields_values.each do |field_value|
+              soap.item 'xsi:type' => 'ns1:FieldValue' do
+                build_tag soap, :string, :Field, field_value[0]
+                build_tag soap, :string, :Value, field_value[1]
+              end
+            end
+            
+          end
+        end
+      end
+
+      def build_tag(soap, type, tag, value)
+        soap.tag!(tag, value, 'xsi:type' => "xsd:#{type}") if value != nil
       end
 
       def build_customer_payments(soap, options)
