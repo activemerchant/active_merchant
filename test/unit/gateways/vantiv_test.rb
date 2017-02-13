@@ -16,6 +16,7 @@ class VantivTest < Test::Unit::TestCase
 
     # String returned from Vantiv as an "authorization"
     @authorization = "100000000000000001;authorization;100"
+    @invalid_authorization = "12345;invalid-authorization;0"
 
     @credit_card = credit_card
     @apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
@@ -315,7 +316,7 @@ class VantivTest < Test::Unit::TestCase
   ## refund
   def test_refund__authorization_failed
     response = stub_comms do
-      @gateway.refund(@amount, "SomeAuthorization")
+      @gateway.refund(@amount, @invalid_authorization)
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -323,6 +324,39 @@ class VantivTest < Test::Unit::TestCase
     assert_equal(
       "No transaction found with specified litleTxnId",
       response.message
+    )
+  end
+
+  def test_refund__authorization_request
+    stub_commit do |_, data, _|
+      assert_match %r(<credit .*</credit>)m, data
+      assert_match %r(<litleTxnId>100000000000000001</litleTxnId>), data
+      assert_match %r(<amount>#{@amount}</amount>), data
+      # nodes that shouldn't be present by default
+      assert_no_match %r(<customBilling>), data
+    end
+
+    @gateway.refund(@amount, @authorization)
+  end
+
+  def test_refund__authorization_request_with_descriptor
+    stub_commit do |_, data, _|
+      assert_match %r(<credit .*</credit>)m, data
+      assert_match(
+        %r(<customBilling>.*<descriptor>descriptor-name</descriptor>)m,
+        data
+      )
+      assert_match(
+        %r(<customBilling>.*<phone>descriptor-phone</phone>)m,
+        data
+      )
+    end
+
+    @gateway.refund(
+      @amount,
+      @authorization,
+      descriptor_name: "descriptor-name",
+      descriptor_phone: "descriptor-phone"
     )
   end
 

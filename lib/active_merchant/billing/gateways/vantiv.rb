@@ -148,10 +148,10 @@ module ActiveMerchant #:nodoc:
         transaction_id, = split_authorization(authorization)
 
         request = build_authenticated_xml_request do |doc|
-          add_descriptor(doc, options)
           doc.credit(transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
-            doc.amount(money) if money
+            doc.amount(money) if money.present?
+            add_descriptor(doc, options)
           end
         end
 
