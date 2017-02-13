@@ -44,7 +44,7 @@ class VantivTest < Test::Unit::TestCase
   def test_authorize__credit_card_failed
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
-    end.respond_with(failed_authorize_response)
+    end.respond_with(_response_authorize__credit_card_failed)
 
     assert_failure response
     assert_equal "110", response.params["response"]
@@ -155,7 +155,7 @@ class VantivTest < Test::Unit::TestCase
   def test_capture__credit_card_failed
     response = stub_comms do
       @gateway.capture(@amount, @credit_card)
-    end.respond_with(failed_capture_response)
+    end.respond_with(_response_capture__credit_card_failed)
 
     assert_failure response
     assert_equal "360", response.params["response"]
@@ -168,7 +168,7 @@ class VantivTest < Test::Unit::TestCase
   def test_capture__credit_card_successful
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
-    end.respond_with(successful_authorize_response)
+    end.respond_with(_response_authorize__credit_card_successful)
 
     assert_success response
 
@@ -179,7 +179,7 @@ class VantivTest < Test::Unit::TestCase
       @gateway.capture(@amount, response.authorization)
     end.check_request do |endpoint, data, headers|
       assert_match(/100000000000000001/, data)
-    end.respond_with(successful_capture_response)
+    end.respond_with(_response_capture__credit_card_successful)
 
     assert_success capture
     assert_equal "100000000000000002;capture;100", capture.authorization
@@ -206,7 +206,7 @@ class VantivTest < Test::Unit::TestCase
   def test_purchase__credit_card_failed
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.respond_with(failed_purchase_response)
+    end.respond_with(_response_purchase__credit_card_failed)
 
     assert_failure response
     assert_equal "110", response.params["response"]
@@ -316,7 +316,7 @@ class VantivTest < Test::Unit::TestCase
   def test_purchase__credit_card_successful
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.respond_with(successful_purchase_response)
+    end.respond_with(_response_purchase__credit_card_successful)
 
     assert_success response
     assert_equal "100000000000000006;sale;100", response.authorization
@@ -327,7 +327,7 @@ class VantivTest < Test::Unit::TestCase
   def test_refund__authorization_failed
     response = stub_comms do
       @gateway.refund(@amount, @invalid_authorization)
-    end.respond_with(failed_refund_response)
+    end.respond_with(_response_refund__authorization_failed)
 
     assert_failure response
     assert_equal "360", response.params["response"]
@@ -373,7 +373,7 @@ class VantivTest < Test::Unit::TestCase
   def test_refund__authorization_successful
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
-    end.respond_with(successful_purchase_response)
+    end.respond_with(_response_purchase__credit_card_successful)
 
     assert_equal "100000000000000006;sale;100", response.authorization
 
@@ -381,14 +381,14 @@ class VantivTest < Test::Unit::TestCase
       @gateway.refund(@amount, response.authorization)
     end.check_request do |endpoint, data, headers|
       assert_match(/100000000000000006/, data)
-    end.respond_with(successful_refund_response)
+    end.respond_with(_response_refund__purchase_successful)
 
     assert_success refund
   end
 
   ## scrubbing
   def test_scrub
-    assert_equal post_scrub, @gateway.scrub(pre_scrub)
+    assert_equal _fixture__after_scrub, @gateway.scrub(_fixture__before_scrub)
   end
 
   def test_scrubbing_support
@@ -399,7 +399,7 @@ class VantivTest < Test::Unit::TestCase
   def test_store__credit_card_failed
     response = stub_comms do
       @gateway.store(@credit_card)
-    end.respond_with(failed_store_response)
+    end.respond_with(_response_store__credit_card_failed)
 
     assert_failure response
     assert_equal "820", response.params["response"]
@@ -435,7 +435,7 @@ class VantivTest < Test::Unit::TestCase
       @gateway.store(@credit_card)
     end.check_request do |endpoint, data, headers|
       assert_match(/<accountNumber>4242424242424242</, data)
-    end.respond_with(successful_store_response)
+    end.respond_with(_response_store__credit_card_successful)
 
     assert_success response
     assert_equal "1111222233330123", response.authorization
@@ -458,7 +458,7 @@ class VantivTest < Test::Unit::TestCase
   def test_store__paypage_registration_id_successful
     response = stub_comms do
       @gateway.store(@paypage_id)
-    end.respond_with(successful_store_paypage_response)
+    end.respond_with(_response_store__paypage_registration_id_successful)
 
     assert_success response
     assert_equal "1111222233334444", response.authorization
@@ -469,8 +469,8 @@ class VantivTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(
-      failed_authorize_response,
-      successful_void_of_auth_response
+      _response_authorize__credit_card_failed,
+      _response_void__authorize_response
     )
 
     assert_failure response
@@ -481,8 +481,8 @@ class VantivTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@credit_card)
     end.respond_with(
-      successful_authorize_response,
-      successful_void_of_auth_response
+      _response_authorize__credit_card_successful,
+      _response_void__authorize_response
     )
 
     assert_success response
@@ -492,8 +492,8 @@ class VantivTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(
-      successful_authorize_response,
-      failed_void_of_authorization_response
+      _response_authorize__credit_card_successful,
+      _response_verify__credit_card_void_failed
     )
 
     assert_success response
@@ -504,7 +504,7 @@ class VantivTest < Test::Unit::TestCase
   def test_void__authorization_failed
     response = stub_comms do
       @gateway.void(@authorize_authorization_invalid_id)
-    end.respond_with(failed_void_of_authorization_response)
+    end.respond_with(_response_verify__credit_card_void_failed)
 
     assert_failure response
     assert_equal "360", response.params["response"]
@@ -527,7 +527,7 @@ class VantivTest < Test::Unit::TestCase
   def test_void__authorization_successful
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
-    end.respond_with(successful_authorize_response)
+    end.respond_with(_response_authorize__credit_card_successful)
 
     assert_success response
     assert_equal "100000000000000001;authorization;100", response.authorization
@@ -536,7 +536,7 @@ class VantivTest < Test::Unit::TestCase
       @gateway.void(response.authorization)
     end.check_request do |endpoint, data, headers|
       assert_match(/<authReversal.*<litleTxnId>100000000000000001</m, data)
-    end.respond_with(successful_void_of_auth_response)
+    end.respond_with(_response_void__authorize_response)
 
     assert_success void
   end
@@ -566,7 +566,7 @@ class VantivTest < Test::Unit::TestCase
   def test_void__refund_authorization_failed
     response = stub_comms do
       @gateway.void(@refund_authorization)
-    end.respond_with(failed_void_of_other_things_response)
+    end.respond_with(_response_void__refund_failed)
 
     assert_failure response
     assert_equal "360", response.params["response"]
@@ -590,7 +590,7 @@ class VantivTest < Test::Unit::TestCase
   def test_void__refund_authorization_successful
     refund = stub_comms do
       @gateway.refund(@amount, @authorize_authorization)
-    end.respond_with(successful_refund_response)
+    end.respond_with(_response_refund__purchase_successful)
 
     assert_equal "100000000000000003;credit;", refund.authorization
 
@@ -598,7 +598,7 @@ class VantivTest < Test::Unit::TestCase
       @gateway.void(refund.authorization)
     end.check_request do |endpoint, data, headers|
       assert_match(/<void.*<litleTxnId>100000000000000003</m, data)
-    end.respond_with(successful_void_of_other_things_response)
+    end.respond_with(_response_void__refund_successful)
 
     assert_success void
   end
@@ -696,7 +696,7 @@ class VantivTest < Test::Unit::TestCase
   def test_xml_schema__validation_unsuccessful
     response = stub_comms do
       @gateway.store(@credit_card)
-    end.respond_with(unsuccessful_xml_schema_validation_response)
+    end.respond_with(_response_xml_schema__validation_failed)
 
     assert_failure response
     assert_equal "1", response.params["response"]
@@ -734,7 +734,7 @@ class VantivTest < Test::Unit::TestCase
     end
   end
 
-  def successful_purchase_response
+  def _response_purchase__credit_card_successful
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <saleResponse id='1' reportGroup='Default Report Group' customerId=''>
@@ -753,7 +753,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def failed_purchase_response
+  def _response_purchase__credit_card_failed
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <saleResponse id='6' reportGroup='Default Report Group' customerId=''>
@@ -771,7 +771,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def successful_authorize_response
+  def _response_authorize__credit_card_successful
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authorizationResponse id='1' reportGroup='Default Report Group' customerId=''>
@@ -790,7 +790,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def failed_authorize_response
+  def _response_authorize__credit_card_failed
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authorizationResponse id='6' reportGroup='Default Report Group' customerId=''>
@@ -808,7 +808,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def successful_capture_response
+  def _response_capture__credit_card_successful
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <captureResponse id='' reportGroup='Default Report Group' customerId=''>
@@ -821,7 +821,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def failed_capture_response
+  def _response_capture__credit_card_failed
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <captureResponse id='' reportGroup='Default Report Group' customerId=''>
@@ -834,7 +834,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def successful_refund_response
+  def _response_refund__purchase_successful
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <creditResponse id='' reportGroup='Default Report Group' customerId=''>
@@ -847,7 +847,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def failed_refund_response
+  def _response_refund__authorization_failed
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <creditResponse id='' reportGroup='Default Report Group' customerId=''>
@@ -860,7 +860,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def successful_void_of_auth_response
+  def _response_void__authorize_response
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authReversalResponse id='' reportGroup='Default Report Group' customerId=''>
@@ -874,7 +874,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def successful_void_of_other_things_response
+  def _response_void__refund_successful
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <voidResponse id='' reportGroup='Default Report Group' customerId=''>
@@ -887,7 +887,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def failed_void_of_authorization_response
+  def _response_verify__credit_card_void_failed
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authReversalResponse id='' reportGroup='Default Report Group' customerId=''>
@@ -901,7 +901,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def failed_void_of_other_things_response
+  def _response_void__refund_failed
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <voidResponse id='' reportGroup='Default Report Group' customerId=''>
@@ -914,7 +914,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def successful_store_response
+  def _response_store__credit_card_successful
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <registerTokenResponse id='50' reportGroup='Default Report Group' customerId=''>
@@ -931,7 +931,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def successful_store_paypage_response
+  def _response_store__paypage_registration_id_successful
     %(
       <litleOnlineResponse version='8.2' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <registerTokenResponse id='99999' reportGroup='Default Report Group' customerId=''>
@@ -946,7 +946,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def failed_store_response
+  def _response_store__credit_card_failed
     %(
       <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <registerTokenResponse id='51' reportGroup='Default Report Group' customerId=''>
@@ -960,7 +960,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def unsuccessful_xml_schema_validation_response
+  def _response_xml_schema__validation_failed
     %(
     <litleOnlineResponse version='8.29' xmlns='http://www.litle.com/schema'
                      response='1'
@@ -969,7 +969,7 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
-  def pre_scrub
+  def _fixture__before_scrub
     <<-pre_scrub
       opening connection to www.testlitle.com:443...
       opened
@@ -999,7 +999,7 @@ class VantivTest < Test::Unit::TestCase
     pre_scrub
   end
 
-  def post_scrub
+  def _fixture__after_scrub
     <<-post_scrub
       opening connection to www.testlitle.com:443...
       opened
