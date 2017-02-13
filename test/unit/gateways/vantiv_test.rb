@@ -16,7 +16,11 @@ class VantivTest < Test::Unit::TestCase
 
     # String returned from Vantiv as an "authorization"
     @authorization = "100000000000000001;authorization;100"
+    @authorization_invalid_id = "123456789012345360;authorization;100"
     @invalid_authorization = "12345;invalid-authorization;0"
+    @capture_authorization = "100000000000000002;capture;100"
+    @refund_authorization = "123456789012345360;credit;100"
+    @purchase_authorization = "100000000000000006;sale;100"
 
     @credit_card = credit_card
     @apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
@@ -178,6 +182,8 @@ class VantivTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
 
     assert_success capture
+    assert_equal "100000000000000002;capture;100", capture.authorization
+    assert capture.test?
   end
 
   ## purchase
@@ -497,7 +503,7 @@ class VantivTest < Test::Unit::TestCase
   ## void
   def test_void__authorization_failed
     response = stub_comms do
-      @gateway.void("123456789012345360;authorization;100")
+      @gateway.void(@authorization_invalid_id)
     end.respond_with(failed_void_of_authorization_response)
 
     assert_failure response
@@ -506,6 +512,16 @@ class VantivTest < Test::Unit::TestCase
       "No transaction found with specified litleTxnId",
       response.message
     )
+  end
+
+  def test_void__authorization_request
+    stub_commit do |_, data, _|
+      assert_match %r(<authReversal .*</authReversal>)m, data
+      assert_match %r(<litleTxnId>100000000000000001</litleTxnId>), data
+      assert_match %r(<amount>100</amount>), data
+    end
+
+    @gateway.void(@authorization, amount: "100")
   end
 
   def test_void__authorization_successful
@@ -525,9 +541,31 @@ class VantivTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_void__capture_authorization_request
+    stub_commit do |_, data, _|
+      assert_match %r(<void .*</void>)m, data
+      assert_match %r(<litleTxnId>100000000000000002</litleTxnId>), data
+      # amount is not included for standard void transactions
+      assert_no_match %r(<amount>), data
+    end
+
+    @gateway.void(@capture_authorization, amount: "125")
+  end
+
+  def test_void__purchase_authorization_request
+    stub_commit do |_, data, _|
+      assert_match %r(<void .*</void>)m, data
+      assert_match %r(<litleTxnId>100000000000000006</litleTxnId>), data
+      # amount is not included for standard void transactions
+      assert_no_match %r(<amount>), data
+    end
+
+    @gateway.void(@purchase_authorization, amount: "150")
+  end
+
   def test_void__refund_authorization_failed
     response = stub_comms do
-      @gateway.void("123456789012345360;credit;100")
+      @gateway.void(@refund_authorization)
     end.respond_with(failed_void_of_other_things_response)
 
     assert_failure response
@@ -538,9 +576,20 @@ class VantivTest < Test::Unit::TestCase
     )
   end
 
+  def test_void__refund_authorization_request
+    stub_commit do |_, data, _|
+      assert_match %r(<void .*</void>)m, data
+      assert_match %r(<litleTxnId>123456789012345360</litleTxnId>), data
+      # amount is not included for standard void transactions
+      assert_no_match %r(<amount>), data
+    end
+
+    @gateway.void(@refund_authorization, amount: "150")
+  end
+
   def test_void__refund_authorization_successful
     refund = stub_comms do
-      @gateway.refund(@amount, "SomeAuthorization")
+      @gateway.refund(@amount, @authorization)
     end.respond_with(successful_refund_response)
 
     assert_equal "100000000000000003;credit;", refund.authorization

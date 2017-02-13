@@ -194,6 +194,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+
+      # Public: Void (cancel) a transaction that occurred during the same
+      # business day.
+      #
+      # Vantiv supports `void` transactions for:
+      #  * `capture`
+      #  * `credit` (refund)
+      #  * `sale`
+      #
+      # This action checks if the `authorization` param is for an `authorize`
+      # action. If so, an `authReversal` is submitted.
+      #
+      # Possible transaction roots are `void` and `authReversal`
       def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
         money = options[:amount] if options[:amount].present?
