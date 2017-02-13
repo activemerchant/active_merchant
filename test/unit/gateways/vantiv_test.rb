@@ -470,7 +470,7 @@ class VantivTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(
       _response_authorize__credit_card_failed,
-      _response_void__authorize_response
+      _response_void__authorize_successful
     )
 
     assert_failure response
@@ -482,7 +482,7 @@ class VantivTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(
       _response_authorize__credit_card_successful,
-      _response_void__authorize_response
+      _response_void__authorize_successful
     )
 
     assert_success response
@@ -536,7 +536,7 @@ class VantivTest < Test::Unit::TestCase
       @gateway.void(response.authorization)
     end.check_request do |endpoint, data, headers|
       assert_match(/<authReversal.*<litleTxnId>100000000000000001</m, data)
-    end.respond_with(_response_void__authorize_response)
+    end.respond_with(_response_void__authorize_successful)
 
     assert_success void
   end
@@ -734,241 +734,6 @@ class VantivTest < Test::Unit::TestCase
     end
   end
 
-  def _response_purchase__credit_card_successful
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <saleResponse id='1' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>100000000000000006</litleTxnId>
-          <orderId>1</orderId>
-          <response>000</response>
-          <responseTime>2014-03-31T11:34:39</responseTime>
-          <message>Approved</message>
-          <authCode>11111 </authCode>
-          <fraudResult>
-            <avsResult>01</avsResult>
-            <cardValidationResult>M</cardValidationResult>
-          </fraudResult>
-        </saleResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_purchase__credit_card_failed
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <saleResponse id='6' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>600000000000000002</litleTxnId>
-          <orderId>6</orderId>
-          <response>110</response>
-          <responseTime>2014-03-31T11:48:47</responseTime>
-          <message>Insufficient Funds</message>
-          <fraudResult>
-            <avsResult>34</avsResult>
-            <cardValidationResult>P</cardValidationResult>
-          </fraudResult>
-        </saleResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_authorize__credit_card_successful
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <authorizationResponse id='1' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>100000000000000001</litleTxnId>
-          <orderId>1</orderId>
-          <response>000</response>
-          <responseTime>2014-03-31T12:21:56</responseTime>
-          <message>Approved</message>
-          <authCode>11111 </authCode>
-          <fraudResult>
-            <avsResult>01</avsResult>
-            <cardValidationResult>M</cardValidationResult>
-          </fraudResult>
-        </authorizationResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_authorize__credit_card_failed
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <authorizationResponse id='6' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>600000000000000001</litleTxnId>
-          <orderId>6</orderId>
-          <response>110</response>
-          <responseTime>2014-03-31T12:24:21</responseTime>
-          <message>Insufficient Funds</message>
-          <fraudResult>
-            <avsResult>34</avsResult>
-            <cardValidationResult>P</cardValidationResult>
-          </fraudResult>
-        </authorizationResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_capture__credit_card_successful
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <captureResponse id='' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>100000000000000002</litleTxnId>
-          <response>000</response>
-          <responseTime>2014-03-31T12:28:07</responseTime>
-          <message>Approved</message>
-        </captureResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_capture__credit_card_failed
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <captureResponse id='' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>304546900824606360</litleTxnId>
-          <response>360</response>
-          <responseTime>2014-03-31T12:30:53</responseTime>
-          <message>No transaction found with specified litleTxnId</message>
-        </captureResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_refund__purchase_successful
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <creditResponse id='' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>100000000000000003</litleTxnId>
-          <response>000</response>
-          <responseTime>2014-03-31T12:36:50</responseTime>
-          <message>Approved</message>
-        </creditResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_refund__authorization_failed
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <creditResponse id='' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>996483567570258360</litleTxnId>
-          <response>360</response>
-          <responseTime>2014-03-31T12:42:41</responseTime>
-          <message>No transaction found with specified litleTxnId</message>
-        </creditResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_void__authorize_response
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <authReversalResponse id='' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>972619753208653000</litleTxnId>
-          <orderId>123</orderId>
-          <response>000</response>
-          <responseTime>2014-03-31T12:45:44</responseTime>
-          <message>Approved</message>
-        </authReversalResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_void__refund_successful
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <voidResponse id='' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>100000000000000004</litleTxnId>
-          <response>000</response>
-          <responseTime>2014-03-31T12:44:52</responseTime>
-          <message>Approved</message>
-        </voidResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_verify__credit_card_void_failed
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <authReversalResponse id='' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>775712323632364360</litleTxnId>
-          <orderId>123</orderId>
-          <response>360</response>
-          <responseTime>2014-03-31T13:03:17</responseTime>
-          <message>No transaction found with specified litleTxnId</message>
-        </authReversalResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_void__refund_failed
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <voidResponse id='' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>486912375928374360</litleTxnId>
-          <response>360</response>
-          <responseTime>2014-03-31T12:55:46</responseTime>
-          <message>No transaction found with specified litleTxnId</message>
-        </voidResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_store__credit_card_successful
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <registerTokenResponse id='50' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>501000000000000001</litleTxnId>
-          <orderId>50</orderId>
-          <litleToken>1111222233330123</litleToken>
-          <response>801</response>
-          <responseTime>2014-03-31T13:06:41</responseTime>
-          <message>Account number was successfully registered</message>
-          <bin>445711</bin>
-          <type>VI</type>
-        </registerTokenResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_store__paypage_registration_id_successful
-    %(
-      <litleOnlineResponse version='8.2' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <registerTokenResponse id='99999' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>222358384397377801</litleTxnId>
-          <orderId>F12345</orderId>
-          <litleToken>1111222233334444</litleToken>
-          <response>801</response>
-          <responseTime>2015-05-20T14:37:22</responseTime>
-          <message>Account number was successfully registered</message>
-        </registerTokenResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_store__credit_card_failed
-    %(
-      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
-        <registerTokenResponse id='51' reportGroup='Default Report Group' customerId=''>
-          <litleTxnId>510000000000000001</litleTxnId>
-          <orderId>51</orderId>
-          <response>820</response>
-          <responseTime>2014-03-31T13:10:51</responseTime>
-          <message>Credit card number was invalid</message>
-        </registerTokenResponse>
-      </litleOnlineResponse>
-    )
-  end
-
-  def _response_xml_schema__validation_failed
-    %(
-    <litleOnlineResponse version='8.29' xmlns='http://www.litle.com/schema'
-                     response='1'
-                     message='Error validating xml data against the schema on line 8\nthe length of the value is 10, but the required minimum is 13.'/>
-
-    )
-  end
-
   def _fixture__before_scrub
     <<-pre_scrub
       opening connection to www.testlitle.com:443...
@@ -1029,4 +794,246 @@ class VantivTest < Test::Unit::TestCase
     post_scrub
   end
 
+  # authorize
+  def _response_authorize__credit_card_failed
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <authorizationResponse id='6' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>600000000000000001</litleTxnId>
+          <orderId>6</orderId>
+          <response>110</response>
+          <responseTime>2014-03-31T12:24:21</responseTime>
+          <message>Insufficient Funds</message>
+          <fraudResult>
+            <avsResult>34</avsResult>
+            <cardValidationResult>P</cardValidationResult>
+          </fraudResult>
+        </authorizationResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def _response_authorize__credit_card_successful
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <authorizationResponse id='1' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>100000000000000001</litleTxnId>
+          <orderId>1</orderId>
+          <response>000</response>
+          <responseTime>2014-03-31T12:21:56</responseTime>
+          <message>Approved</message>
+          <authCode>11111 </authCode>
+          <fraudResult>
+            <avsResult>01</avsResult>
+            <cardValidationResult>M</cardValidationResult>
+          </fraudResult>
+        </authorizationResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  # capture
+  def _response_capture__credit_card_failed
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <captureResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>304546900824606360</litleTxnId>
+          <response>360</response>
+          <responseTime>2014-03-31T12:30:53</responseTime>
+          <message>No transaction found with specified litleTxnId</message>
+        </captureResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def _response_capture__credit_card_successful
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <captureResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>100000000000000002</litleTxnId>
+          <response>000</response>
+          <responseTime>2014-03-31T12:28:07</responseTime>
+          <message>Approved</message>
+        </captureResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  # purchase
+  def _response_purchase__credit_card_failed
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <saleResponse id='6' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>600000000000000002</litleTxnId>
+          <orderId>6</orderId>
+          <response>110</response>
+          <responseTime>2014-03-31T11:48:47</responseTime>
+          <message>Insufficient Funds</message>
+          <fraudResult>
+            <avsResult>34</avsResult>
+            <cardValidationResult>P</cardValidationResult>
+          </fraudResult>
+        </saleResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def _response_purchase__credit_card_successful
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <saleResponse id='1' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>100000000000000006</litleTxnId>
+          <orderId>1</orderId>
+          <response>000</response>
+          <responseTime>2014-03-31T11:34:39</responseTime>
+          <message>Approved</message>
+          <authCode>11111 </authCode>
+          <fraudResult>
+            <avsResult>01</avsResult>
+            <cardValidationResult>M</cardValidationResult>
+          </fraudResult>
+        </saleResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  # refund
+  def _response_refund__authorization_failed
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <creditResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>996483567570258360</litleTxnId>
+          <response>360</response>
+          <responseTime>2014-03-31T12:42:41</responseTime>
+          <message>No transaction found with specified litleTxnId</message>
+        </creditResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def _response_refund__purchase_successful
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <creditResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>100000000000000003</litleTxnId>
+          <response>000</response>
+          <responseTime>2014-03-31T12:36:50</responseTime>
+          <message>Approved</message>
+        </creditResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  # store
+  def _response_store__credit_card_failed
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <registerTokenResponse id='51' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>510000000000000001</litleTxnId>
+          <orderId>51</orderId>
+          <response>820</response>
+          <responseTime>2014-03-31T13:10:51</responseTime>
+          <message>Credit card number was invalid</message>
+        </registerTokenResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def _response_store__credit_card_successful
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <registerTokenResponse id='50' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>501000000000000001</litleTxnId>
+          <orderId>50</orderId>
+          <litleToken>1111222233330123</litleToken>
+          <response>801</response>
+          <responseTime>2014-03-31T13:06:41</responseTime>
+          <message>Account number was successfully registered</message>
+          <bin>445711</bin>
+          <type>VI</type>
+        </registerTokenResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def _response_store__paypage_registration_id_successful
+    %(
+      <litleOnlineResponse version='8.2' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <registerTokenResponse id='99999' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>222358384397377801</litleTxnId>
+          <orderId>F12345</orderId>
+          <litleToken>1111222233334444</litleToken>
+          <response>801</response>
+          <responseTime>2015-05-20T14:37:22</responseTime>
+          <message>Account number was successfully registered</message>
+        </registerTokenResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  # verify
+  def _response_verify__credit_card_void_failed
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <authReversalResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>775712323632364360</litleTxnId>
+          <orderId>123</orderId>
+          <response>360</response>
+          <responseTime>2014-03-31T13:03:17</responseTime>
+          <message>No transaction found with specified litleTxnId</message>
+        </authReversalResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  # void
+  def _response_void__authorize_successful
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <authReversalResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>972619753208653000</litleTxnId>
+          <orderId>123</orderId>
+          <response>000</response>
+          <responseTime>2014-03-31T12:45:44</responseTime>
+          <message>Approved</message>
+        </authReversalResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def _response_void__refund_failed
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <voidResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>486912375928374360</litleTxnId>
+          <response>360</response>
+          <responseTime>2014-03-31T12:55:46</responseTime>
+          <message>No transaction found with specified litleTxnId</message>
+        </voidResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def _response_void__refund_successful
+    %(
+      <litleOnlineResponse version='8.22' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <voidResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>100000000000000004</litleTxnId>
+          <response>000</response>
+          <responseTime>2014-03-31T12:44:52</responseTime>
+          <message>Approved</message>
+        </voidResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  # xml schema
+  def _response_xml_schema__validation_failed
+    %(
+    <litleOnlineResponse version='8.29' xmlns='http://www.litle.com/schema'
+                     response='1'
+                     message='Error validating xml data against the schema on line 8\nthe length of the value is 10, but the required minimum is 13.'/>
+
+    )
+  end
 end
