@@ -28,6 +28,10 @@ class VantivTest < Test::Unit::TestCase
         payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
       }
     )
+
+    @paypage_id = "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3" \
+                  "p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg="
+
     @amount = 100
     @options = {}
   end
@@ -431,11 +435,23 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "1111222233330123", response.authorization
   end
 
-  def test_store__paypage_registration_id_successful
-    id = "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg="
+  def test_store__paypage_registration_id_request
+    stub_commit do |_, data, _|
+      assert_match %r(<registerTokenRequest .*</registerTokenRequest>)m, data
+      assert_match(
+        %r(<paypageRegistrationId>#{@paypage_id}</paypageRegistrationId>),
+        data
+      )
+      # nodes that shouldn't be present by default
+      assert_no_match %r(<orderId>), data
+    end
 
+    @gateway.store(@paypage_id)
+  end
+
+  def test_store__paypage_registration_id_successful
     response = stub_comms do
-      @gateway.store(id)
+      @gateway.store(@paypage_id)
     end.respond_with(successful_store_paypage_response)
 
     assert_success response
