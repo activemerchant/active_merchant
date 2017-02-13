@@ -396,6 +396,30 @@ class VantivTest < Test::Unit::TestCase
     assert_equal "Credit card number was invalid", response.message
   end
 
+  def test_store__credit_card_request
+    stub_commit do |_, data, _|
+      assert_match %r(<registerTokenRequest .*</registerTokenRequest>)m, data
+      assert_match %r(<accountNumber>4242424242424242</accountNumber>), data
+      assert_match %r(<cardValidationNum>123</cardValidationNum>), data
+      # nodes that shouldn't be present by default
+      assert_no_match %r(<orderId>), data
+    end
+
+    @gateway.store(@credit_card)
+  end
+
+  def test_store__credit_card_request_with_order_id
+    stub_commit do |_, data, _|
+      assert_match %r(<registerTokenRequest .*</registerTokenRequest>)m, data
+      assert_match %r(<orderId>this-must-be-truncated--</orderId>), data
+    end
+
+    @gateway.store(
+      @credit_card,
+      order_id: "this-must-be-truncated--to-24-chars"
+    )
+  end
+
   def test_store__credit_card_successful
     response = stub_comms do
       @gateway.store(@credit_card)
