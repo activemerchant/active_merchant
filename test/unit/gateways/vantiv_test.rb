@@ -36,6 +36,13 @@ class VantivTest < Test::Unit::TestCase
     @paypage_id = "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3" \
                   "p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg="
 
+    @token = ActiveMerchant::Billing::VantivGateway::Token.new(
+      "1234123412341234",
+      month: "01",
+      verification_value: "098",
+      year: "2020"
+    )
+
     @amount = 100
     @options = {}
   end
@@ -129,6 +136,32 @@ class VantivTest < Test::Unit::TestCase
     end
 
     @gateway.authorize(@amount, @credit_card)
+  end
+
+  def test_authorize__token_request
+    stub_commit do |_, data, _|
+      assert_match %r(<authorization .*</authorization>)m, data
+      assert_match %r(<orderId>this-must-be-truncated--</orderId>), data
+      assert_match %r(<amount>#{@amount}</amount>), data
+      assert_match %r(<orderSource>ecommerce</orderSource>), data
+      # token nodes
+      assert_match %r(<token>.*</token>)m, data
+      assert_match %r(<litleToken>1234123412341234</litleToken>), data
+      assert_match %r(<expDate>0120</expDate>), data
+      assert_match %r(<cardValidationNum>098</cardValidationNum>), data
+      # nodes that shouldn't be present by default
+      assert_no_match %r(<billToAddress>)m, data
+      assert_no_match %r(<shipToAddress>), data
+      assert_no_match %r(<pos>), data
+      assert_no_match %r(<customBilling>), data
+      assert_no_match %r(<debtRepayment>), data
+    end
+
+    @gateway.authorize(
+      @amount,
+      @token,
+      order_id: "this-must-be-truncated--to-24-chars"
+    )
   end
 
   ## capture
@@ -323,6 +356,32 @@ class VantivTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase__token_request
+    stub_commit do |_, data, _|
+      assert_match %r(<sale .*</sale>)m, data
+      assert_match %r(<orderId>this-must-be-truncated--</orderId>), data
+      assert_match %r(<amount>#{@amount}</amount>), data
+      assert_match %r(<orderSource>ecommerce</orderSource>), data
+      # token nodes
+      assert_match %r(<token>.*</token>)m, data
+      assert_match %r(<litleToken>1234123412341234</litleToken>), data
+      assert_match %r(<expDate>0120</expDate>), data
+      assert_match %r(<cardValidationNum>098</cardValidationNum>), data
+      # nodes that shouldn't be present by default
+      assert_no_match %r(<billToAddress>)m, data
+      assert_no_match %r(<shipToAddress>), data
+      assert_no_match %r(<pos>), data
+      assert_no_match %r(<customBilling>), data
+      assert_no_match %r(<debtRepayment>), data
+    end
+
+    @gateway.purchase(
+      @amount,
+      @token,
+      order_id: "this-must-be-truncated--to-24-chars"
+    )
+  end
+
   ## refund
   def test_refund__authorization_failed
     response = stub_comms do
@@ -462,6 +521,33 @@ class VantivTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal "1111222233334444", response.authorization
+  end
+
+  ## token
+  def test_token__initialize_with_options
+    token = ActiveMerchant::Billing::VantivGateway::Token.new(
+      "987654321",
+      month: "01",
+      verification_value: "098",
+      year: "2020"
+    )
+
+    assert_respond_to(token, :metadata)
+    assert_equal "987654321", token.payment_data
+    assert_equal "987654321", token.litle_token
+    assert_equal "01", token.month
+    assert_equal "098", token.verification_value
+    assert_equal "2020", token.year
+  end
+
+  def test_token__initialize_without_options
+    token = ActiveMerchant::Billing::VantivGateway::Token.new("555666777")
+
+    assert_equal "555666777", token.payment_data
+    assert_equal "555666777", token.litle_token
+    assert_equal "", token.month
+    assert_equal "", token.verification_value
+    assert_equal "", token.year
   end
 
   ## verify

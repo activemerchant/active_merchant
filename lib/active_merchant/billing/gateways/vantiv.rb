@@ -95,6 +95,38 @@ module ActiveMerchant #:nodoc:
       XML_RESPONSE_NODES = %w[message response].freeze
       XML_RESPONSE_ROOT = "litleOnlineResponse"
 
+      # Public: Vantiv token object represents the tokenized credit card number
+      # from Vantiv. Unlike other vault-like solutions, Vantiv only stores the
+      # "account number".
+      #
+      # Example:
+      #   token = ActiveMerchant::Billing::VantivGateway::Token.new(
+      #     "1234567890",
+      #     month: "9",
+      #     year: "2021",
+      #     verification_value: "424"
+      #   )
+      #
+      # This is based on `PaymentToken` so all options are stored in the
+      # metadata attribute.
+      class Token < PaymentToken
+        attr_reader :metadata
+
+        alias litle_token payment_data
+
+        def month
+          metadata.fetch("month", "")
+        end
+
+        def verification_value
+          metadata.fetch("verification_value", "")
+        end
+
+        def year
+          metadata.fetch("year", "")
+        end
+      end
+
       # Public: Create a new Vantiv gateway.
       #
       # options - A hash of options:
@@ -106,6 +138,15 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      # Public: Authorize that a customer has submitted a valid payment method
+      # and that they have sufficient funds for the transation.
+      #
+      # Supported payment methods:
+      #   * `CreditCard`
+      #   * `NetworkTokenizationCreditCard`
+      #   * `Token`
+      #
+      # Vantiv transaction: `authorization`
       def authorize(money, payment_method, options = {})
         request = build_authenticated_xml_request do |doc|
           doc.authorization(transaction_attributes(options)) do
@@ -116,6 +157,13 @@ module ActiveMerchant #:nodoc:
         commit(:authorization, request, money)
       end
 
+      # Public: Capture the referenced authorization transaction to transfer
+      # funds from the customer to the merchant.
+      #
+      # Supported authorization:
+      #   * Authorization (`String`)
+      #
+      # Vantiv transaction: `capture`
       def capture(money, authorization, options = {})
         transaction_id, = split_authorization(authorization)
 
@@ -129,11 +177,23 @@ module ActiveMerchant #:nodoc:
         commit(:capture, request, money)
       end
 
+      # [DEPRECATED] Public: Refund money to a customer.
+      #
+      #  See `#refund`
       def credit(money, authorization, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
+      # Public: A single transaction to authorize and transfer funds from
+      # the customer to the merchant.
+      #
+      # Supported payment methods:
+      #   * `CreditCard`
+      #   * `NetworkTokenizationCreditCard`
+      #   * `Token`
+      #
+      # Vantiv transaction: `sale`
       def purchase(money, payment_method, options = {})
         request = build_authenticated_xml_request do |doc|
           doc.sale(transaction_attributes(options)) do
@@ -144,6 +204,12 @@ module ActiveMerchant #:nodoc:
         commit(:sale, request, money)
       end
 
+      # Public: Refund money to a customer.
+      #
+      # Supported authorization:
+      #   * Authorization (`String`)
+      #
+      # Vantiv transaction: `credit`
       def refund(money, authorization, options = {})
         transaction_id, = split_authorization(authorization)
 
@@ -158,12 +224,22 @@ module ActiveMerchant #:nodoc:
         commit(:credit, request)
       end
 
+      # Public: Scrub text for sensitive values.
+      #
+      # See `SCRUBBED_PATTERNS` above.
       def scrub(transcript)
         SCRUBBED_PATTERNS.inject(transcript) do |text, pattern|
           text.gsub(pattern, SCRUBBED_REPLACEMENT)
         end
       end
 
+      # Public: Submit a payment method and receive a Vantiv token in return.
+      #
+      # Supported payment_methods:
+      #   * `CreditCard`
+      #   * PayPage registration Id (String)
+      #
+      # Vantiv transaction: `registerTokenRequest`
       def store(payment_method, options = {})
         request = build_authenticated_xml_request do |doc|
           doc.registerTokenRequest(transaction_attributes(options)) do
@@ -183,17 +259,27 @@ module ActiveMerchant #:nodoc:
         commit(:registerToken, request)
       end
 
+      # Public: Indicates if this gateway supports scrubbing.
+      #
+      # See `#scrub`
       def supports_scrubbing?
         true
       end
 
-      def verify(creditcard, options = {})
+      # Public: Verify a customer's payment method by performing an
+      # authorize and void.
+      #
+      # Note: This isn't a supported gateway function - it is a combination
+      # of two actions. The `authorize` action must support the payment
+      # method in order for this to work.
+      #
+      # Vantiv transactions: `authorize` + `void`
+      def verify(payment_method, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(0, creditcard, options) }
+          r.process { authorize(0, payment_method, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
-
 
       # Public: Void (cancel) a transaction that occurred during the same
       # business day.
@@ -206,7 +292,7 @@ module ActiveMerchant #:nodoc:
       # This action checks if the `authorization` param is for an `authorize`
       # action. If so, an `authReversal` is submitted.
       #
-      # Possible transaction roots are `void` and `authReversal`
+      # Vantiv transaction: `void` or `authReversal`
       def void(authorization, options = {})
         transaction_id, kind, money = split_authorization(authorization)
         money = options[:amount] if options[:amount].present?
@@ -303,7 +389,14 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(doc, payment_method)
         if payment_method_is_token?(payment_method)
           doc.token do
-            doc.litleToken(payment_method)
+            token = payment_method.litle_token
+            doc.litleToken(token) if token.present?
+
+            expiration = exp_date(payment_method)
+            doc.expDate(expiration) if expiration.present?
+
+            cvv = payment_method.verification_value
+            doc.cardValidationNum(cvv) if cvv.present?
           end
         elsif payment_method_has_track_data?(payment_method)
           doc.card do
@@ -470,8 +563,9 @@ module ActiveMerchant #:nodoc:
         payment_method.is_a?(String)
       end
 
+      # TODO: Remove string check once `Token` is fully supported
       def payment_method_is_token?(payment_method)
-        payment_method.is_a?(String)
+        payment_method.is_a?(String) || payment_method.is_a?(Token)
       end
 
       def root_attributes
