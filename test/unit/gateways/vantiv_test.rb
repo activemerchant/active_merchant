@@ -594,18 +594,19 @@ class VantivTest < Test::Unit::TestCase
       yield(*args)
       # `#with` requires we return true, check the length of args passed in
       # which is just a nice check on our expectation of stubbing `commit`
-      args.length == args_length
+      args.length >= args_length
     end
   end
 
-  # Private: Stub the `commit` method on the gateway and yield the arguments to the block
+  # Private: Stub the `commit` method on the gateway and yield the arguments
+  # to the block
   #
   # The built-in `stub_comms` method requires that a response be returned
   # and checked in order for the `#check_request` block to run. This is
   # more than we need when we're simply checking if the request is being
   # built correctly.
   def stub_commit
-    stub_and_yield_arguments(stub_method: :commit, args_length: 3) do |*args|
+    stub_and_yield_arguments(stub_method: :commit, args_length: 2) do |*args|
       yield(*args)
     end
   end
