@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
             {
               :braintree_customer => (customer_hash(result.customer, :include_credit_cards) if result.success?),
               :customer_vault_id => (result.customer.id if result.success?),
-              :credit_card_token => (result.customer.credit_cards[0].token if result.success?)
+              :credit_card_token => (result.customer.payment_methods[0].token if result.success?)
             },
             :authorization => (result.customer.id if result.success?)
           )
