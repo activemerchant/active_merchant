@@ -1,4 +1,4 @@
-require 'test_helper'
+require "test_helper"
 
 class VantivTest < Test::Unit::TestCase
   include CommStub
@@ -9,8 +9,8 @@ class VantivTest < Test::Unit::TestCase
     @merchant_id = "merchant_id"
 
     @gateway = VantivGateway.new(
-      login: 'login',
-      password: 'password',
+      login: "login",
+      password: "password",
       merchant_id: @merchant_id
     )
 
@@ -25,10 +25,10 @@ class VantivTest < Test::Unit::TestCase
     @credit_card = credit_card
     @apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
-        month: '01',
-        year: '2012',
+        month: "01",
+        year: "2012",
         brand: "visa",
-        number:  "44444444400009",
+        number: "44444444400009",
         payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
       }
     )
