@@ -14,11 +14,11 @@ class VantivTest < Test::Unit::TestCase
       merchant_id: @merchant_id
     )
 
-    # String returned from Vantiv as an "authorization"
-    @authorization = "100000000000000001;authorization;100"
-    @authorization_invalid_id = "123456789012345360;authorization;100"
-    @invalid_authorization = "12345;invalid-authorization;0"
+    # String returned from AM Gateway as Vantiv "authorization"
+    @authorize_authorization = "100000000000000001;authorization;100"
+    @authorize_authorization_invalid_id = "123456789012345360;authorization;100"
     @capture_authorization = "100000000000000002;capture;100"
+    @invalid_authorization = "12345;invalid-authorization;0"
     @refund_authorization = "123456789012345360;credit;100"
     @purchase_authorization = "100000000000000006;sale;100"
 
@@ -139,7 +139,7 @@ class VantivTest < Test::Unit::TestCase
       assert_match %r(<amount>#{@amount}</amount>), data
     end
 
-    @gateway.capture(@amount, @authorization)
+    @gateway.capture(@amount, @authorize_authorization)
   end
 
   def test_capture__authorization_request_without_amount
@@ -149,7 +149,7 @@ class VantivTest < Test::Unit::TestCase
       assert_no_match %r(<amount>.*</amount>), data
     end
 
-    @gateway.capture(nil, @authorization)
+    @gateway.capture(nil, @authorize_authorization)
   end
 
   def test_capture__credit_card_failed
@@ -346,7 +346,7 @@ class VantivTest < Test::Unit::TestCase
       assert_no_match %r(<customBilling>), data
     end
 
-    @gateway.refund(@amount, @authorization)
+    @gateway.refund(@amount, @authorize_authorization)
   end
 
   def test_refund__authorization_request_with_descriptor
@@ -364,7 +364,7 @@ class VantivTest < Test::Unit::TestCase
 
     @gateway.refund(
       @amount,
-      @authorization,
+      @authorize_authorization,
       descriptor_name: "descriptor-name",
       descriptor_phone: "descriptor-phone"
     )
@@ -503,7 +503,7 @@ class VantivTest < Test::Unit::TestCase
   ## void
   def test_void__authorization_failed
     response = stub_comms do
-      @gateway.void(@authorization_invalid_id)
+      @gateway.void(@authorize_authorization_invalid_id)
     end.respond_with(failed_void_of_authorization_response)
 
     assert_failure response
@@ -521,7 +521,7 @@ class VantivTest < Test::Unit::TestCase
       assert_match %r(<amount>100</amount>), data
     end
 
-    @gateway.void(@authorization, amount: "100")
+    @gateway.void(@authorize_authorization, amount: "100")
   end
 
   def test_void__authorization_successful
@@ -589,7 +589,7 @@ class VantivTest < Test::Unit::TestCase
 
   def test_void__refund_authorization_successful
     refund = stub_comms do
-      @gateway.refund(@amount, @authorization)
+      @gateway.refund(@amount, @authorize_authorization)
     end.respond_with(successful_refund_response)
 
     assert_equal "100000000000000003;credit;", refund.authorization
