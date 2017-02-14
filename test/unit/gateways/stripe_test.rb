@@ -724,8 +724,10 @@ class StripeTest < Test::Unit::TestCase
   def test_add_creditcard_with_track_data
     post = {}
     @credit_card.stubs(:track_data).returns("Tracking data")
+    @credit_card.stubs(:contactless_magstripe).returns(true)
     @gateway.send(:add_creditcard, post, @credit_card, {})
     assert_equal @credit_card.track_data, post[:card][:swipe_data]
+    assert_equal "contactless_magstripe_mode", post[:card][:read_method]
     assert_nil post[:card][:number]
     assert_nil post[:card][:exp_year]
     assert_nil post[:card][:exp_month]
@@ -908,9 +910,31 @@ class StripeTest < Test::Unit::TestCase
       headers && headers['Idempotency-Key'] == 'test123'
     }.returns(successful_purchase_response)
 
-    @gateway.purchase(@amount, @credit_card, @options.merge(:idempotency_key => 'test123'))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(:idempotency_key => 'test123'))
+    assert_success response
   end
 
+  def test_optional_idempotency_on_void
+    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+      headers && headers['Idempotency-Key'] == 'test123'
+    }.returns(successful_purchase_response(true))
+
+    response = @gateway.void('ch_test_charge', @options.merge(:idempotency_key => 'test123'))
+    assert_success response
+  end
+
+  def test_optional_idempotency_on_verify
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      headers && headers['Idempotency-Key'] == nil
+    end.returns(successful_void_response)
+
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      headers && headers['Idempotency-Key'] == 'test123'
+    end.returns(successful_authorization_response)
+
+    response = @gateway.verify(@credit_card, @options.merge(:idempotency_key => 'test123'))
+    assert_success response
+  end
 
   def test_initialize_gateway_with_version
     @gateway = StripeGateway.new(:login => 'login', :version => '2013-12-03')

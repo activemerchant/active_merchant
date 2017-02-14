@@ -36,24 +36,25 @@ module ActiveMerchant
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
-        '36' => STANDARD_ERROR_CODE[:incorrect_number],
-        '237' => STANDARD_ERROR_CODE[:invalid_number],
-        '2315' => STANDARD_ERROR_CODE[:invalid_number],
-        '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        '378' => STANDARD_ERROR_CODE[:invalid_cvc],
-        '38' => STANDARD_ERROR_CODE[:expired_card],
-        '2317' => STANDARD_ERROR_CODE[:expired_card],
-        '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
-        '227' => STANDARD_ERROR_CODE[:incorrect_address],
         '2127' => STANDARD_ERROR_CODE[:incorrect_address],
         '22' => STANDARD_ERROR_CODE[:card_declined],
+        '227' => STANDARD_ERROR_CODE[:incorrect_address],
         '23' => STANDARD_ERROR_CODE[:card_declined],
-        '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '2315' => STANDARD_ERROR_CODE[:invalid_number],
+        '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '2317' => STANDARD_ERROR_CODE[:expired_card],
         '235' => STANDARD_ERROR_CODE[:processing_error],
+        '237' => STANDARD_ERROR_CODE[:invalid_number],
         '24' => STANDARD_ERROR_CODE[:pickup_card],
+        '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
         '300' => STANDARD_ERROR_CODE[:config_error],
-        '384' => STANDARD_ERROR_CODE[:config_error]
+        '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '3155' => STANDARD_ERROR_CODE[:unsupported_feature],
+        '36' => STANDARD_ERROR_CODE[:incorrect_number],
+        '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '378' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '38' => STANDARD_ERROR_CODE[:expired_card],
+        '384' => STANDARD_ERROR_CODE[:config_error],
       }
 
       MARKET_TYPE = {
@@ -180,6 +181,12 @@ module ActiveMerchant
         end
       end
 
+      def unstore(authorization)
+        customer_profile_id, _, _ = split_authorization(authorization)
+
+        delete_customer_profile(customer_profile_id)
+      end
+
       def verify_credentials
         response = commit(:verify_credentials) { }
         response.success?
@@ -243,6 +250,7 @@ module ActiveMerchant
           xml.send(transaction_type) do
             xml.amount(amount(amount))
             add_payment_source(xml, payment)
+            add_settings(xml, payment, options)
             add_invoice(xml, options)
           end
         end
@@ -614,6 +622,12 @@ module ActiveMerchant
         end
       end
 
+      def delete_customer_profile(customer_profile_id)
+        commit(:cim_store_delete_customer) do |xml|
+          xml.customerProfileId(customer_profile_id)
+        end
+      end
+
       def names_from(payment_source, address, options)
         if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
           first_name, last_name = split_names(address[:name])
@@ -681,6 +695,8 @@ module ActiveMerchant
           "createCustomerProfileRequest"
         elsif action == :cim_store_update
           "createCustomerPaymentProfileRequest"
+        elsif action == :cim_store_delete_customer
+          "deleteCustomerProfileRequest"
         elsif action == :verify_credentials
           "authenticateTestRequest"
         elsif is_cim_action?(action)
@@ -825,7 +841,7 @@ module ActiveMerchant
       end
 
       def cim?(action)
-        (action == :cim_store) || (action == :cim_store_update)
+        (action == :cim_store) || (action == :cim_store_update) || (action == :cim_store_delete_customer)
       end
 
       def transaction_id_from(authorization)

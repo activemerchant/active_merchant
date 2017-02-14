@@ -14,6 +14,12 @@ class LinkpointTest < Test::Unit::TestCase
     @options = { :order_id => 1000, :billing_address => address }
   end
 
+  def test_instantiating_without_credential_raises
+    assert_raise ArgumentError do
+      LinkpointGateway.new(login: 123123)
+    end
+  end
+
   def test_credit_card_formatting
     assert_equal '04', @gateway.send(:format_creditcard_expiry_year, 2004)
     assert_equal '04', @gateway.send(:format_creditcard_expiry_year, '2004')

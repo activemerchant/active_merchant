@@ -64,6 +64,38 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_equal "PENDING", response.params["transactionResponse"]["state"]
   end
 
+  def test_pending_refund
+    @gateway.expects(:ssl_post).returns(pending_refund_response)
+
+    response = @gateway.refund(@amount, "7edbaf68-8f3a-4ae7-b9c7-d1e27e314999")
+    assert_success response
+    assert_equal "PENDING", response.params["transactionResponse"]["state"]
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    response = @gateway.refund(@amount, "")
+    assert_failure response
+    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+  end
+
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    response = @gateway.void("7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options)
+    assert_success response
+    assert_equal "APPROVED", response.message
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+
+    response = @gateway.void("")
+    assert_failure response
+    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+  end
+
   def test_verify_good_credentials
     @gateway.expects(:ssl_post).returns(credentials_are_legit_response)
     assert @gateway.verify_credentials
@@ -277,6 +309,83 @@ class PayuLatamTest < Test::Unit::TestCase
         "referenceQuestionnaire": null,
         "extraParameters": null
       }
+    }
+    RESPONSE
+  end
+
+  def pending_refund_response
+    <<-RESPONSE
+    {
+      "code": "SUCCESS",
+      "error": null,
+      "transactionResponse":
+      {
+        "orderId": 924877963,
+        "transactionId": null,
+        "state": "PENDING",
+        "paymentNetworkResponseCode": null,
+        "paymentNetworkResponseErrorMessage": null,
+        "trazabilityCode": null,
+        "authorizationCode": null,
+        "pendingReason": "PENDING_REVIEW",
+        "responseCode": null,
+        "errorCode": null,
+        "responseMessage": "924877963",
+        "transactionDate": null,
+        "transactionTime": null,
+        "operationDate": null,
+        "referenceQuestionnaire": null,
+        "extraParameters": null,
+        "additionalInfo": null
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_refund_response
+    <<-RESPONSE
+    {
+      "code":"ERROR",
+      "error":"property: order.id, message: must not be null property: parentTransactionId, message: must not be null",
+      "transactionResponse": null
+    }
+    RESPONSE
+  end
+
+  def successful_void_response
+    <<-RESPONSE
+    {
+      "code": "SUCCESS",
+      "error": null,
+      "transactionResponse": {
+        "orderId": 840434914,
+        "transactionId": "e66fd9aa-f485-4f10-b1d6-be8e9e354b63",
+        "state": "APPROVED",
+        "paymentNetworkResponseCode": "0",
+        "paymentNetworkResponseErrorMessage": null,
+        "trazabilityCode": "49263990",
+        "authorizationCode": "NPS-011111",
+        "pendingReason": null,
+        "responseCode": "APPROVED",
+        "errorCode": null,
+        "responseMessage": "APROBADA - Autorizada",
+        "transactionDate": null,
+        "transactionTime": null,
+        "operationDate": 1486655230074,
+        "referenceQuestionnaire": null,
+        "extraParameters": null,
+        "additionalInfo": null
+       }
+    }
+    RESPONSE
+  end
+
+  def failed_void_response
+    <<-RESPONSE
+    {
+      "code":"ERROR",
+      "error":"property: order.id, message: must not be null property: parentTransactionId, message: must not be null",
+      "transactionResponse": null
     }
     RESPONSE
   end

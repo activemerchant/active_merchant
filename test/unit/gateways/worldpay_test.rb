@@ -44,6 +44,15 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal 'R50704213207145707', response.authorization
   end
 
+  def test_authorize_passes_ip_and_session_id
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(ip: '127.0.0.1', session_id: '0215ui8ib1'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<session shopperIPAddress="127.0.0.1" id="0215ui8ib1"\/>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -262,15 +271,17 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
+      assert_no_match %r(cardAddress), data
+      assert_no_match %r(address), data
       assert_no_match %r(firstName), data
       assert_no_match %r(lastName), data
+      assert_no_match %r(address1), data
       assert_no_match %r(address2), data
+      assert_no_match %r(postalCode), data
+      assert_no_match %r(city), data
+      assert_no_match %r(state), data
+      assert_no_match %r(countryCode), data
       assert_no_match %r(telephoneNumber), data
-      assert_match %r(<address1>N/A</address1>), data
-      assert_match %r(<city>N/A</city>), data
-      assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
-      assert_match %r(<countryCode>US</countryCode>), data
     end.respond_with(successful_authorize_response)
   end
 
