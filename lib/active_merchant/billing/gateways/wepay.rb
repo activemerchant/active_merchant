@@ -72,7 +72,6 @@ module ActiveMerchant #:nodoc:
           post[:amount] = amount(money)
         end
         post[:refund_reason] = (options[:description] || "Refund")
-        post[:app_fee] = options[:application_fee] if options[:application_fee]
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
         post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]
         commit("/checkout/refund", post, options)
@@ -91,19 +90,14 @@ module ActiveMerchant #:nodoc:
         post[:expiration_year] = creditcard.year
         post[:original_ip] = options[:ip] if options[:ip]
         post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
+
         if(billing_address = (options[:billing_address] || options[:address]))
-          post[:address] = {
-            "address1" => billing_address[:address1],
-            "city"     => billing_address[:city],
-            "country"  => billing_address[:country]
-          }
-          if(post[:country] == "US")
-            post[:address]["zip"] = billing_address[:zip]
-            post[:address]["state"] = billing_address[:state]
-          else
-            post[:address]["region"] = billing_address[:state]
-            post[:address]["postal_code"] = billing_address[:zip]
-          end
+          post[:address] = {}
+          post[:address]["address1"] = billing_address[:address1] if billing_address[:address1]
+          post[:address]["city"]     = billing_address[:city] if billing_address[:city]
+          post[:address]["country"]  = billing_address[:country]  if billing_address[:country]
+          post[:address]["region"]   = billing_address[:state]  if billing_address[:state]
+          post[:address]["postal_code"] = billing_address[:zip]
         end
 
         if options[:recurring] == true
@@ -132,8 +126,6 @@ module ActiveMerchant #:nodoc:
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
         post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]
         post[:reference_id] = options[:order_id] if options[:order_id]
-        post[:app_fee] = options[:application_fee] if options[:application_fee]
-        post[:fee_payer] = options[:fee_payer] if options[:fee_payer]
         post[:redirect_uri] = options[:redirect_uri] if options[:redirect_uri]
         post[:callback_uri] = options[:callback_uri] if options[:callback_uri]
         post[:fallback_uri] = options[:fallback_uri] if options[:fallback_uri]
@@ -144,6 +136,7 @@ module ActiveMerchant #:nodoc:
         post[:preapproval_id] = options[:preapproval_id] if options[:preapproval_id]
         post[:prefill_info] = options[:prefill_info] if options[:prefill_info]
         post[:funding_sources] = options[:funding_sources] if options[:funding_sources]
+        add_fee(post, options)
       end
 
       def add_token(post, token)
@@ -155,6 +148,14 @@ module ActiveMerchant #:nodoc:
         }
 
         post[:payment_method] = payment_method
+      end
+
+      def add_fee(post, options)
+        if options[:application_fee] || options[:fee_payer]
+          post[:fee] = {}
+          post[:fee][:app_fee] = options[:application_fee] if options[:application_fee]
+          post[:fee][:fee_payer] = options[:fee_payer] if options[:fee_payer]
+        end
       end
 
       def parse(response)
@@ -225,4 +226,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

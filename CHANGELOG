@@ -1,8 +1,42 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300
+* Omise: Enable Japan, JPY and JCB support [zdk] #2284
+* Braintree Blue: Pass cardholder_name with card [curiousepic] #2324
+* Paymill: Send new required fields on tokenization requests [tschelabaumann] #2279
+* GlobalCollect: Pass options to Refund [curiousepic] #2330
+* PayU LATAM: Let Refund take amount value [curiousepic] #2334
+* Linkpoint: Raise ArgumentError when trying to instantiate without `:pem` [jasonwebster] #2329
+* Base Gateway: Add new `unsupported_feature` standard error code [jasonwebster] #2322
+* Authorize.net: Use new `unsupported_feature` standard error code [jasonwebster] #2322
+* Kushki: Add new gateway [shasum] #2326
+* PayU LATAM: Count pending refunds as succeeded [curiousepic] #2336
+* Stripe: Remove idempotency key from verify [shasum] #2335
+* CardStream: Add additional of currencies [shasum] #2337
+
+== Version 1.63.0 (February 2, 2017)
+* Authorize.net: Add #unstore support [jimryan] #2293
 * AuthorizeNet: Fix line items quirk [shasum]
+* CardStream: Add dynamic descriptor option fields [curiousepic]
+* CardStream: Support PEN currency [shasum]
+* Culqi: Add new gateway [shasum]
+* CyberSource: Add Lebanon to supported countries [shasum]
+* Element: Add AVS and CVV codes to response [shasum]
+* Firstdata E4 (Payeezy): Set correct ECI value for card present swipes [jasonwebster] #2318
+* GlobalCollect: On purchase skip capture if not required [davidsantoso]
+* PaymentExpress: Update supported countries [shasum]
+* Remove leading or trailing whitespace from credit card name [davidsantoso]
+* Remove support for Ruby 2.0 [jasonwebster]
+* Secure Pay AU: Add scrubbing support to Secure Pay AU [bruno] #2253
+* Stripe: Fix error in handling of track-only contactless EMV data [jasonwebster]
+* Vanco: Update test URL [davidsantoso]
+* WePay: Build fee structure correctly [curiousepic]
+* WePay: Remove null address fields from request [davidsantoso]
 * WePay: Update WePay to API version 2016-12-07 [davidsantoso]
+* Wirecard: Send customer data in requests [davidsantoso]
+* Worldpay: Add session id attribute [shasum]
+* Worldpay: Do not default address when not provided [shasum]
 
 == Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]

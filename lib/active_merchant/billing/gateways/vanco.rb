@@ -5,7 +5,7 @@ module ActiveMerchant
     class VancoGateway < Gateway
       include Empty
 
-      self.test_url = 'https://www.vancodev.com/cgi-bin/wstest2.vps'
+      self.test_url = 'https://uat.vancopayments.com/cgi-bin/ws2.vps'
       self.live_url = 'https://myvanco.vancopayments.com/cgi-bin/ws2.vps'
 
       self.supported_countries = ['US']

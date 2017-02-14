@@ -77,6 +77,9 @@ module ActiveMerchant #:nodoc:
       # :call_issuer - Transaction requires voice authentication, call issuer
       # :pickup_card - Issuer requests that you pickup the card from merchant
       # :test_mode_live_card - Card was declined. Request was in test mode, but used a non test card.
+      # :unsupported_feature - Transaction failed due to gateway or merchant
+      #                        configuration not supporting a feature used, such
+      #                        as network tokenization.
 
       STANDARD_ERROR_CODE = {
         :incorrect_number => 'incorrect_number',
@@ -93,7 +96,8 @@ module ActiveMerchant #:nodoc:
         :call_issuer => 'call_issuer',
         :pickup_card => 'pick_up_card',
         :config_error => 'config_error',
-        :test_mode_live_card => 'test_mode_live_card'
+        :test_mode_live_card => 'test_mode_live_card',
+        :unsupported_feature => 'unsupported_feature',
       }
 
       cattr_reader :implementations
