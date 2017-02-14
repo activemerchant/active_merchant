@@ -231,7 +231,6 @@ module ActiveMerchant
       def add_encrypted_fields(doc, card, options)
         doc.send("encrypted-card-number", options[:encrypted_cc])
         doc.send("encrypted-security-code", options[:encrypted_cvv])
-        doc.send("card-type", card.brand)
       end
 
       def add_description(doc, description)
