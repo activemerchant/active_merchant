@@ -59,7 +59,7 @@ class RemoteSecureCoTest < Test::Unit::TestCase
 
   def test_failed_capture
     assert_raises ArgumentError do
-      response = @gateway.capture(@amount, '')
+      @gateway.capture(@amount, '')
     end
   end
 
@@ -82,7 +82,7 @@ class RemoteSecureCoTest < Test::Unit::TestCase
 
   def test_failed_refund
     assert_raises ArgumentError do
-      response = @gateway.refund(@amount, '')
+      @gateway.refund(@amount, '')
     end
   end
 
@@ -97,7 +97,7 @@ class RemoteSecureCoTest < Test::Unit::TestCase
 
   def test_failed_void
     assert_raises ArgumentError do
-      response = @gateway.void('')
+      @gateway.void('')
     end
   end
 
@@ -116,7 +116,7 @@ class RemoteSecureCoTest < Test::Unit::TestCase
   def test_invalid_login
     exception = assert_raises ActiveMerchant::ResponseError do
       gateway = SecureCoGateway.new(username: '', password: '', merchant_account_id: '')
-      response = gateway.purchase(@amount, @credit_card, @options)
+      gateway.purchase(@amount, @credit_card, @options)
     end
     assert_equal '401', exception.response.code
   end
