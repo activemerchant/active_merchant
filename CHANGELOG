@@ -14,6 +14,7 @@
 * PayU LATAM: Count pending refunds as succeeded [curiousepic] #2336
 * Stripe: Remove idempotency key from verify [shasum] #2335
 * CardStream: Add additional of currencies [shasum] #2337
+* Revert "Authorize.net: Allow settings to be passed for CIM purchases" [curiousepic] #2339
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293

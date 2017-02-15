@@ -643,21 +643,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_settings_for_cim_purchase
-    stub_comms do
-      @store = @gateway.store(@credit_card, @options)
-      assert_success @store
-    end.respond_with(successful_store_response)
-
-    stub_comms do
-      test_options = {email_customer: true, duplicate_window: 0}
-      @gateway.purchase(@amount, @store.authorization, test_options)
-    end.check_request do |_endpoint, data, _headers|
-      assert_equal settings_from_doc(parse(data))["duplicateWindow"], "0"
-      assert_equal settings_from_doc(parse(data))["emailCustomer"], "true"
-    end.respond_with(successful_purchase_using_stored_card_response)
-  end
-
   def test_duplicate_window_class_attribute_deprecated
     @gateway.class.duplicate_window = 0
     assert_deprecation_warning("Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead.") do
