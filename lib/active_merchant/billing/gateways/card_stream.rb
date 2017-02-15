@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
         "MXN" => "484",
         "NOK" => "578",
         "NZD" => "554",
+        "PEN" => "604",
         "SEK" => "752",
         "SGD" => "702",
         "USD" => "840",
@@ -154,6 +155,8 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, credit_card_or_reference, money, options)
         add_pair(post, :transactionUnique, options[:order_id], :required => true)
         add_pair(post, :orderRef, options[:description] || options[:order_id], :required => true)
+        add_pair(post, :statementNarrative1, options[:merchant_name]) if options[:merchant_name]
+        add_pair(post, :statementNarrative2, options[:dynamic_descriptor]) if options[:dynamic_descriptor]
         if credit_card_or_reference.respond_to?(:number)
           if ['american_express', 'diners_club'].include?(card_brand(credit_card_or_reference).to_s)
             add_pair(post, :item1Quantity, 1)

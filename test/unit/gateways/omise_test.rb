@@ -23,7 +23,11 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal @gateway.supported_countries, %w( TH )
+    assert_equal @gateway.supported_countries, %w( TH JP )
+  end
+
+  def test_supported_cardtypes
+    assert_equal @gateway.supported_cardtypes, [:visa, :master, :jcb]
   end
 
   def test_supports_scrubbing
@@ -151,6 +155,13 @@ class OmiseTest < Test::Unit::TestCase
     desc = 'Charge for order 3947'
     @gateway.send(:add_amount, result, @amount, {description: desc})
     assert_equal desc, result[:description]
+  end
+
+  def test_add_amount_with_correct_currency
+    result = {}
+    jpy_currency = 'JPY'
+    @gateway.send(:add_amount, result, @amount, {currency: jpy_currency})
+    assert_equal jpy_currency, result[:currency]
   end
 
   def test_commit_transaction

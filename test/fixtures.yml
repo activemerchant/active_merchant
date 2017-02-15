@@ -207,6 +207,13 @@ credorax:
   merchant_id: 'merchant_id'
   cipher_key: 'cipher_key'
 
+# Culqi does not provide public testing data
+culqi:
+  merchant_id: MERCHANT
+  terminal_id: TERMINAL
+  partner_id: PARTNER
+  secret_key: SECRET
+
 # To get 100% passing Cybersource remote tests, you must ask
 # Cybersource support to enable the recurring and pinless debit
 # services on your test account.
@@ -931,6 +938,11 @@ sage_pay:
 sallie_mae:
   login: TEST0
 
+secure_co:
+  username: USERNAME
+  password: PASSWORD
+  merchant_account_id: 00000000-0000-0000-0000-000000000000
+
 secure_net:
   login: X
   password: Y
@@ -1078,7 +1090,7 @@ webpay:
 wepay:
   client_id: "44716"
   account_id: "2080478981"
-  access_token: "STAGE_67d2e41067af064af698e9cdc185c7570e4cb3191de04d8d092357c2a9120b6c"
+  access_token: "STAGE_c91882b0bed3584b8aed0f7f515f2f05a1d40924ee6f394ce82d91018cb0f2d3"
   client_secret: "d48fefe743"
 
 # Working test credentials with AVS/CVV support, no need to replace

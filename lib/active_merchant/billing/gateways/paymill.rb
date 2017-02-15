@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment_method, options = {})
+      def purchase(money, payment_method, options={})
         action_with_token(:purchase, money, payment_method, options)
       end
 
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(credit_card, options={})
-        save_card(credit_card)
+        save_card(credit_card, options)
       end
 
       def supports_scrubbing
@@ -74,11 +74,15 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_credit_card(post, credit_card)
+      def add_credit_card(post, credit_card, options)
+        post['account.holder'] = (credit_card.try(:name) || "")
         post['account.number'] = credit_card.number
         post['account.expiry.month'] = sprintf("%.2i", credit_card.month)
         post['account.expiry.year'] = sprintf("%.4i", credit_card.year)
         post['account.verification'] = credit_card.verification_value
+        post['account.email'] = (options[:email] || nil)
+        post['presentation.amount3D'] =  (options[:money] || nil)
+        post['presentation.currency3D'] = (options[:currency] || currency( options[:money]))
       end
 
       def headers
@@ -122,12 +126,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def action_with_token(action, money, payment_method, options)
+        options[:money] = money
         case payment_method
-        when String
-          self.send("#{action}_with_token", money, payment_method, options)
-        else
-          MultiResponse.run do |r|
-            r.process { save_card(payment_method) }
+          when String
+            self.send("#{action}_with_token", money, payment_method, options)
+          else
+            MultiResponse.run do |r|
+            r.process { save_card(payment_method, options) }
             r.process { self.send("#{action}_with_token", money, r.authorization, options) }
           end
         end
@@ -153,10 +158,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'preauthorizations', post)
       end
 
-      def save_card(credit_card)
+      def save_card(credit_card, options)
         post = {}
 
-        add_credit_card(post, credit_card)
+        add_credit_card(post, credit_card, options)
         post['channel.id'] = @options[:public_key]
         post['jsonPFunction'] = 'jsonPFunction'
         post['transaction.mode'] = (test? ? 'CONNECTOR_TEST' : 'LIVE')
@@ -219,6 +224,7 @@ module ActiveMerchant #:nodoc:
         20203 => "Reversed due to complaint by buyer",
         20204 => "Payment has been refunded",
         20300 => "Reversal has been canceled",
+        22000 => "Initiation of transaction successful",
 
         30000 => "Transaction still in progress",
         30100 => "Transaction has been accepted",
@@ -258,6 +264,8 @@ module ActiveMerchant #:nodoc:
         40420 => "Problem with address data",
         40500 => "Permission error with acquirer API",
         40510 => "Rate limit reached for acquirer API",
+        42000 => "Initiation of transaction failed",
+        42410 => "Initiation of transaction expired",
 
         50000 => "Problem with back end",
         50001 => "Country blacklisted",

@@ -159,7 +159,6 @@ module ActiveMerchant
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
-            add_line_items(xml, options)
             add_settings(xml, payment, options)
             add_user_fields(xml, amount, options)
           end
@@ -179,6 +178,12 @@ module ActiveMerchant
         else
           create_customer_profile(credit_card, options)
         end
+      end
+
+      def unstore(authorization)
+        customer_profile_id, _, _ = split_authorization(authorization)
+
+        delete_customer_profile(customer_profile_id)
       end
 
       def verify_credentials
@@ -233,7 +238,6 @@ module ActiveMerchant
           add_invoice(xml, options)
           add_customer_data(xml, payment, options)
           add_market_type_device_type(xml, payment, options)
-          add_line_items(xml, options)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
         end
@@ -245,6 +249,7 @@ module ActiveMerchant
           xml.send(transaction_type) do
             xml.amount(amount(amount))
             add_payment_source(xml, payment)
+            add_settings(xml, payment, options)
             add_invoice(xml, options)
           end
         end
@@ -344,19 +349,6 @@ module ActiveMerchant
           add_apple_pay_payment_token(xml, source)
         else
           add_credit_card(xml, source)
-        end
-      end
-
-      def add_line_items(xml, options)
-        return unless options[:line_items]
-        xml.lineItems do
-          options[:line_items].each do |line_item|
-            xml.lineItem do
-              line_item.each do |key, value|
-                xml.send(camel_case_lower(key), value)
-              end
-            end
-          end
         end
       end
 
@@ -575,6 +567,19 @@ module ActiveMerchant
           xml.invoiceNumber(truncate(options[:order_id], 20))
           xml.description(truncate(options[:description], 255))
         end
+
+        # Authorize.net API requires lineItems to be placed directly after order tag
+        if options[:line_items]
+          xml.lineItems do
+            options[:line_items].each do |line_item|
+              xml.lineItem do
+                line_item.each do |key, value|
+                  xml.send(camel_case_lower(key), value)
+                end
+              end
+            end
+          end
+        end
       end
 
       def create_customer_payment_profile(credit_card, options)
@@ -613,6 +618,12 @@ module ActiveMerchant
               end
             end
           end
+        end
+      end
+
+      def delete_customer_profile(customer_profile_id)
+        commit(:cim_store_delete_customer) do |xml|
+          xml.customerProfileId(customer_profile_id)
         end
       end
 
@@ -683,6 +694,8 @@ module ActiveMerchant
           "createCustomerProfileRequest"
         elsif action == :cim_store_update
           "createCustomerPaymentProfileRequest"
+        elsif action == :cim_store_delete_customer
+          "deleteCustomerProfileRequest"
         elsif action == :verify_credentials
           "authenticateTestRequest"
         elsif is_cim_action?(action)
@@ -827,7 +840,7 @@ module ActiveMerchant
       end
 
       def cim?(action)
-        (action == :cim_store) || (action == :cim_store_update)
+        (action == :cim_store) || (action == :cim_store_update) || (action == :cim_store_delete_customer)
       end
 
       def transaction_id_from(authorization)

@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def refund(authorization, options={})
+      def refund(amount, authorization, options={})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
