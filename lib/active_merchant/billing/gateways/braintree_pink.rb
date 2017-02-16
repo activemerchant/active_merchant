@@ -351,7 +351,7 @@ module ActiveMerchant #:nodoc:
       def response_options(result)
         options = {}
         if result.transaction
-          options[:transaction_id] = result.transaction.id
+          options[:authorization] = result.transaction.id
           options[:avs_result] = { code: avs_code_from(result.transaction) }
           options[:cvv_result] = result.transaction.cvv_response_code
         end
