@@ -49,6 +49,22 @@ class RemoteSecureCoTest < Test::Unit::TestCase
     assert_equal "Luhn Check failed on the credit card number.  Please check your input and try again.  ", response.message
   end
 
+  def test_successful_store_and_purchase
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_match %r{\d{16}}, response.authorization
+
+    response = @gateway.purchase(@amount, response.authorization)
+    assert_success response
+    assert_equal "3d-acquirer:The resource was successfully created.", response.message
+  end
+
+  def test_failed_store
+    response = @gateway.store(@declined_card, @options)
+    assert_failure response
+    assert_equal "Luhn Check failed on the credit card number.  Please check your input and try again.  ", response.message
+  end
+
   def test_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

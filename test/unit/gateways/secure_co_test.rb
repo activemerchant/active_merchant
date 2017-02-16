@@ -33,6 +33,7 @@ class SecureCoTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
+    assert_equal "authorization|7b97ed99-5077-4c5b-9456-843f63e240fd", response.authorization
   end
 
   def test_failed_authorize
@@ -48,6 +49,7 @@ class SecureCoTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, authorize_response.authorization, @options)
     assert_success response
+    assert_equal "capture-authorization|df564532-74c7-48ac-8f43-0d04623cb6e8", response.authorization
   end
 
   def test_failed_capture
@@ -110,6 +112,19 @@ class SecureCoTest < Test::Unit::TestCase
   def test_failed_verify
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
     response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+  end
+
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '0123456789012345', response.authorization
+  end
+
+  def test_failed_store
+    @gateway.expects(:ssl_post).returns(failed_store_response)
+    response = @gateway.store(@credit_card, @options)
     assert_failure response
   end
 
@@ -297,5 +312,13 @@ class SecureCoTest < Test::Unit::TestCase
 
   def failed_void_response
     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><payment xmlns=\"http://www.elastic-payments.com/schema/payment\" xmlns:ns2=\"http://www.elastic-payments.com/schema/epa/transaction\" self=\"http://localhost/engine/rest/merchants/00000000-0000-0000-0000-000000000000/payments/ad384180-c260-4fe6-9e2d-ee3de2531e12\"><merchant-account-id ref=\"http://localhost/engine/rest/merchants/00000000-0000-0000-0000-000000000000\">00000000-0000-0000-0000-000000000000</merchant-account-id><transaction-id>ad384180-c260-4fe6-9e2d-ee3de2531e12</transaction-id><request-id>e33846c3f689389368fca3df85ccbf39</request-id><transaction-type>void-authorization</transaction-type><transaction-state>failed</transaction-state><completion-time-stamp>2017-02-08T06:50:15.000Z</completion-time-stamp><statuses><status code=\"400.1027\" description=\"The Requested Amount exceeds the Parent Transaction Amount.  Please check your input and try again.\" severity=\"error\"/></statuses><requested-amount currency=\"AUD\">10.00</requested-amount><parent-transaction-id>8526239f-7eff-4475-9f5c-2072a06b08e8</parent-transaction-id><group-transaction-id>8526239f-7eff-4475-9f5c-2072a06b08e8</group-transaction-id><account-holder><first-name>Bob</first-name><last-name>Bobsen</last-name></account-holder><card-token><token-id>4643275967361111</token-id><masked-account-number>411111******1111</masked-account-number></card-token><order-number>123459</order-number><payment-methods><payment-method name=\"creditcard\"/></payment-methods><api-id>elastic-api</api-id><entry-mode>ecommerce</entry-mode></payment>"
+  end
+
+  def successful_store_response
+    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><payment xmlns=\"http://www.elastic-payments.com/schema/payment\" xmlns:ns2=\"http://www.elastic-payments.com/schema/epa/transaction\" self=\"http://localhost/engine/rest/merchants/00000000-0000-0000-0000-000000000000/payments/f8400a22-a297-4c3b-9a17-444cba1b1922\"><merchant-account-id ref=\"http://localhost/engine/rest/merchants/00000000-0000-0000-0000-000000000000\">00000000-0000-0000-0000-000000000000</merchant-account-id><transaction-id>f8400a22-a297-4c3b-9a17-444cba1b1922</transaction-id><request-id>3af710ac318c324d19c1826dcbb3c318</request-id><transaction-type>tokenize</transaction-type><transaction-state>success</transaction-state><completion-time-stamp>2017-02-16T00:00:40.000Z</completion-time-stamp><statuses><status code=\"201.0000\" description=\"The resource was successfully created.\" severity=\"information\"/></statuses><account-holder><first-name>Bob</first-name><last-name>Bobsen</last-name></account-holder><card-token><token-id>0123456789012345</token-id><masked-account-number>411111******1111</masked-account-number></card-token><api-id>elastic-api</api-id><entry-mode>ecommerce</entry-mode></payment>"
+  end
+
+  def failed_store_response
+    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><payment xmlns=\"http://www.elastic-payments.com/schema/payment\" xmlns:ns2=\"http://www.elastic-payments.com/schema/epa/transaction\" self=\"http://localhost/engine/rest/merchants/00000000-0000-0000-0000-000000000000/payments/4c4bd5f0-bf42-4b28-96c1-154824441e66\"><merchant-account-id ref=\"http://localhost/engine/rest/merchants/00000000-0000-0000-0000-000000000000\">00000000-0000-0000-0000-000000000000</merchant-account-id><transaction-id>4c4bd5f0-bf42-4b28-96c1-154824441e66</transaction-id><request-id>1009004dc9a3289e4530f7f2032dd9ee</request-id><transaction-type>tokenize</transaction-type><transaction-state>failed</transaction-state><completion-time-stamp>2017-02-15T23:54:34.000Z</completion-time-stamp><statuses><status code=\"400.1005\" description=\"The Card Type has not been provided or is incorrect.\" severity=\"warning\"/></statuses><account-holder><first-name>Bob</first-name><last-name>Bobsen</last-name></account-holder><api-id>elastic-api</api-id><entry-mode>ecommerce</entry-mode></payment>"
   end
 end
