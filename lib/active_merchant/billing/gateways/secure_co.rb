@@ -85,7 +85,8 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * +money+          -- Mandatory. Integer value of cents to bill to the customer.
-      # * +credit_card+    -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+.
+      # * +payment_method+ -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+, or a String token
+      #                       obtained from a previous +store+ operation.
       # * +options+        -- Optional. A hash of options. See below.
       #
       # ==== Options
@@ -143,14 +144,103 @@ module ActiveMerchant #:nodoc:
       #      puts "Purchase request failed. Reason: #{response.message}"
       #    end
       #
-      def purchase(money, credit_card, options={})
+      def purchase(money, payment_method, options={})
         request = build_request('purchase') do |xml|
-          add_payment_method(xml, 'creditcard')
-          add_credit_card(xml, credit_card)
+          add_payment_method(xml, payment_method)
           add_request_id(xml, options[:request_id])
           add_requested_amount(xml, amount(money), options[:currency])
           add_entry_mode(xml, options[:entry_mode])
-          add_account_holder(xml, credit_card, options[:email])
+          add_account_holder(xml, payment_method, options[:email])
+          add_order_id(xml, options[:order_id])           if options[:order_id]
+          add_ip_address(xml, options[:ip])               if options[:ip]
+          add_custom_fields(xml, options[:custom_fields]) if options[:custom_fields]
+        end
+
+        commit request
+      end
+
+      # Tokenizes a credit card.
+      #
+      # Can be followed by a +purchase+ or +authorize+ operation.
+      #
+      # Using this method takes a valid credit card and returns a token that can be used in subsequent operations, in
+      # lieu of the original credit card details.
+      #
+      # Note that any request that takes a credit card as a parameter (e.g. +purchase+ and +authorize+) has the
+      # side-effect of tokenizing your card (you can find the token in +response.params['card_token']['token_id']+).
+      #
+      # ==== Parameters
+      #
+      # * +credit_card+    -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+.
+      # * +options+        -- Optional. A hash of options. See below.
+      #
+      # ==== Options
+      #
+      # * +:request_id+    -- This is the customer generated request identifier. If a request_id is not provided, one
+      #                       will be generated for you. If it is provided, it must be unique. Attempting to re-use a
+      #                       request_id will result in a processing error.
+      # * +:entry_mode+    -- Represents the way in which the payment was collected. If provided, it must be one of
+      #                       ENTRY_MODES. If +:entry_mode+ is not provided, +DEFAULT_ENTRY_MODE+ is used (see above).
+      # * +:email+         -- The email address of the card-holder.
+      # * +:order_id+      -- For reference only, the SecureCo gateway will link the payment to this information.
+      # * +:ip+            -- The IP address of the customer. Only relevant when +:entry_mode+ == 'ecommerce'
+      # * +:custom_fields+ -- A hash or 2d array of key-value pairs to attach to the request. Like +:order_id+ above,
+      #                       this is only used for future reference.
+      #
+      # ==== Minimal Example
+      #
+      #    response = gateway.store(credit_card)
+      #    if response.success?
+      #      puts "Token is #{response.authorization}"
+      #      # Authorize a $20.00 payment
+      #      gateway.authorize(2000, response.authorization)
+      #    else
+      #      raise "Tokenization failed"
+      #    end
+      #
+      # ==== Full Example
+      #
+      #    gateway = ActiveMerchant::Billing::SecureCoGateway.new(
+      #      username: 'yourusername',
+      #      password: 'somepassword',
+      #      merchant_account_id: '00000000-0000-0000-0000-000000000000'
+      #    )
+      #
+      #    credit_card = ActiveMerchant::Billing::CreditCard.new(
+      #      :brand      => 'visa',
+      #      :number     => '4111 1111 1111 1111',
+      #      :month      => 10,
+      #      :year       => 2017,
+      #      :first_name => 'Bob',
+      #      :last_name  => 'Bobsen',
+      #      :verification_value => '123'
+      #    )
+      #
+      #    options = {
+      #      :custom_fields => {client_id: '12345', receipt_id: '54321'},
+      #      :email         => 'the.customer@somehost.com',
+      #      :ip            => '255.255.255.255',
+      #      :order_id      => 'SOME_ORDER 1234',
+      #      :request_id    => SecureRandom.uuid,
+      #    }
+      #
+      #    response = gateway.store(credit_card, options)
+      #
+      #    raise "Tokenization failed" unless response.success?
+      #
+      #    token = response.authorization # it's just a string
+      #
+      #    # ...at a later date...
+      #
+      #    response = gateway.purchase(1000, token)
+      #    puts "Purchase request failed. Reason: #{response.message}" unless response.success?
+      #
+      def store(payment_method, options={})
+        request = build_request('tokenize') do |xml|
+          add_payment_method(xml, payment_method)
+          add_request_id(xml, options[:request_id])
+          add_account_holder(xml, payment_method, options[:email])
+          add_entry_mode(xml, options[:entry_mode])
           add_order_id(xml, options[:order_id])           if options[:order_id]
           add_ip_address(xml, options[:ip])               if options[:ip]
           add_custom_fields(xml, options[:custom_fields]) if options[:custom_fields]
@@ -166,7 +256,8 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * +money+          -- Mandatory. Integer value of cents to seek authorization for.
-      # * +credit_card+    -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+
+      # * +payment_method+ -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+, or a String token
+      #                       obtained from a previous +store+ operation.
       # * +options+        -- Optional. A hash of options. See below.
       #
       # ==== Options
@@ -224,13 +315,13 @@ module ActiveMerchant #:nodoc:
       #      puts "Authorization request failed. Reason: #{response.message}"
       #    end
       #
-      def authorize(money, credit_card, options={})
+      def authorize(money, payment_method, options={})
         request = build_request('authorization') do |xml|
-          add_credit_card(xml, credit_card)
+          add_payment_method(xml, payment_method)
           add_request_id(xml, options[:request_id])
           add_requested_amount(xml, amount(money), options[:currency])
           add_entry_mode(xml, options[:entry_mode])
-          add_account_holder(xml, credit_card, options[:email])
+          add_account_holder(xml, payment_method, options[:email])
           add_order_id(xml, options[:order_id])           if options[:order_id]
           add_ip_address(xml, options[:ip])               if options[:ip]
           add_custom_fields(xml, options[:custom_fields]) if options[:custom_fields]
@@ -304,7 +395,7 @@ module ActiveMerchant #:nodoc:
       #
       def capture(money, authorization, options={})
         _, original_transaction_id = authorization.split ?|
-        raise ArgumentError.new("Couldn't discern original transaction id") unless original_transaction_id
+        raise ArgumentError.new("Couldn't determine original transaction id") unless original_transaction_id
 
         request = build_request('capture-authorization') do |xml|
           add_request_id(xml, options[:request_id])
@@ -394,7 +485,7 @@ module ActiveMerchant #:nodoc:
         unless trans_mapping.key? original_transaction_type
           raise ArgumentError.new("Can't refund \"#{original_transaction_type}\". Must be one of: #{trans_mapping.keys}")
         end
-        raise ArgumentError.new("Couldn't discern original transaction id") unless original_transaction_id
+        raise ArgumentError.new("Couldn't determine original transaction id") unless original_transaction_id
 
         transaction_type = trans_mapping[original_transaction_type]
 
@@ -440,8 +531,10 @@ module ActiveMerchant #:nodoc:
         }
 
         original_transaction_type, original_transaction_id = authorization.split ?|
-        raise ArgumentError.new("Can't void \"#{original_transaction_type}\". Must be one of: #{trans_mapping.keys}") unless trans_mapping.key? original_transaction_type
-        raise ArgumentError.new("Couldn't discern original transaction id") unless original_transaction_id
+        unless trans_mapping.key? original_transaction_type
+          raise ArgumentError.new("Can't void \"#{original_transaction_type}\". Must be one of: #{trans_mapping.keys}")
+        end
+        raise ArgumentError.new("Couldn't determine original transaction id") unless original_transaction_id
 
         transaction_type = trans_mapping[original_transaction_type]
 
@@ -458,7 +551,8 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * +credit_card+    -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+.
+      # * +payment_method+ -- Mandatory. A valid instance of +ActiveMerchant::Billing::CreditCard+, or a String token
+      #                       obtained from a previous +store+ operation.
       # * +options+        -- Optional. See the description of the +options+ parameter in the documentation for the
       #                       +authorize+ and +void+ methods.
       #
@@ -467,9 +561,9 @@ module ActiveMerchant #:nodoc:
       #    response = gateway.verify(credit_card)
       #    puts "Credit card is valid" if response.success?
       #
-      def verify(credit_card, options={})
+      def verify(payment_method, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(100, payment_method, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -482,7 +576,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * +transcript+  -- Mandatory. The HTTP transcript
+      # * +transcript+  -- Mandatory. The HTTP transcript.
       #
       # ==== Example
       #
@@ -585,8 +679,7 @@ module ActiveMerchant #:nodoc:
       #    #  "custom_fields"=>{"test1"=>"ref", "test4"=>"ref", "test3"=>"cap", "test2"=>"aut"}}
       #
       def get_payment_status_by_transaction_id(transaction_id)
-        url = test? ? test_url : live_url
-        uri = URI(url)
+        uri = URI url
         uri.path = '/engine/rest/merchants/%s/payments/%s' % [@options[:merchant_account_id], transaction_id]
         create_response(parse(ssl_get(uri, headers)))
       end
@@ -621,19 +714,21 @@ module ActiveMerchant #:nodoc:
       #      end
       #    end
       #
-      #    # Alternatively, the gateway will always prevent duplicate request_ids, so trying to place the order
-      #    # again with the same request_id will tangentially indicate if the original request made it to the
-      #    # gateway
+      #    # Alternatively, the gateway will always block duplicate request_ids, so trying to place the order again with
+      #    # the same request_id will indirectly indicate if the original request made it to the gateway.
       #
       def get_payment_status_by_request_id(request_id)
-        url = test? ? test_url : live_url
-        uri = URI(url)
+        uri = URI url
         uri.path = '/engine/rest/merchants/%s/payments/search' % @options[:merchant_account_id]
         uri.query = 'payment.request-id=%s' % request_id
         create_response(parse(ssl_get(uri, headers)))
       end
 
       private
+
+      def url
+        test? ? test_url : live_url
+      end
 
       def headers
         {
@@ -660,8 +755,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(xml_request)
-        url = test? ? test_url : live_url
-
         create_response(parse(ssl_post(url, xml_request, headers)))
       end
 
@@ -681,16 +774,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response["statuses"]["status"]["description"]
+        response['statuses']['status']['description']
       end
 
       def authorization_from(response)
-        response.values_at('transaction_type', 'transaction_id').join ?|
+        if response['transaction_type'] == 'tokenize'
+          if response.key? 'card_token'
+            response['card_token']['token_id']
+          else
+            nil
+          end
+        else
+          response.values_at('transaction_type', 'transaction_id').join ?|
+        end
       end
 
       def error_code_from(response)
         unless success_from(response)
-          STANDARD_ERROR_CODE[ERROR_CODE_MAPPING[response["statuses"]["status"]["code"]] || DEFAULT_ERROR_CODE]
+          STANDARD_ERROR_CODE[ERROR_CODE_MAPPING[response['statuses']['status']['code']] || DEFAULT_ERROR_CODE]
         end
       end
 
@@ -704,32 +805,69 @@ module ActiveMerchant #:nodoc:
         end.to_xml(indent: 0)
       end
 
-      def add_credit_card(xml, credit_card)
-        card_type = BRAND_MAPPING[credit_card.brand]
-        if card_type.nil?
-          raise ArgumentError.new("Invalid card brand: \"#{credit_card.brand}\". Must be one of: #{BRAND_MAPPING.keys}")
-        end
-
-        xml.send('card') do
-          xml.send('account-number',     credit_card.number)
-          xml.send('card-security-code', credit_card.verification_value)
-          xml.send('card-type',          card_type)
-          xml.send('expiration-month',   "%02d" % credit_card.month)
-          xml.send('expiration-year',    credit_card.year)
-        end
+      def add_request_id(xml, request_id)
+        xml.send('request-id', request_id || generate_unique_id)
       end
 
-      def add_requested_amount(xml, value, currency)
-        xml.send('requested-amount', value, currency: (currency || default_currency))
+      def add_order_id(xml, order_id)
+        xml.send('order-number', order_id)
       end
 
       def add_ip_address(xml, ip_address)
         xml.send('ip-address', ip_address)
       end
 
+      def add_parent_transaction_id(xml, parent_transaction_id)
+        xml.send('parent-transaction-id', parent_transaction_id)
+      end
+
+      def add_authorization_code(xml, authorization_code)
+        xml.send('authorization-code', authorization_code)
+      end
+
+      def add_merchant_account_id(xml)
+        xml.send('merchant-account-id', @options[:merchant_account_id])
+      end
+
+      def add_requested_amount(xml, value, currency)
+        xml.send('requested-amount', value, currency: (currency || default_currency))
+      end
+
+      def add_account_holder(xml, payment_method, email)
+        xml.send('account-holder') do
+          if payment_method.is_a? CreditCard
+            xml.send('first-name', payment_method.first_name)
+            xml.send('last-name',  payment_method.last_name)
+          end
+          xml.send('email', email) if email
+        end
+      end
+
       def add_payment_method(xml, payment_method)
-        xml.send('payment-methods') do
-          xml.send('payment-method', 'name' => payment_method)
+        case payment_method
+        when String
+          xml.send('card-token') do
+            xml.send('token-id', payment_method)
+          end
+        when CreditCard
+          card_type = BRAND_MAPPING[payment_method.brand]
+          if card_type.nil?
+            raise ArgumentError.new(
+              "Invalid card brand: \"#{payment_method.brand}\". Must be one of: #{BRAND_MAPPING.keys}"
+            )
+          end
+
+          xml.send('card') do
+            xml.send('account-number',     payment_method.number)
+            xml.send('card-security-code', payment_method.verification_value)
+            xml.send('card-type',          card_type)
+            xml.send('expiration-month',   "%02d" % payment_method.month)
+            xml.send('expiration-year',    payment_method.year)
+          end
+        else
+          raise ArgumentError.new(
+            "Invalid payment method: \"#{payment_method.class}\". Must be a \"String\" (card token) or \"CreditCard\""
+          )
         end
       end
 
@@ -739,18 +877,6 @@ module ActiveMerchant #:nodoc:
           raise ArgumentError.new("Invalid entry mode: \"#{entry_mode}\". Must be one of: #{ENTRY_MODES}")
         end
         xml.send('entry-mode', entry_mode)
-      end
-
-      def add_request_id(xml, request_id)
-        xml.send('request-id', request_id || generate_unique_id)
-      end
-
-      def add_order_id(xml, order_id)
-        xml.send('order-number', order_id)
-      end
-
-      def add_merchant_account_id(xml)
-        xml.send('merchant-account-id', @options[:merchant_account_id])
       end
 
       def add_custom_fields(xml, custom_fields)
@@ -766,14 +892,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_account_holder(xml, credit_card, email)
-        xml.send('account-holder') do
-          xml.send('first-name', credit_card.first_name)
-          xml.send('last-name',  credit_card.last_name)
-          xml.send('email',      email) if email
-        end
-      end
-
       def add_transaction_type(xml, transaction_type)
         unless TRANSACTION_TYPES.include? transaction_type
           raise ArgumentError.new(
@@ -781,14 +899,6 @@ module ActiveMerchant #:nodoc:
           )
         end
         xml.send('transaction-type', transaction_type)
-      end
-
-      def add_parent_transaction_id(xml, parent_transaction_id)
-        xml.send('parent-transaction-id', parent_transaction_id)
-      end
-
-      def add_authorization_code(xml, authorization_code)
-        xml.send('authorization-code', authorization_code)
       end
     end
   end
