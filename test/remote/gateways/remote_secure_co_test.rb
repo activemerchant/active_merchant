@@ -49,6 +49,22 @@ class RemoteSecureCoTest < Test::Unit::TestCase
     assert_equal "Luhn Check failed on the credit card number.  Please check your input and try again.  ", response.message
   end
 
+  def test_successful_store_and_purchase
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_match %r{\d{16}}, response.authorization
+
+    response = @gateway.purchase(@amount, response.authorization)
+    assert_success response
+    assert_equal "3d-acquirer:The resource was successfully created.", response.message
+  end
+
+  def test_failed_store
+    response = @gateway.store(@declined_card, @options)
+    assert_failure response
+    assert_equal "Luhn Check failed on the credit card number.  Please check your input and try again.  ", response.message
+  end
+
   def test_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -59,7 +75,7 @@ class RemoteSecureCoTest < Test::Unit::TestCase
 
   def test_failed_capture
     assert_raises ArgumentError do
-      response = @gateway.capture(@amount, '')
+      @gateway.capture(@amount, '')
     end
   end
 
@@ -82,7 +98,7 @@ class RemoteSecureCoTest < Test::Unit::TestCase
 
   def test_failed_refund
     assert_raises ArgumentError do
-      response = @gateway.refund(@amount, '')
+      @gateway.refund(@amount, '')
     end
   end
 
@@ -97,7 +113,7 @@ class RemoteSecureCoTest < Test::Unit::TestCase
 
   def test_failed_void
     assert_raises ArgumentError do
-      response = @gateway.void('')
+      @gateway.void('')
     end
   end
 
@@ -116,7 +132,7 @@ class RemoteSecureCoTest < Test::Unit::TestCase
   def test_invalid_login
     exception = assert_raises ActiveMerchant::ResponseError do
       gateway = SecureCoGateway.new(username: '', password: '', merchant_account_id: '')
-      response = gateway.purchase(@amount, @credit_card, @options)
+      gateway.purchase(@amount, @credit_card, @options)
     end
     assert_equal '401', exception.response.code
   end
