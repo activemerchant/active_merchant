@@ -561,9 +561,9 @@ module ActiveMerchant #:nodoc:
       #    response = gateway.verify(credit_card)
       #    puts "Credit card is valid" if response.success?
       #
-      def verify(credit_card, options={})
+      def verify(payment_method, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(100, payment_method, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
