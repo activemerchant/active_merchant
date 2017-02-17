@@ -31,7 +31,7 @@ class CredoraxTest < Test::Unit::TestCase
       end.respond_with(failed_purchase_response)
 
       assert_failure response
-      assert_equal "Transaction has been declined.", response.message
+      assert_equal "Transaction not allowed for cardholder", response.message
       assert response.test?
     end
 
@@ -58,7 +58,7 @@ class CredoraxTest < Test::Unit::TestCase
       end.respond_with(failed_authorize_response)
 
       assert_failure response
-      assert_equal "Transaction has been declined.", response.message
+      assert_equal "Transaction not allowed for cardholder", response.message
       assert response.test?
     end
 
@@ -139,7 +139,7 @@ class CredoraxTest < Test::Unit::TestCase
       end.respond_with(failed_credit_response)
 
       assert_failure response
-      assert_equal "Transaction has been declined.", response.message
+      assert_equal "Transaction not allowed for cardholder", response.message
       assert response.test?
     end
 
@@ -156,7 +156,7 @@ class CredoraxTest < Test::Unit::TestCase
         @gateway.verify(@credit_card)
       end.respond_with(failed_authorize_response, successful_void_response)
       assert_failure response
-      assert_equal "Transaction has been declined.", response.message
+      assert_equal "Transaction not allowed for cardholder", response.message
     end
 
     def test_empty_response_fails
