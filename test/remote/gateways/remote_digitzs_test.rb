@@ -8,11 +8,13 @@ class RemoteDigitzsTest < Test::Unit::TestCase
     @credit_card = credit_card('4747474747474747', verification_value: '999')
     @declined_card = credit_card('4616161616161616')
     @options = {
+      merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385',
       billing_address: address,
       description: 'Store Purchase'
     }
 
     @options_card_split = {
+      merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385',
       billing_address: address,
       description: 'Split Purchase',
       payment_type: 'card_split',
@@ -21,6 +23,7 @@ class RemoteDigitzsTest < Test::Unit::TestCase
     }
 
     @options_token_split = {
+      merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385',
       billing_address: address,
       description: 'Token Split Purchase',
       payment_type: 'token_split',
@@ -96,7 +99,7 @@ class RemoteDigitzsTest < Test::Unit::TestCase
   end
 
   def test_successful_store_without_billing_address
-    assert response = @gateway.store(@credit_card, {})
+    assert response = @gateway.store(@credit_card, {merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385'})
     assert_success response
   end
 

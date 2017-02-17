@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Digitzs'
 
       def initialize(options={})
-        requires!(options, :app_key, :api_key, :merchant_id)
+        requires!(options, :app_key, :api_key)
         super
       end
 
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       def purchase_request(money, payment, options)
         post = new_post
         post[:data][:type] = "payments"
-        post[:data][:attributes][:merchantId] = @options[:merchant_id]
+        post[:data][:attributes][:merchantId] = options[:merchant_id]
         post[:data][:attributes][:paymentType] = determine_payment_type(payment, options)
         add_split(post, options)
         add_payment(post, payment, options)
@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       def refund_request(money, authorization, options)
         post = new_post
         post[:data][:type] = "payments"
-        post[:data][:attributes][:merchantId] = @options[:merchant_id]
+        post[:data][:attributes][:merchantId] = options[:merchant_id]
         post[:data][:attributes][:paymentType] = "cardRefund"
         post[:data][:attributes][:originalTransaction] = {id: authorization}
         add_transaction(post, money, options)
@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
         post = new_post
         post[:data][:type] = "customers"
         post[:data][:attributes] = {
-          merchantId: @options[:merchant_id],
+          merchantId: options[:merchant_id],
           name: payment.name,
           externalId: "#{SecureRandom.hex(16)}"
         }
