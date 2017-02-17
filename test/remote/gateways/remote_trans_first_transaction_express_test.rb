@@ -1,6 +1,7 @@
 require "test_helper"
 
 class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
+
   def setup
     @gateway = TransFirstTransactionExpressGateway.new(fixtures(:trans_first_transaction_express))
 
@@ -39,6 +40,10 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "Succeeded", response.message
+    assert_not_nil response.avs_result
+    assert_not_nil response.cvv_result
+    assert_equal "Street address does not match, but 5-digit postal code matches.", response.avs_result["message"]
+    assert_equal "CVV matches", response.cvv_result["message"]
   end
 
   def test_successful_purchase_without_cvv
@@ -211,7 +216,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.verify(credit_card(""), @options)
     assert_failure response
     assert_equal "Validation Failure", response.message
-    assert_equal "50011", response.error_code
+    assert_equal "51308", response.error_code
   end
 
   def test_successful_store
@@ -261,7 +266,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.store(credit_card("123"), @options)
     assert_failure response
     assert_equal "Validation Failure", response.message
-    assert_equal "50011", response.error_code
+    assert_equal "51308", response.error_code
   end
 
   # def test_dump_transcript
