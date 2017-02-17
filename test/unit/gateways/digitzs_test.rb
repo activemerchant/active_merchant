@@ -4,20 +4,21 @@ class DigitzsTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = DigitzsGateway.new(api_key: 'api_key', app_key: 'app_key', merchant_id: 'merchant_id')
+    @gateway = DigitzsGateway.new(api_key: 'api_key', app_key: 'app_key')
     @credit_card = credit_card
     @amount = 100
 
     @options = {
+      merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385',
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
     }
 
     @options_with_split = {
+      merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385',
       billing_address: address,
       description: 'Split Purchase',
-      merchant_id: 'spreedly-susanswidg-32268973-2091076-148408385',
       payment_type: 'card_split',
       split_amount: 100,
       split_merchant_id: 'spreedly-susanswidg-32270590-2095203-148657924'
