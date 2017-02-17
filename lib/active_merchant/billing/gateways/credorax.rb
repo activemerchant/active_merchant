@@ -20,6 +20,83 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :maestro]
 
+      RESPONSE_MESSAGES = {
+        "00" => "Approved or completed successfully",
+        "01" => "Refer to card issuer",
+        "02" => "Refer to card issuer special condition",
+        "03" => "Invalid merchant",
+        "04" => "Pick up card",
+        "05" => "Do not Honour",
+        "06" => "Invalid Transaction for Terminal",
+        "07" => "Pick up card special condition",
+        "08" => "Time-Out",
+        "09" => "No Original",
+        "10" => "Approved for partial amount",
+        "11" => "Partial Approval",
+        "12" => "Invalid transaction card / issuer / acquirer",
+        "13" => "Invalid amount",
+        "14" => "Invalid card number",
+        "17" => "Invalid Capture date (terminal business date)",
+        "19" => "System Error; Re-enter transaction",
+        "20" => "No From Account",
+        "21" => "No To Account",
+        "22" => "No Checking Account",
+        "23" => "No Saving Account",
+        "24" => "No Credit Account",
+        "30" => "Format error",
+        "34" => "Implausible card data",
+        "39" => "Transaction Not Allowed",
+        "41" => "Lost Card, Pickup",
+        "42" => "Special Pickup",
+        "43" => "Hot Card, Pickup (if possible)",
+        "44" => "Pickup Card",
+        "51" => "Not sufficient funds",
+        "52" => "No checking Account",
+        "53" => "No savings account",
+        "54" => "Expired card",
+        "55" => "Pin incorrect",
+        "57" => "Transaction not allowed for cardholder",
+        "58" => "Transaction not allowed for merchant",
+        "59" => "Suspected Fraud",
+        "61" => "Exceeds withdrawal amount limit",
+        "62" => "Restricted card",
+        "63" => "MAC Key Error",
+        "65" => "Activity count limit exceeded",
+        "66" => "Exceeds Acquirer Limit",
+        "67" => "Retain Card; no reason specified",
+        "68" => "Response received too late",
+        "75" => "Pin tries exceeded",
+        "76" => "Invalid Account",
+        "77" => "Issuer Does Not Participate In The Service",
+        "78" => "Function Not Available",
+        "79" => "Key Validation Error",
+        "80" => "Approval for Purchase Amount Only",
+        "81" => "Unable to Verify PIN",
+        "82" => "Time out at issuer system",
+        "83" => "Not declined (Valid for all zero amount transactions)",
+        "84" => "Invalid Life Cycle of transaction",
+        "85" => "Not declined",
+        "86" => "Cannot verify pin",
+        "87" => "Purchase amount only, no cashback allowed",
+        "88" => "MAC sync Error",
+        "89" => "Security Violation",
+        "91" => "Issuer not available",
+        "92" => "Unable to route at acquirer Module",
+        "93" => "Transaction cannot be completed",
+        "94" => "Duplicate transaction",
+        "95" => "Contact Acquirer",
+        "96" => "System malfunction",
+        "97" => "No Funds Transfer",
+        "98" => "Duplicate Reversal",
+        "99" => "Duplicate Transaction",
+        "N3" => "Cash Service Not Available",
+        "N4" => "Cash Back Request Exceeds Issuer Limit",
+        "N7" => "N7 (visa), Decline CVV2 failure",
+        "R0" => "Stop Payment Order",
+        "R1" => "Revocation of Authorisation Order",
+        "R3" => "Revocation of all Authorisations Order"
+      }
+
       def initialize(options={})
         requires!(options, :merchant_id, :cipher_key)
         super
@@ -225,7 +302,7 @@ module ActiveMerchant #:nodoc:
         if success_from(response)
           "Succeeded"
         else
-          response["Z3"] || "Unable to read error message"
+          RESPONSE_MESSAGES[response["Z6"]] || response["Z3"] || "Unable to read error message"
         end
       end
     end

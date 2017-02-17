@@ -16,6 +16,7 @@
 * CardStream: Add additional of currencies [shasum] #2337
 * Revert "Authorize.net: Allow settings to be passed for CIM purchases" [curiousepic] #2339
 * Digitzs: Add gateway [davidsantoso]
+* Credorax: Return failure response reason [shasum] #2341
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
