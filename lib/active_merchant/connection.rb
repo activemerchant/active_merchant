@@ -32,6 +32,8 @@ module ActiveMerchant
     attr_accessor :max_retries
     attr_accessor :proxy_address
     attr_accessor :proxy_port
+    attr_accessor :proxy_user
+    attr_accessor :proxy_password
 
     def initialize(endpoint)
       @endpoint     = endpoint.is_a?(URI) ? endpoint : URI.parse(endpoint)
@@ -46,6 +48,8 @@ module ActiveMerchant
       @ssl_version = nil
       @proxy_address = nil
       @proxy_port = nil
+      @proxy_user = nil
+      @proxy_password = nil
     end
 
     def request(method, body, headers = {})
@@ -94,7 +98,7 @@ module ActiveMerchant
 
     private
     def http
-      http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
+      http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port, proxy_user, proxy_password)
       configure_debugging(http)
       configure_timeouts(http)
       configure_ssl(http)
@@ -124,7 +128,6 @@ module ActiveMerchant
       else
         http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
-
     end
 
     def configure_cert(http)
