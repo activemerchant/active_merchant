@@ -111,7 +111,7 @@ module ActiveMerchant
           add_personal_info(doc, credit_card, options)
           doc.send("payment-sources") do
             doc.send("credit-card-info") do
-              add_credit_card(doc, credit_card)
+              add_credit_card(doc, credit_card, options)
             end
           end
           add_order(doc, options)
@@ -160,10 +160,10 @@ module ActiveMerchant
           end
           doc.send("payment-source") do
             doc.send("credit-card-info") do
-              add_credit_card(doc, payment_method)
+              add_credit_card(doc, payment_method, options)
             end
           end
-          add_credit_card(doc, payment_method)
+          add_credit_card(doc, payment_method, options)
         end
       end
 
@@ -189,12 +189,14 @@ module ActiveMerchant
         add_address(doc, options)
       end
 
-      def add_credit_card(doc, card)
+      def add_credit_card(doc, card, options)
         doc.send("credit-card") do
-          doc.send("card-number", card.number)
-          doc.send("security-code", card.verification_value)
+          doc.send("card-number", card.number) if card.number.present?
+          doc.send("security-code", card.verification_value) if card.verification_value.present?
           doc.send("expiration-month", card.month)
           doc.send("expiration-year", card.year)
+          doc.send("encrypted-card-number", options[:encrypted_card_number]) if options[:encrypted_card_number]
+          doc.send("encrypted-security-code", options[:encrypted_security_code]) if options[:encrypted_security_code]
         end
       end
 
