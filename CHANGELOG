@@ -17,6 +17,7 @@
 * Revert "Authorize.net: Allow settings to be passed for CIM purchases" [curiousepic] #2339
 * Digitzs: Add gateway [davidsantoso]
 * Credorax: Return failure response reason [shasum] #2341
+* Sage: Default billing state when outside US [shasum] #2340
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
