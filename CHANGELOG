@@ -18,6 +18,7 @@
 * Digitzs: Add gateway [davidsantoso]
 * Credorax: Return failure response reason [shasum] #2341
 * Sage: Default billing state when outside US [shasum] #2340
+* TransFirst Transaction Express: Fix improper AVS and CVV response code mapping [shasum] #2342
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
