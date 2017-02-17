@@ -80,6 +80,13 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_purchase_with_blank_state
+    assert response = @gateway.purchase(@amount, @visa, billing_address: address(state: ""))
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+  end
+
   def test_authorization_and_capture
     assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
