@@ -172,10 +172,14 @@ module ActiveMerchant
           end
           doc.send("payment-source") do
             doc.send("credit-card-info") do
-              add_credit_card(doc, payment_method, options)
+              if options[:pf_token].present?
+                doc.send("pf-token", options[:pf_token])
+              else
+                add_credit_card(doc, payment_method, options)
+              end
             end
           end
-          add_credit_card(doc, payment_method, options)
+          add_credit_card(doc, payment_method, options) unless options[:pf_token].present?
         end
       end
 
@@ -225,7 +229,6 @@ module ActiveMerchant
       def add_order(doc, options)
         doc.send("merchant-transaction-id", truncate(options[:order_id], 50)) if options[:order_id]
         doc.send("soft-descriptor", options[:soft_descriptor]) if options[:soft_descriptor]
-        doc.send("pf-token", options[:pf_token]) if options[:pf_token].present?
         add_description(doc, options[:description]) if options[:description]
       end
 
