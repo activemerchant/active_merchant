@@ -209,7 +209,6 @@ module ActiveMerchant
           doc.send("expiration-year", card.year)
           doc.send("encrypted-card-number", options[:encrypted_card_number]) if options[:encrypted_card_number]
           doc.send("encrypted-security-code", options[:encrypted_security_code]) if options[:encrypted_security_code]
-          doc.send("pf-token", options[:pf_token]) if options[:pf_token].present?
         end
       end
 
@@ -226,6 +225,7 @@ module ActiveMerchant
       def add_order(doc, options)
         doc.send("merchant-transaction-id", truncate(options[:order_id], 50)) if options[:order_id]
         doc.send("soft-descriptor", options[:soft_descriptor]) if options[:soft_descriptor]
+        doc.send("pf-token", options[:pf_token]) if options[:pf_token].present?
         add_description(doc, options[:description]) if options[:description]
       end
 
