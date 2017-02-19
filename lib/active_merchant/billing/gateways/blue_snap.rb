@@ -139,6 +139,18 @@ module ActiveMerchant
           gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2')
       end
 
+      #
+      # Obtain the Hosted Payment Field token for the session
+      #
+      # @return [String] token
+      def get_hosted_payment_field_token
+        response = ssl_request(:post, url(:hosted_field_token), '', headers)
+        location = response.header["location"]
+        match = location.match(/payment-fields-tokens\/(?<token>[^ \/]+)/)
+        return unless match
+        match["token"]
+      end
+
       private
 
       def add_auth_purchase(doc, money, payment_method, options)
@@ -295,6 +307,8 @@ module ActiveMerchant
           "vaulted-shoppers"
         elsif (action == :get_plans)
           "recurring/plans"
+        elsif (action == :hosted_field_token)
+          "payment-fields-tokens"
         elsif subscription?
           "recurring/subscriptions"
         else
