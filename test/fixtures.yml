@@ -409,6 +409,13 @@ merchant_esolutions:
   login: "94100008043900000004"
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
 
+merchant_first:
+  username: username
+  password: password
+  service_username: svcuser
+  service_password: svcpasswd
+  merchant_id: 000000
+
 merchant_one:
   username: 'demo'
   password: 'password'
