@@ -57,4 +57,33 @@ class RemoteMerchantFirstTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_void
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    void = @gateway.void(response.params['mcs_transaction_id'], @options)
+    assert_success void
+  end
+
+  def test_failed_void
+    # will fail because MF expects a valid MCSTransactionID
+    # The rescue is necessary as MF yield HTTP 500 (internal server error) :-(
+    void = @gateway.void('123', @options) rescue Response.new(false, 'Server was unable to process request.')
+    assert_failure void
+  end
+
+  def test_successful_refund
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    refund = @gateway.refund(@amount, response.params['mcs_transaction_id'], @options)
+    assert_success refund
+  end
+
+  def test_failed_refund
+    # will fail because MF expects a valid MCSTransactionID
+    # The rescue is necessary as MF yield HTTP 500 (internal server error) :-(
+    refund = @gateway.refund(@amount, '123', @options) rescue Response.new(false, 'Server was unable to process request.')
+    assert_failure refund
+  end
 end

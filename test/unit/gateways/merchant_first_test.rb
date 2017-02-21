@@ -54,6 +54,28 @@ class MerchantFirstTest < Test::Unit::TestCase
     assert_equal '1023050306435454', response.authorization
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    void = @gateway.void(response.params['mcs_transaction_id'], @options)
+    assert_success void
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    refund = @gateway.refund(@amount, response.params['mcs_transaction_id'], @options)
+    assert_success refund
+  end
+
   private
 
   def successful_session_id_response
@@ -134,6 +156,18 @@ Conn close
   def failed_purchase_response
     %(
       <?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><CreditSale_SoapResponse xmlns=\"https://MyCardStorage.com/\"><CreditSale_SoapResult><MCSTransactionID>886436</MCSTransactionID><ProcessorTransactionID>506000356</ProcessorTransactionID><Amount>1.00</Amount><TicketNumber /><ReferenceNumber /><ProcessorApprovalCode /><Result><ResultCode>1</ResultCode><ResultDetail>50: General Decline | Invalid Expiration Date</ResultDetail></Result></CreditSale_SoapResult></CreditSale_SoapResponse></soap:Body></soap:Envelope>
+    )
+  end
+
+  def successful_void_response
+    %(
+      <?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><CreditVoid_SoapResponse xmlns=\"https://MyCardStorage.com/\"><CreditVoid_SoapResult><MCSTransactionID>887159</MCSTransactionID><ProcessorTransactionID>506519784</ProcessorTransactionID><Amount>1.0000</Amount><TicketNumber /><ReferenceNumber>887158</ReferenceNumber><ProcessorApprovalCode>TEST</ProcessorApprovalCode><Result><ResultCode>0</ResultCode><ResultDetail>0: Approved | </ResultDetail></Result></CreditVoid_SoapResult></CreditVoid_SoapResponse></soap:Body></soap:Envelope
+    )
+  end
+
+  def successful_refund_response
+    %(
+      <?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><CreditCredit_SoapResponse xmlns=\"https://MyCardStorage.com/\"><CreditCredit_SoapResult><MCSTransactionID>887156</MCSTransactionID><ProcessorTransactionID>506519720</ProcessorTransactionID><Amount>1.00</Amount><TicketNumber /><ReferenceNumber>887155</ReferenceNumber><ProcessorApprovalCode>TEST</ProcessorApprovalCode><Result><ResultCode>0</ResultCode><ResultDetail>0: Approved | </ResultDetail></Result></CreditCredit_SoapResult></CreditCredit_SoapResponse></soap:Body></soap:Envelope>
     )
   end
 

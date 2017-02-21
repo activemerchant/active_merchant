@@ -1,6 +1,6 @@
 require 'nokogiri'
 
-# MerchantFirst's implementation only supports purchase and store
+# MerchantFirst's implementation only supports purchase, refund, void and store
 # as we have been unable to get passed errors when trying to implement
 # other methods, so in order to expedite this gateway, I am only
 # implementing the methods that we can get some clearer answers and docs
@@ -121,18 +121,48 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, payment_method, options={})
         request = build_soap_request do |xml|
           xml.CreditSale_Soap(SOAP_XMLNS) do
             xml.creditCardSale do
               add_authentication(xml, 'CreditSale_Soap')
-              add_credit_card(xml, payment, options)
+              add_credit_card(xml, payment_method, options)
               add_transaction_data(xml, money, options)
             end
           end
         end
 
         commit('CreditSale_Soap', request)
+      end
+
+      def refund(money, authorization, options={})
+        options[:transaction_id] = authorization
+
+        request = build_soap_request do |xml|
+          xml.CreditCredit_Soap(SOAP_XMLNS) do
+            xml.creditCardCredit do
+              add_authentication(xml, 'CreditCredit_Soap')
+              add_transaction_data(xml, money, options)
+            end
+          end
+        end
+
+        commit('CreditCredit_Soap', request)
+      end
+
+      def void(authorization, options={})
+        options[:transaction_id] = authorization
+
+        request = build_soap_request do |xml|
+          xml.CreditVoid_Soap(SOAP_XMLNS) do
+            xml.creditCardVoid do
+              add_authentication(xml, 'CreditVoid_Soap')
+              add_void_transaction_data(xml, options)
+            end
+          end
+        end
+
+        commit('CreditVoid_Soap', request)
       end
 
       def store(credit_card, options={})
@@ -211,6 +241,14 @@ module ActiveMerchant #:nodoc:
           xml.CurrencyCode CURRENCY_MAP[(options[:currency] || currency(money)).upcase]
           xml.GatewayID GATEWAY_MAP[options.fetch(:gateway, 'merchant partners').downcase]
           xml.EmailAddress options[:email] unless empty?(options[:email])
+          xml.MCSTransactionID options[:transaction_id] unless empty?(options[:transaction_id])
+        end
+      end
+
+      def add_void_transaction_data(xml, options={})
+        xml.TransactionData do
+          xml.GatewayID GATEWAY_MAP[options.fetch(:gateway, 'merchant partners').downcase]
+          xml.MCSTransactionID options[:transaction_id]
         end
       end
 
