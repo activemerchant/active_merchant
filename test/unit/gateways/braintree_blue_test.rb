@@ -635,7 +635,9 @@ class BraintreeBlueTest < Test::Unit::TestCase
           :expiration_month => '09',
           :expiration_year => (Time.now.year + 1).to_s,
           :cryptogram => '111111111100cryptogram',
-          :google_transaction_id => '1234567890'
+          :google_transaction_id => '1234567890',
+          :source_card_type => "visa",
+          :source_card_last_four => "1111"
         }
       ).
       returns(braintree_result(:id => "transaction_id"))
