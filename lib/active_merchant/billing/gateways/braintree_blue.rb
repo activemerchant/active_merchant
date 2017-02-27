@@ -582,7 +582,9 @@ module ActiveMerchant #:nodoc:
                 :cryptogram => credit_card_or_vault_id.payment_cryptogram,
                 :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
                 :expiration_year => credit_card_or_vault_id.year.to_s,
-                :google_transaction_id => credit_card_or_vault_id.transaction_id
+                :google_transaction_id => credit_card_or_vault_id.transaction_id,
+                :source_card_type => credit_card_or_vault_id.brand,
+                :source_card_last_four => credit_card_or_vault_id.last_digits
               }
             end
           else

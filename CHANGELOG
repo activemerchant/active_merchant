@@ -20,6 +20,7 @@
 * Sage: Default billing state when outside US [shasum] #2340
 * TransFirst Transaction Express: Fix improper AVS and CVV response code mapping [shasum] #2342
 * Digitzs: Remove merchant_id from gateway credentials [davidsantoso]
+* Braintree: Add Android Pay meta data fields [jknipp] #2347
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
