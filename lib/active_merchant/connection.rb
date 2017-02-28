@@ -77,9 +77,6 @@ module ActiveMerchant
               # very unambiguously does not.
               raise ArgumentError, "DELETE requests do not support a request body" if body
               http.delete(endpoint.request_uri, headers)
-            when :delete_with_body
-              debug body
-              http.request(DeleteWithBody.new(endpoint.request_uri, headers), body)
             else
               raise ArgumentError, "Unsupported request method #{method.to_s.upcase}"
             end

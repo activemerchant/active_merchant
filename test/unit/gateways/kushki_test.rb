@@ -63,47 +63,26 @@ class KushkiTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    options = {
-      amount: {
-        subtotal_iva_0: "4.95",
-        subtotal_iva: "10",
-        iva: "1.54",
-        ice: "3.50"
-      }
-    }
-    amount = 100 * (
-      options[:amount][:subtotal_iva_0].to_f +
-      options[:amount][:subtotal_iva].to_f +
-      options[:amount][:iva].to_f +
-      options[:amount][:ice].to_f
-    )
-
-    @gateway.expects(:ssl_post).returns(successful_charge_response)
-    @gateway.expects(:ssl_post).returns(successful_token_response)
-
-    purchase = @gateway.purchase(amount, @credit_card, options)
-    assert_success purchase
-
-    @gateway.expects(:ssl_request).returns(successful_void_response)
-
-    assert void = @gateway.void(purchase.authorization, options)
-    assert_success void
-    assert_equal 'Succeeded', void.message
-  end
-
-  def test_failed_void
     @gateway.expects(:ssl_post).returns(successful_charge_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
 
     purchase = @gateway.purchase(@amount, @credit_card)
     assert_success purchase
 
+    @gateway.expects(:ssl_request).returns(successful_void_response)
+
+    assert void = @gateway.void(purchase.authorization)
+    assert_success void
+    assert_equal 'Succeeded', void.message
+  end
+
+  def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void(purchase.authorization)
+    response = @gateway.void("000")
     assert_failure response
-    assert_equal 'El monto es zero', response.message
-    assert_equal '219', response.error_code
+    assert_equal 'Tipo de moneda no válida', response.message
+    assert_equal '205', response.error_code
   end
 
   def test_scrub
@@ -247,8 +226,8 @@ class KushkiTest < Test::Unit::TestCase
   def failed_void_response
     %(
       {
-        "code":"219",
-        "message":"El monto es zero"
+        "code":"205",
+        "message":"Tipo de moneda no válida"
       }
     )
   end
