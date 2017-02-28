@@ -52,36 +52,18 @@ class RemoteKushkiTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    options = {
-      amount: {
-        subtotal_iva_0: "4.95",
-        subtotal_iva: "10",
-        iva: "1.54",
-        ice: "3.50"
-      }
-    }
-    amount = 100 * (
-      options[:amount][:subtotal_iva_0].to_f +
-      options[:amount][:subtotal_iva].to_f +
-      options[:amount][:iva].to_f +
-      options[:amount][:ice].to_f
-    )
-
-    purchase = @gateway.purchase(amount, @credit_card, options)
+    purchase = @gateway.purchase(@amount, @credit_card)
     assert_success purchase
 
-    assert void = @gateway.void(purchase.authorization, options)
+    assert void = @gateway.void(purchase.authorization)
     assert_success void
     assert_equal 'Succeeded', void.message
   end
 
   def test_failed_void
-    purchase = @gateway.purchase(@amount, @credit_card)
-    assert_success purchase
-
-    response = @gateway.void(purchase.authorization)
+    response = @gateway.void("000")
     assert_failure response
-    assert_equal 'El monto es zero', response.message
+    assert_equal 'Tipo de moneda no válida', response.message
   end
 
   def test_invalid_login
