@@ -15,6 +15,7 @@
 * Payeezy: Support dynamic soft descriptors [shasum] #2384
 * Stripe: Support custom application in X-Stripe-Client-User-Agent header [davidsantoso]
 * SafeCharge: Add gateway [davidsantoso]
+* TransFirst Transaction Express: Support ACH [curiousepic] #2389
 
 == Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300
