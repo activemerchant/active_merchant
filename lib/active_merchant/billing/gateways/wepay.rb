@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.display_name = 'WePay'
 
-      API_VERSION = "2016-12-07"
+      API_VERSION = "2017-02-01"
 
       def initialize(options = {})
         requires!(options, :client_id, :account_id, :access_token)
