@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners]
 
       def initialize(options={})
-        requires!(options, :username, :password, :merchant)
+        requires!(options, :username, :password, :merchant, :pem, :pem_password)
         super
       end
 
@@ -24,8 +24,31 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_verification_value(post, payment_method)
         add_customer_data(post, options)
+        add_soft_descriptors(post, options)
 
         commit("capture", post)
+      end
+
+      def authorize(amount, payment_method, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_order_number(post, options)
+        add_payment_method(post, payment_method)
+        add_verification_value(post, payment_method)
+        add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+
+        commit("preauth", post)
+      end
+
+      def capture(amount, authorization, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_reference(post, authorization, options)
+        add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+
+        commit("captureWithoutAuth", post)
       end
 
       def refund(amount, authorization, options={})
@@ -33,8 +56,18 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_reference(post, authorization, options)
         add_customer_data(post, options)
+        add_soft_descriptors(post, options)
 
         commit("refund", post)
+      end
+
+      def void(authorization, options={})
+        post = {}
+        add_reference(post, authorization, options)
+        add_customer_data(post, options)
+        add_soft_descriptors(post, options)
+
+        commit("reversal", post)
       end
 
       def store(payment_method, options = {})
@@ -61,6 +94,16 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
       CURRENCY_CODES["AUD"] = "AUD"
       CURRENCY_CODES["INR"] = "INR"
+
+      def add_soft_descriptors(post, options)
+        post["customer.merchantName"] = options[:customer_merchant_name] if options[:customer_merchant_name]
+        post["customer.merchantStreetAddress"] = options[:customer_merchant_street_address] if options[:customer_merchant_street_address]
+        post["customer.merchantLocation"] = options[:customer_merchant_location] if options[:customer_merchant_location]
+        post["customer.merchantState"] = options[:customer_merchant_state] if options[:customer_merchant_state]
+        post["customer.merchantCountry"] = options[:customer_merchant_country] if options[:customer_merchant_country]
+        post["customer.merchantPostCode"] = options[:customer_merchant_post_code] if options[:customer_merchant_post_code]
+        post["customer.subMerchantId"] = options[:customer_sub_merchant_id] if options[:customer_sub_merchant_id]
+      end
 
       def add_invoice(post, money, options)
         post["order.amount"] = amount(money)
