@@ -23,6 +23,7 @@
 * Braintree: Add Android Pay meta data fields [jknipp] #2347
 * Kushki: Remove body from void call [shasum] #2348
 * TransFirst Transaction Express: Don't send order_id with refunds [curiousepic] #2350
+* WePay: Update API version [shasum] #2349
 
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
