@@ -248,7 +248,6 @@ module ActiveMerchant #:nodoc:
         request = build_xml_transaction_request do |doc|
           add_amount(doc, amount)
           add_original_transaction_data(doc, transaction_id)
-          add_order_number(doc, options)
         end
 
         commit(:refund, request)
