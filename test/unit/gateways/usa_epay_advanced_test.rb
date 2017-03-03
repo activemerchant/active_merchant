@@ -98,7 +98,8 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
       :billing_address => address,
 
       :customer_number => 298741,
-      :reference_number => 9999
+      :reference_number => 9999,
+      :line_items => [product_name: 'line item name']
     }
   end
 

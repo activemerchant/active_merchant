@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
     # * {USA ePay Developer Login}[https://www.usaepay.com/developer/login]
     #
     class UsaEpayAdvancedGateway < Gateway
-      API_VERSION = "1.4"
+      API_VERSION = "1.6"
 
       TEST_URL_BASE = 'https://sandbox.usaepay.com/soap/gate/' #:nodoc:
       LIVE_URL_BASE = 'https://www.usaepay.com/soap/gate/' #:nodoc:
@@ -154,6 +154,7 @@ module ActiveMerchant #:nodoc:
         :allow_partial_auth => [:boolean, 'AllowPartialAuth'],
         :currency => [:string, 'Currency'],
         :non_tax => [:boolean, 'NonTax'],
+        :ship_from_zip => [:string, 'ShipFromZip'],
       } #:nodoc:
 
       TRANSACTION_DETAIL_MONEY_OPTIONS = {
@@ -163,6 +164,7 @@ module ActiveMerchant #:nodoc:
         :non_tax => [:boolean, 'NonTax'],
         :shipping => [:double, 'Shipping'],
         :discount => [:double, 'Discount'],
+        :duty => [:double, 'Duty'],
         :subtotal => [:double, 'Subtotal']
       } #:nodoc:
 
@@ -193,6 +195,22 @@ module ActiveMerchant #:nodoc:
         :schedule => [:string, 'Schedule'],
         :number_left => [:integer, 'NumLeft'],
         :enabled => [:boolean, 'Enabled']
+      } #:nodoc:
+
+      LINE_ITEM_OPTIONS = {
+        :product_ref_num => [:string, 'ProductRefNum'],
+        :sku => [:string, 'SKU'],
+        :product_name => [:string, 'ProductName'],
+        :description => [:string, 'Description'],
+        :unit_price => [:string, 'UnitPrice'],
+        :quantity => [:string, 'Qty'],
+        :taxable => [:boolean, 'Taxable'],
+        :tax_rate => [:string, 'TaxRate'],
+        :tax_amount => [:string, 'TaxAmount'],
+        :unit_of_measure => [:string, 'UnitOfMeasure'],
+        :commodity_code => [:string, 'CommodityCode'],
+        :discount_rate => [:string, 'DiscountRate'],
+        :discount_amount => [:string, 'DiscountAmount']
       } #:nodoc:
 
       AVS_RESULTS = {
@@ -500,7 +518,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:recurring</tt> -- defaults to +false+ *see documentation*
       # * <tt>:verification_value</tt> -- pci forbids storage of this value, only required for CVV2 validation
       # * <tt>:software</tt> -- active_merchant sets to required gateway option value
-      # * <tt>:line_items</tt> -- XXX not implemented yet
+      # * <tt>:line_items</tt> -- optional array of information for each product included in order
       # * <tt>:custom_fields</tt> -- XXX not implemented yet
       #
       # ==== Transaction Options
@@ -563,7 +581,7 @@ module ActiveMerchant #:nodoc:
       #   * <tt>:number_left</tt> -- transactions remaining in billing cycle
       #   * <tt>:amount</tt> -- amount to be billed each recurring transaction
       #   * <tt>:enabled</tt> -- states if currently active
-      # * <tt>:line_items</tt> -- XXX not implemented yet
+      # * <tt>:line_items</tt> -- optional array of information for each product included in order
       # * <tt>:custom_fields</tt> -- XXX not implemented yet
       #
       # ==== Transaction Options
@@ -1408,7 +1426,20 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_line_items(soap, options) # TODO
+      def build_line_items(soap, options)
+        if line_items = options[:line_items]
+          length = options[:line_items].length
+          tag_name = 'LineItem'
+          soap.LineItems 'SOAP-ENC:arrayType' => "ns1:LineItem[#{length}]", 'xsi:type' =>"ns1:LineItemArray" do
+            line_items.each do |line_item|
+              soap.tag! tag_name, 'xsi:type' => "ns1:LineItem" do
+                LINE_ITEM_OPTIONS.each do |k,v|
+                  build_tag soap, v[0], v[1], line_item[k]
+                end
+              end
+            end
+          end
+        end
       end
 
       def build_custom_fields(soap, options) # TODO
