@@ -134,6 +134,26 @@ class LitleTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_partial_capture
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+
+    assert_equal "100000000000000001;authorization;100", response.authorization
+    assert response.test?
+
+    capture = stub_comms do
+      @gateway.capture(@amount - 1, response.authorization)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/100000000000000001/, data)
+      assert_match(/partial/, data)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
