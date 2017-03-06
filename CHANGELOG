@@ -26,6 +26,9 @@
 * WePay: Update API version [shasum] #2349
 * USA ePay Advanced: Add quick_update_customer action [joshreeves] #2229
 
+== Version 1.63.1
+* Payeezy: Add support for authorization, purchase and capture via credit card token
+
 == Version 1.63.0 (February 2, 2017)
 * Authorize.net: Add #unstore support [jimryan] #2293
 * AuthorizeNet: Fix line items quirk [shasum]

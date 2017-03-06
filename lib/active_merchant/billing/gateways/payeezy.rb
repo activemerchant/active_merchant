@@ -109,8 +109,16 @@ module ActiveMerchant
         authorization.split('|').last.to_i
       end
 
-      def add_authorization_info(params, authorization)
-        transaction_id, transaction_tag, method, _ = authorization.split('|')
+      def add_authorization_info(params, auth)
+        auth_string = if auth.is_a? String
+          # Standard flow
+          auth
+        else
+          # Passing a token authorization
+          params[:token] = auth.params["token"]
+          auth.authorization
+        end
+        transaction_id, transaction_tag, method, _ = auth_string.split('|')
         params[:transaction_id] = transaction_id
         params[:transaction_tag] = transaction_tag
         params[:method] = method
@@ -119,9 +127,25 @@ module ActiveMerchant
       def add_payment_method(params, payment_method)
         if payment_method.is_a? Check
           add_echeck(params, payment_method)
+        elsif payment_method.is_a? CreditCardToken
+          add_credit_card_token(params, payment_method)
         else
           add_creditcard(params, payment_method)
         end
+      end
+
+      def add_credit_card_token(params, data)
+        token_data = {}
+        token_data[:type] = CREDIT_CARD_BRAND[data.brand]
+        token_data[:value] = data.value
+        token_data[:cardholder_name] = data.cardholder_name
+        token_data[:exp_date] = data.exp_date
+
+        params[:method] = 'token'
+        params[:token] = {
+          token_type: 'FDToken',
+          token_data: token_data
+        }
       end
 
       def add_creditcard(params, creditcard)
