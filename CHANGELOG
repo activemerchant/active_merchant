@@ -2,6 +2,7 @@
 
 == HEAD
 * Moneris: Add 3DS fields for decrypted Apple and Android Pay data [davidsantoso] #2457
+* Trexle: Add gateway support [hossamhossny] #2351
 
 == Version 1.67.0 (June 8, 2017)
 * Acapture: Pass 3D Secure fields [davidsantoso] #2451
