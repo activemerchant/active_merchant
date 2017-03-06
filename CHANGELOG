@@ -1,28 +1,30 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300
-* Omise: Enable Japan, JPY and JCB support [zdk] #2284
-* Braintree Blue: Pass cardholder_name with card [curiousepic] #2324
-* Paymill: Send new required fields on tokenization requests [tschelabaumann] #2279
-* GlobalCollect: Pass options to Refund [curiousepic] #2330
-* PayU LATAM: Let Refund take amount value [curiousepic] #2334
-* Linkpoint: Raise ArgumentError when trying to instantiate without `:pem` [jasonwebster] #2329
-* Base Gateway: Add new `unsupported_feature` standard error code [jasonwebster] #2322
 * Authorize.net: Use new `unsupported_feature` standard error code [jasonwebster] #2322
-* Kushki: Add new gateway [shasum] #2326
-* PayU LATAM: Count pending refunds as succeeded [curiousepic] #2336
-* Stripe: Remove idempotency key from verify [shasum] #2335
-* CardStream: Add additional of currencies [shasum] #2337
-* Revert "Authorize.net: Allow settings to be passed for CIM purchases" [curiousepic] #2339
-* Digitzs: Add gateway [davidsantoso]
-* Credorax: Return failure response reason [shasum] #2341
-* Sage: Default billing state when outside US [shasum] #2340
-* TransFirst Transaction Express: Fix improper AVS and CVV response code mapping [shasum] #2342
-* Digitzs: Remove merchant_id from gateway credentials [davidsantoso]
+* Base Gateway: Add new `unsupported_feature` standard error code [jasonwebster] #2322
+* Braintree Blue: Pass cardholder_name with card [curiousepic] #2324
 * Braintree: Add Android Pay meta data fields [jknipp] #2347
+* CardStream: Add additional of currencies [shasum] #2337
+* Credorax: Return failure response reason [shasum] #2341
+* Digitzs: Add gateway [davidsantoso]
+* Digitzs: Remove merchant_id from gateway credentials [davidsantoso]
+* GlobalCollect: Pass options to Refund [curiousepic] #2330
+* Kushki: Add new gateway [shasum] #2326
 * Kushki: Remove body from void call [shasum] #2348
+* Linkpoint: Raise ArgumentError when trying to instantiate without `:pem` [jasonwebster] #2329
+* Omise: Enable Japan, JPY and JCB support [zdk] #2284
+* PayU LATAM: Count pending refunds as succeeded [curiousepic] #2336
+* PayU LATAM: Let Refund take amount value [curiousepic] #2334
+* Paymill: Send new required fields on tokenization requests [tschelabaumann] #2279
+* Revert "Authorize.net: Allow settings to be passed for CIM purchases" [curiousepic] #2339
+* Sage: Default billing state when outside US [shasum] #2340
+* Stripe: Remove idempotency key from verify [shasum] #2335
 * TransFirst Transaction Express: Don't send order_id with refunds [curiousepic] #2350
+* TransFirst Transaction Express: Fix improper AVS and CVV response code mapping [shasum] #2342
 * WePay: Update API version [shasum] #2349
 * USA ePay Advanced: Add quick_update_customer action [joshreeves] #2229
 
