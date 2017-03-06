@@ -1148,6 +1148,10 @@ transax:
   password: nelix123
 
 # Working credentials, no need to replace
+trexle:
+  api_key: "J5RGMpDlFlTfv9mEFvNWYoqHufyukPP4"
+
+# Working credentials, no need to replace
 trust_commerce:
   login: 'TestMerchant'
   password: 'password'
