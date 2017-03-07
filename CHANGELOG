@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* JetPay: Adjust refund and void transaction types [davidsantoso] #2356
 
 == Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300

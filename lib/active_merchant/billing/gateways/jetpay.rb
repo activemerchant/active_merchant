@@ -183,11 +183,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, reference, options = {})
-        params = reference.split(";")
-        transaction_id = params[0]
-        token = params[3]
+        transaction_id, approval, original_amount, token = reference.split(";")
         credit_card = options[:credit_card]
-        commit(money, build_credit_request('CREDIT', money, transaction_id, credit_card, token, options))
+        commit(money, build_credit_request('VOID', money, transaction_id, credit_card, token, options))
       end
 
       def supports_scrubbing
@@ -256,7 +254,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_void_request(money, transaction_id, approval, token, options)
-        build_xml_request('VOID', options, transaction_id) do |xml|
+        build_xml_request('REVERSEAUTH', options, transaction_id) do |xml|
           xml.tag! 'Approval', approval
           xml.tag! 'TotalAmount', amount(money)
           xml.tag! 'Token', token if token
