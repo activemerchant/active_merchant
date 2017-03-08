@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
     class Check < Model
       attr_accessor :first_name, :last_name,
                     :bank_name, :routing_number, :account_number,
-                    :account_holder_type, :account_type, :number
+                    :account_holder_type, :account_type, :number, :echeck_type
 
       # Used for Canadian bank accounts
       attr_accessor :institution_number, :transit_number
