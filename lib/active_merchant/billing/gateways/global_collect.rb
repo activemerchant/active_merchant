@@ -131,8 +131,8 @@ module ActiveMerchant #:nodoc:
         if payment
           post["order"]["customer"]["personalInformation"] = {
             "name" => {
-              "firstName" => payment.first_name,
-              "surname" => payment.last_name
+              "firstName" => payment.first_name[0..14],
+              "surname" => payment.last_name[0..69]
             }
           }
         end
