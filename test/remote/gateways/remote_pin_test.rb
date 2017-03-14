@@ -24,6 +24,20 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal true, response.params['response']['captured']
   end
 
+  def test_successful_purchase_with_metadata
+    options_with_metadata = {
+      metadata: {
+        order_id: generate_unique_id,
+        purchase_number: generate_unique_id
+      }
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options_with_metadata))
+    assert_success response
+    assert_equal true, response.params['response']['captured']
+    assert_equal options_with_metadata[:metadata][:order_id], response.params['response']['metadata']['order_id']
+    assert_equal options_with_metadata[:metadata][:purchase_number], response.params['response']['metadata']['purchase_number']
+  end
+
   def test_successful_authorize_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
@@ -162,7 +176,7 @@ class RemotePinTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
-    
+
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
