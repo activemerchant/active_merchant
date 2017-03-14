@@ -75,18 +75,22 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_successful_void
+
+  def test_void
+    # must void a valid auth
     assert auth = @gateway.authorize(9900, @credit_card, @options)
     assert_success auth
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
     assert_not_nil auth.params["approval"]
 
+
     assert void = @gateway.void(auth.authorization)
     assert_success void
   end
 
-  def test_refund_after_purchase
+  def test_refund_with_token
+
     assert response = @gateway.purchase(9900, @credit_card, @options)
     assert_success response
     assert_equal "APPROVED", response.message
@@ -99,23 +103,6 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_not_nil(credit.authorization)
     assert_not_nil(response.params["approval"])
     assert_equal [response.params['transaction_id'], response.params["approval"], 9900, response.params["token"]].join(";"), response.authorization
-  end
-
-  def test_refund_after_authorize_capture
-    assert auth = @gateway.authorize(9900, @credit_card, @options)
-    assert_success auth
-    assert_equal 'APPROVED', auth.message
-    assert_not_nil auth.authorization
-    assert_not_nil auth.params["approval"]
-
-    assert capture = @gateway.capture(9900, auth.authorization)
-    assert_success capture
-
-    assert refund = @gateway.refund(9900, capture.authorization)
-    assert_success refund
-    assert_not_nil(refund.authorization)
-    assert_not_nil(refund.params["approval"])
-    assert_equal [refund.params['transaction_id'], refund.params["approval"], 9900, refund.params["token"]].join(";"), refund.authorization
   end
 
   def test_refund_backwards_compatible
