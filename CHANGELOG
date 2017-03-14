@@ -1,7 +1,6 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* JetPay: Adjust refund and void transaction types [davidsantoso] #2356
 * GlobalCollect: Truncate firstName field to 15 characters [davidsantoso]
 * Qvalent: Add soft descriptor fields. Add authorize, capture, and void [davidsantoso]
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272
