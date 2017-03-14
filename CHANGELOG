@@ -5,6 +5,7 @@
 * GlobalCollect: Truncate firstName field to 15 characters [davidsantoso]
 * Qvalent: Add soft descriptor fields. Add authorize, capture, and void [davidsantoso]
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272
+* Pin: Add metadata optional field [shasum] #2363
 
 == Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300
