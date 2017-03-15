@@ -4,7 +4,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   def setup
     @gateway = ElavonGateway.new(fixtures(:elavon))
 
-    @credit_card = credit_card('4111111111111111')
+    @credit_card = credit_card('4124939999999990')
     @bad_credit_card = credit_card('invalid')
 
     @options = {
@@ -168,7 +168,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_successful_update
     store_response = @gateway.store(@credit_card, @options)
     token = store_response.params["token"]
-    credit_card = credit_card('4111111111111111', :month => 10)
+    credit_card = credit_card('4124939999999990', :month => 10)
     assert response = @gateway.update(token, credit_card, @options)
     assert_success response
     assert response.test?
@@ -195,5 +195,14 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_match %r{invalid}i, response.message
+  end
+
+  def test_successful_purchase_with_custom_fields
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: {a_key: "a value"}))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'APPROVAL', response.message
+    assert response.authorization
   end
 end
