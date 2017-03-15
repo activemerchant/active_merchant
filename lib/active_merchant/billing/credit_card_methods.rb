@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
         'visa'               => /^4\d{12}(\d{3})?(\d{3})?$/,
         'master'             => /^(5[1-5]\d{4}|677189|222[1-9]\d{2}|22[3-9]\d{3}|2[3-6]\d{4}|27[01]\d{3}|2720\d{2})\d{10}$/,
         'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62212[6-9]|6221[3-9][0-9]|622[2-8][0-9][0-9]|6229[0-1][0-9]|62292[0-5]\d{10})$/,
-        'union_pay'          => /^(62\d{14,17})$/,
+        'unionpay'          => /^(62\d{14,17})$/,
         'american_express'   => /^3[47]\d{13}$/,
         'diners_club'        => /^3(0[0-5]|[68]\d)\d{11}$/,
         'jcb'                => /^35(28|29|[3-8]\d)\d{12}$/,
@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
         'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/
       }
 
-      CHECKSUM_EXEMPTIONS = %w(union_pay)
+      CHECKSUM_EXEMPTIONS = %w(unionpay)
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
       ELECTRON_RANGES = [

@@ -186,10 +186,10 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_not_equal 'discover', CreditCard.brand?('6600000000000000')
   end
 
-  def test_matching_union_pay_card
-    assert_equal 'union_pay', CreditCard.brand?('6211111111111111')
-    assert_equal 'union_pay', CreditCard.brand?('6233333333333333')
-    assert_equal 'union_pay', CreditCard.brand?('6221260000000000')
+  def test_matching_unionpay_card
+    assert_equal 'unionpay', CreditCard.brand?('6211111111111111')
+    assert_equal 'unionpay', CreditCard.brand?('6233333333333333')
+    assert_equal 'unionpay', CreditCard.brand?('6221260000000000')
   end
 
   def test_matching_invalid_card
@@ -215,17 +215,17 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'switch', CreditCard.brand?(number)
   end
 
-  def test_16_digit_union_pay
+  def test_16_digit_unionpay
     number = '6200000000000000'
     assert_equal 16, number.length
-    assert_equal 'union_pay', CreditCard.brand?(number)
+    assert_equal 'unionpay', CreditCard.brand?(number)
     assert CreditCard.valid_number?(number)
   end
 
-  def test_19_digit_union_pay
+  def test_19_digit_unionpay
     number = '6200000000000000000'
     assert_equal 19, number.length
-    assert_equal 'union_pay', CreditCard.brand?(number)
+    assert_equal 'unionpay', CreditCard.brand?(number)
     assert CreditCard.valid_number?(number)
   end
 
