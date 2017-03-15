@@ -156,6 +156,14 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_rejected_refund
+    response = stub_comms do
+      @gateway.refund(@accepted_amount, '000000142800000000920000100001')
+    end.respond_with(rejected_refund_response)
+
+    assert_failure response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -297,6 +305,10 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def failed_refund_response
     %({\n   \"errorId\" : \"1bd31e6a-39dd-4214-941a-088a320e0286\",\n   \"errors\" : [ {\n      \"code\" : \"1002\",\n      \"propertyName\" : \"paymentId\",\n      \"message\" : \"INVALID_PAYMENT_ID\"\n   } ]\n})
+  end
+
+  def rejected_refund_response
+    %({\n   \"id\" : \"00000022184000047564000-100001\",\n   \"refundOutput\" : {\n      \"amountOfMoney\" : {\n         \"amount\" : 627000,\n         \"currencyCode\" : \"COP\"\n      },\n      \"references\" : {\n         \"merchantReference\" : \"17091GTgZmcC\",\n         \"paymentReference\" : \"0\"\n      },\n      \"paymentMethod\" : \"card\",\n      \"cardRefundMethodSpecificOutput\" : {\n      }\n   },\n   \"status\" : \"REJECTED\",\n   \"statusOutput\" : {\n      \"isCancellable\" : false,\n      \"statusCategory\" : \"UNSUCCESSFUL\",\n      \"statusCode\" : 1850,\n      \"statusCodeChangeDateTime\" : \"20170313230631\"\n   }\n})
   end
 
   def successful_void_response
