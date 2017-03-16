@@ -52,11 +52,6 @@ barclaycard_smartpay:
   merchant: merchant
   password: password
 
-barclays_epdq:
-  login: test
-  password: test
-  client_id: 1234
-
 barclays_epdq_extra_plus:
   login: merchant number
   user: username
