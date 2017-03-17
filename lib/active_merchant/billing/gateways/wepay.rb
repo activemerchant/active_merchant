@@ -126,6 +126,7 @@ module ActiveMerchant #:nodoc:
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
         post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]
         post[:reference_id] = options[:order_id] if options[:order_id]
+        post[:unique_id] = options[:unique_id] if options[:unique_id]
         post[:redirect_uri] = options[:redirect_uri] if options[:redirect_uri]
         post[:callback_uri] = options[:callback_uri] if options[:callback_uri]
         post[:fallback_uri] = options[:fallback_uri] if options[:fallback_uri]
