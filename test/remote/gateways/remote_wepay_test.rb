@@ -66,6 +66,12 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_unique_id
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(unique_id: generate_unique_id))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_authorize
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
