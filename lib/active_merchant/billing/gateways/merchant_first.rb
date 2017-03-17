@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       include Empty
 
       self.test_url = 'https://beta.mycardstorage.com/api/api.asmx'
-      self.live_url = 'https://example.com/live'
+      self.live_url = 'https://prod.mycardstorage.com/api/api.asmx'
 
       self.supported_countries = ['US', 'MX']
       self.default_currency = 'USD'
