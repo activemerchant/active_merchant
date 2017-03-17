@@ -122,8 +122,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options={})
+        # if we are using a token, we need to call different
+        # methods
+        token_method = payment_method.is_a?(String) ? '_Token' : ''
         request = build_soap_request do |xml|
-          xml.CreditSale_Soap(SOAP_XMLNS) do
+          xml.send("CreditSale#{token_method}_Soap", SOAP_XMLNS) do
             xml.creditCardSale do
               add_authentication(xml, 'CreditSale_Soap')
               add_credit_card(xml, payment_method, options)
@@ -132,7 +135,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        commit('CreditSale_Soap', request)
+        commit("CreditSale#{token_method}_Soap", request)
       end
 
       def refund(money, authorization, options={})
