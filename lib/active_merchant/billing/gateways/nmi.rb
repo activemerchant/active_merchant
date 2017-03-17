@@ -141,6 +141,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(post, payment_method, options)
         if(payment_method.is_a?(String))
           post[:customer_vault_id] = payment_method
+          post[:cvv] = options[:cvv] if options[:cvv].present?
         elsif(card_brand(payment_method) == 'check')
           post[:payment] = 'check'
           post[:checkname] = payment_method.name
