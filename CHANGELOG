@@ -8,6 +8,7 @@
 * Pin: Add metadata optional field [shasum] #2363
 * GlobalCollect: Set REJECTED refunds as unsuccessful transactions [davidsantoso] #2365
 * WePay: Support unique_id for idempotent transactions [shasum] #2367
+* Orbital: Don't send CVV indicator if CVV is not present [curiousepic] #2368
 
 == Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300

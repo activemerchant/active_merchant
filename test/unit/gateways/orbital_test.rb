@@ -676,6 +676,24 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal "AUTH DECLINED                   12001", response.message
   end
 
+  def test_cvv_indicator_present_for_visas_with_cvvs
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match %r{<CardSecValInd>1<\/CardSecValInd>}, data
+      assert_match %r{<CardSecVal>123<\/CardSecVal>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_cvv_indicator_absent_for_recurring
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, {verification_value: nil}), @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_no_match %r{<CardSecValInd>}, data
+      assert_no_match %r{<CardSecVal>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
