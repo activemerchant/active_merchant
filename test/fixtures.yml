@@ -468,6 +468,11 @@ micropayment:
   access_key: "0b4832ca37a31e748c4490b58d743986"
 
 # Working credentials, no need to replace
+midtrans:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
+# Working credentials, no need to replace
 migs:
   login: TESTH-STATION
   password: 'F1CE6F32'
@@ -1209,3 +1214,7 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+midtrans:
+  client_key: 'VT-client-ZiKr3dq3HTywXpZP'
+  server_key: 'VT-server-Jk750sVuDY9Gz3iBlulfUthr'
