@@ -439,6 +439,25 @@ class StripeTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_adds_application_to_x_stripe_client_user_agent_header
+    application = {
+      name: "app",
+      version: "1.0",
+      url: "https://example.com"
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "cus_xxx|card_xxx", @options.merge({application: application}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/\"application\"/, headers["X-Stripe-Client-User-Agent"])
+      assert_match(/\"name\":\"app\"/, headers["X-Stripe-Client-User-Agent"])
+      assert_match(/\"version\":\"1.0\"/, headers["X-Stripe-Client-User-Agent"])
+      assert_match(/\"url\":\"https:\/\/example.com\"/, headers["X-Stripe-Client-User-Agent"])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_token_including_customer
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, "cus_xxx|card_xxx")
