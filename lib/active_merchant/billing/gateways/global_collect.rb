@@ -271,8 +271,10 @@ EOS
         else
           if errors = response["errors"]
             errors.first.try(:[], "message")
+          elsif status = response["status"]
+            "Status: " + status
           else
-            "Unable to read error message"
+            "No message available"
           end
         end
       end
@@ -289,8 +291,10 @@ EOS
         unless succeeded
           if errors = response["errors"]
             errors.first.try(:[], "code")
+          elsif status = response.try(:[], "statusOutput").try(:[], "statusCode")
+            status.to_s
           else
-            "Unable to read error code"
+            "No error code available"
           end
         end
       end

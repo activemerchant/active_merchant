@@ -73,7 +73,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '123', @options)
     assert_failure response
-    assert_match %r{The given paymentId is not correct}, response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   # Because payments are not fully authorized immediately, refunds can only be
@@ -97,7 +97,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '123')
     assert_failure response
-    assert_match %r{The given paymentId is not correct}, response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   def test_successful_void
@@ -112,7 +112,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('123')
     assert_failure response
-    assert_match %r{The given paymentId is not correct}, response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   def test_successful_verify
@@ -132,7 +132,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{The authorization was missing or invalid}, response.message
+    assert_match %r{MISSING_OR_INVALID_AUTHORIZATION}, response.message
   end
 
   def test_transcript_scrubbing
