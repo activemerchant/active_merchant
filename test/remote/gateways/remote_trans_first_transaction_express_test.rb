@@ -87,7 +87,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@declined_amount, @credit_card, @options)
+    response = @gateway.purchase(@rejected_amount, @declined_card, @options)
     assert_failure response
     assert_equal "Not sufficient funds", response.message
     assert_equal "51", response.params["rspCode"]

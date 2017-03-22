@@ -162,6 +162,8 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(rejected_refund_response)
 
     assert_failure response
+    assert_equal "1850", response.error_code
+    assert_equal "Status: REJECTED", response.message
   end
 
   def test_scrub
