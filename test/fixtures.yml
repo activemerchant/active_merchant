@@ -1021,6 +1021,11 @@ s5:
   login: 8a82941847c4d0780147cea1d1730dcc
   password: n3yNMBGK
 
+# Working credentials, no need to replace
+safe_charge:
+  client_login_id: 'SpreedlyTestTRX'
+  client_password: '5Jp5xKmgqY'
+
 sage:
   login: 214282982451
   password: 'Z5W2S8J7X8T5'
