@@ -13,12 +13,12 @@ gemfile:
 - Gemfile.rails40
 - Gemfile.rails41
 - Gemfile.rails42
-- Gemfile.rails5
+- Gemfile.rails50
 
 matrix:
   exclude:
     - rvm: 2.1
-      gemfile: Gemfile.rails5
+      gemfile: Gemfile.rails50
 
 notifications:
   email:
