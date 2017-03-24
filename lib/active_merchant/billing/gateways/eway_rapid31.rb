@@ -315,8 +315,8 @@ module ActiveMerchant #:nodoc:
               'V6116' => 'Invalid card data on original transactionID',
               'V6117' => 'Invalid CreateAccessCodeSharedRequest, FooterText',
               'V6118' => 'Invalid CreateAccessCodeSharedRequest, HeaderText',
-              'V6119' => 'Invalid CreateAccessCodeSharedRequest, Language',
-              'V6120' => 'Invalid CreateAccessCodeSharedRequest, LogoUrl'
+              'V6119' => 'Invalid CreateAccessCodeSharedRequest, Language'
+
             }
     end
   end
