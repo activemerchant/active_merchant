@@ -75,6 +75,22 @@ class EwayRapid31Test < Test::Unit::TestCase
     assert @response.test?
   end
 
+  def test_unsuccessful_amex_store
+    bad_credit_card = credit_card('378282246310005', :month => 13)
+
+    stub_comms(@gateway, :ssl_request) do
+      assert @response = @gateway.store(bad_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert JSON.parse(expected_amex_store_request(:month => bad_credit_card.month)) == JSON.parse(data)
+    end.respond_with(failed_store_response_invalid_card)
+
+    assert_nil @response.authorization
+    assert_nil @response.avs_result['code']
+    assert_failure @response
+    assert @response.test?
+    assert @response.message == "Card type not support by merchant"
+  end
+
 
   def test_successful_purchase_with_token
     stub_comms(@gateway, :ssl_request) do
@@ -317,6 +333,38 @@ class EwayRapid31Test < Test::Unit::TestCase
               "CardDetails":{
                   "Name":"Longbob Longsen",
                   "Number":"4444333322221111",
+                  "ExpiryMonth":"#{sprintf('%02d', options[:month])}",
+                  "ExpiryYear":"18",
+                  "CVN":"123"
+              },
+              "FirstName":"Jim",
+              "LastName":"Smith",
+              "Title":"",
+              "CompanyName":"Widgets Inc",
+              "Street1":"456 My Street",
+              "Street2":"Apt 1",
+              "City":"Ottawa",
+              "State":"ON",
+              "PostalCode":"K1C2N6",
+              "Country":"ca",
+              "Phone":"(555)555-5555",
+              "Mobile":"",
+              "Fax":"(555)555-6666",
+              "Email":"jim.smith@example.com"
+          }
+      }
+    JSON
+
+    request
+  end
+
+  def expected_amex_store_request(options = {})
+    request = <<-JSON
+      {
+          "Customer":{
+              "CardDetails":{
+                  "Name":"Longbob Longsen",
+                  "Number":"378282246310005",
                   "ExpiryMonth":"#{sprintf('%02d', options[:month])}",
                   "ExpiryYear":"18",
                   "CVN":"123"

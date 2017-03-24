@@ -315,7 +315,30 @@ module ActiveMerchant #:nodoc:
               'V6116' => 'Invalid card data on original transactionID',
               'V6117' => 'Invalid CreateAccessCodeSharedRequest, FooterText',
               'V6118' => 'Invalid CreateAccessCodeSharedRequest, HeaderText',
-              'V6119' => 'Invalid CreateAccessCodeSharedRequest, Language'
+              'V6119' => 'Invalid CreateAccessCodeSharedRequest, Language',
+              'V6120' => 'Invalid CreateAccessCodeSharedRequest, LogoUrl ',
+              'V6121' => 'Invalid TransactionSearch, Filter Match Type',
+              'V6122' => 'Invalid TransactionSearch, Non numeric Transaction ID',
+              'V6123' => 'Invalid TransactionSearch,no TransactionID or AccessCode specified',
+              'V6124' => 'Invalid Line Items. The line items have been provided however the totals do not match the TotalAmount field',
+              'V6125' => 'Selected Payment Type not enabled',
+              'V6126' => 'Invalid encrypted card number, decryption failed',
+              'V6127' => 'Invalid encrypted cvn, decryption failed',
+              'V6128' => 'Invalid Method for Payment Type',
+              'V6129' => 'Transaction has not been authorised for Capture/Cancellation',
+              'V6130' => 'Generic customer information error ',
+              'V6131' => 'Generic shipping information error',
+              'V6132' => 'Transaction has already been completed or voided, operation not permitted',
+              'V6133' => 'Checkout not available for Payment Type',
+              'V6134' => 'Invalid Auth Transaction ID for Capture/Void',
+              'V6135' => 'PayPal Error Processing Refund',
+              'V6140' => 'Merchant account is suspended',
+              'V6141' => 'Invalid PayPal account details or API signature',
+              'V6142' => 'Authorise not available for Bank/Branch',
+              'V6150' => 'Invalid Refund Amount',
+              'V6151' => 'Refund amount greater than original transaction',
+              'V6152' => 'Original transaction already refunded for total amount',
+              'V6153' => 'Card type not support by merchant'
 
             }
     end
