@@ -18,7 +18,8 @@ class EwayRapid31Test < Test::Unit::TestCase
       :description => 'Store Purchase',
       :email => 'jim.smith@example.com',
       :ip => '127.0.0.1',
-      :transaction_type => 'MOTO'
+      :transaction_type => 'MOTO',
+      :application_id => "ActiveMerchant"
     }
   end
 
@@ -72,6 +73,22 @@ class EwayRapid31Test < Test::Unit::TestCase
     assert_nil @response.avs_result['code']
     assert_failure @response
     assert @response.test?
+  end
+
+  def test_unsuccessful_amex_store
+    bad_credit_card = credit_card('378282246310005', :month => 13)
+
+    stub_comms(@gateway, :ssl_request) do
+      assert @response = @gateway.store(bad_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert JSON.parse(expected_amex_store_request(:month => bad_credit_card.month)) == JSON.parse(data)
+    end.respond_with(failed_store_response_invalid_card)
+
+    assert_nil @response.authorization
+    assert_nil @response.avs_result['code']
+    assert_failure @response
+    assert @response.test?
+    assert @response.message == "Card type not support by merchant"
   end
 
 
@@ -172,7 +189,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Number":"444433XXXXXX1111",
                   "Name":"Longbob Longsen",
                   "ExpiryMonth":"09",
-                  "ExpiryYear":"15",
+                  "ExpiryYear":"18",
                   "StartMonth":null,
                   "StartYear":null,
                   "IssueNumber":null
@@ -282,14 +299,14 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Name":"Longbob Longsen",
                   "Number":"4444333322221111",
                   "ExpiryMonth":"09",
-                  "ExpiryYear":"15",
+                  "ExpiryYear":"18",
                   "CVN":"123"
               },
               "FirstName":"Jim",
               "LastName":"Smith",
               "Title":"",
               "CompanyName":"Widgets Inc",
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
@@ -317,14 +334,46 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Name":"Longbob Longsen",
                   "Number":"4444333322221111",
                   "ExpiryMonth":"#{sprintf('%02d', options[:month])}",
-                  "ExpiryYear":"15",
+                  "ExpiryYear":"18",
                   "CVN":"123"
               },
               "FirstName":"Jim",
               "LastName":"Smith",
               "Title":"",
               "CompanyName":"Widgets Inc",
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
+              "Street2":"Apt 1",
+              "City":"Ottawa",
+              "State":"ON",
+              "PostalCode":"K1C2N6",
+              "Country":"ca",
+              "Phone":"(555)555-5555",
+              "Mobile":"",
+              "Fax":"(555)555-6666",
+              "Email":"jim.smith@example.com"
+          }
+      }
+    JSON
+
+    request
+  end
+
+  def expected_amex_store_request(options = {})
+    request = <<-JSON
+      {
+          "Customer":{
+              "CardDetails":{
+                  "Name":"Longbob Longsen",
+                  "Number":"378282246310005",
+                  "ExpiryMonth":"#{sprintf('%02d', options[:month])}",
+                  "ExpiryYear":"18",
+                  "CVN":"123"
+              },
+              "FirstName":"Jim",
+              "LastName":"Smith",
+              "Title":"",
+              "CompanyName":"Widgets Inc",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
@@ -349,7 +398,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Number":"444433XXXXXX1111",
                   "Name":"Longbob Longsen",
                   "ExpiryMonth":"09",
-                  "ExpiryYear":"15",
+                  "ExpiryYear":"18",
                   "StartMonth":null,
                   "StartYear":null,
                   "IssueNumber":null
@@ -387,7 +436,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Number":"444433XXXXXX1111",
                   "Name":"Longbob Longsen",
                   "ExpiryMonth":"13",
-                  "ExpiryYear":"15",
+                  "ExpiryYear":"18",
                   "StartMonth":null,
                   "StartYear":null,
                   "IssueNumber":null
@@ -413,6 +462,44 @@ class EwayRapid31Test < Test::Unit::TestCase
               "Url":null
           },
           "Errors":"V6101"
+      }
+    JSON
+  end
+
+  def failed_store_response_invalid_card
+    <<-JSON
+      {
+          "Customer":{
+              "CardDetails":{
+                  "Number":"444433XXXXXX1111",
+                  "Name":"Longbob Longsen",
+                  "ExpiryMonth":"13",
+                  "ExpiryYear":"18",
+                  "StartMonth":null,
+                  "StartYear":null,
+                  "IssueNumber":null
+              },
+              "TokenCustomerID":null,
+              "Reference":null,
+              "Title":null,
+              "FirstName":"Jim",
+              "LastName":"Smith",
+              "CompanyName":"Widgets Inc",
+              "JobDescription":null,
+              "Street1":"1234 My Street",
+              "Street2":"Apt 1",
+              "City":"Ottawa",
+              "State":"ON",
+              "PostalCode":"K1C2N6",
+              "Country":"ca",
+              "Email":"jim.smith@example.com",
+              "Phone":"(555)555-5555",
+              "Mobile":null,
+              "Comments":null,
+              "Fax":"(555)555-6666",
+              "Url":null
+          },
+          "Errors":"V6153"
       }
     JSON
   end
@@ -484,7 +571,7 @@ class EwayRapid31Test < Test::Unit::TestCase
               "LastName":"Smith",
               "Title":"",
               "CompanyName":"Widgets Inc",
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
@@ -530,7 +617,7 @@ class EwayRapid31Test < Test::Unit::TestCase
               "LastName":"Smith",
               "CompanyName":"Widgets Inc",
               "JobDescription":null,
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
@@ -590,7 +677,7 @@ class EwayRapid31Test < Test::Unit::TestCase
               "LastName":"Smith",
               "CompanyName":"Widgets Inc",
               "JobDescription":"",
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
@@ -630,7 +717,7 @@ class EwayRapid31Test < Test::Unit::TestCase
             "LastName":"Smith",
             "Title":"",
             "CompanyName":"Widgets Inc",
-            "Street1":"1234 My Street",
+            "Street1":"456 My Street",
             "Street2":"Apt 1",
             "City":"Ottawa",
             "State":"ON",
@@ -678,7 +765,7 @@ class EwayRapid31Test < Test::Unit::TestCase
               "LastName":"Smith",
               "CompanyName":"Widgets Inc",
               "JobDescription":null,
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
@@ -723,7 +810,7 @@ class EwayRapid31Test < Test::Unit::TestCase
               "LastName":"Smith",
               "CompanyName":"Widgets Inc",
               "JobDescription":"",
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
@@ -750,7 +837,7 @@ class EwayRapid31Test < Test::Unit::TestCase
               "LastName":"Smith",
               "Title":"",
               "CompanyName":"Widgets Inc",
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
@@ -764,7 +851,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Name":"Longbob Longsen",
                   "Number":"4444333322221111",
                   "ExpiryMonth":"09",
-                  "ExpiryYear":"15",
+                  "ExpiryYear":"18",
                   "CVN":"123"
               }
           },
@@ -797,7 +884,7 @@ class EwayRapid31Test < Test::Unit::TestCase
               "LastName":"Smith",
               "CompanyName":"Widgets Inc",
               "JobDescription":null,
-              "Street1":"1234 My Street",
+              "Street1":"456 My Street",
               "Street2":"Apt 1",
               "City":"Ottawa",
               "State":"ON",
