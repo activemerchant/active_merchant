@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         post = {}
         post[:metadata] = options[:metadata] if options[:metadata]
+        post[:reason] = options[:reason] if options[:reason]
         post[:expand] = [:charge]
         commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options)
       end
