@@ -56,4 +56,11 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
+  
+  def test_setup_order
+    response = @gateway.setup_order(500, @options)
+    assert response.success?
+    assert response.test?
+    assert_not_nil response,token
+  end
 end

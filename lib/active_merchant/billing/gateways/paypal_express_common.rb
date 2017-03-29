@@ -17,10 +17,11 @@ module ActiveMerchant
       end
 
       def redirect_url_for(token, options = {})
-        options = {:review => true, :mobile => false}.update(options)
+        options = {:review => true, :mobile => false, :order => false}.update(options)
 
         cmd  = options[:mobile] ? '_express-checkout-mobile' : '_express-checkout'
-        url  = "#{redirect_url}?cmd=#{cmd}&token=#{token}"
+        url  = "#{redirect_url}?cmd=#{cmd}"
+        url += options[:order] ? "&order_id=#{token}" : "&token=#{token}"
         url += '&useraction=commit' unless options[:review]
 
         url

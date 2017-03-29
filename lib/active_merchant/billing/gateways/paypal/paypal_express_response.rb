@@ -60,6 +60,22 @@ module ActiveMerchant #:nodoc:
       def note
         @params['note_text']
       end
+
+      def payment_info
+        (@params['PaymentInfo']||{})
+      end
+
+      def transaction_id
+        payment_info['TransactionID']
+      end
+
+      def payment_status
+        payment_info['PaymentStatus']
+      end
+
+      def pending_reason
+        payment_info['PendingReason']
+      end
     end
   end
 end
