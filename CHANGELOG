@@ -11,6 +11,7 @@
 * Orbital: Don't send CVV indicator if CVV is not present [curiousepic] #2368
 * JetPay: Pass down authorization payment method token to refund a capture [davidsantoso]
 * GlobalCollect: Make message and error reporting more robust [curiousepic] #2370
+* Cybersource: Rescue XML parse exception [shasum] #2380
 
 == Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300

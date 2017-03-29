@@ -686,6 +686,8 @@ module ActiveMerchant #:nodoc:
           response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
         rescue ResponseError => e
           response = parse(e.response.body)
+        rescue REXML::ParseException => e
+          response = { message: e.to_s }
         end
 
         success = response[:decision] == "ACCEPT"
