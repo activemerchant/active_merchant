@@ -37,6 +37,7 @@ module ActiveMerchant
         add_payment_method(params, payment_method)
         add_address(params, options)
         add_amount(params, amount, options)
+        add_soft_descriptors(params, options)
 
         commit(params, options)
       end
@@ -48,6 +49,7 @@ module ActiveMerchant
         add_payment_method(params, payment_method)
         add_address(params, options)
         add_amount(params, amount, options)
+        add_soft_descriptors(params, options)
 
         commit(params, options)
       end
@@ -57,6 +59,7 @@ module ActiveMerchant
 
         add_authorization_info(params, authorization)
         add_amount(params, amount, options)
+        add_soft_descriptors(params, options)
 
         commit(params, options)
       end
@@ -167,6 +170,10 @@ module ActiveMerchant
       def add_amount(params, money, options)
         params[:currency_code] = (options[:currency] || default_currency).upcase
         params[:amount] = amount(money)
+      end
+
+      def add_soft_descriptors(params, options)
+        params[:soft_descriptors] = options[:soft_descriptors] if options[:soft_descriptors]
       end
 
       def commit(params, options)
