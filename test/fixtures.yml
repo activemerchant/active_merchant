@@ -157,6 +157,10 @@ certo_direct:
   login: 1
   password: vP6OwK3
 
+charity_engine:
+  username: login
+  password: password
+
 checkout:
   merchant_id: SBMTEST
   password: Password1!
