@@ -20,6 +20,7 @@
 * Card Connect: support storing cards [bpollack] #2896
 * Avoid mutating headers passed in for Active Merchant connections [grantbdev] #2892
 * Forte: add support for refunds [bpollack] #2898
+* Forte: fix a bug in logic for selecting billing names [whitby3001] #2381
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
