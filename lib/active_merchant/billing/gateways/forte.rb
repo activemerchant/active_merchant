@@ -121,11 +121,11 @@ module ActiveMerchant #:nodoc:
           post[:billing_address][:physical_address][:locality] = address[:city] if address[:city]
         end
 
-        if empty?(post[:billing_address][:first_name] && payment.first_name)
+        if empty?(post[:billing_address][:first_name]) && payment.first_name
           post[:billing_address][:first_name] = payment.first_name
         end
 
-        if empty?(post[:billing_address][:last_name] && payment.last_name)
+        if empty?(post[:billing_address][:last_name]) && payment.last_name
           post[:billing_address][:last_name] = payment.last_name
         end
       end
