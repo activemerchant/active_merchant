@@ -141,6 +141,33 @@ class ForteTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_successful_refund
+    @gateway.expects(:handle_resp).returns(successful_refund_response)
+
+    response = @gateway.refund(126.75, "trn_757222e1-5b92-452b-9b9c-5d5a1c3fd086#16455266")
+    assert_success response
+    assert_equal 126.75, response.params["authorization_amount"]
+    assert_not_nil response.params["authorization_code"]
+    assert_not_nil response.params["transaction_id"]
+    assert_not_nil response.authorization
+  end
+
+  def test_failed_refund_with_blank_authorization
+    @gateway.expects(:handle_resp).returns(failed_refund_with_blank_authorization_response)
+
+    response = @gateway.refund(126.75, '')
+    assert_failure response
+    assert_equal "Error[1]: The field authorization_code is required when performing a reverse action. Error[2]: The field original_transaction_id is required when performing a reverse action.", response.message
+  end
+
+  def test_failed_refund_with_nil_amount
+    @gateway.expects(:handle_resp).returns(failed_refund_with_nil_amount_response)
+
+    response = @gateway.refund(nil, "trn_757222e1-5b92-452b-9b9c-5d5a1c3fd086#16455266")
+    assert_failure response
+    assert_equal "MANDITORY FIELD MISSING:authorization_amount", response.message
+  end
+
   private
 
   def pre_scrubbed
@@ -524,6 +551,79 @@ class ForteTest < Test::Unit::TestCase
         "response": {
           "environment":"sandbox",
           "response_desc":"The field transaction_id is required."
+        }
+      }
+    )
+  end
+
+  def successful_refund_response
+    %q(
+      {
+        "transaction_id":"trn_fbc166b6-ae56-40a6-8d08-7edcd56de4a3",
+        "location_id":"loc_187386",
+        "original_transaction_id":"trn_757222e1-5b92-452b-9b9c-5d5a1c3fd086",
+        "order_number":"SO536553",
+        "action":"disburse",
+        "authorization_amount":126.75,
+        "authorization_code":"16455266",
+        "billing_address": {
+          "first_name":"John",
+          "last_name":"Smith",
+          "physical_address": {
+            "street_line1":"66 Main Street",
+            "locality":"Lake Zurich",
+            "region":"IL",
+            "postal_code":"60047"
+          }
+        },
+        "response": {
+          "environment":"sandbox",
+          "response_type":"A",
+          "response_code":"A01",
+          "response_desc":"APPROVED",
+          "authorization_code":"16474779"
+        }
+      }
+    )
+  end
+
+  def failed_refund_with_blank_authorization_response
+    %q(
+      {
+        "location_id":"loc_187386",
+        "action":"reverse",
+        "response": {
+          "environment": "sandbox",
+          "response_desc": "Error[1]: The field authorization_code is required when performing a reverse action. Error[2]: The field original_transaction_id is required when performing a reverse action."
+        }
+      }
+    )
+  end
+
+  def failed_refund_with_nil_amount_response
+    %q(
+      {
+        "transaction_id":"trn_fd6d0b34-50e1-4932-bcee-3165e6a8d599",
+        "location_id":"loc_187386",
+        "original_transaction_id":"trn_00c2ffd8-4e46-4257-a287-13645ecdc5da",
+        "order_number":"SO536550",
+        "action":"disburse",
+        "authorization_code":"16476492",
+        "billing_address": {
+          "first_name":"John",
+          "last_name":"Smith",
+          "physical_address": {
+            "street_line1":"66 Main Street",
+            "locality":"Lake Zurich",
+            "region":"IL",
+            "postal_code":"60047"
+          }
+        },
+        "response": {
+          "environment":"sandbox",
+          "response_type":"E",
+          "response_code":"F01",
+          "response_desc":"MANDITORY FIELD MISSING:authorization_amount"
         }
       }
     )

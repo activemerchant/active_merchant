@@ -65,6 +65,16 @@ module ActiveMerchant #:nodoc:
         commit(:post, post)
       end
 
+      def refund(money, authorization, options={})
+        post = {}
+        add_amount(post, money, options)
+        post[:original_transaction_id] = transaction_id_from(authorization)
+        post[:authorization_code] = authorization_code_from(authorization)
+        post[:action] = "reverse"
+
+        commit(:post, post)
+      end
+
       def void(authorization, options={})
         post = {}
         post[:transaction_id] = transaction_id_from(authorization)

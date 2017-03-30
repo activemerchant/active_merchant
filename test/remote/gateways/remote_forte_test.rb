@@ -167,6 +167,42 @@ class RemoteForteTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
   end
 
+  def test_successful_refund
+    purchase_response = @gateway.purchase(@amount, @check, @options)
+    assert_success purchase_response
+
+    wait_for_authorization_to_clear
+
+    refund_response = @gateway.refund(@amount, purchase_response.authorization)
+    assert_success refund_response
+    assert_equal @amount/100, refund_response.params["authorization_amount"]
+    assert_not_nil refund_response.params["authorization_code"]
+    assert_not_nil refund_response.params["transaction_id"]
+    assert_not_nil refund_response.authorization
+  end
+
+  def test_failed_refund_with_blank_authorization
+    purchase_response = @gateway.purchase(@amount, @check, @options)
+    assert_success purchase_response
+
+    wait_for_authorization_to_clear
+
+    refund_response = @gateway.refund(@amount, '')
+    assert_failure refund_response
+    assert_equal "Error[1]: The field authorization_code is required when performing a reverse action. Error[2]: The field original_transaction_id is required when performing a reverse action.", refund_response.message
+  end
+
+  def test_failed_refund_with_nil_amount
+    purchase_response = @gateway.purchase(@amount, @check, @options)
+    assert_success purchase_response
+
+    wait_for_authorization_to_clear
+
+    refund_response = @gateway.refund(nil, purchase_response.authorization)
+    assert_failure refund_response
+    assert_equal "MANDITORY FIELD MISSING:authorization_amount", refund_response.message
+  end
+
   private
 
   def wait_for_authorization_to_clear
