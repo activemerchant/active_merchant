@@ -70,13 +70,8 @@ module ActiveMerchant
         self.plan_id = options[:plan_id]
         self.pf_token = options[:pf_token]
         commit(:purchase) do |doc|
-          if hosted_payment_fields?
-            add_shopper_info(doc, payment_method, options)
-            add_order(doc, options, money)
-          else
-            add_auth_purchase(doc, money, payment_method, options)
-            add_plan(doc, options)
-          end
+          add_auth_purchase(doc, money, payment_method, options)
+          add_plan(doc, options)
         end
       end
 
@@ -157,6 +152,18 @@ module ActiveMerchant
         match["token"]
       end
 
+      #
+      # Creates the subscription plan
+      #
+      # @param [Hash] options
+      #
+      # @return [String] plan id
+      def create_subscription_plan(options)
+        commit(:create_plan, :post) do |doc|
+          add_subscription_plan(doc, options)
+        end
+      end
+
       private
 
       def add_auth_purchase(doc, money, payment_method, options)
@@ -170,18 +177,21 @@ module ActiveMerchant
         if payment_method.is_a?(String)
           doc.send("vaulted-shopper-id", payment_method)
         else
-          doc.send("card-holder-info") do
-            add_personal_info(doc, payment_method, options)
-          end
-          doc.send("payer-info") do
-            add_personal_info(doc, payment_method, options)
-          end
-          doc.send("payment-source") do
-            doc.send("credit-card-info") do
-              add_credit_card(doc, payment_method, options)
+          if subscription?
+            doc.send("payer-info") do
+              add_personal_info(doc, payment_method, options)
             end
+            doc.send("payment-source") do
+              doc.send("credit-card-info") do
+                doc.send("pf-token", options[:pf_token]) if options[:pf_token]
+              end
+            end
+          else
+            doc.send("card-holder-info") do
+              add_personal_info(doc, payment_method, options)
+            end
+            doc.send("pf-token", options[:pf_token]) if options[:pf_token]
           end
-          add_credit_card(doc, payment_method, options)
         end
       end
 
@@ -230,32 +240,9 @@ module ActiveMerchant
       end
 
       def add_order(doc, options, money = nil)
-        if hosted_payment_fields?
-          doc.send("order") do
-            doc.send("ordering-shopper") do
-              doc.send("web-info") do
-                doc.send("ip", options[:ip])
-                doc.send("remote-host", 'www.clickfunnels.com')
-                doc.send("user-agent", options[:user_agent])
-              end
-            end
-            doc.send("cart") do
-              doc.send("cart-item") do
-                doc.send("sku") do
-                  doc.send("sku-id", options[:sku_id])
-                end
-                doc.send("quantity", options[:quantity] || 1)
-              end
-            end
-            doc.send("expected-total-price") do
-              add_amount(doc, money)
-            end
-          end
-        else
-          doc.send("merchant-transaction-id", truncate(options[:order_id], 50)) if options[:order_id]
-          doc.send("soft-descriptor", options[:soft_descriptor]) if options[:soft_descriptor]
-          add_description(doc, options[:description]) if options[:description]
-        end
+        doc.send("merchant-transaction-id", truncate(options[:order_id], 50)) if options[:order_id]
+        doc.send("soft-descriptor", options[:soft_descriptor]) if options[:soft_descriptor]
+        add_description(doc, options[:description]) if options[:description]
       end
 
       def add_address(doc, options)
@@ -278,23 +265,16 @@ module ActiveMerchant
         doc.send("transaction-id", authorization)
       end
 
-      def add_shopper_info(doc, payment_method, options)
-        doc.send("shopper") do
-          doc.send("shopper-info") do
-            doc.send("shopper-contact-info") do
-              add_personal_info(doc, payment_method, options)
-            end
-            doc.send("payment-info") do
-              doc.send("credit-cards-info") do
-                doc.send("credit-card-info") do
-                  doc.send("billing-contact-info") do
-                    add_personal_info(doc, payment_method, options)
-                  end
-                  doc.send("pf-token", options[:pf_token])
-                end
-              end
-            end
-          end
+      #
+      # Adds subscription plan options to xml
+      #
+      # @param [Nokogiri::XML] doc
+      # @param [Hash] options
+      #
+      # @return [String] plan id
+      def add_subscription_plan(doc, options)
+        options.each do |name, value|
+          doc.send(name.to_s.dasherize, value)
         end
       end
 
@@ -358,8 +338,8 @@ module ActiveMerchant
           "recurring/plans"
         elsif (action == :hosted_field_token)
           "payment-fields-tokens"
-        elsif hosted_payment_fields?
-          "batch/order-placement"
+        elsif (action == :create_plan)
+          "recurring/plans"
         elsif subscription?
           "recurring/subscriptions"
         else
@@ -412,10 +392,10 @@ module ActiveMerchant
         case action
         when :store
           "vaulted-shopper"
+        when :create_plan
+          "plan"
         else
-          if hosted_payment_fields?
-            "batch-order"
-          elsif subscription?
+          if subscription?
             "recurring-subscription"
           else
             "card-transaction"
@@ -433,7 +413,7 @@ module ActiveMerchant
       def build_xml_request(action)
         builder = Nokogiri::XML::Builder.new
         builder.__send__(root_element(action), root_attributes) do |doc|
-          unless subscription? || hosted_payment_fields?
+          unless subscription?
             doc.send("card-transaction-type", TRANSACTIONS[action]) if TRANSACTIONS[action]
           end
           yield(doc)
