@@ -238,9 +238,16 @@ module ActiveMerchant #:nodoc:
         xml.ZipCode address[:zip] unless empty?(address[:zip])
       end
 
+      def add_country_code(xml, options={})
+        address = options[:billing_address] || options[:address]
+        return unless (address.present? && address.key?(:country))
+        xml.CountryCode address[:country]
+      end
+
       def add_transaction_data(xml, money, options={})
         xml.TransactionData do
           xml.Amount amount(money)
+          add_country_code(xml, options)
           xml.CurrencyCode CURRENCY_MAP[(options[:currency] || currency(money)).upcase]
           xml.GatewayID GATEWAY_MAP[options.fetch(:gateway, 'merchant partners').downcase]
           xml.EmailAddress options[:email] unless empty?(options[:email])
