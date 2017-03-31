@@ -191,6 +191,7 @@ module ActiveMerchant #:nodoc:
             :id => options[:customer],
             :payment_method_nonce => paypal_account.payment_method_nonce,
           }
+          parameters[:device_data] = options[:device_data] if options[:device_data]
           result = @braintree_gateway.customer.create(parameters)
           response = Response.new(result.success?, message_from_result(result),
             {
@@ -225,6 +226,7 @@ module ActiveMerchant #:nodoc:
             :email => scrub_email(options[:email]),
             :id => options[:customer],
           }.merge credit_card_params
+          parameters[:device_data] = options[:device_data] if options[:device_data]
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
@@ -280,12 +282,17 @@ module ActiveMerchant #:nodoc:
             }
           }, options)[:credit_card]
 
-          result = @braintree_gateway.customer.update(vault_id,
+          parameters = {
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email]),
             :credit_card => credit_card_params
-          )
+          }
+
+          parameters[:device_data] = options[:device_data] if options[:device_data]
+
+          result = @braintree_gateway.customer.update(vault_id, parameters)
+
           Response.new(result.success?, message_from_result(result),
             :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
             :customer_vault_id => (result.customer.id if result.success?)
@@ -303,12 +310,16 @@ module ActiveMerchant #:nodoc:
           customer.paypal_accounts.each { |pp| @braintree_gateway.paypal_account.delete(pp.token) }
 
           # Update it with the new nonce
-          result = @braintree_gateway.customer.update(vault_id,
+          parameters = {
             :first_name => paypal_account.first_name,
             :last_name => paypal_account.last_name,
             :email => scrub_email(options[:email]),
             :payment_method_nonce => paypal_account.payment_method_nonce,
-          )
+          }
+
+          parameters[:device_data] = options[:device_data] if options[:device_data]
+
+          result = @braintree_gateway.customer.update(vault_id, parameters)
 
           Response.new(result.success?, message_from_result(result),
             :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
