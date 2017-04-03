@@ -124,6 +124,20 @@ module ActiveMerchant #:nodoc:
             xml.ResponseChannel_Id attribution[:response_channel_id] unless empty?(attribution[:response_channel_id])
             xml.Initiative_Id attribution[:initiative_id] unless empty?(attribution[:initiative_id])
             xml.InitiativeSegment_Id attribution[:initiative_segment_id] unless empty?(attribution[:initiative_segment_id])
+            add_tracking_codes(xml, attribution[:tracking_codes]) unless empty?(attribution[:tracking_codes])
+          end
+        end
+      end
+
+      # tracking codes are expected in the `attribution[:tracking_codes]` datastructure
+      # as `code1: '123', code2: 'foo' ... `
+      def add_tracking_codes(xml, options={})
+        we_have_at_least_one_code = false
+        (1..8).each { |i| we_have_at_least_one_code = true if options.key?("code#{i}".to_sym) }
+        return unless we_have_at_least_one_code
+        xml.TrackingCodes do
+          (1..8).each do |counter|
+            xml.send("Code#{counter}", options["code#{counter}".to_sym]) unless empty?(options["code#{counter}".to_sym])
           end
         end
       end
