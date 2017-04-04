@@ -159,12 +159,13 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
-  def test_successful_maestro_purchase
-    assert response = @gateway.purchase(@amount, @maestro, @options)
-    assert_success response
-    assert response.test?
-    assert !response.authorization.blank?
-  end
+  # Maestro is not available for GBP
+  # def test_successful_maestro_purchase
+  #   assert response = @gateway.purchase(@amount, @maestro, @options)
+  #   assert_success response
+  #   assert response.test?
+  #   assert !response.authorization.blank?
+  # end
 
   def test_successful_amex_purchase
     assert response = @gateway.purchase(@amount, @amex, @options)
@@ -313,6 +314,14 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_repeat_purchase
+    response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+
+    repeat = @gateway.purchase(@amount, response.authorization, @options.merge(repeat: true, order_id: generate_unique_id))
+    assert_success repeat
+  end
+
   def test_invalid_login
     message = SagePayGateway.simulate ? 'VSP Simulator cannot find your vendor name.  Ensure you have have supplied a Vendor field with your VSP Vendor name assigned to it.' : '3034 : The Vendor or VendorName value is required.'
 
@@ -337,7 +346,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success response
     assert !response.authorization.blank?
     assert purchase = @gateway.purchase(@amount, response.authorization, @options.merge(customer: 1))
-    assert purchase = @gateway.purchase(@amount, response.authorization, @options.merge(verification_value: '123', order_id: 'foobar123'))
+    assert purchase = @gateway.purchase(@amount, response.authorization, @options.merge(verification_value: '123', order_id: generate_unique_id))
     assert_success purchase
   end
 
@@ -417,13 +426,13 @@ class RemoteSagePayTest < Test::Unit::TestCase
   # Example from http://www.sagepay.co.uk/support/customer-xml
   def customer_xml
     <<-XML
-<customer> 
-  <customerMiddleInitial>W</customerMiddleInitial> 
-  <customerBirth>1983-01-01</customerBirth> 
-  <customerWorkPhone>020 1234567</customerWorkPhone> 
-  <customerMobilePhone>0799 1234567</customerMobilePhone> 
-  <previousCust>0</previousCust> 
-  <timeOnFile>10</timeOnFile> 
+<customer>
+  <customerMiddleInitial>W</customerMiddleInitial>
+  <customerBirth>1983-01-01</customerBirth>
+  <customerWorkPhone>020 1234567</customerWorkPhone>
+  <customerMobilePhone>0799 1234567</customerMobilePhone>
+  <previousCust>0</previousCust>
+  <timeOnFile>10</timeOnFile>
   <customerId>CUST123</customerId>
 </customer>
     XML
