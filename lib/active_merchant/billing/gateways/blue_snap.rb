@@ -143,6 +143,9 @@ module ActiveMerchant
                   .gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2')
                   .gsub(%r((<account-number>).+(</account-number>)), '\1[FILTERED]\2')
                   .gsub(%r((<routing-number>).+(</routing-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<routing-number>).+(</routing-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<encrypted-card-number>).+(</encrypted-card-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<encrypted-security-code>).+(</encrypted-security-code>)), '\1[FILTERED]\2')
       end
 
       private
