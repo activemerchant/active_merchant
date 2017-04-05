@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class RemoteIppTest < Test::Unit::TestCase
+class RemoteBamboraTest < Test::Unit::TestCase
   def setup
-    @gateway = IppGateway.new(fixtures(:ipp))
+    @gateway = BamboraGateway.new(fixtures(:bambora))
 
     @credit_card = credit_card('4005550000000001')
 
@@ -11,11 +11,6 @@ class RemoteIppTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase',
     }
-  end
-
-  def test_dump_transcript
-    skip("Transcript scrubbing for this gateway has been tested.")
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 
   def test_transcript_scrubbing
@@ -38,8 +33,6 @@ class RemoteIppTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(105, @credit_card, @options)
     assert_failure response
-    assert_equal 'Do Not Honour', response.message
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -74,7 +67,7 @@ class RemoteIppTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = IppGateway.new(
+    gateway = BamboraGateway.new(
       username: '',
       password: '',
     )

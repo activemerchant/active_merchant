@@ -1,10 +1,10 @@
 require 'test_helper'
 
-class IppTest < Test::Unit::TestCase
+class BamboraTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = IppGateway.new(
+    @gateway = BamboraGateway.new(
       username: 'username',
       password: 'password',
     )
