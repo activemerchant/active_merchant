@@ -2,15 +2,15 @@ require "nokogiri"
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class IppGateway < Gateway
-      self.live_url = 'https://www.ippayments.com.au/interface/api/dts.asmx'
-      self.test_url = 'https://demo.ippayments.com.au/interface/api/dts.asmx'
+    class BamboraGateway < Gateway
+      self.live_url = 'https://www.bambora.co.nz/interface/api/dts.asmx'
+      self.test_url = 'https://demo.bambora.co.nz/interface/api/dts.asmx'
 
-      self.supported_countries = ['AU']
+      self.supported_countries = ['AU', 'NZ']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
-      self.homepage_url = 'http://www.ippayments.com.au/'
-      self.display_name = 'IPP'
+      self.homepage_url = 'http://www.bambora.com/'
+      self.display_name = 'Bambora'
 
       self.money_format = :cents
 
@@ -22,7 +22,6 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
-        ActiveMerchant.deprecated("IPP gateway is now named Bambora")
         requires!(options, :username, :password)
         super
       end
@@ -87,6 +86,9 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_credentials(xml)
+        if @options.key?(:account)
+          xml.AccountNumber @options[:account]
+        end
         xml.Security do
           xml.UserName @options[:username]
           xml.Password @options[:password]
