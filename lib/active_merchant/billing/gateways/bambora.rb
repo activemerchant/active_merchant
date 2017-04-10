@@ -86,11 +86,12 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_credentials(xml)
-        if @options.key?(:account)
-          xml.AccountNumber @options[:account]
+        username, account_number = options[:username].split(":")
+        unless account_number.nil?
+          xml.AccountNumber account_number
         end
         xml.Security do
-          xml.UserName @options[:username]
+          xml.UserName username
           xml.Password @options[:password]
         end
       end

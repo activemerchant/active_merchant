@@ -41,9 +41,8 @@ bambora:
   password: qwerty123
 
 bambora_ready:
-  username: nmi.api
+  username: nmi.api:747
   password: qwerty123
-  account: 747
 
 # Bank Frick doesn't provide public testing data
 bank_frick:

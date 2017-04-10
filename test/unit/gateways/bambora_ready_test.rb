@@ -5,9 +5,8 @@ class BamboraReadyTest < Test::Unit::TestCase
 
   def setup
     @gateway = BamboraGateway.new(
-      username: 'username',
+      username: 'username:123',
       password: 'password',
-      account: '123',
     )
 
     @amount = 100
