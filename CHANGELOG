@@ -17,6 +17,7 @@
 * SafeCharge: Add gateway [davidsantoso]
 * TransFirst Transaction Express: Support ACH [curiousepic] #2389
 * Checkout V2: Fix sandbox URL [nicolas-maalouf-cko] #2391
+* Checkout V2: Fix success_from not properly checking two possible success codes [davidsantoso]
 
 == Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300

@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["responseCode"] == ("10000" || "10100")
+        response["responseCode"] == "10000" || response["responseCode"] == "10100"
       end
 
       def message_from(succeeded, response)
