@@ -15,7 +15,7 @@ class RemoteBamboraTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(200, @credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
 
