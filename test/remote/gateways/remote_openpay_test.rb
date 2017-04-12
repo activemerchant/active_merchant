@@ -20,6 +20,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
         phone: address[:phone]
       },
       email: 'longsen@example.com',
+      use_token: true
     }
   end
 
@@ -30,7 +31,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
-    assert response = @gateway.purchase_with_token(@amount, @credit_card, @options.merge(@additional_options))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@additional_options))
     assert_success response
     assert_nil response.message
   end

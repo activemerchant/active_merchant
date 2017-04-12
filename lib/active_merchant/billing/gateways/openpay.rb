@@ -24,27 +24,31 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      # purchase can be used with the option[:use_token] set to any value
+      # and we'll generate a temporary token in Openpay first and use
+      # that to charge the card. See the API docs at
+      # http://www.openpay.mx/docs/api/?shell#con-id-de-tarjeta-o-token
       def purchase(money, creditcard, options = {})
-        post = create_post_for_auth_or_purchase(money, creditcard, options)
-        commit(:post, 'charges', post, options)
-      end
+        if options[:use_token].present?
+          # customer is mandatory in
+          # http://www.openpay.mx/docs/api/?shell#con-id-de-tarjeta-o-token
+          requires!(options, :customer)
+          card_params = {}
+          add_creditcard(card_params, creditcard, options)
+          card = card_params[:card]
 
-      def purchase_with_token(money, creditcard, options = {})
-        # customer is mandatory in
-        # http://www.openpay.mx/docs/api/?shell#con-id-de-tarjeta-o-token
-        requires!(options, :customer)
-        card_params = {}
-        add_creditcard(card_params, creditcard, options)
-        card = card_params[:card]
+          MultiResponse.run(:first) do |r|
+            r.process { commit(:post, 'tokens', card, options) }
 
-        MultiResponse.run(:first) do |r|
-          r.process { commit(:post, 'tokens', card, options) }
-
-          if(r.success? && !r.params['id'].blank?)
-            creditcard = r.params['id']
-            post = create_post_for_auth_or_purchase(money, creditcard, options)
-            r.process { commit(:post, 'charges', post, options) }
+            if(r.success? && !r.params['id'].blank?)
+              creditcard = r.params['id']
+              post = create_post_for_auth_or_purchase(money, creditcard, options)
+              r.process { commit(:post, 'charges', post, options) }
+            end
           end
+        else
+          post = create_post_for_auth_or_purchase(money, creditcard, options)
+          commit(:post, 'charges', post, options)
         end
       end
 

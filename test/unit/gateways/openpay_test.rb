@@ -198,8 +198,9 @@ class OpenpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).twice.returns(successful_new_token, successful_new_charge)
     @options[:customer] = { first_name: 'Longbob', last_name: 'Longsen', phone: address[:phone] }
     @options[:email] = 'longsen@example.com'
+    @options[:use_token] = true
 
-    assert response = @gateway.purchase_with_token(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of MultiResponse, response
     assert_success response
     assert_equal 2, response.responses.size
