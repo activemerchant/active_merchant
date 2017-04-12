@@ -13,10 +13,25 @@ class RemoteOpenpayTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @additional_options = {
+      customer: {
+        first_name: 'Longbob',
+        last_name: 'Longsen',
+        phone: address[:phone]
+      },
+      email: 'longsen@example.com',
+      use_token: true
+    }
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
+  def test_successful_purchase_with_token
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@additional_options))
     assert_success response
     assert_nil response.message
   end
