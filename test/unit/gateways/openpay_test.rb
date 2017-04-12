@@ -201,16 +201,10 @@ class OpenpayTest < Test::Unit::TestCase
     @options[:use_token] = true
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of MultiResponse, response
+    assert_instance_of Response, response
     assert_success response
-    assert_equal 2, response.responses.size
 
-    token_response = response.responses[0]
-    assert_not_nil token_response.params['id']
-
-    charge_response = response.responses[1]
-    assert_not_nil charge_response.params['id']
-
+    assert_equal 'trntzfavar7amwi8mht1', response.authorization
     assert response.test?
   end
 
