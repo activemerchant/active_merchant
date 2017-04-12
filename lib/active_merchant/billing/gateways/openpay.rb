@@ -29,6 +29,25 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'charges', post, options)
       end
 
+      def purchase_with_token(money, creditcard, options = {})
+        # customer is mandatory in
+        # http://www.openpay.mx/docs/api/?shell#con-id-de-tarjeta-o-token
+        requires!(options, :customer)
+        card_params = {}
+        add_creditcard(card_params, creditcard, options)
+        card = card_params[:card]
+
+        MultiResponse.run(:first) do |r|
+          r.process { commit(:post, 'tokens', card, options) }
+
+          if(r.success? && !r.params['id'].blank?)
+            creditcard = r.params['id']
+            post = create_post_for_auth_or_purchase(money, creditcard, options)
+            r.process { commit(:post, 'charges', post, options) }
+          end
+        end
+      end
+
       def authorize(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         post[:capture] = false
@@ -114,6 +133,7 @@ module ActiveMerchant #:nodoc:
         post[:device_session_id] = options[:device_session_id]
         post[:currency] = (options[:currency] || currency(money)).upcase
         add_creditcard(post, creditcard, options)
+        add_customer(post, options) if options[:customer].present?
         post
       end
 
@@ -146,6 +166,17 @@ module ActiveMerchant #:nodoc:
             country_code: address[:country]
           }
         end
+      end
+
+      def add_customer(post, options)
+        return unless options[:customer].present?
+        customer = options[:customer]
+        post[:customer] = {
+          name: customer[:first_name],
+          last_name: customer[:last_name],
+          phone_number: customer[:phone],
+          email: options[:email]
+        }
       end
 
       def headers(options = {})
