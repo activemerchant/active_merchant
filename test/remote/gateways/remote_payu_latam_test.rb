@@ -130,6 +130,21 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_match /property: parentTransactionId, message: must not be null/, response.message
   end
 
+  def test_successful_authorize_and_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_capture
+    response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_match /must not be null/, response.message
+  end
+
   def test_verify_credentials
     assert @gateway.verify_credentials
 
