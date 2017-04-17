@@ -390,6 +390,11 @@ itransact:
   password: API_ACCESS_KEY
   gateway_id: GATEWAY_ID
 
+# Working credentials, no need to replace
+iyzico:
+  api_id: 'izzHF4CC6ZCU5Mb9PKXZl6neexytWjfu'
+  secret: 'koN27VKnj8zD2poBhaGuFUcSaOe0Rhlz'
+
 jetpay:
   login: TESTTERMINAL
 
