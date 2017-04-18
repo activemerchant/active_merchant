@@ -83,6 +83,21 @@ module ActiveMerchant
         commit(request)
       end
 
+      def store(creditcard, options = {})
+        # the customer token and payment method token are mandatory in Realex
+        requires!(options, :customer, :cardref)
+        MultiResponse.run(:first) do |r|
+          r.process do
+            request = build_store_payer_request(creditcard, options)
+            commit(request)
+          end
+          r.process do
+            request = build_store_payment_request(creditcard, options)
+            commit(request)
+          end
+        end
+      end
+
       def supports_scrubbing
         true
       end
@@ -188,6 +203,40 @@ module ActiveMerchant
         xml.target!
       end
 
+      def build_store_payer_request(credit_card, options)
+        timestamp = new_timestamp
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'payer-new' do
+          add_merchant_details(xml, options)
+          xml.tag! 'orderid', sanitize_order_id(options[:order_id])
+          add_payer_info(xml, credit_card, options)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), nil, nil, options[:customer])
+        end
+        xml.target!
+      end
+
+      def build_store_payment_request(credit_card, options)
+        timestamp = new_timestamp
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'card-new' do
+          add_merchant_details(xml, options)
+          xml.tag! 'orderid', sanitize_order_id(options[:order_id])
+          add_card_for_store(xml, credit_card, options)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), nil, nil, options[:customer], sanitize_card_name(credit_card.name), credit_card.number)
+        end
+        xml.target!
+      end
+
+      def add_payer_info(xml, credit_card, options)
+        address = options[:address]
+
+        return unless address || options[:customer]
+        xml.tag! 'payer', 'ref' => options[:customer] do
+          xml.tag! 'firstname', credit_card.first_name
+          xml.tag! 'surname', credit_card.last_name
+        end
+      end
+
       def add_address_and_customer_info(xml, options)
         billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address]
@@ -240,7 +289,19 @@ module ActiveMerchant
         xml.tag! 'amount', amount(money), 'currency' => options[:currency] || currency(money)
       end
 
-      def add_card(xml, credit_card)
+      def add_card_for_store(xml, credit_card, options = {})
+        xml.tag! 'card' do
+          xml.tag! 'number', credit_card.number
+          xml.tag! 'expdate', expiry_date(credit_card)
+          xml.tag! 'chname', credit_card.name
+          xml.tag! 'type', CARD_MAPPING[card_brand(credit_card).to_s]
+          xml.tag! 'issueno', credit_card.issue_number
+          xml.tag! 'ref', options[:cardref]
+          xml.tag! 'payerref', options[:customer]
+        end
+      end
+
+      def add_card(xml, credit_card, options = {})
         xml.tag! 'card' do
           xml.tag! 'number', credit_card.number
           xml.tag! 'expdate', expiry_date(credit_card)
@@ -302,6 +363,10 @@ module ActiveMerchant
 
       def sanitize_order_id(order_id)
         order_id.to_s.gsub(/[^a-zA-Z0-9\-_]/, '')
+      end
+
+      def sanitize_card_name(cardholder_name)
+        cardholder_name.gsub(/[^a-zA-Z0-9\-_\"\'\+\s]/, '')
       end
     end
   end
