@@ -167,9 +167,11 @@ module ActiveMerchant
       private
 
       def add_auth_purchase(doc, money, payment_method, options)
-        doc.send("recurring-transaction", options[:recurring] ? "RECURRING" : "ECOMMERCE")
-        add_order(doc, options)
-        add_amount(doc, money)
+        unless subscription?
+          doc.send("recurring-transaction", options[:recurring] ? "RECURRING" : "ECOMMERCE")
+          add_order(doc, options)
+          add_amount(doc, money)
+        end
         doc.send("transaction-fraud-info") do
           doc.send("shopper-ip-address", options[:ip]) if options[:ip]
         end
