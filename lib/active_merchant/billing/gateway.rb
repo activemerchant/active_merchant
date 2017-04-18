@@ -65,6 +65,25 @@ module ActiveMerchant #:nodoc:
       CURRENCIES_WITHOUT_FRACTIONS = [ 'JPY', 'HUF', 'TWD' ]
       CREDIT_DEPRECATION_MESSAGE = "Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead."
 
+      STANDARD_ERROR_CODE = {
+          :incorrect_number => 'incorrect_number',
+          :invalid_number => 'invalid_number',
+          :invalid_expiry_date => 'invalid_expiry_date',
+          :invalid_cvc => 'invalid_cvc',
+          :expired_card => 'expired_card',
+          :incorrect_cvc => 'incorrect_cvc',
+          :incorrect_zip => 'incorrect_zip',
+          :incorrect_address => 'incorrect_address',
+          :incorrect_pin => 'incorrect_pin',
+          :card_declined => 'card_declined',
+          :processing_error => 'processing_error',
+          :call_issuer => 'call_issuer',
+          :pickup_card => 'pick_up_card',
+          :config_error => 'config_error',
+          :test_mode_live_card => 'test_mode_live_card',
+          :unsupported_feature => 'unsupported_feature',
+      }
+
       cattr_reader :implementations
       @@implementations = []
 
