@@ -697,8 +697,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success, message, response,
           :test => test?,
           :authorization => authorization,
-          :avs_result => { :code => response[:avsCode] },
-          :cvv_result => response[:cvCode]
+          :avs_result => { :code => (response[:ccAuthReply] && response[:ccAuthReply][:avsCode]) },
+          :cvv_result => (response[:ccAuthReply] && response[:ccAuthReply][:cvCode])
         )
       end
 
@@ -720,20 +720,24 @@ module ActiveMerchant #:nodoc:
           parse_element(reply, root)
           reply[:message] = "#{reply[:faultcode]}: #{reply[:faultstring]}"
         end
+
         return reply
       end
 
       def parse_element(reply, node)
+        node_name = node.name.to_sym
         if node.has_elements?
-          node.elements.each{|e| parse_element(reply, e) }
+          reply[node_name] = {}
+          node.elements.each{|e| parse_element(reply[node_name], e) }
         else
           if node.parent.name =~ /item/
             parent = node.parent.name + (node.parent.attributes["id"] ? "_" + node.parent.attributes["id"] : '')
             reply[(parent + '_' + node.name).to_sym] = node.text
           else
-            reply[node.name.to_sym] = node.text
+            reply[node_name] = node.text
           end
         end
+
         return reply
       end
     end
