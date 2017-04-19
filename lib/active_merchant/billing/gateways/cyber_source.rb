@@ -731,7 +731,7 @@ module ActiveMerchant #:nodoc:
             parent = node.parent.name + (node.parent.attributes["id"] ? "_" + node.parent.attributes["id"] : '')
             reply[(parent + '_' + node.name).to_sym] = node.text
           else
-            reply[node.name.to_sym] = node.text
+            reply[node.name.to_sym] = node.text unless reply[node.name.to_sym]
           end
         end
         return reply

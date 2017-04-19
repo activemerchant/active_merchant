@@ -477,9 +477,70 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def successful_purchase_response
     <<-XML
-<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-<soap:Header>
-<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-2636690"><wsu:Created>2008-01-15T21:42:03.343Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>b0a6cf9aa07f1a8495f89c364bbd6a9a</c:merchantReferenceCode><c:requestID>2004333231260008401927</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Afvvj7Ke2Fmsbq0wHFE2sM6R4GAptYZ0jwPSA+R9PhkyhFTb0KRjoE4+ynthZrG6tMBwjAtT</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>123456</c:authorizationCode><c:avsCode>Y</c:avsCode><c:avsCodeRaw>Y</c:avsCodeRaw><c:cvCode>M</c:cvCode><c:cvCodeRaw>M</c:cvCodeRaw><c:authorizedDateTime>2008-01-15T21:42:03Z</c:authorizedDateTime><c:processorResponse>00</c:processorResponse><c:authFactorCode>U</c:authFactorCode></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
+    <?xml version="1.0" encoding="utf-8"?>
+    <soap:Envelope
+        xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Header>
+            <wsse:Security
+                xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+                <wsu:Timestamp
+                    xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-2636690">
+                    <wsu:Created>2008-01-15T21:42:03.343Z</wsu:Created>
+                </wsu:Timestamp>
+            </wsse:Security>
+        </soap:Header>
+        <soap:Body>
+            <c:replyMessage
+                xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26">
+                <c:merchantReferenceCode>b0a6cf9aa07f1a8495f89c364bbd6a9a</c:merchantReferenceCode>
+                <c:requestID>2004333231260008401927</c:requestID>
+                <c:decision>ACCEPT</c:decision>
+                <c:reasonCode>100</c:reasonCode>
+                <c:requestToken>Afvvj7Ke2Fmsbq0wHFE2sM6R4GAptYZ0jwPSA+R9PhkyhFTb0KRjoE4+ynthZrG6tMBwjAtT</c:requestToken>
+                <c:purchaseTotals>
+                    <c:currency>USD</c:currency>
+                </c:purchaseTotals>
+                <c:ccAuthReply>
+                    <c:reasonCode>100</c:reasonCode>
+                    <c:amount>1.00</c:amount>
+                    <c:authorizationCode>123456</c:authorizationCode>
+                    <c:avsCode>Y</c:avsCode>
+                    <c:avsCodeRaw>Y</c:avsCodeRaw>
+                    <c:cvCode>M</c:cvCode>
+                    <c:cvCodeRaw>M</c:cvCodeRaw>
+                    <c:authorizedDateTime>2008-01-15T21:42:03Z</c:authorizedDateTime>
+                    <c:processorResponse>00</c:processorResponse>
+                    <c:authFactorCode>U</c:authFactorCode>
+                </c:ccAuthReply>
+                <c:ccCaptureReply>
+                    <c:reasonCode>100</c:reasonCode>
+                    <c:requestDateTime>2008-01-15T21:42:03Z</c:requestDateTime>
+                    <c:amount>1.00</c:amount>
+                    <c:reconciliationID>4660871002726091204009</c:reconciliationID>
+                </c:ccCaptureReply>
+                <c:decisionReply>
+                    <c:casePriority>3</c:casePriority>
+                    <c:activeProfileReply>
+                        <c:selectedBy>Default Active Profile</c:selectedBy>
+                        <c:name>[NI] High Risk</c:name>
+                        <c:rulesTriggered>
+                            <c:ruleResultItem>
+                                <c:name>[NI] MORPH-C +score</c:name>
+                                <c:decision>IGNORE</c:decision>
+                                <c:evaluation>T</c:evaluation>
+                            </c:ruleResultItem>
+                            <c:ruleResultItem>
+                                <c:name>[NI] VEL-NAME + score</c:name>
+                                <c:decision>IGNORE</c:decision>
+                                <c:evaluation>T</c:evaluation>
+                            </c:ruleResultItem>
+                        </c:rulesTriggered>
+                    </c:activeProfileReply>
+                    <c:velocityInfoCode>GVEL-R13^GVEL-R11</c:velocityInfoCode>
+                </c:decisionReply>
+            </c:replyMessage>
+        </soap:Body>
+    </soap:Envelope>
     XML
   end
 
