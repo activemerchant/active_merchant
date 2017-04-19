@@ -736,6 +736,10 @@ plugnpay:
   password: PASSWORD
 
 # Working credentials, no need to replace
+pro_pay:
+  cert_str: "5ab9cddef2e4911b77e0c4ffb70f03"
+
+# Working credentials, no need to replace
 psigate:
   login: teststore
   password: psigate1234
