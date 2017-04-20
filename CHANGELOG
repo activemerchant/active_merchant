@@ -21,7 +21,9 @@
 * SagePay: Support Repeat transactions [curiousepic] #2395
 * PayU LATAM: Fix incorrect capture method definition [davidsantoso]
 * Beanstream: Map ISO province codes for US and CA [shasum] #2396
+* Braintree Blue: Force refund of unsettled payments via void [bizla] #2398
 * Openpay: Support card points [shasum] #2401
+* Authorize.Net: Force refund of unsettled payments via void [bizla] #2399
 
 == Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300
