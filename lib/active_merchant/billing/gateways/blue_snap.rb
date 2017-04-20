@@ -174,6 +174,7 @@ module ActiveMerchant
         end
         doc.send("transaction-fraud-info") do
           doc.send("shopper-ip-address", options[:ip]) if options[:ip]
+          doc.send("session-id", options[:session_id]) if options[:session_id]
         end
 
         if payment_method.is_a?(String)
