@@ -92,13 +92,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment_method, options = {})
-        post = {}
-        add_invoice(post, nil, options)
-        add_payment_method(post, payment_method, options)
-        add_customer_data(post, options)
-        add_merchant_defined_fields(post, options)
+        MultiResponse.run do |r|
+          r.process { verify(payment_method, options) }
+          r.process do
+            post = {}
+            add_invoice(post, nil, options)
+            add_payment_method(post, payment_method, options)
+            add_customer_data(post, options)
+            add_merchant_defined_fields(post, options)
 
-        commit("add_customer", post)
+            commit("add_customer", post)
+          end
+        end
       end
 
       def supports_scrubbing?
