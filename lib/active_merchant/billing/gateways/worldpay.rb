@@ -60,10 +60,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "CAPTURED", "SETTLED", "SETTLED_BY_MERCHANT")}
-          r.process{refund_request(money, authorization, options)}
+        response = MultiResponse.run do |r|
+          r.process { inquire_request(authorization, options, "CAPTURED", "SETTLED", "SETTLED_BY_MERCHANT") }
+          r.process { refund_request(money, authorization, options) }
         end
+
+        return response if response.success?
+        return response unless options[:force_full_refund_if_unsettled]
+
+        void(authorization, options ) if response.params["last_event"] == "AUTHORISED"
       end
 
       def verify(credit_card, options={})
