@@ -113,6 +113,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:device_session_id] = options[:device_session_id]
         post[:currency] = (options[:currency] || currency(money)).upcase
+        post[:use_card_points] = options[:use_card_points] if options[:use_card_points]
         add_creditcard(post, creditcard, options)
         post
       end
