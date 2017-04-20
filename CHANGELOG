@@ -25,6 +25,7 @@
 * Openpay: Support card points [shasum] #2401
 * Authorize.Net: Force refund of unsettled payments via void [bizla] #2399
 * Braintree Blue: Change :full_refund option to :force_full_refund_if_unsettled [bizla] #2403
+* Worldpay: Force refund of unsettled payments via void [bizla] #2402
 
 == Version 1.64.0 (March 6, 2017)
 * Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300
