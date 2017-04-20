@@ -21,35 +21,39 @@ module ActiveMerchant #:nodoc:
         requires!(options, :key, :merchant_id)
         @api_key = options[:key]
         @merchant_id = options[:merchant_id]
+        @merchant_account_id = options[:merchant_account_id]
         super
       end
 
       def purchase(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
-        commit(:post, 'charges', post, options)
+        commit(:post, get_path('charges', options), post, options)
       end
 
       def authorize(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         post[:capture] = false
-        commit(:post, 'charges', post, options)
+        commit(:post, get_path('charges', options), post, options)
       end
 
       def capture(money, authorization, options = {})
-        post = {}
+         post = {}
         post[:amount] = amount(money) if money
-        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
+        resource = get_path("charges/#{CGI.escape(authorization)}/capture", options)
+        commit(:post, resource, post, options)
       end
 
       def void(identification, options = {})
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", nil, options)
+         resource = get_path("charges/#{CGI.escape(identification)}/refund", options)
+        commit(:post, resource, nil, options)
       end
 
       def refund(money, identification, options = {})
         post = {}
         post[:description] = options[:description]
         post[:amount] = amount(money)
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options)
+        resource = get_path("charges/#{CGI.escape(identification)}/refund", options)
+        commit(:post, resource, post, options)
       end
 
       def verify(credit_card, options = {})
@@ -64,13 +68,14 @@ module ActiveMerchant #:nodoc:
         add_creditcard(card_params, creditcard, options)
         card = card_params[:card]
 
-        if options[:customer].present?
-          commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", card, options)
+        if is_customer(options)
+          commit(:post, "customers/#{CGI.escape(options[:customer_id])}/cards", card, options)
         else
-          requires!(options, :email, :name)
+          requires!(options, :email)
           post = {}
-          post[:name] = options[:name]
+          post[:name] = creditcard.first_name || email
           post[:email] = options[:email]
+          post[:requires_account] = false
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, 'customers', post, options) }
 
@@ -109,12 +114,44 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = amount(money)
         post[:method] = 'card'
-        post[:description] = options[:description]
+        post[:description] = options[:description] || "Active Merchant Purchase"
         post[:order_id] = options[:order_id]
         post[:device_session_id] = options[:device_session_id]
         post[:currency] = (options[:currency] || currency(money)).upcase
+        post[:metadata] = options[:metadata]
+        add_customer(post, creditcard, options)
         add_creditcard(post, creditcard, options)
         post
+      end
+
+      def add_customer(post, creditcard, options)
+          if !is_customer(options)
+            if(email = options[:email])
+              customer = {}
+              customer[:email] = email
+              customer[:name] = creditcard.first_name if creditcard
+              customer[:last_name] = creditcard.last_name if creditcard
+              customer[:external_id] = options[:customer_external_id]
+              if (address = (options[:billing_address] || options[:address]))
+                customer[:phone_number] = address[:phone]
+              end
+              add_shipment_address(customer, options)
+              post[:customer] = customer
+            end
+          end
+      end
+
+      def add_shipment_address(post, options)
+        if(address = options[:shipping_address])
+          post[:address] = {}
+          post[:address][:line1] = address[:address1] if address[:address1]
+          post[:address][:line2] = address[:address2] if address[:address2]
+          post[:address][:line3] = address[:name] if address[:name]
+          post[:address][:postal_code] = address[:zip] if address[:zip]
+          post[:address][:state] = address[:state] if address[:state]
+          post[:address][:city] = address[:city] if address[:city]
+          post[:address][:country_code] = address[:country] if address[:country]     
+        end
       end
 
       def add_creditcard(post, creditcard, options)
@@ -128,14 +165,14 @@ module ActiveMerchant #:nodoc:
             cvv2: creditcard.verification_value,
             holder_name: creditcard.name
           }
-          add_address(card, options)
+          add_billing_address(card, options)
           post[:card] = card
         end
       end
 
-      def add_address(card, options)
+      def add_billing_address(card, options)
         return unless card.kind_of?(Hash)
-        if address = (options[:billing_address] || options[:address])
+        if (address = (options[:billing_address] || options[:address]))
           card[:address] = {
             line1: address[:address1],
             line2: address[:address2],
@@ -146,6 +183,18 @@ module ActiveMerchant #:nodoc:
             country_code: address[:country]
           }
         end
+      end
+      
+      def get_path(resource, options) 
+        if is_customer(options)
+          "customers/#{CGI.escape(options[:customer_id])}/" + resource
+        else
+          resource
+        end
+      end
+
+      def is_customer(options) 
+        return options[:customer_id].present?
       end
 
       def headers(options = {})
@@ -175,7 +224,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def http_request(method, resource, parameters={}, options={})
-        url = (test? ? self.test_url : self.live_url) + @merchant_id + '/' + resource
+        merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)   
+        account_id =  merchant_account_id.present? ? merchant_account_id : @merchant_id
+        url = (test? ? self.test_url : self.live_url) + account_id + '/' + resource
         raw_response = nil
         begin
           raw_response = ssl_request(method, url, (parameters ? parameters.to_json : nil), headers(options))
@@ -208,7 +259,7 @@ module ActiveMerchant #:nodoc:
             'error_code' => '9999',
             'description' => msg
         }
-      end
+      end    
     end
   end
 end

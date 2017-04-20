@@ -6,16 +6,62 @@ class RemoteOpenpayTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
+    @credit_card_two = credit_card('4111111111111111')
     @store_card = credit_card('5105105105105100')
     @declined_card = credit_card('4222222222222220')
 
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      email: "me@email.com"
     }
   end
 
   def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
+  def test_successful_purchase_merchant_account_id
+    @options[:merchant_account_id] = "msbt1ra6v1oe8wsymskg"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
+  def test_successful_purchase_dollar
+    @options[:currency] = "usd"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+    assert_not_nil response.params
+    assert_equal "USD", response.params["currency"]
+  end
+
+  def test_successful_purchase_with_metadada
+    @options[:metadata] = {
+      one_field: "value one",
+      second_field: "value second"
+    }
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+    assert_not_nil response.params
+    assert_not_nil response.params["metadata"]
+  end
+
+  def test_successful_purchase_with_customer
+    @options[:customer_external_id] = SecureRandom.hex #It must be unique
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+    assert_not_nil response.params
+  end
+
+  def test_successful_purchase_with_customer_and_shipping_address
+    @options[:customer_external_id] = SecureRandom.hex #It must be unique
+    @options[:shipping_address] = address
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_nil response.message
@@ -93,12 +139,12 @@ class RemoteOpenpayTest < Test::Unit::TestCase
 
     customer_stored = response_store.responses[0]
     card_stored = response_store.responses[1]
+    @options[:customer_id] = customer_stored.authorization
     assert response = @gateway.purchase(@amount, card_stored.authorization, @options)
     assert_success response
     assert_nil response.message
 
     assert_success @gateway.unstore(customer_stored.authorization, card_stored.authorization)
-    assert_success @gateway.unstore(customer_stored.authorization)
   end
 
   def test_successful_purchase_with_device_session_id
@@ -113,7 +159,8 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert response.authorization
 
-    @options[:customer] = response.authorization
+    @options[:customer_id] = response.authorization
+    
     assert second_card = @gateway.store(@store_card, @options)
     assert_success second_card
     assert_instance_of Response, second_card
