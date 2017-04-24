@@ -41,6 +41,7 @@ module ActiveMerchant #:nodoc:
                   add_credit_card(xml, payment_method)
                   add_customer_details(xml, options) if options[:customer].present?
                   add_attribution_details(xml, options) if options[:attribution].present?
+                  add_send_receipt(xml, options)
                 end
               end
             end
@@ -90,6 +91,14 @@ module ActiveMerchant #:nodoc:
       def add_invoice(xml, money, options={})
         xml.Amount amount(money)
         xml.TaxDeductibleAmount amount(money)
+      end
+
+      # defaults to true
+      # option[:receipt] is expected to be a boolean
+      # if it is not present, as directed by CE, this should be true
+      # it's more of an opt-out setup
+      def add_send_receipt(xml, options={})
+        xml.SendReceipt options.key?(:receipt) ? options[:receipt] : true
       end
 
       def add_credit_card(xml, creditcard)
