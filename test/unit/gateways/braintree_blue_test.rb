@@ -697,7 +697,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       expects(:void).
       returns(braintree_result)
 
-    response = @gateway.refund(1.00, 'transaction_id', full_refund: true)
+    response = @gateway.refund(1.00, 'transaction_id', force_full_refund_if_unsettled: true)
     assert response.success?
   end
 
