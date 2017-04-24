@@ -37,7 +37,7 @@ class RemoteCharityEngineTest < Test::Unit::TestCase
         initiative_segment_id: '789',
         tracking_codes: {
           code4: SecureRandom.uuid,
-          code5: 'Foo Bar'
+          code6: 'Foo Bar'
         }
       }
     }
