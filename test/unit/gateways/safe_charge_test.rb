@@ -74,6 +74,11 @@ class SafeChargeTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    response = @gateway.refund(@amount, 'authorization', @options)
+    assert_success response
+    assert_equal 'Success', response.message
   end
 
   def test_failed_refund
@@ -82,6 +87,22 @@ class SafeChargeTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, '', @options)
     assert_failure response
     assert_equal "1163", response.error_code
+  end
+
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_credit_response)
+
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Decline', response.message
   end
 
   def test_successful_void
@@ -234,11 +255,26 @@ reading 727 bytes...
   end
 
   def successful_refund_response
+    %(
+      <Response><Version>4.0.4</Version><ClientLoginID>SpreedlyTestTRX</ClientLoginID><ClientUniqueID></ClientUniqueID><TransactionID>101508440432</TransactionID><Status>APPROVED</Status><AuthCode>111207</AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0"></Reason></ReasonCodes><ErrCode>0</ErrCode><ExErrCode>0</ExErrCode><Token>MQBVAG4AUgAwAFcAaABxAGoASABdAE4ALABvAGYANAAmAE8AcQA/AEgAawAkAHYASQBKAFMAegBiACoAcQBBAC8AVABlAD4AKwBkAC0AKwA8ACcAMwA=</Token><CustomData></CustomData><AcquirerID>19</AcquirerID><IssuerBankName></IssuerBankName><IssuerBankCountry></IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>SuiMHP60FrDKfyaJs47hqqrR/JU=</UniqueCC><CustomData2></CustomData2><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType></CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><FraudResponse /></Response>
+    )
   end
 
   def failed_refund_response
     %(
       <Response><Version>4.0.4</Version><ClientLoginID>SpreedlyTestTRX</ClientLoginID><ClientUniqueID></ClientUniqueID><TransactionID>101508208595</TransactionID><Status>ERROR</Status><AuthCode></AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><Reason>Transaction must contain a Card/Token/Account</Reason><ErrCode>-1100</ErrCode><ExErrCode>1163</ExErrCode><CustomData></CustomData><AcquirerID>-1</AcquirerID><IssuerBankName></IssuerBankName><IssuerBankCountry></IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>2jmj7l5rSw0yVb/vlWAYkK/YBwk=</UniqueCC><CustomData2></CustomData2><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType></CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo></Response>
+    )
+  end
+
+  def successful_credit_response
+    %(
+      <Response><Version>4.0.4</Version><ClientLoginID>SpreedlyTestTRX</ClientLoginID><ClientUniqueID></ClientUniqueID><TransactionID>101508440421</TransactionID><Status>APPROVED</Status><AuthCode>111644</AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0"></Reason></ReasonCodes><ErrCode>0</ErrCode><ExErrCode>0</ExErrCode><Token>bwA1ADAAcAAwAHUAVABJAFYAUQAlAGcAfAB8AFQAbwBkAHAAbwAjAG4AaABDAHsAUABdACoAYwBaAEsAMQBHAEUAMQBuAHQAdwBXAFUAVABZACMAMwA=</Token><CustomData></CustomData><AcquirerID>19</AcquirerID><IssuerBankName></IssuerBankName><IssuerBankCountry></IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>SuiMHP60FrDKfyaJs47hqqrR/JU=</UniqueCC><CustomData2></CustomData2><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType></CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><FraudResponse /></Response>
+    )
+  end
+
+  def failed_credit_response
+    %(
+      <Response><Version>4.0.4</Version><ClientLoginID>SpreedlyTestTRX</ClientLoginID><ClientUniqueID></ClientUniqueID><TransactionID>101508440424</TransactionID><Status>DECLINED</Status><AuthCode></AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0">Decline</Reason></ReasonCodes><ErrCode>-1</ErrCode><ExErrCode>0</ExErrCode><Token>RwBVAGQAZgAwAFMAbABwAEwASgBNAFMAXABJAGAAeAAsAHsALAA7ADUAOgBUAEMAZwBNAG4AbABQAC4AQAAvAC0APwBpAEAAWQBoACMAdwBvAGEAMwA=</Token><CustomData></CustomData><AcquirerID>19</AcquirerID><IssuerBankName></IssuerBankName><IssuerBankCountry></IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>GyueFkuQqW+UL38d57fuA5/RqfQ=</UniqueCC><CustomData2></CustomData2><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType></CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><FraudResponse /></Response>
     )
   end
 

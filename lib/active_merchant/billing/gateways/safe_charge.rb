@@ -63,6 +63,15 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def credit(money, payment, options={})
+        post = {}
+        add_payment(post, payment)
+        add_transaction_data("Credit", post, money, options)
+        post[:sg_CreditType] = 1
+
+        commit(post)
+      end
+
       def void(authorization, options={})
         post = {}
         auth, transaction_id, token, exp_month, exp_year, original_amount = authorization.split("|")

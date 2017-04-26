@@ -89,6 +89,18 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     assert_equal 'Transaction must contain a Card/Token/Account', response.message
   end
 
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'Decline', response.message
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
