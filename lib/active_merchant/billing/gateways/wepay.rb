@@ -108,6 +108,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((\\?"cc_number\\?":\\?")[^\\"]+(\\?"))i, '\1[FILTERED]\2').
+          gsub(%r((\\?"cvv\\?":\\?")[^\\"]+(\\?"))i, '\1[FILTERED]\2').
+          gsub(%r((Authorization: Bearer )\w+)i, '\1[FILTERED]\2')
+      end
+
       private
 
       def authorize_with_token(post, money, token, options)
