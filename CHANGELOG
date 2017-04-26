@@ -1,30 +1,32 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Barclays ePDQ: removed because it has been replaced by a new API [bdewater] #2331
-* GlobalCollect: Truncate firstName field to 15 characters [davidsantoso]
-* Qvalent: Add soft descriptor fields. Add authorize, capture, and void [davidsantoso]
+
+== Version 1.65.0 (April 26, 2017)
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272
-* Pin: Add metadata optional field [shasum] #2363
-* GlobalCollect: Set REJECTED refunds as unsuccessful transactions [davidsantoso] #2365
-* WePay: Support unique_id for idempotent transactions [shasum] #2367
-* Orbital: Don't send CVV indicator if CVV is not present [curiousepic] #2368
-* JetPay: Pass down authorization payment method token to refund a capture [davidsantoso]
-* GlobalCollect: Make message and error reporting more robust [curiousepic] #2370
-* Cybersource: Rescue XML parse exception [shasum] #2380
-* Payeezy: Support dynamic soft descriptors [shasum] #2384
-* Stripe: Support custom application in X-Stripe-Client-User-Agent header [davidsantoso]
-* SafeCharge: Add gateway [davidsantoso]
-* TransFirst Transaction Express: Support ACH [curiousepic] #2389
+* Authorize.Net: Force refund of unsettled payments via void [bizla] #2399
+* Barclays ePDQ: removed because it has been replaced by a new API [bdewater] #2331
+* Beanstream: Map ISO province codes for US and CA [shasum] #2396
+* Braintree Blue: Change :full_refund option to :force_full_refund_if_unsettled [bizla] #2403
+* Braintree Blue: Force refund of unsettled payments via void [bizla] #2398
 * Checkout V2: Fix sandbox URL [nicolas-maalouf-cko] #2391
 * Checkout V2: Fix success_from not properly checking two possible success codes [davidsantoso]
-* SagePay: Support Repeat transactions [curiousepic] #2395
-* PayU LATAM: Fix incorrect capture method definition [davidsantoso]
-* Beanstream: Map ISO province codes for US and CA [shasum] #2396
-* Braintree Blue: Force refund of unsettled payments via void [bizla] #2398
+* Cybersource: Rescue XML parse exception [shasum] #2380
+* GlobalCollect: Make message and error reporting more robust [curiousepic] #2370
+* GlobalCollect: Set REJECTED refunds as unsuccessful transactions [davidsantoso] #2365
+* GlobalCollect: Truncate firstName field to 15 characters [davidsantoso]
+* JetPay: Pass down authorization payment method token to refund a capture [davidsantoso]
 * Openpay: Support card points [shasum] #2401
-* Authorize.Net: Force refund of unsettled payments via void [bizla] #2399
-* Braintree Blue: Change :full_refund option to :force_full_refund_if_unsettled [bizla] #2403
+* Orbital: Don't send CVV indicator if CVV is not present [curiousepic] #2368
+* PayU LATAM: Fix incorrect capture method definition [davidsantoso]
+* Payeezy: Support dynamic soft descriptors [shasum] #2384
+* Pin: Add metadata optional field [shasum] #2363
+* Qvalent: Add soft descriptor fields. Add authorize, capture, and void [davidsantoso]
+* SafeCharge: Add gateway [davidsantoso]
+* SagePay: Support Repeat transactions [curiousepic] #2395
+* Stripe: Support custom application in X-Stripe-Client-User-Agent header [davidsantoso]
+* TransFirst Transaction Express: Support ACH [curiousepic] #2389
+* WePay: Support unique_id for idempotent transactions [shasum] #2367
 * Worldpay: Force refund of unsettled payments via void [bizla] #2402
 
 == Version 1.64.0 (March 6, 2017)
