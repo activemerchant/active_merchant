@@ -10,10 +10,10 @@ module ActiveMerchant #:nodoc:
     #               :login     => "my_virtual_merchant_id",
     #               :password  => "my_virtual_merchant_pin",
     #               :user      => "my_virtual_merchant_user_id" # optional
-    #               :custom_fields_array => [:my_field1, :my_field2] # optional.
+    #               :custom_fields => [:my_field1, :my_field2] # optional.
     #            )
     #
-    #  pass values for custom_fields_array in the options hash
+    #  pass values for custom_fields in the options hash
     # options = {
     #   email: user.email,
     #   address: {address1: '123', ...},
@@ -65,6 +65,8 @@ module ActiveMerchant #:nodoc:
         :update => 'CCUPDATETOKEN',
       }
 
+      DEFAULT_CUSTOM_FIELDS = [:customer_number]
+
       # Initialize the Gateway
       #
       # The gateway requires that a valid login and password be passed
@@ -76,10 +78,10 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> -- PIN
       # * <tt>:user</tt> -- Specify a subuser of the account (optional)
       # * <tt>:test => +true+ or +false+</tt> -- Force test transactions
-      # * <tt>:custom_fields_array => custom fields configured on specific Elavon account</tt> (optional)
+      # * <tt>:custom_fields => custom fields configured on specific Elavon account</tt> (optional)
       def initialize(options = {})
         requires!(options, :login, :password)
-        @custom_fields_array = options[:custom_fields_array] || [:customer_number]
+        @custom_fields = options[:custom_fields] || DEFAULT_CUSTOM_FIELDS
         super
       end
 
@@ -266,7 +268,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(form, options)
         form[:email] = truncate(options[:email], 100) unless empty?(options[:email])
         form[:customer_code] = truncate(options[:customer], 10) unless empty?(options[:customer])
-        @custom_fields_array.each do |custom_field|
+        @custom_fields.each do |custom_field|
           form[custom_field] = options[custom_field] unless empty?(options[custom_field])
         end
       end
@@ -356,7 +358,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def custom_field?(field_name)
-        @custom_fields_array.include? field_name
+        @custom_fields.include? field_name
       end
 
       def preamble
