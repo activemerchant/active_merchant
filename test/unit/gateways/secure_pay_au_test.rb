@@ -191,6 +191,15 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_equal 'test3', response.params['client_id']
   end
 
+  def test_successful_store_as_token
+    @gateway.expects(:ssl_post).returns(successful_store_as_token_response)
+
+    assert response = @gateway.store(@credit_card, {:billing_id => 'test3', :amount => 123, :store_as_token => true})
+    assert_instance_of Response, response
+    assert_equal "Successful", response.message
+    assert_equal '5066426195942236', response.params['token_value']
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
@@ -534,6 +543,45 @@ class SecurePayAuTest < Test::Unit::TestCase
     -> "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811115230823000+660</messageTimestamp><apiVersion>xml-4.2</apiVersion></MessageInfo><RequestType>Payment</RequestType><MerchantInfo><merchantID>[FILTERED]</merchantID></MerchantInfo><Status><statusCode>000</statusCode><statusDescription>Normal</statusDescription></Status><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><approved>Yes</approved><responseCode>00</responseCode><responseText>Approved</responseText><thinlinkResponseCode>100</thinlinkResponseCode><thinlinkResponseText>000</thinlinkResponseText><thinlinkEventStatusCode>000</thinlinkEventStatusCode><thinlinkEventStatusText>Normal</thinlinkEventStatusText><settlementDate>20161108</settlementDate><txnID>123822</txnID><CreditCardInfo><pan>424242...242</pan><expiryDate>09/15</expiryDate><cardType>6</cardType><cardDescription>Visa</cardDescription></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
     read 1148 bytes
     Conn close
+    XML
+  end
+
+  def successful_store_as_token_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+      <SecurePayMessage>
+        <MessageInfo>
+          <messageID>86bff4c9d569273e2276bbef3b6e3f</messageID>
+          <messageTimestamp>20172704002158842237+000</messageTimestamp>
+          <apiVersion>xml-4.2</apiVersion>
+        </MessageInfo>
+        <RequestType>Payment</RequestType>
+        <MerchantInfo>
+          <merchantID>WLM0017</merchantID>
+        </MerchantInfo>
+        <Status>
+          <statusCode>0</statusCode>
+          <statusDescription>Normal</statusDescription>
+        </Status>
+        <Token>
+          <TokenList count="1">
+            <TokenItem ID="1">
+              <responseCode>00</responseCode>
+              <responseText>Successful</responseText>
+              <successful>yes</successful>
+              <tokenValue>5066426195942236</tokenValue>
+              <CreditCardInfo>
+                <pan>444433XXXXXXX111</pan>
+                <expiryDate>09/23</expiryDate>
+                <cardType>6</cardType>
+                <cardDescription>Visa</cardDescription>
+              </CreditCardInfo>
+              <amount>100</amount>
+              <transactionReference>test evrg 1234</transactionReference>
+            </TokenItem>
+          </TokenList>
+        </Token>
+      </SecurePayMessage>
     XML
   end
 end
