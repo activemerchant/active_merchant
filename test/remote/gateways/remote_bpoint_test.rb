@@ -125,6 +125,7 @@ class RemoteBpointTest < Test::Unit::TestCase
       merchant_number: 'xyz'
     )
     response = gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'invalid login', response.message
     assert_failure response
   end
 

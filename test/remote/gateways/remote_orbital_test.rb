@@ -3,7 +3,7 @@ require "test_helper.rb"
 class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital))
+    @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_gateway))
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
@@ -174,5 +174,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_equal 'AUTH DECLINED                   12001', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

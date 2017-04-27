@@ -243,6 +243,14 @@ class IatsPaymentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
+
   private
 
   def successful_purchase_response
@@ -502,6 +510,56 @@ class IatsPaymentsTest < Test::Unit::TestCase
           </DeleteCustomerCodeV1Response>
         </soap:Body>
       </soap:Envelope>
+    XML
+  end
+
+  def pre_scrub
+    <<-XML
+      opening connection to www.iatspayments.com:443...
+      opened
+      starting SSL for www.iatspayments.com:443...
+      SSL established
+      <- "POST /NetGate/ProcessLink.asmx?op=ProcessCreditCardV1 HTTP/1.1\r\nContent-Type: application/soap+xml; charset=utf-8\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.iatspayments.com\r\nContent-Length: 779\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\"><soap12:Body><ProcessCreditCardV1 xmlns=\"https://www.iatspayments.com/NetGate/\"><agentCode>TEST88</agentCode><password>TEST88</password><invoiceNum>63b5dd7098e8e3a9ff9a6f0992fdb6d5</invoiceNum><total>1.00</total><firstName>Longbob</firstName><lastName>Longsen</lastName><creditCardNum>4222222222222220</creditCardNum><creditCardExpiry>09/17</creditCardExpiry><cvv2>123</cvv2><mop>VISA</mop><address>456 My Street</address><city>Ottawa</city><state>ON</state><zipCode>K1C2N6</zipCode><comment>Store purchase</comment></ProcessCreditCardV1></soap12:Body></soap12:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: private, max-age=0\r\n"
+      -> "Content-Type: application/soap+xml; charset=utf-8\r\n"
+      -> "X-AspNet-Version: 4.0.30319\r\n"
+      -> "X-Powered-By: ASP.NET\r\n"
+      -> "Date: Thu, 29 Sep 2016 05:41:04 GMT\r\n"
+      -> "Content-Length: 719\r\n"
+      -> "Connection: close\r\n"
+      -> "Via: 1.1 sjc1-10\r\n"
+      -> "\r\n"
+      reading 719 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><ProcessCreditCardV1Response xmlns=\"https://www.iatspayments.com/NetGate/\"><ProcessCreditCardV1Result><IATSRESPONSE xmlns=\"\"><STATUS>Success</STATUS><ERRORS /><PROCESSRESULT><AUTHORIZATIONRESULT> OK: 678594:\n</AUTHORIZATIONRESULT><CUSTOMERCODE /><SETTLEMENTBATCHDATE> 09/28/2016\n</SETTLEMENTBATCHDATE><SETTLEMENTDATE> 09/29/2016\n</SETTLEMENTDATE><TRANSACTIONID>A92E3B72\n</TRANSACTIONID></PROCESSRESULT></IATSRESPONSE></ProcessCreditCardV1Result></ProcessCreditCardV1Response></soap:Body></soap:Envelope>"
+      read 719 bytes
+      Conn close
+    XML
+  end
+
+  def post_scrub
+    <<-XML
+      opening connection to www.iatspayments.com:443...
+      opened
+      starting SSL for www.iatspayments.com:443...
+      SSL established
+      <- "POST /NetGate/ProcessLink.asmx?op=ProcessCreditCardV1 HTTP/1.1\r\nContent-Type: application/soap+xml; charset=utf-8\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.iatspayments.com\r\nContent-Length: 779\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\"><soap12:Body><ProcessCreditCardV1 xmlns=\"https://www.iatspayments.com/NetGate/\"><agentCode>[FILTERED]</agentCode><password>[FILTERED]</password><invoiceNum>63b5dd7098e8e3a9ff9a6f0992fdb6d5</invoiceNum><total>1.00</total><firstName>Longbob</firstName><lastName>Longsen</lastName><creditCardNum>[FILTERED]</creditCardNum><creditCardExpiry>09/17</creditCardExpiry><cvv2>[FILTERED]</cvv2><mop>VISA</mop><address>456 My Street</address><city>Ottawa</city><state>ON</state><zipCode>K1C2N6</zipCode><comment>Store purchase</comment></ProcessCreditCardV1></soap12:Body></soap12:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: private, max-age=0\r\n"
+      -> "Content-Type: application/soap+xml; charset=utf-8\r\n"
+      -> "X-AspNet-Version: 4.0.30319\r\n"
+      -> "X-Powered-By: ASP.NET\r\n"
+      -> "Date: Thu, 29 Sep 2016 05:41:04 GMT\r\n"
+      -> "Content-Length: 719\r\n"
+      -> "Connection: close\r\n"
+      -> "Via: 1.1 sjc1-10\r\n"
+      -> "\r\n"
+      reading 719 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><ProcessCreditCardV1Response xmlns=\"https://www.iatspayments.com/NetGate/\"><ProcessCreditCardV1Result><IATSRESPONSE xmlns=\"\"><STATUS>Success</STATUS><ERRORS /><PROCESSRESULT><AUTHORIZATIONRESULT> OK: 678594:\n</AUTHORIZATIONRESULT><CUSTOMERCODE /><SETTLEMENTBATCHDATE> 09/28/2016\n</SETTLEMENTBATCHDATE><SETTLEMENTDATE> 09/29/2016\n</SETTLEMENTDATE><TRANSACTIONID>A92E3B72\n</TRANSACTIONID></PROCESSRESULT></IATSRESPONSE></ProcessCreditCardV1Result></ProcessCreditCardV1Response></soap:Body></soap:Envelope>"
+      read 719 bytes
+      Conn close
     XML
   end
 end

@@ -103,6 +103,18 @@ module ActiveMerchant #:nodoc:
         commit_periodic(build_periodic_item(:remove_triggered, options[:amount], nil, options))
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<merchantID>).+(</merchantID>)), '\1[FILTERED]\2').
+          gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
+          gsub(%r((<cardNumber>).+(</cardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<cvv>).+(</cvv>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def build_purchase_request(money, credit_card, options)

@@ -46,6 +46,14 @@ class RemoteLitleTest < Test::Unit::TestCase
       number: "4488282659650110",
       verification_value: "992"
     )
+    @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        month: '01',
+        year: '2012',
+        brand: "visa",
+        number:  "44444444400009",
+        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+      })
   end
 
   def test_successful_authorization
@@ -101,6 +109,12 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_apple_pay
+    assert response = @gateway.purchase(10010, @decrypted_apple_pay)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(60060, @credit_card2, {
         :order_id=>'6',
@@ -145,7 +159,7 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_void
-    assert void = @gateway.void("123456789012345360;authorization")
+    assert void = @gateway.void("123456789012345360;authorization;100")
     assert_failure void
     assert_equal 'No transaction found with specified litleTxnId', void.message
   end
@@ -218,6 +232,16 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal '1111222233330123', store_response.params['litleToken']
   end
 
+  def test_store_with_paypage_registration_id_successful
+    paypage_registration_id = "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg="
+    assert store_response = @gateway.store(paypage_registration_id, :order_id => '50')
+
+    assert_success store_response
+    assert_equal 'Account number was successfully registered', store_response.message
+    assert_equal '801', store_response.params['response']
+    assert_equal '1111222233334444', store_response.params['litleToken']
+  end
+
   def test_store_unsuccessful
     credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4457119999999999'))
     assert store_response = @gateway.store(credit_card, :order_id => '51')
@@ -271,4 +295,16 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal '1', store_response.params['response']
   end
 
+  def test_purchase_scrubbing
+    credit_card = CreditCard.new(@credit_card_hash.merge(verification_value: '999'))
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(10010, credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end

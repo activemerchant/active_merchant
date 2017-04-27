@@ -181,7 +181,7 @@ class PayuInTest < Test::Unit::TestCase
           month: "4",
           year: "2015"
         ),
-        order_id: ("!@#" + ("a" * 26)),
+        order_id: ("!@#" + ("a" * 31)),
         description: ("a" * 101),
         email: ("c" * 51),
         billing_address: {
@@ -208,7 +208,7 @@ class PayuInTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       case endpoint
       when /_payment/
-        assert_parameter("txnid", /^a/, data, length: 25)
+        assert_parameter("txnid", /^a/, data, length: 30)
         assert_parameter("productinfo", /^a/, data, length: 100)
         assert_parameter("firstname", /^a/, data, length: 60)
         assert_parameter("lastname", /^a/, data, length: 20)
@@ -269,6 +269,15 @@ class PayuInTest < Test::Unit::TestCase
       case endpoint
       when /_payment/
         assert_parameter("bankcode", "DINR", data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(100, credit_card("4242424242424242", brand: :maestro), @options)
+    end.check_request do |endpoint, data, _|
+      case endpoint
+      when /_payment/
+        assert_parameter("bankcode", "MAES", data)
       end
     end.respond_with(successful_purchase_response)
   end

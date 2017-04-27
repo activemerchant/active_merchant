@@ -307,6 +307,10 @@ SRC
     @gateway.authorize(@amount, @credit_card, options)
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_purchase_response
@@ -430,6 +434,70 @@ SRC
   <md5hash>34e7....a77d</md5hash>
 </response>"
     RESPONSE
+  end
+
+  def transcript
+    <<-REQUEST
+    <request timestamp="20150722170750" type="auth">
+      <merchantid>your merchant id</merchantid>
+      <orderid>445472dc5ea848fec1c1720a07d5710b</orderid>
+      <amount currency="EUR">10000</amount>
+      <card>
+        <number>4000126842489127</number>
+        <expdate>0620</expdate>
+        <chname>Longbob Longsen</chname>
+        <type>VISA</type>
+        <issueno/>
+        <cvn>
+          <number>123</number>
+          <presind>1</presind>
+        </cvn>
+      </card>
+      <autosettle flag="1"/>
+      <sha1hash>d22109765de91b75e7ad2e5d2fcf8a88235019d9</sha1hash>
+      <comments>
+        <comment id="1">Test Realex Purchase</comment>
+      </comments>
+      <tssinfo>
+        <address type="billing">
+          <code>90210</code>
+          <country>US</country>
+        </address>
+      </tssinfo>
+    </request>
+    REQUEST
+  end
+
+  def scrubbed_transcript
+    <<-REQUEST
+    <request timestamp="20150722170750" type="auth">
+      <merchantid>your merchant id</merchantid>
+      <orderid>445472dc5ea848fec1c1720a07d5710b</orderid>
+      <amount currency="EUR">10000</amount>
+      <card>
+        <number>[FILTERED]</number>
+        <expdate>0620</expdate>
+        <chname>Longbob Longsen</chname>
+        <type>VISA</type>
+        <issueno/>
+        <cvn>
+          <number>[FILTERED]</number>
+          <presind>1</presind>
+        </cvn>
+      </card>
+      <autosettle flag="1"/>
+      <sha1hash>d22109765de91b75e7ad2e5d2fcf8a88235019d9</sha1hash>
+      <comments>
+        <comment id="1">Test Realex Purchase</comment>
+      </comments>
+      <tssinfo>
+        <address type="billing">
+          <code>90210</code>
+          <country>US</country>
+        </address>
+      </tssinfo>
+    </request>
+  REQUEST
   end
 
   require 'nokogiri'

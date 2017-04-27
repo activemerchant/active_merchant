@@ -102,9 +102,9 @@ module ActiveMerchant #:nodoc:
         end
 
         def add_invoice(post, options)
-          post[:ms] = options[:order_id] || generate_unique_id
-          post[:mo] = options[:invoice]
-          post[:mr] = options[:description]
+          post[:ms] = generate_unique_id
+          post[:mo] = options[:description]
+          post[:mr] = options[:order_id]
         end
 
         def add_credit_card(post, credit_card)
@@ -192,4 +192,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

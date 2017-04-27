@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
         post[:delim_data]     = "TRUE"
         post[:delim_char]     = ","
         post[:encap_char]     = "$"
-        post[:solution_ID]    = application_id if application_id.present? && application_id != "ActiveMerchant"
+        post[:solution_ID]    = application_id if application_id
 
         request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         request

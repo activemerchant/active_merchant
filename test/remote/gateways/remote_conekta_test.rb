@@ -62,6 +62,30 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert_equal nil, response.message
   end
 
+  def test_successful_void
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal nil, response.message
+
+    identifier = response.params["id"]
+
+    assert response = @gateway.void(identifier)
+    assert_success response
+    assert_equal nil, response.message
+  end
+
+  def test_unsuccessful_void
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal nil, response.message
+
+    identifier = response.params["id"]
+
+    assert response = @gateway.void(identifier)
+    assert_failure response
+    assert_equal "El cargo no existe o no es apto para esta operación.", response.message
+  end
+
   def test_unsuccessful_refund
     assert response = @gateway.refund(@amount, "1", @options)
     assert_failure response
@@ -138,5 +162,15 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "Acceso no autorizado.", response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 end

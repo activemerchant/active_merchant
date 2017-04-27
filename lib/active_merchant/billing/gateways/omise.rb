@@ -3,7 +3,6 @@ require 'active_merchant/billing/rails'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OmiseGateway < Gateway
-      API_VERSION = '1.0'
       API_URL     = 'https://api.omise.co/'
       VAULT_URL   = 'https://vault.omise.co/'
 
@@ -15,18 +14,20 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = API_URL
 
       # Currency supported by Omise
-      # * Thai Baht with Satang, ie. 9000 => 90 THB
+      # * Thai Baht with Satang, 50000 (THB500.00)
+      # * Japanese Yen, 500 (JPY500)
       self.default_currency = 'THB'
       self.money_format     = :cents
 
       #Country supported by Omise
       # * Thailand
-      self.supported_countries = %w( TH )
+      self.supported_countries = %w( TH JP )
 
       # Credit cards supported by Omise
       # * VISA
       # * MasterCard
-      self.supported_cardtypes = [:visa, :master]
+      # * JCB
+      self.supported_cardtypes = [:visa, :master, :jcb]
 
       # Omise main page
       self.homepage_url = 'https://www.omise.co/'
@@ -40,13 +41,16 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>:public_key</tt> -- Omise's public key (REQUIRED).
-      # * <tt>:secret_key</tt> -- Omise's secret key (REQUIRED).
+      # * <tt>:public_key</tt>  -- Omise's public key  (REQUIRED).
+      # * <tt>:secret_key</tt>  -- Omise's secret key  (REQUIRED).
+      # * <tt>:api_version</tt> -- Omise's API Version (OPTIONAL), default version is '2014-07-27'
+      #                            See version at page https://dashboard.omise.co/api-version/edit
 
       def initialize(options={})
         requires!(options, :public_key, :secret_key)
-        @public_key = options[:public_key]
-        @secret_key = options[:secret_key]
+        @public_key  = options[:public_key]
+        @secret_key  = options[:secret_key]
+        @api_version = options[:api_version]
         super
       end
 
@@ -145,7 +149,7 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "customers/#{CGI.escape(customer_id)}")
       end
 
-      # Enable scrubbling sensitive information
+      # Enable scrubbing sensitive information
       def supports_scrubbing?
         true
       end
@@ -178,7 +182,8 @@ module ActiveMerchant #:nodoc:
         key = options[:key] || @secret_key
         {
           'Content-Type'    => 'application/json;utf-8',
-          'User-Agent'      => "Omise/v#{API_VERSION} ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'Omise-Version'   => @api_version || "2014-07-27",
+          'User-Agent'      => "ActiveMerchantBindings/#{ActiveMerchant::VERSION} Ruby/#{RUBY_VERSION}",
           'Authorization'   => 'Basic ' + Base64.encode64(key.to_s + ':').strip,
           'Accept-Encoding' => 'utf-8'
         }

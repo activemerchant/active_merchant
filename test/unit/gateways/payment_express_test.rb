@@ -126,7 +126,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal %w(AU CA DE ES FR GB HK IE MY NL NZ SG US ZA), PaymentExpressGateway.supported_countries
+    assert_equal %w(AU FJ GB HK IE MY NZ PG SG US), PaymentExpressGateway.supported_countries
   end
 
   def test_supported_card_types
@@ -306,6 +306,10 @@ class PaymentExpressTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def perform_each_transaction_type_with_request_body_assertions(options = {})
@@ -422,5 +426,13 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def successful_billing_id_token_purchase_response
     %(<Txn><Transaction success="1" reco="00" responsetext="APPROVED"><Authorized>1</Authorized><MerchantReference></MerchantReference><CardName>Visa</CardName><Retry>0</Retry><StatusRequired>0</StatusRequired><AuthCode>030817</AuthCode><Amount>10.00</Amount><CurrencyId>554</CurrencyId><InputCurrencyId>554</InputCurrencyId><InputCurrencyName>NZD</InputCurrencyName><CurrencyRate>1.00</CurrencyRate><CurrencyName>NZD</CurrencyName><CardHolderName>LONGBOB LONGSEN</CardHolderName><DateSettlement>20070323</DateSettlement><TxnType>Purchase</TxnType><CardNumber>424242........42</CardNumber><DateExpiry>0808</DateExpiry><ProductId></ProductId><AcquirerDate>20070323</AcquirerDate><AcquirerTime>030817</AcquirerTime><AcquirerId>9000</AcquirerId><Acquirer>Test</Acquirer><TestMode>1</TestMode><CardId>2</CardId><CardHolderResponseText>APPROVED</CardHolderResponseText><CardHolderHelpText>The Transaction was approved</CardHolderHelpText><CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription><MerchantResponseText>APPROVED</MerchantResponseText><MerchantHelpText>The Transaction was approved</MerchantHelpText><MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription><UrlFail></UrlFail><UrlSuccess></UrlSuccess><EnablePostResponse>0</EnablePostResponse><PxPayName></PxPayName><PxPayLogoSrc></PxPayLogoSrc><PxPayUserId></PxPayUserId><PxPayXsl></PxPayXsl><PxPayBgColor></PxPayBgColor><AcquirerPort>9999999999-99999999</AcquirerPort><AcquirerTxnRef>12859</AcquirerTxnRef><GroupAccount>9997</GroupAccount><DpsTxnRef>0000000303ace8db</DpsTxnRef><AllowRetry>0</AllowRetry><DpsBillingId></DpsBillingId><BillingId>TEST1234</BillingId><TransactionId>03ace8db</TransactionId><PxHostId>00000003</PxHostId></Transaction><ReCo>00</ReCo><ResponseText>APPROVED</ResponseText><HelpText>The Transaction was approved</HelpText><Success>1</Success><DpsTxnRef>0000000303ace8db</DpsTxnRef><TxnRef></TxnRef></Txn>)
+  end
+
+  def transcript
+    %(<Txn><CardHolderName>Longbob Longsen</CardHolderName><CardNumber>4111111111111111</CardNumber><DateExpiry>0916</DateExpiry><Cvc2>123</Cvc2><Cvc2Presence>1</Cvc2Presence><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>59956b468905bde7</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>456 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PostUsername>WaysactDev</PostUsername><PostPassword>kvr52dw9</PostPassword><TxnType>Purchase</TxnType></Txn>)
+  end
+
+  def scrubbed_transcript
+    %(<Txn><CardHolderName>Longbob Longsen</CardHolderName><CardNumber>[FILTERED]</CardNumber><DateExpiry>0916</DateExpiry><Cvc2>[FILTERED]</Cvc2><Cvc2Presence>1</Cvc2Presence><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>59956b468905bde7</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>456 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PostUsername>WaysactDev</PostUsername><PostPassword>kvr52dw9</PostPassword><TxnType>Purchase</TxnType></Txn>)
   end
 end

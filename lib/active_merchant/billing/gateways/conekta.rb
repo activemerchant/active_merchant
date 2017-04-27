@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :key)
-        options[:version] ||= '0.3.0'
+        options[:version] ||= '1.0.0'
         super
       end
 
@@ -53,6 +53,22 @@ module ActiveMerchant #:nodoc:
         add_order(post, money, options)
 
         commit(:post, "charges/#{identifier}/refund", post)
+      end
+
+      def void(identifier, options = {})
+        post = {}
+        commit(:post, "charges/#{identifier}/void", post)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card%5Bnumber%5D=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?card%5Bcvc%5D=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -207,4 +223,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

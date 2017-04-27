@@ -257,8 +257,8 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
 <?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body>
-    <VoidPreAuthorizationResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <VoidPreAuthorizationResult>
+    <VoidResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <VoidResult>
         <Amount />
         <ApprovalStatus>APPROVED</ApprovalStatus>
         <AuthorizationCode>VOID</AuthorizationCode>
@@ -274,8 +274,8 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
         <Token>266783537</Token>
         <TransactionDate>7/9/2015 3:13:51 PM</TransactionDate>
         <TransactionType>3</TransactionType>
-      </VoidPreAuthorizationResult>
-    </VoidPreAuthorizationResponse>
+      </VoidResult>
+    </VoidResponse>
   </soap:Body>
 </soap:Envelope>
     XML
@@ -285,8 +285,8 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
     <<-XML
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body>
-    <VoidPreAuthorizationResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
-      <VoidPreAuthorizationResult>
+    <VoidResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <VoidResult>
         <Amount />
         <ApprovalStatus>DECLINED;1019;original transaction id not found</ApprovalStatus>
         <AuthorizationCode />
@@ -302,8 +302,8 @@ class MerchantWareVersionFourTest < Test::Unit::TestCase
         <Token />
         <TransactionDate>5/15/2013 9:37:04 AM</TransactionDate>
         <TransactionType>3</TransactionType>
-      </VoidPreAuthorizationResult>
-    </VoidPreAuthorizationResponse>
+      </VoidResult>
+    </VoidResponse>
   </soap:Body>
 </soap:Envelope>
     XML

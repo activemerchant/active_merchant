@@ -75,6 +75,19 @@ module ActiveMerchant #:nodoc:
         commit(:unstore, post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<agentCode>).+(</agentCode>)), '\1[FILTERED]\2').
+          gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
+          gsub(%r((<creditCardNum>).+(</creditCardNum>)), '\1[FILTERED]\2').
+          gsub(%r((<cvv2>).+(</cvv2>)), '\1[FILTERED]\2').
+          gsub(%r((<accountNum>).+(</accountNum>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def add_ip(post, options)

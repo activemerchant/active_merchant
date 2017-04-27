@@ -40,6 +40,17 @@ class VancoTest < Test::Unit::TestCase
     assert_equal "Success", response.message
   end
 
+  def test_successful_purchase_with_ip_address
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(ip: "192.168.0.1"))
+    end.check_request do |endpoint, data, headers|
+      if data =~ /<RequestType>EFTAdd/
+        assert_match(%r(<CustomerIPAddress>192), data)
+      end
+    end.respond_with(successful_login_response, successful_purchase_response)
+    assert_success response
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)

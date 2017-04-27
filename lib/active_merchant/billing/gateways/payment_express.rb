@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       # However, regular accounts with DPS only support VISA and Mastercard
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb ]
 
-      self.supported_countries = %w[ AU CA DE ES FR GB HK IE MY NL NZ SG US ZA ]
+      self.supported_countries = %w[ AU FJ GB HK IE MY NZ PG SG US ]
 
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
@@ -120,6 +120,17 @@ module ActiveMerchant #:nodoc:
       def store(credit_card, options = {})
         request  = build_token_request(credit_card, options)
         commit(:validate, request)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<Cvc2>)\d+(</Cvc2>)), '\1[FILTERED]\2')
       end
 
       private

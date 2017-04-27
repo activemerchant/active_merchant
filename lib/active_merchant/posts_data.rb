@@ -12,10 +12,10 @@ module ActiveMerchant #:nodoc:
       base.retry_safe = false
 
       base.class_attribute :open_timeout
-      base.open_timeout = 60
+      base.open_timeout = Connection::OPEN_TIMEOUT
 
       base.class_attribute :read_timeout
-      base.read_timeout = 60
+      base.read_timeout = Connection::READ_TIMEOUT
 
       base.class_attribute :max_retries
       base.max_retries = Connection::MAX_RETRIES
@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
 
     def raw_ssl_request(method, endpoint, data, headers = {})
       logger.warn "#{self.class} using ssl_strict=false, which is insecure" if logger unless ssl_strict
-      logger.warn "#{self.class} posting to plaintext endpoint, which is insecure" if logger unless endpoint =~ /^https:/
+      logger.warn "#{self.class} posting to plaintext endpoint, which is insecure" if logger unless endpoint.to_s =~ /^https:/
 
       connection = new_connection(endpoint)
       connection.open_timeout = open_timeout

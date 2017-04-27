@@ -2,7 +2,7 @@ require 'test_helper'
 
 class CardSaveTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
     @gateway = CardSaveGateway.new(:login => 'login', :password => 'password')
     @credit_card = credit_card
     @amount = 100
