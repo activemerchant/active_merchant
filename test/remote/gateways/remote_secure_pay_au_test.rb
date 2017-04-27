@@ -15,7 +15,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     @gateway = SecurePayAuGateway.new(fixtures(:secure_pay_au))
 
     @amount = 100
-    @credit_card = credit_card('4242424242424242', {:month => 9, :year => 15})
+    @credit_card = credit_card('4444333322221111', {:month => 9, :year => 23  })
 
     @options = {
       :order_id => '2',
@@ -95,7 +95,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(@amount+1, authorization)
     assert_failure response
-    assert_equal 'Only $1.0 available for refund', response.message
+    assert_equal 'Only 1.00 AUD available for refund', response.message
   end
 
   def test_successful_void
@@ -117,7 +117,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.void(authorization+'1')
     assert_failure response
-    assert_equal 'Unable to retrieve original FDR txn', response.message
+    assert_equal 'Transaction type not available', response.message
   end
 
   def test_successful_unstore
@@ -141,6 +141,15 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     @gateway.unstore('test1234') rescue nil
 
     assert response = @gateway.store(@credit_card, {:billing_id => 'test1234', :amount => 15000})
+    assert_success response
+
+    assert_equal 'Successful', response.message
+  end
+
+  def test_successful_store_as_token
+    @gateway.unstore('test1234') rescue nil
+
+    assert response = @gateway.store(@credit_card, {:billing_id => 'test evrg 1234', :store_as_token => true, :amount => 100})
     assert_success response
 
     assert_equal 'Successful', response.message
