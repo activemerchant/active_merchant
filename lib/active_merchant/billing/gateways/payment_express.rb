@@ -21,7 +21,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
 
-      self.live_url = self.test_url = 'https://sec.paymentexpress.com/pxpost.aspx'
+      self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
+      self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
 
       APPROVED = '1'
 
@@ -130,7 +131,9 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<Cvc2>)\d+(</Cvc2>)), '\1[FILTERED]\2')
+          gsub(%r((<Cvc2>)\d+(</Cvc2>)), '\1[FILTERED]\2').
+          gsub(%r((<PostUsername>)\w+(</PostUsername>)), '\1[FILTERED]\2').
+          gsub(%r((<PostPassword>)\w+(</PostPassword>)), '\1[FILTERED]\2')
       end
 
       private
@@ -293,7 +296,7 @@ module ActiveMerchant #:nodoc:
         add_transaction_type(request, action)
 
         # Parse the XML response
-        response = parse( ssl_post(self.live_url, request.to_s) )
+        response = parse( ssl_post(url, request.to_s) )
 
         # Return a response
         PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
@@ -321,6 +324,10 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      end
+
+      def url
+        test? ? test_url : live_url
       end
 
       def message_from(response)
