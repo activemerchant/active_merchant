@@ -5,7 +5,10 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   def setup
     @gateway = PaymentExpressGateway.new(fixtures(:payment_express))
 
-    @credit_card = credit_card('4111111111111111')
+    # the cvv assertion in the scrubbing test fails most of the time as
+    # the default of 123 is usually found in other parts of the transcript
+    # so use a less common occurence of 432 (weird)
+    @credit_card = credit_card('4111111111111111', {verification_value: 432})
 
     @options = {
       :order_id => generate_unique_id,
@@ -75,7 +78,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
       :password => ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_match %r{error}i, response.message
+    assert_match %r{invalid credentials}i, response.message
     assert_failure response
   end
 
@@ -138,6 +141,8 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+    assert_scrubbed(fixtures(:payment_express)[:login], clean_transcript)
+    assert_scrubbed(fixtures(:payment_express)[:password], clean_transcript)
   end
 
 end
