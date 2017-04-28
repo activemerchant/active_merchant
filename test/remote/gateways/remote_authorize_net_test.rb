@@ -11,6 +11,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
+      email: 'anet@example.com',
       duplicate_window: 0,
       billing_address: address,
       description: 'Store Purchase'
@@ -26,7 +27,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_minimal_options
-    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0)
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, email: 'anet@example.com', billing_address: address)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -34,7 +35,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_email_customer
-    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, email_customer: true)
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, email_customer: true, email: 'anet@example.com', billing_address: address)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -42,7 +43,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_header_email_receipt
-    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, header_email_receipt: "subject line")
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, header_email_receipt: "subject line", email: 'anet@example.com', billing_address: address)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -273,7 +274,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_using_stored_card
-    response = @gateway.store(@credit_card)
+    response = @gateway.store(@credit_card, @options)
     assert_success response
 
     response = @gateway.purchase(@amount, response.authorization, @options)
@@ -295,14 +296,14 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_using_stored_card_new_payment_profile
-    assert store = @gateway.store(@credit_card)
+    assert store = @gateway.store(@credit_card, @options)
     assert_success store
     assert store.authorization
 
     new_card = credit_card('4007000000027')
     customer_profile_id, _, _ = store.authorization.split("#")
 
-    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
+    assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id, email: 'anet@example.com', billing_address: address)
     assert_success response
 
     response = @gateway.purchase(@amount, response.authorization, @options)
@@ -311,14 +312,14 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_using_stored_card
-    store = @gateway.store(@credit_card)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
 
     auth = @gateway.authorize(@amount, store.authorization, @options)
     assert_success auth
     assert_equal "This transaction has been approved.", auth.message
 
-    capture = @gateway.capture(@amount, auth.authorization)
+    capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal "This transaction has been approved.", capture.message
   end
@@ -338,19 +339,19 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_failed_capture_using_stored_card
-    store = @gateway.store(@credit_card)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
 
     auth = @gateway.authorize(@amount, store.authorization, @options)
     assert_success auth
 
-    capture = @gateway.capture(@amount + 4000, auth.authorization)
+    capture = @gateway.capture(@amount + 4000, auth.authorization, @options)
     assert_failure capture
     assert_match %r{The amount requested for settlement cannot be greater}, capture.message
   end
 
   def test_faux_successful_refund_using_stored_card
-    store = @gateway.store(@credit_card)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
 
     purchase = @gateway.purchase(@amount, store.authorization, @options)
@@ -362,7 +363,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_failed_refund_using_stored_card
-    store = @gateway.store(@credit_card)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
 
     purchase = @gateway.purchase(@amount, store.authorization, @options)
@@ -375,28 +376,28 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_void_using_stored_card
-    store = @gateway.store(@credit_card)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
 
     auth = @gateway.authorize(@amount, store.authorization, @options)
     assert_success auth
 
-    void = @gateway.void(auth.authorization)
+    void = @gateway.void(auth.authorization, @options)
     assert_success void
     assert_equal "This transaction has been approved.", void.message
   end
 
   def test_failed_void_using_stored_card
-    store = @gateway.store(@credit_card)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
 
     auth = @gateway.authorize(@amount, store.authorization, @options)
     assert_success auth
 
-    void = @gateway.void(auth.authorization)
+    void = @gateway.void(auth.authorization, @options)
     assert_success void
 
-    another_void = @gateway.void(auth.authorization)
+    another_void = @gateway.void(auth.authorization, @options)
     assert_failure another_void
     assert_equal "This transaction has already been voided.", another_void.message
   end
