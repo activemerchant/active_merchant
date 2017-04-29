@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         MultiResponse.run do |r|
           r.process { authorize(money, payment, options) }
-          r.process { capture(money, r.authorization, options) }
+          r.process { capture(money, r.authorization, options) } unless capture_requested?(r)
         end
       end
 
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
         post = nestable_hash
-        add_amount(post, money, options={})
+        add_amount(post, money, options)
         add_refund_customer_data(post, options)
         commit(:refund, post, authorization)
       end
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_amount(post, money, options)
+      def add_amount(post, money, options={})
         post["amountOfMoney"] = {
           "amount" => amount(money),
           "currencyCode" => options[:currency] || currency(money)
@@ -131,8 +131,8 @@ module ActiveMerchant #:nodoc:
         if payment
           post["order"]["customer"]["personalInformation"] = {
             "name" => {
-              "firstName" => payment.first_name,
-              "surname" => payment.last_name
+              "firstName" => payment.first_name[0..14],
+              "surname" => payment.last_name[0..69]
             }
           }
         end
@@ -262,14 +262,20 @@ EOS
       end
 
       def success_from(response)
-        !response["errorId"]
+        !response["errorId"] && response["status"] != "REJECTED"
       end
 
       def message_from(succeeded, response)
         if succeeded
           "Succeeded"
         else
-          response["errors"][0]["message"] || "Unable to read error message"
+          if errors = response["errors"]
+            errors.first.try(:[], "message")
+          elsif status = response["status"]
+            "Status: " + status
+          else
+            "No message available"
+          end
         end
       end
 
@@ -283,12 +289,22 @@ EOS
 
       def error_code_from(succeeded, response)
         unless succeeded
-          response["errors"][0]["code"] || "Unable to read error code"
+          if errors = response["errors"]
+            errors.first.try(:[], "code")
+          elsif status = response.try(:[], "statusOutput").try(:[], "statusCode")
+            status.to_s
+          else
+            "No error code available"
+          end
         end
       end
 
       def nestable_hash
         Hash.new {|h,k| h[k] = Hash.new(&h.default_proc) }
+      end
+
+      def capture_requested?(response)
+        response.params.try(:[], "payment").try(:[], "status") == "CAPTURE_REQUESTED"
       end
     end
   end

@@ -136,7 +136,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_failed_purchase_with_incomplete_3DS_information
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:cavv => 'MDRjN2MxZTAxYjllNTBkNmM2MTA=', :sli => '05'))
     assert_failure response
-    assert_match %r{Exception caught in application}, response.message
+    assert_match %r{Extra/xid is required for SLI 05}, response.message
   end
 
   def test_invalid_login

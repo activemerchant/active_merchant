@@ -126,7 +126,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal %w(AU CA DE ES FR GB HK IE MY NL NZ SG US ZA), PaymentExpressGateway.supported_countries
+    assert_equal %w(AU FJ GB HK IE MY NZ PG SG US), PaymentExpressGateway.supported_countries
   end
 
   def test_supported_card_types

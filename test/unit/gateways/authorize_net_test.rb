@@ -28,6 +28,25 @@ class AuthorizeNetTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @additional_options = {
+      line_items: [
+        {
+          item_id: "1",
+          name: "mug",
+          description: "coffee",
+          quantity: "100",
+          unit_price: "10"
+        },
+        {
+          item_id: "2",
+          name: "vase",
+          description: "floral",
+          quantity: "200",
+          unit_price: "20"
+        }
+      ]
+    }
   end
 
   def test_add_swipe_data_with_bad_data
@@ -274,10 +293,49 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_passes_partial_auth
     stub_comms do
-      @gateway.purchase(100, credit_card, disable_partial_auth: true)
+      @gateway.purchase(@amount, credit_card, disable_partial_auth: true)
     end.check_request do |endpoint, data, headers|
       assert_match(/<settingName>allowPartialAuth<\/settingName>/, data)
       assert_match(/<settingValue>false<\/settingValue>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_email_customer
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, email_customer: true)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<settingName>emailCustomer<\/settingName>/, data)
+      assert_match(/<settingValue>true<\/settingValue>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_header_email_receipt
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, header_email_receipt: "yet another field")
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<settingName>headerEmailReceipt<\/settingName>/, data)
+      assert_match(/<settingValue>yet another field<\/settingValue>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_line_items
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, @options.merge(@additional_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<lineItems>/, data)
+      assert_match(/<lineItem>/, data)
+      assert_match(/<itemId>#{@additional_options[:line_items][0][:item_id]}<\/itemId>/, data)
+      assert_match(/<name>#{@additional_options[:line_items][0][:name]}<\/name>/, data)
+      assert_match(/<description>#{@additional_options[:line_items][0][:description]}<\/description>/, data)
+      assert_match(/<quantity>#{@additional_options[:line_items][0][:quantity]}<\/quantity>/, data)
+      assert_match(/<unitPrice>#{@additional_options[:line_items][0][:unit_price]}<\/unitPrice>/, data)
+      assert_match(/<\/lineItem>/, data)
+      assert_match(/<itemId>#{@additional_options[:line_items][1][:item_id]}<\/itemId>/, data)
+      assert_match(/<name>#{@additional_options[:line_items][1][:name]}<\/name>/, data)
+      assert_match(/<description>#{@additional_options[:line_items][1][:description]}<\/description>/, data)
+      assert_match(/<quantity>#{@additional_options[:line_items][1][:quantity]}<\/quantity>/, data)
+      assert_match(/<unitPrice>#{@additional_options[:line_items][1][:unit_price]}<\/unitPrice>/, data)
+      assert_match(/<\/lineItems>/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -491,6 +549,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal "The record cannot be found", refund.message
   end
 
+  def test_failed_refund_due_to_unsettled_payment
+    @gateway.expects(:ssl_post).returns(failed_refund_for_unsettled_payment_response)
+    @gateway.expects(:void).never
+
+    @gateway.refund(36.40, '2214269051#XXXX1234')
+  end
+
+  def test_failed_full_refund_due_to_unsettled_payment_forces_void
+    @gateway.expects(:ssl_post).returns(failed_refund_for_unsettled_payment_response)
+    @gateway.expects(:void).once
+
+    @gateway.refund(36.40, '2214269051#XXXX1234', force_full_refund_if_unsettled: true)
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
@@ -508,6 +580,27 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_failure store
     assert_match(/The field length is invalid/, store.message)
     assert_equal("15", store.params["message_code"])
+  end
+
+  def test_successful_unstore
+    response = stub_comms do
+      @gateway.unstore('35959426#32506918#cim_store')
+    end.check_request do |endpoint, data, headers|
+      doc = parse(data)
+      assert_equal "35959426", doc.at_xpath("//deleteCustomerProfileRequest/customerProfileId").content
+    end.respond_with(successful_unstore_response)
+
+    assert_success response
+    assert_equal "Successful", response.message
+  end
+
+  def test_failed_unstore
+    @gateway.expects(:ssl_post).returns(failed_unstore_response)
+
+    unstore = @gateway.unstore('35959426#32506918#cim_store')
+    assert_failure unstore
+    assert_match(/The record cannot be found/, unstore.message)
+    assert_equal("40", unstore.params["message_code"])
   end
 
   def test_successful_store_new_payment_profile
@@ -903,6 +996,23 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '508141794', response.authorization.split('#')[0]
+  end
+
+  def test_failed_apple_pay_authorization_with_network_tokenization_not_supported
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal credit_card.payment_cryptogram, doc.at_xpath("//creditCard/cryptogram").content
+        assert_equal credit_card.number, doc.at_xpath("//creditCard/cardNumber").content
+      end
+    end.respond_with(network_tokenization_not_supported_response)
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:unsupported_feature], response.error_code
   end
 
   def test_supports_network_tokenization_true
@@ -1794,6 +1904,36 @@ class AuthorizeNetTest < Test::Unit::TestCase
     eos
   end
 
+  def successful_unstore_response
+    <<-eos
+      <?xml version="1.0" encoding="utf-8"?>
+      <deleteCustomerProfileResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+      </deleteCustomerProfileResponse>
+    eos
+  end
+
+  def failed_unstore_response
+    <<-eos
+      <?xml version="1.0" encoding="utf-8"?>
+      <deleteCustomerProfileResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00040</code>
+            <text>The record cannot be found.</text>
+          </message>
+        </messages>
+      </deleteCustomerProfileResponse>
+    eos
+  end
+
   def successful_store_new_payment_profile_response
     <<-eos
       <?xml version="1.0" encoding="UTF-8"?>
@@ -2054,6 +2194,42 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
         </messages>
       </authenticateTestResponse>
+    eos
+  end
+
+  def failed_refund_for_unsettled_payment_response
+    <<-eos
+    <?xml version="1.0" encoding="utf-8"?>
+      <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00027</code>
+            <text>The transaction was unsuccessful.</text>
+          </message>
+        </messages>
+        <transactionResponse>
+          <responseCode>3</responseCode>
+          <authCode/>
+          <avsResultCode>P</avsResultCode>
+          <cvvResultCode/>
+          <cavvResultCode/>
+          <transId>0</transId>
+          <refTransID/>
+          <transHash/>
+          <testRequest>0</testRequest>
+          <accountNumber>XXXX0001</accountNumber>
+          <accountType>Visa</accountType>
+          <errors>
+            <error>
+              <errorCode>54</errorCode>
+              <errorText>The referenced transaction does not meet the criteria for issuing a credit.</errorText>
+            </error>
+          </errors>
+          <userFields/>
+          <transHashSha2/>
+        </transactionResponse>
+      </createTransactionResponse>
     eos
   end
 end

@@ -101,6 +101,50 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_equal "PENDING", response.params["transactionResponse"]["state"]
   end
 
+  def test_well_formed_refund_fails_as_expected
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_equal "The payment plan id cannot be empty", refund.message
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(@amount, '')
+    assert_failure response
+    assert_match /property: parentTransactionId, message: must not be null/, response.message
+  end
+
+  def test_successful_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal "APPROVED", void.message
+  end
+
+  def test_failed_void
+    response = @gateway.void('')
+    assert_failure response
+    assert_match /property: parentTransactionId, message: must not be null/, response.message
+  end
+
+  def test_successful_authorize_and_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_capture
+    response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_match /must not be null/, response.message
+  end
+
   def test_verify_credentials
     assert @gateway.verify_credentials
 

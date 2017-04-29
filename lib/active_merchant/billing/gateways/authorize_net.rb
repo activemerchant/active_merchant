@@ -8,7 +8,7 @@ module ActiveMerchant
       self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.live_url = 'https://api2.authorize.net/xml/v1/request.api'
 
-      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK EE ES FI FR GB GB GI GR HU IE IL IS IT LI LT LU LV MC MT NL NO PL PT RO SE SI SK SM TR US VA)
+      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK EE ES FI FR GB GI GR HU IE IL IS IT LI LT LU LV MC MT NL NO PL PT RO SE SI SK SM TR US VA)
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
@@ -36,24 +36,25 @@ module ActiveMerchant
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
-        '36' => STANDARD_ERROR_CODE[:incorrect_number],
-        '237' => STANDARD_ERROR_CODE[:invalid_number],
-        '2315' => STANDARD_ERROR_CODE[:invalid_number],
-        '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        '378' => STANDARD_ERROR_CODE[:invalid_cvc],
-        '38' => STANDARD_ERROR_CODE[:expired_card],
-        '2317' => STANDARD_ERROR_CODE[:expired_card],
-        '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
-        '227' => STANDARD_ERROR_CODE[:incorrect_address],
         '2127' => STANDARD_ERROR_CODE[:incorrect_address],
         '22' => STANDARD_ERROR_CODE[:card_declined],
+        '227' => STANDARD_ERROR_CODE[:incorrect_address],
         '23' => STANDARD_ERROR_CODE[:card_declined],
-        '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '2315' => STANDARD_ERROR_CODE[:invalid_number],
+        '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '2317' => STANDARD_ERROR_CODE[:expired_card],
         '235' => STANDARD_ERROR_CODE[:processing_error],
+        '237' => STANDARD_ERROR_CODE[:invalid_number],
         '24' => STANDARD_ERROR_CODE[:pickup_card],
+        '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
         '300' => STANDARD_ERROR_CODE[:config_error],
-        '384' => STANDARD_ERROR_CODE[:config_error]
+        '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '3155' => STANDARD_ERROR_CODE[:unsupported_feature],
+        '36' => STANDARD_ERROR_CODE[:incorrect_number],
+        '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '378' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '38' => STANDARD_ERROR_CODE[:expired_card],
+        '384' => STANDARD_ERROR_CODE[:config_error],
       }
 
       MARKET_TYPE = {
@@ -91,6 +92,7 @@ module ActiveMerchant
       APPLE_PAY_DATA_DESCRIPTOR = "COMMON.APPLE.INAPP.PAYMENT"
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = "155"
+      INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = "54"
 
       def initialize(options={})
         requires!(options, :login, :password)
@@ -130,10 +132,17 @@ module ActiveMerchant
       end
 
       def refund(amount, authorization, options={})
-        if auth_was_for_cim?(authorization)
+        response = if auth_was_for_cim?(authorization)
           cim_refund(amount, authorization, options)
         else
           normal_refund(amount, authorization, options)
+        end
+
+        return response if response.success?
+        return response unless options[:force_full_refund_if_unsettled]
+
+        if response.params["response_reason_code"] == INELIGIBLE_FOR_ISSUING_CREDIT_ERROR
+          void(authorization, options)
         end
       end
 
@@ -178,6 +187,12 @@ module ActiveMerchant
         else
           create_customer_profile(credit_card, options)
         end
+      end
+
+      def unstore(authorization)
+        customer_profile_id, _, _ = split_authorization(authorization)
+
+        delete_customer_profile(customer_profile_id)
       end
 
       def verify_credentials
@@ -345,6 +360,10 @@ module ActiveMerchant
         end
       end
 
+      def camel_case_lower(key)
+        String(key).split('_').inject([]){ |buffer,e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
+      end
+
       def add_settings(xml, source, options)
         xml.transactionSettings do
           if options[:recurring]
@@ -364,6 +383,18 @@ module ActiveMerchant
           elsif self.class.duplicate_window
             ActiveMerchant.deprecated "Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead."
             set_duplicate_window(xml, self.class.duplicate_window)
+          end
+          if options[:email_customer]
+            xml.setting do
+              xml.settingName("emailCustomer")
+              xml.settingValue("true")
+            end
+          end
+          if options[:header_email_receipt]
+            xml.setting do
+              xml.settingName("headerEmailReceipt")
+              xml.settingValue(options[:header_email_receipt])
+            end
           end
         end
       end
@@ -544,6 +575,19 @@ module ActiveMerchant
           xml.invoiceNumber(truncate(options[:order_id], 20))
           xml.description(truncate(options[:description], 255))
         end
+
+        # Authorize.net API requires lineItems to be placed directly after order tag
+        if options[:line_items]
+          xml.lineItems do
+            options[:line_items].each do |line_item|
+              xml.lineItem do
+                line_item.each do |key, value|
+                  xml.send(camel_case_lower(key), value)
+                end
+              end
+            end
+          end
+        end
       end
 
       def create_customer_payment_profile(credit_card, options)
@@ -585,6 +629,11 @@ module ActiveMerchant
         end
       end
 
+      def delete_customer_profile(customer_profile_id)
+        commit(:cim_store_delete_customer) do |xml|
+          xml.customerProfileId(customer_profile_id)
+        end
+      end
 
       def names_from(payment_source, address, options)
         if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
@@ -653,6 +702,8 @@ module ActiveMerchant
           "createCustomerProfileRequest"
         elsif action == :cim_store_update
           "createCustomerPaymentProfileRequest"
+        elsif action == :cim_store_delete_customer
+          "deleteCustomerProfileRequest"
         elsif action == :verify_credentials
           "authenticateTestRequest"
         elsif is_cim_action?(action)
@@ -797,7 +848,7 @@ module ActiveMerchant
       end
 
       def cim?(action)
-        (action == :cim_store) || (action == :cim_store_update)
+        (action == :cim_store) || (action == :cim_store_update) || (action == :cim_store_delete_customer)
       end
 
       def transaction_id_from(authorization)

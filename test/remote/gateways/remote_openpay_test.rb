@@ -106,6 +106,17 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_card_points
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(use_card_points: 'NONE'))
+    assert_success response
+  end
+
+  def test_failed_purchase_with_card_points
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(use_card_points: 'MIXED'))
+    assert_failure response
+    assert_match %r{cardNumber not allowed for Card points}, response.message
+  end
+
   def test_successful_store
     new_email_address = '%d@example.org' % Time.now
     assert response = @gateway.store(@credit_card, name: 'Test User', email: new_email_address)

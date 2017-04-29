@@ -6,6 +6,7 @@ class RemoteVancoTest < Test::Unit::TestCase
 
     @amount = 10005
     @credit_card = credit_card('4111111111111111')
+    @declined_card = credit_card('4111111111111111', year: 2011)
     @check = check
 
     @options = {
@@ -40,10 +41,10 @@ class RemoteVancoTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(@amount, @credit_card, billing_address: address(country: "CA"))
+    response = @gateway.purchase(@amount, @declined_card)
     assert_failure response
-    assert_equal("Client not set up for International Credit Card Processing", response.message)
-    assert_equal("286", response.params["error_codes"])
+    assert_equal("Invalid Expiration Date", response.message)
+    assert_equal("183", response.params["error_codes"])
   end
 
   def test_successful_echeck_purchase

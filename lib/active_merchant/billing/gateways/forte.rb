@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         post[:transaction_id] = transaction_id_from(authorization)
-        post[:authorization_code] = authorization_code_from(authorization)
+        post[:authorization_code] = authorization_code_from(authorization) || ""
         post[:action] = "capture"
 
         commit(:put, post)
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        [response["transaction_id"], response["authorization_code"]].join("#")
+        [response.try(:[], "transaction_id"), response.try(:[], "response").try(:[], "authorization_code")].join("#")
       end
 
       def endpoint

@@ -71,7 +71,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
         @api_key = options[:login]
         @fee_refund_api_key = options[:fee_refund_login]
-
         super
       end
 
@@ -159,6 +158,7 @@ module ActiveMerchant #:nodoc:
       def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(auth_minimum_amount(options), payment, options) }
+          options[:idempotency_key] = nil
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -271,13 +271,15 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
           gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\2').
+          gsub(%r((card\[cryptogram\]=)[^&]+(&?)), '\1[FILTERED]\2').
+          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
+          gsub(%r((card\[emv_approval_data\]=)[^&]+(&?)), '\1[FILTERED]\2').
+          gsub(%r((card\[emv_auth_data\]=)[^&]+(&?)), '\1[FILTERED]\2').
           gsub(%r((card\[encrypted_pin\]=)[^&]+(&?)), '\1[FILTERED]\2').
           gsub(%r((card\[encrypted_pin_key_id\]=)[\w=]+(&?)), '\1[FILTERED]\2').
-          gsub(%r((card\[emv_auth_data\]=)[^&]+(&?)), '\1[FILTERED]\2')
+          gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
+          gsub(%r((card\[swipe_data\]=)[^&]+(&?)), '\1[FILTERED]\2')
       end
 
       def supports_network_tokenization?
@@ -378,7 +380,7 @@ module ActiveMerchant #:nodoc:
             card[:swipe_data] = creditcard.track_data
             card[:fallback_reason] = creditcard.fallback_reason if creditcard.fallback_reason
             card[:read_method] = "contactless" if creditcard.contactless_emv
-            post[:read_method] = "contactless_magstripe_mode" if creditcard.contactless_magstripe
+            card[:read_method] = "contactless_magstripe_mode" if creditcard.contactless_magstripe
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
@@ -473,12 +475,17 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "Stripe-Version" => api_version(options),
-          "X-Stripe-Client-User-Agent" => user_agent,
+          "X-Stripe-Client-User-Agent" => stripe_client_user_agent(options),
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
         headers.merge!("Idempotency-Key" => idempotency_key) if idempotency_key
         headers.merge!("Stripe-Account" => options[:stripe_account]) if options[:stripe_account]
         headers
+      end
+
+      def stripe_client_user_agent(options)
+        return user_agent unless options[:application]
+        JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
       end
 
       def api_version(options)

@@ -265,6 +265,7 @@ class FirstdataE4Test < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       assert_match "<Track1>Track Data</Track1>", data
+      assert_match "<Ecommerce_Flag>R</Ecommerce_Flag>", data
     end.respond_with(successful_purchase_response)
   end
 

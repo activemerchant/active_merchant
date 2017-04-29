@@ -44,6 +44,15 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal 'R50704213207145707', response.authorization
   end
 
+  def test_authorize_passes_ip_and_session_id
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(ip: '127.0.0.1', session_id: '0215ui8ib1'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<session shopperIPAddress="127.0.0.1" id="0215ui8ib1"\/>/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -123,12 +132,28 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal "05d9f8c622553b1df1fe3a145ce91ccf", response.params['refund_received_order_code']
   end
 
+  def test_successful_refund_for_settled_by_merchant_payment
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.respond_with(successful_refund_inquiry_response('SETTLED_BY_MERCHANT'), successful_refund_response)
+    assert_success response
+    assert_equal "05d9f8c622553b1df1fe3a145ce91ccf", response.params['refund_received_order_code']
+  end
+
   def test_refund_fails_unless_status_is_captured
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(failed_refund_inquiry_response, successful_refund_response)
     assert_failure response
     assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' is required.", response.message
+  end
+
+  def test_full_refund_for_unsettled_payment_forces_void
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options.merge(force_full_refund_if_unsettled: true))
+    end.respond_with(failed_refund_inquiry_response, failed_refund_inquiry_response, successful_void_response)
+    assert_success response
+    assert "cancel", response.responses.last.params["action"]
   end
 
   def test_capture
@@ -192,7 +217,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_currency_exponent_handling
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(currency: :JPY))
+      @gateway.authorize(10000, @credit_card, @options.merge(currency: :JPY))
     end.check_request do |endpoint, data, headers|
       assert_tag_with_attributes 'amount',
           {'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY'},
@@ -262,15 +287,17 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
+      assert_no_match %r(cardAddress), data
+      assert_no_match %r(address), data
       assert_no_match %r(firstName), data
       assert_no_match %r(lastName), data
+      assert_no_match %r(address1), data
       assert_no_match %r(address2), data
+      assert_no_match %r(postalCode), data
+      assert_no_match %r(city), data
+      assert_no_match %r(state), data
+      assert_no_match %r(countryCode), data
       assert_no_match %r(telephoneNumber), data
-      assert_match %r(<address1>N/A</address1>), data
-      assert_match %r(<city>N/A</city>), data
-      assert_match %r(<postalCode>0000</postalCode>), data
-      assert_match %r(<state>N/A</state>), data
-      assert_match %r(<countryCode>US</countryCode>), data
     end.respond_with(successful_authorize_response)
   end
 

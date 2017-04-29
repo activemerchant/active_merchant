@@ -86,6 +86,7 @@ module ActiveMerchant #:nodoc:
         "AUD" => '036',
         "BRL" => '986',
         "CAD" => '124',
+        "CLP" => '152',
         "CZK" => '203',
         "DKK" => '208',
         "HKD" => '344',
@@ -106,6 +107,7 @@ module ActiveMerchant #:nodoc:
         "AUD" => '2',
         "BRL" => '2',
         "CAD" => '2',
+        "CLP" => '2',
         "CZK" => '2',
         "DKK" => '2',
         "HKD" => '2',
@@ -415,10 +417,12 @@ module ActiveMerchant #:nodoc:
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         unless creditcard.nil?
-          if %w( visa discover ).include?(creditcard.brand)
-            xml.tag! :CardSecValInd, (creditcard.verification_value? ? '1' : '9')
+          if creditcard.verification_value?
+            if %w( visa discover ).include?(creditcard.brand)
+              xml.tag! :CardSecValInd, '1'
+            end
+            xml.tag! :CardSecVal,  creditcard.verification_value
           end
-          xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
         end
       end
 

@@ -60,10 +60,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "CAPTURED", "SETTLED", "SETTLED_BY_MERCHANT")}
-          r.process{refund_request(money, authorization, options)}
+        response = MultiResponse.run do |r|
+          r.process { inquire_request(authorization, options, "CAPTURED", "SETTLED", "SETTLED_BY_MERCHANT") }
+          r.process { refund_request(money, authorization, options) }
         end
+
+        return response if response.success?
+        return response unless options[:force_full_refund_if_unsettled]
+
+        void(authorization, options ) if response.params["last_event"] == "AUTHORISED"
       end
 
       def verify(credit_card, options={})
@@ -187,7 +192,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
 
         amount_hash = {
-          :value => amount(money),
+          :value => localized_amount(money, currency),
           'currencyCode' => currency,
           'exponent' => non_fractional_currency?(currency) ? 0 : 2
         }
@@ -223,8 +228,11 @@ module ActiveMerchant #:nodoc:
 
               add_address(xml, (options[:billing_address] || options[:address]))
             end
-            if options[:ip]
-              xml.tag! 'session', 'shopperIPAddress' => options[:ip]
+            if options[:ip] && options[:session_id]
+              xml.tag! 'session', 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
+            else
+              xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
+              xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
             end
           end
         end
@@ -238,6 +246,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, address)
+        return unless address
+
         address = address_with_defaults(address)
 
         xml.tag! 'cardAddress' do

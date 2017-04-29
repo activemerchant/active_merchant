@@ -59,6 +59,72 @@ module ActiveMerchant #:nodoc:
         :cancel => 'C'
       }
 
+      STATES = {
+        "ALBERTA" => "AB",
+        "BRITISH COLUMBIA" => "BC",
+        "MANITOBA" => "MB",
+        "NEW BRUNSWICK" => "NB",
+        "NEWFOUNDLAND AND LABRADOR" => "NL",
+        "NOVA SCOTIA" => "NS",
+        "ONTARIO" => "ON",
+        "PRINCE EDWARD ISLAND" => "PE",
+        "QUEBEC" => "QC",
+        "SASKATCHEWAN" => "SK",
+        "NORTHWEST TERRITORIES" => "NT",
+        "NUNAVUT" => "NU",
+        "YUKON" => "YT",
+        "ALABAMA" => "AL",
+        "ALASKA" => "AK",
+        "ARIZONA" => "AZ",
+        "ARKANSAS" => "AR",
+        "CALIFORNIA" => "CA",
+        "COLORADO" => "CO",
+        "CONNECTICUT" => "CT",
+        "DELAWARE" => "DE",
+        "FLORIDA" => "FL",
+        "GEORGIA" => "GA",
+        "HAWAII" => "HI",
+        "IDAHO" => "ID",
+        "ILLINOIS" => "IL",
+        "INDIANA" => "IN",
+        "IOWA" => "IA",
+        "KANSAS" => "KS",
+        "KENTUCKY" => "KY",
+        "LOUISIANA" => "LA",
+        "MAINE" => "ME",
+        "MARYLAND" => "MD",
+        "MASSACHUSETTS" => "MA",
+        "MICHIGAN" => "MI",
+        "MINNESOTA" => "MN",
+        "MISSISSIPPI" => "MS",
+        "MISSOURI" => "MO",
+        "MONTANA" => "MT",
+        "NEBRASKA" => "NE",
+        "NEVADA" => "NV",
+        "NEW HAMPSHIRE" => "NH",
+        "NEW JERSEY" => "NJ",
+        "NEW MEXICO" => "NM",
+        "NEW YORK" => "NY",
+        "NORTH CAROLINA" => "NC",
+        "NORTH DAKOTA" => "ND",
+        "OHIO" => "OH",
+        "OKLAHOMA" => "OK",
+        "OREGON" => "OR",
+        "PENNSYLVANIA" => "PA",
+        "RHODE ISLAND" => "RI",
+        "SOUTH CAROLINA" => "SC",
+        "SOUTH DAKOTA" => "SD",
+        "TENNESSEE" => "TN",
+        "TEXAS" => "TX",
+        "UTAH" => "UT",
+        "VERMONT" => "VT",
+        "VIRGINIA" => "VA",
+        "WASHINGTON" => "WA",
+        "WEST VIRGINIA" => "WV",
+        "WISCONSIN" => "WI",
+        "WYOMING" => "WY"
+      }
+
       def self.included(base)
         base.default_currency = 'CAD'
 
@@ -161,7 +227,7 @@ module ActiveMerchant #:nodoc:
           post[:ordAddress1]      = billing_address[:address1]
           post[:ordAddress2]      = billing_address[:address2]
           post[:ordCity]          = billing_address[:city]
-          post[:ordProvince]      = billing_address[:state]
+          post[:ordProvince]      = STATES[billing_address[:state].upcase] || billing_address[:state] if billing_address[:state]
           post[:ordPostalCode]    = billing_address[:zip]
           post[:ordCountry]       = billing_address[:country]
         end
@@ -172,7 +238,7 @@ module ActiveMerchant #:nodoc:
           post[:shipAddress1]     = shipping_address[:address1]
           post[:shipAddress2]     = shipping_address[:address2]
           post[:shipCity]         = shipping_address[:city]
-          post[:shipProvince]     = shipping_address[:state]
+          post[:shipProvince]     = STATES[shipping_address[:state].upcase] || shipping_address[:state] if shipping_address[:state]
           post[:shipPostalCode]   = shipping_address[:zip]
           post[:shipCountry]      = shipping_address[:country]
           post[:shippingMethod]   = shipping_address[:shipping_method]

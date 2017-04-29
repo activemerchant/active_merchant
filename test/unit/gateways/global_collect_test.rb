@@ -35,6 +35,29 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_purchase_does_not_run_capture_if_authorize_auto_captured
+    response = stub_comms do
+      @gateway.purchase(@accepted_amount, @credit_card, @options)
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+    assert_equal "CAPTURE_REQUESTED", response.params["payment"]["status"]
+    assert_equal 1, response.responses.size
+  end
+
+  def test_trucates_first_name_to_15_chars
+    credit_card = credit_card('4567350000427977', { first_name: "thisisaverylongfirstname" })
+
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/thisisaverylong/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal "000000142800000000920000100001", response.authorization
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@rejected_amount, @declined_card, @options)
@@ -117,12 +140,30 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_refund_passes_currency_code
+    stub_comms do
+      @gateway.refund(@accepted_amount, '000000142800000000920000100001', {currency: 'COP'})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"currencyCode\":\"COP\"/, data)
+    end.respond_with(failed_refund_response)
+  end
+
   def test_failed_refund
     response = stub_comms do
       @gateway.refund(nil, "")
     end.respond_with(failed_refund_response)
 
     assert_failure response
+  end
+
+  def test_rejected_refund
+    response = stub_comms do
+      @gateway.refund(@accepted_amount, '000000142800000000920000100001')
+    end.respond_with(rejected_refund_response)
+
+    assert_failure response
+    assert_equal "1850", response.error_code
+    assert_equal "Status: REJECTED", response.message
   end
 
   def test_scrub
@@ -266,6 +307,10 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def failed_refund_response
     %({\n   \"errorId\" : \"1bd31e6a-39dd-4214-941a-088a320e0286\",\n   \"errors\" : [ {\n      \"code\" : \"1002\",\n      \"propertyName\" : \"paymentId\",\n      \"message\" : \"INVALID_PAYMENT_ID\"\n   } ]\n})
+  end
+
+  def rejected_refund_response
+    %({\n   \"id\" : \"00000022184000047564000-100001\",\n   \"refundOutput\" : {\n      \"amountOfMoney\" : {\n         \"amount\" : 627000,\n         \"currencyCode\" : \"COP\"\n      },\n      \"references\" : {\n         \"merchantReference\" : \"17091GTgZmcC\",\n         \"paymentReference\" : \"0\"\n      },\n      \"paymentMethod\" : \"card\",\n      \"cardRefundMethodSpecificOutput\" : {\n      }\n   },\n   \"status\" : \"REJECTED\",\n   \"statusOutput\" : {\n      \"isCancellable\" : false,\n      \"statusCategory\" : \"UNSUCCESSFUL\",\n      \"statusCode\" : 1850,\n      \"statusCodeChangeDateTime\" : \"20170313230631\"\n   }\n})
   end
 
   def successful_void_response

@@ -33,6 +33,14 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_very_long_name
+    credit_card = credit_card('4567350000427977', { first_name: "thisisaverylongfirstname"})
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@rejected_amount, @declined_card, @options)
     assert_failure response
@@ -65,7 +73,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '123', @options)
     assert_failure response
-    assert_equal 'INVALID_PAYMENT_ID', response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   # Because payments are not fully authorized immediately, refunds can only be
@@ -89,7 +97,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '123')
     assert_failure response
-    assert_equal 'INVALID_PAYMENT_ID', response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   def test_successful_void
@@ -104,7 +112,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('123')
     assert_failure response
-    assert_equal 'INVALID_PAYMENT_ID', response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   def test_successful_verify

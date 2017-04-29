@@ -11,6 +11,19 @@ class RemotePayeezyTest < Test::Unit::TestCase
       :billing_address => address,
       :merchant_ref => 'Store Purchase'
     }
+    @options_mdd = {
+      soft_descriptors: {
+        dba_name: "Caddyshack",
+        street: "1234 Any Street",
+        city: "Durham",
+        region: "North Carolina",
+        mid: "mid_1234",
+        mcc: "mcc_5678",
+        postal_code: "27701",
+        country_code: "US",
+        merchant_contact_info: "8885551212"
+      }
+    }
   end
 
   def test_successful_purchase
@@ -21,6 +34,12 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_echeck
     assert response = @gateway.purchase(@amount, @check, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_soft_descriptors
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_mdd))
     assert_match(/Transaction Normal/, response.message)
     assert_success response
   end
@@ -125,7 +144,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@bad_credit_card, @options)
     assert_failure response
-    assert_match %r{The card number must be numeric}, response.message
+    assert_match %r{The credit card number check failed}, response.message
   end
 
   def test_bad_creditcard_number
@@ -152,9 +171,9 @@ class RemotePayeezyTest < Test::Unit::TestCase
     # ask for error 42 (unable to send trans) as the cents bit...
     @amount = 500042
     assert response = @gateway.purchase(@amount, @credit_card, @options )
-    assert_match(/Internal Server Error/, response.message) # 42 is 'unable to send trans'
+    assert_match(/Server Error/, response.message) # 42 is 'unable to send trans'
     assert_failure response
-    assert_equal response.error_code, "internal_server_error"
+    assert_equal "500", response.error_code
   end
 
   def test_transcript_scrubbing

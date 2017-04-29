@@ -1,6 +1,88 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* SafeCharge: Support credit transactions [shasum] #2404
+* WePay: Add scrub method [shasum] #2406
+* iVeri: Add gateway support [curiousepic] #2400
+* ProPay: Add gateway support [davidsantoso] #2405
+
+== Version 1.65.0 (April 26, 2017)
+* Adyen: Add Adyen v18 gateway [adyenpayments] #2272
+* Authorize.Net: Force refund of unsettled payments via void [bizla] #2399
+* Barclays ePDQ: removed because it has been replaced by a new API [bdewater] #2331
+* Beanstream: Map ISO province codes for US and CA [shasum] #2396
+* Braintree Blue: Change :full_refund option to :force_full_refund_if_unsettled [bizla] #2403
+* Braintree Blue: Force refund of unsettled payments via void [bizla] #2398
+* Checkout V2: Fix sandbox URL [nicolas-maalouf-cko] #2391
+* Checkout V2: Fix success_from not properly checking two possible success codes [davidsantoso]
+* Cybersource: Rescue XML parse exception [shasum] #2380
+* GlobalCollect: Make message and error reporting more robust [curiousepic] #2370
+* GlobalCollect: Set REJECTED refunds as unsuccessful transactions [davidsantoso] #2365
+* GlobalCollect: Truncate firstName field to 15 characters [davidsantoso]
+* JetPay: Pass down authorization payment method token to refund a capture [davidsantoso]
+* Openpay: Support card points [shasum] #2401
+* Orbital: Don't send CVV indicator if CVV is not present [curiousepic] #2368
+* PayU LATAM: Fix incorrect capture method definition [davidsantoso]
+* Payeezy: Support dynamic soft descriptors [shasum] #2384
+* Pin: Add metadata optional field [shasum] #2363
+* Qvalent: Add soft descriptor fields. Add authorize, capture, and void [davidsantoso]
+* SafeCharge: Add gateway [davidsantoso]
+* SagePay: Support Repeat transactions [curiousepic] #2395
+* Stripe: Support custom application in X-Stripe-Client-User-Agent header [davidsantoso]
+* TransFirst Transaction Express: Support ACH [curiousepic] #2389
+* WePay: Support unique_id for idempotent transactions [shasum] #2367
+* Worldpay: Force refund of unsettled payments via void [bizla] #2402
+
+== Version 1.64.0 (March 6, 2017)
+* Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300
+* Authorize.net: Use new `unsupported_feature` standard error code [jasonwebster] #2322
+* Base Gateway: Add new `unsupported_feature` standard error code [jasonwebster] #2322
+* Braintree Blue: Pass cardholder_name with card [curiousepic] #2324
+* Braintree: Add Android Pay meta data fields [jknipp] #2347
+* CardStream: Add additional of currencies [shasum] #2337
+* Credorax: Return failure response reason [shasum] #2341
+* Digitzs: Add gateway [davidsantoso]
+* Digitzs: Remove merchant_id from gateway credentials [davidsantoso]
+* GlobalCollect: Pass options to Refund [curiousepic] #2330
+* Kushki: Add new gateway [shasum] #2326
+* Kushki: Remove body from void call [shasum] #2348
+* Linkpoint: Raise ArgumentError when trying to instantiate without `:pem` [jasonwebster] #2329
+* Omise: Enable Japan, JPY and JCB support [zdk] #2284
+* PayU LATAM: Count pending refunds as succeeded [curiousepic] #2336
+* PayU LATAM: Let Refund take amount value [curiousepic] #2334
+* Paymill: Send new required fields on tokenization requests [tschelabaumann] #2279
+* Revert "Authorize.net: Allow settings to be passed for CIM purchases" [curiousepic] #2339
+* Sage: Default billing state when outside US [shasum] #2340
+* Stripe: Remove idempotency key from verify [shasum] #2335
+* TransFirst Transaction Express: Don't send order_id with refunds [curiousepic] #2350
+* TransFirst Transaction Express: Fix improper AVS and CVV response code mapping [shasum] #2342
+* WePay: Update API version [shasum] #2349
+* USA ePay Advanced: Add quick_update_customer action [joshreeves] #2229
+
+== Version 1.63.0 (February 2, 2017)
+* Authorize.net: Add #unstore support [jimryan] #2293
+* AuthorizeNet: Fix line items quirk [shasum]
+* CardStream: Add dynamic descriptor option fields [curiousepic]
+* CardStream: Support PEN currency [shasum]
+* Culqi: Add new gateway [shasum]
+* CyberSource: Add Lebanon to supported countries [shasum]
+* Element: Add AVS and CVV codes to response [shasum]
+* Firstdata E4 (Payeezy): Set correct ECI value for card present swipes [jasonwebster] #2318
+* GlobalCollect: On purchase skip capture if not required [davidsantoso]
+* PaymentExpress: Update supported countries [shasum]
+* Remove leading or trailing whitespace from credit card name [davidsantoso]
+* Remove support for Ruby 2.0 [jasonwebster]
+* Secure Pay AU: Add scrubbing support to Secure Pay AU [bruno] #2253
+* Stripe: Fix error in handling of track-only contactless EMV data [jasonwebster]
+* Vanco: Update test URL [davidsantoso]
+* WePay: Build fee structure correctly [curiousepic]
+* WePay: Remove null address fields from request [davidsantoso]
+* WePay: Update WePay to API version 2016-12-07 [davidsantoso]
+* Wirecard: Send customer data in requests [davidsantoso]
+* Worldpay: Add session id attribute [shasum]
+* Worldpay: Do not default address when not provided [shasum]
+
+== Version 1.62.0 (December 5, 2016)
 * AuthorizeNet: Map to standard AVSResult codes [shasum]
 * CitrusPay: Add 3DSecureId field [davidsantoso]
 * CyberSource: Only get alpha2 country code when it's a known country [bruno] #2238
@@ -9,6 +91,18 @@
 * NAB Transact: Add scrubbing to NAB Transact [bruno] #2038
 * iATS: Add scrubbing support to iATS [bruno] #2228
 * Stripe: Ensure ECI values for tokenized cards are padded [jasonwebster] #2250
+* Forte: Fix incorrect authorization_code response mapping [davidsantoso]
+* maxiPago: Send currency with request [curiousepic]
+* Credorax: Map order_id to field H9 [curiousepic]
+* Authorize.net: Remove duplicate country GB [shasum]
+* PayU Latam: Add processWithoutCvv2 field [shasum]
+* Fat Zebra: De-nest soft descriptor fields [curiousepic]
+* Credorax: Only pass c5 field for billing address1 [davidsantoso]
+* Orbital: Add support for CLP currency [curiousepic]
+* Authorize.net: Add line item fields and additional transaction settings [shasum]
+* Authorize.net: Pass through `header_email_receipt` [shasum]
+* Stripe: Scrub additional network tokenization related sensitive data [jasonwebster] #2251
+* Applying: Worldpay: Format non-fractional currency amounts correctly [jasonwebster] #2267
 
 == Version 1.61.0 (November 7, 2016)
 * Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]

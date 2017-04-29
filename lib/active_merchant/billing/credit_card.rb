@@ -245,7 +245,7 @@ module ActiveMerchant #:nodoc:
       #
       # @return [String] the full name of the card holder
       def name
-        [first_name, last_name].compact.join(' ')
+        "#{first_name} #{last_name}".strip
       end
 
       def name=(full_name)

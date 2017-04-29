@@ -85,6 +85,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success @gateway.authorize(@amount, @credit_card, @options.merge(:billing_address => address))
   end
 
+  def test_partial_address
+    billing_address = address
+    billing_address.delete(:address1)
+    billing_address.delete(:zip)
+    billing_address.delete(:country)
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(:billing_address => billing_address))
+  end
+
   def test_ip_address
     assert_success @gateway.authorize(@amount, @credit_card, @options.merge(ip: "192.18.123.12"))
   end
@@ -111,7 +119,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_authorize_nonfractional_currency
     assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'IDR')))
     assert_equal "IDR", result.params['amount_currency_code']
-    assert_equal "1234", result.params['amount_value']
+    assert_equal "12", result.params['amount_value']
     assert_equal "0", result.params['amount_exponent']
   end
 

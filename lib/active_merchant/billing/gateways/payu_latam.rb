@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit('auth', post)
       end
 
-      def capture(authorization, options={})
+      def capture(amount, authorization, options={})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
-      def refund(authorization, options={})
+      def refund(amount, authorization, options={})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
@@ -200,18 +200,32 @@ module ActiveMerchant #:nodoc:
           brand, token = split_authorization(payment_method)
           credit_card = {}
           credit_card[:securityCode] = options[:cvv] if options[:cvv]
+          credit_card[:processWithoutCvv2] = true if options[:cvv].blank?
           post[:transaction][:creditCard] = credit_card
           post[:transaction][:creditCardTokenId] = token
           post[:transaction][:paymentMethod] = brand.upcase
         else
           credit_card = {}
           credit_card[:number] = payment_method.number
-          credit_card[:securityCode] = payment_method.verification_value
+          credit_card[:securityCode] = add_security_code(payment_method, options)
           credit_card[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
           credit_card[:name] = payment_method.name.strip
+          credit_card[:processWithoutCvv2] = true if add_process_without_cvv2(payment_method, options)
           post[:transaction][:creditCard] = credit_card
           post[:transaction][:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
         end
+      end
+
+      def add_security_code(payment_method, options)
+        return payment_method.verification_value unless payment_method.verification_value.blank?
+        return options[:cvv] unless options[:cvv].blank?
+        return "0000" if BRAND_MAP[payment_method.brand.to_s] == "AMEX"
+        "000"
+      end
+
+      def add_process_without_cvv2(payment_method, options)
+        return true if payment_method.verification_value.blank? && options[:cvv].blank?
+        false
       end
 
       def add_payer(post, options)
@@ -307,6 +321,8 @@ module ActiveMerchant #:nodoc:
           response["code"] == "SUCCESS" && response["creditCardToken"] && response["creditCardToken"]["creditCardTokenId"].present?
         when 'verify_credentials'
           response["code"] == "SUCCESS"
+        when 'refund'
+        response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "PENDING" || response["transactionResponse"]["state"] == "APPROVED")
         else
           response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "APPROVED")
         end

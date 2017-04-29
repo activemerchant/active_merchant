@@ -136,15 +136,9 @@ module ActiveMerchant #:nodoc:
         extra[:cavv] = options[:cavv] if options[:cavv]
         extra[:xid] = options[:cavv] if options[:xid]
         extra[:sli] = options[:sli] if options[:sli]
-        add_descriptor(extra, options)
+        extra[:name] = options[:merchant] if options[:merchant]
+        extra[:location] = options[:merchant_location] if options[:merchant_location]
         post[:extra] = extra if extra.any?
-      end
-
-      def add_descriptor(extra, options)
-        descriptor = {}
-        descriptor[:name] = options[:merchant] if options[:merchant]
-        descriptor[:location] = options[:merchant_location] if options[:merchant_location]
-        extra[:descriptor] = descriptor if descriptor.any?
       end
 
       def add_order_id(post, options)

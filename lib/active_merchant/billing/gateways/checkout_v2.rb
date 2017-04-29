@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = "Checkout.com V2 Gateway"
       self.homepage_url = "https://www.checkout.com/"
       self.live_url = "https://api2.checkout.com/v2"
-      self.test_url = "http://sandbox.checkout.com/api2/v2"
+      self.test_url = "https://sandbox.checkout.com/api2/v2"
 
       self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
       self.default_currency = "USD"
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["responseCode"] == ("10000" || "10100")
+        response["responseCode"] == "10000" || response["responseCode"] == "10100"
       end
 
       def message_from(succeeded, response)

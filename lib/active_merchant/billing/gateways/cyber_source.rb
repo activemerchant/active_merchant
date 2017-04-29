@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       XSD_VERSION = "1.121"
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG)
+      self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG LB)
 
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(JPY)
@@ -686,6 +686,8 @@ module ActiveMerchant #:nodoc:
           response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
         rescue ResponseError => e
           response = parse(e.response.body)
+        rescue REXML::ParseException => e
+          response = { message: e.to_s }
         end
 
         success = response[:decision] == "ACCEPT"

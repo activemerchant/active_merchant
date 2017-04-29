@@ -48,6 +48,11 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_currency
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: "CLP"))
+    assert_success response
+  end
+
   def test_failed_purchase
     assert response = @gateway.purchase(@invalid_amount, @credit_card, @options)
     assert_failure response

@@ -29,7 +29,7 @@ class RemoteForteTest < Test::Unit::TestCase
     gateway = ForteGateway.new(api_key: "InvalidKey", secret: "InvalidSecret", location_id: "11", account_id: "323")
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "UserName and Password combination not found.", response.message
+    assert_match "combination not found.", response.message
   end
 
   def test_successful_purchase
@@ -101,7 +101,7 @@ class RemoteForteTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'The field transaction_id is required.', response.message
+    assert_match 'field transaction_id', response.message
   end
 
   def test_successful_credit
@@ -140,7 +140,7 @@ class RemoteForteTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'The field transaction_id is required.', response.message
+    assert_match 'field transaction_id', response.message
   end
 
   def test_successful_verify
@@ -170,7 +170,7 @@ class RemoteForteTest < Test::Unit::TestCase
   private
 
   def wait_for_authorization_to_clear
-    sleep(7)
+    sleep(10)
   end
 
 end

@@ -185,7 +185,7 @@ class SageGatewayTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
-  def test_us_address_with_state
+  def test_address_with_state
     post = {}
     options = {
       :billing_address => { :country => "US", :state => "CA"}
@@ -196,15 +196,15 @@ class SageGatewayTest < Test::Unit::TestCase
     assert_equal "CA", post[:C_state]
   end
 
-  def test_us_address_without_state
+  def test_address_without_state
     post = {}
     options = {
-      :billing_address => { :country => "US", :state => ""}
+      :billing_address => { :country => "NZ", :state => ""}
     }
     @gateway.send(:add_addresses, post, options)
 
-    assert_equal "US", post[:C_country]
-    assert_equal "", post[:C_state]
+    assert_equal "NZ", post[:C_country]
+    assert_equal "Outside of US", post[:C_state]
   end
 
   def test_successful_check_purchase
