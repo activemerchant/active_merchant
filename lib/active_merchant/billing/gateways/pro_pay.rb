@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://xmltest.propay.com/API/PropayAPI.aspx'
       self.live_url = 'https://epay.propay.com/api/propayapi.aspx'
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'CA']
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
