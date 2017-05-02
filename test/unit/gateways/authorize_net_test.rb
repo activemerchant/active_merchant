@@ -660,7 +660,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_duplicate_window_class_attribute_deprecated
     @gateway.class.duplicate_window = 0
     assert_deprecation_warning("Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead.") do
-      @gateway.purchase(@amount, @credit_card)
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card)
+      end.respond_with(successful_purchase_response)
     end
   ensure
     @gateway.class.duplicate_window = nil
