@@ -27,10 +27,23 @@ class AdyenTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_authorize
+  def test_successful_authorize_card
+    @gateway.expects(:add_credit_card_payment).with(instance_of(Hash), @credit_card)
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal '7914775043909934', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_recurring
+    token = 'token'
+    @gateway.expects(:add_recurring_payment).with(instance_of(Hash), token)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, token, @options)
     assert_success response
 
     assert_equal '7914775043909934', response.authorization

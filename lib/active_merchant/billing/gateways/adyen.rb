@@ -44,7 +44,13 @@ module ActiveMerchant #:nodoc:
         requires!(options, :reference)
         post = init_post(options)
         add_invoice(post, money, options)
-        add_payment(post, payment)
+
+        if payment.is_a?(String)
+          add_recurring_payment(post, payment)
+        else
+          add_credit_card_payment(post, payment)
+        end
+
         add_extra_data(post, options)
         add_address(post, options)
         commit('authorise', post)
@@ -100,6 +106,7 @@ module ActiveMerchant #:nodoc:
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
         post[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
+        post[:recurring] = options[:recurring] if options[:recurring]
       end
 
       def add_address(post, options)
@@ -132,7 +139,7 @@ module ActiveMerchant #:nodoc:
         post[:modificationAmount] = amount
       end
 
-      def add_payment(post, payment)
+      def add_credit_card_payment(post, payment)
         card = {
             expiryMonth: payment.month,
             expiryYear: payment.year,
@@ -143,6 +150,12 @@ module ActiveMerchant #:nodoc:
         card.delete_if{|k,v| v.blank? }
         requires!(card, :expiryMonth, :expiryYear, :holderName, :number, :cvc)
         post[:card] = card
+      end
+
+      def add_recurring_payment(post, payment)
+        post[:selectedRecurringDetailReference] = payment
+        extra_data = {shopper_interaction: 'ContAuth', recurring: {contract: 'RECURRING'}}
+        add_extra_data(post, extra_data)
       end
 
       def add_references(post, authorization, options = {})
