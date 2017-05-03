@@ -22,8 +22,6 @@ module ActiveMerchant #:nodoc:
       # all transactions are in cents
       self.money_format = :cents
 
-      API_VERSION = '2.2'
-
       ACTION_CODE_MESSAGES = {
         "000" =>  "Approved.",
         "001" =>  "Refer to card issuer.",
@@ -210,19 +208,14 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request(transaction_type, options = {}, transaction_id = nil, &block)
         xml = Builder::XmlMarkup.new
-        xml.tag! 'JetPay', 'Version' => API_VERSION do
+        xml.tag! 'JetPay' do
           # The basic values needed for any request
           xml.tag! 'TerminalID', @options[:login]
           xml.tag! 'TransactionType', transaction_type
           xml.tag! 'TransactionID', transaction_id.nil? ? generate_unique_id.slice(0, 18) : transaction_id
-          xml.tag! 'Origin', options[:origin] || 'INTERNET'
-          xml.tag! 'IndustryInfo', 'Type' => options[:industry_info] || 'ECOMMERCE'
-          xml.tag! 'ReaderUsed', options[:reader_used] || 'CHIP'
-          xml.tag! 'Application', 'VirtPOS', 'Version' => '4.2'
-          xml.tag! 'Device', 'Fake POS', 'Version' => '1.0'
-          xml.tag! 'Library', 'ActiveMerchant', 'Version' => '1.x'
-          xml.tag! 'Gateway', 'JetPay'
-          xml.tag! 'DeveloperID', options[:developer_id] || 'n/a'
+          if options && options[:origin]
+            xml.tag! 'Origin', options[:origin]
+          end
 
           if block_given?
             yield xml
@@ -346,7 +339,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, credit_card)
-        xml.tag! 'CardNum', credit_card.number, "CardPresent" => false, "Tokenize" => true
+        xml.tag! 'CardNum', credit_card.number, "Tokenize" => true
         xml.tag! 'CardExpMonth', format_exp(credit_card.month)
         xml.tag! 'CardExpYear', format_exp(credit_card.year)
 
@@ -361,40 +354,37 @@ module ActiveMerchant #:nodoc:
 
       def add_addresses(xml, options)
         if billing_address = options[:billing_address] || options[:address]
-          xml.tag! 'Billing' do
-            xml.tag! 'Address', [billing_address[:address1], billing_address[:address2]].compact.join(" ")
-            xml.tag! 'City', billing_address[:city]
-            xml.tag! 'StateProv', billing_address[:state]
-            xml.tag! 'PostalCode', billing_address[:zip]
-            xml.tag! 'Country', lookup_country_code(billing_address[:country])
-            xml.tag! 'Phone', billing_address[:phone]
-            xml.tag! 'Email', options[:email] if options[:email]
-          end
+          xml.tag! 'BillingAddress', [billing_address[:address1], billing_address[:address2]].compact.join(" ")
+          xml.tag! 'BillingCity', billing_address[:city]
+          xml.tag! 'BillingStateProv', billing_address[:state]
+          xml.tag! 'BillingPostalCode', billing_address[:zip]
+          xml.tag! 'BillingCountry', lookup_country_code(billing_address[:country])
+          xml.tag! 'BillingPhone', billing_address[:phone]
         end
 
         if shipping_address = options[:shipping_address]
-          xml.tag! 'Shipping' do
-            xml.tag! 'Name', shipping_address[:name]
-            xml.tag! 'Address', [shipping_address[:address1], shipping_address[:address2]].compact.join(" ")
-            xml.tag! 'City', shipping_address[:city]
-            xml.tag! 'StateProv', shipping_address[:state]
-            xml.tag! 'PostalCode', shipping_address[:zip]
-            xml.tag! 'Country', lookup_country_code(shipping_address[:country])
-            xml.tag! 'Phone', shipping_address[:phone]
+          xml.tag! 'ShippingInfo' do
+            xml.tag! 'ShippingName', shipping_address[:name]
+
+            xml.tag! 'ShippingAddr' do
+              xml.tag! 'Address', [shipping_address[:address1], shipping_address[:address2]].compact.join(" ")
+              xml.tag! 'City', shipping_address[:city]
+              xml.tag! 'StateProv', shipping_address[:state]
+              xml.tag! 'PostalCode', shipping_address[:zip]
+              xml.tag! 'Country', lookup_country_code(shipping_address[:country])
+            end
           end
         end
       end
 
       def add_customer_data(xml, options)
+        xml.tag! 'Email', options[:email] if options[:email]
         xml.tag! 'UserIPAddress', options[:ip] if options[:ip]
       end
 
       def add_invoice_data(xml, options)
         xml.tag! 'OrderNumber', options[:order_id] if options[:order_id]
-        if tax = options[:tax]
-          exemption = options[:exemption] || false
-          xml.tag! 'TaxAmount', amount(tax), 'ExemptInd' => exemption
-        end
+        xml.tag! 'TaxAmount', amount(options[:tax]) if options[:tax]
       end
 
       def add_user_defined_fields(xml, options)
