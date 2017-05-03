@@ -112,13 +112,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_purchase_params(post, money, payment_method, options)
+        add_card_holder_authentication(post, options)
         add_amount(post, money, options)
+        add_electronic_commerce_indicator(post, options)
         add_payment_method(post, payment_method, options)
       end
 
       def add_amount(post, money, options)
         post.Amount(amount(money))
         post.Currency(options[:currency] || default_currency)
+      end
+
+      def add_electronic_commerce_indicator(post, options)
+        post.ElectronicCommerceIndicator(options[:eci]) if options[:eci]
       end
 
       def add_authorization(post, authorization, options)
@@ -136,6 +142,11 @@ module ActiveMerchant #:nodoc:
 
       def add_new_reference(post, options)
         post.MerchantReference(options[:order_id] || generate_unique_id)
+      end
+
+      def add_card_holder_authentication(post, options)
+        post.CardHolderAuthenticationID(options[:xid]) if options[:xid]
+        post.CardHolderAuthenticationData(options[:cavv]) if options[:cavv]
       end
 
       def commit(post)

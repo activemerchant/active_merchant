@@ -36,6 +36,19 @@ class RemoteIveriTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_3ds_params
+    options = {
+      eci: "ThreeDSecure",
+      xid: SecureRandom.hex(14),
+      cavv: SecureRandom.hex(14)
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @bad_card, @options)
     assert_failure response

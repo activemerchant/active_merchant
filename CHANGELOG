@@ -6,6 +6,7 @@
 * iVeri: Add gateway support [curiousepic] #2400
 * ProPay: Add gateway support [davidsantoso] #2405
 * ProPay: Add Canada as supported country [davidsantoso]
+* iVeri: Support 3DSecure data fields [davidsantoso] #2412
 
 == Version 1.65.0 (April 26, 2017)
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272
