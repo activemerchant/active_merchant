@@ -3,19 +3,19 @@ module ActiveMerchant #:nodoc:
     class OppGateway < Gateway
 # = Open Payment Platform
     #
-    #  The Open Payment Platform includes a powerful omni-channel transaction processing API, 
-    #   enabling you to quickly and flexibly build new applications and services on the platform. 
-    #   
-    #   This plugin enables connectivity to the Open Payment Platform for activemerchant. 
+    #  The Open Payment Platform includes a powerful omni-channel transaction processing API,
+    #   enabling you to quickly and flexibly build new applications and services on the platform.
+    #
+    #   This plugin enables connectivity to the Open Payment Platform for activemerchant.
     #
     # For any questions or comments please contact support@payon.com
     #
     # == Usage
     #
     #   gateway = ActiveMerchant::Billing::OppGateway.new(
-    #      user_id: 'merchant user id', 
+    #      user_id: 'merchant user id',
     #      password: 'password',
-    #      entity_id: 'entity id', 
+    #      entity_id: 'entity id',
     #   )
     #
     #   # set up credit card object as in main ActiveMerchant example
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     #
     #   # Request: complete example, including address, billing address, shipping address
     #    complete_request_options = {
-    #      order_id: "your merchant/shop order id", # alternative is to set merchantInvoiceId 
+    #      order_id: "your merchant/shop order id", # alternative is to set merchantInvoiceId
     #      merchant_transaction_id: "your merchant/shop transaction id",
     #      address: address,
     #      description: 'Store Purchase - Books',
@@ -67,34 +67,34 @@ module ActiveMerchant #:nodoc:
     #        ip:  101.102.103.104,
     #      },
     #    }
-    #    
+    #
     #    # Request: minimal example
     #    minimal_request_options = {
-    #      order_id: "your merchant/shop order id", # alternative is to set merchantInvoiceId 
+    #      order_id: "your merchant/shop order id", # alternative is to set merchantInvoiceId
     #      description: 'Store Purchase - Books',
     #    }
     #
-    #   options = 
+    #   options =
     #   # run request
     #   response = gateway.purchase(754, creditcard, options) # charge 7,54 EUR
     #
     #   response.success?                   # Check whether the transaction was successful
-    #   response.error_code                 # Retrieve the error message - it's mapped to Gateway::STANDARD_ERROR_CODE 
+    #   response.error_code                 # Retrieve the error message - it's mapped to Gateway::STANDARD_ERROR_CODE
     #   response.message                    # Retrieve the message returned by opp
     #   response.authorization              # Retrieve the unique transaction ID returned by opp
     #   response.params['result']['code']   # Retrieve original return code returned by opp server
     #
     # == Errors
-    #   If transaction is not successful, response.error_code contains mapped to Gateway::STANDARD_ERROR_CODE error message. 
-    #   Complete list of opp error codes can be viewed on https://docs.oppwa.com/ 
-    #   Because this list is much bigger than Gateway::STANDARD_ERROR_CODE, only fraction is mapped to Gateway::STANDARD_ERROR_CODE. 
-    #   All other codes are mapped as Gateway::STANDARD_ERROR_CODE[:processing_error], so if this is the case, 
+    #   If transaction is not successful, response.error_code contains mapped to Gateway::STANDARD_ERROR_CODE error message.
+    #   Complete list of opp error codes can be viewed on https://docs.oppwa.com/
+    #   Because this list is much bigger than Gateway::STANDARD_ERROR_CODE, only fraction is mapped to Gateway::STANDARD_ERROR_CODE.
+    #   All other codes are mapped as Gateway::STANDARD_ERROR_CODE[:processing_error], so if this is the case,
     #   you may check the original result code from OPP that can be found in response.params['result']['code']
-    #       
+    #
     # == Special features
-    #   For purchase method risk check can be forced when options[:risk_workflow] = true 
-    #   This will split (on OPP server side) the transaction into two separate transactions: authorize and capture, 
-    #   but capture will be executed only if risk checks are successful.   
+    #   For purchase method risk check can be forced when options[:risk_workflow] = true
+    #   This will split (on OPP server side) the transaction into two separate transactions: authorize and capture,
+    #   but capture will be executed only if risk checks are successful.
     #
     #   For testing you may use the test account details listed fixtures.yml under opp. It is important to note that there are two test modes available:
     #     options[:test_mode]='EXTERNAL' causes test transactions to be forwarded to the processor's test system for 'end-to-end' testing
@@ -102,10 +102,10 @@ module ActiveMerchant #:nodoc:
     #   If no test_mode parameter is sent, test_mode=INTERNAL is the default behaviour.
     #
     #   Billing Address, Shipping Address, Custom Parameters are supported as described under https://docs.oppwa.com/parameters
-    #   See complete example above for details. 
+    #   See complete example above for details.
     #
     #   == Tokenization
-    #  When create_registration is set to true, the payment details will be stored and a token will be returned in registrationId response field, 
+    #  When create_registration is set to true, the payment details will be stored and a token will be returned in registrationId response field,
     #  which can subsequently be used to reference the stored payment.
 
       self.test_url = 'https://test.oppwa.com/v1/payments'
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IN IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro, :dankort] 
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro, :dankort]
 
       self.homepage_url = 'https://docs.oppwa.com'
       self.display_name = 'Open Payment Platform'
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         # debit
-        execute_dbpa(options[:risk_workflow] ? 'PA.CP': 'DB', 
+        execute_dbpa(options[:risk_workflow] ? 'PA.CP': 'DB',
           money, payment, options)
       end
 
@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
         # preauthorization PA
         execute_dbpa('PA', money, payment, options)
       end
-      
+
       def capture(money, authorization, options={})
         # capture CP
         execute_referencing('CP', money, authorization, options)
@@ -163,8 +163,6 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((authentication\.password=)\w+), '\1[FILTERED]').
-          gsub(%r((authentication\.userId=)\w+), '\1[FILTERED]').
-          gsub(%r((authentication\.entityId=)\w+), '\1[FILTERED]').
           gsub(%r((card\.number=)\d+), '\1[FILTERED]').
           gsub(%r((card\.cvv=)\d+), '\1[FILTERED]')
       end
@@ -173,11 +171,11 @@ module ActiveMerchant #:nodoc:
 
       def execute_dbpa(txtype, money, payment, options)
         post = {}
-        post[:paymentType] = txtype 
+        post[:paymentType] = txtype
         add_invoice(post, money, options)
         add_payment_method(post, payment, options)
         add_address(post, options)
-        add_customer_data(post, options)
+        add_customer_data(post, payment, options)
         add_options(post, options)
         commit(post, nil, options)
       end
@@ -189,38 +187,38 @@ module ActiveMerchant #:nodoc:
         commit(post, authorization, options)
       end
 
-      def add_authentication(post) 
-          post[:authentication] = { entityId: @options[:entity_id], password: @options[:password], userId: @options[:user_id]} 
+      def add_authentication(post)
+          post[:authentication] = { entityId: @options[:entity_id], password: @options[:password], userId: @options[:user_id]}
       end
 
-      def add_customer_data(post, options)
+      def add_customer_data(post, payment, options)
         if options[:customer]
           post[:customer] = {
             merchantCustomerId:  options[:customer][:merchant_customer_id],
-            givenName:  options[:customer][:givenname],
-            surname:  options[:customer][:surname],
+            givenName:  options[:customer][:givenname] || payment.first_name,
+            surname:  options[:customer][:surname] || payment.last_name,
             birthDate:  options[:customer][:birth_date],
             phone:  options[:customer][:phone],
             mobile:  options[:customer][:mobile],
-            email:  options[:customer][:email],
+            email:  options[:customer][:email] || options[:email],
             companyName:  options[:customer][:company_name],
             identificationDocType:  options[:customer][:identification_doctype],
             identificationDocId:  options[:customer][:identification_docid],
-            ip:  options[:customer][:ip],
+            ip:  options[:customer][:ip] || options[:ip]
           }
         end
       end
 
       def add_address(post, options)
-        if billing_address = options[:billing_address]
+        if billing_address = options[:billing_address] || options[:address]
           address(post, billing_address, 'billing')
         end
         if shipping_address = options[:shipping_address]
-          address(post, billing_address, 'shipping')
+          address(post, shipping_address, 'shipping')
           if shipping_address[:name]
-            firstname, lastname = shipping_address[:name].split(' ') 
-            post[:shipping] = { givenName: firstname, surname: lastname }          
-          end 
+            firstname, lastname = shipping_address[:name].split(' ')
+            post[:shipping] = { givenName: firstname, surname: lastname }
+          end
         end
       end
 
@@ -232,15 +230,15 @@ module ActiveMerchant #:nodoc:
             state: address[:state],
             postcode: address[:zip],
             country: address[:country],
-          } 
+          }
       end
 
       def add_invoice(post, money, options)
           post[:amount] = amount(money)
-          post[:currency] = (currency(money) || @options[:currency]) if 'RV'!=(post[:paymentType])
-          post[:descriptor] = options[:description] || options[:descriptor]  
-          post[:merchantInvoiceId] = options[:merchantInvoiceId] || options[:order_id] 
-          post[:merchantTransactionId] = options[:merchant_transaction_id]  
+          post[:currency] = options[:currency] || currency(money) unless post[:paymentType] == 'RV'
+          post[:descriptor] = options[:description] || options[:descriptor]
+          post[:merchantInvoiceId] = options[:merchantInvoiceId] || options[:order_id]
+          post[:merchantTransactionId] = options[:merchant_transaction_id] || generate_unique_id
       end
 
       def add_payment_method(post, payment, options)
@@ -271,30 +269,31 @@ module ActiveMerchant #:nodoc:
       def build_url(url, authorization, options)
         if options[:registrationId]
           "#{url.gsub(/payments/, 'registrations')}/#{options[:registrationId]}/payments"
-        elsif authorization  
+        elsif authorization
           "#{url}/#{authorization}"
         else
           url
         end
       end
-      
+
       def commit(post, authorization, options)
-        url = (test? ? test_url : live_url)
+        url = build_url(test? ? test_url : live_url, authorization, options)
         add_authentication(post)
         post = flatten_hash(post)
 
-        url = build_url(url, authorization, options)
-        raw_response = raw_ssl_request(:post, url, 
-            post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&"), 
-            "Content-Type" => "application/x-www-form-urlencoded;charset=UTF-8")
-            
-        success = success_from(raw_response)
-        response = raw_response.body
-        begin 
-          response = JSON.parse(response)          
-        rescue JSON::ParserError
-          response = json_error(response)
+        response = begin
+          parse(
+            ssl_post(
+              url,
+              post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&"),
+              "Content-Type" => "application/x-www-form-urlencoded;charset=UTF-8"
+            )
+          )
+        rescue ResponseError => e
+          parse(e.response.body)
         end
+
+        success = success_from(response)
 
         Response.new(
           success,
@@ -306,11 +305,34 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def success_from(raw_response)
-        raw_response.code.to_i.between?(200,299)  
+      def parse(body)
+        begin
+          JSON.parse(body)
+        rescue JSON::ParserError
+          json_error(body)
+        end
+      end
+
+      def json_error(body)
+        message = "Invalid response received #{body.inspect}"
+        { 'result' => {'description' => message, 'code' => 'unknown' } }
+      end
+
+      def success_from(response)
+        return false unless response['result']
+
+        success_regex = /^(000\.000\.|000\.100\.1|000\.[36])/
+
+        if success_regex =~ response['result']['code']
+          true
+        else
+          false
+        end
       end
 
       def message_from(response)
+        return 'Failed' unless response['result']
+
         response['result']['description']
       end
 
@@ -319,44 +341,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-          case response['result']['code']
-          when '100.100.101' 
-              Gateway::STANDARD_ERROR_CODE[:incorrect_number]
-          when '100.400.317' 
-              Gateway::STANDARD_ERROR_CODE[:invalid_number]
-          when '100.100.600', '100.100.601', '800.100.153', '800.100.192' 
-              Gateway::STANDARD_ERROR_CODE[:invalid_cvc]
-          when '100.100.303' 
-              Gateway::STANDARD_ERROR_CODE[:expired_card]
-          when '100.800.200', '100.800.201', '100.800.202', '800.800.202' 
-              Gateway::STANDARD_ERROR_CODE[:incorrect_zip]
-          when '100.400.000', '100.400.086', '100.400.305', '800.400.150' 
-              Gateway::STANDARD_ERROR_CODE[:incorrect_address]
-          when '800.100.159' 
-              Gateway::STANDARD_ERROR_CODE[:pickup_card]
-          when '800.100.151', '800.100.158', '800.100.160' 
-              Gateway::STANDARD_ERROR_CODE[:card_declined]
-            else
-              Gateway::STANDARD_ERROR_CODE[:processing_error]
-          end
+        response['result']['code']
       end
-      
-      def json_error(raw_response)
-        message = "Invalid response received #{raw_response.inspect}"
-        { 'result' => {'description' => message, 'code' => 'unknown' } }
-      end
-      
+
       def flatten_hash(hash)
         hash.each_with_object({}) do |(k, v), h|
           if v.is_a? Hash
             flatten_hash(v).map do |h_k, h_v|
               h["#{k}.#{h_k}".to_sym] = h_v
             end
-          else 
+          else
             h[k] = v
           end
          end
-      end      
+      end
     end
   end
 end
