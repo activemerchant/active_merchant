@@ -107,6 +107,7 @@ module ActiveMerchant #:nodoc:
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
         post[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
         post[:recurring] = options[:recurring] if options[:recurring]
+        post[:captureDelayHours] = options[:capture_delay_hours] if options[:capture_delay_hours]
       end
 
       def add_address(post, options)
