@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
           mapping :time, 'trade_time'
           mapping :name, 'product_name'
           mapping :sign, 'sign'
-          mapping :amount, 'order_amount'
+          mapping :amount_with_commision, 'order_amount'
 
         end
       end
