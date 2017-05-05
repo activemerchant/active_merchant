@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class SecureNetTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = SecureNetGateway.new(
                  :login => 'X',
@@ -10,7 +12,7 @@ class SecureNetTest < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
 
-    @options = { 
+    @options = {
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
@@ -24,7 +26,7 @@ class SecureNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal '12532160', response.authorization
+    assert_equal '12532160|1.00|2224', response.authorization
     assert response.test?
   end
 
@@ -35,7 +37,7 @@ class SecureNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
 
-    assert_equal '12532160', response.authorization
+    assert_equal '12532160|1.00|2224', response.authorization
     assert response.test?
   end
 
@@ -46,7 +48,7 @@ class SecureNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal '12533097', response.authorization
+    assert_equal '12533097|1.00|2224', response.authorization
     assert response.test?
   end
 
@@ -57,35 +59,35 @@ class SecureNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
 
-    assert_equal '12533097', response.authorization
+    assert_equal '12533097|1.00|2224', response.authorization
     assert response.test?
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, @credit_card, '12533132', @options)
+    assert response = @gateway.capture(@amount, '12533132', @options)
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal '12533132', response.authorization
+    assert_equal '12533132|1.00|2224', response.authorization
     assert response.test?
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert response = @gateway.capture(@amount, @credit_card, '12533132', @options)
+    assert response = @gateway.capture(@amount, '12533132', @options)
     assert_instance_of Response, response
     assert_failure response
 
-    assert_equal '12533132', response.authorization
+    assert_equal '12533132|1.00|2224', response.authorization
     assert response.test?
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
-    assert response = @gateway.void(@amount, @credit_card, '12533174', @options)
+    assert response = @gateway.void('12533174', @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -93,21 +95,21 @@ class SecureNetTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    assert response = @gateway.void(@amount, @credit_card, '123456', @options)
+    assert response = @gateway.void('123456', @options)
     assert_failure response
     assert_equal 'TRANSACTION ID DOES NOT EXIST FOR VOID', response.message
   end
 
-  def test_successful_credit
-    @gateway.expects(:ssl_post).returns(successful_credit_response)
-    assert response = @gateway.credit(@amount, @credit_card, '123456789', @options)
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.refund(@amount, '123456789', @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
 
-  def test_failed_credit
-    @gateway.expects(:ssl_post).returns(failed_credit_response)
-    assert response = @gateway.credit(@amount, @credit_card, '12533185', @options)
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+    assert response = @gateway.refund(@amount, '12533185', @options)
     assert_failure response
     assert_equal 'CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION', response.message
   end
@@ -115,15 +117,36 @@ class SecureNetTest < Test::Unit::TestCase
   def test_supported_countries
     assert_equal ['US'], SecureNetGateway.supported_countries
   end
-  
+
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :discover], SecureNetGateway.supported_cardtypes
   end
-  
+
   def test_failure_without_response_reason_text
     assert_nothing_raised do
       assert_equal '', @gateway.send(:message_from, {})
     end
+  end
+
+  def test_passes_optional_fields
+    options = { description: "Good Stuff", invoice_description: "Sweet Invoice", invoice_number: "48" }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{NOTE>Good Stuff<}, data)
+      assert_match(%r{INVOICEDESC>Sweet Invoice<}, data)
+      assert_match(%r{INVOICENUM>48<}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_only_passes_optional_fields_if_specified
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{NOTE}, data)
+      assert_no_match(%r{INVOICEDESC}, data)
+      assert_no_match(%r{INVOICENUM}, data)
+    end.respond_with(successful_purchase_response)
   end
 
 
@@ -162,11 +185,11 @@ class SecureNetTest < Test::Unit::TestCase
     '<GATEWAYRESPONSE xmlns="http://gateway.securenet.com/API/Contracts" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><ASPREPONSE i:nil="true"/><TRANSACTIONRESPONSE><RESPONSE_CODE>3</RESPONSE_CODE><RESPONSE_REASON_CODE>01R1</RESPONSE_REASON_CODE><RESPONSE_REASON_TEXT>TRANSACTION ID DOES NOT EXIST FOR VOID</RESPONSE_REASON_TEXT><RESPONSE_SUBCODE/><ADDITIONALAMOUNT>0</ADDITIONALAMOUNT><ADDITIONALDATA1 i:nil="true"/><ADDITIONALDATA2 i:nil="true"/><ADDITIONALDATA3 i:nil="true"/><ADDITIONALDATA4 i:nil="true"/><ADDITIONALDATA5 i:nil="true"/><AUTHCODE/><AUTHORIZEDAMOUNT>0</AUTHORIZEDAMOUNT><AVS_RESULT_CODE/><BANK_ACCOUNTNAME i:nil="true"/><BANK_ACCOUNTTYPE i:nil="true"/><BATCHID i:nil="true"/><CARDHOLDER_FIRSTNAME i:nil="true"/><CARDHOLDER_LASTNAME i:nil="true"/><CARDLEVEL_RESULTS i:nil="true"/><CARDTYPE i:nil="true"/><CARD_CODE_RESPONSE_CODE/><CASHBACK_AMOUNT>0</CASHBACK_AMOUNT><CAVV_RESPONSE_CODE/><CHECKNUM i:nil="true"/><CODE>0400</CODE><CUSTOMERID/><CUSTOMER_BILL><ADDRESS/><CITY/><COMPANY/><COUNTRY/><EMAIL/><EMAILRECEIPT>FALSE</EMAILRECEIPT><FIRSTNAME/><LASTNAME/><PHONE/><STATE/><ZIP/></CUSTOMER_BILL><EXPIRYDATE i:nil="true"/><GRATUITY>0</GRATUITY><INDUSTRYSPECIFICDATA i:nil="true"/><LAST4DIGITS i:nil="true"/><LEVEL2_VALID>FALSE</LEVEL2_VALID><LEVEL3_VALID>FALSE</LEVEL3_VALID><MARKETSPECIFICDATA i:nil="true"/><METHOD>CC</METHOD><NETWORKCODE i:nil="true"/><NETWORKID i:nil="true"/><ORDERID>1285171515481000</ORDERID><PAYMENTID i:nil="true"/><RETREFERENCENUM i:nil="true"/><SECURENETID>1002550</SECURENETID><SETTLEMENTAMOUNT>0</SETTLEMENTAMOUNT><SETTLEMENTDATETIME i:nil="true"/><SYSTEM_TRACENUM i:nil="true"/><TRACKTYPE i:nil="true"/><TRANSACTIONAMOUNT>1.00</TRANSACTIONAMOUNT><TRANSACTIONDATETIME i:nil="true"/><TRANSACTIONID>0</TRANSACTIONID></TRANSACTIONRESPONSE><VAULTACCOUNTRESPONSE i:nil="true"/><VAULTCUSTOMERRESPONSE i:nil="true"/></GATEWAYRESPONSE>'
   end
 
-  def successful_credit_response
+  def successful_refund_response
     '<GATEWAYRESPONSE xmlns="http://gateway.securenet.com/API/Contracts" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><ASPREPONSE i:nil="true"/><TRANSACTIONRESPONSE><RESPONSE_CODE>1</RESPONSE_CODE><RESPONSE_REASON_CODE>0000</RESPONSE_REASON_CODE><RESPONSE_REASON_TEXT>Approved</RESPONSE_REASON_TEXT><RESPONSE_SUBCODE/><ADDITIONALAMOUNT>0</ADDITIONALAMOUNT><ADDITIONALDATA1/><ADDITIONALDATA2/><ADDITIONALDATA3/><ADDITIONALDATA4/><ADDITIONALDATA5/><AUTHCODE>N+NFUB</AUTHCODE><AUTHORIZEDAMOUNT>1.00</AUTHORIZEDAMOUNT><AVS_RESULT_CODE>P</AVS_RESULT_CODE><BANK_ACCOUNTNAME/><BANK_ACCOUNTTYPE/><BATCHID>0</BATCHID><CARDHOLDER_FIRSTNAME>Longbob</CARDHOLDER_FIRSTNAME><CARDHOLDER_LASTNAME>Longsen</CARDHOLDER_LASTNAME><CARDLEVEL_RESULTS/><CARDTYPE>VI</CARDTYPE><CARD_CODE_RESPONSE_CODE>P</CARD_CODE_RESPONSE_CODE><CASHBACK_AMOUNT>0</CASHBACK_AMOUNT><CAVV_RESPONSE_CODE/><CHECKNUM i:nil="true"/><CODE>0000</CODE><CUSTOMERID/><CUSTOMER_BILL><ADDRESS>1234 My Street</ADDRESS><CITY>Ottawa</CITY><COMPANY>Widgets Inc</COMPANY><COUNTRY>CA</COUNTRY><EMAIL/><EMAILRECEIPT>FALSE</EMAILRECEIPT><FIRSTNAME>Longbob</FIRSTNAME><LASTNAME>Longsen</LASTNAME><PHONE>(555)555-5555</PHONE><STATE>ON</STATE><ZIP>K1C2N6</ZIP></CUSTOMER_BILL><EXPIRYDATE>0911</EXPIRYDATE><GRATUITY>0</GRATUITY><INDUSTRYSPECIFICDATA>P</INDUSTRYSPECIFICDATA><LAST4DIGITS>2224</LAST4DIGITS><LEVEL2_VALID>FALSE</LEVEL2_VALID><LEVEL3_VALID>FALSE</LEVEL3_VALID><MARKETSPECIFICDATA/><METHOD>CC</METHOD><NETWORKCODE/><NETWORKID/><ORDERID>1</ORDERID><PAYMENTID/><RETREFERENCENUM/><SECURENETID>1002550</SECURENETID><SETTLEMENTAMOUNT>1.00</SETTLEMENTAMOUNT><SETTLEMENTDATETIME>09212010233807</SETTLEMENTDATETIME><SYSTEM_TRACENUM/><TRACKTYPE>0</TRACKTYPE><TRANSACTIONAMOUNT>1.00</TRANSACTIONAMOUNT><TRANSACTIONDATETIME>09222010023807</TRANSACTIONDATETIME><TRANSACTIONID>12532160</TRANSACTIONID></TRANSACTIONRESPONSE><VAULTACCOUNTRESPONSE i:nil="true"/><VAULTCUSTOMERRESPONSE i:nil="true"/></GATEWAYRESPONSE>'
   end
 
-  def failed_credit_response
+  def failed_refund_response
     '<GATEWAYRESPONSE xmlns="http://gateway.securenet.com/API/Contracts" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><ASPREPONSE i:nil="true"/><TRANSACTIONRESPONSE><RESPONSE_CODE>3</RESPONSE_CODE><RESPONSE_REASON_CODE>01R3</RESPONSE_REASON_CODE><RESPONSE_REASON_TEXT>CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION</RESPONSE_REASON_TEXT><RESPONSE_SUBCODE/><ADDITIONALAMOUNT>0</ADDITIONALAMOUNT><ADDITIONALDATA1 i:nil="true"/><ADDITIONALDATA2 i:nil="true"/><ADDITIONALDATA3 i:nil="true"/><ADDITIONALDATA4 i:nil="true"/><ADDITIONALDATA5 i:nil="true"/><AUTHCODE/><AUTHORIZEDAMOUNT>0</AUTHORIZEDAMOUNT><AVS_RESULT_CODE/><BANK_ACCOUNTNAME i:nil="true"/><BANK_ACCOUNTTYPE i:nil="true"/><BATCHID i:nil="true"/><CARDHOLDER_FIRSTNAME i:nil="true"/><CARDHOLDER_LASTNAME i:nil="true"/><CARDLEVEL_RESULTS i:nil="true"/><CARDTYPE i:nil="true"/><CARD_CODE_RESPONSE_CODE/><CASHBACK_AMOUNT>0</CASHBACK_AMOUNT><CAVV_RESPONSE_CODE/><CHECKNUM i:nil="true"/><CODE>0500</CODE><CUSTOMERID/><CUSTOMER_BILL><ADDRESS/><CITY/><COMPANY/><COUNTRY/><EMAIL/><EMAILRECEIPT>FALSE</EMAILRECEIPT><FIRSTNAME/><LASTNAME/><PHONE/><STATE/><ZIP/></CUSTOMER_BILL><EXPIRYDATE i:nil="true"/><GRATUITY>0</GRATUITY><INDUSTRYSPECIFICDATA i:nil="true"/><LAST4DIGITS i:nil="true"/><LEVEL2_VALID>FALSE</LEVEL2_VALID><LEVEL3_VALID>FALSE</LEVEL3_VALID><MARKETSPECIFICDATA i:nil="true"/><METHOD>CC</METHOD><NETWORKCODE i:nil="true"/><NETWORKID i:nil="true"/><ORDERID>1285171984419000</ORDERID><PAYMENTID i:nil="true"/><RETREFERENCENUM i:nil="true"/><SECURENETID>1002550</SECURENETID><SETTLEMENTAMOUNT>0</SETTLEMENTAMOUNT><SETTLEMENTDATETIME i:nil="true"/><SYSTEM_TRACENUM i:nil="true"/><TRACKTYPE i:nil="true"/><TRANSACTIONAMOUNT>1.00</TRANSACTIONAMOUNT><TRANSACTIONDATETIME i:nil="true"/><TRANSACTIONID>0</TRANSACTIONID></TRANSACTIONRESPONSE><VAULTACCOUNTRESPONSE i:nil="true"/><VAULTCUSTOMERRESPONSE i:nil="true"/></GATEWAYRESPONSE>'
   end
 

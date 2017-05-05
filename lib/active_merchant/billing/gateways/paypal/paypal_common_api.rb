@@ -65,22 +65,18 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
 
         headers = {'X-PP-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
-        @options = {
+        options = {
           :pem => pem_file,
           :signature => signature,
           :headers => headers || {}
         }.update(options)
 
 
-        if @options[:pem].blank? && @options[:signature].blank?
+        if options[:pem].blank? && options[:signature].blank?
           raise ArgumentError, "An API Certificate or API Signature is required to make requests to PayPal"
         end
 
-        super
-      end
-
-      def test?
-        @options[:test] || Base.gateway_mode == :test
+        super(options)
       end
 
       def reauthorize(money, authorization, options = {})
@@ -246,7 +242,7 @@ module ActiveMerchant #:nodoc:
         commit 'DoAuthorization', build_do_authorize(transaction_id, money, options)
       end
 
-      # The ManagePendingTransactionStatus API operation accepts or denys a
+      # The ManagePendingTransactionStatus API operation accepts or denies a
       # pending transaction held by Fraud Management Filters.
       #
       # ==== Parameters:
@@ -346,6 +342,7 @@ module ActiveMerchant #:nodoc:
       def build_mass_pay_request(*args)
         default_options = args.last.is_a?(Hash) ? args.pop : {}
         recipients = args.first.is_a?(Array) ? args : [args]
+        receiver_type = default_options[:receiver_type]
 
         xml = Builder::XmlMarkup.new
 
@@ -353,11 +350,18 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'MassPayRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'EmailSubject', default_options[:subject] if default_options[:subject]
+            xml.tag! 'ReceiverType', receiver_type if receiver_type
             recipients.each do |money, recipient, options|
               options ||= default_options
               xml.tag! 'MassPayItem' do
-                xml.tag! 'ReceiverEmail', recipient
-                xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
+                if(!receiver_type || receiver_type == 'EmailAddress')
+                  xml.tag! 'ReceiverEmail', recipient
+                elsif receiver_type == 'UserID'
+                  xml.tag! 'ReceiverID', recipient
+                else
+                  raise ArgumentError.new("Unknown receiver_type: #{receiver_type}")
+                end
+                xml.tag! 'Amount', amount(money), 'currencyID' => (options[:currency] || currency(money))
                 xml.tag! 'Note', options[:note] if options[:note]
                 xml.tag! 'UniqueId', options[:unique_id] if options[:unique_id]
               end
@@ -401,7 +405,7 @@ module ActiveMerchant #:nodoc:
         transaction_search_optional_fields = %w{ Payer ReceiptID Receiver
                                                  TransactionID InvoiceID CardNumber
                                                  AuctionItemNumber TransactionClass
-                                                 CurrencyCode Status }
+                                                 CurrencyCode Status ProfileID }
         build_request_wrapper('TransactionSearch') do |xml|
           xml.tag! 'StartDate', date_to_iso(options[:start_date])
           xml.tag! 'EndDate', date_to_iso(options[:end_date]) unless options[:end_date].blank?
@@ -509,10 +513,10 @@ module ActiveMerchant #:nodoc:
       def add_credentials(xml)
         xml.tag! 'RequesterCredentials', CREDENTIALS_NAMESPACES do
           xml.tag! 'n1:Credentials' do
-            xml.tag! 'Username', @options[:login]
-            xml.tag! 'Password', @options[:password]
-            xml.tag! 'Subject', @options[:subject]
-            xml.tag! 'Signature', @options[:signature] unless @options[:signature].blank?
+            xml.tag! 'n1:Username', @options[:login]
+            xml.tag! 'n1:Password', @options[:password]
+            xml.tag! 'n1:Subject', @options[:subject]
+            xml.tag! 'n1:Signature', @options[:signature] unless @options[:signature].blank?
           end
         end
       end
@@ -538,7 +542,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Number', item[:number]
             xml.tag! 'n2:Quantity', item[:quantity]
             if item[:amount]
-              xml.tag! 'n2:Amount', localized_amount(item[:amount], currency_code), 'currencyID' => currency_code
+              xml.tag! 'n2:Amount', item_amount(item[:amount], currency_code), 'currencyID' => currency_code
             end
             xml.tag! 'n2:Description', item[:description]
             xml.tag! 'n2:ItemURL', item[:url]
@@ -621,11 +625,11 @@ module ActiveMerchant #:nodoc:
         response = parse(action, ssl_post(endpoint_url, build_request(request), @options[:headers]))
 
         build_response(successful?(response), message_from(response), response,
-    	    :test => test?,
-    	    :authorization => authorization_from(response),
-    	    :fraud_review => fraud_review?(response),
-    	    :avs_result => { :code => response[:avs_code] },
-    	    :cvv_result => response[:cvv2_code]
+          :test => test?,
+          :authorization => authorization_from(response),
+          :fraud_review => fraud_review?(response),
+          :avs_result => { :code => response[:avs_code] },
+          :cvv_result => response[:cvv2_code]
         )
       end
 
@@ -634,7 +638,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:transaction_id] || response[:authorization_id] || response[:refund_transaction_id] # middle one is from reauthorization
+        (
+          response[:transaction_id] ||
+          response[:authorization_id] ||
+          response[:refund_transaction_id] ||
+          response[:billing_agreement_id]
+        )
       end
 
       def successful?(response)
@@ -647,6 +656,14 @@ module ActiveMerchant #:nodoc:
 
       def date_to_iso(date)
         (date.is_a?(Date) ? date.to_time : date).utc.iso8601
+      end
+
+      def item_amount(amount, currency_code)
+        if amount.to_i < 0 && non_fractional_currency?(currency_code)
+          amount(amount).to_f.floor
+        else
+          localized_amount(amount, currency_code)
+        end
       end
     end
   end

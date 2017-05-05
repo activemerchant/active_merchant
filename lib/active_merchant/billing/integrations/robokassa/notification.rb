@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
             [gross, item_id]
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             security_key == generate_signature
           end
 

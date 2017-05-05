@@ -87,4 +87,10 @@ class WorldPayHelperTest < Test::Unit::TestCase
     assert_field 'M_custom_2', 'Custom Value 2'
     assert_field 'MC_custom_3', 'Custom Value 3'
   end
+
+  def test_return_url
+    @helper.return_url 'some_return_url'
+
+    assert_equal 'some_return_url', @helper.fields['MC_return']
+  end
 end

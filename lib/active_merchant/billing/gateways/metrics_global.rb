@@ -48,11 +48,10 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:login</tt> -- The username required to access the Metrics Global control panel. (REQUIRED)
       # * <tt>:password</tt> -- The password required to access the Metrics Global control panel. (REQUIRED)
-      # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server. 
+      # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -156,7 +155,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-      
+
       def commit(action, money, parameters)
         parameters[:amount] = amount(money) unless action == 'VOID'
 
@@ -177,8 +176,8 @@ module ActiveMerchant #:nodoc:
         #   (TESTMODE) Successful Sale
         test_mode = test? || message =~ /TESTMODE/
 
-        Response.new(success?(response), message, response, 
-          :test => test_mode, 
+        Response.new(success?(response), message, response,
+          :test => test_mode,
           :authorization => response[:transaction_id],
           :fraud_review => fraud_review?(response),
           :avs_result => { :code => response[:avs_result_code] },
@@ -199,7 +198,7 @@ module ActiveMerchant #:nodoc:
 
         results = {
           :response_code => fields[RESPONSE_CODE].to_i,
-          :response_reason_code => fields[RESPONSE_REASON_CODE], 
+          :response_reason_code => fields[RESPONSE_REASON_CODE],
           :response_reason_text => fields[RESPONSE_REASON_TEXT],
           :avs_result_code => fields[AVS_RESULT_CODE],
           :transaction_id => fields[TRANSACTION_ID],
@@ -252,7 +251,7 @@ module ActiveMerchant #:nodoc:
           post[:customer_ip] = options[:ip]
         end
       end
-      
+
       # x_duplicate_window won't be sent by default, because sending it changes the response.
       # "If this field is present in the request with or without a value, an enhanced duplicate transaction response will be sent."
       def add_duplicate_window(post)
@@ -271,7 +270,7 @@ module ActiveMerchant #:nodoc:
           post[:country] = address[:country].to_s
           post[:state]   = address[:state].blank?  ? 'n/a' : address[:state]
         end
-        
+
         if address = options[:shipping_address]
           post[:ship_to_first_name] = address[:first_name].to_s
           post[:ship_to_last_name] = address[:last_name].to_s
@@ -296,11 +295,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def message_from(results)  
+      def message_from(results)
         if results[:response_code] == DECLINED
           return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
           if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[ results[:avs_result_code] ] 
+            return AVSResult.messages[ results[:avs_result_code] ]
           end
         end
 

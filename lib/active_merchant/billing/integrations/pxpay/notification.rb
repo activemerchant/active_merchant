@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
           end
 
           # was the notification a validly formed request?
-          def acknowledge
+          def acknowledge(authcode = nil)
             @valid == '1'
           end
 

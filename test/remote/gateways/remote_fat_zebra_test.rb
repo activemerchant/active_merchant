@@ -1,8 +1,6 @@
 require 'test_helper'
 
 class RemoteFatZebraTest < Test::Unit::TestCase
-
-
   def setup
     @gateway = FatZebraGateway.new(fixtures(:fat_zebra))
 
@@ -37,7 +35,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
   def test_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
-    
+
     assert response = @gateway.refund(@amount, purchase.authorization, rand(1000000).to_s)
     assert_success response
     assert_match /Approved/, response.message
@@ -55,12 +53,12 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert card = @gateway.store(@credit_card)
 
     assert_success card
-    assert_false card.params["response"]["token"].nil?
+    assert_false card.authorization.nil?
   end
 
   def test_purchase_with_token
     assert card = @gateway.store(@credit_card)
-    assert purchase = @gateway.purchase(@amount, {:cvv => 123, :token => card.authorization}, @options)
+    assert purchase = @gateway.purchase(@amount, card.authorization, @options.merge(:cvv => 123))
     assert_success purchase
   end
 

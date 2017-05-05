@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
         class Status
           include PostsData
                     
-          STATUS_TEST_URL = 'https://test.timesofmoney.com/direcpay/secure/dpPullMerchAtrnDtls.jsp'
+          STATUS_TEST_URL = 'https://test.direcpay.com/direcpay/secure/dpMerchantTransaction.jsp'
           STATUS_LIVE_URL = 'https://www.timesofmoney.com/direcpay/secure/dpPullMerchAtrnDtls.jsp'
           
           attr_reader :account, :options

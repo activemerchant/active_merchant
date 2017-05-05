@@ -1,6 +1,5 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
     class Error < ActiveMerchantError #:nodoc:
     end
 
@@ -24,16 +23,34 @@ module ActiveMerchant #:nodoc:
         @test = options[:test] || false
         @authorization = options[:authorization]
         @fraud_review = options[:fraud_review]
-        @avs_result = AVSResult.new(options[:avs_result]).to_hash
-        @cvv_result = CVVResult.new(options[:cvv_result]).to_hash
+
+        @avs_result = if options[:avs_result].kind_of?(AVSResult)
+          options[:avs_result].to_hash
+        else
+          AVSResult.new(options[:avs_result]).to_hash
+        end
+
+        @cvv_result = if options[:cvv_result].kind_of?(CVVResult)
+          options[:cvv_result].to_hash
+        else
+          CVVResult.new(options[:cvv_result]).to_hash
+        end
       end
     end
 
     class MultiResponse < Response
+      def self.run(primary_response = :last, &block)
+        response = new.tap(&block)
+        response.primary_response = primary_response
+        response
+      end
+
       attr_reader :responses
+      attr_writer :primary_response
 
       def initialize
         @responses = []
+        @primary_response = :last
       end
 
       def process
@@ -52,10 +69,14 @@ module ActiveMerchant #:nodoc:
         @responses.all?{|r| r.success?}
       end
 
+      def primary_response
+        success? && @primary_response == :first ? @responses.first : @responses.last
+      end
+
       %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
         class_eval %(
           def #{m}
-            @responses.last.#{m}
+            (@responses.empty? ? nil : primary_response.#{m})
           end
         )
       end

@@ -46,8 +46,6 @@ module ActiveMerchant #:nodoc:
       # * <tt>:advanced_password</tt> -- The MiGS AMA User's password
       def initialize(options = {})
         requires!(options, :login, :password)
-        @test = options[:login].start_with?('TEST')
-        @options = options
         super
       end
 
@@ -180,6 +178,10 @@ module ActiveMerchant #:nodoc:
         response_object(response_hash)
       end
 
+      def test?
+        @options[:login].start_with?('TEST')
+      end
+
       private
 
       def add_advanced_user(post)
@@ -219,7 +221,7 @@ module ActiveMerchant #:nodoc:
 
       def response_object(response)
         Response.new(success?(response), response[:Message], response,
-          :test => @test,
+          :test => test?,
           :authorization => response[:TransactionNo],
           :fraud_review => fraud_review?(response),
           :avs_result => { :code => response[:AVSResultCode] },

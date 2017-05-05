@@ -3,10 +3,7 @@ require 'base64'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WirecardGateway < Gateway
-      # Test server location
       self.test_url = 'https://c3-test.wirecard.com/secure/ssl-gateway'
-
-      # Live server location
       self.live_url = 'https://c3.wirecard.com/secure/ssl-gateway'
 
       # The Namespaces are not really needed, because it just tells the System, that there's actually no namespace used.
@@ -16,7 +13,7 @@ module ActiveMerchant #:nodoc:
         'xsi:noNamespaceSchemaLocation' => 'wirecard.xsd'
       }
 
-      PERMITTED_TRANSACTIONS = %w[ AUTHORIZATION CAPTURE_AUTHORIZATION PURCHASE ]
+      PERMITTED_TRANSACTIONS = %w[ PREAUTHORIZATION CAPTURE PURCHASE ]
 
       RETURN_CODES = %w[ ACK NOK ]
 
@@ -29,62 +26,54 @@ module ActiveMerchant #:nodoc:
       # number 5551234 within area code 202 (country code 1).
       VALID_PHONE_FORMAT = /\+\d{1,3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
 
-      # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['DE']
-
-      # Wirecard supports all major credit and debit cards:
-      # Visa, Mastercard, American Express, Diners Club,
-      # JCB, Switch, VISA Carte Bancaire, Visa Electron and UATP cards.
-      # They also support the latest anti-fraud systems such as Verified by Visa or Master Secure Code.
-      self.supported_cardtypes = [
-        :visa, :master, :american_express, :diners_club, :jcb, :switch
-      ]
-
-      # The homepage URL of the gateway
+      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :switch ]
+      self.supported_countries = %w(AD CY GI IM MT RO CH AT DK GR IT MC SM TR BE EE HU LV NL SK GB BG FI IS LI NO SI VA FR IL LT PL ES CZ DE IE LU PT SE)
       self.homepage_url = 'http://www.wirecard.com'
-
-      # The name of the gateway
       self.display_name = 'Wirecard'
-
-      # The currency should normally be EUROs
       self.default_currency = 'EUR'
-
-      # 100 is 1.00 Euro
       self.money_format = :cents
 
+      # Public: Create a new Wirecard gateway.
+      #
+      # options - A hash of options:
+      #           :login         - The username
+      #           :password      - The password
+      #           :signature     - The BusinessCaseSignature
       def initialize(options = {})
-        # verify that username and password are supplied
-        requires!(options, :login, :password)
-        # unfortunately Wirecard also requires a BusinessCaseSignature in the XML request
-        requires!(options, :signature)
-        @options = options
+        requires!(options, :login, :password, :signature)
         super
       end
 
-      # Should run against the test servers or not?
-      def test?
-        @options[:test] || super
-      end
-
-      # Authorization
       def authorize(money, creditcard, options = {})
         options[:credit_card] = creditcard
-        commit(:authorization, money, options)
+        commit(:preauthorization, money, options)
       end
 
-      # Capture Authorization
       def capture(money, authorization, options = {})
-        options[:authorization] = authorization
-        commit(:capture_authorization, money, options)
+        options[:preauthorization] = authorization
+        commit(:capture, money, options)
       end
 
-      # Purchase
       def purchase(money, creditcard, options = {})
         options[:credit_card] = creditcard
         commit(:purchase, money, options)
       end
 
+      def void(identification, options = {})
+        options[:preauthorization] = identification
+        commit(:reversal, nil, options)
+      end
+
+      def refund(money, identification, options = {})
+        options[:preauthorization] = identification
+        commit(:bookback, money, options)
+      end
+
+
       private
+      def clean_description(description)
+        description.to_s.slice(0,32).encode("US-ASCII", invalid: :replace, undef: :replace, replace: '?')
+      end
 
       def prepare_options_hash(options)
         result = @options.merge(options)
@@ -154,16 +143,19 @@ module ActiveMerchant #:nodoc:
         options[:order_id] ||= generate_unique_id
 
         xml.tag! "FNC_CC_#{options[:action].to_s.upcase}" do
-          xml.tag! 'FunctionID', options[:description]
+          xml.tag! 'FunctionID', clean_description(options[:description])
           xml.tag! 'CC_TRANSACTION' do
             xml.tag! 'TransactionID', options[:order_id]
             case options[:action]
-            when :authorization, :purchase
+            when :preauthorization, :purchase
               add_invoice(xml, money, options)
               add_creditcard(xml, options[:credit_card])
               add_address(xml, options[:billing_address])
-            when :capture_authorization
-              xml.tag! 'GuWID', options[:authorization]
+            when :capture, :bookback
+              xml.tag! 'GuWID', options[:preauthorization]
+              add_amount(xml, money)
+            when :reversal
+              xml.tag! 'GuWID', options[:preauthorization]
             end
           end
         end
@@ -171,12 +163,17 @@ module ActiveMerchant #:nodoc:
 
       # Includes the payment (amount, currency, country) to the transaction-xml
       def add_invoice(xml, money, options)
-        xml.tag! 'Amount', amount(money)
+        add_amount(xml, money)
         xml.tag! 'Currency', options[:currency] || currency(money)
         xml.tag! 'CountryCode', options[:billing_address][:country]
         xml.tag! 'RECURRING_TRANSACTION' do
           xml.tag! 'Type', options[:recurring] || 'Single'
         end
+      end
+
+      # Include the amount in the transaction-xml
+      def add_amount(xml, money)
+        xml.tag! 'Amount', amount(money)
       end
 
       # Includes the credit-card data to the transaction-xml
@@ -239,25 +236,30 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      # Parse the <ProcessingStatus> Element which containts all important information
+      # Parse the <ProcessingStatus> Element which contains all important information
       def parse_response(response, root)
         status = nil
-        # get the root element for this Transaction
+
         root.elements.to_a.each do |node|
           if node.name =~ /FNC_CC_/
             status = REXML::XPath.first(node, "CC_TRANSACTION/PROCESSING_STATUS")
           end
         end
+
         message = ""
         if status
           if info = status.elements['Info']
             message << info.text
           end
-          # Get basic response information
+
           status.elements.to_a.each do |node|
             response[node.name.to_sym] = (node.text || '').strip
           end
+
+          error_code = REXML::XPath.first(status, "ERROR/Number")
+          response['ErrorCode'] = error_code.text if error_code
         end
+
         parse_error(root, message)
         response[:Message] = message
       end

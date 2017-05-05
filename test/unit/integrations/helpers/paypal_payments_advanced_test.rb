@@ -2,12 +2,21 @@ require 'test_helper'
 
 class PaypalPaymentsAdvancedHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
-  
+
   def setup
+    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      @original_kcode = $KCODE
+      $KCODE = 'u'
+    end
+
     @helper = PaypalPaymentsAdvanced::Helper.new(1121, 'myaccount', :amount => 500, 
                                       :currency => 'CAD', :credential2 => "password", 
                                       :test => true)
     @url = 'http://example.com'
+  end
+
+  def teardown
+    $KCODE = @original_kcode if @original_kcode
   end
 
   def test_basic_helper_fields
@@ -29,7 +38,7 @@ class PaypalPaymentsAdvancedHelperTest < Test::Unit::TestCase
   end
 
   def test_description
-    @helper.description = "my order"
+    @helper.description "my order"
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 
@@ -46,7 +55,8 @@ class PaypalPaymentsAdvancedHelperTest < Test::Unit::TestCase
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 
-      assert_equal 'John Doe', params["name[8]"]
+      assert_equal 'John', params["first_name[4]"]
+      assert_equal 'Doe', params["last_name[3]"]
       true
     }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
 

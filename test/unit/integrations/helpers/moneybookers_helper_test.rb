@@ -81,4 +81,18 @@ class MoneybookersHelperTest < Test::Unit::TestCase
     @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD', :account_name => 'My account name')
     assert_field 'recipient_description', "My account name"
   end
+
+  def test_language
+
+    @helper = Moneybookers::Helper.new('order-500', 'cody@example.com', :amount => 500, :currency => 'USD', :country => 'DK')
+    assert_field 'language', 'DA'
+
+    # Country with supported language (non-mapped)
+    @helper = Moneybookers::Helper.new('order-500', 'cody@example.com', :amount => 500, :currency => 'USD', :country => 'PL')
+    assert_field 'language', 'PL'
+
+    # Country with unsupported language
+    @helper = Moneybookers::Helper.new('order-500', 'cody@example.com', :amount => 500, :currency => 'USD', :country => 'CA')
+    assert_field 'language', 'EN'
+  end
 end

@@ -58,12 +58,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
-      end
-
-      def test?
-        @options[:test] || super
       end
 
       def purchase(money, credit_card_or_stored_id, options = {})
@@ -113,8 +108,10 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new
 
-        xml.tag! 'amount', amount(money)
-        xml.tag! 'currency', options[:currency] || currency(money)
+        currency = options[:currency] || currency(money)
+
+        xml.tag! 'amount', localized_amount(money, currency)
+        xml.tag! 'currency', currency
         xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
 
         xml.tag! 'CreditCardInfo' do

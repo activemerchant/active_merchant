@@ -16,6 +16,7 @@ module ActiveMerchant #:nodoc:
 
           mapping :description, 'desc'
           mapping :notify_url, 'MC_callback'
+          mapping :return_url, 'MC_return'
           
           
           # WorldPay supports two different test modes - :always_succeed and :always_fail
@@ -57,7 +58,7 @@ module ActiveMerchant #:nodoc:
           end
           
           # Support for a MD5 hash of selected fields to prevent tampering
-          # For futher information read the tech note at the address below: 
+          # For further information read the tech note at the address below:
           # http://support.worldpay.com/kb/integration_guides/junior/integration/help/tech_notes/sjig_tn_009.html
           def encrypt(secret, fields = [:amount, :currency, :account, :order])
             signature_fields = fields.collect{ |field| mappings[field] }

@@ -27,7 +27,20 @@ class NetRegistryTest < Test::Unit::TestCase
     assert_success response
     assert_match(/\A\d{16}\z/, response.authorization)
 
-    response = @gateway.credit(@amount, response.authorization)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      response = @gateway.credit(@amount, response.authorization)
+      assert_equal 'approved', response.params['status']
+      assert_success response
+    end
+  end
+
+  def test_successful_purchase_and_refund
+    response = @gateway.purchase(@amount, @valid_creditcard)
+    assert_equal 'approved', response.params['status']
+    assert_success response
+    assert_match(/\A\d{16}\z/, response.authorization)
+
+    response = @gateway.refund(@amount, response.authorization)
     assert_equal 'approved', response.params['status']
     assert_success response
   end

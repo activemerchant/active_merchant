@@ -3,60 +3,238 @@ module ActiveMerchant #:nodoc:
     # For more information on the Iridium Gateway please download the
     # documentation from their Merchant Management System.
     #
-    # The login and password are not the username and password you use to 
-    # login to the Iridium Merchant Management System. Instead, you will 
+    # The login and password are not the username and password you use to
+    # login to the Iridium Merchant Management System. Instead, you will
     # use the API username and password you were issued separately.
     class IridiumGateway < Gateway
-      self.live_url = self.test_url = 'https://gw1.iridiumcorp.net/'      
+      self.live_url = self.test_url = 'https://gw1.iridiumcorp.net/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['GB', 'ES']
       self.default_currency = 'EUR'
       self.money_format = :cents
-      
+
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :solo, :diners_club]
+
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.iridiumcorp.co.uk/'
-      
+
       # The name of the gateway
       self.display_name = 'Iridium'
-      
-      CURRENCY_CODES = { 
+
+      CURRENCY_CODES = {
+        "AED" => '784',
+        "AFN" => '971',
+        "ALL" => '008',
+        "AMD" => '051',
+        "ANG" => '532',
+        "AOA" => '973',
+        "ARS" => '032',
         "AUD" => '036',
+        "AWG" => '533',
+        "AZN" => '944',
+        "BAM" => '977',
+        "BBD" => '052',
+        "BDT" => '050',
+        "BGN" => '975',
+        "BHD" => '048',
+        "BIF" => '108',
+        "BMD" => '060',
+        "BND" => '096',
+        "BOB" => '068',
+        "BOV" => '984',
+        "BRL" => '986',
+        "BSD" => '044',
+        "BTN" => '064',
+        "BWP" => '072',
+        "BYR" => '974',
+        "BZD" => '084',
         "CAD" => '124',
+        "CDF" => '976',
+        "CHE" => '947',
+        "CHF" => '756',
+        "CHW" => '948',
+        "CLF" => '990',
+        "CLP" => '152',
+        "CNY" => '156',
+        "COP" => '170',
+        "COU" => '970',
+        "CRC" => '188',
+        "CUP" => '192',
+        "CVE" => '132',
+        "CYP" => '196',
+        "CZK" => '203',
+        "DJF" => '262',
+        "DKK" => '208',
+        "DOP" => '214',
+        "DZD" => '012',
+        "EEK" => '233',
+        "EGP" => '818',
+        "ERN" => '232',
+        "ETB" => '230',
         "EUR" => '978',
+        "FJD" => '242',
+        "FKP" => '238',
         "GBP" => '826',
+        "GEL" => '981',
+        "GHS" => '288',
+        "GIP" => '292',
+        "GMD" => '270',
+        "GNF" => '324',
+        "GTQ" => '320',
+        "GYD" => '328',
+        "HKD" => '344',
+        "HNL" => '340',
+        "HRK" => '191',
+        "HTG" => '332',
+        "HUF" => '348',
+        "IDR" => '360',
+        "ILS" => '376',
+        "INR" => '356',
+        "IQD" => '368',
+        "IRR" => '364',
+        "ISK" => '352',
+        "JMD" => '388',
+        "JOD" => '400',
+        "JPY" => '392',
+        "KES" => '404',
+        "KGS" => '417',
+        "KHR" => '116',
+        "KMF" => '174',
+        "KPW" => '408',
+        "KRW" => '410',
+        "KWD" => '414',
+        "KYD" => '136',
+        "KZT" => '398',
+        "LAK" => '418',
+        "LBP" => '422',
+        "LKR" => '144',
+        "LRD" => '430',
+        "LSL" => '426',
+        "LTL" => '440',
+        "LVL" => '428',
+        "LYD" => '434',
+        "MAD" => '504',
+        "MDL" => '498',
+        "MGA" => '969',
+        "MKD" => '807',
+        "MMK" => '104',
+        "MNT" => '496',
+        "MOP" => '446',
+        "MRO" => '478',
+        "MTL" => '470',
+        "MUR" => '480',
+        "MVR" => '462',
+        "MWK" => '454',
         "MXN" => '484',
+        "MXV" => '979',
+        "MYR" => '458',
+        "MZN" => '943',
+        "NAD" => '516',
+        "NGN" => '566',
+        "NIO" => '558',
+        "NOK" => '578',
+        "NPR" => '524',
         "NZD" => '554',
+        "OMR" => '512',
+        "PAB" => '590',
+        "PEN" => '604',
+        "PGK" => '598',
+        "PHP" => '608',
+        "PKR" => '586',
+        "PLN" => '985',
+        "PYG" => '600',
+        "QAR" => '634',
+        "ROL" => '642',
+        "RON" => '946',
+        "RSD" => '941',
+        "RUB" => '643',
+        "RWF" => '646',
+        "SAR" => '682',
+        "SBD" => '090',
+        "SCR" => '690',
+        "SDG" => '938',
+        "SEK" => '752',
+        "SGD" => '702',
+        "SHP" => '654',
+        "SKK" => '703',
+        "SLL" => '694',
+        "SOS" => '706',
+        "SRD" => '968',
+        "STD" => '678',
+        "SYP" => '760',
+        "SZL" => '748',
+        "THB" => '764',
+        "TJS" => '972',
+        "TMM" => '795',
+        "TND" => '788',
+        "TOP" => '776',
+        "TRY" => '949',
+        "TTD" => '780',
+        "TWD" => '901',
+        "TZS" => '834',
+        "UAH" => '980',
+        "UGX" => '800',
         "USD" => '840',
+        "USN" => '997',
+        "USS" => '998',
+        "UYU" => '858',
+        "UZS" => '860',
+        "VEB" => '862',
+        "VND" => '704',
+        "VUV" => '548',
+        "WST" => '882',
+        "XAF" => '950',
+        "XAG" => '961',
+        "XAU" => '959',
+        "XBA" => '955',
+        "XBB" => '956',
+        "XBC" => '957',
+        "XBD" => '958',
+        "XCD" => '951',
+        "XDR" => '960',
+        "XOF" => '952',
+        "XPD" => '964',
+        "XPF" => '953',
+        "XPT" => '962',
+        "XTS" => '963',
+        "XXX" => '999',
+        "YER" => '886',
+        "ZAR" => '710',
+        "ZMK" => '894',
+        "ZWD" => '716',
       }
-      
+
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
-      end  
-      
-      def authorize(money, creditcard, options = {})
-        commit(build_purchase_request('PREAUTH', money, creditcard, options), options)
       end
-      
+
+      def authorize(money, payment_source, options = {})
+        setup_address_hash(options)
+
+        if payment_source.respond_to?(:number)
+          commit(build_purchase_request('PREAUTH', money, payment_source, options), options)
+        else
+          commit(build_reference_request('PREAUTH', money, payment_source, options), options)
+        end
+      end
+
       def purchase(money, payment_source, options = {})
         setup_address_hash(options)
-        
+
         if payment_source.respond_to?(:number)
           commit(build_purchase_request('SALE', money, payment_source, options), options)
         else
           commit(build_reference_request('SALE', money, payment_source, options), options)
         end
-      end                       
-    
+      end
+
       def capture(money, authorization, options = {})
         commit(build_reference_request('COLLECTION', money, authorization, options), options)
       end
-      
+
       def credit(money, authorization, options={})
         deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
@@ -65,12 +243,12 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options={})
         commit(build_reference_request('REFUND', money, authorization, options), options)
       end
-      
+
       def void(authorization, options={})
         commit(build_reference_request('VOID', nil, authorization, options), options)
       end
-      
-      private                       
+
+      private
 
       def build_purchase_request(type, money, creditcard, options)
         options.merge!(:action => 'CardDetailsTransaction')
@@ -80,7 +258,7 @@ module ActiveMerchant #:nodoc:
           add_customerdetails(xml, creditcard, options[:billing_address], options)
         end
       end
-      
+
       def build_reference_request(type, money, authorization, options)
         options.merge!(:action => 'CrossReferenceTransaction')
         order_id, cross_reference, auth_id = authorization.split(";")
@@ -96,13 +274,13 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
-      
+
       def build_request(options)
         requires!(options, :action)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
-        xml.tag! 'soap:Envelope', { 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/', 
-                                    'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 
+        xml.tag! 'soap:Envelope', { 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/',
+                                    'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
                                     'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
           xml.tag! 'soap:Body' do
             xml.tag! options[:action], {'xmlns' => "https://www.thepaymentgateway.net/"} do
@@ -120,7 +298,7 @@ module ActiveMerchant #:nodoc:
         options[:billing_address] = options[:billing_address] || options[:address] || {}
         options[:shipping_address] = options[:shipping_address] || {}
       end
-      
+
       def add_purchase_data(xml, type, money, options)
         requires!(options, :order_id)
         xml.tag! 'TransactionDetails', {'Amount' => amount(money), 'CurrencyCode' => currency_code(options[:currency] || currency(money))} do
@@ -150,13 +328,13 @@ module ActiveMerchant #:nodoc:
             end
             xml.tag! 'PhoneNumber', address[:phone]
           end
-          
+
           xml.tag! 'EmailAddress', options[:email]
           xml.tag! 'CustomerIPAddress', options[:ip] || "127.0.0.1"
-        end   
+        end
       end
 
-      def add_creditcard(xml, creditcard)      
+      def add_creditcard(xml, creditcard)
         xml.tag! 'CardDetails' do
           xml.tag! 'CardName', creditcard.name
           xml.tag! 'CV2', creditcard.verification_value if creditcard.verification_value
@@ -164,7 +342,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ExpiryDate', { 'Month' => creditcard.month.to_s.rjust(2, "0"), 'Year' => creditcard.year.to_s[/\d\d$/] }
         end
       end
-      
+
       def add_merchant_data(xml, options)
         xml.tag! 'MerchantAuthentication', {"MerchantID" => @options[:login], "Password" => @options[:password]}
       end
@@ -174,13 +352,13 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request,
                               {"SOAPAction" => "https://www.thepaymentgateway.net/#{options[:action]}",
                                "Content-Type" => "text/xml; charset=utf-8" }))
-  
+
         success = response[:transaction_result][:status_code] == "0"
         message = response[:transaction_result][:message]
         authorization = success ? [ options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code] ].compact.join(";") : nil
-        
-        Response.new(success, message, response, 
-          :test => test?, 
+
+        Response.new(success, message, response,
+          :test => test?,
           :authorization => authorization)
       end
 
@@ -190,19 +368,19 @@ module ActiveMerchant #:nodoc:
         if (root = REXML::XPath.first(xml, "//CardDetailsTransactionResponse")) or
               (root = REXML::XPath.first(xml, "//CrossReferenceTransactionResponse"))
           root.elements.to_a.each do |node|
-            case node.name  
+            case node.name
             when 'Message'
               reply[:message] = reply(node.text)
             else
               parse_element(reply, node)
             end
           end
-        elsif root = REXML::XPath.first(xml, "//soap:Fault") 
+        elsif root = REXML::XPath.first(xml, "//soap:Fault")
           parse_element(reply, root)
           reply[:message] = "#{reply[:faultcode]}: #{reply[:faultstring]}"
         end
         reply
-      end     
+      end
 
       def parse_element(reply, node)
         case node.name
@@ -236,7 +414,7 @@ module ActiveMerchant #:nodoc:
           k = node.name.underscore.to_sym
           if node.has_elements?
             reply[k] = {}
-            node.elements.each{|e| parse_element(reply[k], e) } 
+            node.elements.each{|e| parse_element(reply[k], e) }
           else
             if node.has_attributes?
               reply[k] = {}
@@ -248,7 +426,7 @@ module ActiveMerchant #:nodoc:
         end
         reply
       end
-      
+
       def currency_code(currency)
         CURRENCY_CODES[currency]
       end

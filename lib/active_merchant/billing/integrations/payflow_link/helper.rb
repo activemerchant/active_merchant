@@ -20,7 +20,6 @@ module ActiveMerchant #:nodoc:
           mapping :credential2, 'pwd'
           mapping :credential3, 'partner'
           mapping :order, 'user1'
-          mapping :description, 'description'
 
           mapping :amount, 'amt'
 
@@ -33,10 +32,15 @@ module ActiveMerchant #:nodoc:
                                      :phone   => 'phone',
                                      :name    => 'name'
 
-          mapping :customer, :name => 'name'
+          mapping :customer, { :first_name => 'first_name', :last_name => 'last_name' }
+
+          def description(value)
+            add_field('description', normalize("#{value}").delete("#"))
+          end
 
           def customer(params = {})
-            add_field(mappings[:customer][:name], [params.delete(:first_name), params.delete(:last_name)].compact.join(' '))
+            add_field(mappings[:customer][:first_name], params[:first_name])
+            add_field(mappings[:customer][:last_name], params[:last_name])
           end
 
           def billing_address(params = {})
@@ -92,6 +96,18 @@ module ActiveMerchant #:nodoc:
             end
 
             [response['SECURETOKEN'], response['SECURETOKENID']] if response['RESPMSG'] && response['RESPMSG'].downcase == "approved"
+          end
+
+          def normalize(text)
+            return unless text
+
+            if ActiveSupport::Inflector.method(:transliterate).arity == -2
+              ActiveSupport::Inflector.transliterate(text,'')
+            elsif RUBY_VERSION >= '1.9'
+              text.gsub(/[^\x00-\x7F]+/, '')
+            else
+              ActiveSupport::Inflector.transliterate(text).to_s
+            end
           end
         end
       end

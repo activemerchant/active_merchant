@@ -26,15 +26,6 @@ class MoneybookersNotificationTest < Test::Unit::TestCase
   def test_respond_to_acknowledge
     assert @moneybookers.respond_to?(:acknowledge)
   end
-
-  def test_credential2_required
-    assert_raises ArgumentError do
-      Moneybookers::Notification.new(http_raw_data, {})
-    end
-    assert_nothing_raised do
-      Moneybookers::Notification.new(http_raw_data, :credential2 => 'secret')
-    end
-  end
   
   def test_status_failed
     notification = Moneybookers::Notification.new(http_raw_data.sub(/status=2/, 'status=-2'), :credential2 => 'secret')

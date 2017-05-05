@@ -54,7 +54,6 @@ module ActiveMerchant #:nodoc:
       # password: referrer url (for authorize authentication)
       def initialize(options = {})
         requires!(options, :login)
-        @options = options
         super
       end
 

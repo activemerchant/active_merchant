@@ -17,10 +17,9 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login)
-        @options = options
         super
       end
-      
+
       def test?
         @options[:login] == "TEST0"
       end

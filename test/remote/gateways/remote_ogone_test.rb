@@ -163,6 +163,14 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success purchase
   end
 
+  def test_successful_store_with_store_amount_at_the_gateway_level
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:store_amount => 100))
+    assert response = gateway.store(@credit_card, :billing_id => 'test_alias')
+    assert_success response
+    assert purchase = gateway.purchase(@amount, 'test_alias')
+    assert_success purchase
+  end
+
   def test_successful_store_generated_alias
     assert response = @gateway.store(@credit_card)
     assert_success response
@@ -170,39 +178,25 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  def test_successful_store
-    assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
-    assert_success response
-    assert purchase = @gateway.purchase(@amount, 'test_alias')
-    assert_success purchase
-  end
-
-  def test_successful_store_generated_alias
-    assert response = @gateway.store(@credit_card)
-    assert_success response
-    assert purchase = @gateway.purchase(@amount, response.billing_id)
-    assert_success purchase
-  end
-
-  def test_successful_referenced_credit
+  def test_successful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    assert credit = @gateway.credit(@amount, purchase.authorization, @options)
-    assert_success credit
-    assert credit.authorization
-    assert_equal OgoneGateway::SUCCESS_MESSAGE, credit.message
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success refund
+    assert refund.authorization
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, refund.message
   end
 
-  def test_unsuccessful_referenced_credit
+  def test_unsuccessful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    assert credit = @gateway.credit(@amount+1, purchase.authorization, @options) # too much refund requested
-    assert_failure credit
-    assert credit.authorization
-    assert_equal 'Overflow in refunds requests', credit.message
+    assert refund = @gateway.refund(@amount+1, purchase.authorization, @options) # too much refund requested
+    assert_failure refund
+    assert refund.authorization
+    assert_equal 'Overflow in refunds requests', refund.message
   end
 
-  def test_successful_unreferenced_credit
+  def test_successful_credit
     assert credit = @gateway.credit(@amount, @credit_card, @options)
     assert_success credit
     assert credit.authorization

@@ -18,6 +18,34 @@ class BaseTest < Test::Unit::TestCase
     assert_equal LinkpointGateway,     Base.gateway(:linkpoint)
   end
 
+  def test_should_raise_when_nil_gateway_is_passed
+    e = assert_raise ArgumentError do
+      Base.gateway(nil)
+    end
+    assert_equal 'A gateway provider must be specified', e.message
+  end
+
+  def test_should_raise_when_empty_gateway_is_passed
+    e = assert_raise ArgumentError do
+      Base.gateway('')
+    end
+    assert_equal 'A gateway provider must be specified', e.message
+  end
+
+  def test_should_raise_when_invalid_gateway_symbol_is_passed
+    e = assert_raise ArgumentError do
+      Base.gateway(:hotdog)
+    end
+    assert_equal 'The specified gateway is not valid (hotdog)', e.message
+  end
+
+  def test_should_raise_when_invalid_gateway_string_is_passed
+    e = assert_raise ArgumentError do
+      Base.gateway('hotdog')
+    end
+    assert_equal 'The specified gateway is not valid (hotdog)', e.message
+  end
+
   def test_should_return_an_integration_by_name
     chronopay = Base.integration(:chronopay)
     

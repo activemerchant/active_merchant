@@ -1,7 +1,3 @@
-if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-  $KCODE = 'u'
-end
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class GarantiGateway < Gateway
@@ -36,7 +32,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password, :terminal_id, :merchant_id)
-        @options = options
         super
       end
 
@@ -198,7 +193,7 @@ module ActiveMerchant #:nodoc:
 
       def normalize(text)
         return unless text
-        
+
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
           ActiveSupport::Inflector.transliterate(text,'')
         elsif RUBY_VERSION >= '1.9'

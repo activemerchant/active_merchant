@@ -4,50 +4,44 @@ class QuickpayNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "mysecretmd5string")
+    @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "test", version: 7)
   end
 
   def test_accessors
     assert @quickpay.complete?
     assert_equal "000", @quickpay.status
-    assert_equal "88", @quickpay.transaction_id
-    assert_equal "order-4232", @quickpay.item_id
-    assert_equal "89.50", @quickpay.gross
+    assert_equal "4262", @quickpay.transaction_id
+    assert_equal "1353061158", @quickpay.item_id
+    assert_equal "1.23", @quickpay.gross
     assert_equal "DKK", @quickpay.currency
-    assert_equal Time.parse("2008-11-05 21:57:37"), @quickpay.received_at
-    assert @quickpay.test?
+    assert_equal Time.parse("2012-11-16 10:19:36+00:00"), @quickpay.received_at
   end
 
   def test_compositions
-    assert_equal Money.new(8950, 'DKK'), @quickpay.amount
+    assert_equal Money.new(123, 'DKK'), @quickpay.amount
   end
 
-  def test_acknowledgement    
+  def test_acknowledgement
     assert @quickpay.acknowledge
   end
-  
+
   def test_failed_acknnowledgement
     @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "badmd5string")
     assert !@quickpay.acknowledge
   end
 
-  def test_acknowledgement_with_cardnumber
-    @quickpay = Quickpay::Notification.new(http_raw_data_with_cardnumber, :credential2 => "mysecretmd5string")
-    assert @quickpay.acknowledge
-  end
-  
   def test_quickpay_attributes
-    assert_equal "Authorized", @quickpay.state
+    assert_equal "1", @quickpay.state
     assert_equal "authorize", @quickpay.msgtype
   end
 
   def test_generate_md5string
-    assert_equal "authorizeorder-42328950DKK081105215737Authorized000Ok000OK89898989info@pinds.com88visa-dkYesmysecretmd5string", 
+    assert_equal "authorize1353061158123DKK2012-11-16T10:19:36+00:001000OK000OKMerchant #1merchant1@pil.dk4262dankortXXXXXXXXXXXX999910test",
                  @quickpay.generate_md5string
   end
 
   def test_generate_md5check
-    assert_equal "e70bd0e528dc335ac74d5f1c348fe2f4", @quickpay.generate_md5check
+    assert_equal "7caa0df7d17085206af135ed70d22cc9", @quickpay.generate_md5check
   end
 
   def test_respond_to_acknowledge
@@ -56,14 +50,100 @@ class QuickpayNotificationTest < Test::Unit::TestCase
 
   private
   def http_raw_data
-    "msgtype=authorize&ordernumber=order-4232&amount=8950&currency=DKK&time=081105215737&state=Authorized&" + 
-    "chstat=000&chstatmsg=Ok&qpstat=000&qpstatmsg=OK&merchant=89898989&merchantemail=info@pinds.com&transaction=88&" + 
-    "cardtype=visa-dk&testmode=Yes&md5check=e70bd0e528dc335ac74d5f1c348fe2f4"
-  end  
+    <<-END_POST
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="msgtype"
 
-  def http_raw_data_with_cardnumber
-    "msgtype=authorize&ordernumber=order-4232&amount=8950&currency=DKK&time=081105215737&state=Authorized&" + 
-    "chstat=000&chstatmsg=Ok&qpstat=000&qpstatmsg=OK&merchant=89898989&merchantemail=info@pinds.com&transaction=88&" + 
-    "cardtype=visa-dk&testmode=Yes&cardnumber=XXXXXXXXXXXX4092&md5check=bded8685e10790a9351a9d51285cec9d"
-  end  
+authorize
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="ordernumber"
+
+1353061158
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="amount"
+
+123
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="currency"
+
+DKK
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="time"
+
+2012-11-16T10:19:36+00:00
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="state"
+
+1
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="qpstat"
+
+000
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="qpstatmsg"
+
+OK
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="chstat"
+
+000
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="chstatmsg"
+
+OK
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="merchant"
+
+Merchant #1
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="merchantemail"
+
+merchant1@pil.dk
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="transaction"
+
+4262
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="cardtype"
+
+dankort
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="cardnumber"
+
+XXXXXXXXXXXX9999
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="cardhash"
+
+
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="acquirer"
+
+nets
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="splitpayment"
+
+1
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="fraudprobability"
+
+
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="fraudremarks"
+
+
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="fraudreport"
+
+
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="fee"
+
+0
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="md5check"
+
+7caa0df7d17085206af135ed70d22cc9
+------------------------------8a827a0e6829--
+END_POST
+  end
 end

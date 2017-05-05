@@ -33,6 +33,12 @@ class ValitorNotificationTest < Test::Unit::TestCase
     
     assert !@notification.test?
   end
+
+  def test_comma_delimited_notification
+    @notification = Valitor::Notification.new(http_raw_query_with_comma_delimited_currency)
+
+    assert_equal "25.99", @notification.gross
+  end
   
   def test_acknowledge
     valid = Valitor.notification(http_raw_query, :credential2 => 'password')
@@ -54,4 +60,8 @@ class ValitorNotificationTest < Test::Unit::TestCase
   def http_raw_query
     "Kortategund=VISA&KortnumerSidustu=9999&Dagsetning=21.01.2011&Heimildarnumer=123450&Faerslunumer=FÆRSLUNR: 0026237&VefverslunSalaID=2b969de3-6928-4fa7-a0d6-6dec63fec5c3&Tilvisunarnumer=order684afbb93730db2492a8fa2f3fedbcb9&RafraenUndirskriftSvar=03d859813eff711d6c8667b0caf5f5a5&Upphaed=100&Nafn=NAME&Heimilisfang=123 ADDRESS&Postnumer=98765&Stadur=CITY&Land=COUNTRY&Tolvupostfang=EMAIL@EXAMPLE.COM&Athugasemdir=COMMENTS&LeyfirEndurtoku="
   end  
+
+  def http_raw_query_with_comma_delimited_currency
+    "Kortategund=VISA&KortnumerSidustu=9999&Dagsetning=21.01.2011&Heimildarnumer=123450&Faerslunumer=FÆRSLUNR: 0026237&VefverslunSalaID=2b969de3-6928-4fa7-a0d6-6dec63fec5c3&Tilvisunarnumer=order684afbb93730db2492a8fa2f3fedbcb9&RafraenUndirskriftSvar=03d859813eff711d6c8667b0caf5f5a5&Upphaed=25,99&Nafn=NAME&Heimilisfang=123 ADDRESS&Postnumer=98765&Stadur=CITY&Land=COUNTRY&Tolvupostfang=EMAIL@EXAMPLE.COM&Athugasemdir=COMMENTS&LeyfirEndurtoku="
+  end
 end

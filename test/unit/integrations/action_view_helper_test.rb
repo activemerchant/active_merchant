@@ -15,6 +15,14 @@ class ActionViewHelperTest < Test::Unit::TestCase
     assert_raise(ArgumentError){ payment_service_for }
   end
 
+  def test_payment_service_rendering_error
+    ActiveMerchant::Billing::Integrations::Bogus::Helper.any_instance.stubs(:form_fields).raises(StandardError.new('Standard Error'))
+
+    assert_raise(ActiveMerchant::Billing::Integrations::ActionViewHelperError) do
+      payment_service_for('order-1', 'test', :service => :bogus){}
+    end
+  end
+
   protected
   def protect_against_forgery?
     false
@@ -32,6 +40,7 @@ if "".respond_to? :html_safe?
     include ActionView::Helpers::TextHelper
   end
 
+  ::MissingSourceFile::REGEXPS << [/^cannot load such file -- (.+)$/i, 1]
   class PaymentServiceController < ActionController::Base
 
     def payment_action
@@ -40,7 +49,7 @@ if "".respond_to? :html_safe?
   end
 
   class PaymentServiceControllerTest < ActionController::TestCase
-    if ActionPack::VERSION::MAJOR == 3
+    if ActionPack::VERSION::MAJOR > 2
       begin
         require 'rails'
       rescue NameError, LoadError
@@ -49,6 +58,9 @@ if "".respond_to? :html_safe?
 
       class MerchantApp < Rails::Application; end
       PaymentServiceController.send :include, Rails.application.routes.url_helpers
+      if Rails.version.start_with? '4'
+        Rails.application.config.secret_key_base = 'dad95720ad4ac592311874defcac8dd586795da07a5c87e51810c5a84012f2f2bf474b352fa76b1a0852cc14cf451b19d82abafa97dfdb1d14298843904c9b9b'
+      end
     end
 
     def test_html_safety
@@ -66,9 +78,9 @@ if "".respond_to? :html_safe?
     def with_routes
       raise "You need to pass a block to me" unless block_given?
 
-      if ActionPack::VERSION::MAJOR == 3
+      if ActionPack::VERSION::MAJOR > 2
         with_routing do |set|
-          set.draw { match '/:action', :controller => 'payment_service' }
+          set.draw { match '/:action', :controller => 'payment_service', :via => [:get, :post] }
           yield
         end
       else

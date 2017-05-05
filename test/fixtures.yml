@@ -10,6 +10,11 @@
 #
 # Paste any required PEM certificates after the pem key.
 #
+
+app55:
+  api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
+  api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
+
 authorize_net:
   login: X
   password: Y
@@ -25,6 +30,15 @@ barclays_epdq:
   login: test
   password: test
   client_id: 1234
+
+barclays_epdq_extra_plus:
+  login: merchant number
+  user: username
+  password: password
+
+be2bill:
+  login: your_test_login
+  password: your_test_password
 
 beanstream:
   login: merchant id
@@ -50,6 +64,7 @@ braintree_blue:
   merchant_id: X
   public_key: Y
   private_key: Z
+  merchant_account_id: A
 
 braintree_blue_with_processing_rules:
   merchant_id: X
@@ -65,13 +80,25 @@ card_stream:
   login: X
   password: Y
 
+cecabank:
+  merchant_id: MERCHANTID
+  acquirer_bin: ACQUIRERBIN
+  terminal_id: TERMINALID
+  key: KEY
+
 certo_direct:
   login: 1
   password: vP6OwK3
 
+# To get 100% passing Cybersource remote tests, you must ask
+# Cybersource support to enable the recurring and pinless debit
+# services on your test account.
 cyber_source:
   login: X
   password: Y
+
+conekta:
+  key: 1tv5yJp3xnVZ7eK67m4h
 
 data_cash:
   login: X
@@ -94,6 +121,10 @@ epay:
   login: X
   password: Y
 
+evo_ca:
+  username: demo
+  password: password
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'
@@ -102,6 +133,11 @@ eway_managed:
   login: '87654321'
   username: 'test@eway.com.au'
   password: 'test123'
+
+# Working credentials, no need to replace
+eway_rapid:
+  login: "F9802CIVgUgNaD8y/H52MBMnL5OvMoy4cYimpi1L/dCXeNNR6or3vLPoC9GjeLVdA7ymi+"
+  password: "sandbox1"
 
 # Working credentials, no need to replace
 exact:
@@ -117,9 +153,23 @@ federated_canada:
   login: demo
   password: password
 
+finansbank:
+  login: TEST
+  password: TEST
+  client_id: TEST
+
 first_pay:
   login:
   password:
+
+firstdata_e4:
+  login:
+  password:
+
+first_giving:
+  application_key: ''
+  security_token:  ''
+  charity_id: "1234"
 
 garanti:
   login: "PROVAUT"
@@ -152,6 +202,10 @@ itransact:
 jetpay:
   login: TESTTERMINAL
 
+hdfc:
+  login: LOGIN
+  password: PASSWORD
+
 iridium:
     login: LOGIN
     password: PASSWORD
@@ -167,19 +221,43 @@ litle:
   merchant_id: 101
 
 # Working test credentials, no need to replace
+maxipago:
+  login: "100"
+  password: "21g8u6gh6szw1gywfs165vui"
+
+# Working test credentials, no need to replace
 merchant_esolutions:
   login: "94100008043900000004"
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
+
+merchant_one:
+  username: 'demo'
+  password: 'password'
 
 merchant_ware:
  login:
  password:
  name:
 
+merchant_ware_version_four:
+ login:
+ password:
+ name:
+
+merchant_warrior:
+  merchant_uuid: '50c5b9f0b52ea'
+  api_key: '8fr3ajm7'
+  api_passphrase: 'cymvlwgc'
+
 # Working credentials, no need to replace
 mercury:
+  login: '395347306=TOKEN'
+  password: '123TOKEN'
+
+mercury_no_tokenization:
   login: '595901'
   password: 'xyz'
+  tokenization: false
 
 metrics_global:
   login: 'demo'
@@ -214,6 +292,10 @@ moneris_us:
   login: monusqa002
   password: qatoken
 
+money_movers:
+  login: demo
+  password: password
+
 # Working credentials, no need to replace
 nab_transact:
   login: ABC0001
@@ -233,6 +315,11 @@ netaxept:
 netbilling:
   login: '104901072025'
 
+netpay:
+  store_id: 14
+  login: POS
+  password: plaza2020
+
 net_registry:
   login: X
   password: Y
@@ -246,6 +333,11 @@ ogone:
   user: USER
   password: PASSWORD
   signature: SIGNATURE
+
+# Working credentials, no need to replace
+openpay:
+  key: 'sk_e568c42a6c384b7ab02cd47d2e407cab'
+  merchant_id: 'mzdtln0bmtms6o3kck8f'
 
 optimal_payment:
   login: test
@@ -266,6 +358,11 @@ pay_gate_xml:
   login: '10011021600'
   password: 'test'
 
+payex:
+  account: ACCOUNT
+  # encryption key is generated via the PayEx Admin console
+  encryption_key: ENCRYPTION_KEY
+
 payflow:
   login: LOGIN
   password: PASSWORD
@@ -285,6 +382,10 @@ payment_express:
   login: LOGIN
   password: PASSWORD
 
+paymill:
+  private_key: PRIVATE_KEY
+  public_key: PUBLIC_KEY
+
 # You can use either your API PEM file or API signature with PayPal.
 paypal_certificate:
   login: LOGIN
@@ -298,6 +399,10 @@ paypal_signature:
   password: PASSWORD
   signature: SIGNATURE
 
+payu_in:
+  login: C0Dr8m
+  secret: 3sf0jURk
+
 payway:
   username:
   password:
@@ -307,6 +412,9 @@ pay_secure:
   login: LOGIN
   password: PASSWORD
 
+pin:
+  api_key: "I_mo9BUUUXIwXF-avcs3LA"
+
 plugnpay:
   login: LOGIN
   password: PASSWORD
@@ -314,6 +422,10 @@ plugnpay:
 pxpay:
   login: LOGIN
   password: PASSWORD
+
+redsys:
+  login: MERCHANT CODE
+  secret_key: SECRET KEY
 
 sage_pay:
   login: LOGIN
@@ -383,6 +495,10 @@ psl_visa_debit_address:
   state:
   zip:
 
+payscout:
+  username: demo
+  password: password
+
 # Quickpay offers a test account.
 # To log in to the manager, use demo@quickpay.net and test234
 quickpay:
@@ -393,12 +509,17 @@ quickpay:
 quickpay_with_api_key:
   login: 89898978
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
-  apikey: "3WrEgfY995CnetPlp7R7XG6J5aq83K4k7B4Z3jsLd1vz53x1w6h42M81u7H62Sb4"
-  version: 4
+  apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
+  version: 7
 
 quantum:
   login: X
   password: Y
+
+raven_pac_net:
+  user: ernest
+  secret: "all good men die young"
+  prn: 840033
 
 realex:
   login: X
@@ -505,14 +626,35 @@ skipjack:
   login: X
   password: Y
 
+so_easy_pay:
+  login: 110159
+  password: b1fe9de37c234ef8fd53668377076687d6314dc8f6146023338d61b5969719e0
+
+# Working credentials, no need to replace
+spreedly_core:
+  login: "4Y9bVkOCpYesPQOfDi7TXQyUw50"
+  password: "Y2i7AjgU03SUjwY4xnOPqzdsv4dMbPDCQzorAk8Bcoy0U8EIVE4innGjuoMQv7MN"
+  gateway_token: "3gLeg4726V5P0HK7cq7QzHsL0a6"
+
 stripe:
   login:
+  fee_refund_login:
+
+# Working credentials, no need to replace
+swipe_checkout:
+  login: 2077103073D8B5
+  api_key: f2fe4efd5033edfaed9e4aad319ef4d34536a10eea07f90f182616d7216ae2b8
+  region: NZ
 
 trans_first:
   login: LOGIN
   password: PASSWORD
 
 transax:
+  login: transaxdemo
+  password: nelix123
+
+transnational:
   login: demo
   password: password
 
@@ -549,6 +691,15 @@ vindicia:
   login: LOGIN
   password: PASSWORD
 
+webpay:
+  login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
+
+# Working test credentials, no need to replace
+wepay:
+  client_id: "187493"
+  account_id: "1311201206"
+  access_token: "STAGE_4c6a319f9b6ef50e596ee3ea0b845f2fecd50fa0d8bc0b7483bd61c2018dbf5c"
+
 # Working test credentials, no need to replace
 wirecard:
   login: 56500
@@ -557,3 +708,18 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+iats_payments:
+  login: TEST88
+  password: TEST88
+
+bit_pay:
+  api_key: 'rKrahSl7WRrYeKRUhGzbvW3nBzo0jG4FPaL8uPYaoPk'
+
+wirecard_checkout_page:
+  secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
+  shop_id: ''
+  paymenttype: IDL
+
+mollie_ideal:
+  api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'

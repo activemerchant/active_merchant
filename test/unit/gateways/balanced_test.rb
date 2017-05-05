@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BalancedTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @marketplace_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO'
 
@@ -26,7 +28,6 @@ class BalancedTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Shopify Purchase'
     }
-
   end
 
   def test_successful_purchase
@@ -97,6 +98,15 @@ class BalancedTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_bad_email
+    @gateway.stubs(:ssl_request).returns(failed_account_response_bad_email).then.returns(successful_card_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert response.test?
+    assert_match /must be a valid email address/, response.message
+  end
+
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_request).times(4).returns(
         successful_account_response
@@ -157,6 +167,26 @@ class BalancedTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorization_capture_with_on_behalf_of_uri
+    @gateway.expects(:ssl_request).times(1).returns(
+        successful_purchase_response
+    )
+
+    hold_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/holds/HL7dYMhpVBcqAYqxLF5mZtQ5'
+    on_behalf_of_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/accounts/AC73SN17anKkjk6Y1sVe2uaq'
+
+    response = stub_comms do
+      @gateway.capture(nil, hold_uri, :on_behalf_of_uri => on_behalf_of_uri)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/on_behalf_of_uri=\/v1\/marketplaces\/TEST-MP73SaFdpQePv9dOaG5wXOGO\/accounts\/AC73SN17anKkjk6Y1sVe2uaq/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/debits/WD2x6vLS7RzHYEcdymqRyNAO', response.authorization
+    assert response.test?
+  end
+
   def test_unsuccessful_authorization_capture
     @gateway.expects(:ssl_request).times(1).returns(
         failed_purchase_response
@@ -198,7 +228,7 @@ class BalancedTest < Test::Unit::TestCase
 
     debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
     refund_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/refunds/RF3GhhG5I3AgrjjXsdkRFQDA'
-    assert refund = @gateway.refund(debit_uri)
+    assert refund = @gateway.refund(@amount, debit_uri)
     assert_instance_of Response, refund
     assert_success refund
     assert refund.test?
@@ -211,10 +241,36 @@ class BalancedTest < Test::Unit::TestCase
     )
 
     debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
-    assert refund = @gateway.refund(debit_uri)
+    assert refund = @gateway.refund(@amount, debit_uri)
     assert_instance_of Response, refund
     assert_failure refund
     assert refund.test?
+  end
+
+  def test_deprecated_refund_purchase
+    assert_deprecation_warning("Calling the refund method without an amount parameter is deprecated and will be removed in a future version.", @gateway) do
+      @gateway.expects(:ssl_request).times(1).returns(
+          successful_refund_response
+      )
+
+      debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
+      refund_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/refunds/RF3GhhG5I3AgrjjXsdkRFQDA'
+      assert refund = @gateway.refund(debit_uri)
+      assert_instance_of Response, refund
+      assert_success refund
+      assert refund.test?
+      assert_equal refund.authorization, refund_uri
+    end
+  end
+
+  def test_refund_with_nil_debit_uri
+    @gateway.expects(:ssl_request).times(1).returns(
+        failed_refund_response
+    )
+
+    assert refund = @gateway.refund(nil, nil)
+    assert_instance_of Response, refund
+    assert_failure refund
   end
 
   def test_store
@@ -227,11 +283,13 @@ class BalancedTest < Test::Unit::TestCase
     )
 
     card_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/cards/CC6r6kLUcxW3MxG3AmZoiuTf'
+    account_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/accounts/AC5quPICW5qEHXac1KnjKGYu'
     assert response = @gateway.store(@credit_card, {
         :email=>'john.buyer@example.org'
     })
-    assert_instance_of String, response
-    assert_equal card_uri, response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal "#{card_uri};#{account_uri}", response.authorization
   end
 
   def test_ensure_does_not_respond_to_credit
@@ -335,6 +393,23 @@ class BalancedTest < Test::Unit::TestCase
   },
   "request_id": "OHMc3f6135cd1fd11e19f1e026ba7e5e72e",
   "description": "Account with email address 'john.buyer@example.org' already exists. Your request id is OHMc3f6135cd1fd11e19f1e026ba7e5e72e."
+}
+    RESPONSE
+  end
+
+  def failed_account_response_bad_email
+    <<-RESPONSE
+{
+  "status": "Bad Request",
+  "category_code": "request",
+  "additional": null,
+  "status_code": 400,
+  "category_type": "request",
+  "extras": {
+    "email_address": "invalid_email must be a valid email address as specified by RFC-2822"
+  },
+  "request_id": "OHM417b4e7ad9e411e2893c026ba7c1aba6",
+  "description": "Invalid field [email_address] - invalid_email must be a valid email address as specified by RFC-2822 Your request id is OHM417b4e7ad9e411e2893c026ba7c1aba6."
 }
     RESPONSE
   end

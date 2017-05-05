@@ -8,10 +8,10 @@ class RemoteMigsTest < Test::Unit::TestCase
 
     @amount = 100
     @declined_amount = 105
-    @visa   = credit_card('4005550000000001', :month => 5, :year => 2013, :brand => 'visa')
-    @master = credit_card('5123456789012346', :month => 5, :year => 2013, :brand => 'master')
-    @amex   = credit_card('371449635311004',  :month => 5, :year => 2013, :brand => 'american_express')
-    @diners = credit_card('30123456789019',   :month => 5, :year => 2013, :brand => 'diners_club')
+    @visa   = credit_card('4005550000000001', :month => 5, :year => 2017, :brand => 'visa')
+    @master = credit_card('5123456789012346', :month => 5, :year => 2017, :brand => 'master')
+    @amex   = credit_card('371449635311004',  :month => 5, :year => 2017, :brand => 'american_express')
+    @diners = credit_card('30123456789019',   :month => 5, :year => 2017, :brand => 'diners_club')
     @credit_card = @visa
 
     @options = {
@@ -37,7 +37,7 @@ class RemoteMigsTest < Test::Unit::TestCase
     }
 
     responses.each_pair do |card_type, response_text|
-      url = @gateway.purchase_offsite_url(@amount, options.merge(:card_type => card_type))
+      url = @capture_gateway.purchase_offsite_url(@amount, options.merge(:card_type => card_type))
       assert_response_contains response_text, url
     end
   end

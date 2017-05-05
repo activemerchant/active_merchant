@@ -3,6 +3,8 @@ require 'action_pack'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
+      ActionViewHelperError = Class.new(StandardError)
+
       module ActionViewHelper
         # This helper allows the usage of different payment integrations
         # through a single form helper.  Payment integrations are the
@@ -11,11 +13,11 @@ module ActiveMerchant #:nodoc:
         #
         # The helper creates a scope around a payment service helper
         # which provides the specific mapping for that service.
-        # 
+        #
         #  <% payment_service_for 1000, 'paypalemail@mystore.com',
-        #                               :amount => 50.00, 
-        #                               :currency => 'CAD', 
-        #                               :service => :paypal, 
+        #                               :amount => 50.00,
+        #                               :currency => 'CAD',
+        #                               :service => :paypal,
         #                               :html => { :id => 'payment-form' } do |service| %>
         #
         #    <% service.customer :first_name => 'Cody',
@@ -49,23 +51,26 @@ module ActiveMerchant #:nodoc:
           service = service_class.new(order, account, options)
           form_options[:method] = service.form_method
           result = []
-          result << form_tag(integration_module.service_url, form_options)
+          service_url = service.respond_to?(:credential_based_url) ? service.credential_based_url : integration_module.service_url
+          result << form_tag(service_url, form_options)
 
           result << capture(service, &proc)
 
           service.form_fields.each do |field, value|
             result << hidden_field_tag(field, value)
           end
-          
+
           service.raw_html_fields.each do |field, value|
             result << "<input id=\"#{field}\" name=\"#{field}\" type=\"hidden\" value=\"#{value}\" />\n"
           end
-          
+
           result << '</form>'
           result= result.join("\n")
-          
+
           concat(result.respond_to?(:html_safe) ? result.html_safe : result)
           nil
+        rescue => e
+          raise ActionViewHelperError.new(e)
         end
       end
     end

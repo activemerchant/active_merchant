@@ -9,8 +9,20 @@ module ActiveMerchant #:nodoc:
             (params.has_key?('LMI_PAYMENT_NO') && params.has_key?('LMI_PAYMENT_AMOUNT'))
           end
 
+          def amount
+            BigDecimal.new(gross)
+          end
+
           def key_present?
             params["LMI_HASH"].present?
+          end
+
+          def item_id
+            params['LMI_PAYMENT_NO']
+          end
+
+          def gross
+            params['LMI_PAYMENT_AMOUNT']
           end
 
           def security_key
@@ -21,8 +33,12 @@ module ActiveMerchant #:nodoc:
             @options[:secret]
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             (security_key == generate_signature)
+          end
+
+          def success_response(*args)
+            {:nothing => true}
           end
         end
       end

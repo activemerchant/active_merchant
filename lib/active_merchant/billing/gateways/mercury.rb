@@ -1,5 +1,15 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # The Mercury gateway integration by default requires that the Mercury
+    # account being used has tokenization turned. This enables the use of
+    # capture/refund/void without having to pass the credit card back in each
+    # time. Only the "OneTime" tokenization is used; there is no use of
+    # "Recurring" tokenization.
+    #
+    # If you don't wish to enable Mercury tokenization, you can pass
+    # <code>:tokenization => false</code> as an option when creating the
+    # gateway. If you do so, then passing a +:credit_card+ option to +capture+
+    # and +refund+ will become mandatory.
     class MercuryGateway < Gateway
       URLS = {
         :test => 'https://w1.mercurydev.net/ws/ws.asmx',
@@ -14,101 +24,67 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
+        @use_tokenization = (!options.has_key?(:tokenization) || options[:tokenization])
         super
       end
 
       def purchase(money, credit_card, options = {})
+        requires!(options, :order_id)
+
         request = build_non_authorized_request('Sale', money, credit_card, options)
         commit('Sale', request)
       end
 
       def credit(money, credit_card, options = {})
+        requires!(options, :order_id)
+
         request = build_non_authorized_request('Return', money, credit_card, options)
         commit('Return', request)
       end
 
-      def void(money, authorization, credit_card, options = {})
-        options[:void] ||= 'VoidSale'
-        request = build_authorized_request(options[:void], money, authorization, credit_card, options)
-        commit(options[:void], request)
-      end
-
       def authorize(money, credit_card, options = {})
-        options[:authorized] ||= money
-        request = build_non_authorized_request('PreAuth', money, credit_card, options)
+        requires!(options, :order_id)
+
+        request = build_non_authorized_request('PreAuth', money, credit_card, options.merge(:authorized => money))
         commit('PreAuth', request)
       end
 
-      def capture(money, authorization, credit_card, options = {})
-        options[:authorized] ||= money
-        request = build_authorized_request('PreAuthCapture', money, authorization, credit_card, options)
+      def capture(money, authorization, options = {})
+        requires!(options, :credit_card) unless @use_tokenization
+
+        request = build_authorized_request('PreAuthCapture', money, authorization, options[:credit_card], options.merge(:authorized => money))
         commit('PreAuthCapture', request)
       end
 
-      def voice_authorize(money, authorization, credit_card, options = {})
-        request = build_authorized_request('VoiceAuth', money, authorization, credit_card, options)
-        commit('VoiceAuth', request)
+      def refund(money, authorization, options = {})
+        requires!(options, :credit_card) unless @use_tokenization
+
+        request = build_authorized_request('Return', money, authorization, options[:credit_card], options)
+        commit('Return', request)
       end
 
-      def adjust(money, authorization, credit_card, options = {})
-        request = build_authorized_request('Adjust', money, authorization, credit_card, options)
-        commit('Adjust', request)
-      end
+      def void(authorization, options={})
+        requires!(options, :credit_card) unless @use_tokenization
 
-      def batch_summary
-        xml = Builder::XmlMarkup.new
+        if options[:try_reversal]
+          request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options.merge(:reversal => true))
+          response = commit('VoidSale', request)
 
-        xml.tag! "TStream" do
-          xml.tag! "Admin" do
-            xml.tag! 'TranCode', 'BatchSummary'
-          end
-          xml.tag! 'MerchantID', @options[:login]
+          return response if response.success?
         end
-        xml = xml.target!
 
-        commit('BatchSummary', build_soap_request(xml))
+        request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options)
+        commit('VoidSale', request)
       end
 
-      def batch_close(options = {})
-        requires!(options, :batch_no, :batch_item_count, :net_batch_total,
-          :credit_purchase_count, :credit_purchase_amount, :credit_return_count,
-          :credit_return_amount, :debit_purchase_count, :debit_purchase_amount,
-          :debit_return_count, :debit_return_amount)
-
-        xml = Builder::XmlMarkup.new
-
-        xml.tag! "TStream" do
-          xml.tag! "Admin" do
-            xml.tag! 'TranCode', 'BatchClose'
-          end
-          xml.tag! 'MerchantID', @options[:login]
-          xml.tag! "BatchNo", options[:batch_no]
-          xml.tag! "BatchItemCount", options[:batch_item_count]
-          xml.tag! "NetBatchTotal", options[:net_batch_total]
-          xml.tag! "CreditPurchaseCount", options[:credit_purchase_count]
-          xml.tag! "CreditPurchaseAmount", options[:credit_purchase_amount]
-          xml.tag! "CreditReturnCount", options[:credit_return_count]
-          xml.tag! "CreditReturnAmount", options[:credit_return_amount]
-          xml.tag! "DebitPurchaseCount", options[:debit_purchase_count]
-          xml.tag! "DebitPurchaseAmount", options[:debit_purchase_amount]
-          xml.tag! "DebitReturnCount", options[:debit_return_count]
-          xml.tag! "DebitReturnAmount", options[:debit_return_amount]
-        end
-        xml = xml.target!
-
-        commit('BatchClose', build_soap_request(xml))
-      end
-
-      def test?
-        @options[:test] || Base.gateway_mode == :test
+      def store(credit_card, options={})
+        request = build_card_lookup_request(credit_card, options)
+        commit('CardLookup', request)
       end
 
       private
 
       def build_non_authorized_request(action, money, credit_card, options)
-        requires!(options, :order_id, :invoice)
-
         xml = Builder::XmlMarkup.new
 
         xml.tag! "TStream" do
@@ -118,7 +94,8 @@ module ActiveMerchant #:nodoc:
             if action == 'PreAuth' || action == 'Sale'
               xml.tag! "PartialAuth", "Allow"
             end
-            add_invoice(xml, options)
+            add_invoice(xml, options[:order_id], nil, options)
+            add_reference(xml, "RecordNumberRequested")
             add_customer_data(xml, options)
             add_amount(xml, money, options)
             add_credit_card(xml, credit_card, action)
@@ -129,38 +106,67 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_authorized_request(action, money, authorization, credit_card, options)
-        requires!(options, :order_id, :invoice)
-
         xml = Builder::XmlMarkup.new
+
+        invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
+        ref_no = invoice_no if options[:reversal]
 
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
             xml.tag! 'TranType', 'Credit'
-            xml.tag! 'TranCode', action
             if action == 'PreAuthCapture'
               xml.tag! "PartialAuth", "Allow"
             end
-            add_invoice(xml, options)
+            xml.tag! 'TranCode', (@use_tokenization ? (action + "ByRecordNo") : action)
+            add_invoice(xml, invoice_no, ref_no, options)
+            add_reference(xml, record_no)
             add_customer_data(xml, options)
-            add_amount(xml, money, options)
-            # captures cannot contain track2 data
-            add_credit_card(xml, credit_card, action) unless credit_card.is_a?(String)
+            add_amount(xml, (money || amount.to_i), options)
+            add_credit_card(xml, credit_card, action) if credit_card
             add_address(xml, options)
             xml.tag! 'TranInfo' do
-              xml.tag! "AuthCode", authorization
-              xml.tag! "AcqRefData", options[:acq_ref_data] if options[:acq_ref_data]
-              xml.tag! "ProcessData", options[:process_data] if options[:process_data]
+              xml.tag! "AuthCode", auth_code
+              xml.tag! "AcqRefData", acq_ref_data if options[:reversal]
+              xml.tag! "ProcessData", process_data if options[:reversal]
             end
           end
         end
         xml = xml.target!
       end
 
-      def add_invoice(xml, options)
-        xml.tag! 'InvoiceNo', options[:invoice]
-        xml.tag! 'RefNo', options[:order_id]
+      def build_card_lookup_request(credit_card, options)
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! "TStream" do
+          xml.tag! "Transaction" do
+            xml.tag! 'TranType', 'CardLookup'
+            xml.tag! 'RecordNo', 'RecordNumberRequested'
+            xml.tag! 'Frequency', 'OneTime'
+
+            xml.tag! 'Memo', options[:description]
+            add_customer_data(xml, options)
+            add_credit_card(xml, credit_card, options)
+          end
+        end
+        xml.target!
+      end
+
+      def add_invoice(xml, invoice_no, ref_no, options)
+        if /^\d+$/ !~ invoice_no.to_s
+          raise ArgumentError.new("order_id '#{invoice_no}' is not numeric as required by Mercury")
+        end
+
+        xml.tag! 'InvoiceNo', invoice_no
+        xml.tag! 'RefNo', (ref_no || invoice_no)
         xml.tag! 'OperatorID', options[:merchant] if options[:merchant]
         xml.tag! 'Memo', options[:description] if options[:description]
+      end
+
+      def add_reference(xml, record_no)
+        if @use_tokenization
+          xml.tag! "Frequency", "OneTime"
+          xml.tag! "RecordNo", record_no
+        end
       end
 
       def add_customer_data(xml, options)
@@ -192,19 +198,14 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_credit_card(xml, credit_card, action)
-        include_cvv = !%w(Return PreAuthCapture).include?(action)
-        if credit_card.is_a?(String)
-          xml.tag! 'Account' do
-            xml.tag! "Track2", credit_card
-          end
-        else
-          xml.tag! 'Account' do
-            xml.tag! 'AcctNo', credit_card.number
-            xml.tag! 'ExpDate', expdate(credit_card)
-          end
-          xml.tag! 'CardType', CARD_CODES[credit_card.brand] if credit_card.brand
-          xml.tag! 'CVVData', credit_card.verification_value if(include_cvv && credit_card.verification_value)
+        xml.tag! 'Account' do
+          xml.tag! 'AcctNo', credit_card.number
+          xml.tag! 'ExpDate', expdate(credit_card)
         end
+        xml.tag! 'CardType', CARD_CODES[credit_card.brand] if credit_card.brand
+
+        include_cvv = !%w(Return PreAuthCapture).include?(action)
+        xml.tag! 'CVVData', credit_card.verification_value if(include_cvv && credit_card.verification_value)
       end
 
       def expdate(credit_card)
@@ -244,11 +245,6 @@ module ActiveMerchant #:nodoc:
           else
             response[node.name.underscore.to_sym] = node.text
           end
-        end
-
-        # have to handle batch functions
-        xml.elements.each("//BatchSummary/*") do |node|
-          response[node.name.underscore.to_sym] = node.text
         end
       end
 
@@ -290,13 +286,33 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success, message, response,
           :test => test?,
-          :authorization => response[:auth_code],
+          :authorization => authorization_from(response),
           :avs_result => { :code => response[:avs_result] },
           :cvv_result => response[:cvv_result])
       end
 
       def message_from(response)
         response[:text_response]
+      end
+
+      def authorization_from(response)
+        dollars, cents = (response[:purchase] || "").split(".").collect{|e| e.to_i}
+        dollars ||= 0
+        cents ||= 0
+        [
+          response[:invoice_no],
+          response[:ref_no],
+          response[:auth_code],
+          response[:acq_ref_data],
+          response[:process_data],
+          response[:record_no],
+          ((dollars * 100) + cents).to_s
+        ].join(";")
+      end
+
+      def split_authorization(authorization)
+        invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = authorization.split(";")
+        [invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount]
       end
 
       ENVELOPE_NAMESPACES = {
@@ -306,7 +322,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def escape_xml(xml)
-        xml.gsub(/\>/,'&gt;').gsub!(/\</,'&lt;')
+        "\n<![CDATA[\n#{xml}\n]]>\n"
       end
 
       def unescape_xml(escaped_xml)

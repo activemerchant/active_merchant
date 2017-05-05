@@ -36,7 +36,7 @@ class DataCashTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert response.test?
-    assert_equal 'The transaction was successful', response.message
+    assert_equal 'ACCEPTED', response.message
     assert_equal '4400200050664928;123456789;', response.authorization
   end
 
@@ -66,7 +66,7 @@ class DataCashTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    assert_equal 'Invalid reference number', response.message
+    assert_equal 'DECLINED', response.message
   end
   
   def test_error_response
@@ -76,7 +76,7 @@ class DataCashTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    assert_equal 'Invalid reference number', response.message
+    assert_equal 'DECLINED', response.message
   end
   
   def test_supported_countries
@@ -107,28 +107,36 @@ class DataCashTest < Test::Unit::TestCase
   end
   
   def test_successful_continuous_authority_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
+    @gateway.expects(:ssl_post).returns(successful_purchase_using_continuous_authority_response)
+
     response = @gateway.purchase(@amount, '4400200050664928;123456789;10000000', @options)
     assert_instance_of Response, response
     assert_success response
     assert response.test?
-    assert_equal 'The transaction was successful', response.message
+    assert_equal 'ACCEPTED', response.message
+  end
+
+  def test_capture_method_is_ecomm
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<capturemethod>ecomm<\/capturemethod>/)).returns(successful_purchase_response)
+    response = @gateway.purchase(100, @credit_card, @options)
+    assert_success response
   end
   
   private
   def failed_purchase_response
     <<-XML
 <Response>
-  <status>22</status>
-  <time>1196414665</time>
+  <CardTxn>
+    <authcode>NOT AUTHORISED</authcode>
+    <card_scheme>Mastercard</card_scheme>
+    <country>Japan</country>
+  </CardTxn>
+  <datacash_reference>4500203037300784</datacash_reference>
+  <merchantreference>85613a50952067796b1c6ab61c2cac</merchantreference>
   <mode>TEST</mode>
-  <country>United Kingdom</country>
-  <merchantreference>2d24cc91284c1ed5c65d8821f1e752c7</merchantreference>
-  <issuer>Clydesdale Bank PLC</issuer>
-  <reason>Invalid reference number</reason>
-  <card_scheme>Solo</card_scheme>
-  <datacash_reference>4400200050664928</datacash_reference>
+  <reason>DECLINED</reason>
+  <status>7</status>
+  <time>1363364315</time>
 </Response>
     XML
   end
@@ -136,16 +144,48 @@ class DataCashTest < Test::Unit::TestCase
   def successful_purchase_response
     <<-XML
 <Response>
+  <CardTxn>
+    <Cv2Avs>
+      <address_policy matched='accept' notchecked='accept' notmatched='reject' notprovided='accept' partialmatch='accept'></address_policy>
+      <address_result numeric='0'>notprovided</address_result>
+      <cv2_policy matched='accept' notchecked='reject' notmatched='reject' notprovided='reject' partialmatch='reject'></cv2_policy>
+      <cv2_result numeric='2'>matched</cv2_result>
+      <cv2avs_status>ACCEPTED</cv2avs_status>
+      <postcode_policy matched='accept' notchecked='accept' notmatched='reject' notprovided='accept' partialmatch='accept'></postcode_policy>
+      <postcode_result numeric='0'>notprovided</postcode_result>
+    </Cv2Avs>
+    <authcode>123456789</authcode>
+    <card_scheme>Visa</card_scheme>
+    <country>United Kingdom</country>
+  </CardTxn>
+  <datacash_reference>4400200050664928</datacash_reference>
+  <merchantreference>2d24cc91284c1ed5c65d8821f1e752c7</merchantreference>
+  <mode>TEST</mode>
+  <reason>ACCEPTED</reason>
   <status>1</status>
   <time>1196414665</time>
-  <mode>TEST</mode>
-  <country>United Kingdom</country>
-  <merchantreference>2d24cc91284c1ed5c65d8821f1e752c7</merchantreference>
-  <issuer>Clydesdale Bank PLC</issuer>
-  <reason>The transaction was successful</reason>
-  <card_scheme>Visa</card_scheme>
+</Response>
+    XML
+  end
+
+  def successful_purchase_using_continuous_authority_response
+    <<-XML
+<Response>
+  <CardTxn>
+    <authcode>123456789</authcode>
+    <card_scheme>VISA Debit</card_scheme>
+    <country>United Kingdom</country>
+    <issuer>Barclays Bank PLC</issuer>
+  </CardTxn>
+  <ContAuthTxn>
+    <account_status>Using account ref 4500203037301241. CONT_AUTH transaction complete</account_status>
+  </ContAuthTxn>
   <datacash_reference>4400200050664928</datacash_reference>
-  <authcode>123456789</authcode>
+  <merchantreference>3fc2b05ab38b70f0eb3a6b6d35c0de</merchantreference>
+  <mode>TEST</mode>
+  <reason>ACCEPTED</reason>
+  <status>1</status>
+  <time>1363364966</time>
 </Response>
     XML
   end  

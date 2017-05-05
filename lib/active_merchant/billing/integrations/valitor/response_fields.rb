@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
           end
           
           def gross
-            "%0.2f" % params['Upphaed'].to_s
+            "%0.2f" % params['Upphaed'].to_s.sub(',', '.')
           end
           
           def card_type
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
             @options[:credential2]
           end
           
-          def acknowledge
+          def acknowledge(authcode = nil)
             password ? Digest::MD5.hexdigest("#{password}#{order}") == params['RafraenUndirskriftSvar'] : true
           end
         end

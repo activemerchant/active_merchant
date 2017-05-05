@@ -1,9 +1,11 @@
 require 'test_helper'
 
 class MonerisTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.mode = :test
-    
+
     @gateway = MonerisGateway.new(
       :login => 'store1',
       :password => 'yesguy'
@@ -14,9 +16,15 @@ class MonerisTest < Test::Unit::TestCase
     @options = { :order_id => '1', :customer => '1' }
   end
 
+  def test_default_options
+    assert_equal 7, @gateway.options[:crypt_type]
+    assert_equal "store1", @gateway.options[:login]
+    assert_equal "yesguy", @gateway.options[:password]
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-  
+
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '58-0_3;1026.1', response.authorization
@@ -24,11 +32,11 @@ class MonerisTest < Test::Unit::TestCase
 
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-  
+
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_failure response
   end
-  
+
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns("")
     @gateway.expects(:parse).returns({})
@@ -36,34 +44,34 @@ class MonerisTest < Test::Unit::TestCase
       @gateway.credit(@amount, "123;456", @options)
     end
   end
-  
+
   def test_refund
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns("")
     @gateway.expects(:parse).returns({})
     @gateway.refund(@amount, "123;456", @options)
   end
-  
+
   def test_amount_style
    assert_equal '10.34', @gateway.send(:amount, 1034)
-                                                      
+
    assert_raise(ArgumentError) do
      @gateway.send(:amount, '10.34')
    end
-  end                                                           
-  
-  def test_purchase_is_valid_xml
-   params = { 
+  end
+
+  def test_preauth_is_valid_xml
+   params = {
      :order_id => "order1",
      :amount => "1.01",
      :pan => "4242424242424242",
      :expdate => "0303",
-     :crypt_type => 7,                                                  
+     :crypt_type => 7,
    }
 
    assert data = @gateway.send(:post_data, 'preauth', params)
    assert REXML::Document.new(data)
    assert_equal xml_capture_fixture.size, data.size
-  end  
+  end
 
   def test_purchase_is_valid_xml
    params = {
@@ -80,23 +88,23 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_capture_is_valid_xml
-   params = { 
+   params = {
      :order_id => "order1",
      :amount => "1.01",
      :pan => "4242424242424242",
      :expdate => "0303",
-     :crypt_type => 7,                                                  
+     :crypt_type => 7,
    }
 
    assert data = @gateway.send(:post_data, 'preauth', params)
    assert REXML::Document.new(data)
    assert_equal xml_capture_fixture.size, data.size
-  end  
-  
+  end
+
   def test_supported_countries
     assert_equal ['CA'], MonerisGateway.supported_countries
   end
-  
+
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :diners_club, :discover], MonerisGateway.supported_cardtypes
   end
@@ -107,8 +115,7 @@ class MonerisTest < Test::Unit::TestCase
     end
   end
 
-
- def test_successful_store
+  def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
     assert response = @gateway.store(@credit_card)
     assert_success response
@@ -160,6 +167,50 @@ class MonerisTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_gets_sent_when_its_enabled
+    gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', cvv_enabled: true)
+
+    @credit_card.verification_value = "452"
+    stub_comms(gateway) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{cvd_indicator>1<}, data)
+      assert_match(%r{cvd_value>452<}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_no_cvv_specified_when_its_enabled
+    gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', cvv_enabled: true)
+
+    @credit_card.verification_value = ""
+    stub_comms(gateway) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{cvd_indicator>0<}, data)
+      assert_no_match(%r{cvd_value>}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_cvv_when_not_enabled
+    @credit_card.verification_value = "452"
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{cvd_value>}, data)
+      assert_no_match(%r{cvd_indicator>}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_no_cvv_specified_when_not_enabled
+    @credit_card.verification_value = ""
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{cvd_value>}, data)
+      assert_no_match(%r{cvd_indicator>}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_purchase_response
@@ -183,10 +234,10 @@ class MonerisTest < Test::Unit::TestCase
     <TimedOut>false</TimedOut>
   </receipt>
 </response>
-    
+
     RESPONSE
   end
-  
+
   def failed_purchase_response
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -208,10 +259,9 @@ class MonerisTest < Test::Unit::TestCase
     <TimedOut>false</TimedOut>
   </receipt>
 </response>
-    
-    RESPONSE
-  end  
 
+    RESPONSE
+  end
 
   def successful_store_response
     <<-RESPONSE
@@ -255,7 +305,6 @@ class MonerisTest < Test::Unit::TestCase
     RESPONSE
   end
 
-
   def xml_purchase_fixture
    '<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>'
   end
@@ -263,5 +312,4 @@ class MonerisTest < Test::Unit::TestCase
   def xml_capture_fixture
    '<request><store_id>store1</store_id><api_token>yesguy</api_token><preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></preauth></request>'
   end
-
 end

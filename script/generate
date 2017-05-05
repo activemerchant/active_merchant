@@ -1,14 +1,16 @@
 #!/usr/bin/env ruby
-APP_ROOT = File.join(File.dirname(__FILE__), '..')
+require "rubygems"
+require "thor"
 
-begin
-  require 'rubigen'
-rescue LoadError
-  require 'rubygems'
-  require 'rubigen'
+require File.expand_path("../../generators/active_merchant_generator", __FILE__)
+
+Dir[File.expand_path("../..", __FILE__) + "/generators/*/*.rb"].each do |generator|
+  require generator
 end
-require 'rubigen/scripts/generate'
 
-ARGV.shift if ['--help', '-h'].include?(ARGV[0])
-RubiGen::Base.use_component_sources! [:activemerchant, :rubygems, :test_unit]
-RubiGen::Scripts::Generate.new.run(ARGV)
+class Generate < Thor
+  register(GatewayGenerator, "gateway", "gateway NAME", "Generates a new gateway.")
+  register(IntegrationGenerator, "integration", "integration NAME", "Generates a new integration.")
+end
+
+Generate.start

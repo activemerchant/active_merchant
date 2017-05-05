@@ -18,6 +18,11 @@ class RobokassaHelperTest < Test::Unit::TestCase
     assert_equal 'test_account:500:123:secret', @helper.generate_signature_string
   end
 
+  def test_signature_string_with_empty_amount
+    helper = Robokassa::Helper.new(123,'test_account', :currency => 'USD', :secret => 'secret')
+    assert_equal 'test_account::123:secret', helper.generate_signature_string
+  end
+
   def test_custom_fields
     @helper.shpa = '123'
     @helper.shpMySuperParam = '456'

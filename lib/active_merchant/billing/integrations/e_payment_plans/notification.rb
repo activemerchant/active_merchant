@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge
+          def acknowledge(authcode = nil)
             payload = raw
 
             response = ssl_post(EPaymentPlans.notification_confirmation_url, payload)

@@ -1,8 +1,14 @@
 # coding: utf-8
+
 require 'test_helper'
 
 class GarantiTest < Test::Unit::TestCase
   def setup
+    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      @original_kcode = $KCODE
+      $KCODE = 'u'
+    end
+
     Base.gateway_mode = :test
     @gateway = GarantiGateway.new(:login => 'a', :password => 'b', :terminal_id => 'c', :merchant_id => 'd')
 
@@ -14,6 +20,10 @@ class GarantiTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+  end
+
+  def teardown
+    $KCODE = @original_kcode if @original_kcode
   end
 
   def test_successful_purchase

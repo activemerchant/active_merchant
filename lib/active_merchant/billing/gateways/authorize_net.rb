@@ -38,10 +38,12 @@ module ActiveMerchant #:nodoc:
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
-      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
+      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT, AUTHORIZATION_CODE = 0, 2, 3, 4
+      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE  = 5, 6, 38, 39
 
-      self.supported_countries = ['US']
+      self.default_currency = 'USD'
+
+      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK ES FI FR GB GB GI GR HU IE IT LI LU MC MT NL NO PL PT RO SE SI SK SM TR US VA)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
@@ -49,6 +51,7 @@ module ActiveMerchant #:nodoc:
       CARD_CODE_ERRORS = %w( N S )
       AVS_ERRORS = %w( A E N R W Z )
       AVS_REASON_CODES = %w(27 45)
+      TRANSACTION_ALREADY_ACTIONED = %w(310 311)
 
       AUTHORIZE_NET_ARB_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
@@ -72,7 +75,6 @@ module ActiveMerchant #:nodoc:
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -82,12 +84,13 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
+      # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
-      def authorize(money, creditcard, options = {})
+      def authorize(money, paysource, options = {})
         post = {}
+        add_currency_code(post, money, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
+        add_payment_source(post, paysource, options)
         add_address(post, options)
         add_customer_data(post, options)
         add_duplicate_window(post)
@@ -100,12 +103,13 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
+      # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
-      def purchase(money, creditcard, options = {})
+      def purchase(money, paysource, options = {})
         post = {}
+        add_currency_code(post, money, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
+        add_payment_source(post, paysource, options)
         add_address(post, options)
         add_customer_data(post, options)
         add_duplicate_window(post)
@@ -196,7 +200,7 @@ module ActiveMerchant #:nodoc:
       #   For example, to charge the customer once every three months the hash would be
       #   +:interval => { :unit => :months, :length => 3 }+ (REQUIRED)
       # * <tt>:duration</tt> -- A hash containing keys for the <tt>:start_date</tt> the subscription begins (also the date the
-      #   initial billing occurs) and the total number of billing <tt>:occurences</tt> or payments for the subscription. (REQUIRED)
+      #   initial billing occurs) and the total number of billing <tt>:occurrences</tt> or payments for the subscription. (REQUIRED)
       def recurring(money, creditcard, options={})
         requires!(options, :interval, :duration, :billing_address)
         requires!(options[:interval], :length, [:unit, :days, :months])
@@ -263,9 +267,6 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:amount] = amount(money) unless action == 'VOID'
 
-        # Only activate the test_request when the :test option is passed in
-        parameters[:test_request] = @options[:test] ? 'TRUE' : 'FALSE'
-
         url = test? ? self.test_url : self.live_url
         data = ssl_post url, post_data(action, parameters)
 
@@ -274,15 +275,8 @@ module ActiveMerchant #:nodoc:
 
         message = message_from(response)
 
-        # Return the response. The authorization can be taken out of the transaction_id
-        # Test Mode on/off is something we have to parse from the response text.
-        # It usually looks something like this
-        #
-        #   (TESTMODE) Successful Sale
-        test_mode = test? || message =~ /TESTMODE/
-
         Response.new(success?(response), message, response,
-          :test => test_mode,
+          :test => test?,
           :authorization => response[:transaction_id],
           :fraud_review => fraud_review?(response),
           :avs_result => { :code => response[:avs_result_code] },
@@ -291,7 +285,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response[:response_code] == APPROVED
+        response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
       end
 
       def fraud_review?(response)
@@ -307,7 +301,9 @@ module ActiveMerchant #:nodoc:
           :response_reason_text => fields[RESPONSE_REASON_TEXT],
           :avs_result_code => fields[AVS_RESULT_CODE],
           :transaction_id => fields[TRANSACTION_ID],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE]
+          :card_code => fields[CARD_CODE_RESPONSE_CODE],
+          :authorization_code => fields[AUTHORIZATION_CODE],
+          :cardholder_authentication_code => fields[CARDHOLDER_AUTH_CODE]
         }
         results
       end
@@ -329,17 +325,41 @@ module ActiveMerchant #:nodoc:
         request
       end
 
+      def add_currency_code(post, money, options)
+        post[:currency_code] = options[:currency] || currency(money)
+      end
+
       def add_invoice(post, options)
         post[:invoice_num] = options[:order_id]
         post[:description] = options[:description]
       end
 
-      def add_creditcard(post, creditcard)
+      def add_creditcard(post, creditcard, options={})
         post[:card_num]   = creditcard.number
         post[:card_code]  = creditcard.verification_value if creditcard.verification_value?
         post[:exp_date]   = expdate(creditcard)
         post[:first_name] = creditcard.first_name
         post[:last_name]  = creditcard.last_name
+      end
+
+      def add_payment_source(params, source, options={})
+        if card_brand(source) == "check"
+          add_check(params, source, options)
+        else
+          add_creditcard(params, source, options)
+        end
+      end
+
+      def add_check(post, check, options)
+        post[:method] = "ECHECK"
+        post[:bank_name] = check.bank_name
+        post[:bank_aba_code] = check.routing_number
+        post[:bank_acct_num] = check.account_number
+        post[:bank_acct_type] = check.account_type
+        post[:echeck_type] = "WEB"
+        post[:bank_acct_name] = check.name
+        post[:bank_check_number] = check.number if check.number.present?
+        post[:recurring_billing] = (options[:recurring] ? "TRUE" : "FALSE")
       end
 
       def add_customer_data(post, options)
@@ -349,12 +369,21 @@ module ActiveMerchant #:nodoc:
         end
 
         if options.has_key? :customer
-          post[:cust_id] = options[:customer]
+          post[:cust_id] = options[:customer] if Float(options[:customer]) rescue nil
         end
 
         if options.has_key? :ip
           post[:customer_ip] = options[:ip]
         end
+
+        if options.has_key? :cardholder_authentication_value
+          post[:cardholder_authentication_value] = options[:cardholder_authentication_value]
+        end
+
+        if options.has_key? :authentication_indicator
+          post[:authentication_indicator] = options[:authentication_indicator]
+        end
+
       end
 
       # x_duplicate_window won't be sent by default, because sending it changes the response.

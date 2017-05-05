@@ -16,7 +16,7 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     CommonPaypalGateway.pem_file = nil
 
     @gateway = CommonPaypalGateway.new(
-      :login => 'cody', 
+      :login => 'cody',
       :password => 'test',
       :pem => 'PEM'
     )
@@ -120,7 +120,7 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal '1.00', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/Amount').text
   end
 
-  
+
   def test_build_manage_pending_transaction_status_request
     request = REXML::Document.new(@gateway.send(:build_manage_pending_transaction_status,123, 'Accept'))
     assert_equal '123', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/TransactionID').text
@@ -134,8 +134,8 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_build_transaction_search_request
-    options = {:start_date => Date.strptime('02/21/2012', '%m/%d/%Y'),
-      :end_date => Date.strptime('03/21/2012', '%m/%d/%Y'),
+    options = {:start_date => DateTime.new(2012, 2, 21, 0),
+      :end_date => DateTime.new(2012, 3, 21, 0),
       :receiver => 'foo@example.com',
       :first_name => 'Robert'}
     request = REXML::Document.new(@gateway.send(:build_transaction_search, options))
@@ -152,9 +152,9 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_build_reference_transaction_gets_ip
-    request = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 
-                                                100, 
-                                                :reference_id => 'id', 
+    request = REXML::Document.new(@gateway.send(:build_reference_transaction_request,
+                                                100,
+                                                :reference_id => 'id',
                                                 :ip => '127.0.0.1'))
     assert_equal '100', REXML::XPath.first(request, '//n2:PaymentDetails/n2:OrderTotal').text
     assert_equal 'id', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text

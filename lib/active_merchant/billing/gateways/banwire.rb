@@ -10,7 +10,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login)
-        @options = options
         super
       end
 
@@ -46,7 +45,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         post[:address] = options[:billing_address][:address1]
-        post[:post_code] = options[:billing_address][:zipcode]
+        post[:post_code] = options[:billing_address][:zip]
       end
 
       def add_creditcard(post, creditcard)
@@ -72,7 +71,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(money, parameters)
-        response = parse(ssl_post(URL, post_data(parameters)))
+        raw_response = ssl_post(URL, post_data(parameters))
+        begin
+          response = parse(raw_response)
+        rescue JSON::ParserError
+          response = json_error(raw_response)
+        end
+
         Response.new(success?(response),
                      response["message"],
                      response,
@@ -86,6 +91,14 @@ module ActiveMerchant #:nodoc:
 
       def post_data(parameters = {})
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+      end
+
+      def json_error(raw_response)
+        msg = 'Invalid response received from the Banwire API.  Please contact Banwire support if you continue to receive this message.'
+        msg += "  (The raw response returned by the API was #{raw_response.inspect})"
+        {
+          "message" => msg
+        }
       end
     end
   end

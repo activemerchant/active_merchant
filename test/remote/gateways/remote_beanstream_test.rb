@@ -17,7 +17,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     @mastercard          = credit_card('5100000010001004')
     @declined_mastercard = credit_card('5100000020002000')
     
-    @amex                = credit_card('371100001000131')
+    @amex                = credit_card('371100001000131', {:verification_value => 1234})
     @declined_amex       = credit_card('342400001000180')
     
     # Canadian EFT

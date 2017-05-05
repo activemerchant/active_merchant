@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Balanced'
       self.money_format = :cents
 
-      class Error < StandardError
+      class Error < ActiveMerchant::ActiveMerchantError
         attr_reader :response
 
         def initialize(response, msg=nil)
@@ -91,9 +91,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> -- The Balanced API Secret (REQUIRED)
       def initialize(options = {})
         requires!(options, :login)
-        @options = options
-        initialize_marketplace(options[:marketplace] || load_marketplace)
         super
+        initialize_marketplace(options[:marketplace] || load_marketplace)
       end
 
       # Performs an authorization (Hold in Balanced nonclementure), which
@@ -132,6 +131,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = money
         post[:description] = options[:description]
+        add_common_params(post, options)
 
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
@@ -161,6 +161,12 @@ module ActiveMerchant #:nodoc:
       #   purchase.
       # * <tt>account_uri</tt> -- `account_uri` is the URI of an existing
       #   Balanced account.
+      #
+      # If you are passing a new card URI from balanced.js, you should pass
+      # the customer's name
+      #
+      # * <tt>name</tt> -- the customer's name, to appear on the Account
+      #   on Balanced.
       def purchase(money, credit_card, options = {})
         if credit_card.respond_to?('number')
           requires!(options, :email) unless options[:account_uri]
@@ -169,6 +175,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = money
         post[:description] = options[:description]
+        add_common_params(post, options)
 
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
@@ -198,6 +205,7 @@ module ActiveMerchant #:nodoc:
         post[:hold_uri] = authorization
         post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
+        add_common_params(post, options)
 
         create_transaction(:post, @debits_uri, post)
       rescue Error => ex
@@ -210,9 +218,10 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>authorization</tt> -- The uri of the authorization returned from
       #   an `authorize` request.
-      def void(authorization)
+      def void(authorization, options = {})
         post = {}
         post[:is_void] = true
+        add_common_params(post, options)
 
         create_transaction(:put, authorization, post)
       rescue Error => ex
@@ -235,12 +244,18 @@ module ActiveMerchant #:nodoc:
       # * <tt>`:amount`<tt> -- specify an amount if you want to perform a
       #   partial refund. This value will default to the total amount of the
       #   debit that has not been refunded so far.
-      def refund(debit_uri, options = {})
+      def refund(amount, debit_uri = "deprecated", options = {})
+        if(debit_uri == "deprecated" || debit_uri.kind_of?(Hash))
+          deprecated "Calling the refund method without an amount parameter is deprecated and will be removed in a future version."
+          return refund(options[:amount], amount, options)
+        end
+
         requires!(debit_uri)
         post = {}
         post[:debit_uri] = debit_uri
-        post[:amount] = options[:amount] if options[:amount]
+        post[:amount] = amount
         post[:description] = options[:description]
+        add_common_params(post, options)
         create_transaction(:post, @refunds_uri, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -256,11 +271,17 @@ module ActiveMerchant #:nodoc:
         post = {}
         account_uri = create_or_find_account(post, options)
         if credit_card.respond_to? :number
-          add_credit_card(post, credit_card, options)
+          card_uri = add_credit_card(post, credit_card, options)
         else
-          associate_card_to_account(account_uri, credit_card)
-          credit_card
+          card_uri = associate_card_to_account(account_uri, credit_card)
         end
+
+        is_test = false
+        if @marketplace_uri
+          is_test = (@marketplace_uri.index("TEST") ? true : false)
+        end
+
+        Response.new(true, "Card stored", {}, :test => is_test, :authorization => [card_uri, account_uri].compact.join(';'))
       rescue Error => ex
         failed_response(ex.response)
       end
@@ -294,7 +315,9 @@ module ActiveMerchant #:nodoc:
         end
 
         if account_uri == nil
+          post[:name] = options[:name] if options[:name]
           post[:email_address] = options[:email]
+          post[:meta] = options[:meta] if options[:meta]
 
           # create an account
           response = http_request(:post, @accounts_uri, post)
@@ -305,6 +328,7 @@ module ActiveMerchant #:nodoc:
             # lookup account from Balanced, account_uri should be in the
             # exception in a dictionary called extras
             account_uri = response['extras']['account_uri']
+            raise Error.new(response) unless account_uri
           end
         end
 
@@ -321,6 +345,15 @@ module ActiveMerchant #:nodoc:
           credit_card[:postal_code] = address[:zip] if address[:zip]
           credit_card[:country] = address[:country] if address[:country]
         end
+      end
+
+      def add_common_params(post, options)
+        common_params = [
+          :appears_on_statement_as,
+          :on_behalf_of_uri,
+          :meta
+        ]
+        post.update(options.select{|key, _| common_params.include?(key)})
       end
 
       def add_credit_card(post, credit_card, options)
@@ -344,6 +377,7 @@ module ActiveMerchant #:nodoc:
 
           post[:card_uri] = card_uri
         elsif credit_card.kind_of?(String)
+          associate_card_to_account(post[:account_uri], credit_card) unless options[:account_uri]
           post[:card_uri] = credit_card
         end
 

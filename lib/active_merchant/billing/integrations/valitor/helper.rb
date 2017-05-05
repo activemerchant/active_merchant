@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
             requires!(options, :amount, :description)
             options.assert_valid_keys([:description, :quantity, :amount, :discount])
 
-            add_field("Vara_#{id}_Verd", format_amount(options[:amount]))
+            add_field("Vara_#{id}_Verd", format_amount(options[:amount], @fields[mappings[:currency]]))
             add_field("Vara_#{id}_Fjoldi", options[:quantity] || "1")
             
             add_field("Vara_#{id}_Lysing", options[:description]) if options[:description]
@@ -76,8 +76,8 @@ module ActiveMerchant #:nodoc:
             @fields.merge('RafraenUndirskrift' => signature)
           end
           
-          def format_amount(amount)
-            amount.to_f.round
+          def format_amount(amount, currency)
+            Gateway::CURRENCIES_WITHOUT_FRACTIONS.include?(currency) ? amount.to_f.round : sprintf("%.2f", amount)
           end
         end
       end

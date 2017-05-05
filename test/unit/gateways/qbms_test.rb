@@ -11,14 +11,12 @@ class QbmsTest < Test::Unit::TestCase
 
     @amount = 100
     @card = credit_card('4111111111111111')
-
-    @options = {}
   end
 
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(authorization_response)
 
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_instance_of Response, response
     assert_success response
     assert_equal '1000', response.authorization
@@ -27,7 +25,7 @@ class QbmsTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(capture_response)
 
-    assert response = @gateway.capture(@amount, @card, @options)
+    assert response = @gateway.capture(@amount, @card)
     assert_instance_of Response, response
     assert_success response
     assert_equal '1000', response.authorization
@@ -36,16 +34,34 @@ class QbmsTest < Test::Unit::TestCase
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(charge_response)
 
-    assert response = @gateway.purchase(@amount, @card, @options)
+    assert response = @gateway.purchase(@amount, @card)
     assert_instance_of Response, response
     assert_success response
     assert_equal '1000', response.authorization
   end
 
+  def test_truncated_address_is_sent
+    @gateway.expects(:ssl_post).
+      with(anything, regexp_matches(/12345 Ridiculously Lengthy Roa\<.*445566778\</), anything).
+      returns(charge_response)
+
+    options = { :billing_address => address.update(:address1 => "12345 Ridiculously Lengthy Road Name", :zip => '4455667788') }
+    assert response = @gateway.purchase(@amount, @card, options)
+    assert_success response
+  end
+
+  def test_partial_address_is_ok
+    @gateway.expects(:ssl_post).returns(charge_response)
+
+    options = { :billing_address => address.update(:address1 => nil, :zip => nil) }
+    assert response = @gateway.purchase(@amount, @card, options)
+    assert_success response
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(void_response)
 
-    assert response = @gateway.void("x", @options)
+    assert response = @gateway.void("x")
     assert_instance_of Response, response
     assert_success response
   end
@@ -54,7 +70,7 @@ class QbmsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(credit_response)
 
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
-      assert response = @gateway.credit(@amount, "x", @options)
+      assert response = @gateway.credit(@amount, "x")
       assert_instance_of Response, response
       assert_success response
     end
@@ -63,44 +79,44 @@ class QbmsTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(credit_response)
 
-    assert response = @gateway.refund(@amount, "x", @options)
+    assert response = @gateway.refund(@amount, "x")
     assert_instance_of Response, response
     assert_success response
   end
 
   def test_avs_result
     @gateway.expects(:ssl_post).returns(authorization_response)
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_equal 'Y', response.avs_result['street_match']
     assert_equal 'Y', response.avs_result['postal_match']
 
     @gateway.expects(:ssl_post).returns(authorization_response(:avs_street => "Fail"))
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_equal 'N', response.avs_result['street_match']
     assert_equal 'Y', response.avs_result['postal_match']
 
     @gateway.expects(:ssl_post).returns(authorization_response(:avs_zip => "Fail"))
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_equal 'Y', response.avs_result['street_match']
     assert_equal 'N', response.avs_result['postal_match']
 
     @gateway.expects(:ssl_post).returns(authorization_response(:avs_street => "Fail", :avs_zip => "Fail"))
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_equal 'N', response.avs_result['street_match']
     assert_equal 'N', response.avs_result['postal_match']
   end
 
   def test_cvv_result
     @gateway.expects(:ssl_post).returns(authorization_response)
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_equal 'M', response.cvv_result['code']
 
     @gateway.expects(:ssl_post).returns(authorization_response(:card_security_code_match => "Fail"))
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_equal 'N', response.cvv_result['code']
 
     @gateway.expects(:ssl_post).returns(authorization_response(:card_security_code_match => "NotAvailable"))
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_equal 'P', response.cvv_result['code']
   end
 
@@ -123,7 +139,7 @@ class QbmsTest < Test::Unit::TestCase
   def test_failed_authorization
     @gateway.expects(:ssl_post).returns(authorization_response(:status_code => 10301))
 
-    assert response = @gateway.authorize(@amount, @card, @options)
+    assert response = @gateway.authorize(@amount, @card)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -134,7 +150,7 @@ class QbmsTest < Test::Unit::TestCase
     @gateway = QbmsGateway.new(:login => "test", :ticket => "abc123", :test => true)
     @gateway.stubs(:parse).returns({})
     @gateway.expects(:ssl_post).with(QbmsGateway.test_url, anything, anything).returns(authorization_response)
-    @gateway.authorize(@amount, @card, @options)
+    @gateway.authorize(@amount, @card)
 
     ActiveMerchant::Billing::Base.mode = :test
   end

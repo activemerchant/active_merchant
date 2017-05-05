@@ -9,12 +9,23 @@ module ActiveMerchant #:nodoc:
     #
     # ActiveMerchant expects the amounts to be given as an Integer in cents. In this case, 10 EUR becomes 1000.
     #
+    # Create certificates for authentication:
+    #
+    # The PEM file expected should contain both the certificate and the generated PEM file.
+    # Some sample shell commands to generate the certificates:
+    #
+    #    openssl genrsa -aes128 -out priv.pem -passout pass:[YOUR PASSWORD] 1024
+    #    openssl req -x509 -new -key priv.pem -passin pass:[YOUR PASSWORD] -days 3000 -out cert.cer
+    #    cat cert.cer priv.pem > ideal.pem
+    #
+    # Following the steps above, upload cert.cer to the ideal web interface and pass the path of ideal.pem to the :pem option.
+    #
     # Configure the gateway using your iDEAL bank account info and security settings:
     #
     # Create gateway:
     #    gateway = ActiveMerchant::Billing::IdealRabobankGateway.new(
-    #      :login    => '123456789', # merchant number
-    #      :pem      => File.read(RAILS_ROOT + '/config/ideal.pem'), # put certificate and PEM in this file
+    #      :login    => '123456789', # 9 digit merchant number
+    #      :pem      => File.read(Rails.root + 'config/ideal.pem'),
     #      :password => 'password' # password for the PEM key
     #    )
     #

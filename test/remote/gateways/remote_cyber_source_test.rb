@@ -4,15 +4,16 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
 
-    @gateway = CyberSourceGateway.new(fixtures(:cyber_source))
+    @gateway = CyberSourceGateway.new({nexus: "NC"}.merge(fixtures(:cyber_source)))
 
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('801111111111111')
+    @pinless_debit_card = credit_card('4002269999999999')
 
     @amount = 100
 
     @options = {
-      :billing_address => address,
+      :billing_address => address(country: "US", state: "NC"),
 
       :order_id => generate_unique_id,
       :line_items => [
@@ -110,31 +111,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_tax_calculation_with_nexus
-    total_line_items_value = @options[:line_items].inject(0) do |sum, item|
-                               sum += item[:declared_value] * item[:quantity]
-                             end
-
-    canada_gst_rate = 0.05
-    ontario_pst_rate = 0.08
-
-
-    total_pst = total_line_items_value.to_f * ontario_pst_rate / 100
-    total_gst = total_line_items_value.to_f * canada_gst_rate / 100
-    total_tax = total_pst + total_gst
-
-    assert response = @gateway.calculate_tax(@credit_card, @options.merge(:nexus => 'ON'))
+  def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
-    assert response.params['totalTaxAmount']
-    assert_equal total_pst, response.params['totalCountyTaxAmount'].to_f
-    assert_equal total_gst, response.params['totalStateTaxAmount'].to_f
-    assert_equal total_tax, response.params['totalTaxAmount'].to_f
     assert_success response
     assert response.test?
   end
 
-  def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+  def test_successful_pinless_debit_card_puchase
+    assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(:pinless_debit_card => true))
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
@@ -204,6 +189,30 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  # Pinless debit payment can never be refunded.
+  def test_unsuccessful_pinless_debit_card_refund
+    assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(:pinless_debit_card => true))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert response = @gateway.refund(@amount, response.authorization)
+    assert_equal 'One or more fields contains invalid data', response.message
+    assert_equal false,  response.success?
+  end
+
+  def test_successful_subscription_credit
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.credit(@amount, response.authorization, :order_id => generate_unique_id)
+
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
   def test_successful_create_subscription
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
@@ -216,6 +225,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
+  end
+
+  def test_successful_create_subscription_with_monthly_options
+    response = @gateway.store(@credit_card, @subscription_options.merge(:setup_fee => 99.0, :subscription => {:amount => 49.0, :automatic_renew => false, frequency: 'monthly'}))
+    assert_equal 'Successful transaction', response.message
+    response = @gateway.retrieve(";#{response.params['subscriptionID']};", :order_id => @subscription_options[:order_id])
+    assert_equal 49.0, response.params['recurringAmount'].to_f
+    assert_equal 'monthly', response.params['frequency']
   end
 
   def test_successful_update_subscription_creditcard
@@ -263,4 +280,10 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_validate_pinless_debit_card
+    assert response = @gateway.validate_pinless_debit_card(@pinless_debit_card, @options)
+    assert response.test?
+    assert_equal 'Y', response.params["status"]
+    assert_equal true,  response.success?
+  end
 end

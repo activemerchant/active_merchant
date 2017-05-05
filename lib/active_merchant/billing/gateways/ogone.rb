@@ -32,13 +32,13 @@ module ActiveMerchant #:nodoc:
     # == Usage
     #
     #   gateway = ActiveMerchant::Billing::OgoneGateway.new(
-    #               :login                     => "my_ogone_psp_id",
-    #               :user                      => "my_ogone_user_id",
-    #               :password                  => "my_ogone_pswd",
-    #               :signature                 => "my_ogone_sha_signature", # Only if you configured your Ogone environment so.
-    #               :signature_encryptor       => "sha512", # Can be "none" (default), "sha1", "sha256" or "sha512".
+    #     :login               => "my_ogone_psp_id",
+    #     :user                => "my_ogone_user_id",
+    #     :password            => "my_ogone_pswd",
+    #     :signature           => "my_ogone_sha_signature", # Only if you configured your Ogone environment so.
+    #     :signature_encryptor => "sha512"                  # Can be "none" (default), "sha1", "sha256" or "sha512".
     #                                                       # Must be the same as the one configured in your Ogone account.
-    #            )
+    #   )
     #
     #   # set up credit card object as in main ActiveMerchant example
     #   creditcard = ActiveMerchant::Billing::CreditCard.new(
@@ -75,7 +75,19 @@ module ActiveMerchant #:nodoc:
     #
     #   # When using store, you can also let Ogone generate the alias for you
     #   response = gateway.store(creditcard)
-    #   puts response.billing_id  # Retrieve the generated alias
+    #   puts response.billing_id # Retrieve the generated alias
+    #
+    #   # By default, Ogone tries to authorize 0.01 EUR but you can change this
+    #   # amount using the :store_amount option when creating the gateway object:
+    #   gateway = ActiveMerchant::Billing::OgoneGateway.new(
+    #     :login               => "my_ogone_psp_id",
+    #     :user                => "my_ogone_user_id",
+    #     :password            => "my_ogone_pswd",
+    #     :signature           => "my_ogone_sha_signature",
+    #     :signature_encryptor => "sha512",
+    #     :store_amount        => 100 # The store method will try to authorize 1 EUR instead of 0.01 EUR
+    #   )
+    #   response = gateway.store(creditcard) # authorize 1 EUR and void the authorization right away
     #
     # == 3-D Secure feature
     #
@@ -99,12 +111,6 @@ module ActiveMerchant #:nodoc:
     #     :language        => Customer's language, for example: "en_EN"
     #
     class OgoneGateway < Gateway
-
-      URLS = {
-        :order       => 'https://secure.ogone.com/ncol/%s/orderdirect.asp',
-        :maintenance => 'https://secure.ogone.com/ncol/%s/maintenancedirect.asp'
-      }
-
       CVV_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'P' }
@@ -125,8 +131,8 @@ module ActiveMerchant #:nodoc:
       OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be the default for a future release of ActiveMerchant. You should either begin using it, or update your configuration to explicitly disable it (signature_encryptor: none)"
       OGONE_STORE_OPTION_DEPRECATION_MESSAGE   = "The 'store' option has been renamed to 'billing_id', and its usage is deprecated."
 
-      self.test_url = URLS[:order] % "test"
-      self.live_url = URLS[:order] % "prod"
+      self.test_url = "https://secure.ogone.com/ncol/test/"
+      self.live_url = "https://secure.ogone.com/ncol/prod/"
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
       # also supports Airplus and UATP
@@ -135,10 +141,10 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Ogone'
       self.default_currency = 'EUR'
       self.money_format = :cents
+      self.ssl_version = :TLSv1
 
       def initialize(options = {})
         requires!(options, :login, :user, :password)
-        @options = options
         super
       end
 
@@ -155,23 +161,25 @@ module ActiveMerchant #:nodoc:
 
       # Verify and transfer the specified amount.
       def purchase(money, payment_source, options = {})
-        post = {}
+        post   = {}
+        action = options[:action] || 'SAL'
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('SAL', post)
+        commit(action, post)
       end
 
       # Complete a previously authorized transaction.
       def capture(money, authorization, options = {})
-        post = {}
+        post   = {}
+        action = options[:action] || 'SAL'
         add_authorization(post, reference_from(authorization))
         add_invoice(post, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('SAL', post)
+        commit(action, post)
       end
 
       # Cancels a previously authorized transaction.
@@ -199,14 +207,10 @@ module ActiveMerchant #:nodoc:
 
       # Store a credit card by creating an Ogone Alias
       def store(payment_source, options = {})
-        options.merge!(:alias_operation => 'BYOGONE') unless options.has_key?(:billing_id) || options.has_key?(:store)
-        response = authorize(1, payment_source, options)
+        options.merge!(:alias_operation => 'BYPSP') unless(options.has_key?(:billing_id) || options.has_key?(:store))
+        response = authorize(@options[:store_amount] || 1, payment_source, options)
         void(response.authorization) if response.success?
         response
-      end
-
-      def test?
-        @options[:test] || super
       end
 
       private
@@ -240,6 +244,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_source(post, payment_source, options)
+        add_d3d(post, options) if options[:d3d]
+
         if payment_source.is_a?(String)
           add_alias(post, payment_source, options[:alias_operation])
           add_eci(post, options[:eci] || '9')
@@ -250,7 +256,6 @@ module ActiveMerchant #:nodoc:
           end
           add_alias(post, options[:billing_id], options[:alias_operation])
           add_eci(post, options[:eci] || '7')
-          add_d3d(post, options) if options[:d3d]
           add_creditcard(post, payment_source)
         end
       end
@@ -334,8 +339,7 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]
 
-        url = URLS[parameters['PAYID'] ? :maintenance : :order] % [test? ? "test" : "prod"]
-        response = parse(ssl_post(url, post_data(action, parameters)))
+        response = parse(ssl_post(url(parameters['PAYID']), post_data(action, parameters)))
 
         options = {
           :authorization => [response["PAYID"], action].join(";"),
@@ -344,6 +348,10 @@ module ActiveMerchant #:nodoc:
           :cvv_result    => CVV_MAPPING[response["CVCCheck"]]
         }
         OgoneResponse.new(successful?(response), message_from(response), response, options)
+      end
+
+      def url(payid)
+        (test? ? test_url : live_url) + (payid ? "maintenancedirect.asp" : "orderdirect.asp")
       end
 
       def successful?(response)

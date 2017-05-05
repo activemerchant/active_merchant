@@ -99,7 +99,6 @@ module ActiveMerchant
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 

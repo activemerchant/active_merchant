@@ -4,12 +4,14 @@ rescue LoadError
   raise "Could not load the vindicia-api gem.  Use `gem install vindicia-api` to install it."
 end
 
+require 'i18n/core_ext/string/interpolate'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
 
     # For more information on the Vindicia Gateway please visit their {website}[http://vindicia.com/]
     #
-    # The login and password are not the username and password you use to 
+    # The login and password are not the username and password you use to
     # login to the Vindicia Merchant Portal.
     #
     # ==== Recurring Billing
@@ -25,8 +27,8 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_url, :live_url
 
-      self.test_url = "https://soap.prodtest.sj.vindicia.com/soap.pl" 
-      self.live_url = "http://soap.vindicia.com/soap.pl" 
+      self.test_url = "https://soap.prodtest.sj.vindicia.com/soap.pl"
+      self.live_url = "http://soap.vindicia.com/soap.pl"
 
       # Creates a new VindiciaGateway
       #
@@ -40,24 +42,25 @@ module ActiveMerchant #:nodoc:
       # * <tt>:api_version</tt> -- Vindicia API Version - defaults to 3.6 (OPTIONAL)
       # * <tt>:account_id</tt> -- Account Id which all transactions will be run against. (REQUIRED)
       # * <tt>:transaction_prefix</tt> -- Prefix to order id for one-time transactions - defaults to 'X' (OPTIONAL
-      # * <tt>:min_chargeback_probability</tt> -- Minimum score for chargebacks - defaults to 65 (OPTIONAL) 
+      # * <tt>:min_chargeback_probability</tt> -- Minimum score for chargebacks - defaults to 65 (OPTIONAL)
       # * <tt>:cvn_success</tt> -- Array of valid CVN Check return values - defaults to [M, P] (OPTIONAL)
       # * <tt>:avs_success</tt> -- Array of valid AVS Check return values - defaults to [X, Y, A, W, Z] (OPTIONAL)
       def initialize(options = {})
         requires!(options, :login, :password)
+        super
 
         config = lambda do |config|
-          config.login = options[:login] 
-          config.password = options[:password] 
+          config.login = options[:login]
+          config.password = options[:password]
           config.api_version = options[:api_version] || "3.6"
-          config.endpoint = test? ? self.test_url : self.live_url 
+          config.endpoint = test? ? self.test_url : self.live_url
           config.namespace = "http://soap.vindicia.com"
         end
 
-        if Vindicia.config.is_configured? 
+        if Vindicia.config.is_configured?
           config.call(Vindicia.config)
         else
-          Vindicia.configure(&config) 
+          Vindicia.configure(&config)
         end
 
         requires!(options, :account_id)
@@ -66,10 +69,9 @@ module ActiveMerchant #:nodoc:
         @transaction_prefix = options[:transaction_prefix] || "X"
 
         @min_chargeback_probability = options[:min_chargeback_probability] || 65
-        @cvn_success = options[:cvn_success] || %w{M P} 
+        @cvn_success = options[:cvn_success] || %w{M P}
         @avs_success = options[:avs_success] || %w{X Y A W Z}
 
-        @options = options
         @allowed_authorization_statuses = %w{Authorized}
       end
 
@@ -103,7 +105,7 @@ module ActiveMerchant #:nodoc:
         if !response.success? && response.fraud_review? && !response.authorization.blank?
           void_response = void([vindicia_transaction[:transaction][:merchantTransactionId]], options)
           if void_response.success?
-            return response 
+            return response
           else
             return void_response
           end
@@ -142,10 +144,10 @@ module ActiveMerchant #:nodoc:
             :account => { :merchantAccountId => @account_id },
             :merchantTransactionId => identification,
             :sourceIp => options[:ip]
-          }] 
+          }]
         }))
 
-        if response[:return][:returnCode] == '200' && response[:qtyFail].to_i == 0          
+        if response[:return][:returnCode] == '200' && response[:qtyFail].to_i == 0
           success(response, identification)
         else
           fail(response)
@@ -204,22 +206,22 @@ module ActiveMerchant #:nodoc:
 
       def check_transaction(vindicia_transaction)
         if vindicia_transaction[:return][:returnCode] == '200'
-          status_log = vindicia_transaction[:transaction][:statusLog].first 
+          status_log = vindicia_transaction[:transaction][:statusLog].first
           if status_log[:creditCardStatus]
             avs = status_log[:creditCardStatus][:avsCode]
             cvn = status_log[:creditCardStatus][:cvnCode]
           end
 
-          if @allowed_authorization_statuses.include?(status_log[:status]) && 
+          if @allowed_authorization_statuses.include?(status_log[:status]) &&
             check_cvn(cvn) && check_avs(avs)
 
-            success(vindicia_transaction, 
-                    vindicia_transaction[:transaction][:merchantTransactionId], 
+            success(vindicia_transaction,
+                    vindicia_transaction[:transaction][:merchantTransactionId],
                     avs, cvn)
           else
             # If the transaction is authorized, but it didn't pass our AVS/CVV checks send the authorization along so
             # that is gets voided. Otherwise, send no authorization.
-            fail(vindicia_transaction, avs, cvn, false, 
+            fail(vindicia_transaction, avs, cvn, false,
                  @allowed_authorization_statuses.include?(status_log[:status]) ? vindicia_transaction[:transaction][:merchantTransactionId] : "")
           end
         else
@@ -238,9 +240,9 @@ module ActiveMerchant #:nodoc:
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard, options)
 
-        post(Vindicia::Transaction.auth({ 
-          :transaction => parameters, 
-          :minChargebackProbability => @min_chargeback_probability 
+        post(Vindicia::Transaction.auth({
+          :transaction => parameters,
+          :minChargebackProbability => @min_chargeback_probability
         }))
       end
 
@@ -281,8 +283,8 @@ module ActiveMerchant #:nodoc:
         add_subscription_information(parameters, options)
 
         post(Vindicia::AutoBill.update({
-          :autobill => parameters, 
-          :validatePaymentMethod => false, 
+          :autobill => parameters,
+          :validatePaymentMethod => false,
           :minChargebackProbability => 100
         }))
       end
@@ -290,8 +292,8 @@ module ActiveMerchant #:nodoc:
       def check_subscription(vindicia_transaction)
         if vindicia_transaction[:return][:returnCode] == '200'
           if vindicia_transaction[:autobill] && vindicia_transaction[:autobill][:status] == "Active"
-            success(vindicia_transaction, 
-                    vindicia_transaction[:autobill][:merchantAutoBillId]) 
+            success(vindicia_transaction,
+                    vindicia_transaction[:autobill][:merchantAutoBillId])
           else
             fail(vindicia_transaction)
           end
@@ -326,8 +328,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def fail(response, avs_code = nil, cvn_code = nil, fraud_review = false, authorization = "")
-        ActiveMerchant::Billing::Response.new(false, response[:return][:returnString], response, 
-                                              { :fraud_review => fraud_review || !authorization.blank?, 
+        ActiveMerchant::Billing::Response.new(false, response[:return][:returnString], response,
+                                              { :fraud_review => fraud_review || !authorization.blank?,
                                                 :authorization => authorization, :test => test?,
                                                 :avs_result => { :code => avs_code }, :cvv_result => cvn_code })
 

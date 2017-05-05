@@ -86,13 +86,10 @@ module ActiveMerchant
       def initialize(options={})
         @options = options
 
-        options[:merchant] ||= 'TEST' if test?
-
+        @options[:merchant] ||= 'TEST' if test?
         requires!(options, :username, :password, :merchant, :pem)
 
-        @options[:eci]      ||= 'SSL'
-
-        super
+        @options[:eci] ||= 'SSL'
       end
 
       def authorize(amount, payment_method, options={})
@@ -204,10 +201,6 @@ module ActiveMerchant
         return Response.new(false, "Invalid credentials", {}, :test => test?)
       rescue ActiveMerchant::ClientCertificateError
         return Response.new(false, "Invalid certificate", {}, :test => test?)
-      end
-
-      def test?
-        (@options[:test] || super)
       end
     end
   end

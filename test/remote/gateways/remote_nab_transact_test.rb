@@ -1,4 +1,5 @@
 require 'test_helper'
+
 class RemoteNabTransactTest < Test::Unit::TestCase
 
   def setup
@@ -28,11 +29,33 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
   end
-  
+
+  def test_unsuccessful_purchase_insufficient_funds
+    #Any total not ending in 00/08/11/16
+    failing_amount = 151 #Specifically tests 'Insufficient Funds'
+    assert response = @gateway.purchase(failing_amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Insufficient Funds', response.message
+  end
+
+  def test_unsuccessful_purchase_do_not_honour
+    #Any total not ending in 00/08/11/16
+    failing_amount = 105 #Specifically tests 'do not honour'
+    assert response = @gateway.purchase(failing_amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Do Not Honour', response.message
+  end
+
+  def test_unsuccessful_purchase_bad_credit_card
+    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'Invalid Credit Card Number', response.message
+  end
+
   # Unfortunately there is no "real" way to test the dynamic card acceptor,
   # however the "Integration Guide - XML API for Payments" documentation states:
   #   If enabled on your NAB Transact account, the Dynamic Card Acceptor details
-  #   will be accepted via metadata tags added to your XML request. Note that 
+  #   will be accepted via metadata tags added to your XML request. Note that
   #   permission for this feature must be enabled on your account or you will
   #   receive a response of “555 – Permission denied”.
   #
@@ -56,26 +79,93 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     end
   end
 
-  def test_unsuccessful_purchase_insufficient_funds
-    #Any total not ending in 00/08/11/16
-    failing_amount = 151 #Specifically tests 'Insufficient Funds'
-    assert response = @gateway.purchase(failing_amount, @credit_card, @options)
+  def test_successful_authorize
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_capture
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    authorization = auth.authorization
+
+    assert capture = @gateway.capture(@amount, authorization)
+    assert_success capture
+    assert_equal 'Approved', capture.message
+  end
+
+  def test_unsuccessful_authorize_insufficient_funds
+    # amount of 151 is the test amount for "Insufficient Funds"
+    failing_amount = 151
+
+    assert response = @gateway.authorize(failing_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Insufficient Funds', response.message
   end
 
-  def test_unsuccessful_purchase_do_not_honour
-    #Any total not ending in 00/08/11/16
-    failing_amount = 105 #Specifically tests 'do not honour'
-    assert response = @gateway.purchase(failing_amount, @credit_card, @options)
+  def test_unsuccessful_authorize_do_not_honour
+    # amount of 105 for "Do Not Honour"
+    failing_amount = 105
+
+    assert response = @gateway.authorize(failing_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Do Not Honour', response.message
   end
 
-  def test_unsuccessful_purchase_bad_credit_card
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
+  def test_unsuccessful_capture_amount_greater_than_authorized
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    authorization = auth.authorization
+
+    assert capture = @gateway.capture(@amount+100, authorization)
+    assert_failure capture
+    assert_equal 'Preauth was done for smaller amount', capture.message
+  end
+
+  def test_authorize_and_capture_with_card_acceptor
+    card_acceptor_options = {
+      :merchant_name => 'ActiveMerchant',
+      :merchant_location => 'Melbourne'
+    }
+    card_acceptor_options.each do |key, value|
+      options = @options.merge({key => value})
+      assert response = @gateway.authorize(@amount, @credit_card, options)
+      assert_failure response
+      assert_equal 'Permission denied', response.message
+
+      assert response = @card_acceptor_gateway.authorize(@amount, @credit_card, options)
+      assert_success response
+      assert_equal 'Approved', response.message
+
+      authorization = response.authorization
+
+      assert response = @card_acceptor_gateway.capture(@amount, authorization)
+      assert_success response
+      assert_equal 'Approved', response.message
+    end
+  end
+
+  def test_successful_refund
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    authorization = response.authorization
+    assert response = @gateway.refund(@amount, authorization)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_refund
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    authorization = response.authorization
+    assert response = @gateway.refund(@amount+1, authorization)
     assert_failure response
-    assert_equal 'Invalid Credit Card Number', response.message
+    assert_equal 'Only $2.0 available for refund', response.message
   end
 
   def test_invalid_login

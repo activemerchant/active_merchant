@@ -13,15 +13,14 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.fatzebra.com.au/'
       self.display_name = 'Fat Zebra'
-    
+
       # Setup a new instance of the gateway.
       #
       # The options hash should include :username and :token
       # You can find your username and token at https://dashboard.fatzebra.com.au
       # Under the Your Account section
       def initialize(options = {})
-        requires!(options, :username)
-        requires!(options, :token)
+        requires!(options, :username, :token)
         @username = options[:username]
         @token    = options[:token]
         super
@@ -29,11 +28,11 @@ module ActiveMerchant #:nodoc:
 
       # To create a purchase on a credit card use:
       #
-      #   purchase(money, creditcard , { ... })
+      #   purchase(money, creditcard)
       #
       # To charge a tokenized card
       #
-      #   purchase(money, {:token => "abzy87u", :cvv => "123"}, { ... }})
+      #   purchase(money, "abzy87u", :cvv => "123")
       def purchase(money, creditcard, options = {})
         post = {}
 
@@ -61,6 +60,8 @@ module ActiveMerchant #:nodoc:
       end
 
       # Tokenize a credit card
+      #
+      # The token is returned in the Response#authorization
       def store(creditcard)
         post = {}
         add_creditcard(post, creditcard)
@@ -69,6 +70,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       # Add the money details to the request
       def add_amount(post, money, options)
         post[:amount] = money
@@ -81,42 +83,61 @@ module ActiveMerchant #:nodoc:
           post[:card_expiry] = "#{creditcard.month}/#{creditcard.year}"
           post[:cvv] = creditcard.verification_value if creditcard.verification_value?
           post[:card_holder] = creditcard.name if creditcard.name
+        elsif creditcard.is_a?(String)
+          post[:card_token] = creditcard
+          post[:cvv] = options[:cvv]
+        elsif creditcard.is_a?(Hash)
+          deprecated "Passing the credit card as a Hash is deprecated. Use a String and put the (optional) CVV in the options hash instead."
+          post[:card_token] = creditcard[:token]
+          post[:cvv] = creditcard[:cvv]
         else
-            post[:card_token] = creditcard[:token]
-            post[:cvv] = creditcard[:cvv]
+          raise ArgumentError.new("Unknown credit card format #{creditcard.inspect}")
         end
       end
 
       # Post the data to the gateway
       def commit(method, uri, parameters=nil)
-        raw_response = response = nil
-        success = false
-        begin
-          raw_response = ssl_request(method, get_url(uri), parameters.to_json, headers)
-          response = parse(raw_response)
-          success = response["successful"] && (response["response"]["successful"] || response["response"]["token"])
+        response = begin
+          parse(ssl_request(method, get_url(uri), parameters.to_json, headers))
         rescue ResponseError => e
-          if e.response.code == "401"
-            return Response.new(false, "Invalid Login")
-          end
-
-          raw_response = e.response.body
-          response = parse(raw_response)
-        rescue JSON::ParserError
-          response = json_error(raw_response)
+          return Response.new(false, "Invalid Login") if(e.response.code == "401")
+          parse(e.response.body)
         end
 
-        message = response["response"]["message"]
-        unless response["successful"]
-          # There is an error, so we will show that instead
-          message = response["errors"].empty? ? "Unknown Error" : response["errors"].join(", ")
-        end
-
-        Response.new(success,
-          message,
+        success = success_from(response)
+        Response.new(
+          success,
+          message_from(response),
           response,
-          :test => response.has_key?("test") ? response["test"] : false,
-          :authorization => response["response"]["id"] || response["response"]["token"])
+          :test => response["test"],
+          :authorization => authorization_from(response, success)
+        )
+      end
+
+      def success_from(response)
+        (
+          response["successful"] &&
+          response["response"] &&
+          (response["response"]["successful"] || response["response"]["token"])
+        )
+      end
+
+      def authorization_from(response, success)
+        if success
+          (response["response"]["id"] || response["response"]["token"])
+        else
+          nil
+        end
+      end
+
+      def message_from(response)
+        if !response["errors"].empty?
+          response["errors"].join(", ")
+        elsif response["response"]["message"]
+          response["response"]["message"]
+        else
+          "Unknown Error"
+        end
       end
 
       # Parse the returned JSON, if parse errors are raised then return a detailed error.
@@ -146,7 +167,7 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.strict_encode64(@username.to_s + ":" + @token.to_s).strip,
           "User-Agent" => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
-      end 
+      end
     end
   end
 end

@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       include SageCore
       self.live_url = 'https://www.sagepayments.net/cgi-bin/eftBankcard.dll?transaction'
       self.source = 'bankcard'
-          
+
       # Credit cards supported by Sage
       # * VISA
       # * MasterCard
@@ -17,42 +17,47 @@ module ActiveMerchant #:nodoc:
       # * JCB
       # * Sears
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
-      
+
       def authorize(money, credit_card, options = {})
         post = {}
         add_credit_card(post, credit_card)
         add_transaction_data(post, money, options)
         commit(:authorization, post)
       end
-      
+
       def purchase(money, credit_card, options = {})
         post = {}
         add_credit_card(post, credit_card)
         add_transaction_data(post, money, options)
         commit(:purchase, post)
-      end                       
-    
-      # The +money+ amount is not used. The entire amount of the 
+      end
+
+      # The +money+ amount is not used. The entire amount of the
       # initial authorization will be captured.
       def capture(money, reference, options = {})
         post = {}
         add_reference(post, reference)
         commit(:capture, post)
       end
-      
+
       def void(reference, options = {})
         post = {}
         add_reference(post, reference)
         commit(:void, post)
       end
-      
+
       def credit(money, credit_card, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, credit_card, options)
+      end
+
+      def refund(money, credit_card, options = {})
         post = {}
         add_credit_card(post, credit_card)
         add_transaction_data(post, money, options)
         commit(:credit, post)
       end
-          
+
       private
       def exp_date(credit_card)
         year  = sprintf("%.4i", credit_card.year)
@@ -67,7 +72,7 @@ module ActiveMerchant #:nodoc:
         post[:C_exp]        = exp_date(credit_card)
         post[:C_cvv]        = credit_card.verification_value if credit_card.verification_value?
       end
-      
+
       def parse(data)
         response = {}
         response[:success]          = data[1,1]
@@ -78,7 +83,7 @@ module ActiveMerchant #:nodoc:
         response[:avs_result]       = data[43, 1].strip
         response[:risk]             = data[44, 2]
         response[:reference]        = data[46, 10]
-        
+
         response[:order_number], response[:recurring] = data[57...-1].split("\034")
         response
       end

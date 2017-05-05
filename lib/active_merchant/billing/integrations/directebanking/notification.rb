@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
             Digest::SHA1.hexdigest(generate_signature_string)
           end
           
-          def acknowledge
+          def acknowledge(authcode = nil)
             # signature_is_valid?
             generate_signature.to_s == params['hash'].to_s
           end

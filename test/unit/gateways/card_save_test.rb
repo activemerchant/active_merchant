@@ -5,16 +5,16 @@ class CardSaveTest < Test::Unit::TestCase
     Base.gateway_mode = :test
     @gateway = CardSaveGateway.new(:login => 'login', :password => 'password')
     @credit_card = credit_card
-    @amount = 100    
+    @amount = 100
     @options = {:order_id =>'1', :billing_address => address, :description =>'Store Purchase'}
   end
-  
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_visa_no_3d_purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    
+
     # Replace with authorization number from the successful response
     assert_equal '1;110706093540191601939772;939772', response.authorization
     assert response.test?
@@ -28,7 +28,7 @@ class CardSaveTest < Test::Unit::TestCase
     assert_nil response.authorization
     assert response.test?
   end
-  
+
   def test_referred_request_is_a_failure
     @gateway.expects(:ssl_post).returns(referred_mastercard_no_3d_secure_purchase_response)
 
@@ -37,8 +37,8 @@ class CardSaveTest < Test::Unit::TestCase
     assert_nil response.authorization
     assert response.test?
   end
-  
-  def test_referred_request_is_a_failure
+
+  def test_unsupported_card_currency_combination_is_a_failure
     @gateway.expects(:ssl_post).returns(failed_due_to_unsupported_card_currency_combination)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -46,47 +46,47 @@ class CardSaveTest < Test::Unit::TestCase
     assert_nil response.authorization
     assert response.test?
   end
-  
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(authorization_successful)
-    
+
     assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response    
+    assert_success response
     assert_equal('1;110706124418747501702211;702211', response.authorization)
     assert response.test?
   end
-  
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(capture_successful)
-    
+
     assert response = @gateway.capture(1111, "1;110706124418747501702211;702211")
-    assert_success response    
+    assert_success response
     assert_equal('110706124418747501702211', response.authorization)
     assert response.test?
   end
-  
+
   def test_default_currency
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/CurrencyCode="826"/), anything).returns(successful_visa_no_3d_purchase_response)
     assert_success @gateway.purchase(@amount, @credit_card, @options)
   end
-  
+
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund)
     assert response = @gateway.refund(@amount, '123456789')
     assert_success response
     assert_equal 'Refund successful', response.message
   end
-  
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund)
-    
+
     assert response = @gateway.refund(@amount, '123456789')
     assert_failure response
     assert_equal 'Amount exceeds that available for refund [1000]', response.message
   end
 
   private
-  
+
   # Place raw successful response from gateway here
   def successful_visa_no_3d_purchase_response
     %(<?xml version="1.0" encoding="utf-8"?>
@@ -112,7 +112,7 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-  
+
   def declined_switch_no_3d_purchase_response
     %(<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -136,7 +136,7 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-  
+
   def referred_mastercard_no_3d_secure_purchase_response
     %(<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -160,7 +160,7 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-  
+
   def failed_due_to_unsupported_card_currency_combination
     %(<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -184,7 +184,7 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-  
+
   def authorization_successful
     %(<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -209,7 +209,7 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-  
+
   def capture_successful
     %(<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -231,7 +231,7 @@ class CardSaveTest < Test::Unit::TestCase
     </soap:Envelope>
     )
   end
-  
+
   def successful_refund
     %(<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -252,7 +252,7 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-  
+
   def failed_refund
     %(<?xml version="1.0" encoding="utf-8"?>
     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -273,5 +273,5 @@ class CardSaveTest < Test::Unit::TestCase
       </soap:Body>
     </soap:Envelope>)
   end
-  
+
 end

@@ -12,7 +12,7 @@ module ActiveMerchant
     # login - The unique id of the merchant
     # password - The secret is used to digitally sign the request
     # account - This is an optional third part of the authentication process
-    # and is used if the merchant wishes do distuinguish cc traffic from the different sources
+    # and is used if the merchant wishes do distinguish cc traffic from the different sources
     # by using a different account. This must be created in advance
     #
     # the Realex team decided to make the orderid unique per request,
@@ -20,7 +20,7 @@ module ActiveMerchant
     # same order id
     class RealexGateway < Gateway
       self.live_url = self.test_url = 'https://epage.payandshop.com/epage-remote.cgi'
-                  
+
       CARD_MAPPING = {
         'master'            => 'MC',
         'visa'              => 'VISA',
@@ -34,7 +34,7 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'EUR'
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
-      self.supported_countries = [ 'IE', 'GB' ]
+      self.supported_countries = %w(IE GB FR BE NL LU IT)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
 
@@ -45,7 +45,6 @@ module ActiveMerchant
       def initialize(options = {})
         requires!(options, :login, :password)
         options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options.has_key?(:rebate_secret)
-        @options = options
         super
       end
 
@@ -81,14 +80,17 @@ module ActiveMerchant
       def void(authorization, options = {})
         request = build_void_request(authorization, options)
         commit(request)
-      end     
-      
-      private           
-      def commit(request)        
+      end
+
+      private
+      def commit(request)
         response = parse(ssl_post(self.live_url, request))
 
-        Response.new(response[:result] == "00", message_from(response), response,
-          :test => response[:message] =~ /\[ test system \]/,
+        Response.new(
+          (response[:result] == "00"),
+          message_from(response),
+          response,
+          :test => (response[:message] =~ %r{\[ test system \]}),
           :authorization => authorization_from(response),
           :cvv_result => response[:cvnresult],
           :avs_result => {
@@ -188,14 +190,14 @@ module ActiveMerchant
 
           if billing_address
             xml.tag! 'address', 'type' => 'billing' do
-              xml.tag! 'code', avs_input_code( billing_address )
+              xml.tag! 'code', format_address_code(billing_address)
               xml.tag! 'country', billing_address[:country]
             end
           end
 
           if shipping_address
             xml.tag! 'address', 'type' => 'shipping' do
-              xml.tag! 'code', format_shipping_zip_code(shipping_address[:zip])
+              xml.tag! 'code', format_address_code(shipping_address)
               xml.tag! 'country', shipping_address[:country]
             end
           end
@@ -241,17 +243,9 @@ module ActiveMerchant
         end
       end
 
-      def avs_input_code(address)
-        address.values_at(:zip, :address1).map{ |v| extract_digits(v) }.join('|')
-      end
-
-      def format_shipping_zip_code(zip)
-        zip.to_s.gsub(/\W/, '')
-      end
-
-      def extract_digits(string)
-        return "" if string.nil?
-        string.gsub(/[\D]/,'')
+      def format_address_code(address)
+        code = [address[:zip].to_s, address[:address1].to_s + address[:address2].to_s]
+        code.collect{|e| e.gsub(/\D/, "")}.reject{|e| e.empty?}.join("|")
       end
 
       def new_timestamp

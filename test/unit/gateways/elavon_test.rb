@@ -97,10 +97,6 @@ class ElavonTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_supported_countries
-    assert_equal ['US', 'CA'], ElavonGateway.supported_countries
-  end
-
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :discover], ElavonGateway.supported_cardtypes
   end

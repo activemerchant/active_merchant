@@ -1,5 +1,14 @@
 require 'test_helper'
 
+RSP = {
+  :approved_auth => "AUTH_CODE=XCADZ&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203758&CVV2=_&MESSAGE=Approved%20Auth",
+  :approved_capture => "AUTH_CODE=CHTHX&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=CAPTURE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203760&CVV2=_&MESSAGE=Approved%20Capture",
+  :approved_void => "AUTH_CODE=KTMHB&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=VOID&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203763&CVV2=_&MESSAGE=Approved%20Void",
+  :declined => "TRANS_ID=100000000150&STATUS=0&AVS=0&CVV2=7&MESSAGE=Declined&REBID=",
+  :approved_purchase => "AUTH_CODE=GYRUY&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=SALE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203767&CVV2=_&MESSAGE=Approved%20Sale"
+}
+
+
 class BluePayTest < Test::Unit::TestCase
   include CommStub
 
@@ -15,53 +24,62 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
-  
+    #@gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(RSP[:approved_auth])
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '508141794', response.authorization
+    assert_equal '100134203758', response.authorization
   end
-  
+
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-  
+    @gateway.expects(:ssl_post).returns(RSP[:approved_purchase])
+
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '508141795', response.authorization
+    assert_equal '100134203767', response.authorization
   end
-  
+
   def test_failed_authorization
-    @gateway.expects(:ssl_post).returns(failed_authorization_response)
-  
+    @gateway.expects(:ssl_post).returns(RSP[:declined])
+
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal '508141794', response.authorization
+    assert_equal '100000000150', response.authorization
   end
-  
+
   def test_add_address_outsite_north_america
     result = {}
-    
+
     @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'DE', :state => ''} )
-    
-    assert_equal ["ADDR1", "ADDR2", "CITY", "COMPANY_NAME", "COUNTRY", "NAME1", "NAME2", "PHONE", "STATE", "ZIP"], result.stringify_keys.keys.sort
+    assert_equal ["ADDR1", "ADDR2", "CITY", "COMPANY_NAME", "COUNTRY", "PHONE", "STATE", "ZIP"], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:STATE]
-    assert_equal '123 Test St.', result[:ADDR1] 
-    assert_equal 'DE', result[:COUNTRY]     
+    assert_equal '123 Test St.', result[:ADDR1]
+    assert_equal 'DE', result[:COUNTRY]
   end
-                                                             
+
   def test_add_address
     result = {}
-  
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'} )  
-   
-    assert_equal ["ADDR1", "ADDR2", "CITY", "COMPANY_NAME", "COUNTRY", "NAME1", "NAME2", "PHONE", "STATE", "ZIP"], result.stringify_keys.keys.sort 
+
+    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'} )
+
+    assert_equal ["ADDR1", "ADDR2", "CITY", "COMPANY_NAME", "COUNTRY", "PHONE", "STATE", "ZIP"], result.stringify_keys.keys.sort
     assert_equal 'AK', result[:STATE]
     assert_equal '123 Test St.', result[:ADDR1]
     assert_equal 'US', result[:COUNTRY]
-    
+
+  end
+
+  def test_name_comes_from_payment_method
+    result = {}
+
+    @gateway.send(:add_creditcard, result, @credit_card)
+    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'} )
+
+    assert_equal @credit_card.first_name, result[:NAME1]
+    assert_equal @credit_card.last_name, result[:NAME2]
   end
 
   def test_add_invoice
@@ -69,31 +87,17 @@ class BluePayTest < Test::Unit::TestCase
     @gateway.send(:add_invoice, result, :order_id => '#1001')
     assert_equal '#1001', result[:invoice_num]
   end
-  
+
   def test_add_description
     result = {}
     @gateway.send(:add_invoice, result, :description => 'My Purchase is great')
     assert_equal 'My Purchase is great', result[:description]
   end
-  
-  def test_add_duplicate_window_without_duplicate_window
-    result = {}
-    @gateway.class.duplicate_window = nil
-    @gateway.send(:add_duplicate_window, result)
-    assert_nil result[:duplicate_window]
-  end
-  
-  def test_add_duplicate_window_with_duplicate_window
-    result = {}
-    @gateway.class.duplicate_window = 0
-    @gateway.send(:add_duplicate_window, result)
-    assert_equal 0, result[:duplicate_window]
-  end
-  
+
   def test_purchase_meets_minimum_requirements
-    params = { 
+    params = {
       :amount => "1.01",
-    }                                                         
+    }
 
     @gateway.send(:add_creditcard, params, @credit_card)
 
@@ -102,14 +106,14 @@ class BluePayTest < Test::Unit::TestCase
       assert_not_nil(data =~ /#{key}=/)
     end
   end
-  
+
   def test_successful_refund
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.refund(@amount, '123456789', :card_number => @credit_card.number)
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.refund(@amount, '100134230412', :card_number => @credit_card.number)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end
-  
+
   def test_refund_passing_extra_info
     response = stub_comms do
       @gateway.refund(50, '123456789', :card_number => @credit_card.number, :first_name => "Bob", :last_name => "Smith", :zip => "12345")
@@ -120,10 +124,9 @@ class BluePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
     assert_success response
   end
-  
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
-    
     assert response = @gateway.refund(@amount, '123456789', :card_number => @credit_card.number)
     assert_failure response
     assert_equal 'The referenced transaction does not meet the criteria for issuing a credit', response.message
@@ -131,72 +134,60 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning("credit should only be used to credit a payment method", @gateway) do
       assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
       assert_success response
       assert_equal 'This transaction has been approved', response.message
     end
   end
-  
+
   def test_supported_countries
     assert_equal ['US'], BluePayGateway.supported_countries
   end
-  
+
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb],  BluePayGateway.supported_cardtypes
   end
-  
-  def test_failure_without_response_reason_text
+
+  def test_parser_extracts_exactly_the_keys_in_gateway_response
     assert_nothing_raised do
-      assert_equal '', @gateway.send(:message_from, {})
+      response = @gateway.send(:parse, "NEW_IMPORTANT_FIELD=value_on_fire")
+      assert_equal response.params.keys, ['NEW_IMPORTANT_FIELD']
+      assert_equal response.params['NEW_IMPORTANT_FIELD'], "value_on_fire"
     end
   end
-  
-  def test_response_under_review_by_fraud_service
-    @gateway.expects(:ssl_post).returns(fraud_review_response)
-    
-    response = @gateway.purchase(@amount, @credit_card)
-    assert_failure response
-    assert response.fraud_review?
-    assert_equal "Thank you! For security reasons your order is currently being reviewed", response.message
+
+  def test_failure_without_response_reason_text
+    assert_nothing_raised do
+      assert_equal '', @gateway.send(:parse, "MESSAGE=").message
+    end
   end
-  
+
   def test_avs_result
-    @gateway.expects(:ssl_post).returns(fraud_review_response)
-    
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+
     response = @gateway.purchase(@amount, @credit_card)
-    assert_equal 'X', response.avs_result['code']
+    assert_equal '_', response.avs_result['code']
   end
-  
+
   def test_cvv_result
-    @gateway.expects(:ssl_post).returns(fraud_review_response)
-    
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+
     response = @gateway.purchase(@amount, @credit_card)
-    assert_equal 'M', response.cvv_result['code']
+    assert_equal '_', response.cvv_result['code']
   end
 
   def test_message_from
-    @gateway.class_eval {
-      public :message_from
-    }
-    result = {
-      :response_code => 2,
-      :card_code => 'N',
-      :avs_result_code => 'A',
-      :response_reason_code => '27',
-      :response_reason_text => 'Failure.',
-    }
-    assert_equal "No Match", @gateway.message_from(result)
 
-    result[:card_code] = 'M'
-    assert_equal "Street address matches, but 5-digit and 9-digit postal code do not match.", @gateway.message_from(result)
-
-    result[:response_reason_code] = '22'
-    assert_equal "Failure", @gateway.message_from(result)
+    def get_msg(query)
+      @gateway.send(:parse, query).message
+    end
+    assert_equal "No Match", get_msg('STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE')
+    assert_equal "Street address matches, but 5-digit and 9-digit postal code do not match.",
+                   get_msg('STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE')
   end
-  
-  # Recurring Billing Unit Tests
 
+  # Recurring Billing Unit Tests
   def test_successful_recurring
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
 
@@ -243,7 +234,7 @@ class BluePayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert response.success?
     assert response.test?
-    assert_equal @rebill_status, response.params['status'][0]
+    assert_equal @rebill_status, response.params['status']
   end
 
   def test_solution_id_is_added_to_post_data_parameters
@@ -255,28 +246,29 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   private
+
   def minimum_requirements
     %w(version delim_data relay_response login tran_key amount card_num exp_date type)
   end
-  
+
+  def successful_refund_response
+    "AUTH_CODE=GFOCD&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=CREDIT&REBID=&STATUS=1&AVS=_&TRANS_ID=100134230412&CVV2=_&MESSAGE=Approved%20Credit"
+  end
+
   def failed_refund_response
-    '$3$,$2$,$54$,$The referenced transaction does not meet the criteria for issuing a credit.$,$$,$P$,$0$,$$,$$,$1.00$,$CC$,$credit$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$39265D8BA0CDD4F045B5F4129B2AAA01$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+    'AUTH_CODE=&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=CREDIT&REBID=&STATUS=0&AVS=_&TRANS_ID=100134229326&CVV2=_&MESSAGE=The%20referenced%20transaction%20does%20not%20meet%20the%20criteria%20for%20issuing%20a%20credit'
   end
-  
+
   def successful_authorization_response
-    '$1$,$1$,$1$,$This transaction has been approved.$,$advE7f$,$Y$,$508141794$,$5b3fe66005f3da0ebe51$,$$,$1.00$,$CC$,$auth_only$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$2860A297E0FE804BCB9EF8738599645C$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+    "AUTH_CODE=RSWUC&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=1&AVS=_&TRANS_ID=100134229528&CVV2=_&MESSAGE=Approved%20Auth"
   end
-  
+
   def successful_purchase_response
-    '$1$,$1$,$1$,$This transaction has been approved.$,$d1GENk$,$Y$,$508141795$,$32968c18334f16525227$,$Store purchase$,$1.00$,$CC$,$auth_capture$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$269862C030129C1173727CC10B1935ED$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+    "AUTH_CODE=KHJMY&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=SALE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134229668&CVV2=_&MESSAGE=Approved%20Sale"
   end
-  
+
   def failed_authorization_response
-    '$2$,$1$,$1$,$This transaction was declined.$,$advE7f$,$Y$,$508141794$,$5b3fe66005f3da0ebe51$,$$,$1.00$,$CC$,$auth_only$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$2860A297E0FE804BCB9EF8738599645C$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
-  end
- 
-  def fraud_review_response
-    '$4$,$$,$253$,$Thank you! For security reasons your order is currently being reviewed.$,$$,$X$,$0$,$$,$$,$1.00$,$$,$auth_capture$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$207BCBBF78E85CF174C87AE286B472D2$,$M$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+    "AUTH_CODE=&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=AUTH&REBID=&STATUS=0&AVS=_&TRANS_ID=100134229728&CVV2=_&MESSAGE=Declined%20Auth"
   end
 
   def successful_recurring_response

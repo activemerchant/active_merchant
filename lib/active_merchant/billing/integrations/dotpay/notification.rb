@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
             Digest::MD5.hexdigest(generate_signature_string)
           end
 
-          def acknowledge      
+          def acknowledge(authcode = nil)      
             generate_signature.to_s == md5.to_s
           end
         end

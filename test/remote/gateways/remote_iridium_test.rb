@@ -1,33 +1,31 @@
 # encoding: utf-8
 
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class RemoteIridiumTest < Test::Unit::TestCase
-  
-
   def setup
     @gateway = IridiumGateway.new(fixtures(:iridium))
-    
+
     @amount = 100
     @credit_card = credit_card('4976000000003436', {:verification_value => '452'})
     @declined_card = credit_card('4221690000004963')
-    
-    our_address = address(:address1 => "32 Edward Street", 
+
+    our_address = address(:address1 => "32 Edward Street",
                           :address2 => "Camborne",
                           :state => "Cornwall",
                           :zip => "TR14 8PA",
                           :country => "826")
-    @options = { 
+    @options = {
       :order_id => generate_unique_id,
       :billing_address => our_address,
       :description => 'Store Purchase'
     }
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert response.authorization, response.authorization 
+    assert response.authorization, response.authorization
     assert response.message[/AuthCode/], response.message
   end
 
@@ -50,9 +48,9 @@ class RemoteIridiumTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '', @options)
     assert_failure response
-    assert_equal 'Input Variable Errors', response.message
+    assert_match %r{Input Variable Errors}i, response.message
   end
-  
+
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert response.message[/AuthCode/], response.message
@@ -67,7 +65,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert_equal 'Card declined', response.message
     assert_equal false,  response.success?
   end
-  
+
   def test_successful_authorization_and_failed_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -83,25 +81,34 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, "a;b;c", @options)
     assert_failure capture
   end
-  
+
   def test_successful_purchase_by_reference
-    assert response = @gateway.authorize(0, @credit_card, @options)
+    assert response = @gateway.authorize(1, @credit_card, @options)
     assert_success response
     assert(reference = response.authorization)
-    
+
     assert response = @gateway.purchase(@amount, reference, {:order_id => generate_unique_id})
     assert_success response
   end
-  
+
   def test_failed_purchase_by_reference
-    assert response = @gateway.authorize(0, @credit_card, @options)
+    assert response = @gateway.authorize(1, @credit_card, @options)
     assert_success response
     assert(reference = response.authorization)
-    
+
     assert response = @gateway.purchase(@amount, 'bogusref', {:order_id => generate_unique_id})
     assert_failure response
   end
-  
+
+  def test_successful_authorize_by_reference
+    assert response = @gateway.authorize(1, @credit_card, @options)
+    assert_success response
+    assert(reference = response.authorization)
+
+    assert response = @gateway.authorize(@amount, reference, {:order_id => generate_unique_id})
+    assert_success response
+  end
+
   def test_successful_credit
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -109,7 +116,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert response = @gateway.credit(@amount, response.authorization)
     assert_success response
   end
-  
+
   def test_failed_credit
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -117,7 +124,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert response = @gateway.credit(@amount*2, response.authorization)
     assert_failure response
   end
-  
+
   def test_successful_void
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -125,34 +132,31 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert response = @gateway.void(response.authorization)
     assert_success response
   end
-  
-  def test_failed_void
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
 
-    assert response = @gateway.void(response.authorization)
+  def test_failed_void
+    assert response = @gateway.void("bogus")
     assert_failure response
   end
-  
+
   def test_invalid_login
     gateway = IridiumGateway.new(
                 :login => '',
                 :password => ''
               )
-    
+
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Input Variable Errors', response.message
+    assert_match %r{Input Variable Errors}i, response.message
   end
 
   def test_successful_purchase_with_no_verification_value
     @credit_card.verification_value = nil
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert response.authorization, response.authorization 
+    assert response.authorization, response.authorization
     assert response.message[/AuthCode/], response.message
   end
-  
+
   def test_successful_authorize_with_no_address
     @options.delete(:billing_address)
     assert response = @gateway.authorize(@amount, @credit_card, @options)

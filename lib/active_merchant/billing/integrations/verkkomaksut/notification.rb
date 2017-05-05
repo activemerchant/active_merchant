@@ -40,8 +40,8 @@ module ActiveMerchant #:nodoc:
             end
           end
           
-          # Acknowldges the payment. If the authcodes match, returns true.
-          def acknowledge(authcode)
+          # Acknowledges the payment. If the authcodes match, returns true.
+          def acknowledge(authcode = nil)
             return_authcode = [params["ORDER_NUMBER"], params["TIMESTAMP"], params["PAID"], params["METHOD"], authcode].join("|")
             Digest::MD5.hexdigest(return_authcode).upcase == params["RETURN_AUTHCODE"]
           end

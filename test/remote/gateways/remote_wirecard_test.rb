@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require 'test_helper'
 
 class RemoteWirecardTest < Test::Unit::TestCase
@@ -43,17 +44,53 @@ class RemoteWirecardTest < Test::Unit::TestCase
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
-    assert auth.message[/THIS IS A DEMO/]
+    assert_match /THIS IS A DEMO/, auth.message
     assert auth.authorization
     assert capture = @gateway.capture(amount, auth.authorization, @options)
     assert_success capture
   end
 
+  def test_successful_authorize_and_partial_capture
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_match /THIS IS A DEMO/, auth.message
+    assert auth.authorization
+
+    #Capture some of the authorized amount
+    assert capture = @gateway.capture(@amount - 10, auth.authorization, @options)
+    assert_success capture
+  end
+
+  def test_successful_void
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    assert void = @gateway.void(response.authorization)
+    assert_success void
+    assert_match /THIS IS A DEMO/, void.message
+  end
+
+  def test_successful_refund
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    assert refund = @gateway.refund(@amount - 20, response.authorization)
+    assert_success refund
+    assert_match /THIS IS A DEMO/, refund.message
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    # puts response.message
     assert_success response
-    assert response.message[/THIS IS A DEMO/]
+    assert_match /THIS IS A DEMO/, response.message
+  end
+
+  def test_utf8_description_does_not_blow_up
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(description: "Habitación"))
+    assert_success response
+    assert_match /THIS IS A DEMO/, response.message
   end
 
   def test_successful_purchase_with_german_address_german_state_and_german_phone
@@ -91,12 +128,25 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert response.test?
     assert_failure response
     assert response.message[ /Credit card number not allowed in demo mode/ ], "Got wrong response message"
+    assert_equal "24997", response.params['ErrorCode']
   end
 
   def test_unauthorized_capture
     assert response = @gateway.capture(@amount, "1234567890123456789012")
     assert_failure response
     assert_equal "Could not find referenced transaction for GuWID 1234567890123456789012.", response.message
+  end
+
+  def test_failed_refund
+    assert refund = @gateway.refund(@amount - 20, 'C428094138244444404448')
+    assert_failure refund
+    assert_match /Could not find referenced transaction/, refund.message
+  end
+
+  def test_failed_void
+    assert void = @gateway.void('C428094138244444404448')
+    assert_failure void
+    assert_match /Could not find referenced transaction/, void.message
   end
 
   def test_invalid_login

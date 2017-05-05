@@ -1,13 +1,23 @@
+# encoding: utf-8
 require 'test_helper'
 
 class PayflowLinkHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
-  
+
   def setup
+    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      @original_kcode = $KCODE
+      $KCODE = 'u'
+    end
+
     @helper = PayflowLink::Helper.new(1121, 'myaccount', :amount => 500, 
                                       :currency => 'CAD', :credential3 => 'PayPal', 
                                       :credential2 => "password", :test => true, :credential4 => '')
     @url = 'http://example.com'
+  end
+
+  def teardown
+    $KCODE = @original_kcode if @original_kcode
   end
 
   def test_basic_helper_fields
@@ -29,12 +39,39 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
   end
 
   def test_description
-    @helper.description = "my order"
+    @helper.description "my order"
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 
-      assert_equal 'my order', params["description[8]"]
-      true
+      'my order' == params["description[8]"]
+    }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
+
+    @helper.form_fields
+  end
+
+  def test_description_cleaned
+    @helper.description "#my order#"
+    @helper.expects(:ssl_post).with { |url, data|
+      params = parse_params(data)
+
+      'my order' == params["description[8]"]
+    }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
+
+    @helper.form_fields
+  end
+
+  def test_description_transliterate
+    @helper.description "#my ordér"
+
+    @helper.expects(:ssl_post).with { |url, data|
+      params = parse_params(data)
+      if ActiveSupport::Inflector.method(:transliterate).arity == -2
+        'my order' == params["description[8]"]
+      elsif RUBY_VERSION >= '1.9'
+        'my ordr' == params["description[7]"]
+      else
+        'my order' == params["description[8]"]
+      end
     }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
 
     @helper.form_fields
@@ -46,7 +83,8 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 
-      assert_equal 'John Doe', params["name[8]"]
+      assert_equal 'John', params["first_name[4]"]
+      assert_equal 'Doe', params["last_name[3]"]
       true
     }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
 

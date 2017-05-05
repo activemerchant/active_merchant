@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
       include Utils
 
       DEBIT_CARDS = [ :switch, :solo ]
-      CURRENCIES_WITHOUT_FRACTIONS = [ 'JPY' ]
+      CURRENCIES_WITHOUT_FRACTIONS = [ 'BIF', 'BYR', 'CLP', 'CVE', 'DJF', 'GNF', 'HUF', 'ISK', 'JPY', 'KMF', 'KRW', 'PYG', 'RWF', 'TWD', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' ]
       CREDIT_DEPRECATION_MESSAGE = "Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead."
 
       cattr_reader :implementations
@@ -125,11 +125,12 @@ module ActiveMerchant #:nodoc:
       # See the documentation for the gateway you will be using to make sure there are no other
       # required options.
       def initialize(options = {})
+        @options = options
       end
 
       # Are we running in test mode?
       def test?
-        Base.gateway_mode == :test
+        (@options.has_key?(:test) ? @options[:test] : Base.test?)
       end
 
       private # :nodoc: all
@@ -160,7 +161,18 @@ module ActiveMerchant #:nodoc:
 
       def localized_amount(money, currency)
         amount = amount(money)
-        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s) ? amount.split('.').first : amount
+
+        return amount unless non_fractional_currency?(currency)
+
+        if self.money_format == :cents
+          sprintf("%.0f", amount.to_f / 100)
+        else
+          amount.split('.').first
+        end
+      end
+
+      def non_fractional_currency?(currency)
+        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
       end
 
       def currency(money)

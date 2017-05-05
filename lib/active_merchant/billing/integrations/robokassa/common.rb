@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
           def generate_signature_string
             custom_param_keys = params.keys.select {|key| key =~ /^shp/}.sort
             custom_params = custom_param_keys.map {|key| "#{key}=#{params[key]}"}
-            [main_params, secret, custom_params].flatten.compact.join(':')
+            [main_params, secret, custom_params.compact].flatten.join(':')
           end
 
           def generate_signature

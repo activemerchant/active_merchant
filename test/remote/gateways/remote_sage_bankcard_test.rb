@@ -91,8 +91,8 @@ class RemoteSageBankcardTest < Test::Unit::TestCase
     assert_equal 'INVALID T_REFERENCE', response.message
   end
   
-  def test_successful_credit
-    assert response = @gateway.credit(@amount, @visa, @options)
+  def test_successful_refund
+    assert response = @gateway.refund(@amount, @visa, @options)
     assert_success response
     assert response.test?
   end

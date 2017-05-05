@@ -369,7 +369,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # The value before updating
     assert_equal "XXXX4242", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in 4242"
 
-    #Update the payment profile
+    # Update the payment profile
     assert response = @gateway.update_customer_payment_profile(
       :customer_profile_id => @customer_profile_id,
       :payment_profile => {
@@ -393,6 +393,31 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal "XXXX1234", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in: 1234"
     # Show that fields that were left out of the update were cleared
     assert_nil response.params['payment_profile']['customer_type']
+
+    new_billing_address = response.params['payment_profile']['bill_to']
+    new_billing_address.update(:first_name => 'Frank', :last_name => 'Brown')
+    masked_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => response.params['payment_profile']['payment']['credit_card']['card_number'])
+
+    # Update only the billing address with a masked card and expiration date
+    assert response = @gateway.update_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :payment_profile => {
+        :customer_payment_profile_id => customer_payment_profile_id,
+        :bill_to => new_billing_address,
+        :payment => {
+          :credit_card => masked_credit_card
+        }
+      }
+    )
+
+    # Get the updated payment profile
+    assert response = @gateway.get_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :customer_payment_profile_id => customer_payment_profile_id
+    )
+
+    # Show that the billing address on the payment profile was updated
+    assert_equal "Frank", response.params['payment_profile']['bill_to']['first_name'], "The billing address should contain the first name we passed in: Frank"
   end
 
   def test_successful_update_customer_shipping_address_request
@@ -500,6 +525,41 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     )
 
     assert response.test?
+    assert_success response
+    assert_equal "Successful.", response.message
+  end
+
+  def test_should_create_duplicate_customer_profile_transactions_with_duplicate_window_alteration
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
+
+    key = (Time.now.to_f * 1000000).to_i.to_s
+
+    customer_profile_transaction = {
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :type => :auth_capture,
+        :order => {
+          :invoice_number => key.to_s,
+          :description => "Test Order Description #{key.to_s}",
+          :purchase_order_number => key.to_s
+        },
+        :amount => @amount
+      },
+      :extra_options => { "x_duplicate_window" => 1 }
+    }
+
+    assert response = @gateway.create_customer_profile_transaction(customer_profile_transaction)
+    assert_success response
+    assert_equal "Successful.", response.message
+
+    sleep(5)
+
+    assert response = @gateway.create_customer_profile_transaction(customer_profile_transaction)
     assert_success response
     assert_equal "Successful.", response.message
   end

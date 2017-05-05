@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
             date.blank? && time.blank? && transaction_id.blank?
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             true
           end
         end

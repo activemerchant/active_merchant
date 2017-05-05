@@ -31,17 +31,17 @@ class RemoteBarclaysEpdqTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_mastercard
-    assert response = @gateway.purchase(@approved_amount, credit_card('5301250070000050', :type => :master), @options)
+    assert response = @gateway.purchase(@approved_amount, credit_card('5301250070000050', :brand => :master), @options)
     assert_success response
   end
 
   def test_successful_purchase_with_maestro
-    assert response = @gateway.purchase(@approved_amount, credit_card('675938410597000022', :type => :maestro, :issue_number => '5'), @options)
+    assert response = @gateway.purchase(@approved_amount, credit_card('675938410597000022', :brand => :maestro, :issue_number => '5'), @options)
     assert_success response
   end
 
   def test_successful_purchase_with_switch
-    assert response = @gateway.purchase(@approved_amount, credit_card('6759560045005727054', :type => :switch, :issue_number => '1'), @options)
+    assert response = @gateway.purchase(@approved_amount, credit_card('6759560045005727054', :brand => :switch, :issue_number => '1'), @options)
     assert_success response
   end
 

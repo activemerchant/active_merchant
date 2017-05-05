@@ -5,6 +5,7 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           SUCCESS = '00'
           FAIL = '99'
+          PENDING = '02'
 
           def complete?
             status == 'Completed'
@@ -15,10 +16,20 @@ module ActiveMerchant #:nodoc:
           end
 
           def status
-            params['result'][0..1] == SUCCESS ? 'Completed' : 'Failed'
+            status_code = params['result'][0..1]
+            case status_code
+            when SUCCESS
+              'Completed'
+            when FAIL
+              'Failed'
+            when PENDING
+              'Pending'
+            else
+              raise "Unknown status code"
+            end
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             true
           end
         end
