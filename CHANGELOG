@@ -11,6 +11,7 @@
 * iVeri: Add gateway support [curiousepic] #2400
 * iVeri: Support 3DSecure data fields [davidsantoso] #2412
 * Opp: Fix transaction success criteria and clean up options [shasum] #2414
+* Elavon: Support custom fields [curiousepic] #2416
 * WePay: Support risk headers [shasum] #2419
 * WePay: Add Canada as supported country [shasum] #2419
 
