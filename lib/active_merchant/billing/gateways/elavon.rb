@@ -53,6 +53,7 @@ module ActiveMerchant #:nodoc:
         :void => 'CCDELETE',
         :store => 'CCGETTOKEN',
         :update => 'CCUPDATETOKEN',
+        :query => 'TXNQUERY',
       }
 
       # Initialize the Gateway
@@ -160,6 +161,21 @@ module ActiveMerchant #:nodoc:
         add_txn_id(form, identification)
         add_test_mode(form, options)
         commit(:void, nil, form)
+      end
+
+      # Queries a transaction based on the original transaction id.
+      #
+      # This returns useful information such as trans_status which allows
+      # the client insight into whether a transaction is settled or not.
+      #
+      # ==== Parameters
+      #
+      # * <tt>identification</tt> - The ID of the original transaction.
+      def query(identification, options = {})
+        form = {}
+        add_txn_id(form, identification)
+        add_test_mode(form, options)
+        commit(:query, nil, form)
       end
 
       # Make a credit to a card.  Use the refund method if you'd like to credit using

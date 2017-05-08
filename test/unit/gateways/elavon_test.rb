@@ -265,6 +265,23 @@ class ElavonTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_successful_query
+    @gateway.expects(:ssl_post).returns(successful_query_response)
+
+    assert response = @gateway.query('123')
+    assert_success response
+    assert_equal 'APPROVAL', response.message
+    assert_equal 'OPN', response.params['trans_status']
+  end
+
+  def test_failed_query
+    @gateway.expects(:ssl_post).returns(failed_query_response)
+
+    assert response = @gateway.query('123')
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
   private
   def successful_purchase_response
     "ssl_card_number=42********4242
@@ -383,7 +400,7 @@ class ElavonTest < Test::Unit::TestCase
     errorName=Credit Card Number Invalid
     errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
   end
-  
+
   def successful_capture_response
     "ssl_card_number=42********4242
     ssl_exp_date=0910
@@ -450,5 +467,29 @@ class ElavonTest < Test::Unit::TestCase
     "errorCode=5000
     errorName=Credit Card Number Invalid
     errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
+  end
+
+  def successful_query_response
+    "ssl_txn_id=456
+    ssl_trans_status=OPN
+    ssl_transaction_type=SALE
+    ssl_is_voidable=TRUE
+    ssl_card_number=42********4242
+    ssl_exp_date=0910
+    ssl_amount=1.00
+    ssl_description=Test Transaction
+    ssl_result=0
+    ssl_result_message=APPROVAL
+    ssl_approval_code=123456
+    ssl_cvv2_response=P
+    ssl_avs_response=X
+    ssl_account_balance=0.00
+    ssl_txn_time=08/07/2009 09:54:18 PM"
+  end
+
+  def failed_query_response
+    "errorCode=5040
+    errorName=Invalid Transaction ID
+    errorMessage=The transaction ID is invalid for this transaction type"
   end
 end
