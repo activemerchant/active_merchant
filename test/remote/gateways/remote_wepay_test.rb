@@ -72,6 +72,12 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_ip_and_risk_token
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: "100.166.99.123", risk_token: "123e4567-e89b-12d3-a456-426655440000"))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_authorize
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
