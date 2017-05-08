@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://stage.wepayapi.com/v2'
       self.live_url = 'https://wepayapi.com/v2'
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'https://www.wepay.com/'
       self.default_currency = 'USD'
