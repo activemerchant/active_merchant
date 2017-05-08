@@ -224,12 +224,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options)
-        {
-          "Content-Type"  => "application/json",
-          "User-Agent"    => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "Authorization" => "Bearer #{@options[:access_token]}",
-          "Api-Version"   => api_version(options)
+        headers = {
+          "Content-Type"      => "application/json",
+          "User-Agent"        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "Authorization"     => "Bearer #{@options[:access_token]}",
+          "Api-Version"       => api_version(options)
         }
+
+        headers["Client-IP"] = options[:ip] if options[:ip]
+        headers["WePay-Risk-Token"] = options[:risk_token] if options[:risk_token]
+
+        headers
       end
 
       def api_version(options)
