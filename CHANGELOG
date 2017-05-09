@@ -15,6 +15,7 @@
 * WePay: Support risk headers [shasum] #2419
 * WePay: Add Canada as supported country [shasum] #2419
 * Fat Zebra: Fix xid 3D Secure field [curiousepic]
+* SafeCharge: Mark support for European countries [curiousepic]
 
 
 == Version 1.65.0 (April 26, 2017)
