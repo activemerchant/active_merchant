@@ -14,6 +14,8 @@
 * Elavon: Support custom fields [curiousepic] #2416
 * WePay: Support risk headers [shasum] #2419
 * WePay: Add Canada as supported country [shasum] #2419
+* Fat Zebra: Fix xid 3D Secure field [curiousepic]
+
 
 == Version 1.65.0 (April 26, 2017)
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272
