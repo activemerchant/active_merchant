@@ -10,8 +10,9 @@ class RemotePaymillTest < Test::Unit::TestCase
         :email => 'Longbob.Longse@example.com'
     }
     @declined_card = credit_card('5105105105105100', month: 5, year: 2020)
+    @tokenAmount = (sprintf("%.2f",@amount.to_f/ 100) || nil)
 
-    uri = URI.parse("https://test-token.paymill.com?transaction.mode=CONNECTOR_TEST&channel.id=#{params[:public_key]}&jsonPFunction=paymilljstests&account.number=4111111111111111&account.expiry.month=12&account.expiry.year=2018&account.verification=123&account.holder=John%20Rambo&presentation.amount3D=#{@amount}&presentation.currency3D=EUR")
+    uri = URI.parse("https://test-token.paymill.com?transaction.mode=CONNECTOR_TEST&channel.id=#{params[:public_key]}&jsonPFunction=paymilljstests&account.number=4111111111111111&account.expiry.month=12&account.expiry.year=2018&account.verification=123&account.holder=John%20Rambo&presentation.amount3D=#{@tokenAmount}&presentation.currency3D=EUR")
     https = Net::HTTP.new(uri.host, uri.port)
     https.use_ssl = true
     request = Net::HTTP::Get.new(uri.request_uri)
