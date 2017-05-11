@@ -111,6 +111,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = amount(money)
         post[:method] = 'card'
+        post[:customer] = options[:customer]
         post[:description] = options[:description]
         post[:order_id] = options[:order_id]
         post[:device_session_id] = options[:device_session_id]
