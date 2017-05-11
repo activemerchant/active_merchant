@@ -103,11 +103,8 @@ module ActiveMerchant
           response,
           :test => (response[:message] =~ %r{\[ test system \]}),
           :authorization => authorization_from(response),
-          :cvv_result => response[:cvnresult],
-          :avs_result => {
-            :street_match => response[:avspostcoderesponse],
-            :postal_match => response[:avspostcoderesponse]
-          }
+          avs_result: AVSResult.new(code: response[:avspostcoderesponse]),
+          cvv_result: CVVResult.new(response[:cvnresult])
         )
       end
 
