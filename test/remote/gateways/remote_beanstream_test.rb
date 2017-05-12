@@ -110,7 +110,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_due_to_invalid_billing_state
-    @options[:billing_address][:state] = "Quebecistan"
+    @options[:billing_address][:state] = "Invalid"
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_failure response
     assert_match %r{province does not match country}, response.message
