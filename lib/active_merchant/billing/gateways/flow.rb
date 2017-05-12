@@ -243,7 +243,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(&block)
         yield
-        # TODO: fetch the response here and build response object here
       rescue Io::Flow::V0::HttpClient::ServerError => e
         Response.new(
           false,
@@ -251,25 +250,6 @@ module ActiveMerchant #:nodoc:
           { object: e.body.present? ? e.body_json : {} }, # Need to check body before parse JSON...this will be fixed later by flow
           error_code: e.code == 422 ? e.body_json["code"] : nil
         )
-        # Response.new(
-        #   success_from(response),
-        #   message_from(response),
-        #   response,
-        #   authorization: authorization_from(response),
-        #   avs_result: AVSResult.new(code: response["some_avs_response_key"]),
-        #   cvv_result: CVVResult.new(response["some_cvv_response_key"]),
-        #   test: test?,
-        #   error_code: error_code_from(response)
-        # )
-      end
-
-      def success_from(response)
-      end
-
-      def message_from(response)
-      end
-
-      def authorization_from(response)
       end
 
       def avs_code_from_auth(auth)
