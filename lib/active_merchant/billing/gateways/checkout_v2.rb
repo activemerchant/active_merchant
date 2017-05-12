@@ -94,6 +94,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:email] = options[:email] || "unspecified@example.com"
+        post[:customerIp] = options[:ip] if options[:ip]
         address = options[:billing_address]
         if(address && post[:card])
           post[:card][:billingDetails] = {}

@@ -16,6 +16,7 @@
 * WePay: Add Canada as supported country [shasum] #2419
 * Fat Zebra: Fix xid 3D Secure field [curiousepic]
 * SafeCharge: Mark support for European countries [curiousepic]
+* Checkout V2: Pass customer ip option [curiousepic]
 
 
 == Version 1.65.0 (April 26, 2017)
