@@ -11,10 +11,10 @@ module ActiveMerchant #:nodoc:
           mapping :interface_v, 'interface_version'
           mapping :sign_type, 'sign_type'
           mapping :notify_url, 'notify_url'
-          mapping :time, 'trade_time'
+          mapping :time, 'order_time'
           mapping :name, 'product_name'
           mapping :sign, 'sign'
-          mapping :amount_with_commision, 'order_amount'
+          mapping :amount, 'order_amount'
 
         end
       end
