@@ -163,8 +163,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters, successful_text)
         url = "#{(test? ? test_url : live_url)}/#{action}#{parameters[:pg_id].present? ? "/#{parameters[:pg_id]}" : '' }"
-        parameters[:merchant_id] = @options[:merchant_id]
-        parameters[:security_key] = @options[:security_key]
+        parameters = parameters.merge(@options)
 
         begin
           raw_response = ssl_post(url, post_data(action, parameters), headers)
