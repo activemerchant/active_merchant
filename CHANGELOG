@@ -18,6 +18,7 @@
 * SafeCharge: Mark support for European countries [curiousepic]
 * Checkout V2: Pass customer ip option [curiousepic]
 * Realex: Map AVS and CVV response codes [davidsantoso] #2424
+* Opp: Send disable3DSecure custom parameter if present [davidsantoso] #2432
 
 == Version 1.65.0 (April 26, 2017)
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272
