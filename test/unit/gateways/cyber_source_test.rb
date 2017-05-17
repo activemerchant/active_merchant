@@ -175,6 +175,17 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    refute_equal 'Successful transaction', response.message
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_unsuccessful_authorization_with_reply
+    @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response_with_reply)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    refute_equal 'Successful transaction', response.message
+    assert_equal '481', response.params['reasonCode']
     assert_instance_of Response, response
     assert_failure response
   end
@@ -496,6 +507,64 @@ class CyberSourceTest < Test::Unit::TestCase
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-28121162"><wsu:Created>2008-01-15T21:50:41.580Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>a1efca956703a2a5037178a8a28f7357</c:merchantReferenceCode><c:requestID>2004338415330008402434</c:requestID><c:decision>REJECT</c:decision><c:reasonCode>231</c:reasonCode><c:requestToken>Afvvj7KfIgU12gooCFE2/DanQIApt+G1OgTSA+R9PTnyhFTb0KRjgFY+ynyIFNdoKKAghwgx</c:requestToken><c:ccAuthReply><c:reasonCode>231</c:reasonCode></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def unsuccessful_authorization_response_with_reply
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Header>
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+          <wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-5307043">
+            <wsu:Created>2017-05-10T01:15:14.835Z</wsu:Created>
+          </wsu:Timestamp></wsse:Security>
+        </soap:Header>
+        <soap:Body>
+          <c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.121">
+            <c:merchantReferenceCode>TEST11111111111</c:merchantReferenceCode>
+            <c:requestID>1841784762620176127166</c:requestID>
+            <c:decision>REJECT</c:decision>
+            <c:reasonCode>481</c:reasonCode>
+            <c:requestToken>AMYJY9fl62i+vx2OEQYAx9zv/9UBZAAA5h5D</c:requestToken>
+            <c:purchaseTotals>
+              <c:currency>USD</c:currency>
+            </c:purchaseTotals>
+            <c:ccAuthReply>
+              <c:reasonCode>100</c:reasonCode>
+              <c:amount>1186.43</c:amount>
+              <c:authorizationCode>123456</c:authorizationCode>
+              <c:avsCode>N</c:avsCode>
+              <c:avsCodeRaw>N</c:avsCodeRaw>
+              <c:cvCode>M</c:cvCode>
+              <c:cvCodeRaw>M</c:cvCodeRaw>
+              <c:authorizedDateTime>2017-05-10T01:15:14Z</c:authorizedDateTime>
+              <c:processorResponse>00</c:processorResponse>
+              <c:reconciliationID>013445773WW7EWMB0RYI9</c:reconciliationID>
+            </c:ccAuthReply>
+            <c:afsReply>
+              <c:reasonCode>100</c:reasonCode>
+              <c:afsResult>96</c:afsResult>
+              <c:hostSeverity>1</c:hostSeverity>
+              <c:consumerLocalTime>20:15:14</c:consumerLocalTime>
+              <c:afsFactorCode>C^H</c:afsFactorCode>
+              <c:internetInfoCode>MM-IPBST</c:internetInfoCode>
+              <c:suspiciousInfoCode>MUL-EM</c:suspiciousInfoCode>
+              <c:velocityInfoCode>VEL-ADDR^VEL-CC^VEL-NAME</c:velocityInfoCode>
+              <c:ipCountry>us</c:ipCountry>
+              <c:ipState>nv</c:ipState><c:ipCity>las vegas</c:ipCity>
+              <c:ipRoutingMethod>fixed</c:ipRoutingMethod>
+              <c:scoreModelUsed>default</c:scoreModelUsed>
+              <c:cardBin>540510</c:cardBin>
+              <c:binCountry>US</c:binCountry>
+              <c:cardAccountType>PURCHASING</c:cardAccountType>
+              <c:cardScheme>MASTERCARD CREDIT</c:cardScheme>
+              <c:cardIssuer>werewrewrew.</c:cardIssuer>
+            </c:afsReply>
+            <c:decisionReply><c:casePriority>3</c:casePriority><c:activeProfileReply/></c:decisionReply>
+          </c:replyMessage>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
