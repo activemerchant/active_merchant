@@ -65,11 +65,11 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :secondary_test_url, :secondary_live_url
 
-      self.test_url = "https://orbitalvar1.paymentech.net/authorize"
-      self.secondary_test_url = "https://orbitalvar2.paymentech.net/authorize"
+      self.test_url = "https://orbitalvar1.chasepaymentech.com/authorize"
+      self.secondary_test_url = "https://orbitalvar2.chasepaymentech.com/authorize"
 
-      self.live_url = "https://orbital1.paymentech.net/authorize"
-      self.secondary_live_url = "https://orbital2.paymentech.net/authorize"
+      self.live_url = "https://orbital1.chasepaymentech.com/authorize"
+      self.secondary_live_url = "https://orbital2.chasepaymentech.com/authorize"
 
       self.supported_countries = ["US", "CA"]
       self.default_currency = "CAD"
@@ -422,9 +422,9 @@ module ActiveMerchant #:nodoc:
               xml.tag! :CardSecValInd, '1'
             end
             xml.tag! :CardSecVal,  creditcard.verification_value
+            end
           end
         end
-      end
 
       def add_refund(xml, currency=nil)
         xml.tag! :AccountNum, nil
