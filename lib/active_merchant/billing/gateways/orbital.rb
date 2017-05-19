@@ -422,9 +422,9 @@ module ActiveMerchant #:nodoc:
               xml.tag! :CardSecValInd, '1'
             end
             xml.tag! :CardSecVal,  creditcard.verification_value
-            end
           end
         end
+      end
 
       def add_refund(xml, currency=nil)
         xml.tag! :AccountNum, nil
