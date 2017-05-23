@@ -51,6 +51,7 @@ module ActiveMerchant #:nodoc:
           add_credit_card_payment(post, payment)
         end
 
+        add_risk_data(post, options)
         add_extra_data(post, options)
         add_address(post, options)
         commit('authorise', post)
@@ -98,17 +99,29 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_extra_data(post, options)
-        post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
-        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
-        post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
-        post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
-        post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
         post[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
         post[:recurring] = options[:recurring] if options[:recurring]
         post[:captureDelayHours] = options[:capture_delay_hours] if options[:capture_delay_hours]
       end
+
+      def add_risk_data(post, options)
+        post[:shopperName] = options[:shopper_name] if options[:shopper_name]
+        post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
+        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
+        post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
+        post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
+        post[:dateOfBirth] = options[:date_of_birth] if options[:date_of_birth]
+        post[:deliveryAddress] = options[:delivery_address] if options[:delivery_address]
+        post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
+        post[:billingAddress] = options[:billing_address] if options[:billing_address]
+        post[:telephoneNumber] = options[:telephone_number] if options[:telephone_number]
+        post[:telephoneNumber] = options[:telephone_number] if options[:telephone_number]
+        post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
+        post[:browserInfo] = options[:browser_info] if options[:browser_info]
+      end
+
 
       def add_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
