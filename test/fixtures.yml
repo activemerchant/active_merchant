@@ -238,6 +238,10 @@ digitzs:
 direc_pay:
   login: 200904281000001
 
+direct_connect:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+
 efsnet:
   login: X
   password: Y
