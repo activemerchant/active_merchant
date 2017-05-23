@@ -22,6 +22,7 @@
 * Opp: Send disable3DSecure custom parameter if present [davidsantoso] #2432
 * SafeCharge: Map standard Active Merchant order_id field [davidsantoso] #2434
 * Payeezy: Default check number to 001 if not present [davidsantoso] #2439
+* Opp: Fix incorrect customParameter key to disable 3DS [davidsantoso]
 
 == Version 1.65.0 (April 26, 2017)
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272
