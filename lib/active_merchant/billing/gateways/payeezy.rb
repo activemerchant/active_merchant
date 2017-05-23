@@ -143,7 +143,7 @@ module ActiveMerchant
       def add_echeck(params, echeck)
         tele_check = {}
 
-        tele_check[:check_number] = echeck.number
+        tele_check[:check_number] = echeck.number || "001"
         tele_check[:check_type] = "P"
         tele_check[:routing_number] = echeck.routing_number
         tele_check[:account_number] = echeck.account_number
