@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class QuickpayV4to7Gateway < Gateway
       include QuickpayCommon
-      self.live_url = self.test_url = 'https://secure.quickpay.dk/api'    
+      self.live_url = self.test_url = 'https://secure.quickpay.dk/api'
       APPROVED = '000'
 
       # The login is the QuickpayId
@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:qpstatmsg].to_s
+        response[:qpstatmsg] ? response[:qpstatmsg].to_s : response[:chstatmsg].to_s
       end
 
       def post_data(action, params = {})
@@ -224,4 +224,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
