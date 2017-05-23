@@ -824,8 +824,8 @@ quickbooks:
 # Quickpay offers a test account.
 # To log in to the manager, use demo@quickpay.net and test234
 quickpay:
-  login: 89898978
-  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+  login: 15936
+  password: "965fa95aa8ba44fb736053631703071b4e1e7a2beb64ab2bef83dde49b68bb2f"
 
 quickpay_v10_api_key:
   api_key: "6e4e4f0a7cf692b0118ffe2c56c45b0cd3171badf65626de2ead023fd99b8bbc"
