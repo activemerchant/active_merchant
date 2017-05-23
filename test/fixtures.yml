@@ -238,6 +238,10 @@ digitzs:
 direc_pay:
   login: 200904281000001
 
+e_processing_network:
+  login: 080880
+  password: yFqqXJh9Pqnugfr
+
 efsnet:
   login: X
   password: Y
