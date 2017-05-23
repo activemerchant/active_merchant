@@ -108,6 +108,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_email(post, options)
+        add_3d_secure(post, options)
         add_echo(post, options)
 
         commit(:purchase, post)
@@ -119,6 +120,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_email(post, options)
+        add_3d_secure(post, options)
         add_echo(post, options)
 
         commit(:authorize, post)
@@ -230,6 +232,11 @@ module ActiveMerchant #:nodoc:
         post[:c3] = options[:email] || 'unspecified@example.com'
       end
 
+      def add_3d_secure(post, options)
+        return unless options[:eci] && options[:xid]
+        post[:i8] = "#{options[:eci]}:#{(options[:cavv] || "none")}:#{options[:xid]}"
+      end
+
       def add_echo(post, options)
         # The d2 parameter is used during the certification process
         # See remote tests for full certification test suite
@@ -240,7 +247,7 @@ module ActiveMerchant #:nodoc:
         purchase: '1',
         authorize: '2',
         capture: '3',
-        authorize_void:'4',
+        authorize_void: '4',
         refund: '5',
         credit: '6',
         purchase_void: '7',
