@@ -238,6 +238,10 @@ digitzs:
 direc_pay:
   login: 200904281000001
 
+# Working credentials, no need to replace
+ebanx:
+  integration_key: 1231000
+
 efsnet:
   login: X
   password: Y
