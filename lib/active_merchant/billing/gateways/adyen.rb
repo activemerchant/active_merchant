@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_risk_data(post, options)
-        post[:shopperName] = options[:shopper_name] if options[:shopper_name]
+        post[:shopperName] = format_shopper_name(options[:shopper_name]) if options[:shopper_name]
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
         post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
         post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
@@ -120,6 +120,14 @@ module ActiveMerchant #:nodoc:
         post[:telephoneNumber] = options[:telephone_number] if options[:telephone_number]
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:browserInfo] = options[:browser_info] if options[:browser_info]
+      end
+
+      def format_shopper_name(shopper_name)
+        {
+            firstName: shopper_name[:shopper_first_name],
+            lastName: shopper_name[:shopper_last_name],
+            gender: shopper_name[:gender]
+        }.delete_if{|_k, v| v.nil?}
       end
 
 
