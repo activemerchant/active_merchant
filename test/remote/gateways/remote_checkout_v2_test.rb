@@ -64,6 +64,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Invalid Card Number', response.message
   end
 
+  def test_avs_failed_purchase
+    response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(address1: 'Test_A'))
+    assert_failure response
+    assert_equal '40111 - Street Match Only', response.message
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
