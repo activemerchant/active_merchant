@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://process.sandbox.safecharge.com/service.asmx/Process'
       self.live_url = 'https://process.safecharge.com/service.asmx/Process'
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'GR', 'ES', 'FI', 'FR', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SE', 'SI', 'SK', 'GB', 'US']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master]
 
@@ -63,6 +63,15 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def credit(money, payment, options={})
+        post = {}
+        add_payment(post, payment)
+        add_transaction_data("Credit", post, money, options)
+        post[:sg_CreditType] = 1
+
+        commit(post)
+      end
+
       def void(authorization, options={})
         post = {}
         auth, transaction_id, token, exp_month, exp_year, original_amount = authorization.split("|")
@@ -105,6 +114,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_ClientPassword] = @options[:client_password]
         post[:sg_ResponseFormat] = "4"
         post[:sg_Version] = VERSION
+        post[:sg_ClientUniqueID] = options[:order_id] if options[:order_id]
       end
 
       def add_payment(post, payment)

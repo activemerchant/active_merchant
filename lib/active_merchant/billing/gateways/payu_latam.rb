@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         commit('auth', post)
       end
 
-      def capture(authorization, options={})
+      def capture(amount, authorization, options={})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')

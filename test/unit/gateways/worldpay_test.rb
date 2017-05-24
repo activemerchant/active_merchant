@@ -132,12 +132,28 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal "05d9f8c622553b1df1fe3a145ce91ccf", response.params['refund_received_order_code']
   end
 
+  def test_successful_refund_for_settled_by_merchant_payment
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.respond_with(successful_refund_inquiry_response('SETTLED_BY_MERCHANT'), successful_refund_response)
+    assert_success response
+    assert_equal "05d9f8c622553b1df1fe3a145ce91ccf", response.params['refund_received_order_code']
+  end
+
   def test_refund_fails_unless_status_is_captured
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(failed_refund_inquiry_response, successful_refund_response)
     assert_failure response
     assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' is required.", response.message
+  end
+
+  def test_full_refund_for_unsettled_payment_forces_void
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options.merge(force_full_refund_if_unsettled: true))
+    end.respond_with(failed_refund_inquiry_response, failed_refund_inquiry_response, successful_void_response)
+    assert_success response
+    assert "cancel", response.responses.last.params["action"]
   end
 
   def test_capture

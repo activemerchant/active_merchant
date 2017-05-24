@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://stage.wepayapi.com/v2'
       self.live_url = 'https://wepayapi.com/v2'
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'https://www.wepay.com/'
       self.default_currency = 'USD'
@@ -106,6 +106,17 @@ module ActiveMerchant #:nodoc:
         else
           commit('/credit_card/create', post, options)
         end
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((\\?"cc_number\\?":\\?")[^\\"]+(\\?"))i, '\1[FILTERED]\2').
+          gsub(%r((\\?"cvv\\?":\\?")[^\\"]+(\\?"))i, '\1[FILTERED]\2').
+          gsub(%r((Authorization: Bearer )\w+)i, '\1[FILTERED]\2')
       end
 
       private
@@ -213,12 +224,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options)
-        {
-          "Content-Type"  => "application/json",
-          "User-Agent"    => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "Authorization" => "Bearer #{@options[:access_token]}",
-          "Api-Version"   => api_version(options)
+        headers = {
+          "Content-Type"      => "application/json",
+          "User-Agent"        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "Authorization"     => "Bearer #{@options[:access_token]}",
+          "Api-Version"       => api_version(options)
         }
+
+        headers["Client-IP"] = options[:ip] if options[:ip]
+        headers["WePay-Risk-Token"] = options[:risk_token] if options[:risk_token]
+
+        headers
       end
 
       def api_version(options)

@@ -691,7 +691,8 @@ module ActiveMerchant #:nodoc:
         end
 
         success = response[:decision] == "ACCEPT"
-        message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]
+        message = response[:message]
+
         authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken], action, amount, options[:currency]].compact.join(";") : nil
 
         Response.new(success, message, response,
@@ -709,9 +710,10 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "//c:replyMessage")
           root.elements.to_a.each do |node|
-            case node.name
+            case node.expanded_name
             when 'c:reasonCode'
-              reply[:message] = reply(node.text)
+              reply[:reasonCode] = node.text
+              reply[:message] = reason_message(node.text)
             else
               parse_element(reply, node)
             end
@@ -728,13 +730,18 @@ module ActiveMerchant #:nodoc:
           node.elements.each{|e| parse_element(reply, e) }
         else
           if node.parent.name =~ /item/
-            parent = node.parent.name + (node.parent.attributes["id"] ? "_" + node.parent.attributes["id"] : '')
-            reply[(parent + '_' + node.name).to_sym] = node.text
-          else
-            reply[node.name.to_sym] = node.text
+            parent = node.parent.name
+            parent += '_' + node.parent.attributes["id"] if node.parent.attributes["id"]
+            parent += '_'
           end
+          reply["#{parent}#{node.name}".to_sym] ||= node.text
         end
         return reply
+      end
+
+      def reason_message(reason_code)
+        return if reason_code.blank?
+        @@response_codes[:"r#{reason_code}"]
       end
     end
   end

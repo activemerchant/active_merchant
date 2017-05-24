@@ -140,6 +140,22 @@ class PayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    response = @gateway.capture(@amount, "4000|authorization", @options)
+    assert_success response
+    assert_equal "APPROVED", response.message
+  end
+
+  def test_failed_capture
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+
+    response = @gateway.capture(@amount, "")
+    assert_failure response
+    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -381,6 +397,42 @@ class PayuLatamTest < Test::Unit::TestCase
   end
 
   def failed_void_response
+    <<-RESPONSE
+    {
+      "code":"ERROR",
+      "error":"property: order.id, message: must not be null property: parentTransactionId, message: must not be null",
+      "transactionResponse": null
+    }
+    RESPONSE
+  end
+
+  def successful_capture_response
+    <<-RESPONSE
+    {
+      "code": "SUCCESS",
+      "error": null,
+      "transactionResponse": {
+        "orderId": 272601,
+        "transactionId": "66c7bff2-c423-42ed-800a-8be11531e7a1",
+        "state": "APPROVED",
+        "paymentNetworkResponseCode": null,
+        "paymentNetworkResponseErrorMessage": null,
+        "trazabilityCode": "00000000",
+        "authorizationCode": "00000000",
+        "pendingReason": null,
+        "responseCode": "APPROVED",
+        "errorCode": null,
+        "responseMessage": null,
+        "transactionDate": null,
+        "transactionTime": null,
+        "operationDate": 1314012754,
+        "extraParameters": null
+      }
+      }
+    RESPONSE
+  end
+
+  def failed_capture_response
     <<-RESPONSE
     {
       "code":"ERROR",

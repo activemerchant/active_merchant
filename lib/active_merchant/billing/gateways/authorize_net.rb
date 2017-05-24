@@ -92,6 +92,7 @@ module ActiveMerchant
       APPLE_PAY_DATA_DESCRIPTOR = "COMMON.APPLE.INAPP.PAYMENT"
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = "155"
+      INELIGIBLE_FOR_ISSUING_CREDIT_ERROR = "54"
 
       def initialize(options={})
         requires!(options, :login, :password)
@@ -131,10 +132,17 @@ module ActiveMerchant
       end
 
       def refund(amount, authorization, options={})
-        if auth_was_for_cim?(authorization)
+        response = if auth_was_for_cim?(authorization)
           cim_refund(amount, authorization, options)
         else
           normal_refund(amount, authorization, options)
+        end
+
+        return response if response.success?
+        return response unless options[:force_full_refund_if_unsettled]
+
+        if response.params["response_reason_code"] == INELIGIBLE_FOR_ISSUING_CREDIT_ERROR
+          void(authorization, options)
         end
       end
 
