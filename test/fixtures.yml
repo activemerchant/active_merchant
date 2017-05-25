@@ -398,6 +398,9 @@ iveri:
 jetpay:
   login: TESTTERMINAL
 
+jetpay_v2:
+  login: TESTMCC3136X
+
 komoju:
   login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3
 
