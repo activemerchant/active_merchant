@@ -238,6 +238,12 @@ digitzs:
 direc_pay:
   login: 200904281000001
 
+#Working credentials, no need to replace
+ecomprocessing_direct:
+  username: test_username
+  password: test_password
+  token: test_token
+
 efsnet:
   login: X
   password: Y
@@ -254,6 +260,12 @@ element:
   acceptor_id: "3928907"
   application_name: "Spreedly"
   application_version: "1"
+
+#Working credentials, no need to replace
+emerchantpay_direct:
+  username: test_username
+  password: test_password
+  token: test_token
 
 # login: merchant number
 # password: referrer url (for authorize authentication)
