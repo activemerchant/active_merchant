@@ -345,6 +345,15 @@ module ActiveMerchant #:nodoc:
         xml.tag! :SDMerchantEmail, soft_desc.merchant_email           if soft_desc.merchant_email
       end
 
+      def add_soft_descriptors_from_hash(xml, soft_desc)
+        xml.tag! :SDMerchantName, soft_desc[:merchant_name] || nil
+        xml.tag! :SDProductDescription, soft_desc[:product_description] || nil
+        xml.tag! :SDMerchantCity, soft_desc[:merchant_city] || nil
+        xml.tag! :SDMerchantPhone, soft_desc[:merchant_phone] || nil
+        xml.tag! :SDMerchantURL, soft_desc[:merchant_url] || nil
+        xml.tag! :SDMerchantEmail, soft_desc[:merchant_email] || nil
+      end
+
       def add_address(xml, creditcard, options)
         if(address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
@@ -560,6 +569,8 @@ module ActiveMerchant #:nodoc:
 
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
+            elsif parameters[:soft_descriptors].is_a?(Hash)
+              add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
 
             set_recurring_ind(xml, parameters)

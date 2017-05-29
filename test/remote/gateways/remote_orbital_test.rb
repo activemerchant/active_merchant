@@ -40,6 +40,20 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_soft_descriptor_hash
+    assert response = @gateway.purchase(
+      @amount, @credit_card, @options.merge(
+        soft_descriptors: {
+          merchant_name: 'Merch',
+          product_description: 'Description',
+          merchant_email: 'email@example',
+        }
+      )
+    )
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   # Amounts of x.01 will fail
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(101, @declined_card, @options)
