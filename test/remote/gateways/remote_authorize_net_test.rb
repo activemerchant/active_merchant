@@ -77,6 +77,49 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_email_customer
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, email_customer: true)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_header_email_receipt
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, header_email_receipt: "subject line")
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_line_items
+    additional_options = {
+      email: "anet@example.com",
+      line_items: [
+        {
+          item_id: "1",
+          name: "mug",
+          description: "coffee",
+          quantity: "100",
+          unit_price: "10"
+        },
+        {
+          item_id: "2",
+          name: "vase",
+          description: "floral",
+          quantity: "200",
+          unit_price: "20"
+        }
+      ]
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(additional_options))
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
