@@ -54,6 +54,7 @@ module ActiveMerchant #:nodoc:
       }
 
       class_attribute :duplicate_window
+      class_attribute :cim_direct_response_delimiter
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
       TRANSACTION_ALREADY_ACTIONED = %w(310 311)
@@ -71,6 +72,8 @@ module ActiveMerchant #:nodoc:
 
       PAYMENT_METHOD_NOT_SUPPORTED_ERROR = "155"
 
+      DEFAULT_CIM_RESPONSE_DELIMITER = ','
+
       def initialize(options={})
         requires!(options, :login, :password)
         super
@@ -80,6 +83,7 @@ module ActiveMerchant #:nodoc:
         if payment.is_a?(String)
           commit(:cim_purchase) do |xml|
             add_cim_auth_purchase(xml, "profileTransAuthCapture", amount, payment, options)
+            add_cim_delimiter_options(xml)
           end
         else
           commit(:purchase) do |xml|
@@ -92,6 +96,7 @@ module ActiveMerchant #:nodoc:
         if payment.is_a?(String)
           commit(:cim_authorize) do |xml|
             add_cim_auth_purchase(xml, "profileTransAuthOnly", amount, payment, options)
+            add_cim_delimiter_options(xml)
           end
         else
           commit(:authorize) do |xml|
@@ -243,6 +248,7 @@ module ActiveMerchant #:nodoc:
               xml.transId(transaction_id_from(authorization))
             end
           end
+          add_cim_delimiter_options(xml)
         end
       end
 
@@ -272,6 +278,7 @@ module ActiveMerchant #:nodoc:
               xml.transId(transaction_id)
             end
           end
+          add_cim_delimiter_options(xml)
         end
       end
 
@@ -352,6 +359,14 @@ module ActiveMerchant #:nodoc:
             ActiveMerchant.deprecated "Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead."
             set_duplicate_window(xml, self.class.duplicate_window)
           end
+        end
+      end
+
+      def add_cim_delimiter_options(xml)
+        return unless self.class.cim_direct_response_delimiter
+
+        xml.extraOptions do
+          xml.cdata("x_delim_char=#{self.class.cim_direct_response_delimiter}")
         end
       end
 
@@ -763,7 +778,9 @@ module ActiveMerchant #:nodoc:
         params = response[:direct_response]
         return {} unless params
 
-        parts = params.split(',')
+        split_params_with = self.class.cim_direct_response_delimiter || DEFAULT_CIM_RESPONSE_DELIMITER
+
+        parts = params.split(split_params_with)
         {
           response_code: parts[0].to_i,
           response_subcode: parts[1],
