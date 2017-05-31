@@ -30,6 +30,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
     }
   end
 
+  def teardown
+    @gateway.class.cim_direct_response_delimiter = nil
+  end
+
   def test_add_swipe_data_with_bad_data
     @credit_card.track_data = BAD_TRACK_DATA
     stub_comms do
@@ -545,6 +549,44 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @gateway.class.duplicate_window = nil
   end
 
+  def test_cim_purchase_with_delimiter_option
+    @gateway.class.cim_direct_response_delimiter = '|'
+
+    stub_comms do
+      @store = @gateway.store(@credit_card, @options)
+      assert_success @store
+    end.respond_with(successful_store_response)
+
+    stub_comms do
+      purchase = @gateway.purchase(@amount, @store.authorization, {email_customer: true})
+      assert_success purchase
+      assert_equal "This transaction has been approved.", purchase.message
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      extra_opts = extra_options_from_doc(doc)
+      assert_equal '|', extra_opts['x_delim_char']
+    end.respond_with(successful_purchase_using_stored_card_response(delimiter: '|'))
+  end
+
+  def test_cim_auth_with_delimiter_option
+    @gateway.class.cim_direct_response_delimiter = '|'
+
+    stub_comms do
+      @store = @gateway.store(@credit_card, @options)
+      assert_success @store
+    end.respond_with(successful_store_response)
+
+    stub_comms do
+      auth = @gateway.authorize(@amount, @store.authorization, {email_customer: true})
+      assert_success auth
+      assert_equal "This transaction has been approved.", auth.message
+    end.check_request do |_endpoint, data, _headers|
+      doc = parse(data)
+      extra_opts = extra_options_from_doc(doc)
+      assert_equal '|', extra_opts['x_delim_char']
+    end.respond_with(successful_authorize_using_stored_card_response(delimiter: '|'))
+  end
+
   def test_add_cardholder_authentication_value
     stub_comms do
       @gateway.purchase(@amount, @credit_card, cardholder_authentication_value: 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', authentication_indicator: "2")
@@ -968,6 +1010,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
       hash[element.at_xpath("name").content] = element.at_xpath("value").content
       hash
     end
+  end
+
+  def extra_options_from_doc(doc)
+    assert_not_nil doc.at_xpath("//extraOptions")
+    [doc.xpath("//extraOptions").text.split('=')].to_h
   end
 
   def settings_from_doc(doc)
@@ -1709,7 +1756,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
     eos
   end
 
-  def successful_purchase_using_stored_card_response
+  def successful_purchase_using_stored_card_response(delimiter: ',')
+    default_direct_response = '1,1,1,This transaction has been approved.,8HUT72,Y,2235700270,1,Store Purchase,1.01,CC,auth_capture,e385c780422f4bd182c4,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,4A20EEAF89018FF075899DDB332E9D35,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,'
+    direct_response = default_direct_response.tr(',', delimiter)
     <<-eos
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -1721,7 +1770,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
           <text>Successful.</text>
           </message>
       </messages>
-      <directResponse>1,1,1,This transaction has been approved.,8HUT72,Y,2235700270,1,Store Purchase,1.01,CC,auth_capture,e385c780422f4bd182c4,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,4A20EEAF89018FF075899DDB332E9D35,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
+      <directResponse>#{direct_response}</directResponse>
       </createCustomerProfileTransactionResponse>
     eos
   end
@@ -1743,7 +1792,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
     eos
   end
 
-  def successful_authorize_using_stored_card_response
+  def successful_authorize_using_stored_card_response(delimiter: ',')
+    default_direct_response = '1,1,1,This transaction has been approved.,GGHQ5R,Y,2235700640,1,Store Purchase,1.01,CC,auth_only,0bde9d39f8eb9443f2af,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,E47E5CA4F1239B00D39A7F8C147215D3,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,'
+    direct_response = default_direct_response.tr(',', delimiter)
+
     <<-eos
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -1755,7 +1807,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
             <text>Successful.</text>
           </message>
         </messages>
-        <directResponse>1,1,1,This transaction has been approved.,GGHQ5R,Y,2235700640,1,Store Purchase,1.01,CC,auth_only,0bde9d39f8eb9443f2af,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,E47E5CA4F1239B00D39A7F8C147215D3,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
+        <directResponse>#{direct_response}</directResponse>
       </createCustomerProfileTransactionResponse>
     eos
   end
