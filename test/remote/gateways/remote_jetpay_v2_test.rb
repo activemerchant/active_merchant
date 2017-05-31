@@ -48,14 +48,13 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     options = @options.merge(
       ud_field_1: "Value1",
       ud_field_2: "Value2",
-      ud_field_3: "Value3",
-      tax: '777'
+      ud_field_3: "Value3"
       )
     assert response = @gateway.purchase(@amount_approved, @credit_card, options)
     assert_success response
   end
 
-  def test_authorize_and_capture
+  def test_successful_authorize_and_capture
     assert auth = @gateway.authorize(@amount_approved, @credit_card, @options)
     assert_success auth
     assert_equal 'APPROVED', auth.message
@@ -66,7 +65,18 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_partial_capture
+  def test_successful_authorize_and_capture_with_tax
+    assert auth = @gateway.authorize(@amount_approved, @credit_card, @options)
+    assert_success auth
+    assert_equal 'APPROVED', auth.message
+    assert_not_nil auth.authorization
+    assert_not_nil auth.params["approval"]
+
+    assert capture = @gateway.capture(@amount_approved, auth.authorization, @options.merge(:tax_amount => '900', :tax_exemption => 'true'))
+    assert_success capture
+  end
+
+  def test_successful_partial_capture
     assert auth = @gateway.authorize(9900, @credit_card, @options)
     assert_success auth
     assert_equal 'APPROVED', auth.message
@@ -100,7 +110,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_failure void
   end
 
-  def test_purchase_refund
+  def test_successful_purchase_refund
     assert response = @gateway.purchase(@amount_approved, @credit_card, @options)
     assert_success response
     assert_equal "APPROVED", response.message
@@ -114,7 +124,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_equal [response.params['transaction_id'], response.params["approval"], @amount_approved, response.params["token"]].join(";"), response.authorization
   end
 
-  def test_capture_refund
+  def test_successful_capture_refund
     assert auth = @gateway.authorize(@amount_approved, @credit_card, @options)
     assert_success auth
     assert_equal 'APPROVED', auth.message
@@ -186,7 +196,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
   def test_transcript_scrubbing
     @credit_card.verification_value = "421"
     transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount_approved, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
 

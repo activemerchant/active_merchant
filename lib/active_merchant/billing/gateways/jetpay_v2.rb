@@ -252,8 +252,11 @@ module ActiveMerchant #:nodoc:
 
       def build_capture_request(transaction_id, money, options)
         build_xml_request('CAPT', options, transaction_id) do |xml|
-          xml.tag! 'TotalAmount', amount(money)
+          add_invoice_data(xml, options)
           add_user_defined_fields(xml, options)
+          xml.tag! 'TotalAmount', amount(money)
+
+          xml.target!
         end
       end
 
@@ -262,6 +265,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Approval', approval
           xml.tag! 'TotalAmount', amount(money)
           xml.tag! 'Token', token if token
+
           xml.target!
         end
       end
@@ -386,8 +390,8 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice_data(xml, options)
         xml.tag! 'OrderNumber', options[:order_id] if options[:order_id]
-        if tax = options[:tax]
-          xml.tag! 'TaxAmount', tax, {'ExemptInd' => options[:tax_exemption] || "false"}
+        if tax_amount = options[:tax_amount]
+          xml.tag! 'TaxAmount', tax_amount, {'ExemptInd' => options[:tax_exemption] || "false"}
         end
       end
 

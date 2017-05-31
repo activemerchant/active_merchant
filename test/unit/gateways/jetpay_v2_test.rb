@@ -121,7 +121,7 @@ class JetpayV2Test < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    assert refund = @gateway.refund(@amount_approved, 'bogus', @options)
+    assert refund = @gateway.refund(@amount, 'bogus', @options)
     assert_failure refund
   end
 
