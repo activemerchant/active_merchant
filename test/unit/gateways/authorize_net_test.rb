@@ -435,6 +435,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal "This transaction has been approved.", void.message
   end
 
+  def test_successful_void_using_stored_card
+    @gateway.class.cim_direct_response_delimiter = '|'
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(successful_authorize_using_stored_card_response)
+    auth = @gateway.authorize(@amount, store.authorization)
+
+    @gateway.expects(:ssl_post).returns(successful_void_using_stored_card_response(delimiter: '|'))
+    void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal "This transaction has been approved.", void.message
+  end
+
   def test_failed_void_using_stored_card
     @gateway.expects(:ssl_post).returns(successful_store_response)
     store = @gateway.store(@credit_card, @options)
@@ -1880,7 +1894,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   end
 
-  def successful_void_using_stored_card_response
+  def successful_void_using_stored_card_response(delimiter: ',')
+    default_direct_response = '1,1,1,This transaction has been approved.,3R9YE2,P,2235701141,1,,0.00,CC,void,becdb509b35a32c30e97,,,,,,,,,,,,,,,,,,,,,,,,,C3C4B846B9D5A37D14462C2BF5B924FD,,,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,'
+    direct_response = default_direct_response.tr(',', delimiter)
     <<-eos
       <?xml version="1.0" encoding="UTF-8"?>
       <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -1892,7 +1908,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
             <text>Successful.</text>
           </message>
         </messages>
-        <directResponse>1,1,1,This transaction has been approved.,3R9YE2,P,2235701141,1,,0.00,CC,void,becdb509b35a32c30e97,,,,,,,,,,,,,,,,,,,,,,,,,C3C4B846B9D5A37D14462C2BF5B924FD,,,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
+        <directResponse>#{direct_response}</directResponse>
       </createCustomerProfileTransactionResponse>
     eos
   end
