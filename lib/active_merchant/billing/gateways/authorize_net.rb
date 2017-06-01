@@ -312,6 +312,7 @@ module ActiveMerchant #:nodoc:
               xml.transId(transaction_id_from(authorization))
             end
           end
+          add_cim_delimiter_options(xml)
         end
       end
 
