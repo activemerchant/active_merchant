@@ -181,6 +181,22 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_eci_default_value
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>07</Ecommerce_Flag>", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_eci_option_value
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(eci: "05"))
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_network_tokenization_requests_with_visa
     stub_comms do
       credit_card = network_tokenization_credit_card('4111111111111111',
