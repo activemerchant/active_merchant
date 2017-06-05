@@ -14,6 +14,7 @@
 * Ebanx: Reduce supported countries to Brazil and Mexico [davidsantoso]
 * Payeezy: Add customer_id_type and customer_id_number fields [davidsantoso] #2454
 * Payeezy: Add client_email field for telecheck [davidsantoso] #2455
+* FirstData Payeezy: Set default ECI value for auth/purchase transactions [jasonwebster] #2448
 
 == Version 1.66.0 (May 4, 2017)
 * Support Rails 5.1 [jhawthorn] #2407
