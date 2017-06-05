@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
           xml.AddressStreet1 address[:address1] unless empty?(address[:address1])
           xml.AddressStreet2 address[:address2] unless empty?(address[:address2])
           xml.AddressCity address[:city] unless empty?(address[:city])
-          xml.AddressStateProvince address[:state] unless empty?(address[:state])
+          xml.AddressState address[:state] unless empty?(address[:state])
           xml.AddressPostalCode address[:zip] unless empty?(address[:zip])
         end
       end
