@@ -236,7 +236,9 @@ module ActiveMerchant #:nodoc:
           xml.tag! "Expiry_Date", expdate(credit_card)
           xml.tag! "CardHoldersName", credit_card.name
           xml.tag! "CardType", card_type(credit_card.brand)
-          xml.tag! "Ecommerce_Flag", (credit_card.try(:eci) || options[:eci] || DEFAULT_ECI)
+
+          eci = (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
+          xml.tag! "Ecommerce_Flag", eci
 
           add_credit_card_verification_strings(xml, credit_card, options)
         end
