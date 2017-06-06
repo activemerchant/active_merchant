@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class OppTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = OppGateway.new(fixtures(:opp))
     @amount = 100
@@ -153,6 +155,20 @@ class OppTest < Test::Unit::TestCase
     response = @gateway.void(@test_success_id, @options)
     assert_failure response
     assert_equal '100.100.101', response.error_code
+  end
+
+  def test_passes_3d_secure_fields
+    options = @complete_request_options.merge({eci: "eci", cavv: "cavv", xid: "xid"})
+
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @valid_card, options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/threeDSecure.eci=eci/, data)
+      assert_match(/threeDSecure.verificationId=cavv/, data)
+      assert_match(/threeDSecure.xid=xid/, data)
+    end.respond_with(successful_response('DB', @test_success_id))
+
+    assert_success response
   end
 
   def test_scrub

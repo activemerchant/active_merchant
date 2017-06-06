@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OppGateway < Gateway
-# = Open Payment Platform
+    # = Open Payment Platform
     #
     #  The Open Payment Platform includes a powerful omni-channel transaction processing API,
     #   enabling you to quickly and flexibly build new applications and services on the platform.
@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
     #
     #   # set up credit card object as in main ActiveMerchant example
     #   creditcard = ActiveMerchant::Billing::CreditCard.new(
-   #     :type       => 'visa',
+    #     :type       => 'visa',
     #     :number     => '4242424242424242',
     #     :month      => 8,
     #     :year       => 2009,
@@ -177,6 +177,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_customer_data(post, payment, options)
         add_options(post, options)
+        add_3d_secure(post, options)
         commit(post, nil, options)
       end
 
@@ -223,40 +224,50 @@ module ActiveMerchant #:nodoc:
       end
 
       def address(post, address, prefix)
-          post[prefix] = {
-            street1: address[:address1],
-            street2: address[:address2],
-            city: address[:city],
-            state: address[:state],
-            postcode: address[:zip],
-            country: address[:country],
-          }
+        post[prefix] = {
+          street1: address[:address1],
+          street2: address[:address2],
+          city: address[:city],
+          state: address[:state],
+          postcode: address[:zip],
+          country: address[:country],
+        }
       end
 
       def add_invoice(post, money, options)
-          post[:amount] = amount(money)
-          post[:currency] = options[:currency] || currency(money) unless post[:paymentType] == 'RV'
-          post[:descriptor] = options[:description] || options[:descriptor]
-          post[:merchantInvoiceId] = options[:merchantInvoiceId] || options[:order_id]
-          post[:merchantTransactionId] = options[:merchant_transaction_id] || generate_unique_id
+        post[:amount] = amount(money)
+        post[:currency] = options[:currency] || currency(money) unless post[:paymentType] == 'RV'
+        post[:descriptor] = options[:description] || options[:descriptor]
+        post[:merchantInvoiceId] = options[:merchantInvoiceId] || options[:order_id]
+        post[:merchantTransactionId] = options[:merchant_transaction_id] || generate_unique_id
       end
 
       def add_payment_method(post, payment, options)
-          if options[:registrationId]
-            #post[:recurringType] = 'REPEATED'
-            post[:card] = {
-              cvv: payment.verification_value,
-            }
-          else
-            post[:paymentBrand] = payment.brand.upcase
-            post[:card] = {
-              holder: payment.name,
-              number: payment.number,
-              expiryMonth: "%02d" % payment.month,
-              expiryYear: payment.year,
-              cvv: payment.verification_value,
-            }
-          end
+        if options[:registrationId]
+          #post[:recurringType] = 'REPEATED'
+          post[:card] = {
+            cvv: payment.verification_value,
+          }
+        else
+          post[:paymentBrand] = payment.brand.upcase
+          post[:card] = {
+            holder: payment.name,
+            number: payment.number,
+            expiryMonth: "%02d" % payment.month,
+            expiryYear: payment.year,
+            cvv: payment.verification_value,
+          }
+        end
+      end
+
+      def add_3d_secure(post, options)
+        return unless options[:eci] && options[:cavv] && options[:xid]
+
+        post[:threeDSecure] = {
+          eci: options[:eci],
+          verificationId: options[:cavv],
+          xid: options[:xid]
+        }
       end
 
       def add_options(post, options)
