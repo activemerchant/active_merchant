@@ -177,27 +177,27 @@ module ActiveMerchant #:nodoc:
       #
       # The line_item hash goes in the options hash and should look like
       #
-      #         :line_items => [
-      #           {
-      #             :declared_value => '1',
-      #             :quantity => '2',
-      #             :code => 'default',
-      #             :description => 'Giant Walrus',
-      #             :sku => 'WA323232323232323'
-      #           },
-      #           {
-      #             :declared_value => '6',
-      #             :quantity => '1',
-      #             :code => 'default',
-      #             :description => 'Marble Snowcone',
-      #             :sku => 'FAKE1232132113123'
-      #           }
-      #         ]
+      # :line_items => [
+      #   {
+      #     :declared_value => '1',
+      #     :quantity => '2',
+      #     :code => 'default',
+      #     :description => 'Giant Walrus',
+      #     :sku => 'WA323232323232323'
+      #   },
+      #   {
+      #     :declared_value => '6',
+      #     :quantity => '1',
+      #     :code => 'default',
+      #     :description => 'Marble Snowcone',
+      #     :sku => 'FAKE1232132113123'
+      #   }
+      # ]
       #
-      # This functionality is only supported by this particular gateway may
+      # This functionality is only supported by this particular gateway and may
       # be changed at any time
       def calculate_tax(creditcard, options)
-        requires!(options,  :line_items)
+        requires!(options, :line_items)
         setup_address_hash(options)
         commit(build_tax_calculation_request(creditcard, options), :calculate_tax, nil, options)
       end
@@ -244,7 +244,7 @@ module ActiveMerchant #:nodoc:
           :country => 'US'
         }
         options[:billing_address] = options[:billing_address] || options[:address] || default_address
-        options[:shipping_address] = options[:shipping_address] || {}
+        options[:shipping_address] = options[:shipping_address] || nil
       end
 
       def build_auth_request(money, creditcard_or_reference, options)
@@ -409,6 +409,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_line_item_data(xml, options)
+        return nil if options[:line_items].nil?
         options[:line_items].each_with_index do |value, index|
           xml.tag! 'item', {'id' => index} do
             xml.tag! 'unitPrice', localized_amount(value[:declared_value].to_i, options[:currency] || default_currency)
@@ -423,9 +424,9 @@ module ActiveMerchant #:nodoc:
       def add_merchant_data(xml, options)
         xml.tag! 'merchantID', @options[:login]
         xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
-        xml.tag! 'clientLibrary' ,'Ruby Active Merchant'
-        xml.tag! 'clientLibraryVersion',  VERSION
-        xml.tag! 'clientEnvironment' , RUBY_PLATFORM
+        xml.tag! 'clientLibrary', 'Ruby Active Merchant'
+        xml.tag! 'clientLibraryVersion', VERSION
+        xml.tag! 'clientEnvironment', RUBY_PLATFORM
       end
 
       def add_purchase_data(xml, money = 0, include_grand_total = false, options={})
@@ -436,22 +437,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, payment_method, address, options, shipTo = false)
+        return nil if address.nil?
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
-          xml.tag! 'firstName',             payment_method.first_name             if payment_method
-          xml.tag! 'lastName',              payment_method.last_name              if payment_method
-          xml.tag! 'street1',               address[:address1]
-          xml.tag! 'street2',               address[:address2]                unless address[:address2].blank?
-          xml.tag! 'city',                  address[:city]
-          xml.tag! 'state',                 address[:state]
-          xml.tag! 'postalCode',            address[:zip]
-          xml.tag! 'country',               lookup_country_code(address[:country]) unless address[:country].blank?
-          xml.tag! 'company',               address[:company]                 unless address[:company].blank?
-          xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
-          xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
-          xml.tag! 'email',                 options[:email] || 'null@cybersource.com'
-          xml.tag! 'ipAddress',             options[:ip]                      unless options[:ip].blank? || shipTo
-          xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
-          xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
+          xml.tag! 'firstName',            payment_method.first_name              unless payment_method.is_a?(String)
+          xml.tag! 'lastName',             payment_method.last_name               unless payment_method.is_a?(String)
+          xml.tag! 'street1',              address[:address1]
+          xml.tag! 'street2',              address[:address2]                     unless address[:address2].blank?
+          xml.tag! 'city',                 address[:city]
+          xml.tag! 'state',                address[:state]
+          xml.tag! 'postalCode',           address[:zip]
+          xml.tag! 'country',              lookup_country_code(address[:country]) unless address[:country].blank?
+          xml.tag! 'company',              address[:company]                      unless address[:company].blank?
+          xml.tag! 'companyTaxID',         address[:companyTaxID]                 unless address[:company_tax_id].blank?
+          xml.tag! 'phoneNumber',          address[:phone]                        unless address[:phone].blank?
+          xml.tag! 'email',                options[:email]                        || 'null@cybersource.com'
+          xml.tag! 'ipAddress',            options[:ip]                           unless options[:ip].blank? || shipTo
+          xml.tag! 'driversLicenseNumber', options[:drivers_license_number]       unless options[:drivers_license_number].blank?
+          xml.tag! 'driversLicenseState',  options[:drivers_license_state]        unless options[:drivers_license_state].blank?
         end
       end
 
@@ -632,17 +634,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_address(xml, payment_method_or_reference, options[:billing_address], options)
+        add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
+        add_line_item_data(xml, options)
+        add_purchase_data(xml, money, true, options)
+
         if payment_method_or_reference.is_a?(String)
-          add_purchase_data(xml, money, true, options)
           add_subscription(xml, options, payment_method_or_reference)
         elsif card_brand(payment_method_or_reference) == 'check'
-          add_address(xml, payment_method_or_reference, options[:billing_address], options)
-          add_purchase_data(xml, money, true, options)
           add_check(xml, payment_method_or_reference)
         else
-          add_address(xml, payment_method_or_reference, options[:billing_address], options)
-          add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
-          add_purchase_data(xml, money, true, options)
           add_creditcard(xml, payment_method_or_reference)
         end
       end
@@ -693,11 +694,12 @@ module ActiveMerchant #:nodoc:
         success = response[:decision] == "ACCEPT"
         message = response[:message]
 
-        authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken], action, amount, options[:currency]].compact.join(";") : nil
+        authorization = [ options[:order_id], response[:requestID], response[:requestToken], action, amount, options[:currency]].compact.join(";")
 
         Response.new(success, message, response,
           :test => test?,
           :authorization => authorization,
+          :fraud_review => (response[:decision] == 'REVIEW'),
           :avs_result => { :code => response[:avsCode] },
           :cvv_result => response[:cvCode]
         )
