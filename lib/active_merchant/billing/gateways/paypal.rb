@@ -12,6 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.homepage_url = 'https://www.paypal.com/us/webapps/mpp/paypal-payments-pro'
       self.display_name = 'PayPal Payments Pro (US)'
+      self.ssl_version = :TLSv1_2
 
       def authorize(money, credit_card_or_referenced_id, options = {})
         requires!(options, :ip)
