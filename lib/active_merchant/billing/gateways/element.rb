@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Element'
 
       SERVICE_TEST_URL = 'https://certservices.elementexpress.com/express.asmx'
-      SERVICE_LIVE_URL = 'https://service.elementexpress.com/express.asmx'
+      SERVICE_LIVE_URL = 'https://services.elementexpress.com/express.asmx'
 
       def initialize(options={})
         requires!(options, :account_id, :account_token, :application_id, :acceptor_id, :application_name, :application_version)
@@ -178,21 +178,22 @@ module ActiveMerchant #:nodoc:
           xml.ReversalType options[:reversal_type] if options[:reversal_type]
           xml.TransactionID options[:trans_id] if options[:trans_id]
           xml.TransactionAmount amount(money.to_i) if money
-          xml.MarketCode "Default" if money
+          xml.MarketCode (options[:market_code] || "Default") if money
           xml.ReferenceNumber options[:order_id] || SecureRandom.hex(20)
         end
       end
 
       def add_terminal(xml, options)
         xml.terminal do
-          xml.TerminalID "01"
-          xml.CardPresentCode "UseDefault"
-          xml.CardholderPresentCode "UseDefault"
-          xml.CardInputCode "UseDefault"
-          xml.CVVPresenceCode "UseDefault"
-          xml.TerminalCapabilityCode "UseDefault"
-          xml.TerminalEnvironmentCode "UseDefault"
-          xml.MotoECICode "NonAuthenticatedSecureECommerceTransaction"
+          xml.TerminalID options[:terminal_id] || "01"
+          xml.CardPresentCode options[:card_present_code] || "UseDefault"
+          xml.CardholderPresentCode options[:cardholder_present_code] || "UseDefault"
+          xml.CardInputCode options[:card_input_code] || "UseDefault"
+          xml.CVVPresenceCode options[:cvv_presence_code] || "UseDefault"
+          xml.TerminalCapabilityCode options[:terminal_capability_code] || "UseDefault"
+          xml.TerminalEnvironmentCode options[:terminal_environment_code] || "UseDefault"
+          xml.TerminalType options[:terminal_type] || "Unknown"
+          xml.MotoECICode options[:moto_eci_code] || "NonAuthenticatedSecureECommerceTransaction"
         end
       end
 
