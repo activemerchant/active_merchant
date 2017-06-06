@@ -142,6 +142,13 @@ cashnet:
   password: 'X'
   merchant_gateway_name: 'X'
 
+# Contact CCAvenue for credentials
+ccavenue_mcpg:
+  merchant_id: ''
+  working_key: ''
+  access_code: ''
+
+
 cecabank:
   merchant_id: MERCHANTID
   acquirer_bin: ACQUIRERBIN
