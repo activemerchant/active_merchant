@@ -1230,3 +1230,8 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+# Working credentials, no need to replace
+zaakpay:
+  merchantIdentifier: '5c7148b110ee49d7a1a9042db4fbf4ad',
+  secretKey: 'e73be5e3e14a4b548948f899ccde5604',
