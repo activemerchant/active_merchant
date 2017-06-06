@@ -1157,6 +1157,11 @@ trust_commerce:
   password: 'password'
 
 # Working credentials, no need to replace
+trxservices:
+  key: '1F91EF35A3B9384C2BBC7A5CD27D2C4C7043C672134880190722BABA516B4122'
+  iv: '8ACB0F53684B64C4A078DCE34D6AAE52'
+
+# Working credentials, no need to replace
 usa_epay:
   login: '4EoZ5U2Q55j976W7eplC71i6b7kn4pcV'
 
