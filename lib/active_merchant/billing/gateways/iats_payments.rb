@@ -141,6 +141,7 @@ module ActiveMerchant #:nodoc:
         post[:recurring] = false
         post[:begin_date] = Time.now.xmlschema
         post[:end_date] = Time.now.xmlschema
+        post[:schedule_type] = 'Annually'
         post[:amount] = 0
       end
 
