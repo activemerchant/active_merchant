@@ -152,8 +152,8 @@ module ActiveMerchant
     def credit_card(number = '4242424242424242', options = {})
       defaults = {
         :number => number,
-        :month => default_expiration_date.month,
-        :year => default_expiration_date.year,
+        :month => '11',
+        :year => '2020',
         :first_name => 'Longbob',
         :last_name => 'Longsen',
         :verification_value => options[:verification_value] || '123',

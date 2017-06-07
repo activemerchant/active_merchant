@@ -613,10 +613,10 @@ pay_gate_xml:
 
 # Working credentials, no need to replace
 pay_hub:
-  orgid: '123456'
-  username: 'abc123DEF'
-  password: 'abc123DEF'
-  tid: '123'
+  organization_id: 10068
+  version: 'v2'
+  oauth_token: 'f3888418-69eb-4688-802e-d8c64ebdb4c0'
+  terminal_id: '122'
 
 # Working credentials, no need to replace
 pay_junction:
