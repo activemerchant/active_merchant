@@ -25,25 +25,81 @@ class RemoteConektaTest < Test::Unit::TestCase
     )
 
     @options = {
-      :device_fingerprint => "41l9l92hjco6cuekf0c7dq68v4",
+      device_fingerprint: "41l9l92hjco6cuekf0c7dq68v4",
       description: 'Blue clip',
+      customer: "Mario Reyes",
+      email: "mario@gmail.com",
+      phone: "1234567890",
       billing_address: {
         address1: "Rio Missisipi #123",
         address2: "Paris",
         city: "Guerrero",
         country: "Mexico",
         zip: "5555",
-        name: "Mario Reyes",
         phone: "12345678",
       },
+      line_items: [{
+        name: "an item",
+        description: "an item",
+        unit_price: 1
+      }],
       carrier: "Estafeta"
     }
+
+    @spreedly_options = {
+      description: "{
+        \"device_fingerprint\":\"41l9l92hjco6cuekf0c7dq68v4\",
+        \"description\":\"Blue clip\",
+        \"details\": {
+          \"name\":\"Mario Reyes\",
+          \"email\":\"mario@gmail.com\",
+          \"phone\":\"1234567890\",
+          \"ip_address\":\"127.0.0.1\",
+          \"line_items\": [{
+            \"name\": \"an item\",
+            \"description\": \"an item\",
+            \"unit_price\": 1
+          }],
+          \"billing_address\": {
+            \"street1\": \"Rio Missisipi #123\",
+            \"street2\": \"Paris\",
+            \"city\": \"Guerrero\",
+            \"country\": \"Mexico\",
+            \"zip\": \"5555\",
+            \"name\": \"Mario Reyes\",
+            \"phone\": \"12345678\"
+          }
+        }
+      }"
+    }
+  end
+
+  def test_successful_purchase_using_spreedly
+    assert response = @gateway.purchase(@amount, @credit_card, @spreedly_options)
+    assert_success response
+    assert_equal nil, response.message
+    assert_equal "Mario Reyes", response.params['details']['name']
+    assert_equal "1234567890", response.params['details']['phone']
+    assert_equal "mario@gmail.com", response.params['details']['email']
+    assert_equal "Rio Missisipi #123", response.params['details']['billing_address']['street1']
+    assert_equal "Paris", response.params['details']['billing_address']['street2']
+    assert_equal "Guerrero", response.params['details']['billing_address']['city']
+    assert_equal "5555", response.params['details']['billing_address']['zip']
+    assert_equal "MX", response.params['details']['billing_address']['country']
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal nil, response.message
+    assert_equal "Mario Reyes", response.params['details']['name']
+    assert_equal "1234567890", response.params['details']['phone']
+    assert_equal "mario@gmail.com", response.params['details']['email']
+    assert_equal "Rio Missisipi #123", response.params['details']['billing_address']['street1']
+    assert_equal "Paris", response.params['details']['billing_address']['street2']
+    assert_equal "Guerrero", response.params['details']['billing_address']['city']
+    assert_equal "5555", response.params['details']['billing_address']['zip']
+    assert_equal "MX", response.params['details']['billing_address']['country']
   end
 
   def test_unsuccessful_purchase
@@ -132,7 +188,7 @@ class RemoteConektaTest < Test::Unit::TestCase
       },
       line_items: [
         {
-          rname: "Box of Cohiba S1s",
+          name: "Box of Cohiba S1s",
           description: "Imported From Mex.",
           unit_price: 20000,
           quantity: 1,
@@ -151,6 +207,7 @@ class RemoteConektaTest < Test::Unit::TestCase
     }
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(more_options))
     assert_success response
+    
     assert_equal "Wanaque", response.params['details']['shipment']['address']['city']
     assert_equal "Wooden", response.params['details']['line_items'][-1]['description']
     assert_equal "TheCustomerName", response.params['details']['name']

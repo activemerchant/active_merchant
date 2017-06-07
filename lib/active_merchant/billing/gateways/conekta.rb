@@ -17,28 +17,33 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_source, options = {})
-        post = {}
-
-        add_order(post, money, options)
-        add_payment_source(post, payment_source, options)
-        add_details_data(post, options)
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
+        if (post = build_details_from_description(money, payment_source, options)).blank?
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          add_details_data(post, options)
+        end
 
         commit(:post, 'charges', post)
       end
 
       def authorize(money, payment_source, options = {})
-        post = {}
-
-        add_order(post, money, options)
-        add_payment_source(post, payment_source, options)
-        add_details_data(post, options)
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
+        if (post = build_details_from_description(money, payment_source, options)).blank?
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          add_details_data(post, options)
+        end
 
         post[:capture] = false
         commit(:post, "charges", post)
       end
 
       def capture(money, identifier, options = {})
-        post = {}
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
 
         post[:order_id] = identifier
         add_order(post, money, options)
@@ -47,7 +52,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, identifier, options)
-        post = {}
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
 
         post[:order_id] = identifier
         add_order(post, money, options)
@@ -80,6 +86,18 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount(money)
       end
 
+      def build_details_from_description(money, payment_source, options)
+        post = {}.with_indifferent_access
+        begin
+          options = JSON.parse(options[:description]).with_indifferent_access
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          post.merge!(options)
+        rescue
+          post
+        end
+      end
+
       def add_details_data(post, options)
         details = {}
         details[:name] = options[:customer] if options[:customer]
@@ -90,7 +108,6 @@ module ActiveMerchant #:nodoc:
         add_billing_address(details, options)
         add_line_items(details, options)
         add_shipment(details, options)
-
         post[:details] = details
       end
 

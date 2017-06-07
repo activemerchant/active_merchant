@@ -24,20 +24,53 @@ class ConektaTest < Test::Unit::TestCase
       :last_name          => "Moreno Reyes"
     )
 
-    @options = {
-      :device_fingerprint => "41l9l92hjco6cuekf0c7dq68v4",
-      :description => 'Blue clip',
-      :success_url => "https://www.example.com/success",
-      :failure_url => "https://www.example.com/failure",
-      :address1 => "Rio Missisipi #123",
-      :address2 => "Paris",
-      :city => "Guerrero",
-      :country => "Mexico",
-      :zip => "5555",
-      :name => "Mario Reyes",
-      :phone => "12345678",
-      :carrier => "Estafeta"
+   @options = {
+      device_fingerprint: "41l9l92hjco6cuekf0c7dq68v4",
+      description: 'Blue clip',
+      customer: "Mario Reyes",
+      email: "mario@gmail.com",
+      phone: "1234567890",
+      billing_address: {
+        address1: "Rio Missisipi #123",
+        address2: "Paris",
+        city: "Guerrero",
+        country: "Mexico",
+        zip: "5555",
+        phone: "12345678",
+      },
+      carrier: "Estafeta"
     }
+
+    @spreedly_options = {
+      description: "{
+        \"device_fingerprint\":\"41l9l92hjco6cuekf0c7dq68v4\",
+        \"description\":\"Blue clip\",
+        \"details\": {
+          \"name\":\"Mario Reyes\",
+          \"email\":\"mario@gmail.com\",
+          \"phone\":\"1234567890\",
+          \"ip_address\":\"127.0.0.1\",
+          \"billing_address\": {
+            \"street1\": \"Rio Missisipi #123\",
+            \"street2\": \"Paris\",
+            \"city\": \"Guerrero\",
+            \"country\": \"Mexico\",
+            \"zip\": \"5555\",
+            \"name\": \"Mario Reyes\",
+            \"phone\": \"12345678\"
+          }
+        }
+      }"
+    }
+  end
+
+  def test_successful_purchase_using_spreedly
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @spreedly_options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
   end
 
   def test_successful_tokenized_purchase
@@ -141,58 +174,50 @@ class ConektaTest < Test::Unit::TestCase
 
   def successful_purchase_response
     {
-      'id' => '521b859fcfc26c0f180002d9',
-      'livemode' => false,
-      'created_at' => 1377535391,
-      'status' => 'pre_authorized',
-      'currency' => 'MXN',
-      'description' => 'Blue clip',
-      'reference_id' => nil,
-      'failure_code' => nil,
-      'failure_message' => nil,
-      'object' => 'charge',
-      'amount' => 300,
-      'processed_at' => nil,
-      'fee' => 348,
-      'card' => {
-        'name' => 'Mario Reyes',
-        'exp_month' => '01',
-        'exp_year' => '18',
-        'street2' => 'Paris',
-        'street3' => 'nil',
-        'city' => 'Guerrero',
-        'zip' => '5555',
-        'country' => 'Mexico',
-        'brand' => 'VISA',
-        'last4' => '1111',
-        'object' => 'card',
-        'fraud_response' => '3d_secure_required',
-        'redirect_form' => {
-          'url' => 'https => //eps.banorte.com/secure3d/Solucion3DSecure.htm',
-          'action' => 'POST',
-          'attributes' => {
-            'MerchantId' => '7376961',
-            'MerchantName' => 'GRUPO CONEKTAME',
-            'MerchantCity' => 'EstadodeMexico',
-            'Cert3D' => '03',
-            'ClientId' => '60518',
-            'Name' => '7376962',
-            'Password' => 'fgt563j',
-            'TransType' => 'PreAuth',
-            'Mode' => 'Y',
-            'E1' => 'qKNKjndV9emCxuKE1G4z',
-            'E2' => '521b859fcfc26c0f180002d9',
-            'E3' => 'Y',
-            'ResponsePath' => 'https => //eps.banorte.com/RespuestaCC.jsp',
-            'CardType' => 'VISA',
-            'Card' => '4111111111111111',
-            'Cvv2Indicator' => '1',
-            'Cvv2Val' => '183',
-            'Expires' => '01/18',
-            'Total' => '3.0',
-            'ForwardPath' => 'http => //localhost => 3000/charges/banorte_3d_secure_response',
-            'auth_token' => 'qKNKjndV9emCxuKE1G4z'
-          }
+      "id" => "567837c719ce888f130010ff",
+      "livemode" => false,
+      "created_at" => 1450719175,
+      "status" => "paid",
+      "currency" => "MXN",
+      "description" => "Active Merchant Purchase",
+      "reference_id" => "#1450719153.1",
+      "object" => "charge",
+      "amount" => 57421,
+      "paid_at" => 1450719180,
+      "fee" => 2221,
+      "customer_id" => "",
+      "refunds" => [
+
+      ],
+      "payment_method" => {
+        "name" => "Tobias Luetke",
+        "exp_month" => "09",
+        "exp_year" => "16",
+        "auth_code" => "000000",
+        "object" => "card_payment",
+        "last4" => "1111",
+        "brand" => "visa",
+        "address" => {
+          "street1" => "123 Amoebobacterieae St",
+          "city" => "Ottawa",
+          "state" => "ON",
+          "zip" => "K2P0V6",
+          "country" => "CA"
+        }
+      },
+      "details" => {
+        "name" => "bob@customer.com",
+        "email" => "bob@customer.com",
+        "line_items" => [
+
+        ],
+        "billing_address" => {
+          "street1" => "123 Amoebobacterieae St",
+          "city" => "Ottawa",
+          "state" => "ON",
+          "zip" => "K2P0V6",
+          "country" => "MX",
+          "phone" => "(555)555-5555",
         }
       }
     }.to_json
@@ -232,58 +257,49 @@ class ConektaTest < Test::Unit::TestCase
 
   def successful_authorize_response
     {
-      'id' => '521b859fcfc26c0f180002d9',
-      'livemode' => false,
-      'created_at' => 1377535391,
-      'status' => 'pre_authorized',
-      'currency' => 'MXN',
-      'description' => 'Blue clip',
-      'reference_id' => nil,
-      'failure_code' => nil,
-      'failure_message' => nil,
-      'object' => 'charge',
-      'amount' => 300,
-      'processed_at' => nil,
-      'fee' => 348,
-      'card' => {
-        'name' => 'Mario Reyes',
-        'exp_month' => '01',
-        'exp_year' => '18',
-        'street2' => 'Paris',
-        'street3' => 'nil',
-        'city' => 'Guerrero',
-        'zip' => '5555',
-        'country' => 'Mexico',
-        'brand' => 'VISA',
-        'last4' => '1111',
-        'object' => 'card',
-        'fraud_response' => '3d_secure_required',
-        'redirect_form' => {
-          'url' => 'https => //eps.banorte.com/secure3d/Solucion3DSecure.htm',
-          'action' => 'POST',
-          'attributes' => {
-            'MerchantId' => '7376961',
-            'MerchantName' => 'GRUPO CONEKTAME',
-            'MerchantCity' => 'EstadodeMexico',
-            'Cert3D' => '03',
-            'ClientId' => '60518',
-            'Name' => '7376962',
-            'Password' => 'fgt563j',
-            'TransType' => 'PreAuth',
-            'Mode' => 'Y',
-            'E1' => 'qKNKjndV9emCxuKE1G4z',
-            'E2' => '521b859fcfc26c0f180002d9',
-            'E3' => 'Y',
-            'ResponsePath' => 'https => //eps.banorte.com/RespuestaCC.jsp',
-            'CardType' => 'VISA',
-            'Card' => '4111111111111111',
-            'Cvv2Indicator' => '1',
-            'Cvv2Val' => '183',
-            'Expires' => '01/18',
-            'Total' => '3.0',
-            'ForwardPath' => 'http => //localhost => 3000/charges/banorte_3d_secure_response',
-            'auth_token' => 'qKNKjndV9emCxuKE1G4z'
-          }
+      "id" => "567845ae2412299ec80012d9",
+      "livemode" => false,
+      "created_at" => 1450722734,
+      "status" => "pre_authorized",
+      "currency" => "MXN",
+      "description" => "Active Merchant Purchase",
+      "reference_id" => "#1450722732.1",
+      "object" => "charge",
+      "amount" => 57620,
+      "fee" => 2228,
+      "customer_id" => "",
+      "refunds" => [
+
+      ],
+      "payment_method" => {
+        "name" => "Tobias Luetke",
+        "exp_month" => "09",
+        "exp_year" => "16",
+        "auth_code" => "000000",
+        "object" => "card_payment",
+        "last4" => "1111",
+        "brand" => "visa",
+        "address" => {
+          "street1" => "123 Amoebobacterieae St",
+          "city" => "Ottawa",
+          "state" => "ON",
+          "zip" => "K2P0V6",
+          "country" => "CA"
+        }
+      },
+      "details" => {
+        "name" => "bob@customer.com",
+        "email" => "bob@customer.com",
+        "line_items" => [
+
+        ],
+        "billing_address" => {
+          "street1" => "123 Amoebobacterieae St",
+          "city" => "Ottawa",
+          "state" => "ON",
+          "zip" => "K2P0V6",
+          "country" => "MX",
+          "phone" => "(555)555-5555",
         }
       }
     }.to_json
