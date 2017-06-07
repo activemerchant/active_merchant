@@ -573,7 +573,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_from_response(response)
-        response["card"] || response["active_card"] || response["source"] || {}
+        response["card"] || response["active_card"] || response["source"] || response["sources"]["data"].first rescue nil || {}
       end
 
       def emv_authorization_from_response(response)
