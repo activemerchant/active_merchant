@@ -502,6 +502,11 @@ monei:
   pwd: GyNSEAp2
 
 # Working credentials, no need to replace
+moip:
+  token: YADNIHGVYGYKVLVUVKUUHP5YU5LEXRZC
+  api_key: IYYBBGKTZONVLAAM034Z1ED3IDVDV4FQTQISYUOE
+
+# Working credentials, no need to replace
 moneris:
   login: store1
   password: yesguy
