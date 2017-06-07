@@ -17,6 +17,7 @@ class RemoteLitleTest < Test::Unit::TestCase
       order_id: '1',
       email: 'wow@example.com',
       billing_address: {
+        name: 'Joe Green',
         company: 'testCompany',
         address1: '1 Main St.',
         city: 'Burlington',
@@ -150,6 +151,16 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', void.message
   end
 
+  def test_successful_authorization_with_paypage
+    paypage_payment_method = {
+      paypage_registration_id: "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=",
+      exp_date: "1012"
+    }
+    assert auth = @gateway.authorize(40000, paypage_payment_method, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+  end
+  
   def test_void_authorization
     assert auth = @gateway.authorize(10010, @credit_card1, @options)
 

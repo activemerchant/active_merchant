@@ -209,6 +209,12 @@ module ActiveMerchant #:nodoc:
           doc.card do
             doc.track(payment_method.track_data)
           end
+        elsif payment_method.is_a?(Hash)
+          doc.paypage do
+            doc.paypageRegistrationId(payment_method[:paypage_registration_id])
+            doc.expDate(payment_method[:exp_date])
+            doc.cardValidationNum(payment_method[:card_validation_num]) unless payment_method[:card_validation_num].blank?
+          end
         else
           doc.card do
             doc.type_(CARD_TYPE[payment_method.brand])
@@ -228,15 +234,14 @@ module ActiveMerchant #:nodoc:
         return if payment_method.is_a?(String)
 
         doc.billToAddress do
-          doc.name(payment_method.name)
+          doc.name(payment_method.respond_to?(:name) ? payment_method.name : options[:billing_address][:name])
           doc.email(options[:email]) if options[:email]
-
           add_address(doc, options[:billing_address])
         end
       end
 
       def add_shipping_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
+        return if payment_method.is_a?(String) || payment_method.is_a?(Hash)
 
         doc.shipToAddress do
           add_address(doc, options[:shipping_address])
@@ -315,7 +320,6 @@ module ActiveMerchant #:nodoc:
           :avs_result => { :code => AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]] },
           :cvv_result => parsed[:fraudResult_cardValidationResult]
         }
-
         Response.new(success_from(kind, parsed), parsed[:message], parsed, options)
       end
 
