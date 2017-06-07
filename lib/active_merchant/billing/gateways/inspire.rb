@@ -122,6 +122,25 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_swipe_data(post, creditcard, options)
+        # unencrypted tracks
+        if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
+          post[:track_1] = creditcard.track_data
+        else
+          post[:track_1] = options[:track_1]
+          post[:track_2] = options[:track_2]
+          post[:track_3] = options[:track_3]
+        end
+
+        # encrypted tracks
+        post[:magnesafe_track_1] = options[:magnesafe_track_1]
+        post[:magnesafe_track_2] = options[:magnesafe_track_2]
+        post[:magnesafe_track_3] = options[:magnesafe_track_3]
+        post[:magnesafe_magneprint] = options[:magnesafe_magneprint]
+        post[:magnesafe_ksn] = options[:magnesafe_ksn]
+        post[:magnesafe_magneprint_status] = options[:magnesafe_magneprint_status]
+      end
+
       def add_invoice(post, options)
         post[:orderid] = options[:order_id].to_s.gsub(/[^\w.]/, '')
         post[:orderdescription] = options[:description]
@@ -139,7 +158,9 @@ module ActiveMerchant #:nodoc:
         params[:customer_vault_id] = vault_id
       end
 
-      def add_creditcard(post, creditcard,options)
+      def add_creditcard(post, creditcard, options)
+        add_swipe_data(post, creditcard, options)
+
         if options[:store]
           post[:customer_vault] = "add_customer"
           post[:customer_vault_id] = options[:store] unless options[:store] == true
