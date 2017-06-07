@@ -118,6 +118,10 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(xml, creditcard)
         xml.tag!("CARD") do
+          if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
+            xml.tag! 'TRACKDATA', creditcard.track_data
+          end
+
           xml.tag! 'CARDCODE', creditcard.verification_value if creditcard.verification_value?
           xml.tag! 'CARDNUMBER', creditcard.number
           xml.tag! 'EXPDATE', expdate(creditcard)
