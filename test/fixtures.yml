@@ -494,6 +494,12 @@ modern_payments:
 mollie_ideal:
   api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'
 
+# Need to replace
+mondido:
+  merchant_id: 
+  api_token: 
+  hash_secret: 
+
 # Working credentials, no need to replace
 monei:
   sender_id: 8a829417488d34c401489a5cd1350977
