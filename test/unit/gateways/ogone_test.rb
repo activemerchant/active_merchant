@@ -167,6 +167,41 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_reconcile
+    @gateway.expects(:ssl_post).returns(successful_reconcile_response)
+    assert response = @gateway.reconcile("3025473")
+    assert_success response
+    assert_equal '3025473;', response.authorization
+    assert_equal '9', response.params["STATUS"]
+    assert response.test?
+  end
+
+  def test_successful_reconcile_with_pay_id
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'PAYID', '3025473')
+    @gateway.expects(:add_pair).with(anything, 'ORDERID', '1234961140253559268757474').never
+    @gateway.expects(:ssl_post).returns(successful_reconcile_response)
+    assert response = @gateway.reconcile("PAYID", "3025473")
+    assert_success response
+    assert_equal '3025473;', response.authorization
+    assert_equal '3025473', response.params["PAYID"]
+    assert_equal '9', response.params["STATUS"]
+    assert response.test?
+  end
+
+  def test_successful_reconcile_with_merchant_reference
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ORDERID', '1234961140253559268757474')
+    @gateway.expects(:add_pair).with(anything, 'PAYID', '3025473').never
+    @gateway.expects(:ssl_post).returns(successful_reconcile_response)
+    assert response = @gateway.reconcile("ORDERID", "1234961140253559268757474")
+    assert_success response
+    assert_equal '3025473;', response.authorization
+    assert_equal "1234961140253559268757474", response.order_id
+    assert_equal '9', response.params["STATUS"]
+    assert response.test?
+  end
+
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
@@ -443,6 +478,43 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Hash, response.params
+  end
+
+  def test_path_generation
+    assert OGonePath.new(:maintenance).to_s, "maintenancedirect.asp"
+    assert OGonePath.new(:query).to_s, "querydirect.asp"
+    assert OGonePath.new(:order).to_s, "orderdirect.asp"
+    assert OGonePath.new(:unknown).to_s, "#"
+  end
+
+  def test_path_for_purchase
+    @gateway.expects(:ssl_post).with("https://secure.ogone.com/ncol/test/orderdirect.asp", anything).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_path_for_authorize
+    @gateway.expects(:ssl_post).with("https://secure.ogone.com/ncol/test/orderdirect.asp", anything).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_path_for_capture
+    @gateway.expects(:ssl_post).with("https://secure.ogone.com/ncol/test/maintenancedirect.asp", anything).returns(successful_capture_response)
+    assert response = @gateway.capture(@amount, "3048326")
+    assert_success response
+  end
+
+  def test_path_for_void
+    @gateway.expects(:ssl_post).with("https://secure.ogone.com/ncol/test/maintenancedirect.asp", anything).returns(successful_void_response)
+    assert response = @gateway.void("3048606")
+    assert_success response
+  end
+
+  def test_path_for_reconcile
+    @gateway.expects(:ssl_post).with("https://secure.ogone.com/ncol/test/querydirect.asp", anything).returns(successful_reconcile_response)
+    assert response = @gateway.reconcile("PAYID", "3025473")
+    assert_success response
   end
 
   private
@@ -754,4 +826,33 @@ class OgoneTest < Test::Unit::TestCase
     END
   end
 
+  def successful_reconcile_response
+    <<-END
+    <?xml version="1.0"?>
+    <ncresponse
+    orderID="1234961140253559268757474"
+    PAYID="3025473"
+    PAYIDSUB=""
+    NCSTATUS="0"
+    NCERROR="0"
+    NCERRORPLUS="!"
+    ACCEPTANCE="test123"
+    STATUS="9"
+    IPCTY="99"
+    CCCTY="99"
+    ECI="1"
+    CVCCheck="NO"
+    AAVCheck="NO"
+    VC="NO"
+    AAVZIP="NO"
+    AAVADDRESS="NO"
+    AAVNAME="NO"
+    AAVPHONE="NO"
+    AAVMAIL="NO"
+    amount="1"
+    currency="EUR"
+    ALIAS="2">
+    </ncresponse>
+    END
+  end
 end
