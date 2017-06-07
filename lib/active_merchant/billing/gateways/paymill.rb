@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_amount(post, money, options)
-        post[:token] = card_token
+        add_payment_identifier(post, card_token)
         post[:description] = options[:order_id]
         post[:source] = 'active_merchant'
         commit(:post, 'transactions', post)
@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_amount(post, money, options)
-        post[:token] = card_token
+        add_payment_identifier(post, card_token)
         post[:description] = options[:order_id]
         post[:source] = 'active_merchant'
         commit(:post, 'preauthorizations', post)
@@ -200,6 +200,15 @@ module ActiveMerchant #:nodoc:
       def add_amount(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
+      end
+
+      def add_payment_identifier(post, card_token)
+        case card_token
+        when /\Apay_/
+          post[:payment] = card_token
+        else
+          post[:token] = card_token
+        end
       end
 
       def preauth(authorization)
