@@ -25,6 +25,8 @@ module ActiveMerchant #:nodoc:
 
       base.class_attribute :proxy_address
       base.class_attribute :proxy_port
+      # A ruby URI String
+      base.class_attribute :proxy
     end
 
     def ssl_get(endpoint, headers={})
@@ -60,7 +62,8 @@ module ActiveMerchant #:nodoc:
       connection.ignore_http_status = @options[:ignore_http_status] if @options
 
       connection.proxy_address = proxy_address
-      connection.proxy_port    = proxy_port
+      connection.proxy_port = proxy_port
+      connection.proxy = proxy
 
       connection.request(method, data, headers)
     end

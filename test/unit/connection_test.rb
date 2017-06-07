@@ -178,4 +178,42 @@ class ConnectionTest < Test::Unit::TestCase
     end
   end
 
+  def test_proxy_transformed_to_uri
+    proxy_url = 'https://michaelscott:office@proxy.com:1234'
+    connection = ActiveMerchant::Connection.new(@endpoint)
+    connection.proxy = proxy_url
+
+    assert_equal URI.parse(proxy_url), connection.proxy
+  end
+
+  def test_http_agent_created_with_proxy_attribute
+    http_stub = stub_everything(get: @ok)
+    connection = ActiveMerchant::Connection.new(@endpoint)
+    connection.proxy = 'https://michaelscott:office@proxy.com:1234'
+
+    Net::HTTP.
+      expects(:new).
+      with('example.com', 443, 'proxy.com', 1234, 'michaelscott', 'office').
+      returns(http_stub)
+
+    response = connection.request(:get, nil, {})
+
+    assert_equal 'success', response.body
+  end
+
+  def test_http_agent_created_with_proxy_address_and_proxy_port_attributes
+    http_stub = stub_everything(get: @ok)
+    connection = ActiveMerchant::Connection.new(@endpoint)
+    connection.proxy_address = 'proxy.com'
+    connection.proxy_port = 1234
+
+    Net::HTTP.
+      expects(:new).
+      with('example.com', 443, 'proxy.com', 1234).
+      returns(http_stub)
+
+    response = connection.request(:get, nil, {})
+
+    assert_equal 'success', response.body
+  end
 end

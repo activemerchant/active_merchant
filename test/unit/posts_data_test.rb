@@ -71,4 +71,14 @@ class PostsDataTests < Test::Unit::TestCase
       @gateway.ssl_post(@url, '')
     end
   end
+
+  def test_setting_proxy_uri_settings
+    @gateway.class.proxy = 'http://proxy.com'
+    ActiveMerchant::Connection.any_instance.expects(:request).returns(@ok)
+    ActiveMerchant::Connection.any_instance.expects(:proxy=).with('http://proxy.com')
+
+    assert_nothing_raised do
+      @gateway.ssl_post(@url, '')
+    end
+  end
 end
