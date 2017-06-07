@@ -472,6 +472,11 @@ mercury_no_tokenization:
   password: 'xyz'
   tokenization: false
 
+# Working credentials, no need to replace
+mercury_encrypted:
+  login: '118725340908147'
+  password: 'xyz'
+
 metrics_global:
   login: 'demo'
   password: 'password'
