@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
         end
         add_address(form, options)
         add_customer_data(form, options)
+        add_ip(form, options)
         add_test_mode(form, options)
         add_ip(form, options)
         commit(:purchase, money, form, options)
@@ -56,6 +57,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(form, creditcard)
         add_address(form, options)
         add_customer_data(form, options)
+        add_ip(form, options)
         add_test_mode(form, options)
         add_ip(form, options)
         commit(:authorize, money, form, options)
@@ -137,6 +139,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_ip(form, options)
+        form[:customer_ip_address]  = options[:ssl_cardholder_ip] if options.has_key(:ssl_cardholder_ip)
+      end
 
       def add_invoice(form,options)
         form[:invoice_number] = truncate((options[:order_id] || options[:invoice]), 10)
