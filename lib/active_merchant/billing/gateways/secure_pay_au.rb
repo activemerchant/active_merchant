@@ -2,17 +2,42 @@ require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # This module supports the SecurePay (Australia) gateway www.securepay.com.au.  For more information on the
+    # SecurePayAu Gateway please see their {Integration Guides}[https://www.securepay.com.au/developers/integration-guides].
+    #
+    # == FraudGuard
+    #
+    # FraudGuard sends extra information to SecurePayAu for Fraud Detection.  It is a rule/score based system that can be customized
+    # through the web interface to weight information such as countries, source card countries, IP geo-located country, etc.
+    #
+    # Common usage is to limit payments to cards from a certain country, or to ensure the card country matches the delivery address, etc.
+    #
+    # For more information on FraudGuard, see the {FraudGuard Product Guide}[https://www.securepay.com.au//developers/products-and-services/fraudguard/]
+    #
+    # Requirements for FraudGuard
+    # 1. Ensure the service is activated and appropriately setup in your account
+    # 2. Can only be used with a standard payment, not supported when storing or using stored cards.
+    # 3. Enable the Fraud check by passing {:fraud => true} in either the global options during initialization, or to the options hash of #purchase
+    # 4. Pass the following information to #purchase, or #antifraud_request inside the options hash
+    #    - Required: options[:ip]
+    #    - Optional: options[:email], options[:billing_address], options[:shipping_address], options[:address]
+    #
+    # Note: You can optionally set {:fraud => true} in the global options instead, if you later set one in #purchase it will override the global setting.
     class SecurePayAuGateway < Gateway
+
       API_VERSION = 'xml-4.2'
       PERIODIC_API_VERSION = 'spxml-3.0'
 
-      class_attribute :test_periodic_url, :live_periodic_url
+      class_attribute :test_periodic_url, :live_periodic_url, :test_antifraud_url, :live_antifraud_url
 
       self.test_url = 'https://api.securepay.com.au/test/payment'
       self.live_url = 'https://api.securepay.com.au/xmlapi/payment'
 
       self.test_periodic_url = 'https://test.securepay.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
+
+      self.test_antifraud_url = 'https://test.securepay.com.au/antifraud/payment'
+      self.live_antifraud_url = 'https://api.securepay.com.au/antifraud/payment'
 
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
@@ -34,12 +59,16 @@ module ActiveMerchant #:nodoc:
       # 6 Client Reversal (Void)
       # 10 Preauthorise
       # 11 Preauth Complete (Advice)
+      # 21 Antifraud Payment
+      # 22 Antifraud Request Only
       TRANSACTIONS = {
         :purchase => 0,
         :authorization => 10,
         :capture => 11,
         :void => 6,
-        :refund => 4
+        :refund => 4,
+        :antifraud_purchase => 21,
+        :antifraud_request => 22,
       }
 
       PERIODIC_ACTIONS = {
@@ -64,11 +93,27 @@ module ActiveMerchant #:nodoc:
       def purchase(money, credit_card_or_stored_id, options = {})
         if credit_card_or_stored_id.respond_to?(:number)
           requires!(options, :order_id)
-          commit :purchase, build_purchase_request(money, credit_card_or_stored_id, options)
+
+          if options[:ip] && ((options[:fraud].nil? ? @options[:fraud] : options[:fraud]) == true)
+            action = :antifraud_purchase
+          else
+            action = :purchase
+          end
+
+          commit action, build_purchase_request(money, credit_card_or_stored_id, options)
         else
           options[:billing_id] = credit_card_or_stored_id.to_s
           commit_periodic(build_periodic_item(:trigger, money, nil, options))
         end
+      end
+
+      # Does an antifraud check only, it does not complete the purchase.
+      #
+      # Takes the same arguments as #purchase, but works with a direct credit card number only, does not support a stored/billing ID
+      def antifraud_request(money, credit_card, options = {})
+        requires!(options, :order_id, options[:ip])
+
+        commit :antifraud_request, build_purchase_request(money, credit_card_or_stored_id, options)
       end
 
       def authorize(money, credit_card, options = {})
@@ -132,6 +177,26 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'cvv', credit_card.verification_value if credit_card.verification_value?
         end
 
+        if options[:ip]
+          xml.tag! 'BuyerInfo' do
+            billing_address = options[:billing_address] || options[:address]
+
+            xml.tag! 'ip', options[:ip] unless options[:ip].blank?
+            xml.tag! 'emailAddress', options[:email] unless options[:email].blank?
+
+            unless billing_address[:name].blank?
+              first_name, last_name = billing_address[:name].split(' ', 2)
+              xml.tag! 'firstName', first_name unless first_name.blank?
+              xml.tag! 'lastName', last_name unless last_name.blank?
+            end
+
+            xml.tag! 'zipCode', billing_address[:zip] unless billing_address[:zip].blank?
+            xml.tag! 'town', billing_address[:suburb] unless billing_address[:city].blank?
+            xml.tag! 'billingCountry', billing_address[:country] unless billing_address[:country].blank?
+            xml.tag! 'deliveryCountry', options[:shipping_address][:country] unless (options[:shipping_address].nil? || options[:shipping_address][:country].blank?)
+          end
+        end
+
         xml.target!
       end
 
@@ -181,7 +246,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
+        if [:antifraud_purchase, :antifraud_request].include?(action)
+          url = test? ? self.test_antifraud_url : self.live_antifraud_url
+        else
+          url = test? ? self.test_url : self.live_url
+        end
+
+        response = parse(ssl_post(url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
           :test => test?,

@@ -50,6 +50,19 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_with_antifraud
+    options = @options.merge({
+      :ip => '1.2.3.4',
+      :email => 'test@example.com',
+      :fraud => true,
+    })
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{antifraud}, endpoint
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_localized_currency
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(:currency => 'CAD'))
