@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
 
       def build_purchase_request(money, creditcard, options)
         xml = Builder::XmlMarkup.new
-        add_common_credit_card_info(xml, @options[:ignore_avs] ||  @options[:ignore_cvv] ? 'SALES' : 'AUTH_CAPTURE')
+        add_common_credit_card_info(xml, 'AUTH_ONLY')
         add_address(xml, creditcard, options[:billing_address], options)
         add_purchase_data(xml, money)
         add_creditcard(xml, creditcard)
@@ -175,6 +175,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'Country', address[:country]
         xml.tag! 'EmailAddress', options[:email]
         xml.tag! 'IPAddress', options[:ip]
+        xml.tag! 'PhoneNumber', options[:phone]
       end
 
       def add_creditcard(xml, creditcard)
