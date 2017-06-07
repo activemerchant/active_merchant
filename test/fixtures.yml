@@ -1156,6 +1156,13 @@ trust_commerce:
   login: 'TestMerchant'
   password: 'password'
 
+# Get credentials here: https://sandbox.2checkout.com/sandbox/api
+# Create a valid single use token using your credentials: http://jsbin.com/mibojono/13/edit?html,output
+twocheckout:
+  login: SELLER_ID
+  api_key: PRIVATE_KEY
+  token: CARD_TOKEN
+
 # Working credentials, no need to replace
 usa_epay:
   login: '4EoZ5U2Q55j976W7eplC71i6b7kn4pcV'
