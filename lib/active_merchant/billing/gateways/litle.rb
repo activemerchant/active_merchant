@@ -225,10 +225,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
+        return if payment_method.is_a?(String) && !options.has_key?(:billing_address)
 
         doc.billToAddress do
-          doc.name(payment_method.name)
+          if payment_method.respond_to?(:name)
+            doc.name(payment_method.name)
+          elsif options.has_key?(:name)
+            doc.name(options[:name])
+          end
           doc.email(options[:email]) if options[:email]
 
           add_address(doc, options[:billing_address])
@@ -308,7 +312,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(kind, request, money=nil)
         parsed = parse(kind, ssl_post(url, request, headers))
-
         options = {
           authorization: authorization_from(kind, parsed, money),
           test: test?,

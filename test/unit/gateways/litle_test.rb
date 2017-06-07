@@ -253,6 +253,14 @@ class LitleTest < Test::Unit::TestCase
     assert_equal "1111222233334444", response.authorization
   end
 
+  def test_store_and_purchase_with_registration_id_and_billing_address
+    stub_comms do
+      @gateway.purchase(@amount, "1111222233334444", billing_address: address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<billToAddress>.*Widgets.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_store
     response = stub_comms do
       @gateway.store(@credit_card)
