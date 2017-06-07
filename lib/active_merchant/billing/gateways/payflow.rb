@@ -299,6 +299,7 @@ module ActiveMerchant #:nodoc:
       def get_pay_period(options)
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly])
         case options[:periodicity]
+          when :daily then 'Daily'
           when :weekly then 'Weekly'
           when :biweekly then 'Bi-weekly'
           when :semimonthly then 'Semi-monthly'
