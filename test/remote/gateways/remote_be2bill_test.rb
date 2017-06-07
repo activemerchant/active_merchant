@@ -11,11 +11,16 @@ class RemoteBe2billTest < Test::Unit::TestCase
     @options = {
       :order_id     => '1',
       :description  => 'Store Purchase',
-      :client_id    => '1',
+      :customer_id  => '1',
       :referrer     => 'google.com',
       :user_agent   => 'Firefox 25',
       :ip           => '127.0.0.1',
       :email        => 'customer@yopmail.com'
+    }
+
+    @refund_options = {
+      :order_id => '1',
+      :description => 'Refund Store Purchase'
     }
   end
 
@@ -29,6 +34,24 @@ class RemoteBe2billTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Declined (4001 - The bank refused the transaction.', response.message
+  end
+
+  def test_successful_refund
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert refund = @gateway.refund(@amount, response.authorization, @refund_options)
+    assert_success refund
+    assert_equal 'Approved : The transaction has been accepted.', refund.message
+  end
+
+  def test_successful_void
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert void = @gateway.void(response.authorization, @refund_options)
+    assert_success void
+    assert_equal 'Approved : The transaction has been accepted.', void.message
   end
 
   def test_authorize_and_capture
