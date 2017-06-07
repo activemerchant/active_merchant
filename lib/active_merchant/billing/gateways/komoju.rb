@@ -41,20 +41,31 @@ module ActiveMerchant #:nodoc:
         commit("/payments/#{identification}/refund", {})
       end
 
+      def store(payment, options = {})
+        post = {}
+        add_payment_details(post, payment, options)
+
+        commit("/tokens", post)
+      end
+
       private
 
       def add_payment_details(post, payment, options)
-        details = {}
+        case payment
+        when CreditCard
+          details = {}
 
-        details[:type] = 'credit_card'
-        details[:number] = payment.number
-        details[:month] = payment.month
-        details[:year] = payment.year
-        details[:verification_value] = payment.verification_value
-        details[:given_name] = payment.first_name
-        details[:family_name] = payment.last_name
-        details[:email] = options[:email] if options[:email]
-
+          details[:type] = 'credit_card'
+          details[:number] = payment.number
+          details[:month] = payment.month
+          details[:year] = payment.year
+          details[:verification_value] = payment.verification_value
+          details[:given_name] = payment.first_name
+          details[:family_name] = payment.last_name
+          details[:email] = options[:email] if options[:email]
+        else
+          details = payment
+        end
         post[:payment_details] = details
       end
 

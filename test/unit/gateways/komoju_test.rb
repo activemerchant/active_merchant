@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class KomojuTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = KomojuGateway.new(:login => 'login')
 
@@ -27,6 +29,14 @@ class KomojuTest < Test::Unit::TestCase
 
     assert_equal successful_response["id"], response.authorization
     assert response.test?
+  end
+
+  def test_successful_credit_card_purchase_with_token
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "tok_xxx", @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match('"payment_details":"tok_xxx"', data)
+    end.respond_with(JSON.generate(successful_credit_card_purchase_response))
   end
 
   def test_failed_purchase
@@ -63,6 +73,17 @@ class KomojuTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal successful_response["id"], response.authorization
+    assert response.test?
+  end
+
+  def test_successful_credit_card_store
+    successful_response = successful_credit_card_store_response
+    @gateway.expects(:ssl_post).returns(JSON.generate(successful_response))
+
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+
+    assert_equal "tok_e4075d73cd3767a57d324ac38b16d203b7ab2c4c6208d039356451578f236d85a6fd1af715ffef3ccd4b37d3d2456002", response.authorization
     assert response.test?
   end
 
@@ -120,6 +141,15 @@ class KomojuTest < Test::Unit::TestCase
       "metadata" => {
         "order_id" => "262f2a92-542c-4b4e-a68b-5b6d54a438a8"
       },
+      "created_at" => "2015-03-20T04:51:48Z"
+    }
+  end
+
+  def successful_credit_card_store_response
+    {
+      "id" => "tok_e4075d73cd3767a57d324ac38b16d203b7ab2c4c6208d039356451578f236d85a6fd1af715ffef3ccd4b37d3d2456002",
+      "resource" => "token",
+      "used" => false,
       "created_at" => "2015-03-20T04:51:48Z"
     }
   end
