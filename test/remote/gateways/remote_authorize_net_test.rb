@@ -16,6 +16,26 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @level_2_options = {
+      tax: {
+          amount: "100",
+          name: "tax name",
+          description: "tax description"
+        },
+      duty: {
+          amount: "200",
+          name: "duty name",
+          description: "duty description"
+        },
+      shipping: {
+        amount: "300",
+        name: "shipping name",
+        description: "shipping description",
+      },
+      tax_exempt: "false",
+      po_number: "123"
+    }
   end
 
   def test_successful_purchase
@@ -75,6 +95,12 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
+  end
+
+  def test_successful_purchase_with_level_2_data
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@level_2_options))
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
   end
 
   def test_failed_purchase
@@ -311,6 +337,15 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "This transaction has been approved.", response.message
   end
 
+  def test_successful_purchase_with_stored_card_and_level_2_data
+    store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.purchase(@amount, store_response.authorization, @options.merge(@level_2_options))
+    assert_success response
+    assert_equal 'This transaction has been approved.', response.message
+  end
+
   def test_successful_authorize_and_capture_using_stored_card
     store = @gateway.store(@credit_card, @options)
     assert_success store
@@ -320,6 +355,19 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "This transaction has been approved.", auth.message
 
     capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+    assert_equal "This transaction has been approved.", capture.message
+  end
+
+  def test_successful_authorize_and_capture_using_stored_card_with_level_2_data
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    auth = @gateway.authorize(@amount, store.authorization, @options.merge(@level_2_options))
+    assert_success auth
+    assert_equal "This transaction has been approved.", auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options.merge(@level_2_options))
     assert_success capture
     assert_equal "This transaction has been approved.", capture.message
   end
@@ -358,6 +406,18 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_success purchase
 
     refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_failure refund
+    assert_match %r{does not meet the criteria for issuing a credit}, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+  end
+
+  def test_faux_successful_refund_using_stored_card_and_level_2_data
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    purchase = @gateway.purchase(@amount, store.authorization, @options.merge(@level_2_options))
+    assert_success purchase
+
+    refund = @gateway.refund(@amount, purchase.authorization, @options.merge(@level_2_options))
     assert_failure refund
     assert_match %r{does not meet the criteria for issuing a credit}, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
   end

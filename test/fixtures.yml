@@ -238,6 +238,10 @@ digitzs:
 direc_pay:
   login: 200904281000001
 
+# Working credentials, no need to replace
+ebanx:
+  integration_key: 1231000
+
 efsnet:
   login: X
   password: Y
@@ -397,6 +401,9 @@ iveri:
 
 jetpay:
   login: TESTTERMINAL
+
+jetpay_v2:
+  login: TESTMCC3136X
 
 komoju:
   login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3

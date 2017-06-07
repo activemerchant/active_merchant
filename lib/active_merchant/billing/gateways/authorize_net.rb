@@ -166,7 +166,7 @@ module ActiveMerchant
             xml.amount(amount(amount))
 
             add_payment_source(xml, payment)
-            add_invoice(xml, options)
+            add_invoice(xml, 'refundTransaction', options)
             add_customer_data(xml, payment, options)
             add_settings(xml, payment, options)
             add_user_fields(xml, amount, options)
@@ -244,7 +244,12 @@ module ActiveMerchant
           xml.transactionType(transaction_type)
           xml.amount(amount(amount))
           add_payment_source(xml, payment)
-          add_invoice(xml, options)
+          add_invoice(xml, transaction_type, options)
+          add_tax_fields(xml, options)
+          add_duty_fields(xml, options)
+          add_shipping_fields(xml, options)
+          add_tax_exempt_status(xml, options)
+          add_po_number(xml, options)
           add_customer_data(xml, payment, options)
           add_market_type_device_type(xml, payment, options)
           add_settings(xml, payment, options)
@@ -257,8 +262,12 @@ module ActiveMerchant
         xml.transaction do
           xml.send(transaction_type) do
             xml.amount(amount(amount))
+            add_tax_fields(xml, options)
+            add_shipping_fields(xml, options)
+            add_duty_fields(xml, options)
             add_payment_source(xml, payment)
-            add_invoice(xml, options)
+            add_invoice(xml, transaction_type, options)
+            add_tax_exempt_status(xml, options)
           end
         end
       end
@@ -269,6 +278,9 @@ module ActiveMerchant
           xml.transaction do
             xml.profileTransPriorAuthCapture do
               xml.amount(amount(amount))
+              add_tax_fields(xml, options)
+              add_shipping_fields(xml, options)
+              add_duty_fields(xml, options)
               xml.transId(transaction_id_from(authorization))
             end
           end
@@ -281,8 +293,13 @@ module ActiveMerchant
           xml.transactionRequest do
             xml.transactionType('priorAuthCaptureTransaction')
             xml.amount(amount(amount))
+            add_tax_fields(xml, options)
+            add_duty_fields(xml, options)
+            add_shipping_fields(xml, options)
+            add_tax_exempt_status(xml, options)
+            add_po_number(xml, options)
             xml.refTransId(transaction_id_from(authorization))
-            add_invoice(xml, options)
+            add_invoice(xml, "capture", options)
             add_user_fields(xml, amount, options)
           end
         end
@@ -296,8 +313,11 @@ module ActiveMerchant
           xml.transaction do
             xml.profileTransRefund do
               xml.amount(amount(amount))
+              add_tax_fields(xml, options)
+              add_shipping_fields(xml, options)
+              add_duty_fields(xml, options)
               xml.creditCardNumberMasked(card_number)
-              add_invoice(xml, options)
+              add_invoice(xml, "profileTransRefund", options)
               xml.transId(transaction_id)
             end
           end
@@ -319,7 +339,12 @@ module ActiveMerchant
             end
             xml.refTransId(transaction_id)
 
-            add_invoice(xml, options)
+            add_invoice(xml, 'refundTransaction', options)
+            add_tax_fields(xml, options)
+            add_duty_fields(xml, options)
+            add_shipping_fields(xml, options)
+            add_tax_exempt_status(xml, options)
+            add_po_number(xml, options)
             add_customer_data(xml, nil, options)
             add_user_fields(xml, amount, options)
           end
@@ -570,10 +595,11 @@ module ActiveMerchant
         xml.refId(truncate(options[:order_id], 20))
       end
 
-      def add_invoice(xml, options)
+      def add_invoice(xml, transaction_type, options)
         xml.order do
           xml.invoiceNumber(truncate(options[:order_id], 20))
           xml.description(truncate(options[:description], 255))
+          xml.purchaseOrderNumber(options[:po_number]) if options[:po_number] && transaction_type.start_with?("profileTrans")
         end
 
         # Authorize.net API requires lineItems to be placed directly after order tag
@@ -588,6 +614,47 @@ module ActiveMerchant
             end
           end
         end
+      end
+
+      def add_tax_fields(xml, options)
+        tax = options[:tax]
+        if tax.is_a?(Hash)
+          xml.tax do
+            xml.amount(amount(tax[:amount].to_i))
+            xml.name(tax[:name])
+            xml.description(tax[:description])
+          end
+        end
+      end
+
+      def add_duty_fields(xml, options)
+        duty = options[:duty]
+        if duty.is_a?(Hash)
+          xml.duty do
+            xml.amount(amount(duty[:amount].to_i))
+            xml.name(duty[:name])
+            xml.description(duty[:description])
+          end
+        end
+      end
+
+      def add_shipping_fields(xml, options)
+        shipping = options[:shipping]
+        if shipping.is_a?(Hash)
+          xml.shipping do
+            xml.amount(amount(shipping[:amount].to_i))
+            xml.name(shipping[:name])
+            xml.description(shipping[:description])
+          end
+        end
+      end
+
+      def add_tax_exempt_status(xml, options)
+        xml.taxExempt(options[:tax_exempt]) if options[:tax_exempt]
+      end
+
+      def add_po_number(xml, options)
+        xml.poNumber(options[:po_number]) if options[:po_number]
       end
 
       def create_customer_payment_profile(credit_card, options)
