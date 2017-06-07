@@ -85,6 +85,14 @@ class BanwireTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    
+    assert response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_match /crd\./, response.authorization
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
@@ -113,6 +121,18 @@ class BanwireTest < Test::Unit::TestCase
   def successful_purchase_amex_response
     <<-RESPONSE
     {"user":"desarrollo","id":"20120731153834","referencia":"12345","date":"31-07-2012 15:38:34","card":"99999","response":"ok","code_auth":"test12345","monto":0.5,"client":"Banwire Test Card"}
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+    {"id":174552,"token":"crd.1KsWZShnfhXEfovotoATEN22Hpft","task":"add","result":true,"exists":false,"card":{"type":"credit","category":"classic"}}
+    RESPONSE
+  end
+
+  def failed_store_response
+    <<-RESPONSE
+    {"error":"Card already exists"}
     RESPONSE
   end
 
