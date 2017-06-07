@@ -163,6 +163,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_recurring_field_can_be_specified
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, recurring: false)
+    end.check_request do |endpoint, data, headers|
+      assert_equal settings_from_doc(parse(data))["recurringBilling"], "false"
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_echeck_authorization
     response = stub_comms do
       @gateway.authorize(@amount, @check)
