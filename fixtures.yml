@@ -1,0 +1,507 @@
+epay:
+  login: '8885246'
+  password: https://shopify.com
+
+ideal_rabobank:
+  login: '002028660'
+  password: Ultimate
+
+authorize_net:
+  login: 24ZYp88q6h4
+  password: 38Jj6ev8Nn4Nr78e
+
+barclays_extra_plus:
+  login: LOGIN
+  user: USER
+  password: PASSWORD
+  signature: SIGNATURE
+
+banwire:
+  login: "shopify"
+
+beanstream:
+  login: 281630000
+  user: jadedpixel
+  password: Ultimate99
+
+beanstream_interac:
+  login: 169470000
+  user: billingboss
+  password: summer08
+
+blue_pay:
+  login: '100128300840'
+  password: 'NFNMNUPESOGB10A7EEWJ9G2A6DCHIMYK'
+
+braintree:
+  login: demo
+  password: password
+
+braintree_orange:
+  login: demo
+  password: password
+
+braintree_blue:
+  public_key: 9s8xkncbgx7dn7hf
+  private_key: 8x7pdxpb4m7dztvr
+  merchant_id: gyfsrrt4n2g5bdqp
+
+braintree_blue_with_processing_rules:
+  public_key: 9s8xkncbgx7dn7hf
+  private_key: 8x7pdxpb4m7dztvr
+  merchant_id: gyfsrrt4n2g5bdqp
+
+
+# Was: Jaded-PFA421D6916E
+card_stream:
+  login: '0000018'
+  password: B2C1AA46E
+
+cyber_source:
+  login: shopify
+  password: '4ZcI5rG8nqtbKZlLPfjdQrBxfhTnRquu+XSGc7AyznG39CDXJwZjfIGbwJmngBcSGjtnpZZOISfnBn89h3c/IRvg/EHnizML0B5EhlBod5XY35LKdF1o9MTUMRkg3VegUcRA/z4ZJgTbE6HXV61dIUF4YRlesE9I5o3quZ7vQwossJ++vbN9R7MZaiyF0Q1CsHF+FOdGq675dIZzsDLOcbf0INcnBmN8gZvAmaeAFxIaO2ellk4hJ+cGfz2Hdz8hG+D8QeeLMwvQHkSGUGh3ldjfksp0XWj0xNQxGSDdV6BRxED/PhkmBNsToddXrV0hQXhhGV6wT0jmjeq5nu9DCg=='
+
+centinel:
+  login: "pixels@jadedpixel.com"
+  password: "secret"
+  processor: "134-01"
+
+data_cash:
+  login: X
+  password: Y
+
+efsnet:
+  login: jadedp03
+  password: A00C6F16922772D537D17BA08572D53D17A0857BBF31EAD4D0F60FDF781711CF
+
+# Working credentials, no need to replace
+eway:
+  login: '87654321'
+
+eway_rapid:
+  login: "F9802CIVgUgNaD8y/H52MBMnL5OvMoy4cYimpi1L/dCXeNNR6or3vLPoC9GjeLVdA7ymi+"
+  password: "sandbox1"
+
+# Working credentials, no need to replace
+exact:
+  login: "A00427-01"
+  password: testus
+
+first_pay:
+  login:
+  password:
+
+firstdata_e4:
+  login:  'AD2327-05'
+  password: '83i496gt'
+
+ideal_ing_postbank:
+  # Use this
+  login: '005034231'
+
+  # Works
+  # login: '005013027'
+  password: ideaalhoor
+
+instapay:
+  login: TEST0
+  password:
+
+inspire:
+  login: demo
+  password: password
+
+jetpay:
+  login: TESTTERMINAL
+
+linkpoint:
+  login: '1909597035'
+
+netpay:
+  store_id: 1100007
+  login: POS_Shopify
+  password: adm0n2
+
+# https://ps1.merchantware.net/admin
+# username: acti8445
+# password: yojOorl3
+merchant_ware:
+ login: MTTDAYY8
+ password: "81374-A7M3P-Z5QPT-CT46Y-AZJEH"
+ name: Active Merchant
+
+modern_payments:
+  login: '46'
+  password: FEDCBA98
+
+# Working credentials, no need to replace
+moneris:
+  login: store1
+  password: yesguy
+
+moneris_us:
+  login: monusqa002
+  password: qatoken
+
+netbilling:
+  login: '104901072025'
+
+net_registry:
+  login: X
+  password: Y
+
+ogone:
+  login: shopify
+  user: shopifytest
+  password: WMXIBB09
+  signature: '12345678'
+
+orbital:
+  merchant_id: '041756'
+
+#payflow:
+#  login: jadedpixel1
+#  password: walter69
+#  partner: PayPal
+
+paybox_direct:
+  login: 199988899
+  password: 1999888I
+
+payflow:
+  login: jadedpixel
+  password: Ultimate99
+  partner: paypal
+
+payflow_recurring:
+  login: PPJMPROTEST
+  password: Password1
+  partner: Verisign
+
+payflow_uk:
+  login: shopify
+  password: GYar2304@@
+
+payflow_uk_no_partner:
+  login: 2MNU6HS4MH
+  password: Y3YUJJRDP8BXY1T0
+  user: 6W4838UZWQ
+  partner:
+
+pay_junction:
+  login: 'pj-ql-01'
+  password: 'pj-ql-01p'
+
+payment_express:
+  login: JadedPixelDev
+  password: e824d639
+
+paymill:
+  public_key: 00461061165560c01f672ff1be545a3d
+  private_key: b7e632634e00fbce4d9e7eaf43d7b9b6
+
+paypal_certificate:
+  login: fred_api1.jadedpallet.com
+  password: RJVDHK3HF29VPLQK
+  subject:
+  signature:
+
+paypal_signature:
+  login: seller_api1.jadedpallet.com
+  password: QMJVFP5FU2ATNLGX
+  signature: A0xHEN7X5fzjpyyRG1cdUZymL2olA40x5kvUXL3NJ13jVKsp7sGknk61
+
+pay_secure:
+  login: TEST
+  password: TEST
+
+plugnpay:
+  login: pnpdemo2
+  password: pnpdemo222
+
+protx:
+  login: jadedpixel
+
+# Working credentials, no need to replace
+psigate:
+  login: teststore
+  password: psigate1234
+
+psl_card:
+  login: '0000794'
+
+psl_maestro:
+  number: '6333000012345679'
+  month: '12'
+  year: '2009'
+  verification_value: '945'
+  issue_number: '1'
+
+psl_maestro_address:
+  address1: '67b Ruddles Rise'
+  address2:
+  city: Rugby
+  state:
+  zip: CV21 8GH
+
+psl_solo:
+  number: '6334960300099354'
+  month: '06'
+  year: '2008'
+  verification_value: '227'
+  issue_number: '01'
+
+psl_solo_address:
+  address1: '5 Zigzag Road'
+  city: 'Isleworth'
+  state: 'Middlesex'
+  zip: 'TW7 8FF'
+
+psl_visa:
+  first_name: John
+  last_name: Smith
+  number: '4543059999999982'
+  month: '12'
+  year: '2010'
+  verification_value: '110'
+
+psl_visa_debit:
+  first_name: Jim
+  last_name: Smith
+  number: '4539791001730106'
+  month: '12'
+  year: '2009'
+  verification_value: '289'
+
+psl_visa_debit_address:
+  address1: Unit 5
+  address2: Pickwick Walk
+  address3: 120 Uxbridge Road
+  city: Hatch End
+  state: Middlesex
+  zip: HA6 7HJ
+
+psl_visa_address:
+  address1: '76 Roseby Avenue'
+  city: 'Manchester'
+  zip: 'M63X 7TH'
+
+quickpay:
+  login: 89898989
+  password: n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd
+
+realex:
+  login: shopifytest
+  password: test
+
+realex_with_account:
+  login: shopifytest
+  password: test
+  account: internetamex
+
+realex_with_rebate:
+  login: shopifytest
+  password: test
+  rebate_secret: rebate
+
+realex_visa:
+  number: '4263971921001307'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+realex_visa_declined:
+  number: '4000126842489127'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+realex_visa_referral_a:
+  number: '4000166842489115'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+realex_visa_referral_b:
+  number: '4000136842489878'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+realex_visa_coms_error:
+  number: '4009837983422344'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+realex_mastercard:
+  number: '5425232820001308'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+  brand: 'master'
+
+realex_mastercard_declined:
+  number: '5114617896541284'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+realex_mastercard_referral_a:
+  number: '5121229875643585'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+realex_mastercard_referral_b:
+  number: '5114634523652350'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+realex_mastercard_coms_error:
+  number: '5135024345352238'
+  month: '6'
+  year: '2020'
+  verification_value: '123'
+
+sage:
+  login: '631490448855'
+  password: E7V7D7H8B8G7
+
+sage_pay:
+  login: 'C2N5M4K4J4I4'
+
+sallie_mae:
+  login: TEST0
+
+secure_pay:
+  login: LOGIN
+  password: PASSWORD
+
+secure_pay_au:
+  login: ABC0001
+  password: abc123
+
+secure_pay_tech:
+  login: TESTDIGISPL1
+  password: d557591484cb2cd12bba445aba420d2c69cd6a88
+
+skip_jack:
+  login: '000386891209'
+  password: '100318942670'
+
+transax:
+  login: demo
+  password: password
+
+trans_first:
+  login: LOGIN
+  password: PASSWORD
+
+# Working credentials, no need to replace
+# Shopify credentials:
+# login: 697600
+
+trust_commerce:
+  login: '902700'
+  password: 'commerce8'
+
+# Working credentials, no need to replace
+usa_epay:
+  login: '_7N2st0plo8R6tLuN9q5qn2vs84Sc8eQ'
+
+# Working credentials, no need to replace
+verify:
+  login: 'demo'
+  password: 'password'
+
+viaklix:
+  login: '111128'
+  password: '553091'
+  user: demo57
+
+wirecard:
+  login: 56500
+  password: TestXAPTER
+
+litle:
+  login: 'SHOPIFY'
+  password: 'certMNr5'
+  merchant_id: 102900
+
+# ActiveFulfillment Fixtures
+
+shipwire:
+  login: pixels@jadedpixel.com
+  password: Ultimate
+
+webgistix:
+  login: 3
+  password: Webgistix
+
+amazon:
+  login: 0BRV8WCYSJ4MJMXRNKR2
+  password: yIvEuSJ62wxZ7JkeIO68WPUyOeZFRv3pgEWm7vYx
+
+#  login: jadedpixel@gmail.com
+#  password: walter69!
+
+doba:
+  login: shopify
+  password: password
+  retailer: 1224073
+
+valitor:
+  login: 'WebsiteID'
+  password: 123
+
+paystation:
+  paystation_id: 123
+  gateway_id: 123
+
+stripe:
+  login: 'sk_test_FcNWR0J020BK5NVuofYmr8WF'
+  fee_refund_login: 'sk_test_pejvBTr7uQxAZWRx9MRqDdGs'
+
+optimal_payment:
+  login: test
+  password: test
+  account: 89995739
+
+world_pay_gateway:
+  login: 'TESTSHOPIFYM1'
+  password: 'jk3a2pNSM1C'
+
+alipay:
+  key: '108uc1azfkiqjz6efpmbhfp03gesynqr'
+  account: '2088801766902304;'
+  email: 'shuzhi_zsz@126.com'  
+
+# ActiveShipping Fixtures
+usps:
+  login: '677JADED7283'
+
+ups:
+  key: "9C25C93B6C18898C"
+  login: "shopify"
+  password: "Ultimate!"
+
+fedex:
+  key: '5FJsRZSnp1kVPzRg'
+  password: 'jziwHavkOa7KSvyHOMK0iz1GG'
+  account: '510087909'
+  login: '100007836'
+
+shipwire:
+  login: pixels@jadedpixel.com
+  password: Ultimate
+
+canada_post:
+  login: CPC_DEMO_XML
+
+new_zealand_post:
+  key: '123'
+
+webpay:
+  login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
