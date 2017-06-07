@@ -141,6 +141,15 @@ class Cashnet < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_location_with_non_parsable_characters_gets_encoded_before_parsing
+    gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: "TheCustCode")
+    stub_comms(gateway, :raw_ssl_request) do
+      stub_comms(gateway, :ssl_get) do
+        gateway.purchase(@amount, @credit_card, custcode: "OveriddenCustCode")
+      end.respond_with(successful_purchase_response)
+    end.respond_with(success_with_unparsable_location)
+  end
+
   private
   def expected_expiration_date
     '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
@@ -168,5 +177,9 @@ class Cashnet < Test::Unit::TestCase
 
   def invalid_response
     "A String without a cngateway tag"
+  end
+
+  def success_with_unparsable_location
+    OpenStruct.new(code: "302", 'location' => "https://not a valid url")
   end
 end
