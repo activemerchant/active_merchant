@@ -17,21 +17,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_source, options = {})
-        post = {}
-
-        add_order(post, money, options)
-        add_payment_source(post, payment_source, options)
-        add_details_data(post, options)
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
+        if (post = build_details_from_description(money, payment_source, options)).blank?
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          add_details_data(post, options)
+        end
 
         commit(:post, 'charges', post)
       end
 
       def authorize(money, payment_source, options = {})
-        post = {}
-
-        add_order(post, money, options)
-        add_payment_source(post, payment_source, options)
-        add_details_data(post, options)
+        post = {}.with_indifferent_access
+        options = options.with_indifferent_access
+        if (post = build_details_from_description(money, payment_source, options)).blank?
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          add_details_data(post, options)
+        end
 
         post[:capture] = false
         commit(:post, "charges", post)
@@ -78,6 +82,18 @@ module ActiveMerchant #:nodoc:
         post[:reference_id] = options[:order_id] if options[:order_id]
         post[:currency] = (options[:currency] || currency(money)).downcase
         post[:amount] = amount(money)
+      end
+
+      def build_details_from_description(money, payment_source, options)
+        post = {}.with_indifferent_access
+        begin
+          options = JSON.parse(options[:description]).with_indifferent_access
+          add_order(post, money, options)
+          add_payment_source(post, payment_source, options)
+          post.merge!(options)
+        rescue
+          post
+        end
       end
 
       def add_details_data(post, options)
