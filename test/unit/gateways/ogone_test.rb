@@ -445,6 +445,31 @@ class OgoneTest < Test::Unit::TestCase
     assert_instance_of Hash, response.params
   end
 
+  def test_path_generation
+    assert OGonePath.new(:maintenance).to_s, "maintenancedirect.asp"
+    assert OGonePath.new(:query).to_s, "querydirect.asp"
+    assert OGonePath.new(:order).to_s, "orderdirect.asp"
+    assert OGonePath.new(:unknown).to_s, "#"
+  end
+
+  def test_path_for_purchase
+    @gateway.expects(:ssl_post).with("https://secure.ogone.com/ncol/test/orderdirect.asp", anything).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_path_for_authorize
+    @gateway.expects(:ssl_post).with("https://secure.ogone.com/ncol/test/orderdirect.asp", anything).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_path_for_capture
+    @gateway.expects(:ssl_post).with("https://secure.ogone.com/ncol/test/orderdirect.asp", anything).returns(successful_capture_response)
+    assert response = @gateway.capture(@amount, "3048326")
+    assert_success response
+  end
+
   private
 
   def string_to_digest
