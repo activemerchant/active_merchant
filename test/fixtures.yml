@@ -1192,6 +1192,13 @@ visanet_peru:
   secret_access_key: "Ur+U0pn1bkjRhPGz+G+OLNjqIi7OBlwkZ2eTHySG"
   merchant_id: "101266802"
 
+# Working test credentials, no need to replace
+web_pay3:
+  key: "Sho65#$%!1"   # secret key
+  language: en             # language
+  merchant_token: 62cb47ff4a176222a759ca308e23ec0d1c816639
+  transaction_type: authorize # authorize or purchase
+
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
