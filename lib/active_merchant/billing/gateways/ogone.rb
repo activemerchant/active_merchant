@@ -205,6 +205,13 @@ module ActiveMerchant #:nodoc:
       def refund(money, reference, options = {})
         perform_reference_credit(money, reference, options)
       end
+      
+      # Create an alias for a credit_card
+      def create_alias(payment_source, aliaz, options = {})
+        res = authorize(1, payment_source, :store => aliaz)
+        void(res.params['PAYID'])
+        res
+      end
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
