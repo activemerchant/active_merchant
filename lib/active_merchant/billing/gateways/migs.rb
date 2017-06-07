@@ -186,13 +186,17 @@ module ActiveMerchant #:nodoc:
         requires!(@options, :secure_hash)
 
         response_hash = parse(data)
+        response = response_object(response_hash)
 
-        expected_secure_hash = calculate_secure_hash(response_hash.reject{|k, v| k == :SecureHash}, @options[:secure_hash])
+        # Failures don't include a secure hash, so return directly
+        return response unless response.success?
+
+        # Check SecureHash only on success (not returned otherwise)
+        expected_secure_hash = calculate_secure_hash(response_hash, @options[:secure_hash])
         unless response_hash[:SecureHash] == expected_secure_hash
           raise SecurityError, "Secure Hash mismatch, response may be tampered with"
         end
-
-        response_object(response_hash)
+        response
       end
 
       def test?
@@ -293,7 +297,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def calculate_secure_hash(post, secure_hash)
-        sorted_values = post.sort_by(&:to_s).map(&:last)
+        post_without_secure_hash = post.reject{|k, v| k == :SecureHash}
+        sorted_values = post_without_secure_hash.sort_by(&:to_s).map(&:last)
         input = secure_hash + sorted_values.join
         Digest::MD5.hexdigest(input).upcase
       end
