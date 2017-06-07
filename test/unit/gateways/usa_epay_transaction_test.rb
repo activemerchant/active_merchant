@@ -108,6 +108,26 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_parse_split_payment_response_data
+    result = @gateway.send(:parse, body_with_split_payment_response_data)
+    refute_nil (splits = result[:splits])
+    refute_nil (um02 = splits[:um02])
+    assert_equal "2.22", um02[:amount]
+    assert_equal "description", um02[:description]
+    assert_equal "aaaa", um02[:auth_key]
+
+    refute_nil (um03 = splits[:um03])
+    assert_equal "3.33", um03[:amount]
+    assert_equal "description", um03[:description]
+    assert_equal "bbbb", um03[:auth_key]
+
+    refute_nil (um04 = splits[:um04])
+    assert_equal "4.44", um04[:amount]
+    assert_equal "description", um04[:description]
+    assert_equal "cccc", um04[:auth_key]
+
+  end
+
   def test_successful_authorize_request
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
@@ -411,6 +431,10 @@ private
 
   def purchase_request
     "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
+  end
+
+  def body_with_split_payment_response_data
+     "UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled&UM02authKey=aaaa&UM02amount=2.22&UM02description=description&UM03authKey=bbbb&UM03amount=3.33&UM03description=description&UM04authKey=cccc&UM04amount=4.44&UM04description=description"
   end
 
   def successful_purchase_response

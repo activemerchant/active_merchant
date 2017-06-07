@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
           fields[key] = CGI.unescape(value.to_s)
         end
 
-        {
+        params = {
           :status           => fields['UMstatus'],
           :auth_code        => fields['UMauthCode'],
           :ref_num          => fields['UMrefNum'],
@@ -229,8 +229,24 @@ module ActiveMerchant #:nodoc:
           :error            => fields['UMerror'],
           :error_code       => fields['UMerrorcode'],
           :acs_url          => fields['UMacsurl'],
-          :payload          => fields['UMpayload']
+          :payload          => fields['UMpayload'],
         }.delete_if{|k, v| v.nil?}
+
+        append_split_response_data(fields, params)
+      end
+
+      def append_split_response_data(fields, params)
+        splits = {}
+        fields.each do |key, value|
+          if key.present? && key.match(/(UM\d{2})(.*)/).present?
+            um_index = $1.downcase.to_sym
+            splits[um_index] ||= {}
+            splits[um_index][$2.underscore.to_sym] = CGI.unescape(value.to_s)
+          end
+        end
+        params ||= {}
+        params[:split_payments] = splits if splits.present?
+        params
       end
 
       def commit(action, parameters)
