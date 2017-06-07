@@ -24,8 +24,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://processing.paysafe.com/'
       self.display_name = 'Netbanx by PaySafe'
 
-      STANDARD_ERROR_CODE_MAPPING = {}
-
       def initialize(options={})
         requires!(options, :account_number, :api_key)
         super
