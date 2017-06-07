@@ -559,6 +559,10 @@ nmi:
   login: demo
   password: password
 
+nmi_vault:
+  login: demo
+  password: password
+
 ogone:
   login: LOGIN
   user: USER
