@@ -1,4 +1,5 @@
 require 'nokogiri'
+require 'active_merchant/billing/gateways/litle/paypage_registration'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -205,6 +206,16 @@ module ActiveMerchant #:nodoc:
           doc.token do
             doc.litleToken(payment_method)
           end
+        elsif payment_method.respond_to?(:paypage_registration_id)
+          doc.paypage do
+            doc.paypageRegistrationId(payment_method.paypage_registration_id)
+            if payment_method.try(:month) && payment_method.try(:year)
+              doc.expDate("#{payment_method.month}#{payment_method.year}")
+            end
+            if payment_method.try(:verification_value)
+              doc.cardValidationNum(payment_method.verification_value)
+            end
+          end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
             doc.track(payment_method.track_data)
@@ -228,7 +239,7 @@ module ActiveMerchant #:nodoc:
         return if payment_method.is_a?(String)
 
         doc.billToAddress do
-          doc.name(payment_method.name)
+          doc.name(payment_method.name) if payment_method.respond_to?(:name)
           doc.email(options[:email]) if options[:email]
 
           add_address(doc, options[:billing_address])

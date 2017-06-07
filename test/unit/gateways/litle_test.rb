@@ -36,6 +36,46 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_paypage_registration_with_month_year_verification_name
+    paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
+      'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
+      month: '11',
+      year: '12',
+      verification_value: '123',
+      name: 'Joe Payer'
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, paypage_registration, billing_address: address)
+    end.check_request do |endpoint, data, headers|
+      matcher = %r(<paypage>\s*<paypageRegistrationId>XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==</paypageRegistrationId>\s*<expDate>1112</expDate>\s*<cardValidationNum>123</cardValidationNum>\s*</paypage>)
+      assert_match(matcher, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '100000000000000006;sale', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_paypage_registration_without_month_year_verification_name
+    paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
+      'ZkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw=='
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, paypage_registration, billing_address: address)
+    end.check_request do |endpoint, data, headers|
+      matcher = %r(<paypage>\s*<paypageRegistrationId>ZkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==</paypageRegistrationId>\s*</paypage>)
+      assert_match(matcher, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '100000000000000006;sale', response.authorization
+    assert response.test?
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
@@ -114,7 +154,6 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-
   def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
@@ -132,6 +171,46 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
 
     assert_success capture
+  end
+
+  def test_successful_authorize_with_paypage_registration_with_month_year_verification_name
+    paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
+      'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
+      month: '11',
+      year: '12',
+      verification_value: '123',
+      name: 'Joe Payer'
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, paypage_registration)
+    end.check_request do |endpoint, data, headers|
+      matcher = %r(<paypage>\s*<paypageRegistrationId>XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==</paypageRegistrationId>\s*<expDate>1112</expDate>\s*<cardValidationNum>123</cardValidationNum>\s*</paypage>)
+      assert_match(matcher, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+
+    assert_equal "100000000000000001;authorization", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_paypage_registration_without_month_year_verification_name
+    paypage_registration = ActiveMerchant::Billing::LitlePaypageRegistration.new(
+      'XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==',
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, paypage_registration)
+    end.check_request do |endpoint, data, headers|
+      matcher = %r(<paypage>\s*<paypageRegistrationId>XkNDRGZDTGZyS2RBSTVCazJNSmdWam5TQ2gyTGhydFh0Mk5qZ0Z3cVp5VlNBN00rcGRZdHF6amFRWEttbVBnYw==</paypageRegistrationId>\s*</paypage>)
+      assert_match(matcher, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+
+    assert_equal "100000000000000001;authorization", response.authorization
+    assert response.test?
   end
 
   def test_failed_authorize
