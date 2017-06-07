@@ -150,6 +150,7 @@ module ActiveMerchant
         tele_check[:accountholder_name] = "#{echeck.first_name} #{echeck.last_name}"
         tele_check[:customer_id_type] = options[:customer_id_type] if options[:customer_id_type]
         tele_check[:customer_id_number] = options[:customer_id_number] if options[:customer_id_number]
+        tele_check[:client_email] = options[:client_email] if options[:client_email]
 
         params[:method] = 'tele_check'
         params[:tele_check] = tele_check
