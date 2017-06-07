@@ -491,6 +491,11 @@ modern_payments:
   login: login
   password: password
 
+# Working credentials, no need to replace
+moip:
+  token: YADNIHGVYGYKVLVUVKUUHP5YU5LEXRZC
+  api_key: IYYBBGKTZONVLAAM034Z1ED3IDVDV4FQTQISYUOE
+
 mollie_ideal:
   api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'
 
@@ -1019,6 +1024,11 @@ realex_with_account:
   login: X
   password: Y
   account: testaccount
+
+redecard:
+  login: testews
+  password: testews
+  affiliate: 254785
 
 redsys:
   login: MERCHANT CODE
