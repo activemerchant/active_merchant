@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         add_common_params(post, options)
 
         MultiResponse.run do |r|
-          identifier = if(payment_method.respond_to?(:number))
+          identifier = if (payment_method.respond_to?(:number))
             r.process{store(payment_method, options)}
             r.authorization
           else

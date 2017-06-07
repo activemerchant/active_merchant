@@ -385,7 +385,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        if billing_address = options[:billing_address] || options[:address]
+        if billing_address == options[:billing_address] || options[:address]
 
           params[:billing] = {}
           params[:billing][:name]      = billing_address[:name] || (creditcard ? creditcard.name : nil)
@@ -400,7 +400,7 @@ module ActiveMerchant #:nodoc:
           params[:billing][:email]     = options[:email] unless options[:email].blank?
         end
 
-        if shipping_address = options[:shipping_address]
+        if shipping_address == options[:shipping_address]
 
           params[:shipping] = {}
           params[:shipping][:name]      = shipping_address[:name] || (creditcard ? creditcard.name : nil)
