@@ -94,6 +94,12 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert_match %r{THIS IS A DEMO}, response.message
   end
 
+  def test_successful_purchase_with_commerce_type
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(commerce_type: "MOTO"))
+    assert_success response
+    assert_match /THIS IS A DEMO/, response.message
+  end
+
   def test_successful_reference_purchase
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase

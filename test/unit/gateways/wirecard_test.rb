@@ -318,6 +318,16 @@ class WirecardTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_commerce_type_option
+    options = { commerce_type: "MOTO" }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CommerceType>MOTO<\/CommerceType>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def assert_xml_element_text(xml, xpath, expected_text)
