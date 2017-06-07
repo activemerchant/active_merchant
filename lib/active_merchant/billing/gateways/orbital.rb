@@ -737,7 +737,11 @@ module ActiveMerchant #:nodoc:
             end
 
             xml.tag! :CCAccountNum, creditcard.number if creditcard
-            xml.tag! :CCExpireDate, creditcard.expiry_date.expiration.strftime("%m%y") if creditcard
+            if options[:clear_expiration_date]
+              xml.tag! :CCExpireDate, '~' # ~ means clear this field according to orbital
+            elsif creditcard
+              xml.tag! :CCExpireDate, creditcard.expiry_date.expiration.strftime("%m%y")
+            end
 
             # This has to come after CCExpireDate.
             add_managed_billing(xml, options)
