@@ -5,6 +5,9 @@ class RemoteElementTest < Test::Unit::TestCase
     @gateway = ElementGateway.new(fixtures(:element))
 
     @amount = 100
+    # Element lists certain amounts that can be used
+    # for triggering certain results.
+    @declined_amount = 20
     @credit_card = credit_card('4000100011112224')
     @check = check
     @options = {
@@ -101,6 +104,18 @@ class RemoteElementTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, '')
     assert_failure response
     assert_equal 'TransactionID required', response.message
+  end
+
+  def test_successful_credit
+    assert credit = @gateway.credit(@amount, @credit_card)
+    assert_success credit
+    assert_equal 'Approved', credit.message
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@declined_amount, @credit_card)
+    assert_failure response
+    assert_equal 'Declined', response.message
   end
 
   def test_successful_void
