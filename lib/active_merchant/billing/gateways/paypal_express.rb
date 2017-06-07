@@ -35,7 +35,10 @@ module ActiveMerchant #:nodoc:
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)
 
-        commit 'SetExpressCheckout', build_setup_request('Authorization', money, options)
+        built_request = build_setup_request('Authorization', money, options)
+        ::Rails.logger.info("[PaypalExpress#SetExpressCheckout]: headers:#{@options[:headers]}, request:#{built_request}")
+        commit 'SetExpressCheckout', built_request
+
       end
 
       def setup_purchase(money, options = {})
