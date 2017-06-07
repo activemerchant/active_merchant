@@ -735,6 +735,11 @@ payway:
   password:
   pem:
 
+peloton:
+  client_id:
+  account_name:
+  password: 
+
 pin:
   api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
