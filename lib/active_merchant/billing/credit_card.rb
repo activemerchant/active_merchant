@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
     # * Forbrugsforeningen
     # * Laser
     #
-    # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
+    # For testing purposes, use the 'null' or 'bogus' credit card brands. They skips the majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
     # with the details of particular credit cards or your gateway.
     #
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
       # * +'forbrugsforeningen'+
       # * +'laser'+
       #
-      # Or, if you wish to test your implementation, +'bogus'+.
+      # Or, if you wish to test your implementation, +'null'+ or +'bogus'+.
       #
       # @return (String) the credit card brand
       def brand
@@ -299,8 +299,8 @@ module ActiveMerchant #:nodoc:
       def validate
         errors = validate_essential_attributes + validate_verification_value
 
-        # Bogus card is pretty much for testing purposes. Lets just skip these extra tests if its used
-        return errors_hash(errors) if brand == 'bogus'
+        # Null and Bogus cards are pretty much for testing purposes. Lets just skip these extra tests if used
+        return errors_hash(errors) if brand == 'null' || brand == 'bogus'
 
         errors_hash(
           errors +

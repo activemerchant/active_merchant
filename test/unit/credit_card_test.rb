@@ -43,8 +43,11 @@ class CreditCardTest < Test::Unit::TestCase
     assert_not_valid @visa
   end
 
-  def test_should_be_able_to_liberate_a_bogus_card
-    c = credit_card('', :brand => 'bogus')
+  def test_should_be_able_to_liberate_a_null_or_bogus_card
+    c = credit_card('', :brand => 'null')
+    assert_valid c
+
+    c.brand = 'bogus'
     assert_valid c
 
     c.brand = 'visa'

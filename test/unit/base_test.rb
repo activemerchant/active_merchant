@@ -10,6 +10,7 @@ class BaseTest < Test::Unit::TestCase
   end
 
   def test_should_return_a_new_gateway_specified_by_symbol_name
+    assert_equal NullGateway,          Base.gateway(:null)
     assert_equal BogusGateway,         Base.gateway(:bogus)
     assert_equal MonerisGateway,       Base.gateway(:moneris)
     assert_equal MonerisUsGateway,     Base.gateway(:moneris_us)

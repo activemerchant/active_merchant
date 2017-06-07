@@ -21,7 +21,8 @@ module ActiveMerchant #:nodoc:
       self.mode = :production
 
       # Return the matching gateway for the provider
-      # * <tt>bogus</tt>: BogusGateway - Does nothing (for testing)
+      # * <tt>null</tt>: NullGateway - Does nothing (for testing)
+      # * <tt>bogus</tt>: BogusGateway - Does almost nothing (for testing)
       # * <tt>moneris</tt>: MonerisGateway
       # * <tt>authorize_net</tt>: AuthorizeNetGateway
       # * <tt>trust_commerce</tt>: TrustCommerceGateway
@@ -41,7 +42,8 @@ module ActiveMerchant #:nodoc:
 
       # Return the matching integration module
       # You can then get the notification from the module
-      # * <tt>bogus</tt>: Bogus - Does nothing (for testing)
+      # * <tt>null</tt>: NullGateway - Does nothing (for testing)
+      # * <tt>bogus</tt>: BogusGateway - Does almost nothing (for testing)
       # * <tt>chronopay</tt>: Chronopay
       # * <tt>paypal</tt>: Paypal
       #
