@@ -11,6 +11,8 @@ class RemoteIppTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase',
     }
+
+    @amount = 234
   end
 
   def test_dump_transcript
@@ -71,6 +73,40 @@ class RemoteIppTest < Test::Unit::TestCase
     response = @gateway.refund(105, response.authorization, @options)
     assert_failure response
     assert_equal 'Do Not Honour', response.message
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '', response.message
+  end
+
+  def test_successful_purchase_with_token
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '', response.message
+    customer_token = response.authorization
+
+    assert response = @gateway.purchase(200, customer_token, @options)
+    assert_success response
+    assert_equal '', response.message
+  end
+
+  def test_successful_authorize_with_token
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '', response.message
+    customer_token = response.authorization
+
+    assert response = @gateway.authorize(200, customer_token, @options)
+    assert_success response
+    assert_equal '', response.message
+  end
+
+  def test_failed_store
+    response = @gateway.store(credit_card(''), @options)
+    assert_failure response
+    assert_equal 'Exception encountered', response.message
   end
 
   def test_invalid_login
