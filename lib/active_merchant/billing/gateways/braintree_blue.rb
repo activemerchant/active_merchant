@@ -556,10 +556,8 @@ module ActiveMerchant #:nodoc:
         if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
           parameters[:merchant_account_id] = merchant_account_id
         end
-
-        if options[:recurring]
-          parameters[:recurring] = true
-        end
+        
+        parameters[:recurring] = true if (options[:eci] == 'recurring' || options[:recurring])
 
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
           if options[:payment_method_token]

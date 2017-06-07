@@ -519,10 +519,22 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card("41111111111111111111"), :recurring => true)
 
     Braintree::TransactionGateway.any_instance.expects(:sale).
+        with(has_entries(:recurring => true)).
+        returns(braintree_result)
+
+    @gateway.purchase(100, credit_card("41111111111111111111"), :eci => 'recurring')
+
+    Braintree::TransactionGateway.any_instance.expects(:sale).
       with(Not(has_entries(:recurring => true))).
       returns(braintree_result)
 
     @gateway.purchase(100, credit_card("41111111111111111111"))
+
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+        with(Not(has_entries(:recurring => true))).
+        returns(braintree_result)
+
+    @gateway.purchase(100, credit_card("41111111111111111111"), :eci => 'nonsense')
   end
 
   def test_configured_logger_has_a_default
