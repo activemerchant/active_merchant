@@ -514,6 +514,10 @@ money_movers:
   login: demo
   password: password
 
+mx_merchant:
+  username: "matthewbga"
+  password: "Mq2-rER-gYK-4Rk"
+
 # Working credentials, no need to replace
 nab_transact:
   login: ABC0001
