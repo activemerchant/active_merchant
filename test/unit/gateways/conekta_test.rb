@@ -39,6 +39,112 @@ class ConektaTest < Test::Unit::TestCase
       :carrier => "Estafeta"
     }
   end
+  
+  def test_parsing_card_month_fix
+		cc = @credit_card
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "02"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "03"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "04"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "05"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "06"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "07"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "08"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "09"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "10"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "11"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "12"
+		@gateway.expects(:ssl_request).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal nil, response.message
+    assert response.test?
+    
+    cc.month = "00"
+		@gateway.expects(:ssl_request).returns(failed_purchase_response)
+    assert response = @gateway.purchase(@amount, cc, @options)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal true, !response.message.blank?
+    assert response.test?
+  end
 
   def test_successful_tokenized_purchase
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
