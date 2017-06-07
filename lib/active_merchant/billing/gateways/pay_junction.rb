@@ -329,6 +329,7 @@ module ActiveMerchant #:nodoc:
       def add_optional_fields(params, options)
         params[:notes] = options[:description] unless options[:description].blank?
         params[:invoice] = options[:order_id].to_s.gsub(/[^-\/\w.,']/, '') unless options[:order_id].blank?
+        params[:track] = options[:track] unless options[:track].blank? 
       end
 
       def commit(action, parameters)
