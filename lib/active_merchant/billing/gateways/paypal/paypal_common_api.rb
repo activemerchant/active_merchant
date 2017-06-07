@@ -441,12 +441,12 @@ module ActiveMerchant #:nodoc:
         legacy_hash = legacy_parse(action, xml)
         xml = strip_attributes(xml)
         hash = Hash.from_xml(xml)
-        hash = hash.fetch('Envelope').fetch('Body').fetch("#{action}Response")
+        hash = hash.fetch('SOAP_ENV:Envelope').fetch('SOAP_ENV:Body').fetch("#{action}Response")
         hash = hash["#{action}ResponseDetails"] if hash["#{action}ResponseDetails"]
 
         legacy_hash.merge(hash)
       rescue IndexError
-        legacy_hash.merge(hash['Envelope']['Body'])
+        legacy_hash.merge(hash['SOAP_ENV:Envelope']['SOAP_ENV:Body'])
       end
 
       def strip_attributes(xml)
