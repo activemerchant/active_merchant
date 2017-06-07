@@ -33,8 +33,9 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
+        add_amount(post, money)
 
-        commit('authorization', money, post)
+        commit(:authorization, post)
       end
 
       def purchase(money, creditcard, options = {})
@@ -42,16 +43,34 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
+        add_amount(post, money)
 
-        commit('payment', money, post)
+        commit(:payment, post)
       end
 
       def capture(money, authorization, options = {})
         post = {}
         add_invoice(post, options)
-        post[:TRANSACTIONID] = authorization
+        add_reference(post, authorization)
+        add_amount(post, money)
 
-        commit('capture', money, post)
+        commit(:capture, post)
+      end
+
+      def refund(money, authorization, options = {})
+        post = {}
+        add_invoice(post, options)
+        add_reference(post, authorization)
+        add_amount(post, money)
+
+        commit(:refund, post)
+      end
+
+      def void(authorization, options = {})
+        post = {}
+        post[:SCHEDULEID] = authorization
+
+        commit(:stopntimes, post)
       end
 
       private
@@ -76,13 +95,24 @@ module ActiveMerchant #:nodoc:
         post[:CARDCVV]          = creditcard ? creditcard.verification_value : ''
       end
 
+      def add_reference(post, authorization)
+        post[:TRANSACTIONID] = authorization
+      end
+
+      def add_amount(post, money)
+        if money.is_a?(Hash)
+          post[:AMOUNTS] = money.merge!(money){ |_, value| amount(value) }
+        else
+          post[:AMOUNT] = amount(money)
+        end
+      end
+
       def parse(response)
         ActiveSupport::JSON.decode(response)
       end
 
-      def commit(action, money, parameters)
+      def commit(action, parameters)
         parameters[:IDENTIFIER] = @options[:login]
-        parameters[:AMOUNT]     = amount(money)
         parameters[:VERSION]    = '2.0'
 
         url = (test? ? self.test_url : self.live_url)
@@ -121,7 +151,13 @@ module ActiveMerchant #:nodoc:
 
         signature = @options[:password]
         parameters.sort.each do |key, value|
-          signature += ("#{key.upcase}=#{value}" + @options[:password])
+          if value.is_a?(Hash)
+            value.each do |index, val|
+              signature += ("#{key}[#{index}]=#{val}" + @options[:password])
+            end
+          else
+            signature += ("#{key.upcase}=#{value}" + @options[:password])
+          end
         end
 
         Digest::SHA256.hexdigest(signature)
