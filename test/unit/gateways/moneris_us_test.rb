@@ -22,6 +22,21 @@ class MonerisUsTest < Test::Unit::TestCase
     assert_equal "qatoken", @gateway.options[:password]
   end
 
+  def test_successful_verify
+    @gateway.expects(:ssl_post).twice.returns(successful_purchase_response)
+
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal '58-0_3;1026.1', response.authorization
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
