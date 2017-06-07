@@ -17,10 +17,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
-        end
+        post = {}
+        post[:autoCapture] = "y"
+        add_invoice(post, amount, options)
+        add_payment_method(post, payment_method)
+        add_customer_data(post, options)
+
+        commit(:authorize, post)
       end
 
       def authorize(amount, payment_method, options={})
