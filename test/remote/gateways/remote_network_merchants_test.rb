@@ -41,6 +41,12 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_check_credit
+    assert response = @gateway.credit(@amount, @check, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@decline_amount, @credit_card, @options)
     assert_failure response

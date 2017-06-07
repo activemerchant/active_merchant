@@ -180,6 +180,56 @@ class NetworkMerchantsTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_credit_on_check
+    @gateway.expects(:ssl_post).with { |_, body|
+      body.include?("amount=#{@amount / 100.0}") &&
+        body.include?("type=credit") &&
+        body.include?("payment=check") &&
+        body.include?("checkaccount=#{@check.account_number}")
+    }.returns(successful_credit_on_check)
+
+    assert credit = @gateway.credit(@amount, @check, @options)
+    assert_success credit
+    assert_equal '2760387612', credit.authorization
+  end
+
+  def test_credit_on_card
+    @gateway.expects(:ssl_post).with { |_, body|
+      body.include?("amount=#{@amount / 100.0}") &&
+        body.include?("type=credit") &&
+        body.include?("ccnumber=#{@credit_card.number}")
+    }.returns(successful_credit_on_card)
+
+    assert credit = @gateway.credit(@amount, @credit_card, @options)
+    assert_success credit
+    assert_equal '2760936149', credit.authorization
+  end
+
+  def test_credit_on_stored_card
+    @gateway.expects(:ssl_post).with { |_, body|
+      body.include?("amount=#{@amount / 100.0}") &&
+        body.include?("customer_vault_id=1200085822") &&
+        body.include?("type=credit")
+    }.returns(successful_credit_on_stored_card)
+
+    assert credit = @gateway.credit(@amount, 1200085822, @options)
+    assert_success credit
+    assert_equal "SUCCESS", credit.message
+    assert_equal '2789127093', credit.authorization
+  end
+
+  def test_invalid_credit_on_stored_card
+    @gateway.expects(:ssl_post).with { |_, body|
+      body.include?("amount=#{0.1}") &&
+        body.include?("customer_vault_id=1200085822") &&
+        body.include?("type=credit")
+    }.returns(failed_credit_on_stored_card)
+
+    assert credit = @gateway.credit(10, 1200085822, @options)
+    assert_failure credit
+    assert_equal "FAILED", credit.message
+  end
+
   private
 
   # Place raw successful response from gateway here
@@ -238,5 +288,21 @@ class NetworkMerchantsTest < Test::Unit::TestCase
 
   def failed_login
     "response=3&responsetext=Invalid Username&authcode=&transactionid=0&avsresponse=&cvvresponse=&orderid=1&type=sale&response_code=300"
+  end
+
+  def successful_credit_on_card
+    "authcode=&avsresponse=&cvvresponse=&orderid=&response=1&response_code=100&responsetext=SUCCESS&transactionid=2760936149&type=credit"
+  end
+
+  def successful_credit_on_stored_card
+    "response=1&authcode=123456&avsresponse=&customer_vault_id=1200085822&cvvresponse=&orderid=&response_code=100&responsetext=SUCCESS&transactionid=2789127093&type=credit"
+  end
+
+  def failed_credit_on_stored_card
+    "authcode=123456&avsresponse=&customer_vault_id=1200085822&cvvresponse=&orderid=&response=2&response_code=200&responsetext=FAILED&transactionid=2760329351&type=credit"
+  end
+
+  def successful_credit_on_check
+    "authcode=123456&avsresponse=&cvvresponse=&orderid=&response=1&response_code=100&responsetext=SUCCESS&transactionid=2760387612&type=credit"
   end
 end
