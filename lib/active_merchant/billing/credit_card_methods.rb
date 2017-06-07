@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
             return company.dup if number =~ pattern
           end
 
-          return 'maestro' if number =~ card_companies['maestro']
+          return 'master' if number =~ card_companies['maestro']
 
           return nil
         end
