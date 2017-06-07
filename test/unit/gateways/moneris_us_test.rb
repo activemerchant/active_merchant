@@ -22,6 +22,30 @@ class MonerisUsTest < Test::Unit::TestCase
     assert_equal "qatoken", @gateway.options[:password]
   end
 
+    def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response, successful_void_response)
+    assert_success response
+    assert_equal "58-0_3;1026.1", response.authorization
+  end
+
+  def test_successful_verify_with_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response, failed_void_response)
+    assert_success response
+    assert_equal "Approved", response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorization_response, successful_void_response)
+    assert_failure response
+    assert_equal "Declined", response.message
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -314,6 +338,56 @@ class MonerisUsTest < Test::Unit::TestCase
 
   private
 
+    def successful_authorization_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <ReceiptId>1026.1</ReceiptId>
+    <ReferenceNum>661221050010170010</ReferenceNum>
+    <ResponseCode>027</ResponseCode>
+    <ISO>01</ISO>
+    <AuthCode>013511</AuthCode>
+    <TransTime>18:41:13</TransTime>
+    <TransDate>2008-01-05</TransDate>
+    <TransType>00</TransType>
+    <Complete>true</Complete>
+    <Message>APPROVED * =</Message>
+    <TransAmount>1.00</TransAmount>
+    <CardType>V</CardType>
+    <TransID>58-0_3</TransID>
+    <TimedOut>false</TimedOut>
+  </receipt>
+</response>
+
+    RESPONSE
+  end
+
+  def failed_authorization_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <ReceiptId>1026.1</ReceiptId>
+    <ReferenceNum>661221050010170010</ReferenceNum>
+    <ResponseCode>481</ResponseCode>
+    <ISO>01</ISO>
+    <AuthCode>013511</AuthCode>
+    <TransTime>18:41:13</TransTime>
+    <TransDate>2008-01-05</TransDate>
+    <TransType>00</TransType>
+    <Complete>true</Complete>
+    <Message>DECLINED * =</Message>
+    <TransAmount>1.00</TransAmount>
+    <CardType>V</CardType>
+    <TransID>97-2-0</TransID>
+    <TimedOut>false</TimedOut>
+  </receipt>
+</response>
+
+    RESPONSE
+  end
+
   def successful_purchase_response
     <<-RESPONSE
       <?xml version="1.0"?>
@@ -501,6 +575,62 @@ class MonerisUsTest < Test::Unit::TestCase
           <CorporateCard>false</CorporateCard>
         </receipt>
       </response>
+    RESPONSE
+  end
+
+  def successful_void_response
+        <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <ReceiptId>1026.1</ReceiptId>
+    <ReferenceNum>661221050010170010</ReferenceNum>
+    <ResponseCode>001</ResponseCode>
+    <ISO>00</ISO>
+    <AuthCode>013511</AuthCode>
+    <TransTime>09:38:02</TransTime>
+    <TransDate>2015-04-21</TransDate>
+    <TransType>02</TransType>
+    <Complete>true</Complete>
+    <Message>APPROVED*</Message>
+    <TransAmount>0.00</TransAmount>
+    <CardType>V</CardType>
+    <TransID>830421-1_25</TransID>
+    <TimedOut>false</TimedOut>
+    <BankTotals>null</BankTotals>
+    <Ticket>null</Ticket>
+    <CorporateCard>false</CorporateCard>
+    <CardLevelResult>A</CardLevelResult>
+  </receipt>
+</response>
+
+    RESPONSE
+  end
+
+    def failed_void_response
+        <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <ReceiptId>null</ReceiptId>
+    <ReferenceNum>null</ReferenceNum>
+    <ResponseCode>null</ResponseCode>
+    <ISO>null</ISO>
+    <AuthCode>null</AuthCode>
+    <TransTime>null</TransTime>
+    <TransDate>null</TransDate>
+    <TransType>null</TransType>
+    <Complete>false</Complete>
+    <Message>invalid PAN parameter</Message>
+    <TransAmount>null</TransAmount>
+    <CardType>null</CardType>
+    <TransID>null</TransID>
+    <TimedOut>null</TimedOut>
+    <BankTotals>null</BankTotals>
+    <Ticket>null</Ticket>
+  </receipt>
+</response>
+
     RESPONSE
   end
 
