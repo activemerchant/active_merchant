@@ -280,6 +280,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_legato(post, source, options)
+        post[:singleUseToken] = source
+
+        if billing_address = options[:billing_address]
+          post[:trnCardOwner] = billing_address[:name]
+        end
+      end
+
       def add_check(post, check)
         # The institution number of the consumer’s financial institution. Required for Canadian dollar EFT transactions.
         post[:institutionNumber] = check.institution_number
@@ -426,9 +434,13 @@ module ActiveMerchant #:nodoc:
         response[:code] == '1'
       end
 
-      def add_source(post, source)
-        if source.is_a?(String) or source.is_a?(Integer)
-          post[:customerCode] = source
+      def add_source(post, source, options = {})
+        if source.is_a?(String) || source.is_a?(Integer)
+          if source.to_s.start_with?("gt6-")
+            add_legato(post, source, options)
+          else
+            post[:customerCode] = source
+          end
         else
           card_brand(source) == "check" ? add_check(post, source) : add_credit_card(post, source)
         end

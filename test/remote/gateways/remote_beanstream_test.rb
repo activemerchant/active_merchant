@@ -26,6 +26,9 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
                              :transit_number     => '26729'
                            )
 
+    @single_use_token          = generate_single_use_token(@visa)
+    @declined_single_use_token = generate_single_use_token(@declined_visa)
+
     @amount = 1500
 
     @options = {
@@ -98,6 +101,20 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
   def test_unsuccessful_amex_purchase
     assert response = @gateway.purchase(@amount, @declined_amex, @options)
+    assert_failure response
+    assert_equal 'Card CVD is invalid.', response.message
+  end
+
+  def test_successful_single_use_token_purchase
+    assert response = @gateway.purchase(@amount, @single_use_token, @options)
+    assert_success response
+    assert_false response.authorization.blank?
+    assert_equal "Approved", response.message
+    puts response.inspect
+  end
+
+  def test_unsuccessful_single_use_token_purchase
+    assert response = @gateway.purchase(@amount, @declined_single_use_token, @options)
     assert_failure response
     assert_equal 'DECLINE', response.message
   end
@@ -240,8 +257,25 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_equal @options[:vault_id], response.params["customer_vault_id"].to_i
   end
 
+  def test_add_to_vault_with_single_use_token_and_custom_vault_id
+    @options[:vault_id] = rand(100000)+10001
+    assert response = @gateway.store(generate_single_use_token(@visa), @options.dup)
+    assert_equal 'Operation Successful', response.message, response.inspect
+    assert_success response
+    assert_not_nil response.params["customer_vault_id"]
+  end
+
+  def test_add_to_vault_with_invalid_single_use_token_and_custom_vault_id
+    # unfortunately, beanstream allows invalid singleUseTokens to be stored
+    @options[:vault_id] = rand(100000)+10001
+    assert response = @gateway.store(generate_single_use_token(@declined_visa), @options.dup)
+    assert_equal 'Operation Successful', response.message, response.inspect
+    assert_success response
+    assert_not_nil response.params["customer_vault_id"]
+  end
+
   def test_successful_add_to_vault_with_single_use_token
-    assert response = @gateway.store(generate_single_use_token(@visa))
+    assert response = @gateway.store(generate_single_use_token(@visa), @options.dup)
     assert_equal 'Operation Successful', response.message, response.inspect
     assert_success response
     assert_not_nil response.params["customer_vault_id"]
@@ -280,6 +314,19 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert second_response = @gateway.purchase(@amount*2, @options[:vault_id], @options)
     assert_equal 'Approved', second_response.message
     assert second_response.success?
+  end
+
+  def test_succcessful_add_to_vault_with_single_use_token_and_custom_vault_id_purchase
+    test_add_to_vault_with_single_use_token_and_custom_vault_id
+    assert second_response = @gateway.purchase(@amount*3, @options[:vault_id], @options)
+    assert_equal 'Approved', second_response.message
+    assert second_response.success?
+  end
+
+  def test_unsucccessful_add_to_vault_with_single_use_token_and_custom_vault_id_purchase
+    test_add_to_vault_with_invalid_single_use_token_and_custom_vault_id
+    assert second_response = @gateway.purchase(@amount*3, @options[:vault_id], @options)
+    assert_equal 'DECLINE', second_response.message
   end
 
   def test_unsuccessful_visa_with_vault
