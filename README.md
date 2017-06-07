@@ -70,7 +70,7 @@ if credit_card.validate.empty?
   response = gateway.purchase(amount, credit_card)
 
   if response.success?
-    puts "Successfully charged $#{sprintf("%.2f", amount / 100)} to the credit card #{credit_card.display_number}"
+    puts "Successfully charged $#{sprintf("%.2f", amount / 100.0)} to the credit card #{credit_card.display_number}"
   else
     raise StandardError, response.message
   end
