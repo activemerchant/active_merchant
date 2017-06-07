@@ -1,5 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    #want to work on this section and remove the ruby rockets from below.  
+    #not appropriate in a .rb file, only .erb
+    #was hoping to get some more guidance as to what this file does.  
     class <%= class_name %>Gateway < Gateway
       self.test_url = 'https://example.com/test'
       self.live_url = 'https://example.com/live'
