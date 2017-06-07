@@ -199,6 +199,17 @@ module ActiveMerchant #:nodoc:
         @options[:login].start_with?('TEST')
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript
+          .gsub(/(vpc_CardNum)=(\d)\d+(\d{4})/, '\1=\2[FILTERED]\3')
+          .gsub(/(vpc_CardSecurityCode)=\d+/, '\1=[FILTERED]')
+          .gsub(%r((vpc_AccessCode=)[^&]+(&?)), '\1[FILTERED]\2')
+      end
+
       private
 
       def add_amount(post, money, options)
