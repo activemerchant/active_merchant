@@ -1202,6 +1202,9 @@ wepay:
   access_token: "STAGE_c91882b0bed3584b8aed0f7f515f2f05a1d40924ee6f394ce82d91018cb0f2d3"
   client_secret: "d48fefe743"
 
+white:
+  login: test_sec_k_2e82a300a83f5f15af8d3
+
 # Working test credentials with AVS/CVV support, no need to replace
 wirecard:
   login: 00000031629CA9FA
