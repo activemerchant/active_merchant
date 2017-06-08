@@ -498,6 +498,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(options))
           response = parse(raw_response)
         rescue ResponseError => e
+          raise e if e.response.code.to_i.between?(500,599)
           raw_response = e.response.body
           response = response_error(raw_response)
         rescue JSON::ParserError
