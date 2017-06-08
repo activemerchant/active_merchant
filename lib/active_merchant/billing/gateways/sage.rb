@@ -133,22 +133,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_check_customer_data(post, options)
-        # Required  Customer Type – (NACHA Transaction Class)
-        # CCD for Commercial, Merchant Initiated
-        # PPD for Personal, Merchant Initiated
-        # WEB for Internet, Consumer Initiated
-        # RCK for Returned Checks
-        # ARC for Account Receivable Entry
-        # TEL for TelephoneInitiated
+        # Required  Customer Type – (NACHA Transaction Class)
+        # CCD for Commercial, Merchant Initiated
+        # PPD for Personal, Merchant Initiated
+        # WEB for Internet, Consumer Initiated
+        # RCK for Returned Checks
+        # ARC for Account Receivable Entry
+        # TEL for TelephoneInitiated
         post[:C_customer_type] = "WEB"
 
-        # Optional  10  Digit Originator  ID – Assigned  By for  each transaction  class  or  business  purpose. If  not provided, the default Originator ID for the specific  Customer Type will be applied. 
+        # Optional  10  Digit Originator  ID – Assigned  By for  each transaction  class  or  business  purpose. If  not provided, the default Originator ID for the specific  Customer Type will be applied.
         post[:C_originator_id] = options[:originator_id]
 
-        # Optional  Transaction Addenda
+        # Optional  Transaction Addenda
         post[:T_addenda] = options[:addenda]
 
-        # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes ) 
+        # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes )
         post[:C_ssn] = options[:ssn].to_s.gsub(/[^\d]/, '')
 
         post[:C_dl_state_code] = options[:drivers_license_state]
@@ -160,8 +160,8 @@ module ActiveMerchant #:nodoc:
         date.respond_to?(:strftime) ? date.strftime("%m/%d/%Y") : date
       end
 
-      # DDA for Checking
-      # SAV for Savings 
+      # DDA for Checking
+      # SAV for Savings
       def account_type(check)
         case check.account_type
         when 'checking' then 'DDA'

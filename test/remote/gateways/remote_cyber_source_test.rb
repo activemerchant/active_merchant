@@ -369,5 +369,5 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     gateway = CyberSourceGateway.new(login: "an_unknown_login", password: "unknown_password")
     assert !gateway.verify_credentials
   end
-
+  
 end
