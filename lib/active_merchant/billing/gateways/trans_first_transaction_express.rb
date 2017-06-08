@@ -266,12 +266,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(amount, payment_method, options={})
-        request = build_xml_transaction_request do |doc|
-          add_pan(doc, payment_method)
-          add_amount(doc, amount)
+        if echeck?(payment_method)
+          action = :credit_echeck
+          request = build_xml_transaction_request do |doc|
+            add_name(doc, payment_method)
+            add_echeck(doc, payment_method)
+            add_amount(doc, amount)
+          end
+        else
+          action = :credit
+          request = build_xml_transaction_request do |doc|
+            add_pan(doc, payment_method)
+            add_amount(doc, amount)
+          end
         end
-
-        commit(:credit, request)
+        commit(action, request)
       end
 
       def verify(credit_card, options={})
