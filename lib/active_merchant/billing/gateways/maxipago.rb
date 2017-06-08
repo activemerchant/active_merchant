@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
           xml.customerId options[:customer_id]
           xml.creditCardNumber creditcard.number
           xml.expirationMonth creditcard.month.to_s.rjust(2,'0')[-2..-1]
-          xml.expirationYear creditcard.year.to_s.rjust(4,'0')[-4..-1]
+          xml.expirationYear '20' + creditcard.year.to_s.rjust(2,'0')[-2..-1]
           xml.billingName options[:address][:name]
           xml.billingAddress1 options[:address][:address1]
           xml.billingAddress2 options[:address][:address2]
