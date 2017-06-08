@@ -179,10 +179,6 @@ module ActiveMerchant #:nodoc:
       end
       alias_method :delete, :unstore
 
-      def supports_network_tokenization?
-        true
-      end
-
       def verify_credentials
         begin
           @braintree_gateway.transaction.find("non_existent_token")

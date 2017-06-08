@@ -14,6 +14,18 @@ module ActiveMerchant #:nodoc:
       self.require_verification_value = false
       self.require_name = false
 
+      def self.test_credit_card
+        new(
+          :number => "4111111111111111",
+          :month => 12,
+          :year => 20,
+          :first_name => 'John',
+          :last_name => 'Smith',
+          :brand => 'visa',
+          :payment_cryptogram => 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+        )
+      end
+
       attr_accessor :payment_cryptogram, :eci, :transaction_id
       attr_writer :source
 

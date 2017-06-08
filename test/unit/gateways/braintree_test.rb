@@ -34,4 +34,29 @@ class BraintreeTest < Test::Unit::TestCase
   def test_should_have_default_currency
     assert_equal "USD", BraintreeGateway.default_currency
   end
+
+  def test_supports_network_tokenization_when_not_supported
+    response = ActiveMerchant::Billing::Response.new(false,
+      'Merchant account does not support payment instrument. (91577)',
+      {"braintree_transaction"=>{"processor_response_code"=>"91577"}}, error_code: 91577)
+    gateway.stubs(authorize: response)
+    assert_equal false, gateway.supports_network_tokenization?
+  end
+
+  def test_supports_network_tokenization_should_raise_when_network_error
+    Braintree::Http.any_instance.expects(:post).raises(Braintree::ServerError)
+    assert_raises ActiveMerchant::ActiveMerchantError do
+      gateway.supports_network_tokenization?
+    end
+  end
+
+  private
+
+  def gateway
+    @gateway ||= BraintreeGateway.new(
+      :merchant_id => 'MERCHANT_ID',
+      :public_key => 'PUBLIC_KEY',
+      :private_key => 'PRIVATE_KEY'
+    )
+  end
 end

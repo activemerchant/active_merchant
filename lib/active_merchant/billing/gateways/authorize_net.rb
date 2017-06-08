@@ -218,18 +218,8 @@ module ActiveMerchant
       end
 
       def supports_network_tokenization?
-        card = Billing::NetworkTokenizationCreditCard.new({
-          :number => "4111111111111111",
-          :month => 12,
-          :year => 20,
-          :first_name => 'John',
-          :last_name => 'Smith',
-          :brand => 'visa',
-          :payment_cryptogram => 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
-        })
-
         request = post_data(:authorize) do |xml|
-          add_auth_purchase(xml, "authOnlyTransaction", 1, card, {})
+          add_auth_purchase(xml, "authOnlyTransaction", 1, NetworkTokenizationCreditCard.test_credit_card, {})
         end
         raw_response = ssl_post(url, request, headers)
         response = parse(:authorize, raw_response)

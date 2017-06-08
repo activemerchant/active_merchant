@@ -655,10 +655,6 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal "transaction_id", response.authorization
   end
 
-  def test_supports_network_tokenization
-    assert_instance_of TrueClass, @gateway.supports_network_tokenization?
-  end
-
   def test_unsuccessful_transaction_returns_id_when_available
     Braintree::TransactionGateway.any_instance.expects(:sale).returns(braintree_error_result(transaction: {id: 'transaction_id'}))
     assert response = @gateway.purchase(100, credit_card("41111111111111111111"))
