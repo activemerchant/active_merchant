@@ -50,6 +50,15 @@ class QuickBooksTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize_with_token
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    response = @gateway.authorize(@amount, "", @options.merge({token: "1234"}))
+    assert_success response
+
+    assert_equal @authorization, response.authorization
+    assert response.test?
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
