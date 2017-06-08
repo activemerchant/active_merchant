@@ -1086,6 +1086,19 @@ spreedly_core:
   password: "Y2i7AjgU03SUjwY4xnOPqzdsv4dMbPDCQzorAk8Bcoy0U8EIVE4innGjuoMQv7MN"
   gateway_token: "3gLeg4726V5P0HK7cq7QzHsL0a6"
 
+# Replace login with your app's client_id (also known as app id), create one in
+# the developer portal: https://connect.squareup.com/apps
+# Replace the password with either your Merchant's personal access token or if
+# your app works with many merchant accounts, also 
+# Replace the location_id with the corresponding location you want to use for the
+# merchant's reporting of these sales to be connected to. Read more about locations
+# here: https://docs.connect.squareup.com/articles/processing-payment-rest/
+square:
+  login: sandbox-sq0idp-USE_REAL_SANDBOX_CLIENT_ID
+  password: sandbox-sq0atb-USE_REAL_SANDBOX_ACCESS_TOKEN
+  location_id: USE_A_LOCATION_ID
+  test: true # Square calls test mode "sandbox".
+
 # Working credentials, no need to replace
 stripe:
   login: sk_test_3OD4TdKSIOhDOL2146JJcC79
