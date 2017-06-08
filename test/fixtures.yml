@@ -1176,6 +1176,11 @@ vanco:
   password: v@nco2oo
   client_id: SPREEDLY
 
+vantiv:
+  login: ACTIVE
+  password: MERCHANT
+  merchant_id: 101
+
 # Working credentials, no need to replace
 verify:
   login: 'demo'
