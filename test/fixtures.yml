@@ -1230,3 +1230,7 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+worldpay_online_payments:
+  client_key: "T_C_b9f629e7-cea7-4edb-8206-24bbe351d699"
+  service_key: "T_S_eea7c405-25a9-4428-918f-27a9d63fe64f"

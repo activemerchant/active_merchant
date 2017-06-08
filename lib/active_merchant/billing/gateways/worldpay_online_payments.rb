@@ -92,25 +92,50 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_post_for_auth_or_purchase(token, money, options)
-      {
-        "token" => token,
-        "orderDescription" => options[:description] || 'Worldpay Order',
-        "amount" => money,
-        "currencyCode" => options[:currency] || default_currency,
-        "name" => options[:billing_address]&&options[:billing_address][:name] ? options[:billing_address][:name] : '',
-        "billingAddress" => {
-          "address1"=>options[:billing_address]&&options[:billing_address][:address1] ? options[:billing_address][:address1] : '',
-          "address2"=>options[:billing_address]&&options[:billing_address][:address2] ? options[:billing_address][:address2] : '',
-          "address3"=>"",
-          "postalCode"=>options[:billing_address]&&options[:billing_address][:zip] ? options[:billing_address][:zip] : '',
-          "city"=>options[:billing_address]&&options[:billing_address][:city] ? options[:billing_address][:city] : '',
-          "state"=>options[:billing_address]&&options[:billing_address][:state] ? options[:billing_address][:state] : '',
-          "countryCode"=>options[:billing_address]&&options[:billing_address][:country] ? options[:billing_address][:country] : ''
+        req = {
+          "token" => token,
+          "orderDescription" => options[:description] || 'Worldpay Order',
+          "amount" => money,
+          "is3DSOrder" => options[:is3DSOrder] || false,
+          "currencyCode" => options[:currency] || default_currency,
+          "name" => token[0,5]=='TEST_' && options[:is3DSOrder] ? '3D' : options[:billing_address]&&options[:billing_address][:name] ? options[:billing_address][:name] : '',
+          "billingAddress" => {
+            "address1"=>options[:billing_address]&&options[:billing_address][:address1] ? options[:billing_address][:address1] : '',
+            "address2"=>options[:billing_address]&&options[:billing_address][:address2] ? options[:billing_address][:address2] : '',
+            "address3"=>"",
+            "postalCode"=>options[:billing_address]&&options[:billing_address][:zip] ? options[:billing_address][:zip] : '',
+            "city"=>options[:billing_address]&&options[:billing_address][:city] ? options[:billing_address][:city] : '',
+            "state"=>options[:billing_address]&&options[:billing_address][:state] ? options[:billing_address][:state] : '',
+            "countryCode"=>options[:billing_address]&&options[:billing_address][:country] ? options[:billing_address][:country] : ''
           },
           "customerOrderCode" => options[:order_id],
           "orderType" => "ECOM",
           "authorizeOnly" => options[:authorizeOnly] ? true : false
         }
+
+        if (options[:is3DSOrder])
+          threeDsInfo = {
+            'shopperIpAddress' => :ip,
+            'shopperSessionId' => '1',
+            'shopperUserAgent' => :user_agent,
+            'shopperAcceptHeader' => '*/*'
+          }
+          req.merge!(threeDsInfo)
+        end
+
+        req
+      end
+
+      def authorise3DSOrder(orderCode, responseCode, threeDsInfo)
+          request = {
+              'threeDSResponseCode' => responseCode,
+              'shopperSessionId' => threeDsInfo['shopperSessionId'],
+              'shopperAcceptHeader' => threeDsInfo['shopperAcceptHeader'],
+              'shopperUserAgent' => threeDsInfo['shopperUserAgent'],
+              'shopperIpAddress' => threeDsInfo['shopperIpAddress']
+          }
+          authorize3dsorder = commit(:put, 'orders/'+orderCode, request.to_json, {'Authorization' => @service_key}, 'authorize3dsorder')
+          authorize3dsorder
       end
 
       def parse(body)
@@ -148,6 +173,8 @@ module ActiveMerchant #:nodoc:
                 success = false
               else
                 if type == 'authorize' && response['paymentStatus'] == 'AUTHORIZED'
+                  success = true
+                elsif response['paymentStatus'] == 'PRE_AUTHORIZED' && response['is3DSOrder']
                   success = true
                 elsif type == 'purchase' && response['paymentStatus'] == 'SUCCESS'
                   success = true
