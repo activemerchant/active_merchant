@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options={})
-        return unless options[:customer_id]
+        return Response.new(false, 'Missing customer id') unless options[:customer_id]
         commit('add-card-onfile', true) do |xml|
           xml.customerId options[:customer_id]
           xml.creditCardNumber creditcard.number
@@ -138,8 +138,9 @@ module ActiveMerchant #:nodoc:
       def commit(action, is_api_request=false)
         if is_api_request
           request = build_api_request(action) { |doc| yield(doc) }
+          puts api_url
           puts request
-          raw_response = ssl_post(url(is_api_request), request, 'Content-Type' => 'text/xml')
+          raw_response = ssl_post(api_url, request, 'Content-Type' => 'text/xml')
           puts raw_response
           response = parse(raw_response)
           puts response
@@ -147,7 +148,7 @@ module ActiveMerchant #:nodoc:
         else
           request = build_xml_request(action) { |doc| yield(doc) }
           puts request
-          response = parse(ssl_post(url(is_api_request), request, 'Content-Type' => 'text/xml'))
+          response = parse(ssl_post(url, request, 'Content-Type' => 'text/xml'))
           puts response
           success = success? response
         end
@@ -160,12 +161,12 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def url(is_api_request=false)
-        if is_api_request
-          test? ? self.test_api_url : self.test_live_url
-        else
-          test? ? self.test_url : self.live_url
-        end
+      def api_url
+        test? ? self.test_api_url : self.live_api_url
+      end
+
+      def url
+        test? ? self.test_url : self.live_url
       end
 
       def build_api_request(action)
