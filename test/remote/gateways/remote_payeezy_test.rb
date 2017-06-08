@@ -45,6 +45,12 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_soft_descriptors
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_mdd))
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
   def test_failed_purchase
     @amount = 501300
     assert response = @gateway.purchase(@amount, @credit_card, @options )
