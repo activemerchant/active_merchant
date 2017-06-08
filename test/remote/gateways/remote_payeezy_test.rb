@@ -33,7 +33,8 @@ class RemotePayeezyTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_echeck
-    assert response = @gateway.purchase(@amount, @check, @options)
+    options = @options.merge({customer_id_type: "1", customer_id_number: "1", client_email: "test@example.com"})
+    assert response = @gateway.purchase(@amount, @check, options)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
   end
