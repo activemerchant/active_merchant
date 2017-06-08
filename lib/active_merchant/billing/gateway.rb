@@ -183,7 +183,13 @@ module ActiveMerchant #:nodoc:
 
       # Are we running in test mode?
       def test?
-        (@options.has_key?(:test) ? @options[:test] : Base.test?)
+        if @options.has_key?(:test)
+          @options[:test]
+        elsif @options.has_key?(:test_mode)
+          @options[:test_mode]
+        else
+          Base.test?
+        end
       end
 
       # Does this gateway know how to scrub sensitive information out of HTTP transcripts?
