@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(post, money, options)
-        post[:value] = amount(money)
+        post[:value] = localized_amount(money, options[:currency])
         post[:trackId] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
         post[:descriptor] = {}
