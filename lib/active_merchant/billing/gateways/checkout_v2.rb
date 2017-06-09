@@ -10,7 +10,6 @@ module ActiveMerchant #:nodoc:
       self.default_currency = "USD"
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
-      self.currencies_without_fractions = %w(BIF BYR CLF DJF GNF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
 
       def initialize(options={})
         requires!(options, :secret_key)
