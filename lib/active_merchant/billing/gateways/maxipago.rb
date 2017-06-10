@@ -100,6 +100,12 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
+
+      def delete_customer(customer_id)
+        commit('delete-consumer', true) do |xml|
+          xml.customerId customer_id
+        end
+      end
       
       def update_customer(customer_token, options={})
         commit('update-consumer', true) do |xml|
