@@ -91,7 +91,7 @@ module ActiveMerchant
       def refund(money, authorization, options={})
         commit(:refund, :put) do |doc|
           add_authorization(doc, authorization)
-          add_amount(doc, money)
+          add_amount(doc, money, options)
           add_order(doc, options)
         end
       end
@@ -170,7 +170,7 @@ module ActiveMerchant
         unless subscription?
           doc.send("recurring-transaction", options[:recurring] ? "RECURRING" : "ECOMMERCE")
           add_order(doc, options)
-          add_amount(doc, money)
+          add_amount(doc, money, options)
         end
         doc.send("transaction-fraud-info") do
           doc.send("shopper-ip-address", options[:ip]) if options[:ip]
@@ -198,7 +198,7 @@ module ActiveMerchant
         end
       end
 
-      def add_amount(doc, money)
+      def add_amount(doc, money, options)
         doc.amount(amount(money))
         doc.currency(options[:currency] || currency(money))
       end
