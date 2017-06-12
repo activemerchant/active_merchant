@@ -9,8 +9,15 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220', verification_value: '518')
     @check = check(number: rand(0..100000))
+    @Encrypted_credit_card = ActiveMerchant::Billing::CreditCard.new(
+      :first_name         => 'Bob',
+      :last_name          => 'Bobsen',
+      :track_data         =>'4000000000001111;;01010000VPZJR4RNN8VTZKZKJqGzWGHp+3Ag+MmFKVo76oH2S5K+PI0kx2QmrgEJSgtZtRs/ZBeeqBOk4h7OPN72P9EAdDtxUxLbz3MGOIPXRvxNeTe+5jtuMMTSARoeOpNxpBHZjCdBj3D+P4NTsgtjx+idPZdOxv4MsXFRy0+GtTexAzmOzc2BZYS/tByhYv8SxfkYVbQI80uJ4f/4BDPyGLQOMU74l+hDnShTYpA4SBObD/qsmfXRisG8EFhtEeqZF6+VBRB33rFRefOgwyUoQsyw3RN0ocxVZckFLIW/BW4pHtodY7f2nkmkarfAO0kx+aZKY2EP5YdcEfyMsO1BfGPR1w==?',      
+      :month              => '8',
+      :year               => Time.now.year+1,
+    )
 
-    @more_options = {
+   @more_options = {
       billing_address: address,
       shipping_address: address,
       order_id: generate_unique_id,
@@ -23,7 +30,6 @@ class RemoteCardknoxTest < Test::Unit::TestCase
       custom02: 'mycustom',
       custom13: 'spelled right',
       custom25: 'test 25',
-      pin: '312lkjasdnotvalid',
       address: {
         address1: '19 Laurel Valley Dr',
         address2: 'Apt 1',
@@ -42,6 +48,12 @@ class RemoteCardknoxTest < Test::Unit::TestCase
 
   def test_successful_credit_card_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_tokenized_card_purchase
+    response = @gateway.purchase(@amount, @Encrypted_credit_card, @more_options)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -152,13 +164,13 @@ class RemoteCardknoxTest < Test::Unit::TestCase
 
   end
 
-  def test_failed_partial_check_refund # the gate way does not support this transaction
+  def test_failed_partial_check_refund # the gateway does not support this transaction
     purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
 
     assert refund = @gateway.refund(@amount-1, purchase.authorization)
     assert_failure refund
-    assert_equal "Transaction is in a state that cannot be refunded\nParameter name: originalReferenceNumber", refund.message # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+    assert_equal "Partial refund not allowed", refund.message # "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
   end
 
   def test_credit_card_capture_partial_refund
@@ -175,7 +187,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal 'UNSUPPORTED CARD TYPE', response.message
+    assert_equal 'Original transaction not specified', response.message
   end
 
   def test_successful_credit_card_authorize_void
@@ -275,7 +287,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
   def test_failed_store
     response = @gateway.store('', @options)
     assert_failure response
-    assert_equal 'Card or Magstripe Required', response.message
+    assert_equal 'Card Or Magstripe Required', response.message
   end
 
   def test_invalid_login

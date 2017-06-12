@@ -227,16 +227,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(post, credit_card)
-        if credit_card.track_data.present?
-          post[:Magstripe] = credit_card.track_data
-          post[:Cardpresent] = true
-        else
-          post[:CardNum] = credit_card.number
-          post[:CVV] = credit_card.verification_value
-          post[:Exp] = expdate(credit_card)
-          post[:Name] = credit_card.name
-          post[:CardPresent] = true if credit_card.manual_entry
-        end
+        post[:Magstripe] = credit_card.track_data
+        post[:CardNum] = credit_card.number
+        post[:CVV] = credit_card.verification_value
+        post[:Exp] = expdate(credit_card)
+        post[:Name] = credit_card.name
+        post[:CardPresent] = true if credit_card.manual_entry
       end
 
       def add_check(post, check)
@@ -275,7 +271,7 @@ module ActiveMerchant #:nodoc:
           remaining_balance: fields['xRemainingBalance'],
           amount:            fields['xAuthAmount'],
           masked_card_num:   fields['xMaskedCardNumber'],
-          masked_account_number: fields['MaskedAccountNumber']
+          masked_account_number: fields['xMaskedAccountNumber']
         }.delete_if{|k, v| v.nil?}
       end
 
@@ -310,17 +306,12 @@ module ActiveMerchant #:nodoc:
       def post_data(command, parameters = {})
         initial_parameters = {
           Key: @options[:api_key],
-          Version: "4.5.4",
+          Version: "4.5.5",
           SoftwareName: 'Active Merchant',
           SoftwareVersion: "#{ActiveMerchant::VERSION}",
           Command: command,
         }
-
-        seed = SecureRandom.hex(32).upcase
-        hash = Digest::SHA1.hexdigest("#{initial_parameters[:command]}:#{@options[:pin]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
-        initial_parameters[:Hash] = "s/#{seed}/#{hash}/n" unless @options[:pin].blank?
         parameters = initial_parameters.merge(parameters)
-
         parameters.reject{|k, v| v.blank?}.collect{ |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
     end
