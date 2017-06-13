@@ -187,7 +187,8 @@ module ActiveMerchant #:nodoc:
           "X-VPS-Client-Timeout" => timeout.to_s,
           "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
           "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
-          "X-VPS-Request-ID" => SecureRandom.hex(16)
+          "X-VPS-Request-ID" => SecureRandom.hex(16),
+          "PAYPAL-NVP" => "Y"
         }
       end
 
