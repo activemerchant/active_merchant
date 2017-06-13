@@ -15,7 +15,7 @@ module ActiveMerchant
       end
 
       def purchase(money, credit_card_or_reference, options = {})
-        MultiResponse.run(true) do |r|
+        MultiResponse.run do |r|
           if credit_card_or_reference.is_a?(String)
             r.process { create_token(credit_card_or_reference, options) }
             credit_card_or_reference = r.authorization
@@ -34,7 +34,7 @@ module ActiveMerchant
       end
 
       def authorize(money, credit_card_or_reference, options = {})
-        MultiResponse.run(true) do |r|
+        MultiResponse.run do |r|
           if credit_card_or_reference.is_a?(String)
             r.process { create_token(credit_card_or_reference, options) }
             credit_card_or_reference = r.authorization
@@ -132,7 +132,6 @@ module ActiveMerchant
 
         def create_token(identification, options)
           post = {}
-          # post[:id] = options[:id]
           commit(synchronized_path("/cards/#{identification}/tokens"), post)
         end
 
@@ -196,7 +195,7 @@ module ActiveMerchant
             post[:shipping_address] = map_address(options[:shipping_address])
           end
 
-          [:metadata, :brading_id, :variables].each do |field|
+          [:metadata, :branding_id, :variables].each do |field|
             post[field] = options[field] if options[field]
           end
         end
