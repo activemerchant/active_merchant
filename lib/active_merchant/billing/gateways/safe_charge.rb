@@ -24,6 +24,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_transaction_data("Sale", post, money, options)
         add_payment(post, payment)
+        add_customer_details(post, payment, options)
 
         commit(post)
       end
@@ -32,6 +33,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_transaction_data("Auth", post, money, options)
         add_payment(post, payment)
+        add_customer_details(post, payment, options)
 
         commit(post)
       end
@@ -123,6 +125,21 @@ module ActiveMerchant #:nodoc:
         post[:sg_ExpMonth] = format(payment.month, :two_digits)
         post[:sg_ExpYear] = format(payment.year, :two_digits)
         post[:sg_CVV2] = payment.verification_value
+      end
+
+      def add_customer_details(post, payment, options)
+        if address = options[:billing_address] || options[:address]
+          post[:sg_FirstName] = payment.first_name
+          post[:sg_LastName] = payment.last_name
+          post[:sg_Address] = address[:address1] if address[:address1]
+          post[:sg_City] = address[:city] if address[:city]
+          post[:sg_State] = address[:state]  if address[:state]
+          post[:sg_Zip] = address[:zip]  if address[:zip]
+          post[:sg_Country] = address[:country]  if address[:country]
+          post[:sg_Phone] = address[:phone]  if address[:phone]
+        end
+
+        post[:sg_Email] = options[:email]
       end
 
       def parse(xml)
