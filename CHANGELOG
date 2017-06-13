@@ -6,6 +6,7 @@
 * QuickPay V10: Return last response for purchase and authorize [curiousepic] #2461
 * Support three-decimal currencies [curiousepic] #2466
 * Credorax: Support 0- and 3-exponent currencies [curiousepic]
+* SafeCharge: Map billing address fields [davidsantoso] #2464
 
 == Version 1.67.0 (June 8, 2017)
 * Acapture: Pass 3D Secure fields [davidsantoso] #2451
