@@ -121,6 +121,12 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_equal 'OK', void.message
   end
 
+  def test_unsuccessful_void
+    assert void = @gateway.void('123')
+    assert_failure void
+    assert_equal 'Not found: No Payment with id 123', void.message
+  end
+
   def test_successful_authorization_capture_and_credit
     assert auth = @gateway.authorize(@amount, @valid_card, @options)
     assert_success auth
@@ -189,6 +195,35 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_success store
     assert authorization = @gateway.authorize(@amount, store.authorization, @options)
     assert_success authorization
+  end
+
+  def test_successful_store_and_credit
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert credit = @gateway.refund(@amount, purchase.authorization)
+    assert_success credit
+  end
+
+  def test_unsuccessful_store_and_credit
+    assert store = @gateway.store(@refund_rejected_card, @options)
+    assert_success store
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert credit = @gateway.refund(@amount, purchase.authorization)
+    assert_failure credit
+    assert_match(/Rejected test operation/, credit.message)
+  end
+
+  def test_successful_store_and_void_authorize
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert authorize = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success authorize
+    assert void = @gateway.void(authorize.authorization)
+    assert_success void
+    assert_equal 'OK', void.message
   end
 
   def test_successful_unstore
