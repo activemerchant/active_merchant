@@ -11,6 +11,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     )
     @amount = 100
     @credit_card = credit_card
+    @token = "just_a_token"
     @check = check
     @options = {
       :ip => '71.65.249.145',
@@ -18,6 +19,43 @@ class IatsPaymentsTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store purchase'
     }
+  end
+
+  def test_successful_token_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @token, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<agentCode>login<\/agentCode>/, data)
+      assert_match(/<password>password<\/password>/, data)
+      assert_match(/<customerIPAddress>#{@options[:ip]}<\/customerIPAddress>/, data)
+      assert_match(/<invoiceNum>#{@options[:order_id]}<\/invoiceNum>/, data)
+      assert_match(/<customerCode>#{@token}<\/customerCode>/, data)
+      assert_match(/<address>#{@options[:billing_address][:address1]}<\/address>/, data)
+      assert_match(/<city>#{@options[:billing_address][:city]}<\/city>/, data)
+      assert_match(/<state>#{@options[:billing_address][:state]}<\/state>/, data)
+      assert_match(/<zipCode>#{@options[:billing_address][:zip]}<\/zipCode>/, data)
+      assert_match(/<total>1.00<\/total>/, data)
+      assert_match(/<comment>#{@options[:description]}<\/comment>/, data)
+      assert_equal endpoint, 'https://www.uk.iatspayments.com/NetGate/ProcessLink.asmx?op=ProcessCreditCardWithCustomerCodeV1'
+      assert_equal headers['Content-Type'], 'application/soap+xml; charset=utf-8'
+    end.respond_with(successful_token_purchase_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal 'A6DE6F24', response.authorization
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_token_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @token, @options)
+    end.respond_with(failed_token_purchase_response)
+
+    assert response
+    assert_failure response
+    assert_equal 'A6DE6F24', response.authorization
+    assert response.message.include?('REJECT')
   end
 
   def test_successful_purchase
@@ -252,6 +290,56 @@ class IatsPaymentsTest < Test::Unit::TestCase
   end
 
   private
+
+  def successful_token_purchase_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+  <soap12:Body>
+    <ProcessCreditCardWithCustomerCodeV1 xmlns="https://www.iatspayments.com/NetGate/">
+      <ProcessCreditCardWithCustomerCodeV1Result>
+        <IATSRESPONSE>
+          <STATUS>Success</STATUS>
+          <ERRORS />
+          <PROCESSRESULT>
+            <AUTHORIZATIONRESULT> OK</AUTHORIZATIONRESULT>
+            <CUSTOMERCODE />
+            <SETTLEMENTBATCHDATE> 04/22/2014</SETTLEMENTBATCHDATE>
+            <SETTLEMENTDATE> 04/23/2014</SETTLEMENTDATE>
+            <TRANSACTIONID>A6DE6F24</TRANSACTIONID>
+          </PROCESSRESULT>
+        </IATSRESPONSE>
+      </ProcessCreditCardWithCustomerCodeV1Result>
+    </ProcessCreditCardWithCustomerCodeV1>
+  </soap12:Body>
+</soap12:Envelope>
+    XML
+  end
+
+  def failed_token_purchase_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body>
+    <ProcessCreditCardWithCustomerCodeV1 xmlns="https://www.iatspayments.com/NetGate/">
+      <ProcessCreditCardWithCustomerCodeV1Result>
+        <IATSRESPONSE xmlns="">
+          <STATUS>Success</STATUS>
+          <ERRORS />
+          <PROCESSRESULT>
+            <AUTHORIZATIONRESULT> REJECT: 15</AUTHORIZATIONRESULT>
+            <CUSTOMERCODE />
+            <SETTLEMENTBATCHDATE> 04/22/2014</SETTLEMENTBATCHDATE>
+            <SETTLEMENTDATE> 04/23/2014</SETTLEMENTDATE>
+            <TRANSACTIONID>A6DE6F24</TRANSACTIONID>
+          </PROCESSRESULT>
+        </IATSRESPONSE>
+      </ProcessCreditCardWithCustomerCodeV1Result>
+    </ProcessCreditCardWithCustomerCodeV1>
+  </soap:Body>
+</soap:Envelope>
+    XML
+  end
 
   def successful_purchase_response
     <<-XML

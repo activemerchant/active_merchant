@@ -15,6 +15,7 @@ module ActiveMerchant #:nodoc:
 
       ACTIONS = {
         purchase: "ProcessCreditCardV1",
+        purchase_token: "ProcessCreditCardWithCustomerCodeV1",
         purchase_check: "ProcessACHEFTV1",
         refund: "ProcessCreditCardRefundWithTransactionIdV1",
         refund_check: "ProcessACHEFTRefundWithTransactionIdV1",
@@ -42,7 +43,7 @@ module ActiveMerchant #:nodoc:
         add_ip(post, options)
         add_description(post, options)
 
-        commit((payment.is_a?(Check) ? :purchase_check : :purchase), post)
+        commit((payment.is_a?(Check) ? :purchase_check : payment.is_a?(String) ? :purchase_token : :purchase), post)
       end
 
       def refund(money, authorization, options={})
@@ -81,6 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
+          gsub(%r((<customerCode>).+(</customerCode>)), '\1[FILTERED]\2').
           gsub(%r((<agentCode>).+(</agentCode>)), '\1[FILTERED]\2').
           gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
           gsub(%r((<creditCardNum>).+(</creditCardNum>)), '\1[FILTERED]\2').
@@ -116,9 +118,15 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         if payment.is_a?(Check)
           add_check(post, payment)
+        elsif payment.is_a?(String)
+          add_token(post, payment)
         else
           add_credit_card(post, payment)
         end
+      end
+
+      def add_token(post, token)
+        post[:customer_code] = token
       end
 
       def add_credit_card(post, payment)
@@ -179,6 +187,7 @@ module ActiveMerchant #:nodoc:
       def endpoints
         {
           purchase: "ProcessLink.asmx",
+          purchase_token: "ProcessLink.asmx",
           purchase_check: "ProcessLink.asmx",
           refund: "ProcessLink.asmx",
           refund_check: "ProcessLink.asmx",
