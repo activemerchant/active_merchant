@@ -264,14 +264,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def localized_amount(money, currency)
-        amount = amount(money)
-
-        return amount unless non_fractional_currency?(currency)
-
-        if self.money_format == :cents
-          sprintf("%.0f", amount.to_f / 100)
+        return nil if money.nil?
+        amount = if money.respond_to?(:cents)
+          ActiveMerchant.deprecated "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
+          money.cents.to_s
         else
+          money.to_s
+        end
+
+        if money.is_a?(String)
+          raise ArgumentError, 'money amount must be a positive Integer in cents.'
+        end
+
+        if non_fractional_currency?(currency)
           amount.split('.').first
+        elsif money_format == :cents
+          amount
+        else
+          sprintf("%.2f", amount.to_f / 100)
         end
       end
 

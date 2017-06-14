@@ -406,7 +406,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_nonfractional_currency_handling
     @gateway.expects(:ssl_post).with do |host, request_body|
-      assert_match %r(<grandTotalAmount>1</grandTotalAmount>), request_body
+      assert_match %r(<grandTotalAmount>100</grandTotalAmount>), request_body
       assert_match %r(<currency>JPY</currency>), request_body
       true
     end.returns(successful_nonfractional_authorization_response)

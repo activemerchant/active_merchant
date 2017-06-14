@@ -220,7 +220,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(10000, @credit_card, @options.merge(currency: :JPY))
     end.check_request do |endpoint, data, headers|
       assert_tag_with_attributes 'amount',
-          {'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY'},
+          {'value' => '10000', 'exponent' => '0', 'currencyCode' => 'JPY'},
         data
     end.respond_with(successful_authorize_response)
   end
