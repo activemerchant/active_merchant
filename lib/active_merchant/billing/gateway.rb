@@ -125,8 +125,9 @@ module ActiveMerchant #:nodoc:
       class_attribute :supported_cardtypes
       self.supported_cardtypes = []
 
-      class_attribute :currencies_without_fractions
+      class_attribute :currencies_without_fractions, :currencies_with_three_decimal_places
       self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF HUF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.currencies_with_three_decimal_places = %w()
 
       class_attribute :homepage_url
       class_attribute :display_name
@@ -263,15 +264,26 @@ module ActiveMerchant #:nodoc:
         self.currencies_without_fractions.include?(currency.to_s)
       end
 
+      def three_decimal_currency?(currency)
+        self.currencies_with_three_decimal_places.include?(currency.to_s)
+      end
+
       def localized_amount(money, currency)
         amount = amount(money)
 
-        return amount unless non_fractional_currency?(currency)
-
-        if self.money_format == :cents
-          sprintf("%.0f", amount.to_f / 100)
-        else
-          amount.split('.').first
+        return amount unless non_fractional_currency?(currency) || three_decimal_currency?(currency)
+        if non_fractional_currency?(currency)
+          if self.money_format == :cents
+            sprintf("%.0f", amount.to_f / 100)
+          else
+            amount.split('.').first
+          end
+        elsif three_decimal_currency?(currency)
+          if self.money_format == :cents
+            (amount.to_i * 10).to_s
+          else
+            sprintf("%.3f", amount.to_f)
+          end
         end
       end
 

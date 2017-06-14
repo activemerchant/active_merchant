@@ -90,6 +90,18 @@ class GatewayTest < Test::Unit::TestCase
     assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
   end
 
+  def test_localized_amount_returns_three_decimal_places_for_three_decimal_currencies
+    @gateway.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
+
+    Gateway.money_format = :dollars
+    assert_equal '1.000', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '12.340', @gateway.send(:localized_amount, 1234, 'BHD')
+
+    Gateway.money_format = :cents
+    assert_equal '1000', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '12340', @gateway.send(:localized_amount, 1234, 'BHD')
+  end
+
   def test_split_names
     assert_equal ["Longbob", "Longsen"], @gateway.send(:split_names, "Longbob Longsen")
   end
