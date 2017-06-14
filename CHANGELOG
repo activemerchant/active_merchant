@@ -4,6 +4,7 @@
 * Moneris: Add 3DS fields for decrypted Apple and Android Pay data [davidsantoso] #2457
 * Trexle: Add gateway support [hossamhossny] #2351
 * QuickPay V10: Return last response for purchase and authorize [curiousepic] #2461
+* Support three-decimal currencies [curiousepic] #2466
 
 == Version 1.67.0 (June 8, 2017)
 * Acapture: Pass 3D Secure fields [davidsantoso] #2451
