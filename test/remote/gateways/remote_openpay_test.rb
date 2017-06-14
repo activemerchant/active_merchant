@@ -21,6 +21,13 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_nil response.message
   end
 
+  def test_successful_purchase_with_email
+    @options[:email] = '%d@example.org' % Time.now
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -47,6 +54,13 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
+  def test_successful_authorize_with_email
+    @options[:email] = '%d@example.org' % Time.now
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_nil response.message
