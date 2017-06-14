@@ -130,8 +130,20 @@ module ActiveMerchant #:nodoc:
             holder_name: creditcard.name
           }
           add_address(card, options)
+          add_customer_data(post, creditcard, options)
           post[:card] = card
         end
+      end
+
+      def add_customer_data(post, creditcard, options)
+        if options[:email]
+          customer = {
+            name: creditcard.name || options[:name],
+            email: options[:email]
+          }
+          post[:customer] = customer
+        end
+        post
       end
 
       def add_address(card, options)
