@@ -17,6 +17,9 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(DE GB FR IT ES PL NL BE GR CZ PT SE HU RS AT CH BG DK FI SK NO IE HR BA AL LT MK SI LV EE ME LU MT IS AD MC LI SM)
       self.default_currency = "EUR"
+      self.currencies_without_fractions = %w(CLP JPY KRW PYG VND)
+      self.currencies_with_three_decimal_places = %w(BHD JOD KWD OMR RSD TND)
+
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :maestro]
 
@@ -187,9 +190,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(post, money, options)
-        post[:a4] = amount(money)
+        currency = options[:currency] || currency(money)
+
+        post[:a4] = localized_amount(money, currency)
         post[:a1] = generate_unique_id
-        post[:a5] = options[:currency] || currency(money)
+        post[:a5] = currency
         post[:h9] = options[:order_id]
       end
 
