@@ -4,9 +4,9 @@ class RemoteRazorpayTest < Test::Unit::TestCase
   def setup
     @gateway = RazorpayGateway.new(fixtures(:razorpay))
 
-    @amount = 1000
-    @credit_card = 'pay_7zxGQpLbSCKvS0'
-    @declined_card = credit_card('4000300011112220')
+    @amount = 632200
+    @credit_card = 'pay_803Hfp6B4HxidF'
+    @declined_card = 'pay_803MIBEfMdHzLh'
     @options = {
       billing_address: address,
       description: 'Store Purchase',
@@ -22,22 +22,10 @@ class RemoteRazorpayTest < Test::Unit::TestCase
     assert_equal 'OK', response.message
   end
 
-  def test_successful_purchase_with_more_options
-    options = {
-      order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com"
-    }
-
-    response = @gateway.purchase(@amount, @credit_card, options)
-    assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-  end
-
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'Only payments which have been authorized and not yet captured can be captured', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -45,15 +33,15 @@ class RemoteRazorpayTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    #assert capture = @gateway.capture(@amount, auth.authorization)
-    #assert_success capture
-    #assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'OK', capture.message
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
+    assert_equal 'Payment failed', response.message
   end
 
   def test_partial_capture
@@ -61,13 +49,14 @@ class RemoteRazorpayTest < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(@amount-1, auth.authorization)
-    assert_success capture
+    assert_failure capture
+    assert_equal 'Capture amount must be equal to the amount authorized', response.message
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
+    assert_equal 'Specify payment id', response.message
   end
 
   def test_successful_refund
@@ -76,7 +65,7 @@ class RemoteRazorpayTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
-    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
+    assert_equal 'OK', refund.message
   end
 
   def test_partial_refund
@@ -88,9 +77,9 @@ class RemoteRazorpayTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, '')
+    response = @gateway.refund(@amount, 'test')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
+    assert_equal 'The id provided does not exist', response.message
   end
 
   def test_successful_void
@@ -99,19 +88,13 @@ class RemoteRazorpayTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
-    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
-  end
-
-  def test_failed_void
-    response = @gateway.void('')
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
+    assert_equal 'Razorpay does not support void api', void.message
   end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
+    assert_match %r{OK}, response.message
   end
 
   def test_failed_verify

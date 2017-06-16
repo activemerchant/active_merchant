@@ -950,8 +950,8 @@ raven_pac_net:
 
 # Working credentials, no need to replace
 razorpay:
-  key_id: 'rzp_test_4CnzOFbRfs13NK'
-  key_secret: '3369hUThUVzKnr03V7jQjZDx'
+  key_id:
+  key_secret:
 
 realex:
   login: X

@@ -1,13 +1,12 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class RazorpayGateway < Gateway
-      self.test_url = 'https://api.razorpay.com/v1'
       self.live_url = 'https://api.razorpay.com/v1'
       self.supported_countries = ['IN']
       self.default_currency = 'INR'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :mastercard, :maestro, :rupay, :amex, :discover]
 
-      self.homepage_url = 'http://razorpay/'
+      self.homepage_url = 'http://razorpay.com'
       self.display_name = 'Razorpay'
       self.money_format = :cents
 
@@ -27,6 +26,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, payment_id, options={})
+        return Response.new(false, 'Specify payment id') if payment_id.empty?
         post = {}
         add_amount(post, money)
         commit(:post, "/payments/#{payment_id}/capture", post)
@@ -48,20 +48,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript
+        false
       end
 
       private
-
-      def add_customer_data(post, options)
-      end
-
-      def add_address(post, creditcard, options)
-      end
 
       def add_invoice(post, money, options)
         post[:currency] = (options[:currency] || currency(money))
@@ -85,9 +75,6 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_payment(post, payment)
-      end
-
       def parse(body)
         JSON.parse(body)
       end
@@ -95,6 +82,8 @@ module ActiveMerchant #:nodoc:
       def api_request(method, endpoint, parameters = nil, body = nil)
         raw_response = ssl_request(method, "#{endpoint}?#{post_data(parameters)}", body, headers)
         parse(raw_response)
+      rescue ActiveMerchant::ResponseError => e
+        return parse(e.response.body)
       end
 
       def headers
@@ -106,8 +95,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, path, parameters)
 
-        url = (test? ? test_url : live_url)
-        response = api_request(method, "#{url}#{path}", parameters)
+        response = api_request(method, "#{live_url}#{path}", parameters)
 
         Response.new(
           success_from(response),
@@ -122,12 +110,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['error_code'].nil?
+        response['error_code'].nil? && response['error'].nil?
       end
 
       def message_from(response)
         if success_from(response)
           'OK'
+        elsif response['error']
+          response['error']['description']
+        elsif response['error_description']
+          response['error_description']
         end
       end
 
