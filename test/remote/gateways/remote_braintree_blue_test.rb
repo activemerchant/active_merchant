@@ -441,7 +441,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'voided', void.params["braintree_transaction"]["status"]
     assert failed_void = @gateway.void(auth.authorization)
     assert_failure failed_void
-    assert_equal 'Transaction can only be voided if status is authorized or submitted_for_settlement. (91504)', failed_void.message
+    assert_equal 'Transaction can only be voided if status is authorized, submitted_for_settlement, or - for PayPal - settlement_pending. (91504)', failed_void.message
     assert_equal({"processor_response_code"=>"91504"}, failed_void.params["braintree_transaction"])
   end
 
