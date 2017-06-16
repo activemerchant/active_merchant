@@ -40,8 +40,8 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         post = {}
-        add_transaction_data("Settle", post, money, options)
-        auth, transaction_id, token, exp_month, exp_year, _ = authorization.split("|")
+        auth, transaction_id, token, exp_month, exp_year, _, original_currency = authorization.split("|")
+        add_transaction_data("Settle", post, money, (options.merge!({currency: original_currency})))
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
         post[:sg_CCToken] = token
@@ -53,8 +53,8 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
         post = {}
-        add_transaction_data("Credit", post, money, options)
-        auth, transaction_id, token, exp_month, exp_year, _ = authorization.split("|")
+        auth, transaction_id, token, exp_month, exp_year, _, original_currency = authorization.split("|")
+        add_transaction_data("Credit", post, money, (options.merge!({currency: original_currency})))
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -76,8 +76,8 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         post = {}
-        auth, transaction_id, token, exp_month, exp_year, original_amount = authorization.split("|")
-        add_transaction_data("Void", post, (original_amount.to_f * 100), options)
+        auth, transaction_id, token, exp_month, exp_year, original_amount, original_currency = authorization.split("|")
+        add_transaction_data("Void", post, (original_amount.to_f * 100), (options.merge!({currency: original_currency})))
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -194,7 +194,8 @@ module ActiveMerchant #:nodoc:
           response[:token],
           parameters[:sg_ExpMonth],
           parameters[:sg_ExpYear],
-          parameters[:sg_Amount]
+          parameters[:sg_Amount],
+          parameters[:sg_Currency]
         ].join("|")
       end
 
