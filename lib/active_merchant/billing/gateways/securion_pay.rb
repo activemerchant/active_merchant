@@ -5,8 +5,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.securionpay.com/'
 
 
-      self.supported_countries = %w(AL AD AT BY BE BG HR CY CZ RE DK EE IS FI FR DE GI GR HU IS IE IT IL LV LI LT LU
-                                    MK MT MD MC NL NO PL PT RO RU MA RS SK SI ES SE CH UA GB KI CI ME)
+      self.supported_countries = %w(AD, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GI, GL, GR, GS, GT, HR, HU, IE, IS, IT, LI, LR, LT, LU, LV, MC, MT, MU, MV, MW, NL, NO, PL, RO, SE, SI)
 
       self.default_currency = 'USD'
       self.money_format = :cents
