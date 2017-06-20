@@ -390,7 +390,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       :month              => "01",
       :year               => "2024",
       :source             => :android_pay,
-      :transaction_id     => "123456789"
+      :transaction_id     => "123456789",
+      :eci                => "05"
     )
 
     assert auth = @gateway.authorize(@amount, credit_card, @options)
@@ -441,7 +442,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'voided', void.params["braintree_transaction"]["status"]
     assert failed_void = @gateway.void(auth.authorization)
     assert_failure failed_void
-    assert_equal 'Transaction can only be voided if status is authorized or submitted_for_settlement. (91504)', failed_void.message
+    assert_match('Transaction can only be voided if status is authorized', failed_void.message)
     assert_equal({"processor_response_code"=>"91504"}, failed_void.params["braintree_transaction"])
   end
 

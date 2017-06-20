@@ -592,7 +592,8 @@ module ActiveMerchant #:nodoc:
                 :expiration_year => credit_card_or_vault_id.year.to_s,
                 :google_transaction_id => credit_card_or_vault_id.transaction_id,
                 :source_card_type => credit_card_or_vault_id.brand,
-                :source_card_last_four => credit_card_or_vault_id.last_digits
+                :source_card_last_four => credit_card_or_vault_id.last_digits,
+                :eci_indicator => credit_card_or_vault_id.eci
               }
             end
           else
