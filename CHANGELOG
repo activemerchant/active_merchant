@@ -9,6 +9,7 @@
 * SafeCharge: Map billing address fields [davidsantoso] #2464
 * Openpay: Send customer name and email in authorize and purchase [dtykocki] #2468
 * SafeCharge: Track currency from original transaction [davidsantoso] #2470
+* Braintree Blue: Braintree Blue: Add ECI indicator to Android Pay transactions [davidsantoso] #2474
 
 == Version 1.67.0 (June 8, 2017)
 * Acapture: Pass 3D Secure fields [davidsantoso] #2451
