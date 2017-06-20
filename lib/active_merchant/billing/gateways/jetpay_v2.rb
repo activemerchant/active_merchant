@@ -153,39 +153,39 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, credit_card, options = {})
-        commit(money, build_sale_request(money, credit_card, options))
+      def purchase(money, payment, options = {})
+        commit(money, build_sale_request(money, payment, options))
       end
 
-      def authorize(money, credit_card, options = {})
-        commit(money, build_authonly_request(money, credit_card, options))
+      def authorize(money, payment, options = {})
+        commit(money, build_authonly_request(money, payment, options))
       end
 
       def capture(money, reference, options = {})
-        split_authorization = reference.split(";")
-        transaction_id = split_authorization[0]
-        token = split_authorization[3]
-        commit(money, build_capture_request(transaction_id, money, options), token)
+        transaction_id, _, _, token = reference.split(";")
+        commit(money, build_capture_request(money, transaction_id, options), token)
       end
 
       def void(reference, options = {})
-        transaction_id, approval, amount, token = reference.split(";")
-        commit(amount.to_i, build_void_request(amount.to_i, transaction_id, approval, token, options), token)
+        transaction_id, _, amount, token = reference.split(";")
+        commit(amount.to_i, build_void_request(amount.to_i, transaction_id, options), token)
       end
 
-      def credit(money, credit_card, options = {})
-        commit(money, build_credit_request(money, nil, credit_card, nil, options))
+      def credit(money, payment, options = {})
+        commit(money, build_credit_request(money, nil, payment, options))
       end
 
       def refund(money, reference, options = {})
-        split_authorization = reference.split(";")
-        transaction_id = split_authorization[0]
-        token = split_authorization[3]
-        commit(money, build_credit_request(money, transaction_id, nil, token, options))
+        transaction_id, _, _, token = reference.split(";")
+        commit(money, build_credit_request(money, transaction_id, token, options), token)
       end
 
-      def verify(credit_card, options={})
+      def verify(credit_card, options = {})
         authorize(0, credit_card, options)
+      end
+
+      def store(credit_card, options = {})
+        commit(nil, build_store_request(credit_card, options))
       end
 
       def supports_scrubbing
@@ -224,9 +224,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_sale_request(money, credit_card, options)
+      def build_sale_request(money, payment, options)
         build_xml_request('SALE', options) do |xml|
-          add_credit_card(xml, credit_card)
+          add_payment(xml, payment)
           add_addresses(xml, options)
           add_customer_data(xml, options)
           add_invoice_data(xml, options)
@@ -237,9 +237,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_authonly_request(money, credit_card, options)
+      def build_authonly_request(money, payment, options)
         build_xml_request('AUTHONLY', options) do |xml|
-          add_credit_card(xml, credit_card)
+          add_payment(xml, payment)
           add_addresses(xml, options)
           add_customer_data(xml, options)
           add_invoice_data(xml, options)
@@ -250,9 +250,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_capture_request(transaction_id, money, options)
+      def build_capture_request(money, transaction_id, options)
         build_xml_request('CAPT', options, transaction_id) do |xml|
           add_invoice_data(xml, options)
+          add_purchase_order(xml, options)
           add_user_defined_fields(xml, options)
           xml.tag! 'TotalAmount', amount(money)
 
@@ -260,25 +261,31 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_void_request(money, transaction_id, approval, token, options)
+      def build_void_request(money, transaction_id, options)
         build_xml_request('VOID', options, transaction_id) do |xml|
-          xml.tag! 'Approval', approval
           xml.tag! 'TotalAmount', amount(money)
-          xml.tag! 'Token', token if token
-
           xml.target!
         end
       end
 
-      def build_credit_request(money, transaction_id, card, token, options)
+      def build_credit_request(money, transaction_id, payment, options)
         build_xml_request('CREDIT', options, transaction_id) do |xml|
-          add_credit_card(xml, card) if card
+          add_payment(xml, payment)
           add_invoice_data(xml, options)
           add_addresses(xml, options)
           add_customer_data(xml, options)
           add_user_defined_fields(xml, options)
           xml.tag! 'TotalAmount', amount(money)
-          xml.tag! 'Token', token if token
+
+          xml.target!
+        end
+      end
+
+      def build_store_request(credit_card, options)
+        build_xml_request('TOKENIZE', options) do |xml|
+          add_payment(xml, credit_card)
+          add_addresses(xml, options)
+          add_customer_data(xml, options)
 
           xml.target!
         end
@@ -344,6 +351,18 @@ module ActiveMerchant #:nodoc:
         response[:action_code]
       end
 
+      def add_payment(xml, payment)
+        return unless payment
+
+        if payment.is_a? String
+          token = payment
+          _, _, _, token = payment.split(";") if payment.include? ";"
+          xml.tag! 'Token', token if token
+        else
+          add_credit_card(xml, payment)
+        end
+      end
+
       def add_credit_card(xml, credit_card)
         xml.tag! 'CardNum', credit_card.number, "CardPresent" => false, "Tokenize" => true
         xml.tag! 'CardExpMonth', format_exp(credit_card.month)
@@ -391,7 +410,15 @@ module ActiveMerchant #:nodoc:
       def add_invoice_data(xml, options)
         xml.tag! 'OrderNumber', options[:order_id] if options[:order_id]
         if tax_amount = options[:tax_amount]
-          xml.tag! 'TaxAmount', tax_amount, {'ExemptInd' => options[:tax_exemption] || "false"}
+          xml.tag! 'TaxAmount', tax_amount, {'ExemptInd' => options[:tax_exempt] || "false"}
+        end
+      end
+
+      def add_purchase_order(xml, options)
+        if purchase_order = options[:purchase_order]
+          xml.tag! 'Billing' do
+            xml.tag! 'CustomerPO', purchase_order
+          end
         end
       end
 
