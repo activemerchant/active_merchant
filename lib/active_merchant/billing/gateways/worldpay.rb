@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(HK GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser, :switch]
       self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
+      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'Worldpay Global'
 
@@ -194,7 +195,7 @@ module ActiveMerchant #:nodoc:
         amount_hash = {
           :value => localized_amount(money, currency),
           'currencyCode' => currency,
-          'exponent' => non_fractional_currency?(currency) ? 0 : 2
+          'exponent' => currency_exponent(currency)
         }
 
         if options[:debit_credit_indicator]
@@ -368,6 +369,12 @@ module ActiveMerchant #:nodoc:
       def encoded_credentials
         credentials = "#{@options[:login]}:#{@options[:password]}"
         "Basic #{[credentials].pack('m').strip}"
+      end
+
+      def currency_exponent(currency)
+        return 0 if non_fractional_currency?(currency)
+        return 3 if three_decimal_currency?(currency)
+        return 2
       end
     end
   end

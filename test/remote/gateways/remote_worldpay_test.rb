@@ -123,6 +123,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal "0", result.params['amount_exponent']
   end
 
+  def test_authorize_three_decimal_currency
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'OMR')))
+    assert_equal "OMR", result.params['amount_currency_code']
+    assert_equal "1234", result.params['amount_value']
+    assert_equal "3", result.params['amount_exponent']
+  end
+
   def test_reference_transaction
     assert_success(original = @gateway.authorize(100, @credit_card, @options))
     assert_success(@gateway.authorize(200, original.authorization, :order_id => generate_unique_id))
