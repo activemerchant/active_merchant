@@ -30,7 +30,8 @@ module ActiveMerchant #:nodoc:
         :credit         => 'Refund',
         :authorization  => 'Auth',
         :capture        => 'Complete',
-        :validate       => 'Validate'
+        :validate       => 'Validate',
+        :tokenize       => 'Tokenize'
       }
 
       # We require the DPS gateway username and password when the object is created.
@@ -119,7 +120,7 @@ module ActiveMerchant #:nodoc:
       # Note, once stored, PaymentExpress does not support unstoring a stored card.
       def store(credit_card, options = {})
         request  = build_token_request(credit_card, options)
-        commit(:validate, request)
+        commit(:tokenize, request)
       end
 
       def supports_scrubbing
@@ -329,7 +330,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, response)
         case action
-        when :validate
+        when :validate, :tokenize
           (response[:billing_id] || response[:dps_billing_id])
         else
           response[:dps_txn_ref]
