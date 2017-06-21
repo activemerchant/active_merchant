@@ -14,10 +14,7 @@ module ActiveMerchant #:nodoc:
         :jcb,
         :master,
         :maestro,
-        :swiff,
-        :visa,
-        :visa_debit,
-        :visa_electron
+        :visa
       ]
       self.money_format = :cents
 
