@@ -223,6 +223,14 @@ class WorldpayTest < Test::Unit::TestCase
           {'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY'},
         data
     end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(10000, @credit_card, @options.merge(currency: :OMR))
+    end.check_request do |endpoint, data, headers|
+      assert_tag_with_attributes 'amount',
+          {'value' => '10000', 'exponent' => '3', 'currencyCode' => 'OMR'},
+        data
+    end.respond_with(successful_authorize_response)
   end
 
   def test_address_handling
