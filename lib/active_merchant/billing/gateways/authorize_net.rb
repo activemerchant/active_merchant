@@ -143,6 +143,8 @@ module ActiveMerchant
 
         if response.params["response_reason_code"] == INELIGIBLE_FOR_ISSUING_CREDIT_ERROR
           void(authorization, options)
+        else
+          response
         end
       end
 
