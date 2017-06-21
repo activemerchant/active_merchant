@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Cybersource: update supported card types [bdewater] #2477
 * Moneris: Add 3DS fields for decrypted Apple and Android Pay data [davidsantoso] #2457
 * Trexle: Add gateway support [hossamhossny] #2351
 * QuickPay V10: Return last response for purchase and authorize [curiousepic] #2461
