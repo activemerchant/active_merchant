@@ -563,6 +563,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @gateway.refund(36.40, '2214269051#XXXX1234', force_full_refund_if_unsettled: true)
   end
 
+  def test_failed_full_refund_returns_failed_response_if_reason_code_is_not_unsettled_error
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+    @gateway.expects(:void).never
+
+    response = @gateway.refund(36.40, '2214269051#XXXX1234', force_full_refund_if_unsettled: true)
+    assert response.present?
+    assert_failure response
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 

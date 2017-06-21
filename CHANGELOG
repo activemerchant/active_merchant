@@ -12,6 +12,7 @@
 * SafeCharge: Track currency from original transaction [davidsantoso] #2470
 * Braintree Blue: Braintree Blue: Add ECI indicator to Android Pay transactions [davidsantoso] #2474
 * JetPay V2: Support store transactions and token based payments [shasum] #2475
+* Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476
 
 == Version 1.67.0 (June 8, 2017)
 * Acapture: Pass 3D Secure fields [davidsantoso] #2451
