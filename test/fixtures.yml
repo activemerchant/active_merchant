@@ -21,6 +21,14 @@ allied_wallet:
   merchant_id: merchant_id
   token: token
 
+# Argus doesn't provide public testing data
+argus:
+  req_username: SOMECREDENTIAL
+  req_password: ANOTHERCREDENTIAL
+  site_id: 99999
+  merch_acct_id: 99999
+  li_prod_id_1: 99999
+
 # Working credentials, no need to replace as of Oct 28 2014
 authorize_net:
   login: 7Tt72zseSzH
