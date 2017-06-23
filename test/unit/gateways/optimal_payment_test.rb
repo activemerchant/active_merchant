@@ -128,6 +128,29 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_cvd_fields_pass_correctly
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match (/cvdIndicator%3E1%3C\/cvdIndicator%3E%0A%20%20%20%20%3Ccvd%3E123%3C\/cvd/), data
+    end.respond_with(successful_purchase_response)
+
+    credit_card = CreditCard.new(
+      :number => '4242424242424242',
+      :month => 9,
+      :year => Time.now.year + 1,
+      :first_name => 'Longbob',
+      :last_name => 'Longsen',
+      :brand => 'visa'
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match (/cvdIndicator%3E0%3C\/cvdIndicator%3E%0A%20%20%3C\/card/), data
+    end.respond_with(failed_purchase_response)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -266,6 +289,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
       <year>#{Time.now.year + 1}</year>
     </cardExpiry>
     <cardType>VI</cardType>
+    <cvdIndicator>0</cvdIndicator>
   </card>
   <billingDetails>
     <cardPayMethod>WEB</cardPayMethod>
