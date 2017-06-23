@@ -432,6 +432,10 @@ maxipago:
   login: "100"
   password: "21g8u6gh6szw1gywfs165vui"
 
+# Working credentials, no need to replace
+mercado_pago:
+  access_token: "TEST-8527269031909288-071213-0fc96cb7cd3633189bfbe29f63722700__LB_LA__-263489584"
+
 # Working test credentials, no need to replace
 merchant_esolutions:
   login: "94100008043900000004"
