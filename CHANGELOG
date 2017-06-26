@@ -16,6 +16,7 @@
 * Payflow: Moved to name value pair (NVP) with payflow [jusleg] #2462
 * FirstData: Add a default network tokenization strategy for FirstData E4 [krystosterone] #2473
 * FirstPay: FirstPay: Update hostname and force TLSv1 minimum [davidsantoso] #2478
+* Payflow: Set PAYPAL_NVP header as optional [davidsantoso] #2480
 
 == Version 1.67.0 (June 8, 2017)
 * Acapture: Pass 3D Secure fields [davidsantoso] #2451

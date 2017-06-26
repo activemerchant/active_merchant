@@ -376,7 +376,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_timeout_is_same_in_header_and_xml
     timeout = PayflowGateway.timeout.to_s
 
-    headers = @gateway.send(:build_headers, 1)
+    headers = @gateway.send(:build_headers, 1, {})
     assert_equal timeout, headers['X-VPS-Client-Timeout']
 
     xml = @gateway.send(:build_request, 'dummy body')
