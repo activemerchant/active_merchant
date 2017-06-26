@@ -555,11 +555,12 @@ module ActiveMerchant
 
         xml.billTo do
           first_name, last_name = names_from(payment_source, address, options)
+          full_address = "#{address[:address1]} #{address[:address2]}".strip
+
           xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
           xml.lastName(truncate(last_name, 50)) unless empty?(last_name)
-
           xml.company(truncate(address[:company], 50)) unless empty?(address[:company])
-          xml.address(truncate(address[:address1], 60))
+          xml.address(truncate(full_address, 60))
           xml.city(truncate(address[:city], 40))
           xml.state(empty?(address[:state]) ? 'n/a' : truncate(address[:state], 40))
           xml.zip(truncate((address[:zip] || options[:zip]), 20))
@@ -579,12 +580,12 @@ module ActiveMerchant
           else
             [address[:first_name], address[:last_name]]
           end
+          full_address = "#{address[:address1]} #{address[:address2]}".strip
 
           xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
           xml.lastName(truncate(last_name, 50)) unless empty?(last_name)
-
           xml.company(truncate(address[:company], 50)) unless empty?(address[:company])
-          xml.address(truncate(address[:address1], 60))
+          xml.address(truncate(full_address, 60))
           xml.city(truncate(address[:city], 40))
           xml.state(truncate(address[:state], 40))
           xml.zip(truncate(address[:zip], 20))
