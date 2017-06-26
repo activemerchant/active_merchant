@@ -23,11 +23,11 @@ allied_wallet:
 
 # Argus doesn't provide public testing data
 argus:
-  req_username: SOMECREDENTIAL
-  req_password: ANOTHERCREDENTIAL
-  site_id: 99999
-  merch_acct_id: 99999
-  li_prod_id_1: 99999
+  site_id: site_id
+  req_username: username
+  req_password: password
+  merch_acct_id: Merchant Account ID
+  li_prod_id_1: Line item product ID
 
 # Working credentials, no need to replace as of Oct 28 2014
 authorize_net:
