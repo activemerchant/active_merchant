@@ -180,21 +180,23 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_headers(content_length)
-        {
+      def build_headers(content_length, options = {})
+        headers = {
           "Content-Type" => "text/xml",
           "Content-Length" => content_length.to_s,
           "X-VPS-Client-Timeout" => timeout.to_s,
           "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
           "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
-          "X-VPS-Request-ID" => SecureRandom.hex(16),
-          "PAYPAL-NVP" => "Y"
+          "X-VPS-Request-ID" => SecureRandom.hex(16)
         }
+
+        headers.merge!("PAYPAL-NVP" => options[:paypal_nvp]) if options[:paypal_nvp]
+        headers
       end
 
-      def commit(request_body, options  = {})
+      def commit(request_body, options = {})
         request = build_request(request_body, options)
-        headers = build_headers(request.size)
+        headers = build_headers(request.size, options)
 
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
 
