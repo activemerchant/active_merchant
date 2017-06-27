@@ -15,6 +15,7 @@
 * WorldPay: Support three-decimal currencies [curiousepic] #2501
 * NMI: Add first and lastname to echeck transactions [dtykocki] #2499
 * PayFlow: Add optional email field [davidsantoso] #2505
+* Worldpay: Support Credit on CFT-enabled merchant IDs [curiousepic] #2503
 
 == Version 1.68.0 (June 27, 2017)
 * Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476

@@ -164,6 +164,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_credit
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<paymentDetails action="REFUND">/, data)
+    end.respond_with(successful_credit_response)
+    assert_success response
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
   def test_description
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -702,6 +712,23 @@ class WorldpayTest < Test::Unit::TestCase
         </reply>
       </paymentService>
     REQUEST
+  end
+
+  def successful_credit_response
+    <<-RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                      "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLYCFT">
+        <reply>
+          <ok>
+            <refundReceived orderCode="3d4187536044bd39ad6a289c4339c41c">
+              <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+            </refundReceived>
+          </ok>
+        </reply>
+      </paymentService>
+    RESPONSE
   end
 
   def sample_authorization_request
