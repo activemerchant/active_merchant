@@ -651,9 +651,9 @@ payex:
 
 # Working credentials, no need to replace
 payflow:
-  login: spreedly
-  password: 'ibB4Z8=d;G'
-  partner: PayPal
+  login: 'spreedlyIntegrations'
+  password: 'y9q)(j7H'
+  partner: 'PayPal'
 
 payflow_uk:
   login: LOGIN
