@@ -1,23 +1,25 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Cybersource: update supported card types [bdewater] #2477
-* Moneris: Add 3DS fields for decrypted Apple and Android Pay data [davidsantoso] #2457
-* Trexle: Add gateway support [hossamhossny] #2351
-* QuickPay V10: Return last response for purchase and authorize [curiousepic] #2461
-* Support three-decimal currencies [curiousepic] #2466
-* Credorax: Support 0- and 3-exponent currencies [curiousepic]
-* SafeCharge: Map billing address fields [davidsantoso] #2464
-* Openpay: Send customer name and email in authorize and purchase [dtykocki] #2468
-* SafeCharge: Track currency from original transaction [davidsantoso] #2470
-* Braintree Blue: Braintree Blue: Add ECI indicator to Android Pay transactions [davidsantoso] #2474
-* JetPay V2: Support store transactions and token based payments [shasum] #2475
+
+== Version 1.68.0 (June 27, 2017)
 * Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476
-* Payflow: Moved to name value pair (NVP) with payflow [jusleg] #2462
+* Authorize.net: Concatenate address1 and address2 [dtykocki] #2479
+* Braintree Blue: Braintree Blue: Add ECI indicator to Android Pay transactions [davidsantoso] #2474
+* Credorax: Support 0- and 3-exponent currencies [curiousepic]
+* Cybersource: update supported card types [bdewater] #2477
 * FirstData: Add a default network tokenization strategy for FirstData E4 [krystosterone] #2473
 * FirstPay: FirstPay: Update hostname and force TLSv1 minimum [davidsantoso] #2478
+* JetPay V2: Support store transactions and token based payments [shasum] #2475
+* Moneris: Add 3DS fields for decrypted Apple and Android Pay data [davidsantoso] #2457
+* Openpay: Send customer name and email in authorize and purchase [dtykocki] #2468
+* Payflow: Moved to name value pair (NVP) with payflow [jusleg] #2462
 * Payflow: Set PAYPAL_NVP header as optional [davidsantoso] #2480
-* Authorize.net: Concatenate address1 and address2 [dtykocki] #2479
+* QuickPay V10: Return last response for purchase and authorize [curiousepic] #2461
+* SafeCharge: Map billing address fields [davidsantoso] #2464
+* SafeCharge: Track currency from original transaction [davidsantoso] #2470
+* Support three-decimal currencies [curiousepic] #2466
+* Trexle: Add gateway support [hossamhossny] #2351
 
 == Version 1.67.0 (June 8, 2017)
 * Acapture: Pass 3D Secure fields [davidsantoso] #2451
