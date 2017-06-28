@@ -148,6 +148,8 @@ module ActiveMerchant #:nodoc:
         post[:preapproval_id] = options[:preapproval_id] if options[:preapproval_id]
         post[:prefill_info] = options[:prefill_info] if options[:prefill_info]
         post[:funding_sources] = options[:funding_sources] if options[:funding_sources]
+        post[:payer_rbits] = options[:payer_rbits] if options[:payer_rbits]
+        post[:transaction_rbits] = options[:transaction_rbits] if options[:transaction_rbits]
         add_fee(post, options)
       end
 
