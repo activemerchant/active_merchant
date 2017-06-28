@@ -504,6 +504,7 @@ module ActiveMerchant #:nodoc:
       def add_auth_service(xml, payment_method, options)
         if network_tokenization?(payment_method)
           add_network_tokenization(xml, payment_method, options)
+          add_payment_network_token(xml)
         else
           xml.tag! 'ccAuthService', {'run' => 'true'}
         end
@@ -539,7 +540,9 @@ module ActiveMerchant #:nodoc:
             xml.tag!("xid", Base64.encode64(cryptogram[20...40]))
           end
         end
+      end
 
+      def add_payment_network_token(xml)
         xml.tag! 'paymentNetworkToken' do
           xml.tag!('transactionType', "1")
         end
@@ -556,8 +559,9 @@ module ActiveMerchant #:nodoc:
         if options[:pinless_debit_card]
           xml.tag! 'pinlessDebitService', {'run' => 'true'}
         else
-          add_auth_service(xml, payment_method, options)
+          add_network_tokenization(xml, payment_method, options) if network_tokenization?(payment_method)
           xml.tag! 'ccCaptureService', {'run' => 'true'}
+          add_payment_network_token(xml) if network_tokenization?(payment_method)
         end
       end
 
