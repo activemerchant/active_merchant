@@ -22,8 +22,8 @@ class AdyenTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :billing_address => address(),
-      reference: '345123'
+      billing_address: address(),
+      order_id: '345123'
     }
   end
 
