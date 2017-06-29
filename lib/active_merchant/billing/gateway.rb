@@ -280,9 +280,9 @@ module ActiveMerchant #:nodoc:
           end
         elsif three_decimal_currency?(currency)
           if self.money_format == :cents
-            (amount.to_i * 10).to_s
+            amount.to_s
           else
-            sprintf("%.3f", amount.to_f)
+            sprintf("%.3f", (amount.to_f / 10))
           end
         end
       end

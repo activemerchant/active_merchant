@@ -94,12 +94,12 @@ class GatewayTest < Test::Unit::TestCase
     @gateway.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
 
     Gateway.money_format = :dollars
-    assert_equal '1.000', @gateway.send(:localized_amount, 100, 'OMR')
-    assert_equal '12.340', @gateway.send(:localized_amount, 1234, 'BHD')
+    assert_equal '0.100', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '1.234', @gateway.send(:localized_amount, 1234, 'BHD')
 
     Gateway.money_format = :cents
-    assert_equal '1000', @gateway.send(:localized_amount, 100, 'OMR')
-    assert_equal '12340', @gateway.send(:localized_amount, 1234, 'BHD')
+    assert_equal '100', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '1234', @gateway.send(:localized_amount, 1234, 'BHD')
   end
 
   def test_split_names
