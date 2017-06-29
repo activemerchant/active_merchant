@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ics2wstesta.ic3.com/commerce/1.x/transactionProcessor'
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = "1.121"
+      XSD_VERSION = "1.134"
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :switch, :dankort, :maestro]
       self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG LB)
@@ -279,7 +279,7 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new :indent => 2
         add_purchase_data(xml, money, true, options)
-        add_capture_service(xml, request_id, request_token)
+        add_capture_service(xml, request_id, request_token, options)
         add_business_rules_data(xml, authorization, options)
         xml.target!
       end
@@ -545,10 +545,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_capture_service(xml, request_id, request_token)
+      def add_capture_service(xml, request_id, request_token, options)
         xml.tag! 'ccCaptureService', {'run' => 'true'} do
           xml.tag! 'authRequestID', request_id
           xml.tag! 'authRequestToken', request_token
+          xml.tag! 'sequence', options[:capture_sequence] if options[:capture_sequence]
+          xml.tag! 'totalCount', options[:capture_total_count] if options[:capture_total_count]
         end
       end
 
