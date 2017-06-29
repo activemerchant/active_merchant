@@ -275,14 +275,14 @@ module ActiveMerchant #:nodoc:
         if non_fractional_currency?(currency)
           if self.money_format == :cents
             sprintf("%.0f", amount.to_f / 100)
-          else
+          elsif self.money_format == :dollars
             amount.split('.').first
           end
         elsif three_decimal_currency?(currency)
           if self.money_format == :cents
-            (amount.to_i * 10).to_s
-          else
-            sprintf("%.3f", amount.to_f)
+            amount.to_s
+          elsif self.money_format == :dollars
+            sprintf("%.3f", (amount.to_f / 10))
           end
         end
       end
