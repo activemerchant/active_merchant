@@ -1047,7 +1047,7 @@ sage:
   password: 'Z5W2S8J7X8T5'
 
 sage_pay:
-  login: LOGIN
+  login: spreedly
 
 sallie_mae:
   login: TEST0
