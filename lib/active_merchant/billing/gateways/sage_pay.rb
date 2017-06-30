@@ -359,9 +359,9 @@ module ActiveMerchant #:nodoc:
           response['Token']
         else
          [ params[:VendorTxCode],
-           response["VPSTxId"],
+           response["VPSTxId"] || params[:VPSTxId],
            response["TxAuthNo"],
-           response["SecurityKey"],
+           response["SecurityKey"] || params[:SecurityKey],
            action ].join(";")
         end
       end
