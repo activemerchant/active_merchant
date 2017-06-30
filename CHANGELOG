@@ -10,6 +10,7 @@
 * SagePay: Make Repeat purchase if payment is a past authorization [curiousepic] #2495
 * Netbanx: map response errorCodes onto standard error code [iirving] #2456
 * Netbanx: Update supported countries and cardtypes [iirving] #2456
+* Barclaycard Smartpay: Support 0- and 3-exponent currencies [curiousepic] #2498
 
 == Version 1.68.0 (June 27, 2017)
 * Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476
