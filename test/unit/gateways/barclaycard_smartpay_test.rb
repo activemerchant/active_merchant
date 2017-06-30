@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BarclaycardSmartpayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = BarclaycardSmartpayGateway.new(
       company: 'company',
@@ -116,15 +118,26 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     assert_equal "Refused", response.message
   end
 
-  def test_fractional_currency
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    @gateway.expects(:post_data).with do |params|
-      '100' == params['amount.value'] && 'JPY' == params['amount.currency']
-    end
+  def test_authorize_nonfractional_currency
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/amount.value=1/, data)
+      assert_match(/amount.currency=JPY/,  data)
+    end.respond_with(successful_authorize_response)
 
-    @options[:currency] = 'JPY'
+    assert_success response
+  end
 
-    @gateway.authorize(@amount, @credit_card, @options)
+  def test_authorize_three_decimal_currency
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'OMR'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/amount.value=100/, data)
+      assert_match(/amount.currency=OMR/,  data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
   end
 
   def test_successful_store
