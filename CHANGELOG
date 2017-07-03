@@ -20,6 +20,7 @@
 * Worldpay: Support Credit on CFT-enabled merchant IDs [curiousepic] #2503
 * FirstPay: Add processor_id field [davidsantoso] #2506
 * Authorize.Net: Use two character default for billing state [dtykocki] #2496
+* SafeCharge: Pass UserID field [curiousepic] #2507
 
 == Version 1.68.0 (June 27, 2017)
 * Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476
