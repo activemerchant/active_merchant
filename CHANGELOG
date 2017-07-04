@@ -5,6 +5,7 @@
 * Adyen: Use Active Merchant standard order_id option for reference [jasonwebster] #2483
 * Correct calculation for three-exponent currencies [curiousepic] #2486
 * SagePay: Use VPSTxId from authorization for refunds [dtykocki] #2489
+* Payflow: Move PAYPAL-NVP header option to a class attribute on the payment gateway [deuxpi] #2492
 
 == Version 1.68.0 (June 27, 2017)
 * Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476

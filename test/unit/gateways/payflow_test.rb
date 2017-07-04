@@ -376,7 +376,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_timeout_is_same_in_header_and_xml
     timeout = PayflowGateway.timeout.to_s
 
-    headers = @gateway.send(:build_headers, 1, {})
+    headers = @gateway.send(:build_headers, 1)
     assert_equal timeout, headers['X-VPS-Client-Timeout']
 
     xml = @gateway.send(:build_request, 'dummy body')
@@ -399,6 +399,17 @@ class PayflowTest < Test::Unit::TestCase
     response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
     assert_equal '2014-06-25 09:33:41', response.params['transaction_time']
+  end
+
+  def test_paypal_nvp_option_sends_header
+    headers = @gateway.send(:build_headers, 1)
+    assert_not_include headers, 'PAYPAL-NVP'
+
+    old_use_paypal_nvp = PayflowGateway.use_paypal_nvp
+    PayflowGateway.use_paypal_nvp = true
+    headers = @gateway.send(:build_headers, 1)
+    assert_equal 'Y', headers['PAYPAL-NVP']
+    PayflowGateway.use_paypal_nvp = old_use_paypal_nvp
   end
 
   private
