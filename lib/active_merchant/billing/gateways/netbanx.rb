@@ -16,6 +16,7 @@ module ActiveMerchant #:nodoc:
         :maestro,
         :visa
       ]
+
       self.money_format = :cents
 
       self.homepage_url = 'https://processing.paysafe.com/'
@@ -195,6 +196,7 @@ module ActiveMerchant #:nodoc:
           message_from(success, response),
           response,
           :test => test?,
+          :error_code => error_code_from(response),
           :authorization => authorization_from(success, get_url(uri), method, response)
         )
       end
@@ -242,6 +244,47 @@ module ActiveMerchant #:nodoc:
           'Authorization' => "Basic #{Base64.strict_encode64(@options[:api_key].to_s).strip}",
           'User-Agent'    => "Netbanx-Paysafe v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
+      end
+
+      def error_code_from(response)
+        unless success_from(response)
+          case response['errorCode']
+            when '3002' ; STANDARD_ERROR_CODE[:invalid_number] # You submitted an invalid card number or brand or combination of card number and brand with your request.
+            when '3004' ; STANDARD_ERROR_CODE[:incorrect_zip] # The zip/postal code must be provided for an AVS check request.
+            when '3005' ; STANDARD_ERROR_CODE[:incorrect_cvc] # You submitted an incorrect CVC value with your request.
+            when '3006' ; STANDARD_ERROR_CODE[:expired_card] # You submitted an expired credit card number with your request.
+            when '3009' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined by the issuing bank.
+            when '3011' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined by the issuing bank because the card used is a restricted card. Contact the cardholder's credit card company for further investigation.
+            when '3012' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined by the issuing bank because the credit card expiry date submitted is invalid.
+            when '3013' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined by the issuing bank due to problems with the credit card account.
+            when '3014' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined - the issuing bank has returned an unknown response. Contact the card holder's credit card company for further investigation.
+            when '3015' ; STANDARD_ERROR_CODE[:card_declined] # The bank has requested that you process the transaction manually by calling the cardholder's credit card company.
+            when '3016' ; STANDARD_ERROR_CODE[:card_declined] # The bank has requested that you retrieve the card from the cardholder – it may be a lost or stolen card.
+            when '3017' ; STANDARD_ERROR_CODE[:invalid_number] # You submitted an invalid credit card number with your request.
+            when '3022' ; STANDARD_ERROR_CODE[:card_declined] # The card has been declined due to insufficient funds.
+            when '3023' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined by the issuing bank due to its proprietary card activity regulations.
+            when '3024' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined because the issuing bank does not permit the transaction for this card.          when '3032' ;   STANDARD_ERROR_CODE[:card_declined] # Your request has been declined by the issuing bank or external gateway because the card is probably in one of their negative databases.
+            when '3035' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined due to exceeded PIN attempts.
+            when '3036' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined due to an invalid issuer.
+            when '3037' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined because it is invalid.
+            when '3038' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined due to customer cancellation.
+            when '3039' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined due to an invalid authentication value.
+            when '3040' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined because the request type is not permitted on the card.
+            when '3041' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined due to a timeout.
+            when '3042' ; STANDARD_ERROR_CODE[:card_declined] # Your request has been declined due to a cryptographic error.
+            when '3045' ; STANDARD_ERROR_CODE[:invalid_expiry_date] # You submitted an invalid date format for this request.
+            when '3046' ; STANDARD_ERROR_CODE[:card_declined] # The transaction was declined because the amount was set to zero.
+            when '3047' ; STANDARD_ERROR_CODE[:card_declined] # The transaction was declined because the amount exceeds the floor limit.
+            when '3048' ; STANDARD_ERROR_CODE[:card_declined] # The transaction was declined because the amount is less than the floor limit.
+            when '3049' ; STANDARD_ERROR_CODE[:card_declinedr] # The bank has requested that you retrieve the card from the cardholder – the credit card has expired.
+            when '3050' ; STANDARD_ERROR_CODE[:card_declined] # The bank has requested that you retrieve the card from the cardholder – fraudulent activity is suspected.
+            when '3051' ; STANDARD_ERROR_CODE[:card_declined] # The bank has requested that you retrieve the card from the cardholder – contact the acquirer for more information.
+            when '3052' ; STANDARD_ERROR_CODE[:card_declined] # The bank has requested that you retrieve the card from the cardholder – the credit card is restricted.
+            when '3053' ; STANDARD_ERROR_CODE[:card_declined] # The bank has requested that you retrieve the card from the cardholder – please call the acquirer.
+            when '3054' ; STANDARD_ERROR_CODE[:card_declined] # The transaction was declined due to suspected fraud.
+            else STANDARD_ERROR_CODE[:processing_error]
+          end
+        end
       end
     end
   end
