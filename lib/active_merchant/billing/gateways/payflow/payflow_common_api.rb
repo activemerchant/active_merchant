@@ -25,6 +25,13 @@ module ActiveMerchant #:nodoc:
         # subsequent Responses will have a :duplicate parameter set in the params
         # hash.
         base.retry_safe = true
+
+        # Send Payflow requests to PayPal directly by activating the NVP protocol.
+        # Valid XMLPay documents may have issues being parsed correctly by
+        # Payflow but will be accepted by PayPal if a PAYPAL-NVP request header
+        # is declared.
+        base.class_attribute :use_paypal_nvp
+        base.use_paypal_nvp = false
       end
 
       XMLNS = 'http://www.paypal.com/XMLPay'
@@ -180,7 +187,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_headers(content_length, options = {})
+      def build_headers(content_length)
         headers = {
           "Content-Type" => "text/xml",
           "Content-Length" => content_length.to_s,
@@ -190,13 +197,13 @@ module ActiveMerchant #:nodoc:
           "X-VPS-Request-ID" => SecureRandom.hex(16)
         }
 
-        headers.merge!("PAYPAL-NVP" => options[:paypal_nvp]) if options[:paypal_nvp]
+        headers.merge!("PAYPAL-NVP" => "Y") if self.use_paypal_nvp
         headers
       end
 
       def commit(request_body, options = {})
         request = build_request(request_body, options)
-        headers = build_headers(request.size, options)
+        headers = build_headers(request.size)
 
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
 
