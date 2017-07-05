@@ -7,6 +7,7 @@
 * SagePay: Use VPSTxId from authorization for refunds [dtykocki] #2489
 * Payflow: Move PAYPAL-NVP header option to a class attribute on the payment gateway [deuxpi] #2492
 * Optimal Payments: Pass CVD indicator accurately [curiousepic] #2491
+* SagePay: Make Repeat purchase if payment is a past authorization [curiousepic] #2495
 
 == Version 1.68.0 (June 27, 2017)
 * Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476
