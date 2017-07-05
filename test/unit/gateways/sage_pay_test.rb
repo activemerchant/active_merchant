@@ -305,6 +305,15 @@ class SagePayTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_repeat_purchase_with_reference_token
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "1455548a8d178beecd88fe6a285f50ff;{0D2ACAF0-FA64-6DFF-3869-7ADDDC1E0474};15353766;BS231FNE14;purchase", @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/RelatedVPSTxId=%7B0D2ACAF0-FA64-6DFF-3869-7ADDDC1E0474%/, data)
+      assert_match(/TxType=REPEAT/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def purchase_with_options(optional)
