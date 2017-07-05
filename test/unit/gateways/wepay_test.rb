@@ -160,7 +160,7 @@ class WepayTest < Test::Unit::TestCase
       opened
       starting SSL for stage.wepayapi.com:443...
       SSL established
-      <- "POST /v2/credit_card/create HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer STAGE_c91882b0bed3584b8aed0f7f515f2f05a1d40924ee6f394ce82d91018cb0f2d3\r\nApi-Version: 2017-02-01\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 272\r\n\r\n"
+      <- "POST /v2/credit_card/create HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer STAGE_c91882b0bed3584b8aed0f7f515f2f05a1d40924ee6f394ce82d91018cb0f2d3\r\nApi-Version: 2017-05-31\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 272\r\n\r\n"
       <- "{\"client_id\":\"44716\",\"user_name\":\"Longbob Longsen\",\"email\":\"test@example.com\",\"cc_number\":\"5496198584584769\",\"cvv\":\"123\",\"expiration_month\":9,\"expiration_year\":2018,\"address\":{\"address1\":\"456 My Street\",\"city\":\"Ottawa\",\"country\":\"CA\",\"region\":\"ON\",\"postal_code\":\"K1C2N6\"}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -192,7 +192,7 @@ class WepayTest < Test::Unit::TestCase
       opened
       starting SSL for stage.wepayapi.com:443...
       SSL established
-      <- "POST /v2/checkout/create HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer STAGE_c91882b0bed3584b8aed0f7f515f2f05a1d40924ee6f394ce82d91018cb0f2d3\r\nApi-Version: 2017-02-01\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 202\r\n\r\n"
+      <- "POST /v2/checkout/create HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer STAGE_c91882b0bed3584b8aed0f7f515f2f05a1d40924ee6f394ce82d91018cb0f2d3\r\nApi-Version: 2017-05-31\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 202\r\n\r\n"
       <- "{\"payment_method\":{\"type\":\"credit_card\",\"credit_card\":{\"id\":\"2559797807\",\"auto_capture\":false}},\"account_id\":\"2080478981\",\"amount\":\"20.00\",\"short_description\":\"Purchase\",\"type\":\"goods\",\"currency\":\"USD\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -224,7 +224,7 @@ class WepayTest < Test::Unit::TestCase
       opened
       starting SSL for stage.wepayapi.com:443...
       SSL established
-      <- "POST /v2/checkout/capture HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer STAGE_c91882b0bed3584b8aed0f7f515f2f05a1d40924ee6f394ce82d91018cb0f2d3\r\nApi-Version: 2017-02-01\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 28\r\n\r\n"
+      <- "POST /v2/checkout/capture HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer STAGE_c91882b0bed3584b8aed0f7f515f2f05a1d40924ee6f394ce82d91018cb0f2d3\r\nApi-Version: 2017-05-31\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 28\r\n\r\n"
       <- "{\"checkout_id\":\"1709862829\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -261,7 +261,7 @@ class WepayTest < Test::Unit::TestCase
       opened
       starting SSL for stage.wepayapi.com:443...
       SSL established
-      <- "POST /v2/credit_card/create HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer [FILTERED]\r\nApi-Version: 2017-02-01\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 272\r\n\r\n"
+      <- "POST /v2/credit_card/create HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer [FILTERED]\r\nApi-Version: 2017-05-31\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 272\r\n\r\n"
       <- "{\"client_id\":\"44716\",\"user_name\":\"Longbob Longsen\",\"email\":\"test@example.com\",\"cc_number\":\"[FILTERED]\",\"cvv\":\"[FILTERED]\",\"expiration_month\":9,\"expiration_year\":2018,\"address\":{\"address1\":\"456 My Street\",\"city\":\"Ottawa\",\"country\":\"CA\",\"region\":\"ON\",\"postal_code\":\"K1C2N6\"}}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -293,7 +293,7 @@ class WepayTest < Test::Unit::TestCase
       opened
       starting SSL for stage.wepayapi.com:443...
       SSL established
-      <- "POST /v2/checkout/create HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer [FILTERED]\r\nApi-Version: 2017-02-01\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 202\r\n\r\n"
+      <- "POST /v2/checkout/create HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer [FILTERED]\r\nApi-Version: 2017-05-31\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 202\r\n\r\n"
       <- "{\"payment_method\":{\"type\":\"credit_card\",\"credit_card\":{\"id\":\"2559797807\",\"auto_capture\":false}},\"account_id\":\"2080478981\",\"amount\":\"20.00\",\"short_description\":\"Purchase\",\"type\":\"goods\",\"currency\":\"USD\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
@@ -325,7 +325,7 @@ class WepayTest < Test::Unit::TestCase
       opened
       starting SSL for stage.wepayapi.com:443...
       SSL established
-      <- "POST /v2/checkout/capture HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer [FILTERED]\r\nApi-Version: 2017-02-01\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 28\r\n\r\n"
+      <- "POST /v2/checkout/capture HTTP/1.1\r\nContent-Type: application/json\r\nUser-Agent: ActiveMerchantBindings/1.65.0\r\nAuthorization: Bearer [FILTERED]\r\nApi-Version: 2017-05-31\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: stage.wepayapi.com\r\nContent-Length: 28\r\n\r\n"
       <- "{\"checkout_id\":\"1709862829\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
