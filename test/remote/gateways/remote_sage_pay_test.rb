@@ -323,8 +323,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
   def test_successful_repeat_purchase
     response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
-
-    repeat = @gateway.purchase(@amount, response.authorization, @options.merge(repeat: true, order_id: generate_unique_id))
+    repeat = @gateway.purchase(@amount, response.authorization, @options.merge(order_id: generate_unique_id))
     assert_success repeat
   end
 
