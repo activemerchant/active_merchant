@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class CyberSourceTest < Test::Unit::TestCase
   include CommStub
@@ -354,11 +355,6 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_with_network_tokenization_for_visa
-    @gateway.expects(:ssl_post).with do |host, request_body|
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
-      true
-    end.returns(successful_purchase_response)
-
     credit_card = network_tokenization_credit_card('4111111111111111',
       :brand              => 'visa',
       :transaction_id     => "123",
@@ -366,12 +362,37 @@ class CyberSourceTest < Test::Unit::TestCase
       :payment_cryptogram => "111111111100cryptogram"
     )
 
-    assert response = @gateway.authorize(@amount, credit_card, @options)
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card, @options)
+    end.check_request do |_endpoint, body, _headers|
+      assert_xml_valid_to_xsd(body)
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_network_tokenization_for_visa
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |_endpoint, body, _headers|
+      assert_xml_valid_to_xsd(body)
+      assert_match %r'<ccAuthService run="true">.+?<ccCaptureService run="true"/>'m, body
+    end.respond_with(successful_purchase_response)
+
     assert_success response
   end
 
   def test_successful_auth_with_network_tokenization_for_mastercard
     @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_xml_valid_to_xsd(request_body)
       assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
@@ -389,6 +410,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_auth_with_network_tokenization_for_amex
     @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_xml_valid_to_xsd(request_body)
       assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
@@ -668,5 +690,14 @@ class CyberSourceTest < Test::Unit::TestCase
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-2636690"><wsu:Created>2008-01-15T21:42:03.343Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>b0a6cf9aa07f1a8495f89c364bbd6a9a</c:merchantReferenceCode><c:requestID>2004333231260008401927</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Afvvj7Ke2Fmsbq0wHFE2sM6R4GAptYZ0jwPSA+R9PhkyhFTb0KRjoE4+ynthZrG6tMBwjAtT</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>123456</c:authorizationCode><c:avsCode>Y</c:avsCode><c:avsCodeRaw>Y</c:avsCodeRaw><c:cvCode>M</c:cvCode><c:cvCodeRaw>M</c:cvCodeRaw><c:authorizedDateTime>2008-01-15T21:42:03Z</c:authorizedDateTime><c:processorResponse>00</c:processorResponse><c:authFactorCode>U</c:authFactorCode><p></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
     XML
+  end
+
+  def assert_xml_valid_to_xsd(data, root_element = '//s:Body/*')
+    schema_file = File.open("#{File.dirname(__FILE__)}/../../schema/cyber_source/CyberSourceTransaction_#{CyberSourceGateway::XSD_VERSION}.xsd")
+    doc = Nokogiri::XML(data)
+    root = Nokogiri::XML(doc.xpath(root_element).to_s)
+    xsd = Nokogiri::XML::Schema(schema_file)
+    errors = xsd.validate(root)
+    assert_empty errors, "XSD validation errors in the following XML:\n#{root}"
   end
 end
