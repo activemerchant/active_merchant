@@ -555,6 +555,7 @@ module ActiveMerchant
 
         xml.billTo do
           first_name, last_name = names_from(payment_source, address, options)
+          state = state_from(address, options)
           full_address = "#{address[:address1]} #{address[:address2]}".strip
 
           xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
@@ -562,7 +563,7 @@ module ActiveMerchant
           xml.company(truncate(address[:company], 50)) unless empty?(address[:company])
           xml.address(truncate(full_address, 60))
           xml.city(truncate(address[:city], 40))
-          xml.state(empty?(address[:state]) ? 'n/a' : truncate(address[:state], 40))
+          xml.state(truncate(state, 40))
           xml.zip(truncate((address[:zip] || options[:zip]), 20))
           xml.country(truncate(address[:country], 60))
           xml.phoneNumber(truncate(address[:phone], 25)) unless empty?(address[:phone])
@@ -711,6 +712,14 @@ module ActiveMerchant
           [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
         else
           [options[:first_name], options[:last_name]]
+        end
+      end
+
+      def state_from(address, options)
+        if ["US", "CA"].include?(address[:country])
+          address[:state] || 'NC'
+        else
+          address[:state]
         end
       end
 
