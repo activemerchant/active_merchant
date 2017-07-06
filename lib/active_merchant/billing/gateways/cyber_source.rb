@@ -471,6 +471,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_decision_manager_fields(xml, options)
+        return unless options[:decision_manager_enabled]
+
         xml.tag! 'decisionManager' do
           xml.tag! 'enabled', options[:decision_manager_enabled] if options[:decision_manager_enabled]
           xml.tag! 'profile', options[:decision_manager_profile] if options[:decision_manager_profile]
@@ -478,6 +480,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mdd_fields(xml, options)
+        return unless options.keys.any? { |key| key.to_s.start_with?("mdd_field") }
+
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
             key = "mdd_field_#{each}".to_sym
