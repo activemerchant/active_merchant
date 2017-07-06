@@ -258,6 +258,7 @@ module ActiveMerchant #:nodoc:
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
+        add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
         xml.target!
       end
@@ -293,6 +294,7 @@ module ActiveMerchant #:nodoc:
           add_check_service(xml)
         else
           add_purchase_service(xml, payment_method_or_reference, options)
+          add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
         xml.target!
@@ -355,6 +357,7 @@ module ActiveMerchant #:nodoc:
             add_check_service(xml, options)
           else
             add_purchase_service(xml, payment_method, options)
+            add_payment_network_token(xml) if network_tokenization?(payment_method)
           end
         end
         add_subscription_create_service(xml, options)
@@ -471,6 +474,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_decision_manager_fields(xml, options)
+        return unless options[:decision_manager_enabled]
+
         xml.tag! 'decisionManager' do
           xml.tag! 'enabled', options[:decision_manager_enabled] if options[:decision_manager_enabled]
           xml.tag! 'profile', options[:decision_manager_profile] if options[:decision_manager_profile]
@@ -478,6 +483,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mdd_fields(xml, options)
+        return unless options.keys.any? { |key| key.to_s.start_with?("mdd_field") }
+
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
             key = "mdd_field_#{each}".to_sym
@@ -503,7 +510,7 @@ module ActiveMerchant #:nodoc:
 
       def add_auth_service(xml, payment_method, options)
         if network_tokenization?(payment_method)
-          add_network_tokenization(xml, payment_method, options)
+          add_auth_network_tokenization(xml, payment_method, options)
         else
           xml.tag! 'ccAuthService', {'run' => 'true'}
         end
@@ -513,7 +520,7 @@ module ActiveMerchant #:nodoc:
         payment_method.is_a?(NetworkTokenizationCreditCard)
       end
 
-      def add_network_tokenization(xml, payment_method, options)
+      def add_auth_network_tokenization(xml, payment_method, options)
         return unless network_tokenization?(payment_method)
 
         case card_brand(payment_method).to_sym
@@ -539,9 +546,11 @@ module ActiveMerchant #:nodoc:
             xml.tag!("xid", Base64.encode64(cryptogram[20...40]))
           end
         end
+      end
 
+      def add_payment_network_token(xml)
         xml.tag! 'paymentNetworkToken' do
-          xml.tag!('transactionType', "1")
+          xml.tag!('transactionType', '1')
         end
       end
 
