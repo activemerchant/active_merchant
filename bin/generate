@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-require 'rubygems'
 require 'thor'
 
 require File.expand_path('../../generators/active_merchant_generator', __FILE__)
