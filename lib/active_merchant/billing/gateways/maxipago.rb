@@ -144,12 +144,18 @@ module ActiveMerchant #:nodoc:
       def commit(action, is_api_request=false)
         if is_api_request
           request = build_api_request(action) { |doc| yield(doc) }
+          puts api_url		
+          puts request
           raw_response = ssl_post(api_url, request, 'Content-Type' => 'text/xml')
+          puts raw_response
           response = parse(raw_response)
+          puts response
           success = api_success? response
         else
           request = build_xml_request(action) { |doc| yield(doc) }
+          puts request
           response = parse(ssl_post(url, request, 'Content-Type' => 'text/xml'))
+          puts response
           success = success? response
         end
         Response.new(
