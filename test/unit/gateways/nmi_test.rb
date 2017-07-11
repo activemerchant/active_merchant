@@ -70,6 +70,8 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/type=sale/, data)
       assert_match(/amount=1.00/, data)
       assert_match(/payment=check/, data)
+      assert_match(/firstname=#{@check.first_name}/, data)
+      assert_match(/lastname=#{@check.last_name}/, data)
       assert_match(/checkname=#{@check.name}/, CGI.unescape(data))
       assert_match(/checkaba=#{@check.routing_number}/, data)
       assert_match(/checkaccount=#{@check.account_number}/, data)
