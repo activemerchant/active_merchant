@@ -154,7 +154,9 @@ module ActiveMerchant #:nodoc:
         else
           request = build_xml_request(action) { |doc| yield(doc) }
           puts request
-          response = parse(ssl_post(url, request, 'Content-Type' => 'text/xml'))
+          raw_response = ssl_post(url, request, 'Content-Type' => 'text/xml')
+          puts raw_response
+          response = parse(raw_response)
           puts response
           success = success? response
         end
