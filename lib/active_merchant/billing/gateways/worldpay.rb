@@ -72,6 +72,14 @@ module ActiveMerchant #:nodoc:
         void(authorization, options ) if response.params["last_event"] == "AUTHORISED"
       end
 
+      # Credits only function on a Merchant ID/login/profile flagged for Payouts
+      #   aka Credit Fund Transfers (CFT), whereas normal purchases, refunds,
+      #   and other transactions should be performed on a normal eCom-flagged
+      #   merchant ID.
+      def credit(money, payment_method, options = {})
+        credit_request(money, payment_method, options.merge(:credit => true))
+      end
+
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
@@ -110,6 +118,10 @@ module ActiveMerchant #:nodoc:
 
       def refund_request(money, authorization, options)
         commit('refund', build_refund_request(money, authorization, options), :ok)
+      end
+
+      def credit_request(money, payment_method, options)
+        commit('credit', build_authorization_request(money, payment_method, options), :ok)
       end
 
       def build_request
@@ -217,7 +229,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         else
-          xml.tag! 'paymentDetails' do
+          xml.tag! 'paymentDetails', credit_fund_transfer_attribute(options) do
             xml.tag! CARD_CODES[card_brand(payment_method)] do
               xml.tag! 'cardNumber', payment_method.number
               xml.tag! 'expiryDate' do
@@ -364,6 +376,11 @@ module ActiveMerchant #:nodoc:
       def authorization_from(raw)
         pair = raw.detect{|k,v| k.to_s =~ /_order_code$/}
         (pair ? pair.last : nil)
+      end
+
+      def credit_fund_transfer_attribute(options)
+        return unless options[:credit]
+        {'action' => "REFUND"}
       end
 
       def encoded_credentials
