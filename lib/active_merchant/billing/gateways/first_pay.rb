@@ -67,6 +67,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:owner_email] = options[:email] if options[:email]
         post[:remote_ip_address] = options[:ip] if options[:ip]
+        post[:processor_id] = options[:processor_id] if options[:processor_id]
       end
 
       def add_address(post, creditcard, options)
