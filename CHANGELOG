@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.69.0 (July 12, 2017)
 * WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
 * Adyen: Use Active Merchant standard order_id option for reference [jasonwebster] #2483
 * Correct calculation for three-exponent currencies [curiousepic] #2486
