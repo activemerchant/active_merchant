@@ -1,13 +1,26 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* WePay: Upgrade WePay API to 2017-05-31 [oldsneerjaw] #2493
+
+== Version 1.69.0 (July 12, 2017)
 * WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
 * Adyen: Use Active Merchant standard order_id option for reference [jasonwebster] #2483
 * Correct calculation for three-exponent currencies [curiousepic] #2486
 * SagePay: Use VPSTxId from authorization for refunds [dtykocki] #2489
 * Payflow: Move PAYPAL-NVP header option to a class attribute on the payment gateway [deuxpi] #2492
 * Optimal Payments: Pass CVD indicator accurately [curiousepic] #2491
-* WePay: Upgrade WePay API to 2017-05-31 [oldsneerjaw] #2493
+* SagePay: Make Repeat purchase if payment is a past authorization [curiousepic] #2495
+* Netbanx: map response errorCodes onto standard error code [iirving] #2456
+* Netbanx: Update supported countries and cardtypes [iirving] #2456
+* Barclaycard Smartpay: Support 0- and 3-exponent currencies [curiousepic] #2498
+* CyberSource: Fix XSD schema validation issues [jasonwebster] #2497
+* WorldPay: Support three-decimal currencies [curiousepic] #2501
+* NMI: Add first and lastname to echeck transactions [dtykocki] #2499
+* PayFlow: Add optional email field [davidsantoso] #2505
+* Worldpay: Support Credit on CFT-enabled merchant IDs [curiousepic] #2503
+* FirstPay: Add processor_id field [davidsantoso] #2506
+* Authorize.Net: Use two character default for billing state [dtykocki] #2496
 
 == Version 1.68.0 (June 27, 2017)
 * Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476

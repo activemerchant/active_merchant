@@ -146,6 +146,8 @@ module ActiveMerchant #:nodoc:
           post[:token_cryptogram] = payment_method.payment_cryptogram
         elsif(card_brand(payment_method) == 'check')
           post[:payment] = 'check'
+          post[:firstname] = payment_method.first_name
+          post[:lastname] = payment_method.last_name
           post[:checkname] = payment_method.name
           post[:checkaba] = payment_method.routing_number
           post[:checkaccount] = payment_method.account_number
