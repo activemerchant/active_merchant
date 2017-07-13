@@ -35,7 +35,7 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'EUR'
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
-      self.supported_countries = %w(IE GB FR BE NL LU IT)
+      self.supported_countries = %w(AD AT AU BE BG BI BR CA CH CN CY CZ DE DK EE ES FI FR GB GI GL GR HK HU IE IL IN IS IT LI LK LT LU LV MO MT MV MY NL NO NZ PH PL PR PT RO RU SE SG SI SK TR TW US)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
 

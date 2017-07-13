@@ -198,7 +198,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [QuickPay](http://quickpay.net/) - DE, DK, ES, FI, FR, FO, GB, IS, NO, SE
 * [Qvalent](https://www.qvalent.com/) - AU
 * [Raven](http://www.deepcovelabs.com/raven) - AI, AN, AT, AU, BE, BG, BS, BZ, CA, CH, CR, CY, CZ, DE, DK, DM, DO, EE, EL, ES, FI, FR, GB, GG, GI, HK, HR, HU, IE, IL, IM, IN, IT, JE, KN, LI, LT, LU, LV, MH, MT, MY, NL, NO, NZ, PA, PE, PH, PL, PT, RO, RS, SC, SE, SG, SI, SK, UK, US, VG, ZA
-* [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
+* [Realex](http://www.realexpayments.com/) - AD, AT, AU, BE, BG, BI, BR, CA, CH, CN, CY, CZ, DE, DK, EE, ES, FI, FR, GB, GI, GL, GR, HK, HU, IE, IL, IN, IS, IT, LI, LK, LT, LU, LV, MO, MT, MV, MY, NL, NO, NZ, PH, PL, PR, PT, RO, RU, SE, SG, SI, SK, TR, TW, US
 * [Redsys](http://www.redsys.es/) - ES
 * [S5](http://www.s5.dk/) - DK
 * [SagePay](http://www.sagepay.com) - GB, IE
