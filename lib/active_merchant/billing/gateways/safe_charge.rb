@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_ResponseFormat] = "4"
         post[:sg_Version] = VERSION
         post[:sg_ClientUniqueID] = options[:order_id] if options[:order_id]
-        post[:sg_User_ID] = options[:user_id] if options[:user_id]
+        post[:sg_UserID] = options[:user_id] if options[:user_id]
       end
 
       def add_payment(post, payment)
