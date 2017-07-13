@@ -39,11 +39,20 @@ class RealexTest < Test::Unit::TestCase
 
     @address = {
       :name => 'Longbob Longsen',
-      :address1 => '123 Fake Street',
-      :city => 'Belfast',
+      :address1 => '456, The Road',
+      :city => 'The Town',
       :state => 'Antrim',
-      :country => 'Northern Ireland',
-      :zip => 'BT2 8XX'
+      :country => 'GB',
+      :zip => 'WB3 A21'
+    }
+
+    @address_us = {
+      :name => 'Longbob Longsen',
+      :address1 => '456 The Road',
+      :city => 'The Town',
+      :state => 'Antrim',
+      :country => 'US',
+      :zip => '54321'
     }
 
     @amount = 100
@@ -286,7 +295,7 @@ SRC
   end
 
   def test_zip_in_shipping_address
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>28\|123<\/code>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>321\|456<\/code>/)).returns(successful_purchase_response)
 
     options = {
       :order_id => '1',
@@ -296,12 +305,34 @@ SRC
     @gateway.authorize(@amount, @credit_card, options)
   end
 
+  def test_zip_in_shipping_address_us
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>54321\|456 The Road<\/code>/)).returns(successful_purchase_response)
+
+    options = {
+      :order_id => '1',
+      :shipping_address => @address_us
+    }
+
+    @gateway.authorize(@amount, @credit_card, options)
+  end
+
   def test_zip_in_billing_address
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>28\|123<\/code>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>321\|456<\/code>/)).returns(successful_purchase_response)
 
     options = {
       :order_id => '1',
       :billing_address => @address
+    }
+
+    @gateway.authorize(@amount, @credit_card, options)
+  end
+
+  def test_zip_in_billing_address_us
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>54321\|456 The Road<\/code>/)).returns(successful_purchase_response)
+
+    options = {
+      :order_id => '1',
+      :billing_address => @address_us
     }
 
     @gateway.authorize(@amount, @credit_card, options)

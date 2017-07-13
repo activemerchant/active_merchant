@@ -253,7 +253,10 @@ module ActiveMerchant
 
       def format_address_code(address)
         code = [address[:zip].to_s, address[:address1].to_s + address[:address2].to_s]
-        code.collect{|e| e.gsub(/\D/, "")}.reject{|e| e.empty?}.join("|")
+        if 'GB' == address[:country]
+          code = code.collect{|e| e.gsub(/\D/, "")}
+        end
+        code.reject{|e| e.empty?}.join("|")
       end
 
       def new_timestamp
