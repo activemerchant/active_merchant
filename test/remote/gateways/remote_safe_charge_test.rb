@@ -25,7 +25,8 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
     options = {
       order_id: '1',
       ip: "127.0.0.1",
-      email: "joe@example.com"
+      email: "joe@example.com",
+      user_id: '123'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -92,7 +93,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    response = @gateway.credit(@amount, @credit_card, @options)
+    response = @gateway.credit(@amount, credit_card('4444436501403986'), @options)
     assert_success response
     assert_equal 'Success', response.message
   end
