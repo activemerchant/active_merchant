@@ -252,7 +252,7 @@ module ActiveMerchant
       end
 
       def format_address_code(address)
-        code = [address[:zip].to_s, address[:address1].to_s + address[:address2].to_s]
+        code = [address[:zip].to_s, address[:address1].to_s]
         if 'GB' == address[:country]
           code = code.collect{|e| e.gsub(/\D/, "")}
         end

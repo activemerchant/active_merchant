@@ -40,6 +40,7 @@ class RealexTest < Test::Unit::TestCase
     @address = {
       :name => 'Longbob Longsen',
       :address1 => '456, The Road',
+      :address2 => 'Flat 7',
       :city => 'The Town',
       :state => 'Antrim',
       :country => 'GB',
@@ -49,6 +50,7 @@ class RealexTest < Test::Unit::TestCase
     @address_us = {
       :name => 'Longbob Longsen',
       :address1 => '456 The Road',
+      :address2 => 'Apt 7',
       :city => 'The Town',
       :state => 'Antrim',
       :country => 'US',
