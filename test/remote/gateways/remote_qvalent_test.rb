@@ -54,6 +54,21 @@ class RemoteQvalentTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
+  def test_successful_purchase_with_3d_secure
+    options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: "Store Purchase",
+      xid: "123",
+      cavv: "456",
+      eci: "5"
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -68,9 +83,9 @@ class RemoteQvalentTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @expired_card, @options)
+    response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Expired card", response.message
+    assert_equal "Invalid card number (no such number)", response.message
   end
 
   def test_successful_capture
