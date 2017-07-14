@@ -3,6 +3,7 @@
 == HEAD
 * SafeCharge: Pass UserID field [curiousepic] #2507
 * SafeCharge: Correct UserID field name [curiousepic]
+* Qvalent: Pass 3dSecure fields [curiousepic] #2508
 
 == Version 1.69.0 (July 12, 2017)
 * WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
