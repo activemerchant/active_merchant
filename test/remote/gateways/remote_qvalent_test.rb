@@ -154,6 +154,18 @@ class RemoteQvalentTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
   end
 
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal "Invalid card number (no such number)", response.message
+  end
+
   def test_successful_store
     response = @gateway.store(@credit_card, @options)
     assert_success response

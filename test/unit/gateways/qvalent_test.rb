@@ -105,6 +105,22 @@ class QvalentTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_credit
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card)
+    end.respond_with(successful_credit_response)
+
+    assert_success response
+  end
+
+  def test_failed_credit
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card)
+    end.respond_with(failed_credit_response)
+
+    assert_failure response
+  end
+
   def test_successful_void
     response = stub_comms do
       @gateway.void("auth")
@@ -233,6 +249,18 @@ class QvalentTest < Test::Unit::TestCase
   def failed_refund_response
     %(
       response.summaryCode=1\r\nresponse.responseCode=14\r\nresponse.text=Invalid card number (no such number) - card.PAN: Required field\r\nresponse.previousTxn=0\r\nresponse.end\r\n
+    )
+  end
+
+  def successful_credit_response
+    %(
+      response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=732344591\r\nresponse.orderNumber=f365d21f7f5a1a5fe0eb994f144858e2\r\nresponse.RRN=732344591   \r\nresponse.settlementDate=20170817\r\nresponse.transactionDate=17-AUG-2017 01:19:34\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.traceCode=799500\r\nresponse.end\r\n
+    )
+  end
+
+  def failed_credit_response
+    %(
+      response.summaryCode=1\r\nresponse.responseCode=14\r\nresponse.text=Invalid card number (no such number)\r\nresponse.referenceNo=732344705\r\nresponse.orderNumber=3baab91d5642a34292375a8932cde85f\r\nresponse.settlementDate=20170817\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.end\r\n
     )
   end
 
