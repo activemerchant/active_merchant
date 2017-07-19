@@ -1,5 +1,4 @@
 require 'nokogiri'
-
 module ActiveMerchant
   module Billing
     class BlueSnapGateway < Gateway
@@ -92,7 +91,7 @@ module ActiveMerchant
       end
 
       def refund(money, authorization, options = {})
-        commit(:refund, :put) do |doc|
+        commit(:refund, :put, nil, authorization) do |doc|
           add_authorization(doc, authorization)
           add_amount(doc, money)
           add_order(doc, options)
@@ -279,6 +278,9 @@ module ActiveMerchant
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
 
+        # Upon success a refund response comes back with code 204 and no content.
+        return {code: response.code} if response.code.to_i == 204
+
         parsed = {}
         doc = Nokogiri::XML(response.body)
         doc.root.xpath('*').each do |node|
@@ -303,8 +305,8 @@ module ActiveMerchant
         end
       end
 
-      def api_request(action, request, verb, type = nil)
-        ssl_request(verb, url(action, type), request, headers)
+      def api_request(action, request, verb, type = nil, authorization = nil)
+        ssl_request(verb, url(action, type, authorization), request, headers)
       rescue ResponseError => e
         e.response
       end
@@ -322,20 +324,22 @@ module ActiveMerchant
         )
       end
 
-      def commit(action, verb = :post, payment_type = nil)
+      def commit(action, verb = :post, payment_type = nil, authorization = nil)
         request = build_xml_request(action, payment_type) { |doc| yield(doc) }
-        response = api_request(action, request, verb, payment_type)
+        response = api_request(action, request, verb, payment_type, authorization)
         parsed = parse(response)
         succeeded = success_from(action, response)
         build_response(succeeded, action, parsed)
       end
 
-      def url(action = nil, payment_type = nil)
+      def url(action = nil, payment_type = nil, authorization = nil)
         base = test? ? test_url : live_url
         resource = if action == :store
                      "vaulted-shoppers"
                    elsif payment_type && payment_type == :check
                      "alt-transactions"
+                   elsif action == :refund && authorization
+                     "transactions/#{authorization}/refund"
                    else
                      "transactions"
                    end
