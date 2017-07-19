@@ -205,6 +205,12 @@ module ActiveMerchant #:nodoc:
           doc.token do
             doc.litleToken(payment_method)
           end
+        elsif payment_method.is_a?(Hash)
+          doc.paypage do
+            doc.paypageRegistrationId(payment_method.values[0])
+            doc.expDate(exp_date(payment_method))
+            doc.cardValidationNum(payment_method.verification_value)
+          end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
             doc.track(payment_method.track_data)
@@ -225,7 +231,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(doc, payment_method, options)
-        return if payment_method.is_a?(String)
+        return if payment_method.is_a?(String) || payment_method.is_a?(Hash)
 
         doc.billToAddress do
           doc.name(payment_method.name)
