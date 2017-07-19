@@ -207,9 +207,9 @@ module ActiveMerchant #:nodoc:
           end
         elsif payment_method.is_a?(Hash)
           doc.paypage do
-            doc.paypageRegistrationId(payment_method.values[0])
-            doc.expDate(exp_date(payment_method))
-            doc.cardValidationNum(payment_method.verification_value)
+            doc.paypageRegistrationId(payment_method[:paypage_registration_id])
+            doc.expDate("#{payment_method[:month]}#{payment_method[:year]}")
+            doc.cardValidationNum(payment_method[:verification_value])
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
