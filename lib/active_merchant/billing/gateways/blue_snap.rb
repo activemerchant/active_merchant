@@ -1,5 +1,4 @@
 require 'nokogiri'
-
 module ActiveMerchant
   module Billing
     class BlueSnapGateway < Gateway
@@ -19,7 +18,14 @@ module ActiveMerchant
         capture: "CAPTURE",
         void: "AUTH_REVERSAL",
         refund: "REFUND"
-      }
+      }.freeze
+
+      ACH_ACCOUNT_TYPES = {
+        personal_checking: "CONSUMER_CHECKING",
+        personal_savings: "CONSUMER_SAVINGS",
+        business_checking: "CORPORATE_CHECKING",
+        business_savings: "CORPORATE_SAVINGS"
+      }.freeze
 
       CVC_CODE_TRANSLATOR = {
         'MA' => 'M',
@@ -27,7 +33,7 @@ module ActiveMerchant
         'ND' => 'P',
         'NM' => 'N',
         'NP' => 'S'
-      }
+      }.freeze
 
       AVS_CODE_TRANSLATOR = {
         'line1: U, zip: U, name: U' => 'I',
@@ -57,48 +63,50 @@ module ActiveMerchant
         'line1: N, zip: N, name: U' => 'N',
         'line1: N, zip: N, name: M' => 'K',
         'line1: N, zip: N, name: N' => 'N',
-      }
+      }.freeze
 
       def initialize(options={})
         requires!(options, :api_username, :api_password)
         super
       end
 
-      def purchase(money, payment_method, options={})
-        commit(:purchase) do |doc|
+      def purchase(money, payment_method, options = {})
+        payment_type = payment_method.is_a?(Check) ? :check : :credit_card
+        commit(:purchase, :post, payment_type) do |doc|
           add_auth_purchase(doc, money, payment_method, options)
         end
       end
 
-      def authorize(money, payment_method, options={})
+      def authorize(money, payment_method, options = {})
         commit(:authorize) do |doc|
           add_auth_purchase(doc, money, payment_method, options)
         end
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         commit(:capture, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
         end
       end
 
-      def refund(money, authorization, options={})
-        commit(:refund, :put) do |doc|
+      def refund(money, authorization, options = {})
+        commit(:refund, :put, nil, authorization) do |doc|
           add_authorization(doc, authorization)
           add_amount(doc, money)
           add_order(doc, options)
         end
       end
 
-      def void(authorization, options={})
-        commit(:void, :put) do |doc|
+      def void(authorization, payment_method, options = {})
+        payment_type = payment_method.is_a?(Check) ? :check : :credit_card
+        commit(:void, :put, payment_type) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
         end
       end
 
-      def verify(payment_method, options={})
+      def verify(payment_method, options = {})
         authorize(0, payment_method, options)
       end
 
@@ -129,10 +137,14 @@ module ActiveMerchant
       end
 
       def scrub(transcript)
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(%r((<card-number>).+(</card-number>)), '\1[FILTERED]\2').
-          gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2')
+        transcript.gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]')
+                  .gsub(%r((<card-number>).+(</card-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2')
+                  .gsub(%r((<account-number>).+(</account-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<routing-number>).+(</routing-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<routing-number>).+(</routing-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<encrypted-card-number>).+(</encrypted-card-number>)), '\1[FILTERED]\2')
+                  .gsub(%r((<encrypted-security-code>).+(</encrypted-security-code>)), '\1[FILTERED]\2')
       end
 
       private
@@ -141,17 +153,30 @@ module ActiveMerchant
         doc.send("recurring-transaction", options[:recurring] ? "RECURRING" : "ECOMMERCE")
         add_order(doc, options)
         add_amount(doc, money)
+        add_fraud_info(doc, options)
+
+        doc.send("vaulted-shopper-id", payment_method) if payment_method.is_a? String
+        add_card_holder_info(doc, payment_method, options) if payment_method.is_a? CreditCard
+        add_payer_info(doc, payment_method, options) if payment_method.is_a? Check
+      end
+
+      def add_payer_info(doc, payment_method, options)
+        doc.send("payer-info") do
+          add_personal_info(doc, payment_method, options)
+        end
+        add_ach_info(doc, payment_method)
+      end
+
+      def add_card_holder_info(doc, payment_method, options)
+        doc.send("card-holder-info") do
+          add_personal_info(doc, payment_method, options)
+        end
+        add_credit_card(doc, payment_method, options)
+      end
+
+      def add_fraud_info(doc, options)
         doc.send("transaction-fraud-info") do
           doc.send("shopper-ip-address", options[:ip]) if options[:ip]
-        end
-
-        if payment_method.is_a?(String)
-          doc.send("vaulted-shopper-id", payment_method)
-        else
-          doc.send("card-holder-info") do
-            add_personal_info(doc, payment_method, options)
-          end
-          add_credit_card(doc, payment_method)
         end
       end
 
@@ -160,27 +185,61 @@ module ActiveMerchant
         doc.currency(options[:currency] || currency(money))
       end
 
-      def add_personal_info(doc, credit_card, options)
-        doc.send("first-name", credit_card.first_name)
-        doc.send("last-name", credit_card.last_name)
+      def add_personal_info(doc, card_or_ach, options)
+        doc.send("first-name", card_or_ach.first_name)
+        doc.send("last-name", card_or_ach.last_name)
+        add_company_name(doc, card_or_ach) if card_or_ach.is_a? Check
         doc.email(options[:email]) if options[:email]
+        doc.send("phone", options[:billing_address][:phone]) if options[:billing_address]
         add_address(doc, options)
       end
 
-      def add_credit_card(doc, card)
+      def add_company_name(doc, check)
+        return unless check.account_holder_type == 'business'
+        doc.send("company-name", check.name)
+      end
+
+      def add_account_type(doc, check)
+        type_key = [
+          check.account_holder_type,
+          check.account_type
+        ].join('_').to_sym
+        doc.send("account-type", ACH_ACCOUNT_TYPES[type_key])
+      end
+
+      def add_ach_info(doc, check)
+        doc.send("ecp-transaction") do
+          doc.send("account-number", check.account_number)
+          doc.send("routing-number", check.routing_number)
+          add_account_type(doc, check)
+        end
+        # TODO: Be sure to add form field for this and pull the value from it.
+        doc.send("authorized-by-shopper", "true")
+      end
+
+      def add_credit_card(doc, card, options = nil)
         doc.send("credit-card") do
-          doc.send("card-number", card.number)
-          doc.send("security-code", card.verification_value)
+          if options && options[:encrypted]
+            add_encrypted_fields(doc, card, options)
+          else
+            doc.send("card-number", card.number)
+            doc.send("security-code", card.verification_value)
+          end
           doc.send("expiration-month", card.month)
           doc.send("expiration-year", card.year)
         end
+      end
+
+      def add_encrypted_fields(doc, card, options)
+        doc.send("encrypted-card-number", options[:encrypted_cc])
+        doc.send("encrypted-security-code", options[:encrypted_cvv])
       end
 
       def add_description(doc, description)
         doc.send("transaction-meta-data") do
           doc.send("meta-data") do
             doc.send("meta-key", "description")
-            doc.send("meta-value", truncate(description, 500))
+            doc.send("meta-value", truncate(description, 50))
             doc.send("meta-description", "Description")
           end
         end
@@ -212,8 +271,15 @@ module ActiveMerchant
         doc.send("transaction-id", authorization)
       end
 
+      def add_transaction_type(doc, authorization)
+        doc.send("")
+      end
+
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
+
+        # Upon success a refund response comes back with code 204 and no content.
+        return {code: response.code} if response.code.to_i == 204
 
         parsed = {}
         doc = Nokogiri::XML(response.body)
@@ -233,26 +299,19 @@ module ActiveMerchant
 
       def parse_element(parsed, node)
         if !node.elements.empty?
-          node.elements.each {|e| parse_element(parsed, e) }
+          node.elements.each { |e| parse_element(parsed, e) }
         else
           parsed[node.name.downcase] = node.text
         end
       end
 
-      def api_request(action, request, verb)
-        begin
-          ssl_request(verb, url(action), request, headers)
-        rescue ResponseError => e
-          e.response
-        end
+      def api_request(action, request, verb, type = nil, authorization = nil)
+        ssl_request(verb, url(action, type, authorization), request, headers)
+      rescue ResponseError => e
+        e.response
       end
 
-      def commit(action, verb = :post)
-        request = build_xml_request(action) { |doc| yield(doc) }
-        response = api_request(action, request, verb)
-        parsed = parse(response)
-
-        succeeded = success_from(action, response)
+      def build_response(succeeded, action, parsed)
         Response.new(
           succeeded,
           message_from(succeeded, parsed),
@@ -261,13 +320,29 @@ module ActiveMerchant
           avs_result: avs_result(parsed),
           cvv_result: cvv_result(parsed),
           error_code: error_code_from(parsed),
-          test: test?,
+          test: test?
         )
       end
 
-      def url(action = nil)
+      def commit(action, verb = :post, payment_type = nil, authorization = nil)
+        request = build_xml_request(action, payment_type) { |doc| yield(doc) }
+        response = api_request(action, request, verb, payment_type, authorization)
+        parsed = parse(response)
+        succeeded = success_from(action, response)
+        build_response(succeeded, action, parsed)
+      end
+
+      def url(action = nil, payment_type = nil, authorization = nil)
         base = test? ? test_url : live_url
-        resource = (action == :store) ? "vaulted-shoppers" : "transactions"
+        resource = if action == :store
+                     "vaulted-shoppers"
+                   elsif payment_type && payment_type == :check
+                     "alt-transactions"
+                   elsif action == :refund && authorization
+                     "transactions/#{authorization}/refund"
+                   else
+                     "transactions"
+                   end
         "#{base}/#{resource}"
       end
 
@@ -311,8 +386,14 @@ module ActiveMerchant
         }
       end
 
-      def root_element(action)
-        (action == :store) ? "vaulted-shopper" : "card-transaction"
+      def root_element(action, payment_type = nil)
+        if action == :store
+          "vaulted-shopper"
+        elsif payment_type && payment_type == :check
+          "alt-transaction"
+        else
+          "card-transaction"
+        end
       end
 
       def headers
@@ -322,10 +403,12 @@ module ActiveMerchant
         }
       end
 
-      def build_xml_request(action)
+      def build_xml_request(action, payment_type = nil)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__(root_element(action), root_attributes) do |doc|
-          doc.send("card-transaction-type", TRANSACTIONS[action]) if TRANSACTIONS[action]
+        builder.__send__(root_element(action, payment_type), root_attributes) do |doc|
+          if payment_type == :credit_card
+            doc.send("card-transaction-type", TRANSACTIONS[action]) if TRANSACTIONS[action]
+          end
           yield(doc)
         end
         builder.doc.root.to_xml
@@ -336,12 +419,12 @@ module ActiveMerchant
         when 200...300
           response
         else
-          raise ResponseError.new(response)
+          raise ResponseError, response
         end
       end
 
       def bad_authentication_response
-        { "description" => "Unable to authenticate.  Please check your credentials." }
+        {"description" => "Unable to authenticate.  Please check your credentials."}
       end
     end
   end

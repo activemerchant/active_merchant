@@ -382,6 +382,8 @@ module ActiveMerchant
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
+        elsif card_brand(source) == 'acceptjs'
+          add_tokenized_credit_card(xml, source)
         else
           add_credit_card(xml, source)
         end
@@ -464,6 +466,19 @@ module ActiveMerchant
               if credit_card.is_a?(NetworkTokenizationCreditCard)
                 xml.cryptogram(credit_card.payment_cryptogram)
               end
+            end
+          end
+        end
+      end
+
+      def add_tokenized_credit_card(xml, credit_card)
+        if credit_card.track_data
+          add_swipe_data(xml, credit_card)
+        else
+          xml.payment do
+            xml.opaqueData do
+              xml.dataDescriptor(credit_card.dataDesc)
+              xml.dataValue(credit_card.dataValue)
             end
           end
         end

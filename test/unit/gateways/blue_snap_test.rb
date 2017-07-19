@@ -4,6 +4,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def setup
     @gateway = BlueSnapGateway.new(api_username: 'login', api_password: 'password')
     @credit_card = credit_card
+    @ach = check
     @amount = 100
     @options = { order_id: '1' }
   end
@@ -14,6 +15,14 @@ class BlueSnapTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal '1012082839', response.authorization
+  end
+
+  def test_successful_ach_purchase
+    @gateway.expects(:raw_ssl_request).returns(successful_ach_purchase_response)
+
+    response = @gateway.purchase(@amount, @ach, @options)
+    assert_success response
+    assert_equal '38504784', response.authorization
   end
 
   def test_failed_purchase
@@ -59,9 +68,9 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:raw_ssl_request).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, "Authorization")
+    response = @gateway.refund(@amount, "1012082839")
     assert_success response
-    assert_equal "1012082907", response.authorization
+    assert_equal 204, response.params["code"].to_i
   end
 
   def test_failed_refund
@@ -75,7 +84,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:raw_ssl_request).returns(successful_void_response)
 
-    response = @gateway.void("Authorization")
+    response = @gateway.void("Authorization", credit_card)
     assert_success response
     assert_equal "1012082919", response.authorization
   end
@@ -83,7 +92,7 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:raw_ssl_request).returns(failed_void_response)
 
-    response = @gateway.void("Authorization")
+    response = @gateway.void("Authorization", credit_card)
     assert_failure response
     assert_equal "20008", response.error_code
   end
@@ -199,6 +208,32 @@ class BlueSnapTest < Test::Unit::TestCase
     XML
   end
 
+  def successful_ach_purchase_response
+    MockResponse.succeeded <<-XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <alt-transaction xmlns="http://ws.plimus.com">
+       <transaction-id>38504784</transaction-id>
+       <soft-descriptor>ABC COMPANY</soft-descriptor>
+       <amount>100.00</amount>
+       <currency>USD</currency>
+       <payer-info>
+          <first-name>John</first-name>
+          <last-name>Doe</last-name>
+          <zip>12345</zip>
+          <phone>1234567890</phone>
+       </payer-info>
+       <ecp-transaction>
+          <account-number>4099999992</account-number>
+          <routing-number>011075150</routing-number>
+          <account-type>CONSUMER_CHECKING</account-type>
+       </ecp-transaction>
+       <processing-info>
+          <processing-status>SUCCESS</processing-status>
+       </processing-info>
+    </alt-transaction>
+    XML
+  end
+
   def failed_purchase_response
     body = <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
@@ -311,37 +346,7 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
-    MockResponse.succeeded <<-XML
-      <?xml version="1.0" encoding="UTF-8"?>
-      <card-transaction xmlns="http://ws.plimus.com">
-         <card-transaction-type>REFUND</card-transaction-type>
-         <transaction-id>1012082907</transaction-id>
-         <recurring-transaction>ECOMMERCE</recurring-transaction>
-         <soft-descriptor>BLS*Spreedly</soft-descriptor>
-         <amount>1.00</amount>
-         <currency>USD</currency>
-         <card-holder-info>
-            <first-name>Longbob</first-name>
-            <last-name>Longsen</last-name>
-            <country>ca</country>
-            <state>ON</state>
-            <city>Ottawa</city>
-            <zip>K1C2N6</zip>
-         </card-holder-info>
-         <credit-card>
-            <card-last-four-digits>9299</card-last-four-digits>
-            <card-type>VISA</card-type>
-            <card-sub-type>CREDIT</card-sub-type>
-         </credit-card>
-         <processing-info>
-            <processing-status>SUCCESS</processing-status>
-            <cvv-response-code>ND</cvv-response-code>
-            <avs-response-code-zip>U</avs-response-code-zip>
-            <avs-response-code-address>U</avs-response-code-address>
-            <avs-response-code-name>U</avs-response-code-name>
-         </processing-info>
-      </card-transaction>
-    XML
+    MockResponse.new(204, 'OK', '')
   end
 
   def failed_refund_response
