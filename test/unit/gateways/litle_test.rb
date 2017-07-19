@@ -54,7 +54,7 @@ class LitleTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal '100000000000000006;sale', response.authorization
+    assert_equal '100000000000000006;sale;100', response.authorization
     assert response.test?
   end
 
@@ -72,7 +72,7 @@ class LitleTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal '100000000000000006;sale', response.authorization
+    assert_equal '100000000000000006;sale;100', response.authorization
     assert response.test?
   end
 
@@ -191,7 +191,7 @@ class LitleTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "100000000000000001;authorization", response.authorization
+    assert_equal "100000000000000001;authorization;100", response.authorization
     assert response.test?
   end
 
@@ -209,7 +209,7 @@ class LitleTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "100000000000000001;authorization", response.authorization
+    assert_equal "100000000000000001;authorization;100", response.authorization
     assert response.test?
   end
 
