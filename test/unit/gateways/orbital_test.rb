@@ -14,6 +14,22 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     )
     @customer_ref_num = "ABC"
 
+    @level_2 = {
+      tax_indicator: 1,
+      tax: 10,
+      advice_addendum_1: 'taa1 - test',
+      advice_addendum_2: 'taa2 - test',
+      advice_addendum_3: 'taa3 - test',
+      advice_addendum_4: 'taa4 - test',
+      purchase_order: '123abc',
+      name: address[:name],
+      address1: address[:address1],
+      address2: address[:address2],
+      city: address[:city],
+      state: address[:state],
+      zip: address[:zip],
+    }
+
     @options = { :order_id => '1'}
   end
 
@@ -24,6 +40,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
+  end
+
+  def test_level_2_data
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(level_2_data: @level_2))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<TaxInd>#{@level_2[:tax_indicator]}</TaxInd>}, data
+      assert_match %{<Tax>#{@level_2[:tax]}</Tax>}, data
+      assert_match %{<AMEXTranAdvAddn1>#{@level_2[:advice_addendum_1]}</AMEXTranAdvAddn1>}, data
+      assert_match %{<AMEXTranAdvAddn2>#{@level_2[:advice_addendum_2]}</AMEXTranAdvAddn2>}, data
+      assert_match %{<AMEXTranAdvAddn3>#{@level_2[:advice_addendum_3]}</AMEXTranAdvAddn3>}, data
+      assert_match %{<AMEXTranAdvAddn4>#{@level_2[:advice_addendum_4]}</AMEXTranAdvAddn4>}, data
+      assert_match %{<PCOrderNum>#{@level_2[:purchase_order]}</PCOrderNum>}, data
+      assert_match %{<PCDestZip>#{@level_2[:zip]}</PCDestZip>}, data
+      assert_match %{<PCDestName>#{@level_2[:name]}</PCDestName>}, data
+      assert_match %{<PCDestAddress1>#{@level_2[:address1]}</PCDestAddress1>}, data
+      assert_match %{<PCDestAddress2>#{@level_2[:address2]}</PCDestAddress2>}, data
+      assert_match %{<PCDestCity>#{@level_2[:city]}</PCDestCity>}, data
+      assert_match %{<PCDestState>#{@level_2[:state]}</PCDestState>}, data
+    end.respond_with(successful_purchase_response)
   end
 
   def test_currency_exponents
