@@ -5,6 +5,7 @@
 * SafeCharge: Correct UserID field name [curiousepic]
 * Qvalent: Pass 3dSecure fields [curiousepic] #2508
 * GlobalTransport: Support partial authorizations [dtykocki] #2511
+* Orbital: Add support for level 2 data [dtykocki] #2515
 
 == Version 1.69.0 (July 12, 2017)
 * WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
