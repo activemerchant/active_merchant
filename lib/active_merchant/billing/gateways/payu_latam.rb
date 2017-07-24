@@ -155,6 +155,7 @@ module ActiveMerchant #:nodoc:
         if address = options[:shipping_address]
           buyer = {}
           buyer[:fullName] = address[:name]
+          buyer[:dniNumber] = options[:dni_number]
           shipping_address = {}
           shipping_address[:street1] = address[:address1]
           shipping_address[:street2] = address[:address2]
@@ -234,6 +235,7 @@ module ActiveMerchant #:nodoc:
           post[:transaction][:paymentCountry] = address[:country]
           payer[:fullName] = address[:name]
           payer[:contactPhone] = address[:phone]
+          payer[:dniNumber] = options[:dni_number]
           billing_address = {}
           billing_address[:street1] = address[:address1]
           billing_address[:street2] = address[:address2]
