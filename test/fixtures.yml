@@ -432,6 +432,10 @@ maxipago:
   login: "100"
   password: "21g8u6gh6szw1gywfs165vui"
 
+mercadopago:
+  token: YOUR TEST TOKEN
+  public_key: YOUR TEST PUBLIC KEY
+
 # Working test credentials, no need to replace
 merchant_esolutions:
   login: "94100008043900000004"
