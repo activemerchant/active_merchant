@@ -348,7 +348,7 @@ module ActiveMerchant
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
-        elsif card_brand(source) == 'acceptjs'
+        elsif card_brand(source) == 'tokenized'
           add_tokenized_credit_card(xml, source)
         else
           add_credit_card(xml, source)
@@ -443,8 +443,8 @@ module ActiveMerchant
         else
           xml.payment do
             xml.opaqueData do
-              xml.dataDescriptor(credit_card.dataDesc)
-              xml.dataValue(credit_card.dataValue)
+              xml.dataDescriptor(credit_card.nonce_desc)
+              xml.dataValue(credit_card.nonce)
             end
           end
         end
