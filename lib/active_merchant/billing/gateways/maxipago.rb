@@ -276,7 +276,9 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         code = response[:error_message]
-        STANDARD_ERROR_CODE_MAPPING[code]
+        error_code = STANDARD_ERROR_CODE_MAPPING[code]
+        puts error_code
+        error_code
       end
 
       def add_payment_token(xml, token, options = {})
