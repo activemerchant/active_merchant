@@ -19,6 +19,10 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.maxipago.com/'
       self.display_name = 'maxiPago!'
 
+      STANDARD_ERROR_CODE_MAPPING = {
+        'DECLINED' => STANDARD_ERROR_CODE[:card_declined]
+      }
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -65,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(creditcard, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, creditcard, options) }
+          r.process { authorize(1.00, creditcard, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -77,7 +81,7 @@ module ActiveMerchant #:nodoc:
           xml.creditCardNumber creditcard.number
           xml.expirationMonth creditcard.month.to_s.rjust(2,'0')[-2..-1]
           xml.expirationYear '20' + creditcard.year.to_s.rjust(2,'0')[-2..-1]
-          xml.billingName options[:address][:name]
+          xml.billingName creditcard.name
           xml.billingAddress1 options[:address][:address1]
           xml.billingAddress2 options[:address][:address2]
           xml.billingCity options[:address][:city]
@@ -166,6 +170,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           authorization: authorization_from(response)
+          error_code: success ? nil : error_code_from(response)
         )
       end
 
@@ -267,6 +272,11 @@ module ActiveMerchant #:nodoc:
           add_installments(xml, options)
         end
         add_billing_address(xml, payment, options)
+      end
+
+      def error_code_from(response)
+        code = response[:error_message]
+        STANDARD_ERROR_CODE_MAPPING[code]
       end
 
       def add_payment_token(xml, token, options = {})
