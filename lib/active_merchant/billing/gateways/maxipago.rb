@@ -276,7 +276,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         puts "ERROR_CODE_FROM"
-        code = response[:error_message]
+        code = response[:response_message]
         puts code
         error_code = STANDARD_ERROR_CODE_MAPPING[code]
         puts error_code
