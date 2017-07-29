@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           test: test?,
-          authorization: authorization_from(response)
+          authorization: authorization_from(response),
           error_code: success ? nil : error_code_from(response)
         )
       end
