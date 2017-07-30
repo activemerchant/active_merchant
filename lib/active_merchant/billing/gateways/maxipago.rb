@@ -226,7 +226,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         message = response[:error_message] || response[:response_message] || response[:processor_message] || response[:error_msg]
-        if message = 'DECLINED'
+        if message == 'DECLINED'
           message = 'Cartão não autorizado.'
         end
         message
