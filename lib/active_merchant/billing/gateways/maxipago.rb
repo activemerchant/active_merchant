@@ -225,7 +225,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:error_message] || response[:response_message] || response[:processor_message] || response[:error_msg]
+        message = response[:error_message] || response[:response_message] || response[:processor_message] || response[:error_msg]
+        if message = 'DECLINED'
+          message = 'Cartão não autorizado.'
+        end
+        message
       end
 
       def authorization_from(response)
@@ -275,11 +279,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
-        puts "ERROR_CODE_FROM"
         code = response[:response_message]
-        puts code
         error_code = STANDARD_ERROR_CODE_MAPPING[code]
-        puts error_code
         error_code
       end
 
