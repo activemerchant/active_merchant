@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         xml.instruct!
-        xml.tag! "Transaction" do
+        xml.tag! "Transaction", xmlns: "http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes" do
           add_credentials(xml)
           add_transaction_type(xml, action)
           xml << body
