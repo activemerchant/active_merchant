@@ -166,10 +166,16 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert_equal 'N', response.avs_result['code']
   end
 
+  def test_avs_no_with_house_number
+    avs_nohousenumber = @avs_address
+    avs_nohousenumber[:billing_address].delete(:houseNumberOrName)
+    response = @gateway.authorize(@amount, @avs_credit_card, avs_nohousenumber)
+    assert_equal 'Z', response.avs_result['code']
+  end
+
   def test_nonfractional_currency
     response = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'JPY'))
     assert_success response
-
     response = @gateway.purchase(1234, @credit_card, @options.merge(:currency => 'JPY'))
     assert_success response
   end
