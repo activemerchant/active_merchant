@@ -225,12 +225,12 @@ module ActiveMerchant #:nodoc:
       def address_hash(address)
         full_address = "#{address[:address1]} #{address[:address2]}" if address
         street = address[:street] if address[:street]
-        house = address[:houseNumberOrName] if address[:houseNumberOrName]
-
+        house = address[:houseNumberOrName] ? address[:houseNumberOrName] : full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        
         hash = {}
         hash[:city]              = address[:city] if address[:city]
         hash[:street]            = street || full_address.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
-        hash[:houseNumberOrName] = house || full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        hash[:houseNumberOrName] = house.empty? ? "Not Provided" : house
         hash[:postalCode]        = address[:zip] if address[:zip]
         hash[:stateOrProvince]   = address[:state] if address[:state]
         hash[:country]           = address[:country] if address[:country]

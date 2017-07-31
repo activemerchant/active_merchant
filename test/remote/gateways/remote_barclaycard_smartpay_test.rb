@@ -166,6 +166,13 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert_equal 'N', response.avs_result['code']
   end
 
+  def test_avs_nohousenumber_result
+    avs_nohousenumber = @avs_address
+    avs_nohousenumber[:billing_address].delete(:houseNumberOrName)
+    response = @gateway.authorize(@amount, @avs_credit_card, avs_nohousenumber)
+    assert_equal 'Z', response.avs_result['code']
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
