@@ -9,6 +9,7 @@
 * PayU Latam: Pass DNI Number [curiousepic] #2517
 * Mercado Pago: Add gateway support [davidsantoso] #2518
 * Litle: Update schema and certification tests to v9.12 [curiousepic] #2522
+* Barclaycard Smartpay: Provider a default billing address house number [nfarve] #2520
 
 == Version 1.69.0 (July 12, 2017)
 * WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
