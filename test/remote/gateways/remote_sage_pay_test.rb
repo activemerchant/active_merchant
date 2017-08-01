@@ -124,6 +124,20 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorization_and_capture_and_refund
+    assert auth = @gateway.authorize(@amount, @mastercard, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    assert refund = @gateway.refund(@amount, capture.authorization,
+      :description => 'Crediting trx',
+      :order_id => generate_unique_id
+    )
+    assert_success refund
+  end
+
   def test_successful_authorization_and_void
     assert auth = @gateway.authorize(@amount, @mastercard, @options)
     assert_success auth
@@ -158,14 +172,6 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert response.test?
     assert !response.authorization.blank?
   end
-
-  # Maestro is not available for GBP
-  # def test_successful_maestro_purchase
-  #   assert response = @gateway.purchase(@amount, @maestro, @options)
-  #   assert_success response
-  #   assert response.test?
-  #   assert !response.authorization.blank?
-  # end
 
   def test_successful_amex_purchase
     assert response = @gateway.purchase(@amount, @amex, @options)
@@ -317,8 +323,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
   def test_successful_repeat_purchase
     response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
-
-    repeat = @gateway.purchase(@amount, response.authorization, @options.merge(repeat: true, order_id: generate_unique_id))
+    repeat = @gateway.purchase(@amount, response.authorization, @options.merge(order_id: generate_unique_id))
     assert_success repeat
   end
 

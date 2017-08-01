@@ -1,7 +1,52 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* SafeCharge: Pass UserID field [curiousepic] #2507
+* SafeCharge: Correct UserID field name [curiousepic]
+* Qvalent: Pass 3dSecure fields [curiousepic] #2508
+* GlobalTransport: Support partial authorizations [dtykocki] #2511
+* Orbital: Add support for level 2 data [dtykocki] #2515
+* PayU Latam: Pass DNI Number [curiousepic] #2517
+* Mercado Pago: Add gateway support [davidsantoso] #2518
+* Litle: Update schema and certification tests to v9.12 [curiousepic] #2522
+
+== Version 1.69.0 (July 12, 2017)
+* WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
+* Adyen: Use Active Merchant standard order_id option for reference [jasonwebster] #2483
+* Correct calculation for three-exponent currencies [curiousepic] #2486
+* SagePay: Use VPSTxId from authorization for refunds [dtykocki] #2489
+* Payflow: Move PAYPAL-NVP header option to a class attribute on the payment gateway [deuxpi] #2492
+* Optimal Payments: Pass CVD indicator accurately [curiousepic] #2491
+* SagePay: Make Repeat purchase if payment is a past authorization [curiousepic] #2495
+* Netbanx: map response errorCodes onto standard error code [iirving] #2456
+* Netbanx: Update supported countries and cardtypes [iirving] #2456
+* Barclaycard Smartpay: Support 0- and 3-exponent currencies [curiousepic] #2498
+* CyberSource: Fix XSD schema validation issues [jasonwebster] #2497
+* WorldPay: Support three-decimal currencies [curiousepic] #2501
+* NMI: Add first and lastname to echeck transactions [dtykocki] #2499
+* PayFlow: Add optional email field [davidsantoso] #2505
+* Worldpay: Support Credit on CFT-enabled merchant IDs [curiousepic] #2503
+* FirstPay: Add processor_id field [davidsantoso] #2506
+* Authorize.Net: Use two character default for billing state [dtykocki] #2496
+
+== Version 1.68.0 (June 27, 2017)
+* Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476
+* Authorize.net: Concatenate address1 and address2 [dtykocki] #2479
+* Braintree Blue: Braintree Blue: Add ECI indicator to Android Pay transactions [davidsantoso] #2474
+* Credorax: Support 0- and 3-exponent currencies [curiousepic]
+* Cybersource: update supported card types [bdewater] #2477
+* FirstData: Add a default network tokenization strategy for FirstData E4 [krystosterone] #2473
+* FirstPay: FirstPay: Update hostname and force TLSv1 minimum [davidsantoso] #2478
+* JetPay V2: Support store transactions and token based payments [shasum] #2475
 * Moneris: Add 3DS fields for decrypted Apple and Android Pay data [davidsantoso] #2457
+* Openpay: Send customer name and email in authorize and purchase [dtykocki] #2468
+* Payflow: Moved to name value pair (NVP) with payflow [jusleg] #2462
+* Payflow: Set PAYPAL_NVP header as optional [davidsantoso] #2480
+* QuickPay V10: Return last response for purchase and authorize [curiousepic] #2461
+* SafeCharge: Map billing address fields [davidsantoso] #2464
+* SafeCharge: Track currency from original transaction [davidsantoso] #2470
+* Support three-decimal currencies [curiousepic] #2466
+* Trexle: Add gateway support [hossamhossny] #2351
 
 == Version 1.67.0 (June 8, 2017)
 * Acapture: Pass 3D Secure fields [davidsantoso] #2451
@@ -18,16 +63,6 @@
 * Payeezy: Add client_email field for telecheck [davidsantoso] #2455
 * Payeezy: Add customer_id_type and customer_id_number fields [davidsantoso] #2454
 * Quickpay V10: Fix store and token use for recurring payments [wsmoak] #2180
-
-== Version 1.66.0 (May 4, 2017)
-* Support Rails 5.1 [jhawthorn] #2407
-* ProPay: Add Canada as supported country [davidsantoso]
-* ProPay: Add gateway support [davidsantoso] #2405
-* SafeCharge: Support credit transactions [shasum] #2404
-* WePay: Add scrub method [shasum] #2406
-* iVeri: Add gateway support [curiousepic] #2400
-* iVeri: Support 3DSecure data fields [davidsantoso] #2412
-* Opp: Fix transaction success criteria and clean up options [shasum] #2414
 * Elavon: Support custom fields [curiousepic] #2416
 * WePay: Support risk headers [shasum] #2419
 * WePay: Add Canada as supported country [shasum] #2419
@@ -39,6 +74,16 @@
 * SafeCharge: Map standard Active Merchant order_id field [davidsantoso] #2434
 * Payeezy: Default check number to 001 if not present [davidsantoso] #2439
 * Opp: Fix incorrect customParameter key to disable 3DS [davidsantoso]
+
+== Version 1.66.0 (May 4, 2017)
+* Support Rails 5.1 [jhawthorn] #2407
+* ProPay: Add Canada as supported country [davidsantoso]
+* ProPay: Add gateway support [davidsantoso] #2405
+* SafeCharge: Support credit transactions [shasum] #2404
+* WePay: Add scrub method [shasum] #2406
+* iVeri: Add gateway support [curiousepic] #2400
+* iVeri: Support 3DSecure data fields [davidsantoso] #2412
+* Opp: Fix transaction success criteria and clean up options [shasum] #2414
 
 == Version 1.65.0 (April 26, 2017)
 * Adyen: Add Adyen v18 gateway [adyenpayments] #2272

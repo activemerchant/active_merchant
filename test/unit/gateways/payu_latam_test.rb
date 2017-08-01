@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class PayuLatamTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key')
 
@@ -12,6 +14,7 @@ class PayuLatamTest < Test::Unit::TestCase
     @no_cvv_amex_card = credit_card("4097440000000004", verification_value: " ", brand: "american_express")
 
     @options = {
+      dni_number: '5415668464654',
       currency: "ARS",
       order_id: generate_unique_id,
       description: "Active Merchant Transaction",
@@ -94,6 +97,14 @@ class PayuLatamTest < Test::Unit::TestCase
     response = @gateway.void("")
     assert_failure response
     assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+  end
+
+  def test_successful_purchase_with_dni_number
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"dniNumber":"5415668464654"/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_verify_good_credentials

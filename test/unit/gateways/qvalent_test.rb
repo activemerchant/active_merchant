@@ -158,6 +158,18 @@ class QvalentTest < Test::Unit::TestCase
     assert_equal "Unable to read error message", response.message
   end
 
+  def test_3d_secure_fields
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {xid: '123', cavv: '456', eci: '5'})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/xid=123/, data)
+      assert_match(/cavv=456/, data)
+      assert_match(/ECI=5/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end

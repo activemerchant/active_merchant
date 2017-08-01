@@ -24,6 +24,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_transaction_data("Sale", post, money, options)
         add_payment(post, payment)
+        add_customer_details(post, payment, options)
 
         commit(post)
       end
@@ -32,14 +33,15 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_transaction_data("Auth", post, money, options)
         add_payment(post, payment)
+        add_customer_details(post, payment, options)
 
         commit(post)
       end
 
       def capture(money, authorization, options={})
         post = {}
-        add_transaction_data("Settle", post, money, options)
-        auth, transaction_id, token, exp_month, exp_year, _ = authorization.split("|")
+        auth, transaction_id, token, exp_month, exp_year, _, original_currency = authorization.split("|")
+        add_transaction_data("Settle", post, money, (options.merge!({currency: original_currency})))
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
         post[:sg_CCToken] = token
@@ -51,8 +53,8 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
         post = {}
-        add_transaction_data("Credit", post, money, options)
-        auth, transaction_id, token, exp_month, exp_year, _ = authorization.split("|")
+        auth, transaction_id, token, exp_month, exp_year, _, original_currency = authorization.split("|")
+        add_transaction_data("Credit", post, money, (options.merge!({currency: original_currency})))
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -74,8 +76,8 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         post = {}
-        auth, transaction_id, token, exp_month, exp_year, original_amount = authorization.split("|")
-        add_transaction_data("Void", post, (original_amount.to_f * 100), options)
+        auth, transaction_id, token, exp_month, exp_year, original_amount, original_currency = authorization.split("|")
+        add_transaction_data("Void", post, (original_amount.to_f * 100), (options.merge!({currency: original_currency})))
         post[:sg_CreditType] = 2
         post[:sg_AuthCode] = auth
         post[:sg_TransactionID] = transaction_id
@@ -115,6 +117,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_ResponseFormat] = "4"
         post[:sg_Version] = VERSION
         post[:sg_ClientUniqueID] = options[:order_id] if options[:order_id]
+        post[:sg_UserID] = options[:user_id] if options[:user_id]
       end
 
       def add_payment(post, payment)
@@ -123,6 +126,21 @@ module ActiveMerchant #:nodoc:
         post[:sg_ExpMonth] = format(payment.month, :two_digits)
         post[:sg_ExpYear] = format(payment.year, :two_digits)
         post[:sg_CVV2] = payment.verification_value
+      end
+
+      def add_customer_details(post, payment, options)
+        if address = options[:billing_address] || options[:address]
+          post[:sg_FirstName] = payment.first_name
+          post[:sg_LastName] = payment.last_name
+          post[:sg_Address] = address[:address1] if address[:address1]
+          post[:sg_City] = address[:city] if address[:city]
+          post[:sg_State] = address[:state]  if address[:state]
+          post[:sg_Zip] = address[:zip]  if address[:zip]
+          post[:sg_Country] = address[:country]  if address[:country]
+          post[:sg_Phone] = address[:phone]  if address[:phone]
+        end
+
+        post[:sg_Email] = options[:email]
       end
 
       def parse(xml)
@@ -177,7 +195,8 @@ module ActiveMerchant #:nodoc:
           response[:token],
           parameters[:sg_ExpMonth],
           parameters[:sg_ExpYear],
-          parameters[:sg_Amount]
+          parameters[:sg_Amount],
+          parameters[:sg_Currency]
         ].join("|")
       end
 

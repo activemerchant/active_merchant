@@ -398,6 +398,26 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_match %r{The amount requested for settlement cannot be greater}, capture.message
   end
 
+  def test_faux_successful_refund_with_billing_address
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    refund = @gateway.refund(@amount, purchase.authorization, @options.merge(first_name: 'Jim', last_name: 'Smith'))
+    assert_failure refund
+    assert_match %r{does not meet the criteria for issuing a credit}, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+  end
+
+  def test_faux_successful_refund_without_billing_address
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    @options[:billing_address] = nil
+
+    refund = @gateway.refund(@amount, purchase.authorization, @options.merge(first_name: 'Jim', last_name: 'Smith'))
+    assert_failure refund
+    assert_match %r{does not meet the criteria for issuing a credit}, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+  end
+
   def test_faux_successful_refund_using_stored_card
     store = @gateway.store(@credit_card, @options)
     assert_success store

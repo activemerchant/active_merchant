@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options={})
-        requires!(options, :reference)
+        requires!(options, :order_id)
         post = init_post(options)
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
           value: amount(money),
           currency: options[:currency] || currency(money)
         }
-        post[:reference] = options[:reference]
+        post[:reference] = options[:order_id]
         post[:amount] = amount
       end
 
@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
 
       def add_references(post, authorization, options = {})
         post[:originalReference] = authorization
-        post[:reference] = options[:reference]
+        post[:reference] = options[:order_id]
       end
 
       def parse(body)

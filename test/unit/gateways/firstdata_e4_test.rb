@@ -197,55 +197,42 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_network_tokenization_requests_with_visa
-    stub_comms do
-      credit_card = network_tokenization_credit_card('4111111111111111',
-        :brand              => 'visa',
-        :transaction_id     => "123",
-        :eci                => "05",
-        :payment_cryptogram => "111111111100cryptogram"
-      )
-
-      @gateway.purchase(@amount, credit_card, @options)
-    end.check_request do |endpoint, data, headers|
-      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
-      assert_match "<XID>123</XID>", data
-      assert_match "<CAVV>111111111100cryptogram</CAVV>", data
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_network_tokenization_requests_with_mastercard
-    stub_comms do
-      credit_card = network_tokenization_credit_card('5555555555554444',
-        :brand              => 'mastercard',
-        :transaction_id     => "123",
-        :eci                => "05",
-        :payment_cryptogram => "111111111100cryptogram"
-      )
-
-      @gateway.purchase(@amount, credit_card, @options)
-    end.check_request do |endpoint, data, headers|
-      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
-      assert_match "<XID>123</XID>", data
-      assert_match "<CAVV>111111111100cryptogram</CAVV>", data
-    end.respond_with(successful_purchase_response)
-  end
-
   def test_network_tokenization_requests_with_amex
     stub_comms do
-      credit_card = network_tokenization_credit_card('378282246310005',
-        :brand              => 'american_express',
-        :transaction_id     => "123",
-        :eci                => "05",
-        :payment_cryptogram => Base64.encode64("111111111100cryptogram")
+      credit_card = network_tokenization_credit_card(
+        "378282246310005",
+        brand: "american_express",
+        transaction_id: "123",
+        eci: "05",
+        payment_cryptogram: "whatever_the_cryptogram_of_at_least_20_characters_is",
       )
 
       @gateway.purchase(@amount, credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_, data, _|
       assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
-      assert_match "<XID>YW0=\n</XID>", data
-      assert_match "<CAVV>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</CAVV>", data
+      assert_match "<XID>mrLdtHIWq2nLXq7IrA==\n</XID>", data
+      assert_match "<CAVV>whateverthecryptogramofatlc=\n</CAVV>", data
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_network_tokenization_requests_with_other_brands
+    %w(visa mastercard other).each do |brand|
+      stub_comms do
+        credit_card = network_tokenization_credit_card(
+          "378282246310005",
+          brand: brand,
+          transaction_id: "123",
+          eci: "05",
+          payment_cryptogram: "whatever_the_cryptogram_is",
+        )
+
+        @gateway.purchase(@amount, credit_card, @options)
+      end.check_request do |_, data, _|
+        assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+        assert_match "<XID>123</XID>", data
+        assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
+      end.respond_with(successful_purchase_response)
+    end
   end
 
   def test_requests_include_card_authentication_data

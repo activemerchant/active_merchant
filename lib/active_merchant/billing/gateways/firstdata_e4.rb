@@ -262,16 +262,13 @@ module ActiveMerchant #:nodoc:
 
       def add_network_tokenization_credit_card(xml, credit_card)
         case card_brand(credit_card).to_sym
-        when :visa
-          xml.tag!("XID", credit_card.transaction_id) if credit_card.transaction_id
-          xml.tag!("CAVV", credit_card.payment_cryptogram)
-        when :mastercard
-          xml.tag!("XID", credit_card.transaction_id) if credit_card.transaction_id
-          xml.tag!("CAVV", credit_card.payment_cryptogram)
         when :american_express
           cryptogram = Base64.decode64(credit_card.payment_cryptogram)
           xml.tag!("XID", Base64.encode64(cryptogram[20...40]))
           xml.tag!("CAVV", Base64.encode64(cryptogram[0...20]))
+        else
+          xml.tag!("XID", credit_card.transaction_id) if credit_card.transaction_id
+          xml.tag!("CAVV", credit_card.payment_cryptogram)
         end
       end
 

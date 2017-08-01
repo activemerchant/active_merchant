@@ -10,6 +10,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     @pending_card = credit_card("4097440000000004", verification_value: "222", first_name: "PENDING", last_name: "")
 
     @options = {
+      dni_number: '5415668464654',
       currency: "ARS",
       order_id: generate_unique_id,
       description: "Active Merchant Transaction",

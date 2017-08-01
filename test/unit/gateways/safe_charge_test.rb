@@ -21,7 +21,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
                  'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
-                 'UAbQBYAFIAMwA=|09|18|1.00', response.authorization
+                 'UAbQBYAFIAMwA=|09|18|1.00|USD', response.authorization
     assert response.test?
   end
 
@@ -41,7 +41,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111534|101508189855|MQBVAG4ASABkAEgAagB3AEsAbgAtACoAWgAzAFwAW' \
                  'wBNAF8ATQBUAD0AegBQAGwAQAAtAD0AXAB5AFkALwBtAFAALABaAHoAOgBFAE' \
-                 'wAUAA1AFUAMwA=|09|18|1.00', response.authorization
+                 'wAUAA1AFUAMwA=|09|18|1.00|USD', response.authorization
     assert response.test?
   end
 
@@ -56,12 +56,12 @@ class SafeChargeTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "auth|transaction_id|token|month|year")
+    response = @gateway.capture(@amount, "auth|transaction_id|token|month|year|amount|currency")
     assert_success response
 
     assert_equal '111301|101508190200|RwA1AGQAMgAwAEkAWABKADkAcABjAHYAQQA4AC8AZ' \
                  'AAlAHMAfABoADEALAA8ADQAewB8ADsAewBiADsANQBoACwAeAA/AGQAXQAjAF' \
-                 'EAYgBVAHIAMwA=|month|year|1.00', response.authorization
+                 'EAYgBVAHIAMwA=|month|year|1.00|currency', response.authorization
     assert response.test?
   end
 
@@ -108,12 +108,12 @@ class SafeChargeTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    response = @gateway.void("auth|transaction_id|token|month|year")
+    response = @gateway.void("auth|transaction_id|token|month|year|amount|currency")
     assert_success response
 
     assert_equal '111171|101508208625|ZQBpAFAAZgBuAHEATgBUAHcASAAwADUAcwBHAHQAV' \
                  'QBLAHAAbgB6AGwAJAA1AEMAfAB2AGYASwBrAHEAeQBOAEwAOwBZAGIAewB4AG' \
-                 'wAYwBUAE0AMwA=|month|year|0.00', response.authorization
+                 'wAYwBUAE0AMwA=|month|year|0.00|currency', response.authorization
     assert response.test?
   end
 
@@ -134,7 +134,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111534|101508189855|MQBVAG4ASABkAEgAagB3AEsAbgAtACoAWgAzAFwAW' \
                  'wBNAF8ATQBUAD0AegBQAGwAQAAtAD0AXAB5AFkALwBtAFAALABaAHoAOgBFAE' \
-                 'wAUAA1AFUAMwA=|09|18|1.00', response.authorization
+                 'wAUAA1AFUAMwA=|09|18|1.00|USD', response.authorization
     assert response.test?
   end
 
@@ -144,8 +144,6 @@ class SafeChargeTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
   end
-
-
 
   def test_failed_verify
     @gateway.expects(:ssl_post).returns(failed_authorize_response)

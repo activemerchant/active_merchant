@@ -432,6 +432,10 @@ maxipago:
   login: "100"
   password: "21g8u6gh6szw1gywfs165vui"
 
+# Working credentials, no need to replace
+mercado_pago:
+  access_token: "TEST-8527269031909288-071213-0fc96cb7cd3633189bfbe29f63722700__LB_LA__-263489584"
+
 # Working test credentials, no need to replace
 merchant_esolutions:
   login: "94100008043900000004"
@@ -651,9 +655,9 @@ payex:
 
 # Working credentials, no need to replace
 payflow:
-  login: spreedly
-  password: 'ibB4Z8=d;G'
-  partner: PayPal
+  login: 'spreedlyIntegrations'
+  password: 'y9q)(j7H'
+  partner: 'PayPal'
 
 payflow_uk:
   login: LOGIN
@@ -1047,7 +1051,7 @@ sage:
   password: 'Z5W2S8J7X8T5'
 
 sage_pay:
-  login: LOGIN
+  login: spreedly
 
 sallie_mae:
   login: TEST0
@@ -1152,6 +1156,10 @@ transax:
   password: nelix123
 
 # Working credentials, no need to replace
+trexle:
+  api_key: "J5RGMpDlFlTfv9mEFvNWYoqHufyukPP4"
+
+# Working credentials, no need to replace
 trust_commerce:
   login: 'TestMerchant'
   password: 'password'
@@ -1219,8 +1227,12 @@ world_net:
   secret: 'sandboxEUR'
 
 world_pay_gateway:
-  login: LOGIN
-  password: PASSWORD
+  login: 'SPREEDLY'
+  password: 'KZ#P2aR+'
+
+world_pay_gateway_cft:
+  login: 'SPREEDLYCFT'
+  password: 'Xbf+6#pD'
 
 worldpay_online_payments:
   client_key: "T_C_b9f629e7-cea7-4edb-8206-24bbe351d699"

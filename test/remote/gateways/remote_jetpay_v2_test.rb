@@ -72,7 +72,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_not_nil auth.authorization
     assert_not_nil auth.params["approval"]
 
-    assert capture = @gateway.capture(@amount_approved, auth.authorization, @options.merge(:tax_amount => '900', :tax_exemption => 'true'))
+    assert capture = @gateway.capture(@amount_approved, auth.authorization, @options.merge(:tax_amount => '990', :purchase_order => 'ABC12345'))
     assert_success capture
   end
 

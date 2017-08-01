@@ -1,58 +1,46 @@
 require 'test_helper'
 
-class RemoteSafeChargeTest < Test::Unit::TestCase
+class RemoteMercadoPagoTest < Test::Unit::TestCase
   def setup
-    @gateway = SafeChargeGateway.new(fixtures(:safe_charge))
+    @gateway = MercadoPagoGateway.new(fixtures(:mercado_pago))
 
-    @amount = 100
-    @credit_card = credit_card('4000100011112224')
+    @amount = 500
+    @credit_card = credit_card('4509953566233704')
     @declined_card = credit_card('4000300011112220')
     @options = {
-      order_id: generate_unique_id,
       billing_address: address,
-      description: 'Store Purchase',
-      currency: "EUR"
+      email: "user+br@example.com",
+      description: 'Store Purchase'
     }
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'Success', response.message
-  end
-
-  def test_successful_purchase_with_more_options
-    options = {
-      order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com",
-      user_id: '123'
-    }
-
-    response = @gateway.purchase(@amount, @credit_card, options)
-    assert_success response
-    assert_equal 'Success', response.message
+    assert_equal 'accredited', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Decline', response.message
+    assert_equal "rejected", response.error_code
+    assert_equal 'cc_rejected_other_reason', response.message
   end
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
+    assert_equal 'pending_capture', auth.message
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Success', capture.message
+    assert_equal 'accredited', capture.message
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Decline', response.message
+    assert_equal 'cc_rejected_other_reason', response.message
   end
 
   def test_partial_capture
@@ -61,12 +49,13 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount-1, auth.authorization)
     assert_success capture
+    assert_equal 'accredited', capture.message
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'Transaction must contain a Card/Token/Account', response.message
+    assert_equal 'Method not allowed', response.message
   end
 
   def test_successful_refund
@@ -75,33 +64,21 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
-    assert_equal 'Success', refund.message
+    assert_equal nil, refund.message
   end
 
   def test_partial_refund
-    purchase = @gateway.purchase(200, @credit_card, @options)
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(100, purchase.authorization)
+    assert refund = @gateway.refund(@amount-1, purchase.authorization)
     assert_success refund
   end
 
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal 'Transaction must contain a Card/Token/Account', response.message
-  end
-
-  def test_successful_credit
-    response = @gateway.credit(@amount, credit_card('4444436501403986'), @options)
-    assert_success response
-    assert_equal 'Success', response.message
-  end
-
-  def test_failed_credit
-    response = @gateway.credit(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal 'Decline', response.message
+    assert_equal 'Resource /payments/refunds not found.', response.message
   end
 
   def test_successful_void
@@ -110,33 +87,33 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
-    assert_equal 'Success', void.message
+    assert_equal 'by_collector', void.message
   end
 
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'Invalid Amount', response.message
+    assert_equal 'Method not allowed', response.message
   end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match 'Success', response.message
+    assert_match %r{pending_capture}, response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match 'Decline', response.message
+    assert_match %r{cc_rejected_other_reason}, response.message
   end
 
   def test_invalid_login
-    gateway = SafeChargeGateway.new(client_login_id: '', client_password: '')
+    gateway = MercadoPagoGateway.new(access_token: '')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match 'Invalid login', response.message
+    assert_match %r{Invalid access parameters}, response.message
   end
 
   def test_transcript_scrubbing
@@ -147,7 +124,7 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:client_password], transcript)
+    assert_scrubbed(@gateway.options[:access_token], transcript)
   end
 
 end

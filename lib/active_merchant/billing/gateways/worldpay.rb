@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(HK GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser, :switch]
       self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
+      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'Worldpay Global'
 
@@ -71,6 +72,14 @@ module ActiveMerchant #:nodoc:
         void(authorization, options ) if response.params["last_event"] == "AUTHORISED"
       end
 
+      # Credits only function on a Merchant ID/login/profile flagged for Payouts
+      #   aka Credit Fund Transfers (CFT), whereas normal purchases, refunds,
+      #   and other transactions should be performed on a normal eCom-flagged
+      #   merchant ID.
+      def credit(money, payment_method, options = {})
+        credit_request(money, payment_method, options.merge(:credit => true))
+      end
+
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
@@ -109,6 +118,10 @@ module ActiveMerchant #:nodoc:
 
       def refund_request(money, authorization, options)
         commit('refund', build_refund_request(money, authorization, options), :ok)
+      end
+
+      def credit_request(money, payment_method, options)
+        commit('credit', build_authorization_request(money, payment_method, options), :ok)
       end
 
       def build_request
@@ -194,7 +207,7 @@ module ActiveMerchant #:nodoc:
         amount_hash = {
           :value => localized_amount(money, currency),
           'currencyCode' => currency,
-          'exponent' => non_fractional_currency?(currency) ? 0 : 2
+          'exponent' => currency_exponent(currency)
         }
 
         if options[:debit_credit_indicator]
@@ -216,7 +229,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         else
-          xml.tag! 'paymentDetails' do
+          xml.tag! 'paymentDetails', credit_fund_transfer_attribute(options) do
             xml.tag! CARD_CODES[card_brand(payment_method)] do
               xml.tag! 'cardNumber', payment_method.number
               xml.tag! 'expiryDate' do
@@ -365,9 +378,20 @@ module ActiveMerchant #:nodoc:
         (pair ? pair.last : nil)
       end
 
+      def credit_fund_transfer_attribute(options)
+        return unless options[:credit]
+        {'action' => "REFUND"}
+      end
+
       def encoded_credentials
         credentials = "#{@options[:login]}:#{@options[:password]}"
         "Basic #{[credentials].pack('m').strip}"
+      end
+
+      def currency_exponent(currency)
+        return 0 if non_fractional_currency?(currency)
+        return 3 if three_decimal_currency?(currency)
+        return 2
       end
     end
   end

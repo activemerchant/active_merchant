@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post["order.amount"] = amount(money)
         post["card.currency"] = CURRENCY_CODES[options[:currency] || currency(money)]
-        post["order.ECI"] = "SSL"
+        post["order.ECI"] = options[:eci] ? options[:eci] : "SSL"
       end
 
       def add_payment_method(post, payment_method)
@@ -137,6 +137,8 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post["order.ipAddress"] = options[:ip]
+        post["order.xid"] = options[:xid] if options[:xid]
+        post["order.cavv"] = options[:cavv] if options[:cavv]
       end
 
       def commit(action, post)

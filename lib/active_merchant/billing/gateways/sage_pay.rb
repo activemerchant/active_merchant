@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_optional_data(post, options)
 
-        commit((options[:repeat] ? :repeat : :purchase), post)
+        commit((past_purchase_reference?(payment_method) ? :repeat : :purchase), post)
       end
 
       def authorize(money, payment_method, options = {})
@@ -268,12 +268,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method, options)
-        if options[:repeat]
-          add_related_reference(post, payment_method)
-        elsif payment_method.respond_to?(:number)
-          add_credit_card(post, payment_method)
+        if payment_method.is_a?(String)
+          if past_purchase_reference?(payment_method)
+            add_related_reference(post, payment_method)
+          else
+            add_token_details(post, payment_method, options)
+          end
         else
-          add_token_details(post, payment_method, options)
+          add_credit_card(post, payment_method)
         end
       end
 
@@ -359,9 +361,9 @@ module ActiveMerchant #:nodoc:
           response['Token']
         else
          [ params[:VendorTxCode],
-           response["VPSTxId"],
+           response["VPSTxId"] || params[:VPSTxId],
            response["TxAuthNo"],
-           response["SecurityKey"],
+           response["SecurityKey"] || params[:SecurityKey],
            action ].join(";")
         end
       end
@@ -422,6 +424,10 @@ module ActiveMerchant #:nodoc:
         post[key] = value if !value.blank? || options[:required]
       end
 
+      def past_purchase_reference?(payment_method)
+        return false unless payment_method.is_a?(String)
+        payment_method.split(';').last == 'purchase'
+      end
     end
 
   end
