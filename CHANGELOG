@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Stripe: Add support for statement_address parameters for EMV transactions [malcolm-mergulhao] #2524
 * Vantiv (Litle): Pass 3DS fields [curiousepic] #2536
 * Checkout V2: Add localized_amount support to add_invoice function [nicolas-maalouf-cko] #2452
 * Checkout V2: Fix success response code validation [nicolas-maalouf-cko] #2452

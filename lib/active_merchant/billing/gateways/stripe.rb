@@ -303,7 +303,9 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, payment, options)
         end
 
-        unless emv_payment?(payment)
+        if emv_payment?(payment)
+          add_statement_address(post, options)
+        else
           add_amount(post, money, options, true)
           add_customer_data(post, options)
           post[:description] = options[:description]
@@ -363,6 +365,18 @@ module ActiveMerchant #:nodoc:
           post[:card][:address_state] = address[:state] if address[:state]
           post[:card][:address_city] = address[:city] if address[:city]
         end
+      end
+
+      def add_statement_address(post, options)
+        return unless statement_address = options[:statement_address]
+        return unless [:address1, :city, :zip, :state].all? { |key| statement_address[key].present? } 
+
+        post[:statement_address] = {}
+        post[:statement_address][:line1] = statement_address[:address1]
+        post[:statement_address][:line2] = statement_address[:address2] if statement_address[:address2].present?
+        post[:statement_address][:city] = statement_address[:city]
+        post[:statement_address][:postal_code] = statement_address[:zip]
+        post[:statement_address][:state] = statement_address[:state]
       end
 
       def add_creditcard(post, creditcard, options)
