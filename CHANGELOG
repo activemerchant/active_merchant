@@ -11,6 +11,8 @@
 * Litle: Update schema and certification tests to v9.12 [curiousepic] #2522
 * Barclaycard Smartpay: Provider a default billing address house number [nfarve] #2520
 * Litle: Update urls and name to Vantiv [curiousepic] #2531
+* FirstData E4: Loose XSD validation for Payeezy (FirstData E4)
+* FirstData E4: Fix duplicate XID and CAVV values in tokenized transactions
 
 == Version 1.69.0 (July 12, 2017)
 * WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
