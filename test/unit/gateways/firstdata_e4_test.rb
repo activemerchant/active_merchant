@@ -217,6 +217,25 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_network_tokenization_requests_with_discover_override_eci
+    stub_comms do
+      credit_card = network_tokenization_credit_card(
+        "378282246310005",
+        brand: "discover",
+        transaction_id: "123",
+        eci: "05",
+        payment_cryptogram: "whatever_the_cryptogram_is",
+      )
+
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |_, data, _|
+      assert_match "<Ecommerce_Flag>04</Ecommerce_Flag>", data
+      assert_match "<XID>123</XID>", data
+      assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
+      assert_xml_valid_to_wsdl(data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_network_tokenization_requests_with_other_brands
     %w(visa mastercard other).each do |brand|
       stub_comms do

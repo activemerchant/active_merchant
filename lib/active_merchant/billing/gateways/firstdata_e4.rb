@@ -236,11 +236,19 @@ module ActiveMerchant #:nodoc:
           xml.tag! "CardHoldersName", credit_card.name
           xml.tag! "CardType", card_type(credit_card.brand)
 
-          eci = (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
-          xml.tag! "Ecommerce_Flag", eci
-
+          add_eci(xml, credit_card, options)
           add_credit_card_verification_strings(xml, credit_card, options)
         end
+      end
+
+      def add_eci(xml, credit_card, options)
+        eci = if credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.brand == "discover"
+          "04"
+        else
+          (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
+        end
+
+        xml.tag! "Ecommerce_Flag", eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
