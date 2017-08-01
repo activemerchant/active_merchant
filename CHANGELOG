@@ -17,6 +17,7 @@
 * SafeCharge: Pass UserID field [curiousepic] #2507
 * AuthorizeNet: Allow Response Code 4 to be returned as successful [nfarve] #2530
 * Forte: Remove order number from captures in Forte Gateway [nfarve] #2532
+* PayU Latam: Add additional mandatory fields [deedeelavinder] #2528
 
 == Version 1.69.0 (July 12, 2017)
 * WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
