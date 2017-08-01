@@ -141,6 +141,16 @@ class Cashnet < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_allows_test_gateway
+    gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', test: true)
+    assert gateway.test?
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = gateway.purchase(@amount, @credit_card)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1234', response.authorization
+  end
+
   private
   def expected_expiration_date
     '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
