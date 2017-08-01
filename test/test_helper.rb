@@ -234,6 +234,16 @@ module ActiveMerchant
       }.update(options)
     end
 
+    def statement_address(options = {})
+      {
+        address1: '456 My Street',
+        address2: 'Apt 1',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6'
+      }.update(options)
+    end
+
     def generate_unique_id
       SecureRandom.hex(16)
     end

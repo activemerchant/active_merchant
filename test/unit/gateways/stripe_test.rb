@@ -12,6 +12,7 @@ class StripeTest < Test::Unit::TestCase
 
     @options = {
       :billing_address => address(),
+      :statement_address => statement_address(),
       :description => 'Test Purchase'
     }
 
@@ -896,6 +897,32 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:address2], post[:card][:address_line2]
     assert_equal @options[:billing_address][:country], post[:card][:address_country]
     assert_equal @options[:billing_address][:city], post[:card][:address_city]
+  end
+
+  def test_add_statement_address
+    post = {}
+
+    @gateway.send(:add_statement_address, post, @options)
+
+    assert_equal @options[:statement_address][:zip], post[:statement_address][:postal_code]
+    assert_equal @options[:statement_address][:state], post[:statement_address][:state]
+    assert_equal @options[:statement_address][:address1], post[:statement_address][:line1]
+    assert_equal @options[:statement_address][:address2], post[:statement_address][:line2]
+    assert_equal @options[:statement_address][:country], post[:statement_address][:country]
+    assert_equal @options[:statement_address][:city], post[:statement_address][:city]
+  end
+
+  def test_add_statement_address_returns_nil_if_required_fields_missing
+    post = {}
+    [:address1, :city, :zip, :state].each do |required_key|
+      missing_required = @options.tap do |options|
+        options[:statement_address].delete_if { |k| k == required_key }
+      end
+
+      @gateway.send(:add_statement_address, post, missing_required)
+
+      assert_equal nil, post[:statement_address]
+    end
   end
 
   def test_ensure_does_not_respond_to_credit
