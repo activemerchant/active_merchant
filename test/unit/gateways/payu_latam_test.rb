@@ -15,10 +15,18 @@ class PayuLatamTest < Test::Unit::TestCase
 
     @options = {
       dni_number: '5415668464654',
+      dni_type: 'TI',
       currency: "ARS",
       order_id: generate_unique_id,
       description: "Active Merchant Transaction",
       installments_number: 1,
+      tax: 0,
+      tax_return_base: 0,
+      email: "username@domain.com",
+      ip: "127.0.0.1",
+      device_session_id: 'vghs6tvkcle931686k1900o6e1',
+      cookie: 'pt1t38347bs6jc9ruv2ecpv7o2',
+      user_agent: 'Mozilla/5.0 (Windows NT 5.1; rv:18.0) Gecko/20100101 Firefox/18.0',
       billing_address: address(
         address1: "Viamonte",
         address2: "1366",
