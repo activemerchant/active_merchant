@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         xml.instruct!
-        xml.tag! "Transaction" do
+        xml.tag! "Transaction", xmlns: "http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes" do
           add_credentials(xml)
           add_transaction_type(xml, action)
           xml << body
@@ -171,14 +171,13 @@ module ActiveMerchant #:nodoc:
         add_amount(xml, money, options)
 
         if credit_card_or_store_authorization.is_a? String
-          add_credit_card_token(xml, credit_card_or_store_authorization)
+          add_credit_card_token(xml, credit_card_or_store_authorization, options)
         else
           add_credit_card(xml, credit_card_or_store_authorization, options)
         end
 
         add_customer_data(xml, options)
         add_invoice(xml, options)
-        add_card_authentication_data(xml, options)
         add_tax_fields(xml, options)
         add_level_3(xml, options)
 
@@ -237,11 +236,19 @@ module ActiveMerchant #:nodoc:
           xml.tag! "CardHoldersName", credit_card.name
           xml.tag! "CardType", card_type(credit_card.brand)
 
-          eci = (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
-          xml.tag! "Ecommerce_Flag", eci
-
+          add_eci(xml, credit_card, options)
           add_credit_card_verification_strings(xml, credit_card, options)
         end
+      end
+
+      def add_eci(xml, credit_card, options)
+        eci = if credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.brand == "discover"
+          "04"
+        else
+          (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
+        end
+
+        xml.tag! "Ecommerce_Flag", eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
@@ -254,9 +261,13 @@ module ActiveMerchant #:nodoc:
 
         if credit_card.is_a?(NetworkTokenizationCreditCard)
           add_network_tokenization_credit_card(xml, credit_card)
-        elsif credit_card.verification_value?
-          xml.tag! "CVD_Presence_Ind", "1"
-          xml.tag! "VerificationStr2", credit_card.verification_value
+        else
+          if credit_card.verification_value?
+            xml.tag! "CVD_Presence_Ind", "1"
+            xml.tag! "VerificationStr2", credit_card.verification_value
+          end
+
+          add_card_authentication_data(xml, options)
         end
       end
 
@@ -277,7 +288,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! "XID", options[:xid]
       end
 
-      def add_credit_card_token(xml, store_authorization)
+      def add_credit_card_token(xml, store_authorization, options)
         params = store_authorization.split(";")
         credit_card = CreditCard.new(
           :brand      => params[1],
@@ -290,6 +301,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! "Expiry_Date", expdate(credit_card)
         xml.tag! "CardHoldersName", credit_card.name
         xml.tag! "CardType", card_type(credit_card.brand)
+        add_card_authentication_data(xml, options)
       end
 
       def add_customer_data(xml, options)

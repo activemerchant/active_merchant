@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 require 'yaml'
 
 class FirstdataE4Test < Test::Unit::TestCase
@@ -212,6 +213,26 @@ class FirstdataE4Test < Test::Unit::TestCase
       assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
       assert_match "<XID>mrLdtHIWq2nLXq7IrA==\n</XID>", data
       assert_match "<CAVV>whateverthecryptogramofatlc=\n</CAVV>", data
+      assert_xml_valid_to_wsdl(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_network_tokenization_requests_with_discover_override_eci
+    stub_comms do
+      credit_card = network_tokenization_credit_card(
+        "378282246310005",
+        brand: "discover",
+        transaction_id: "123",
+        eci: "05",
+        payment_cryptogram: "whatever_the_cryptogram_is",
+      )
+
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |_, data, _|
+      assert_match "<Ecommerce_Flag>04</Ecommerce_Flag>", data
+      assert_match "<XID>123</XID>", data
+      assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
+      assert_xml_valid_to_wsdl(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -231,6 +252,7 @@ class FirstdataE4Test < Test::Unit::TestCase
         assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
         assert_match "<XID>123</XID>", data
         assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
+        assert_xml_valid_to_wsdl(data)
       end.respond_with(successful_purchase_response)
     end
   end
@@ -249,6 +271,7 @@ class FirstdataE4Test < Test::Unit::TestCase
       assert_match "<Ecommerce_Flag>06</Ecommerce_Flag>", data
       assert_match "<CAVV>SAMPLECAVV</CAVV>", data
       assert_match "<XID>SAMPLEXID</XID>", data
+      assert_xml_valid_to_wsdl(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -285,6 +308,13 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   private
+
+  def assert_xml_valid_to_wsdl(data)
+    xsd = Nokogiri::XML::Schema(File.open("#{File.dirname(__FILE__)}/../../schema/firstdata_e4/v11.xsd"))
+    doc = Nokogiri::XML(data)
+    errors = xsd.validate(doc)
+    assert_empty errors, "XSD validation errors in the following XML:\n#{doc}"
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED
