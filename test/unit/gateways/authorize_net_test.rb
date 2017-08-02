@@ -826,7 +826,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(fraud_review_response)
 
     response = @gateway.purchase(@amount, @credit_card)
-    assert_failure response
+    assert_success response
     assert response.fraud_review?
     assert_equal "Thank you! For security reasons your order is currently being reviewed", response.message
   end

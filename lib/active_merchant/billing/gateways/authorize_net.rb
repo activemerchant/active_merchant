@@ -898,7 +898,7 @@ module ActiveMerchant
         if cim?(action) || (action == :verify_credentials)
           response[:result_code] == "Ok"
         else
-          response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
+          [APPROVED, FRAUD_REVIEW].include?(response[:response_code]) && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
         end
       end
 
