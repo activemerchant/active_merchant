@@ -145,6 +145,16 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert_equal 'Successful', response.message
   end
 
+  def test_successful_store_with_recurring
+    @gateway.unstore('test1234') rescue nil
+
+    assert response = @gateway.store(@credit_card, {billing_id: 'test1234', amount: 15000, recurring: true})
+    assert_success response
+
+    assert_equal 'Successful', response.message
+    assert_equal 'yes', response.params['recurring_flag']
+  end
+
   def test_failed_store
     @gateway.store(@credit_card, {billing_id: 'test1234', amount: 15000}) rescue nil # Ensure it already exists
 
@@ -162,6 +172,17 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert_equal response.params['amount'], '12300'
 
     assert_equal 'Approved', response.message
+  end
+
+  def test_successful_triggered_payment_with_recurring
+    @gateway.store(@credit_card, {billing_id: 'test1234', amount: 15000}) rescue nil # Ensure it already exists
+
+    assert response = @gateway.purchase(12300, 'test1234', @options.merge({recurring: true}))
+    assert_success response
+    assert_equal response.params['amount'], '12300'
+
+    assert_equal 'Approved', response.message
+    assert_equal 'yes', response.params['recurring_flag']
   end
 
   def test_failure_triggered_payment
