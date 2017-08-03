@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* WePay: Upgrade WePay API to 2017-05-31 [oldsneerjaw] #2493
 * SafeCharge: Pass UserID field [curiousepic] #2507
 * SafeCharge: Correct UserID field name [curiousepic]
 * Qvalent: Pass 3dSecure fields [curiousepic] #2508
