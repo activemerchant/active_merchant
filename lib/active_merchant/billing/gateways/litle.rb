@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
-        add_payment_method(doc, payment_method)
+        add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
         add_debt_repayment(doc, options)
@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
         doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
-      def add_payment_method(doc, payment_method)
+      def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
@@ -213,6 +213,11 @@ module ActiveMerchant #:nodoc:
           if payment_method.is_a?(NetworkTokenizationCreditCard)
             doc.cardholderAuthentication do
               doc.authenticationValue(payment_method.payment_cryptogram)
+            end
+          elsif options[:order_source] && options[:order_source].start_with?('3ds')
+            doc.cardholderAuthentication do
+              doc.authenticationValue(options[:cavv]) if options[:cavv]
+              doc.authenticationTransactionId(options[:xid]) if options[:xid]
             end
           end
         end
