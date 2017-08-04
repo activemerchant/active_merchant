@@ -1,18 +1,20 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* SafeCharge: Pass UserID field [curiousepic] #2507
-* SafeCharge: Correct UserID field name [curiousepic]
-* Qvalent: Pass 3dSecure fields [curiousepic] #2508
+
+== Version 1.70.0 (August 4, 2017)
+* Barclaycard Smartpay: Provider a default billing address house number [nfarve] #2520
+* FirstData E4: Fix duplicate XID and CAVV values in tokenized transactions [jasonwebster] #2529
+* FirstData E4: Loose XSD validation for Payeezy (FirstData E4) [jasonwebster] #2529
 * GlobalTransport: Support partial authorizations [dtykocki] #2511
+* Litle: Update schema and certification tests to v9.12 [curiousepic] #2522
+* Litle: Update urls and name to Vantiv [curiousepic] #2531
+* Mercado Pago: Add gateway support [davidsantoso] #2518
 * Orbital: Add support for level 2 data [dtykocki] #2515
 * PayU Latam: Pass DNI Number [curiousepic] #2517
-* Mercado Pago: Add gateway support [davidsantoso] #2518
-* Litle: Update schema and certification tests to v9.12 [curiousepic] #2522
-* Barclaycard Smartpay: Provider a default billing address house number [nfarve] #2520
-* Litle: Update urls and name to Vantiv [curiousepic] #2531
-* FirstData E4: Loose XSD validation for Payeezy (FirstData E4)
-* FirstData E4: Fix duplicate XID and CAVV values in tokenized transactions
+* Qvalent: Pass 3dSecure fields [curiousepic] #2508
+* SafeCharge: Correct UserID field name [curiousepic]
+* SafeCharge: Pass UserID field [curiousepic] #2507
 
 == Version 1.69.0 (July 12, 2017)
 * WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
