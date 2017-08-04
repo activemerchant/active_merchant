@@ -509,6 +509,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # http://www.modernbill.com/support/manual/old/v4/adminhelp/english/Configuration/Payment_Settings/Gateway_API/AuthorizeNet/Module_Authorize.net.htm
     assert_failure response
     assert_equal 'The referenced transaction does not meet the criteria for issuing a credit.', response.params['direct_response']['message']
+    assert_equal 'The transaction was unsuccessful.', response.message
+    assert_equal "E00027", response.error_code
     return response
   end
 
@@ -583,7 +585,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
   end
 
-  def test_should_create_customer_profile_trasnaction_passing_recurring_flag
+  def test_should_create_customer_profile_transaction_passing_recurring_flag
     response = stub_comms do
       @gateway.create_customer_profile_transaction(
         :transaction => {
@@ -616,6 +618,22 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal '', @gateway.send(:full_or_masked_card_number, '')
     assert_equal '4242424242424242', @gateway.send(:full_or_masked_card_number, @credit_card.number)
     assert_equal 'XXXX1234', @gateway.send(:full_or_masked_card_number, '1234')
+  end
+
+  def test_multiple_errors_when_creating_customer_profile
+    @gateway.expects(:ssl_post).returns(unsuccessful_create_customer_profile_transaction_response_with_multiple_errors(:refund))
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :type => :refund,
+        :amount => 1,
+
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :trans_id => 1
+      }
+    )
+    assert_equal 'The transaction was unsuccessful.', response.message
+    assert_equal 'E00027', response.error_code
   end
 
   private
@@ -1056,4 +1074,26 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     XML
   end
 
+  def unsuccessful_create_customer_profile_transaction_response_with_multiple_errors(transaction_type)
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <createCustomerProfileTransactionResponse
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00027</code>
+            <text>The transaction was unsuccessful.</text>
+          </message>
+          <message>
+            <code>E00001</code>
+            <text>An error occurred during processing. Please try again.</text>
+          </message>
+        </messages>
+        <directResponse>#{UNSUCCESSUL_DIRECT_RESPONSE[transaction_type]}</directResponse>
+      </createCustomerProfileTransactionResponse>
+    XML
+  end
 end

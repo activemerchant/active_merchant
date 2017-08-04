@@ -10,6 +10,7 @@
 * Ebanx: Support Store and person_type option [curiousepic] #2604
 * Elavon: Update endpoint URLs [curiousepic] #2608
 * PayU Latam: Set payment_country gateway attribute [curiousepic] #2611
+* Authorize.net CIM: Handle multiple error messages [amandapuff] #2537
 
 == Version 1.73.0 (September 28, 2017)
 * Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589
