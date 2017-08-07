@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
-        add_transaction_type(post, 'CAPTURE')
+        add_transaction_elements(post, 'CAPTURE', options)
         add_reference(post, authorization)
 
         commit('capture', post)
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
-        add_transaction_type(post, 'VOID')
+        add_transaction_elements(post, 'VOID', options)
         add_reference(post, authorization)
 
         commit('void', post)
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
-        add_transaction_type(post, 'REFUND')
+        add_transaction_elements(post, 'REFUND', options)
         add_reference(post, authorization)
 
         commit('refund', post)
@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
 
       def auth_or_sale(post, transaction_type, amount, payment_method, options)
         add_credentials(post, 'SUBMIT_TRANSACTION')
-        add_transaction_type(post, transaction_type)
+        add_transaction_elements(post, transaction_type, options)
         add_order(post, options)
         add_buyer(post, options)
         add_invoice(post, amount, options)
@@ -136,9 +136,13 @@ module ActiveMerchant #:nodoc:
         post[:merchant] = merchant
       end
 
-      def add_transaction_type(post, type)
+      def add_transaction_elements(post, type, options)
         transaction = {}
         transaction[:type] = type
+        transaction[:ipAddress] = options[:ip] if options[:ip]
+        transaction[:userAgent] = options[:user_agent] if options[:user_agent]
+        transaction[:cookie] = options[:cookie] if options[:cookie]
+        transaction[:deviceSessionId] = options[:device_session_id] if options[:device_session_id]
         post[:transaction] = transaction
       end
 
@@ -155,7 +159,10 @@ module ActiveMerchant #:nodoc:
         if address = options[:shipping_address]
           buyer = {}
           buyer[:fullName] = address[:name]
-          buyer[:dniNumber] = options[:dni_number]
+          buyer[:dniNumber] = options[:dni_number] if options[:dni_number]
+          buyer[:dniType] = options[:dni_type] if options[:dni_type]
+          buyer[:emailAddress] = options[:email] if options[:email]
+          buyer[:contactPhone] = address[:phone]
           shipping_address = {}
           shipping_address[:street1] = address[:address1]
           shipping_address[:street2] = address[:address2]
@@ -174,8 +181,18 @@ module ActiveMerchant #:nodoc:
         tx_value[:value] = amount(money)
         tx_value[:currency] = options[:currency] || currency(money)
 
+        tx_tax = {}
+        tx_tax[:value] = options[:tax] || '0'
+        tx_tax[:currency] = options[:currency] || currency(money)
+
+        tx_tax_return_base = {}
+        tx_tax_return_base[:value] = options[:tax_return_base] || '0'
+        tx_tax_return_base[:currency] = options[:currency] || currency(money)
+
         additional_values = {}
         additional_values[:TX_VALUE] = tx_value
+        additional_values[:TX_TAX] = tx_tax
+        additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base
 
         post[:transaction][:order][:additionalValues] = additional_values
       end
@@ -235,7 +252,10 @@ module ActiveMerchant #:nodoc:
           post[:transaction][:paymentCountry] = address[:country]
           payer[:fullName] = address[:name]
           payer[:contactPhone] = address[:phone]
-          payer[:dniNumber] = options[:dni_number]
+          payer[:dniNumber] = options[:dni_number] if options[:dni_number]
+          payer[:dniType] = options[:dni_type] if options[:dni_type]
+          payer[:emailAddress] = options[:email] if options[:email]
+          payer[:contactPhone] = address[:phone]
           billing_address = {}
           billing_address[:street1] = address[:address1]
           billing_address[:street2] = address[:address2]

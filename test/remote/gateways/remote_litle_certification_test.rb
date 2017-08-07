@@ -639,6 +639,25 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_three_d_secure
+    three_d_secure_assertions('3DS1', '4100200300000004', 'visa', '3dsAuthenticated', '0')
+    three_d_secure_assertions('3DS2', '4100200300000012', 'visa', '3dsAuthenticated', '1')
+    three_d_secure_assertions('3DS3', '4100200300000103', 'visa', '3dsAuthenticated', '2')
+    three_d_secure_assertions('3DS4', '4100200300001002', 'visa', '3dsAuthenticated', 'A')
+    three_d_secure_assertions('3DS5', '4100200300000020', 'visa', '3dsAuthenticated', '3')
+    three_d_secure_assertions('3DS6', '4100200300000038', 'visa', '3dsAuthenticated', '4')
+    three_d_secure_assertions('3DS7', '4100200300000046', 'visa', '3dsAuthenticated', '5')
+    three_d_secure_assertions('3DS8', '4100200300000053', 'visa', '3dsAuthenticated', '6')
+    three_d_secure_assertions('3DS9', '4100200300000061', 'visa', '3dsAuthenticated', '7')
+    three_d_secure_assertions('3DS10', '4100200300000079', 'visa', '3dsAuthenticated', '8')
+    three_d_secure_assertions('3DS11', '4100200300000087', 'visa', '3dsAuthenticated', '9')
+    three_d_secure_assertions('3DS12', '4100200300000095', 'visa', '3dsAuthenticated', 'B')
+    three_d_secure_assertions('3DS13', '4100200300000111', 'visa', '3dsAuthenticated', 'C')
+    three_d_secure_assertions('3DS14', '4100200300000129', 'visa', '3dsAuthenticated', 'D')
+    three_d_secure_assertions('3DS15', '5112010200000001', 'master', '3dsAttempted', nil)
+    three_d_secure_assertions('3DS16', '5112010200000001', 'master', '3dsAttempted', nil)
+  end
+
   def test_authorize_and_purchase_and_credit_with_token
     options = {
       :order_id => transaction_id,
@@ -801,6 +820,25 @@ class RemoteLitleCertification < Test::Unit::TestCase
     # 1C: void
     assert response = @gateway.void(response.authorization, {:id => transaction_id})
     assert_equal 'Approved', response.message
+  end
+
+  def three_d_secure_assertions(test_id, card, type, source, result)
+    credit_card = CreditCard.new(:number => card, :month => '01',
+                                 :year => '2021', :brand => type,
+                                 :verification_value => '261',
+                                 :name => 'Mike J. Hammer')
+
+    options = {
+      order_id: test_id,
+      order_source: source,
+      cavv: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+    }
+
+    assert response = @gateway.authorize(10100, credit_card, options)
+    assert_success response
+    assert_equal result, response.params['fraudResult_authenticationResult']
+    puts "Test #{test_id}: #{txn_id(response)}"
   end
 
   def transaction_id

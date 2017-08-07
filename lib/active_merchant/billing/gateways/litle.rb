@@ -6,14 +6,14 @@ module ActiveMerchant #:nodoc:
       SCHEMA_VERSION = '9.12'
 
       self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
-      self.live_url = 'https://payments.litle.com/vap/communicator/online'
+      self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
-      self.homepage_url = 'http://www.litle.com/'
-      self.display_name = 'Litle & Co.'
+      self.homepage_url = 'http://www.vantiv.com/'
+      self.display_name = 'Vantiv eCommerce'
 
       def initialize(options={})
         requires!(options, :login, :password, :merchant_id)
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
-        add_payment_method(doc, payment_method)
+        add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
         add_debt_repayment(doc, options)
@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
         doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
-      def add_payment_method(doc, payment_method)
+      def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
@@ -213,6 +213,11 @@ module ActiveMerchant #:nodoc:
           if payment_method.is_a?(NetworkTokenizationCreditCard)
             doc.cardholderAuthentication do
               doc.authenticationValue(payment_method.payment_cryptogram)
+            end
+          elsif options[:order_source] && options[:order_source].start_with?('3ds')
+            doc.cardholderAuthentication do
+              doc.authenticationValue(options[:cavv]) if options[:cavv]
+              doc.authenticationTransactionId(options[:xid]) if options[:xid]
             end
           end
         end
