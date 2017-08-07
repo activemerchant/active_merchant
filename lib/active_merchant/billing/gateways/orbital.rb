@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
 
       # A – Authorization request
       def authorize(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_ONLY, money, options) do |xml|
+        order = build_new_order_xml(AUTH_ONLY, money, creditcard, options) do |xml|
           add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
 
       # AC – Authorization and Capture
       def purchase(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_AND_CAPTURE, money, options) do |xml|
+        order = build_new_order_xml(AUTH_AND_CAPTURE, money, creditcard, options) do |xml|
           add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
 
       # R – Refund request
       def refund(money, authorization, options = {})
-        order = build_new_order_xml(REFUND, money, options.merge(:authorization => authorization)) do |xml|
+        order = build_new_order_xml(REFUND, money, nil, options.merge(:authorization => authorization)) do |xml|
           add_refund(xml, options[:currency])
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
@@ -463,6 +463,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_cdpt_eci_and_xid(xml, creditcard)
+        xml.tag! :AuthenticationECIInd, creditcard.eci
+        xml.tag! :XID, creditcard.transaction_id if creditcard.transaction_id
+      end
+
+      def add_cdpt_payment_cryptogram(xml, creditcard)
+        xml.tag! :DPANInd, 'Y'
+        xml.tag! :DigitalTokenCryptogram, creditcard.payment_cryptogram
+      end
+
       def add_refund(xml, currency=nil)
         xml.tag! :AccountNum, nil
 
@@ -566,7 +576,7 @@ module ActiveMerchant #:nodoc:
         @options[:ip_authentication] == true
       end
 
-      def build_new_order_xml(action, money, parameters = {})
+      def build_new_order_xml(action, money, creditcard, parameters = {})
         requires!(parameters, :order_id)
         xml = xml_envelope
         xml.tag! :Request do
@@ -589,6 +599,10 @@ module ActiveMerchant #:nodoc:
 
             yield xml if block_given?
 
+            if creditcard.is_a?(NetworkTokenizationCreditCard)
+              add_cdpt_eci_and_xid(xml, creditcard)
+            end
+
             xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
@@ -597,6 +611,10 @@ module ActiveMerchant #:nodoc:
             add_level_2_advice_addendum(xml, parameters)
 
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
+
+            if creditcard.is_a?(NetworkTokenizationCreditCard)
+              add_cdpt_payment_cryptogram(xml, creditcard)
+            end
 
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
