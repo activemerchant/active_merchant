@@ -83,11 +83,11 @@ class GatewayTest < Test::Unit::TestCase
   def test_localized_amount_should_ignore_money_format_for_non_fractional_currencies
     Gateway.money_format = :dollars
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
-    assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
+    assert_equal '12', @gateway.send(:localized_amount, 1234, 'ISK')
 
     Gateway.money_format = :cents
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
-    assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
+    assert_equal '12', @gateway.send(:localized_amount, 1234, 'ISK')
   end
 
   def test_localized_amount_returns_three_decimal_places_for_three_decimal_currencies
