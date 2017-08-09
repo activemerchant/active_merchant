@@ -1,4 +1,5 @@
 module ActiveMerchant #:nodoc:
+
   module Billing #:nodoc:
     class TransFirstGateway < Gateway
       self.test_url = 'https://ws.cert.transfirst.com'
@@ -16,7 +17,7 @@ module ActiveMerchant #:nodoc:
       ACTIONS = {
         purchase: "CCSale",
         purchase_echeck: "ACHDebit",
-        refund: "CreditCardAutoRefundorVoid",
+        refund: "CreditCardCredit",
         refund_echeck: "ACHVoidTransaction",
         void: "CreditCardAutoRefundorVoid",
       }
@@ -52,6 +53,7 @@ module ActiveMerchant #:nodoc:
         transaction_id, payment_type = split_authorization(authorization)
         add_amount(post, money)
         add_pair(post, :TransID, transaction_id)
+        add_pair(post, :RefID, options[:order_id], required: true)
 
         commit((payment_type == "check" ? :refund_echeck : :refund), post)
       end
@@ -169,7 +171,6 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         response = parse(ssl_post(url(action), post_data(action, params)))
-
         Response.new(
           success_from(response),
           message_from(response),
