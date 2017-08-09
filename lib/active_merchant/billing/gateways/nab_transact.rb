@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_periodic_url, :live_periodic_url
 
-      self.test_url = 'https://transact.nab.com.au/test/xmlapi/payment'
+      self.test_url = 'https://demo.transact.nab.com.au/xmlapi/payment'
       self.live_url = 'https://transact.nab.com.au/live/xmlapi/payment'
       self.test_periodic_url = 'https://transact.nab.com.au/xmlapidemo/periodic'
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
