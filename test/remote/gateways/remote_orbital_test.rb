@@ -6,7 +6,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_gateway))
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111')
+    @credit_card = credit_card('4112344112344113')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -21,6 +21,22 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       :ds => "6011000995500000",
       :diners => "36438999960016",
       :jcb => "3566002020140006"}
+
+    @level_2_options = {
+      tax_indicator: 1,
+      tax: 10,
+      advice_addendum_1: 'taa1 - test',
+      advice_addendum_2: 'taa2 - test',
+      advice_addendum_3: 'taa3 - test',
+      advice_addendum_4: 'taa4 - test',
+      purchase_order: '123abc',
+      name: address[:name],
+      address1: address[:address1],
+      address2: address[:address2],
+      city: address[:city],
+      state: address[:state],
+      zip: address[:zip],
+    }
 
     @test_suite = [
       {:card => :visa, :AVSzip => 11111, :CVD =>	111,  :amount => 3000},
@@ -40,11 +56,32 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_soft_descriptor_hash
+    assert response = @gateway.purchase(
+      @amount, @credit_card, @options.merge(
+        soft_descriptors: {
+          merchant_name: 'Merch',
+          product_description: 'Description',
+          merchant_email: 'email@example',
+        }
+      )
+    )
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_2_data
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   # Amounts of x.01 will fail
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(101, @declined_card, @options)
     assert_failure response
-    assert_equal 'AUTH DECLINED                   12001', response.message
+    assert_equal 'Invalid CC Number', response.message
   end
 
   def test_authorize_and_capture
@@ -54,6 +91,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert auth.authorization
     assert capture = @gateway.capture(amount, auth.authorization, :order_id => '2')
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_level_2_data
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+    assert_success auth
+    assert_equal "Approved", auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization, @options.merge(level_2_data: @level_2_options))
     assert_success capture
   end
 
@@ -72,6 +118,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     assert refund = @gateway.refund(amount, response.authorization, @options)
+    assert_success refund
+  end
+
+  def test_successful_refund_with_level_2_data
+    amount = @amount
+    assert response = @gateway.purchase(amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+    assert_success response
+    assert response.authorization
+    assert refund = @gateway.refund(amount, response.authorization, @options.merge(level_2_data: @level_2_options))
     assert_success refund
   end
 
@@ -173,7 +228,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal 'AUTH DECLINED                   12001', response.message
+    assert_equal 'Invalid CC Number', response.message
   end
 
   def test_transcript_scrubbing

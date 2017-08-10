@@ -6,14 +6,23 @@ class RemotePayuLatamTest < Test::Unit::TestCase
 
     @amount = 4000
     @credit_card = credit_card("4097440000000004", verification_value: "444", first_name: "APPROVED", last_name: "")
-    @declined_card = credit_card("4097440000000004", verification_value: "333", first_name: "REJECTED", last_name: "")
-    @pending_card = credit_card("4097440000000004", verification_value: "222", first_name: "PENDING", last_name: "")
+    @declined_card = credit_card("4097440000000004", verification_value: "444", first_name: "REJECTED", last_name: "")
+    @pending_card = credit_card("4097440000000004", verification_value: "444", first_name: "PENDING", last_name: "")
 
     @options = {
+      dni_number: '5415668464654',
+      dni_type: 'TI',
       currency: "ARS",
       order_id: generate_unique_id,
       description: "Active Merchant Transaction",
       installments_number: 1,
+      tax: 0,
+      tax_return_base: 0,
+      email: "username@domain.com",
+      ip: "127.0.0.1",
+      device_session_id: 'vghs6tvkcle931686k1900o6e1',
+      cookie: 'pt1t38347bs6jc9ruv2ecpv7o2',
+      user_agent: 'Mozilla/5.0 (Windows NT 5.1; rv:18.0) Gecko/20100101 Firefox/18.0',
       billing_address: address(
         address1: "Viamonte",
         address2: "1366",
@@ -128,6 +137,21 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     response = @gateway.void('')
     assert_failure response
     assert_match /property: parentTransactionId, message: must not be null/, response.message
+  end
+
+  def test_successful_authorize_and_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_capture
+    response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_match /must not be null/, response.message
   end
 
   def test_verify_credentials

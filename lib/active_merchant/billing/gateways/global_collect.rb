@@ -131,8 +131,8 @@ module ActiveMerchant #:nodoc:
         if payment
           post["order"]["customer"]["personalInformation"] = {
             "name" => {
-              "firstName" => payment.first_name,
-              "surname" => payment.last_name
+              "firstName" => payment.first_name[0..14],
+              "surname" => payment.last_name[0..69]
             }
           }
         end
@@ -262,14 +262,20 @@ EOS
       end
 
       def success_from(response)
-        !response["errorId"]
+        !response["errorId"] && response["status"] != "REJECTED"
       end
 
       def message_from(succeeded, response)
         if succeeded
           "Succeeded"
         else
-          response["errors"][0]["message"] || "Unable to read error message"
+          if errors = response["errors"]
+            errors.first.try(:[], "message")
+          elsif status = response["status"]
+            "Status: " + status
+          else
+            "No message available"
+          end
         end
       end
 
@@ -283,7 +289,13 @@ EOS
 
       def error_code_from(succeeded, response)
         unless succeeded
-          response["errors"][0]["code"] || "Unable to read error code"
+          if errors = response["errors"]
+            errors.first.try(:[], "code")
+          elsif status = response.try(:[], "statusOutput").try(:[], "statusCode")
+            status.to_s
+          else
+            "No error code available"
+          end
         end
       end
 

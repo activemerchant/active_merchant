@@ -401,6 +401,17 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal '2014-06-25 09:33:41', response.params['transaction_time']
   end
 
+  def test_paypal_nvp_option_sends_header
+    headers = @gateway.send(:build_headers, 1)
+    assert_not_include headers, 'PAYPAL-NVP'
+
+    old_use_paypal_nvp = PayflowGateway.use_paypal_nvp
+    PayflowGateway.use_paypal_nvp = true
+    headers = @gateway.send(:build_headers, 1)
+    assert_equal 'Y', headers['PAYPAL-NVP']
+    PayflowGateway.use_paypal_nvp = old_use_paypal_nvp
+  end
+
   private
   def successful_recurring_response
     <<-XML

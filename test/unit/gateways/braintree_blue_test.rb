@@ -635,14 +635,16 @@ class BraintreeBlueTest < Test::Unit::TestCase
           :expiration_month => '09',
           :expiration_year => (Time.now.year + 1).to_s,
           :cryptogram => '111111111100cryptogram',
-          :google_transaction_id => '1234567890'
+          :google_transaction_id => '1234567890',
+          :source_card_type => "visa",
+          :source_card_last_four => "1111",
+          :eci_indicator => '05'
         }
       ).
       returns(braintree_result(:id => "transaction_id"))
 
     credit_card = network_tokenization_credit_card('4111111111111111',
       :brand              => 'visa',
-      :transaction_id     => "123",
       :eci                => "05",
       :payment_cryptogram => "111111111100cryptogram",
       :source             => :android_pay,
@@ -671,6 +673,32 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, credit_card("41111111111111111111"))
     refute response.success?
     assert_equal response.message, 'Some error message'
+  end
+
+  def test_refund_unsettled_payment
+    Braintree::TransactionGateway.any_instance.
+      expects(:refund).
+      returns(braintree_error_result(message: "Cannot refund a transaction unless it is settled. (91506)"))
+
+    Braintree::TransactionGateway.any_instance.
+      expects(:void).
+      never
+
+    response = @gateway.refund(1.00, 'transaction_id')
+    refute response.success?
+  end
+
+  def test_refund_unsettled_payment_forces_void_on_full_refund
+    Braintree::TransactionGateway.any_instance.
+      expects(:refund).
+      returns(braintree_error_result(message: "Cannot refund a transaction unless it is settled. (91506)"))
+
+    Braintree::TransactionGateway.any_instance.
+      expects(:void).
+      returns(braintree_result)
+
+    response = @gateway.refund(1.00, 'transaction_id', force_full_refund_if_unsettled: true)
+    assert response.success?
   end
 
   private

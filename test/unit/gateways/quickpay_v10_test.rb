@@ -26,7 +26,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       response = @gateway.purchase(@amount, @credit_card, @options)
       assert response
       assert_success response
-      assert_equal 1145, response.authorization
+      assert_equal "1145", response.authorization
       assert response.test?
     end.check_request do |endpoint, data, headers|
       parsed = parse(data)
@@ -45,7 +45,7 @@ class QuickpayV10Test < Test::Unit::TestCase
     stub_comms do
       assert response = @gateway.authorize(@amount, @credit_card, @options)
       assert_success response
-      assert_equal 1145, response.authorization
+      assert_equal "1145", response.authorization
       assert response.test?
     end.check_request do |endpoint, data, headers|
       parsed_data = parse(data)

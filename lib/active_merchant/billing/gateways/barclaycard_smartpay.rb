@@ -6,6 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'GE', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
       self.default_currency = 'EUR'
+      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
 
@@ -225,12 +226,12 @@ module ActiveMerchant #:nodoc:
       def address_hash(address)
         full_address = "#{address[:address1]} #{address[:address2]}" if address
         street = address[:street] if address[:street]
-        house = address[:houseNumberOrName] if address[:houseNumberOrName]
+        house = address[:houseNumberOrName] ? address[:houseNumberOrName] : full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
 
         hash = {}
         hash[:city]              = address[:city] if address[:city]
         hash[:street]            = street || full_address.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
-        hash[:houseNumberOrName] = house || full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        hash[:houseNumberOrName] = house.empty? ? "Not Provided" : house
         hash[:postalCode]        = address[:zip] if address[:zip]
         hash[:stateOrProvince]   = address[:state] if address[:state]
         hash[:country]           = address[:country] if address[:country]
@@ -238,9 +239,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def amount_hash(money, currency)
+        currency = currency || currency(money)
         hash = {}
-        hash[:currency] = currency || currency(money)
-        hash[:value]    = amount(money) if money
+        hash[:currency] = currency
+        hash[:value]    = localized_amount(money, currency) if money
         hash
       end
 

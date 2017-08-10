@@ -31,6 +31,17 @@ class GlobalTransportTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_partial_purchase
+    @gateway.expects(:ssl_post).returns(successful_partial_purchase_response)
+
+    response = @gateway.purchase(200, credit_card, @options)
+    assert_success response
+    assert_equal '8869188', response.authorization
+    assert_equal 'Partial Approval', response.message
+    assert_equal '3.54', response.params["balance_due"]
+    assert_equal '20.00', response.params["approved_amount"]
+  end
+
   def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(100, credit_card)
@@ -44,6 +55,24 @@ class GlobalTransportTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/PNRef=3648890/, data)
     end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
+  def test_successful_partial_authorize_and_capture
+    response = stub_comms do
+      @gateway.authorize(200, credit_card, @options)
+    end.respond_with(successful_partial_authorize_response)
+
+    assert_success response
+    assert_equal "8869269", response.authorization
+    assert_equal "Partial Approval", response.message
+
+    capture = stub_comms do
+      @gateway.capture(150, response.authorization)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/PNRef=8869269/, data)
+    end.respond_with(successful_partial_capture_response)
 
     assert_success capture
   end
@@ -138,8 +167,8 @@ class GlobalTransportTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-
   private
+
   def successful_purchase_response
     %(
       <Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="GlobalPayments">
@@ -176,6 +205,66 @@ class GlobalTransportTest < Test::Unit::TestCase
         <GetCVResultTXT>Match</GetCVResultTXT>
         <GetCommercialCard>False</GetCommercialCard>
         <ExtData>InvNum=1,CardType=Visa&lt;ReceiptData&gt;&lt;MID&gt;332518545311149&lt;/MID&gt;&lt;Trans_Id&gt;014258078002543&lt;/Trans_Id&gt;&lt;Val_Code&gt;ABAD&lt;/Val_Code&gt;&lt;/ReceiptData&gt;&lt;ApprovedAmount&gt;0.00&lt;/ApprovedAmount&gt;&lt;BalanceDue&gt;14.00&lt;/BalanceDue&gt;</ExtData>
+      </Response>
+    )
+  end
+
+  def successful_partial_purchase_response
+    %(
+      <Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="GlobalPayments">
+        <Result>200</Result>
+        <RespMSG>Partial Approval</RespMSG>
+        <Message>PARTIAL AP</Message>
+        <AuthCode>VI2000</AuthCode>
+        <PNRef>8869188</PNRef>
+        <HostCode>0004</HostCode>
+        <GetAVSResult>N</GetAVSResult>
+        <GetAVSResultTXT>No Match</GetAVSResultTXT>
+        <GetStreetMatchTXT>No Match</GetStreetMatchTXT>
+        <GetZipMatchTXT>No Match</GetZipMatchTXT>
+        <GetCVResult>M</GetCVResult>
+        <GetCVResultTXT>Match</GetCVResultTXT>
+        <GetCommercialCard>False</GetCommercialCard>
+        <ExtData>InvNum=1,CardType=Visa,BatchNum=0005&lt;BatchNum&gt;0005&lt;/BatchNum&gt;&lt;ReceiptData&gt;&lt;MID&gt;332518545311149&lt;/MID&gt;&lt;Trans_Id&gt;017198190587855&lt;/Trans_Id&gt;&lt;Val_Code&gt;AABC&lt;/Val_Code&gt;&lt;/ReceiptData&gt;&lt;ApprovedAmount&gt;20.00&lt;/ApprovedAmount&gt;&lt;BalanceDue&gt;3.54&lt;/BalanceDue&gt;</ExtData>
+        <AcqRefData>aWb017198190587855cAABCd5e10fJj470993170717112415k0057840C000000002354lA  m000005</AcqRefData>
+      </Response>
+    )
+  end
+
+  def successful_partial_authorize_response
+    %(
+      <Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="GlobalPayments">
+        <Result>200</Result>
+        <RespMSG>Partial Approval</RespMSG>
+        <Message>PARTIAL AP</Message>
+        <AuthCode>VI2000</AuthCode>
+        <PNRef>8869269</PNRef>
+        <GetAVSResult>N</GetAVSResult>
+        <GetAVSResultTXT>No Match</GetAVSResultTXT>
+        <GetStreetMatchTXT>No Match</GetStreetMatchTXT>
+        <GetZipMatchTXT>No Match</GetZipMatchTXT>
+        <GetCVResult>M</GetCVResult>
+        <GetCVResultTXT>Match</GetCVResultTXT>
+        <GetCommercialCard>False</GetCommercialCard>
+        <ExtData>InvNum=1,CardType=Visa&lt;ReceiptData&gt;&lt;MID&gt;332518545311149&lt;/MID&gt;&lt;Trans_Id&gt;017198190582649&lt;/Trans_Id&gt;&lt;Val_Code&gt;AABC&lt;/Val_Code&gt;&lt;/ReceiptData&gt;&lt;ApprovedAmount&gt;20.00&lt;/ApprovedAmount&gt;&lt;BalanceDue&gt;3.54&lt;/BalanceDue&gt;</ExtData>
+        <AcqRefData>aWb017198190582649cAABCd5e10fJj471048170717124409k0057840C000000002354lA  m000005</AcqRefData>
+      </Response>
+    )
+  end
+
+  def successful_partial_capture_response
+    %(
+      <Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="GlobalPayments">
+        <Result>0</Result>
+        <RespMSG>Approved</RespMSG>
+        <Message>AP</Message>
+        <AuthCode>VI2000</AuthCode>
+        <PNRef>8869275</PNRef>
+        <HostCode>0034</HostCode>
+        <GetCVResultTXT>Service Not Requested</GetCVResultTXT>
+        <GetCommercialCard>False</GetCommercialCard>
+        <ExtData>InvNum=1,CardType=Visa,BatchNum=0005&lt;ExtReceiptData&gt;&lt;AccountNumber&gt;************1111&lt;/AccountNumber&gt;&lt;Issuer&gt;Visa&lt;/Issuer&gt;&lt;Amount&gt;20.00&lt;/Amount&gt;&lt;AuthAmount&gt;20.00&lt;/AuthAmount&gt;&lt;TicketNumber&gt;1&lt;/TicketNumber&gt;&lt;EntryMode&gt;Manual CNP&lt;/EntryMode&gt;&lt;/ExtReceiptData&gt;&lt;BatchNum&gt;0005&lt;/BatchNum&gt;&lt;ReceiptData&gt;&lt;MID&gt;332518545311149&lt;/MID&gt;&lt;Trans_Id&gt;017198190583609&lt;/Trans_Id&gt;&lt;Val_Code&gt;AABC&lt;/Val_Code&gt;&lt;/ReceiptData&gt;</ExtData>
+        <AcqRefData>aWb017198190583609cAABCd5e10fJj471054170717130009lA  m000005</AcqRefData>
       </Response>
     )
   end

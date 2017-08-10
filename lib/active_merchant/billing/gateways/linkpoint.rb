@@ -143,9 +143,9 @@ module ActiveMerchant #:nodoc:
           :pem => LinkpointGateway.pem_file
         }.update(options)
 
-        @options[:pem].strip!
-
         raise ArgumentError, "You need to pass in your pem file using the :pem parameter or set it globally using ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../mycert.pem' ) or similar" if @options[:pem].blank?
+
+        @options[:pem].strip!
       end
 
       # Send a purchase request with periodic options

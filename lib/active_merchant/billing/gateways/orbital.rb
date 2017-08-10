@@ -65,11 +65,11 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :secondary_test_url, :secondary_live_url
 
-      self.test_url = "https://orbitalvar1.paymentech.net/authorize"
-      self.secondary_test_url = "https://orbitalvar2.paymentech.net/authorize"
+      self.test_url = "https://orbitalvar1.chasepaymentech.com/authorize"
+      self.secondary_test_url = "https://orbitalvar2.chasepaymentech.com/authorize"
 
-      self.live_url = "https://orbital1.paymentech.net/authorize"
-      self.secondary_live_url = "https://orbital2.paymentech.net/authorize"
+      self.live_url = "https://orbital1.chasepaymentech.com/authorize"
+      self.secondary_live_url = "https://orbital2.chasepaymentech.com/authorize"
 
       self.supported_countries = ["US", "CA"]
       self.default_currency = "CAD"
@@ -345,6 +345,43 @@ module ActiveMerchant #:nodoc:
         xml.tag! :SDMerchantEmail, soft_desc.merchant_email           if soft_desc.merchant_email
       end
 
+      def add_soft_descriptors_from_hash(xml, soft_desc)
+        xml.tag! :SDMerchantName, soft_desc[:merchant_name] || nil
+        xml.tag! :SDProductDescription, soft_desc[:product_description] || nil
+        xml.tag! :SDMerchantCity, soft_desc[:merchant_city] || nil
+        xml.tag! :SDMerchantPhone, soft_desc[:merchant_phone] || nil
+        xml.tag! :SDMerchantURL, soft_desc[:merchant_url] || nil
+        xml.tag! :SDMerchantEmail, soft_desc[:merchant_email] || nil
+      end
+
+      def add_level_2_tax(xml, options={})
+        if (level_2 = options[:level_2_data])
+          xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator])
+          xml.tag! :Tax, amount(level_2[:tax]) if level_2[:tax]
+        end
+      end
+
+      def add_level_2_advice_addendum(xml, options={})
+        if (level_2 = options[:level_2_data])
+          xml.tag! :AMEXTranAdvAddn1, byte_limit(level_2[:advice_addendum_1], 40) if level_2[:advice_addendum_1]
+          xml.tag! :AMEXTranAdvAddn2, byte_limit(level_2[:advice_addendum_2], 40) if level_2[:advice_addendum_2]
+          xml.tag! :AMEXTranAdvAddn3, byte_limit(level_2[:advice_addendum_3], 40) if level_2[:advice_addendum_3]
+          xml.tag! :AMEXTranAdvAddn4, byte_limit(level_2[:advice_addendum_4], 40) if level_2[:advice_addendum_4]
+        end
+      end
+
+      def add_level_2_purchase(xml, options={})
+        if (level_2 = options[:level_2_data])
+          xml.tag! :PCOrderNum,       byte_limit(level_2[:purchase_order], 17) if level_2[:purchase_order]
+          xml.tag! :PCDestZip,        byte_limit(format_address_field(level_2[:zip]), 10) if level_2[:zip]
+          xml.tag! :PCDestName,       byte_limit(format_address_field(level_2[:name]), 30) if level_2[:name]
+          xml.tag! :PCDestAddress1,   byte_limit(format_address_field(level_2[:address1]), 30) if level_2[:address1]
+          xml.tag! :PCDestAddress2,   byte_limit(format_address_field(level_2[:address2]), 30) if level_2[:address2]
+          xml.tag! :PCDestCity,       byte_limit(format_address_field(level_2[:city]), 20) if level_2[:city]
+          xml.tag! :PCDestState,      byte_limit(format_address_field(level_2[:state]), 2) if level_2[:state]
+        end
+      end
+
       def add_address(xml, creditcard, options)
         if(address = (options[:billing_address] || options[:address]))
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
@@ -417,10 +454,12 @@ module ActiveMerchant #:nodoc:
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         unless creditcard.nil?
-          if %w( visa discover ).include?(creditcard.brand)
-            xml.tag! :CardSecValInd, (creditcard.verification_value? ? '1' : '9')
+          if creditcard.verification_value?
+            if %w( visa discover ).include?(creditcard.brand)
+              xml.tag! :CardSecValInd, '1'
+            end
+            xml.tag! :CardSecVal,  creditcard.verification_value
           end
-          xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
         end
       end
 
@@ -554,10 +593,15 @@ module ActiveMerchant #:nodoc:
             xml.tag! :Amount, amount(money)
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
 
+            add_level_2_tax(xml, parameters)
+            add_level_2_advice_addendum(xml, parameters)
+
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
 
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
+            elsif parameters[:soft_descriptors].is_a?(Hash)
+              add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
 
             set_recurring_ind(xml, parameters)
@@ -567,6 +611,8 @@ module ActiveMerchant #:nodoc:
               tx_ref_num, _ = split_authorization(parameters[:authorization])
               xml.tag! :TxRefNum, tx_ref_num
             end
+
+            add_level_2_purchase(xml, parameters)
           end
         end
         xml.target!
@@ -590,8 +636,11 @@ module ActiveMerchant #:nodoc:
             add_xml_credentials(xml)
             xml.tag! :OrderID, format_order_id(order_id)
             xml.tag! :Amount, amount(money)
+            add_level_2_tax(xml, parameters)
             add_bin_merchant_and_terminal(xml, parameters)
             xml.tag! :TxRefNum, tx_ref_num
+            add_level_2_purchase(xml, parameters)
+            add_level_2_advice_addendum(xml, parameters)
           end
         end
         xml.target!

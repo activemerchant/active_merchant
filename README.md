@@ -91,7 +91,6 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [Bank Frick](http://www.bankfrickacquiring.com/) - LI, US
 * [Banwire](http://www.banwire.com/) - MX
 * [Barclays ePDQ Extra Plus](http://www.barclaycard.co.uk/business/accepting-payments/epdq-ecomm/) - GB
-* [Barclays ePDQ MPI](http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/) - GB
 * [Be2Bill](http://www.be2bill.com/) - FR
 * [Beanstream.com](http://www.beanstream.com/) - CA, US
 * [BluePay](http://www.bluepay.com/) - US

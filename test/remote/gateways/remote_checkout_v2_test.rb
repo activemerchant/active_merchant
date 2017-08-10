@@ -52,10 +52,22 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_ip
+    response = @gateway.purchase(@amount, @credit_card, ip: "96.125.185.52")
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Invalid Card Number', response.message
+  end
+
+  def test_avs_failed_purchase
+    response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(address1: 'Test_A'))
+    assert_failure response
+    assert_equal '40111 - Street Match Only', response.message
   end
 
   def test_successful_authorize_and_capture

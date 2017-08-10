@@ -68,6 +68,21 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
   end
 
+  def test_successful_purchase_defaulting_check_number
+    check_without_number = check(number: nil)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, check_without_number, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/001/, data)
+    end.respond_with(successful_purchase_echeck_response)
+
+    assert_success response
+    assert_equal 'ET133078|69864362|tele_check|100', response.authorization
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).raises(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)

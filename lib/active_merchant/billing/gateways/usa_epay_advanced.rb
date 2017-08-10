@@ -77,12 +77,14 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.usaepay.com/'
       self.display_name = 'USA ePay Advanced SOAP Interface'
 
-      CUSTOMER_OPTIONS = {
+      CUSTOMER_PROFILE_OPTIONS = {
         :id => [:string, 'CustomerID'], # merchant assigned number
         :notes => [:string, 'Notes'],
         :data => [:string, 'CustomData'],
-        :url => [:string, 'URL'],
-        # Recurring Billing
+        :url => [:string, 'URL']
+      } #:nodoc:
+
+      CUSTOMER_RECURRING_BILLING_OPTIONS = {
         :enabled => [:boolean, 'Enabled'],
         :schedule => [:string, 'Schedule'],
         :number_left => [:integer, 'NumLeft'],
@@ -92,18 +94,24 @@ module ActiveMerchant #:nodoc:
         :user => [:string, 'User'],
         :source => [:string, 'Source'],
         :send_receipt => [:boolean, 'SendReceipt'],
-        :receipt_note => [:string, 'ReceiptNote'],
-        # Point of Sale
+        :receipt_note => [:string, 'ReceiptNote']
+      } #:nodoc:
+
+      CUSTOMER_POINT_OF_SALE_OPTIONS = {
         :price_tier => [:string, 'PriceTier'],
         :tax_class => [:string, 'TaxClass'],
         :lookup_code => [:string, 'LookupCode']
       } #:nodoc:
 
-      ADDRESS_OPTIONS = {
+      CUSTOMER_OPTIONS = [
+        CUSTOMER_PROFILE_OPTIONS,
+        CUSTOMER_RECURRING_BILLING_OPTIONS,
+        CUSTOMER_POINT_OF_SALE_OPTIONS
+      ].inject(:merge) #:nodoc:
+
+      COMMON_ADDRESS_OPTIONS = {
         :first_name => [:string, 'FirstName'],
         :last_name => [:string, 'LastName'],
-        :address1 => [:string, 'Street'],
-        :address2 => [:string, 'Street2'],
         :city => [:string, 'City'],
         :state => [:string, 'State'],
         :zip => [:string, 'Zip'],
@@ -113,6 +121,32 @@ module ActiveMerchant #:nodoc:
         :fax => [:string, 'Fax'],
         :company => [:string, 'Company']
       } #:nodoc:
+
+      ADDRESS_OPTIONS = [
+        COMMON_ADDRESS_OPTIONS,
+        {
+          :address1 => [:string, 'Street'],
+          :address2 => [:string, 'Street2'],
+        }
+      ].inject(:merge) #:nodoc
+
+      CUSTOMER_UPDATE_DATA_FIELDS = [
+        CUSTOMER_PROFILE_OPTIONS,
+        CUSTOMER_RECURRING_BILLING_OPTIONS,
+        COMMON_ADDRESS_OPTIONS,
+        {
+          :address1 => [:string, 'Address'],
+          :address2 => [:string, 'Address2'],
+        },
+        {
+          :card_number => [:string, 'CardNumber'],
+          :card_exp => [:string, 'CardExp'],
+          :account => [:string, 'Account'],
+          :routing => [:string, 'Routing'],
+          :check_format => [:string, 'CheckFormat'],
+          :record_type => [:string, 'RecordType'],
+        }
+      ].inject(:merge) #:nodoc
 
       CUSTOMER_TRANSACTION_REQUEST_OPTIONS = {
         :command => [:string, 'Command'],
@@ -349,6 +383,55 @@ module ActiveMerchant #:nodoc:
       #
       def update_customer(options={})
         requires! options, :customer_number
+
+        request = build_request(__method__, options)
+        commit(__method__, request)
+      end
+
+      # Update a customer by replacing only the provided fields.
+      #
+      # ==== Required
+      # * <tt>:customer_number</tt> -- customer to update
+      # * <tt>:update_data</tt> -- FieldValue array of fields to retrieve
+      #   * <tt>:first_name</tt>
+      #   * <tt>:last_name</tt>
+      #   * <tt>:id</tt>
+      #   * <tt>:company</tt>
+      #   * <tt>:address</tt>
+      #   * <tt>:address2</tt>
+      #   * <tt>:city</tt>
+      #   * <tt>:state</tt>
+      #   * <tt>:zip</tt>
+      #   * <tt>:country</tt>
+      #   * <tt>:phone</tt>
+      #   * <tt>:fax</tt>
+      #   * <tt>:email</tt>
+      #   * <tt>:url</tt>
+      #   * <tt>:receipt_note</tt>
+      #   * <tt>:send_receipt</tt>
+      #   * <tt>:notes</tt>
+      #   * <tt>:description</tt>
+      #   * <tt>:order_id</tt>
+      #   * <tt>:enabled</tt>
+      #   * <tt>:schedule</tt>
+      #   * <tt>:next</tt>
+      #   * <tt>:num_left</tt>
+      #   * <tt>:amount</tt>
+      #   * <tt>:custom_data</tt>
+      #   * <tt>:source</tt>
+      #   * <tt>:user</tt>
+      #   * <tt>:card_number</tt>
+      #   * <tt>:card_exp</tt>
+      #   * <tt>:account</tt>
+      #   * <tt>:routing</tt>
+      #   * <tt>:check_format</tt> or <tt>:record_type</tt>
+      #
+      # ==== Response
+      # * <tt>#message</tt> -- boolean; Returns true if successful. Exception thrown all failures.
+      #
+      def quick_update_customer(options={})
+        requires! options, :customer_number
+        requires! options, :update_data
 
         request = build_request(__method__, options)
         commit(__method__, request)
@@ -1019,6 +1102,14 @@ module ActiveMerchant #:nodoc:
         build_customer(soap, options, 'deleteCustomer')
       end
 
+      def build_quick_update_customer(soap, options)
+        soap.tag! "ns1:quickUpdateCustomer" do
+          build_token soap, options
+          build_tag soap, :integer, 'CustNum', options[:customer_number]
+          build_field_value_array soap, "UpdateData", "FieldValue", options[:update_data], CUSTOMER_UPDATE_DATA_FIELDS
+        end
+      end
+
       def build_add_customer_payment_method(soap, options)
         soap.tag! "ns1:addCustomerPaymentMethod" do
           build_token soap, options
@@ -1408,6 +1499,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def build_field_value_array(soap, tag_name, type, custom_data, fields)
+        soap.tag! tag_name, 'SOAP-ENC:arryType' => "xsd:#{type}[#{options.length}]", 'xsi:type' => "ns1:#{type}Array" do
+          custom_data.each do |k, v|
+            build_field_value soap, fields[k][1], v, fields[k][0] if fields.keys.include? k
+          end
+        end
+      end
+
+      def build_field_value(soap, field, value, value_type)
+        soap.FieldValue 'xsi:type' => 'ns1:FieldValue' do
+          build_tag soap, :string, 'Field', field
+          build_tag soap, value_type, 'Value', value
+        end
+      end
+
       def build_line_items(soap, options) # TODO
       end
 
@@ -1511,4 +1617,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
