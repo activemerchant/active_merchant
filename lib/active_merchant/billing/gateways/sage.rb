@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SageGateway < Gateway
+      include Empty
+
       self.display_name = 'http://www.sagepayments.com'
       self.homepage_url = 'Sage Payment Solutions'
       self.live_url = 'https://www.sagepayments.net/cgi-bin'
@@ -204,8 +206,8 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:T_ordernum] = (options[:order_id] || generate_unique_id).slice(0, 20)
-        post[:T_tax] = amount(options[:tax]) unless options[:tax].blank?
-        post[:T_shipping] = amount(options[:shipping]) unless options[:shipping].blank?
+        post[:T_tax] = amount(options[:tax]) unless empty?(options[:tax])
+        post[:T_shipping] = amount(options[:shipping]) unless empty?(options[:shipping])
       end
 
       def add_reference(post, reference)
@@ -226,7 +228,7 @@ module ActiveMerchant #:nodoc:
 
         post[:C_address]    = billing_address[:address1]
         post[:C_city]       = billing_address[:city]
-        post[:C_state]      = billing_address[:state]
+        post[:C_state]      = empty?(billing_address[:state]) ? "Outside of US" : billing_address[:state]
         post[:C_zip]        = billing_address[:zip]
         post[:C_country]    = billing_address[:country]
         post[:C_telephone]  = billing_address[:phone]

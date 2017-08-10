@@ -42,6 +42,10 @@ module ActiveMerchant #:nodoc:
 
       self.display_name = 'Braintree (Blue Platform)'
 
+      ERROR_CODES = {
+        cannot_refund_if_unsettled: 91506
+      }
+
       def initialize(options = {})
         requires!(options, :merchant_id, :public_key, :private_key)
         @merchant_account_id = options[:merchant_account_id]
@@ -90,11 +94,15 @@ module ActiveMerchant #:nodoc:
       def refund(*args)
         # legacy signature: #refund(transaction_id, options = {})
         # new signature: #refund(money, transaction_id, options = {})
-        money, transaction_id, _ = extract_refund_args(args)
+        money, transaction_id, options = extract_refund_args(args)
         money = amount(money).to_s if money
 
         commit do
-          response_from_result(@braintree_gateway.transaction.refund(transaction_id, money))
+          response = response_from_result(@braintree_gateway.transaction.refund(transaction_id, money))
+          return response if response.success?
+          return response unless options[:force_full_refund_if_unsettled]
+
+          void(transaction_id) if response.message =~ /#{ERROR_CODES[:cannot_refund_if_unsettled]}/
         end
       end
 
@@ -582,7 +590,10 @@ module ActiveMerchant #:nodoc:
                 :cryptogram => credit_card_or_vault_id.payment_cryptogram,
                 :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
                 :expiration_year => credit_card_or_vault_id.year.to_s,
-                :google_transaction_id => credit_card_or_vault_id.transaction_id
+                :google_transaction_id => credit_card_or_vault_id.transaction_id,
+                :source_card_type => credit_card_or_vault_id.brand,
+                :source_card_last_four => credit_card_or_vault_id.last_digits,
+                :eci_indicator => credit_card_or_vault_id.eci
               }
             end
           else

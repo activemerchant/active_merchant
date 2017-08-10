@@ -57,7 +57,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_not_nil response
     assert_failure response
 
-    assert_equal '506', response.params['result']
+    assert_equal '504', response.params['result']
     assert_match %r{no such}i, response.message
   end
 
@@ -75,7 +75,6 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_declined
-
     [ @visa_declined, @mastercard_declined ].each do |card|
 
       response = @gateway.purchase(@amount, card,
@@ -122,7 +121,6 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_coms_error
-
     [ @visa_coms_error, @mastercard_coms_error ].each do |card|
 
       response = @gateway.purchase(@amount, card,
@@ -178,8 +176,8 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_not_nil response
     assert_failure response
 
-    assert_equal '502', response.params['result']
-    assert_match(/missing/i, response.message)
+    assert_equal '506', response.params['result']
+    assert_match(/does not conform/i, response.message)
   end
 
   def test_cvn
@@ -287,6 +285,24 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert rebate_response.test?
     assert rebate_response.authorization.length > 0
     assert_equal 'Successful', rebate_response.message
+  end
+
+  def test_maps_avs_and_cvv_response_codes
+    [ @visa, @mastercard ].each do |card|
+
+      response = @gateway.purchase(@amount, card,
+        :order_id => generate_unique_id,
+        :description => 'Test Realex Purchase',
+        :billing_address => {
+          :zip => '90210',
+          :country => 'US'
+        }
+      )
+      assert_not_nil response
+      assert_success response
+      assert_equal "M", response.avs_result["code"]
+      assert_equal "M", response.cvv_result["code"]
+    end
   end
 
   def test_transcript_scrubbing

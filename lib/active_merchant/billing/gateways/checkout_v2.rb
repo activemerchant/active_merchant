@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = "Checkout.com V2 Gateway"
       self.homepage_url = "https://www.checkout.com/"
       self.live_url = "https://api2.checkout.com/v2"
-      self.test_url = "http://sandbox.checkout.com/api2/v2"
+      self.test_url = "https://sandbox.checkout.com/api2/v2"
 
       self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
       self.default_currency = "USD"
@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(post, money, options)
-        post[:value] = amount(money)
+        post[:value] = localized_amount(money, options[:currency])
         post[:trackId] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
         post[:descriptor] = {}
@@ -94,6 +94,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:email] = options[:email] || "unspecified@example.com"
+        post[:customerIp] = options[:ip] if options[:ip]
         address = options[:billing_address]
         if(address && post[:card])
           post[:card][:billingDetails] = {}
@@ -165,7 +166,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["responseCode"] == ("10000" || "10100")
+        (response["responseCode"] == "10000" && !response["responseMessage"].start_with?("40")) || response["responseCode"] == "10100"
       end
 
       def message_from(succeeded, response)

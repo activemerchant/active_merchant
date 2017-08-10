@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class PayuLatamTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key')
 
@@ -12,10 +14,19 @@ class PayuLatamTest < Test::Unit::TestCase
     @no_cvv_amex_card = credit_card("4097440000000004", verification_value: " ", brand: "american_express")
 
     @options = {
+      dni_number: '5415668464654',
+      dni_type: 'TI',
       currency: "ARS",
       order_id: generate_unique_id,
       description: "Active Merchant Transaction",
       installments_number: 1,
+      tax: 0,
+      tax_return_base: 0,
+      email: "username@domain.com",
+      ip: "127.0.0.1",
+      device_session_id: 'vghs6tvkcle931686k1900o6e1',
+      cookie: 'pt1t38347bs6jc9ruv2ecpv7o2',
+      user_agent: 'Mozilla/5.0 (Windows NT 5.1; rv:18.0) Gecko/20100101 Firefox/18.0',
       billing_address: address(
         address1: "Viamonte",
         address2: "1366",
@@ -64,12 +75,12 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_equal "PENDING", response.params["transactionResponse"]["state"]
   end
 
-  def test_successful_refund
-    @gateway.expects(:ssl_post).returns(dummy_successful_refund_response)
+  def test_pending_refund
+    @gateway.expects(:ssl_post).returns(pending_refund_response)
 
     response = @gateway.refund(@amount, "7edbaf68-8f3a-4ae7-b9c7-d1e27e314999")
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal "PENDING", response.params["transactionResponse"]["state"]
   end
 
   def test_failed_refund
@@ -94,6 +105,14 @@ class PayuLatamTest < Test::Unit::TestCase
     response = @gateway.void("")
     assert_failure response
     assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+  end
+
+  def test_successful_purchase_with_dni_number
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"dniNumber":"5415668464654"/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_verify_good_credentials
@@ -138,6 +157,22 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_success response
     assert_equal "APPROVED", response.message
     assert response.test?
+  end
+
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    response = @gateway.capture(@amount, "4000|authorization", @options)
+    assert_success response
+    assert_equal "APPROVED", response.message
+  end
+
+  def test_failed_capture
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+
+    response = @gateway.capture(@amount, "")
+    assert_failure response
+    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
   end
 
   def test_scrub
@@ -313,30 +348,31 @@ class PayuLatamTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def dummy_successful_refund_response
+  def pending_refund_response
     <<-RESPONSE
     {
       "code": "SUCCESS",
       "error": null,
-      "transactionResponse": {
-        "orderId": 840434914,
-        "transactionId": "e66fd9aa-f485-4f10-b1d6-be8e9e354b63",
-        "state": "APPROVED",
-        "paymentNetworkResponseCode": "0",
+      "transactionResponse":
+      {
+        "orderId": 924877963,
+        "transactionId": null,
+        "state": "PENDING",
+        "paymentNetworkResponseCode": null,
         "paymentNetworkResponseErrorMessage": null,
-        "trazabilityCode": "49263990",
-        "authorizationCode": "NPS-011111",
-        "pendingReason": null,
-        "responseCode": "APPROVED",
+        "trazabilityCode": null,
+        "authorizationCode": null,
+        "pendingReason": "PENDING_REVIEW",
+        "responseCode": null,
         "errorCode": null,
-        "responseMessage": "APROBADA - Autorizada",
+        "responseMessage": "924877963",
         "transactionDate": null,
         "transactionTime": null,
-        "operationDate": 1486655230074,
+        "operationDate": null,
         "referenceQuestionnaire": null,
         "extraParameters": null,
         "additionalInfo": null
-       }
+      }
     }
     RESPONSE
   end
@@ -380,6 +416,42 @@ class PayuLatamTest < Test::Unit::TestCase
   end
 
   def failed_void_response
+    <<-RESPONSE
+    {
+      "code":"ERROR",
+      "error":"property: order.id, message: must not be null property: parentTransactionId, message: must not be null",
+      "transactionResponse": null
+    }
+    RESPONSE
+  end
+
+  def successful_capture_response
+    <<-RESPONSE
+    {
+      "code": "SUCCESS",
+      "error": null,
+      "transactionResponse": {
+        "orderId": 272601,
+        "transactionId": "66c7bff2-c423-42ed-800a-8be11531e7a1",
+        "state": "APPROVED",
+        "paymentNetworkResponseCode": null,
+        "paymentNetworkResponseErrorMessage": null,
+        "trazabilityCode": "00000000",
+        "authorizationCode": "00000000",
+        "pendingReason": null,
+        "responseCode": "APPROVED",
+        "errorCode": null,
+        "responseMessage": null,
+        "transactionDate": null,
+        "transactionTime": null,
+        "operationDate": 1314012754,
+        "extraParameters": null
+      }
+      }
+    RESPONSE
+  end
+
+  def failed_capture_response
     <<-RESPONSE
     {
       "code":"ERROR",

@@ -21,8 +21,10 @@ class RemoteForteTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      order_id: '1'
     }
+
   end
 
   def test_invalid_login
@@ -76,7 +78,7 @@ class RemoteForteTest < Test::Unit::TestCase
 
     wait_for_authorization_to_clear
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'APPROVED', capture.message
   end
@@ -94,12 +96,12 @@ class RemoteForteTest < Test::Unit::TestCase
 
     wait_for_authorization_to_clear
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
     assert_success capture
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, '')
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
     assert_match 'field transaction_id', response.message
   end

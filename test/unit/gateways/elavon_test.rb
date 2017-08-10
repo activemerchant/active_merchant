@@ -252,7 +252,7 @@ class ElavonTest < Test::Unit::TestCase
 
     @options[:billing_address][:zip] = bad_zip
 
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip))
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip), anything)
 
     @gateway.purchase(@amount, @credit_card, @options)
   end
@@ -260,9 +260,19 @@ class ElavonTest < Test::Unit::TestCase
   def test_zip_codes_with_letters_are_left_intact
     @options[:billing_address][:zip] = '.K1%Z_5E3-'
 
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'))
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'), anything)
 
     @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_custom_fields_in_request
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(:customer_number => '123', :custom_fields => {:a_key => "a value"}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/customer_number=123/, data)
+      assert_match(/a_key/, data)
+      refute_match(/ssl_a_key/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private
@@ -383,7 +393,7 @@ class ElavonTest < Test::Unit::TestCase
     errorName=Credit Card Number Invalid
     errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
   end
-  
+
   def successful_capture_response
     "ssl_card_number=42********4242
     ssl_exp_date=0910

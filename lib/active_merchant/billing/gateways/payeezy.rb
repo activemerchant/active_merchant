@@ -34,9 +34,10 @@ module ActiveMerchant
         params = {transaction_type: 'purchase'}
 
         add_invoice(params, options)
-        add_payment_method(params, payment_method)
+        add_payment_method(params, payment_method, options)
         add_address(params, options)
         add_amount(params, amount, options)
+        add_soft_descriptors(params, options)
 
         commit(params, options)
       end
@@ -45,9 +46,10 @@ module ActiveMerchant
         params = {transaction_type: 'authorize'}
 
         add_invoice(params, options)
-        add_payment_method(params, payment_method)
+        add_payment_method(params, payment_method, options)
         add_address(params, options)
         add_amount(params, amount, options)
+        add_soft_descriptors(params, options)
 
         commit(params, options)
       end
@@ -57,6 +59,7 @@ module ActiveMerchant
 
         add_authorization_info(params, authorization)
         add_amount(params, amount, options)
+        add_soft_descriptors(params, options)
 
         commit(params, options)
       end
@@ -116,9 +119,9 @@ module ActiveMerchant
         params[:method] = method
       end
 
-      def add_payment_method(params, payment_method)
+      def add_payment_method(params, payment_method, options)
         if payment_method.is_a? Check
-          add_echeck(params, payment_method)
+          add_echeck(params, payment_method, options)
         else
           add_creditcard(params, payment_method)
         end
@@ -137,14 +140,17 @@ module ActiveMerchant
         params[:credit_card] = credit_card
       end
 
-      def add_echeck(params, echeck)
+      def add_echeck(params, echeck, options)
         tele_check = {}
 
-        tele_check[:check_number] = echeck.number
+        tele_check[:check_number] = echeck.number || "001"
         tele_check[:check_type] = "P"
         tele_check[:routing_number] = echeck.routing_number
         tele_check[:account_number] = echeck.account_number
         tele_check[:accountholder_name] = "#{echeck.first_name} #{echeck.last_name}"
+        tele_check[:customer_id_type] = options[:customer_id_type] if options[:customer_id_type]
+        tele_check[:customer_id_number] = options[:customer_id_number] if options[:customer_id_number]
+        tele_check[:client_email] = options[:client_email] if options[:client_email]
 
         params[:method] = 'tele_check'
         params[:tele_check] = tele_check
@@ -167,6 +173,10 @@ module ActiveMerchant
       def add_amount(params, money, options)
         params[:currency_code] = (options[:currency] || default_currency).upcase
         params[:amount] = amount(money)
+      end
+
+      def add_soft_descriptors(params, options)
+        params[:soft_descriptors] = options[:soft_descriptors] if options[:soft_descriptors]
       end
 
       def commit(params, options)
