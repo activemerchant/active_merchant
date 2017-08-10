@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
 
       self.test_url = 'https://demo.transact.nab.com.au/xmlapi/payment'
       self.live_url = 'https://transact.nab.com.au/live/xmlapi/payment'
-      self.test_periodic_url = 'https://transact.nab.com.au/xmlapidemo/periodic'
+      self.test_periodic_url = 'https://demo.transact.nab.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
