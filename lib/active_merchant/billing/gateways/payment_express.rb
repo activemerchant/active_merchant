@@ -21,7 +21,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
 
-      self.live_url = self.test_url = 'https://sec.paymentexpress.com/pxpost.aspx'
+      self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
+      self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
 
       APPROVED = '1'
 
@@ -30,7 +31,8 @@ module ActiveMerchant #:nodoc:
         :credit         => 'Refund',
         :authorization  => 'Auth',
         :capture        => 'Complete',
-        :validate       => 'Validate'
+        :validate       => 'Validate',
+        :tokenize       => 'Tokenize'
       }
 
       # We require the DPS gateway username and password when the object is created.
@@ -119,7 +121,7 @@ module ActiveMerchant #:nodoc:
       # Note, once stored, PaymentExpress does not support unstoring a stored card.
       def store(credit_card, options = {})
         request  = build_token_request(credit_card, options)
-        commit(:validate, request)
+        commit(:tokenize, request)
       end
 
       def supports_scrubbing
@@ -130,7 +132,9 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<Cvc2>)\d+(</Cvc2>)), '\1[FILTERED]\2')
+          gsub(%r((<Cvc2>)\d+(</Cvc2>)), '\1[FILTERED]\2').
+          gsub(%r((<PostUsername>)\w+(</PostUsername>)), '\1[FILTERED]\2').
+          gsub(%r((<PostPassword>)\w+(</PostPassword>)), '\1[FILTERED]\2')
       end
 
       private
@@ -293,7 +297,7 @@ module ActiveMerchant #:nodoc:
         add_transaction_type(request, action)
 
         # Parse the XML response
-        response = parse( ssl_post(self.live_url, request.to_s) )
+        response = parse( ssl_post(url, request.to_s) )
 
         # Return a response
         PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
@@ -323,13 +327,17 @@ module ActiveMerchant #:nodoc:
         response
       end
 
+      def url
+        test? ? test_url : live_url
+      end
+
       def message_from(response)
         (response[:card_holder_help_text] || response[:response_text])
       end
 
       def authorization_from(action, response)
         case action
-        when :validate
+        when :validate, :tokenize
           (response[:billing_id] || response[:dps_billing_id])
         else
           response[:dps_txn_ref]

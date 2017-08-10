@@ -6,13 +6,16 @@ module ActiveMerchant #:nodoc:
       API_VERSION = 'xml-4.2'
       PERIODIC_API_VERSION = 'spxml-3.0'
 
-      class_attribute :test_periodic_url, :live_periodic_url
+      class_attribute :test_periodic_url, :live_periodic_url, :test_token_url, :live_token_url
 
-      self.test_url = 'https://api.securepay.com.au/test/payment'
+      self.test_url = 'https://test.api.securepay.com.au/xmlapi/payment'
       self.live_url = 'https://api.securepay.com.au/xmlapi/payment'
 
-      self.test_periodic_url = 'https://test.securepay.com.au/xmlapi/periodic'
+      self.test_periodic_url = 'https://test.api.securepay.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
+
+      self.test_token_url = 'https://test.api.securepay.com.au/xmlapi/token'
+      self.live_token_url = 'https://api.securepay.com.au/xmlapi/token'
 
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
@@ -93,9 +96,17 @@ module ActiveMerchant #:nodoc:
         commit :void, build_reference_request(nil, reference)
       end
 
+      # if options[:store_as_token] is present, then use the token API
+      # instead of adding the card as a payor
       def store(creditcard, options = {})
         requires!(options, :billing_id, :amount)
-        commit_periodic(build_periodic_item(:add_triggered, options[:amount], creditcard, options))
+        if options[:store_as_token].present?
+          # store the card as a token
+          commit_token(build_token_item(options[:amount], creditcard, options))
+        else
+          # store the card as a payor
+          commit_periodic(build_periodic_item(:add_triggered, options[:amount], creditcard, options))
+        end
       end
 
       def unstore(identification, options = {})
@@ -239,7 +250,60 @@ module ActiveMerchant #:nodoc:
       def commit_periodic(request)
         my_request = build_periodic_request(request)
         #puts my_request
-        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
+        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request, headers))
+
+        Response.new(success?(response), message_from(response), response,
+          :test => test?,
+          :authorization => authorization_from(response)
+        )
+      end
+
+      def build_token_item(money, credit_card, options)
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! 'transactionReference', options[:billing_id].to_s
+
+        if credit_card
+          xml.tag! 'cardNumber', credit_card.number
+          xml.tag! 'expiryDate', expdate(credit_card)
+        end
+        xml.tag! 'amount', amount(money)
+
+        xml.target!
+      end
+
+      def build_token_request(body)
+        xml = Builder::XmlMarkup.new
+        xml.instruct!
+        xml.tag! 'SecurePayMessage' do
+          xml.tag! 'MessageInfo' do
+            xml.tag! 'messageID', SecureRandom.hex(15)
+            xml.tag! 'messageTimestamp', generate_timestamp
+            xml.tag! 'timeoutValue', request_timeout
+            xml.tag! 'apiVersion', PERIODIC_API_VERSION
+          end
+
+          xml.tag! 'MerchantInfo' do
+            xml.tag! 'merchantID', @options[:login]
+            xml.tag! 'password', @options[:password]
+          end
+
+          xml.tag! 'RequestType', 'addToken'
+          xml.tag! 'Token' do
+            xml.tag! 'TokenList', "count" => 1 do
+              xml.tag! 'TokenItem', "ID" => 1 do
+                xml << body
+              end
+            end
+          end
+        end
+        xml.target!
+      end
+
+      def commit_token(request)
+        my_request = build_token_request(request)
+        #puts my_request
+        response = parse(ssl_post(test? ? self.test_token_url : self.live_token_url, my_request, headers))
 
         Response.new(success?(response), message_from(response), response,
           :test => test?,
@@ -273,6 +337,10 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      end
+
+      def headers
+        { 'Content-Type' => 'text/xml' }
       end
 
       def parse_element(response, node)

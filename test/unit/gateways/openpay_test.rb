@@ -194,6 +194,21 @@ class OpenpayTest < Test::Unit::TestCase
     assert_equal whitespace_string_cvv_scrubbed_transcript, @gateway.scrub(whitespace_string_cvv_transcript)
   end
 
+  def test_successful_purchase_with_token
+    @gateway.expects(:ssl_request).twice.returns(successful_new_token, successful_new_charge)
+    @options[:customer] = { first_name: 'Longbob', last_name: 'Longsen', phone: address[:phone] }
+    @options[:email] = 'longsen@example.com'
+    @options[:use_token] = true
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'trntzfavar7amwi8mht1', response.authorization
+    assert response.test?
+  end
+
+
   private
 
   def successful_new_card
@@ -605,5 +620,86 @@ class OpenpayTest < Test::Unit::TestCase
       }
     }
     SCRUBBED_TRANSCRIPT
+  end
+
+  def successful_new_token
+    <<-RESPONSE
+{
+  "id": "k1tlvljbs1iqv64txu4r",
+  "card": {
+    "card_number": "411111XXXXXX1111",
+    "holder_name": "Longbob Longsen",
+    "expiration_year": "18",
+    "expiration_month": "09",
+    "address": {
+      "line1": "456 My Street",
+      "line2": "Apt 1",
+      "line3": "Widgets Inc",
+      "state": "ON",
+      "city": "Ottawa",
+      "postal_code": "K1C2N6",
+      "country_code": "CA"
+    },
+    "creation_date": null,
+    "brand": "visa"
+  }
+}
+    RESPONSE
+  end
+
+  def successful_new_charge
+    <<-RESPONSE
+{
+  "id": "trntzfavar7amwi8mht1",
+  "authorization": "801585",
+  "operation_type": "in",
+  "method": "card",
+  "transaction_type": "charge",
+  "card": {
+    "type": "debit",
+    "brand": "visa",
+    "address": {
+      "line1": "456 My Street",
+      "line2": "Apt 1",
+      "line3": "Widgets Inc",
+      "state": "ON",
+      "city": "Ottawa",
+      "postal_code": "K1C2N6",
+      "country_code": "CA"
+    },
+    "card_number": "411111XXXXXX1111",
+    "holder_name": "Longbob Longsen",
+    "expiration_year": "18",
+    "expiration_month": "09",
+    "allows_charges": true,
+    "allows_payouts": true,
+    "bank_name": "Banamex",
+    "bank_code": "002"
+  },
+  "status": "completed",
+  "conciliated": false,
+  "creation_date": "2017-04-11T23:52:15-05:00",
+  "operation_date": "2017-04-11T23:52:15-05:00",
+  "description": "Store Purchase",
+  "error_message": null,
+  "order_id": null,
+  "fee": {
+    "amount": 2.53,
+    "tax": 0.4048
+  },
+  "amount": 1,
+  "customer": {
+    "name": "Longbob",
+    "last_name": "Longsen",
+    "email": "longsen@example.com",
+    "phone_number": "(555)555-5555",
+    "address": null,
+    "creation_date": "2017-04-11T23:52:15-05:00",
+    "external_id": null,
+    "clabe": null
+  },
+  "currency": "MXN"
+}
+    RESPONSE
   end
 end

@@ -143,6 +143,17 @@ module ActiveMerchant
         commit(:status, 'customer.orderNumber' => options[:order_id])
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?customer.password=)[^&]*), '\1[FILTERED]').
+          gsub(%r((&?card.PAN=)[^&]*), '\1[FILTERED]').
+          gsub(%r((&?card.CVN=)[^&]*), '\1[FILTERED]')
+      end
+
       private
 
       def add_payment_method(post, payment_method)
@@ -194,7 +205,7 @@ module ActiveMerchant
 
         Response.new(success, message, params,
           :test => (@options[:merchant].to_s == "TEST"),
-          :authorization => post[:order_number]
+          :authorization => post['customer.orderNumber']
         )
       rescue ActiveMerchant::ResponseError => e
         raise unless e.response.code == '403'
