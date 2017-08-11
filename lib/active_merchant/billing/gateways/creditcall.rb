@@ -14,6 +14,32 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.creditcall.com'
       self.display_name = 'Creditcall'
+      
+      CVV_CODE = {
+        "matched" => "M",
+        "notmatched" => "N",
+        "notchecked" => "P",
+        "partialmatch" => "N"
+      }
+      
+      AVS_CODE = {
+        "matched;matched" => "D",
+        "matched;notchecked" =>"B",
+        "matched;notmatched" => "A",
+        "matched;partialmatch" => "A",
+        "notchecked;matched" => "P",
+        "notchecked;notchecked" =>"I",
+        "notchecked;notmatched" => "I",
+        "notchecked;partialmatch" => "I",
+        "notmatched;matched" => "W",
+        "notmatched;notchecked" =>"C",
+        "notmatched;notmatched" => "C",
+        "notmatched;partialmatch" => "C",
+        "partialmatched;matched" => "W",
+        "partialmatched;notchecked" =>"C",
+        "partialmatched;notmatched" => "C",
+        "partialmatched;partialmatch" => "C"
+      }
 
       def initialize(options={})
         requires!(options, :terminal_id, :transaction_key)
@@ -26,17 +52,16 @@ module ActiveMerchant #:nodoc:
           r.process { capture(money, r.authorization, options) }
         end
 
-        if multi_response.responses[1].nil?
-          merged_params = multi_response.primary_response.params
-        else
-          merged_params =  multi_response.responses[0].params.merge(multi_response.responses[1].params)
-        end
-
+        merged_params = multi_response.responses.map { |r| r.params }.reduce({}, :merge)
+        
         Response.new(
           multi_response.primary_response.success?,
           multi_response.primary_response.message,
           merged_params,
           authorization: multi_response.responses.first.authorization,
+          avs_result: AVSResult.new(code: avs_result_code_from(merged_params)),
+          cvv_result: CVVResult.new(cvv_result_code_from(merged_params)),
+          error_code: error_result_code_from(merged_params),
           test: test?
         )
       end
@@ -97,6 +122,18 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def avs_result_code_from(params)
+        AVS_CODE["#{params['Address']};#{params['Zip']}"]
+      end
+
+      def cvv_result_code_from(params)
+        CVV_CODE[params["CSC"]]
+      end
+
+      def error_result_code_from(params)
+        params["ErrorCode"]
+      end
 
       def build_xml_request
         builder = Nokogiri::XML::Builder.new do |xml|
@@ -200,8 +237,9 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response),
-          avs_result: AVSResult.new(code: response["some_avs_response_key"]),
-          cvv_result: CVVResult.new(response["some_cvv_response_key"]),
+          avs_result: AVSResult.new(code: avs_result_code_from(response)),
+          cvv_result: CVVResult.new(cvv_result_code_from(response)),
+          error_code: error_result_code_from(response),
           test: test?
         )
       end
