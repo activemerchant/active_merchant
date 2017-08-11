@@ -26,10 +26,16 @@ module ActiveMerchant #:nodoc:
           r.process { capture(money, r.authorization, options) }
         end
 
+        if multi_response.responses[1].nil?
+          merged_params = multi_response.primary_response.params
+        else
+          merged_params =  multi_response.responses[0].params.merge(multi_response.responses[1].params)
+        end
+
         Response.new(
           multi_response.primary_response.success?,
           multi_response.primary_response.message,
-          multi_response.primary_response.params,
+          merged_params,
           authorization: multi_response.responses.first.authorization,
           test: test?
         )
@@ -156,6 +162,16 @@ module ActiveMerchant #:nodoc:
             childnode_to_response(response, childnode)
           end
         end
+
+        node = xml.xpath("//Response/CardDetails")
+        node.children.each do |childnode|
+          if childnode.elements.empty?
+            response[childnode.name] = childnode.text
+          else
+            childnode_to_response(response, childnode)
+          end
+        end
+
 
         response
       end
