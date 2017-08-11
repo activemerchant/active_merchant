@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, payment_type)
-        [ response[:transactionid], payment_type ].join("#")
+        [ response[:transactionid], payment_type ].compact.join("#")
       end
 
       def split_authorization(authorization)
