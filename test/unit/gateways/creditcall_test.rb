@@ -147,7 +147,7 @@ class CreditcallTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>0999da90-b342-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814143753</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814183753</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result></Response>
+    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>0999da90-b342-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814143753</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814183753</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result><CardDetails><CardReference>c2c5fa63-3dd1-da11-8531-01422187e37</CardReference><CardHash>8CtuNPQnryhFt6amPWtp6PLZYXI=</CardHash><PAN>341111xxxxx1002</PAN><ExpiryDate format=”yyMM”>2012</ExpiryDate><CardScheme><Description>AMEX</Description></CardScheme></CardDetails></Response>
     )
   end
 
