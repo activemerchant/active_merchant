@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_data(post, options)
-        post[:sponsor_id] = options["sponsor_id"]
+        post[:sponsor_id] = options[:sponsor_id]
         post[:additional_info] = {
           ip_address: options[:ip_address]
         }
