@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:phone</tt> - The phone number of the customer.
 
       self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
-      self.live_url = 'https://payments.litle.com/vap/communicator/online'
+      self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       LITLE_SCHEMA_VERSION     = '8.13'
 
