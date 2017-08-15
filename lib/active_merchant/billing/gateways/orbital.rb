@@ -30,11 +30,11 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = "5.6"
+      API_VERSION = "7.1"
 
       POST_HEADERS = {
         "MIME-Version" => "1.1",
-        "Content-Type" => "application/PTI56",
+        "Content-Type" => "application/PTI#{API_VERSION.gsub(/\./, '')}",
         "Content-transfer-encoding" => "text",
         "Request-number" => '1',
         "Document-type" => "Request",
