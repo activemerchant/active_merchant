@@ -172,6 +172,23 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', refund.message
   end
 
+  def test_refund_credit_card_token
+    credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4100280190123000'))
+    assert store_response = @gateway.store(credit_card, :order_id => '50')
+    assert_success store_response
+
+    token = store_response.authorization
+    assert_equal store_response.params['litleToken'], token
+
+    assert response = @gateway.purchase(10010, token)
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    assert refund = @gateway.refund(10010, response.authorization,
+      litle_token: token, order_id: '50')
+    assert_success refund
+  end
+
   def test_partial_capture
     assert auth = @gateway.authorize(10010, @credit_card1, @options)
     assert_success auth
