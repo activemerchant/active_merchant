@@ -11,6 +11,7 @@
 * Checkout V2: Add UAE to country list [shasum] #2548
 * Orbital: Updgrade schema version to 7.1 [curiousepic] #2546
 * CreditCall: Parse more response params [nfavre] #2543
+* CreditCall: Only allow AVS when specified [curiousepic] #2549
 
 == Version 1.70.0 (August 4, 2017)
 * Barclaycard Smartpay: Provider a default billing address house number [nfarve] #2520

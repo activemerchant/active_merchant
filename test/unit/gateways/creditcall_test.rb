@@ -126,6 +126,32 @@ class CreditcallTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_options_add_avs_additional_verification_fields
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/AdditionalVerification/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(verify_zip: 'false', verify_address: 'false'))
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/AdditionalVerification/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(verify_zip: 'true', verify_address: 'true'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<AdditionalVerification>\n      <Zip>K1C2N6<\/Zip>\n      <Address>/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(verify_zip: 'true', verify_address: 'false'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/ <AdditionalVerification>\n      <Zip>K1C2N6<\/Zip>\n    <\/AdditionalVerification>\n/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed

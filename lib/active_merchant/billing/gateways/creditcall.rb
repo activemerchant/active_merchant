@@ -126,17 +126,22 @@ module ActiveMerchant #:nodoc:
 
       def add_card_details(xml, payment_method, options={})
         xml.CardDetails do
-          xml.Manual(type: "ecommerce") do
+          xml.Manual(type: manual_type(options)) do
             xml.PAN payment_method.number
             xml.ExpiryDate exp_date(payment_method)
             xml.CSC payment_method.verification_value unless empty?(payment_method.verification_value)
           end
 
-          if address = options[:billing_address]
-            xml.AdditionalVerification do
-              xml.Address address[:address1]
-              xml.Zip address[:zip]
-            end
+          add_additional_verification(xml, options)
+        end
+      end
+
+      def add_additional_verification(xml, options)
+        return unless (options[:verify_zip].to_s == 'true') || (options[:verify_address].to_s == 'true')
+        if address = options[:billing_address]
+          xml.AdditionalVerification do
+            xml.Zip address[:zip] if options[:verify_zip].to_s  == 'true'
+            xml.Address address[:address1] if options[:verify_address].to_s  == 'true'
           end
         end
       end
@@ -221,6 +226,9 @@ module ActiveMerchant #:nodoc:
         response["CardEaseReference"]
       end
 
+      def manual_type(options)
+        options[:manual_type] ? options[:manual_type] : "ecommerce"
+      end
     end
   end
 end
