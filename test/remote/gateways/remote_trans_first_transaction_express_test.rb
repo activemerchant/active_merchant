@@ -46,10 +46,27 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal "CVV matches", response.cvv_result["message"]
   end
  
-  def test_successful_purchase_with_no_address2
+  def test_successful_purchase_no_avs
     options = @options.dup
-    options[:shipping_address][:address2] = nil
-    options[:billing_address][:address2] = nil
+    options[:shipping_address] = nil
+    options[:billing_address] = nil
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_only_required
+    # Test the purchase with only the required billing and shipping information
+    options = @options.dup
+    options[:shipping_address] = {
+      address1: "450 Main",
+      zip: "85284",
+    }
+
+    options[:billing_address] = {
+      address1: "450 Main",
+      zip: "85284",
+    }
+
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal "Succeeded", response.message
