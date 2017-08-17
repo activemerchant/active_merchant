@@ -213,7 +213,7 @@ class BeanstreamTest < Test::Unit::TestCase
 
   def test_ip_is_being_sent
     @gateway.expects(:ssl_post).with do |url, data|
-      data =~ /customerIP=123\.123\.123\.123/
+      data =~ /customerIp=123\.123\.123\.123/
     end.returns(successful_purchase_response)
 
     @options[:ip] = "123.123.123.123"
