@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_ip(post, options)
-        post[:customerIP] = options[:ip] if options[:ip]
+        post[:customerIp] = options[:ip] if options[:ip]
       end
 
       def void_action(original_transaction_type)
