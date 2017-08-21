@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class MercadoPagoTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = MercadoPagoGateway.new(access_token: 'access_token')
     @credit_card = credit_card
@@ -145,6 +147,21 @@ class MercadoPagoTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_sends_american_express_as_amex
+    credit_card = credit_card('378282246310005', brand: 'american_express')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /"payment_method_id"/
+        assert_match(%r(amex), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
   end
 
   private
