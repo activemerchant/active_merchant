@@ -9,6 +9,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
+      shipping_address: address,
       email: "user+br@example.com",
       description: 'Store Purchase'
     }
