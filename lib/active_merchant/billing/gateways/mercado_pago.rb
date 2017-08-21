@@ -91,6 +91,7 @@ module ActiveMerchant #:nodoc:
         add_additional_data(post, options)
         add_customer_data(post, payment, options)
         add_address(post, options)
+        post[:binary_mode] = true
         post
       end
 
@@ -107,6 +108,7 @@ module ActiveMerchant #:nodoc:
         }
 
         add_address(post, options)
+        add_shipping_address(post, options)
       end
 
       def add_customer_data(post, payment, options)
@@ -119,19 +121,45 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = (options[:billing_address] || options[:address])
-          street_number = address[:address1].split(" ").first
-          street_name = address[:address1].split(" ")[1..-1].join(" ")
 
-          post[:additional_info] = {
+          post[:additional_info].merge!({
             payer: {
               address: {
                 zip_code: address[:zip],
-                street_number: street_number,
-                street_name: street_name,
+                street_number: split_street_address(address[:address1]).first,
+                street_name: split_street_address(address[:address1]).last
               }
             }
-          }
+          })
         end
+      end
+
+      def add_shipping_address(post, options)
+        if address = options[:shipping_address]
+
+          post[:additional_info].merge!({
+            shipments: {
+              receiver_address: {
+                zip_code: address[:zip],
+                street_number: split_street_address(address[:address1]).first,
+                street_name: split_street_address(address[:address1]).last,
+                apartment: address[:address2]
+              }
+            }
+          })
+        end
+      end
+
+      def split_street_address(address1)
+        street_number = address1.split(" ").first
+
+        if street_name = address1.split(" ")[1..-1]
+          street_name = street_name.join(" ")
+        else
+          nil
+        end
+
+        [street_number, street_name]
       end
 
       def add_invoice(post, money, options)
@@ -147,7 +175,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, options)
         post[:token] = options[:card_token]
-        post[:payment_method_id] = options[:card_brand]
+        post[:payment_method_id] = options[:card_brand] == "american_express" ? "amex" : options[:card_brand]
       end
 
       def parse(body)
