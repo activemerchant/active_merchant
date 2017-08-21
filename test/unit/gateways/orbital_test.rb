@@ -62,6 +62,17 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_network_tokenization_credit_card_data
+    stub_comms do
+      @gateway.purchase(50, network_tokenization_credit_card(nil, eci: '5', transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA='), @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<DPANInd>Y</DPANInd>}, data
+      assert_match %{DigitalTokenCryptogram}, data
+      assert_match %{XID}, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_currency_exponents
     stub_comms do
       @gateway.purchase(50, credit_card, :order_id => '1')
