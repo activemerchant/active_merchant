@@ -26,7 +26,9 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       order_id: '1',
       ip: "127.0.0.1",
       email: "joe@example.com",
-      user_id: '123'
+      user_id: '123',
+      auth_type: '2',
+      expected_fulfillment_count: '3'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)

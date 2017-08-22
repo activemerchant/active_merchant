@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.safecharge.com'
       self.display_name = 'SafeCharge'
 
-      VERSION = '4.0.4'
+      VERSION = '4.1.0'
 
       def initialize(options={})
         requires!(options, :client_login_id, :client_password)
@@ -118,6 +118,8 @@ module ActiveMerchant #:nodoc:
         post[:sg_Version] = VERSION
         post[:sg_ClientUniqueID] = options[:order_id] if options[:order_id]
         post[:sg_UserID] = options[:user_id] if options[:user_id]
+        post[:sg_AuthType] = options[:auth_type] if options[:auth_type]
+        post[:sg_ExpectedFulfillmentCount] = options[:expected_fulfillment_count] if options[:expected_fulfillment_count]
       end
 
       def add_payment(post, payment)
