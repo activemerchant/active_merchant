@@ -471,15 +471,15 @@ mercury:
   login: '089716741701445'
   password: 'xyz'
 
-mercury_no_tokenization:
-  login: '595901'
-  password: 'xyz'
-  tokenization: false
-
 # Working credentials, no need to replace
 mercury_encrypted:
   login: '118725340908147'
   password: 'xyz'
+
+mercury_no_tokenization:
+  login: '595901'
+  password: 'xyz'
+  tokenization: false
 
 metrics_global:
   login: 'demo'
