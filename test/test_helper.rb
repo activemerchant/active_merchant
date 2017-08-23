@@ -163,11 +163,24 @@ module ActiveMerchant
       Billing::CreditCard.new(defaults)
     end
 
+    # automatic Track 1 format
     def credit_card_with_track_data(number = '4242424242424242', options = {})
       exp_date = default_expiration_date.strftime("%y%m")
 
       defaults = {
         :track_data => "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
+      }.update(options)
+
+      Billing::CreditCard.new(defaults)
+    end
+
+    def credit_card_track_2(number = '4242424242424242', options = {})
+      exp_date = default_expiration_date.strftime("%y%m")
+      service_code = options.fetch(:service_code, '101')
+      discretionary_data = options.fetch(:discretionary_data, '097750213')
+
+      defaults = {
+        :track_data => ";#{number}=#{exp_date}#{service_code}#{discretionary_data}?",
       }.update(options)
 
       Billing::CreditCard.new(defaults)

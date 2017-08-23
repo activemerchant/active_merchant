@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        headers = {
+        {
           "Authorization" => "Basic " + Base64.encode64(@options[:login] +":"+ @options[:password]).strip
         }
       end
