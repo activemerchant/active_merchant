@@ -31,7 +31,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
     options = @options.merge({
       order_id: generate_unique_id,
       ip: "127.0.0.1",
-      email: "joe@example.com"
+      email: "joe@example.com",
+      birth_date: "10/11/1980"
     })
 
     response = @gateway.purchase(@amount, @credit_card, options)
