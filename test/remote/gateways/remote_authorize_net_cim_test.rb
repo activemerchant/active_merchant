@@ -48,15 +48,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_successful_profile_create_get_update_and_delete
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
+    response = get_customer_profile
 
-    assert_success response
-    assert response.test?
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
-    assert response.test?
-    assert_success response
     assert_equal @customer_profile_id, response.authorization
     assert_equal 'Successful.', response.message
     assert response.params['profile']['payment_profiles']['customer_payment_profile_id'] =~ /\d+/, 'The customer_payment_profile_id should be a number'
@@ -82,10 +75,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   # (not capture_only as that will leak the authorization), so don't use this
   # test as a template.
   def test_successful_create_customer_profile_transaction_auth_only_and_then_capture_only_requests
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     assert response = @gateway.create_customer_profile_transaction(
@@ -130,10 +120,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_successful_create_customer_profile_transaction_auth_capture_request
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     assert response = @gateway.create_customer_profile_transaction(
@@ -166,10 +153,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def test_successful_create_customer_payment_profile_request
     payment_profile = @options[:profile].delete(:payment_profiles)
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert_nil response.params['profile']['payment_profiles']
 
     assert response = @gateway.create_customer_payment_profile(
@@ -186,10 +170,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def test_successful_create_customer_payment_profile_request_with_bank_account
     payment_profile = @options[:profile].delete(:payment_profiles)
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert_nil response.params['profile']['payment_profiles']
 
     assert response = @gateway.create_customer_payment_profile(
@@ -225,10 +206,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def test_successful_create_customer_shipping_address_request
     shipping_address = @options[:profile].delete(:ship_to_list)
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert_nil response.params['profile']['ship_to_list']
 
     assert response = @gateway.create_customer_shipping_address(
@@ -251,10 +229,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :credit_card => credit_card('1234123412341234')
       }
     }
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
 
     assert response = @gateway.create_customer_payment_profile(
       :customer_profile_id => @customer_profile_id,
@@ -274,10 +249,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_successful_delete_customer_payment_profile_request
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     assert response = @gateway.delete_customer_payment_profile(
@@ -294,10 +266,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_successful_delete_customer_shipping_address_request
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert customer_address_id = response.params['profile']['ship_to_list']['customer_address_id']
 
     assert response = @gateway.delete_customer_shipping_address(
@@ -314,10 +283,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_successful_get_customer_payment_profile_request
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     assert response = @gateway.get_customer_payment_profile(
@@ -335,10 +301,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_successful_get_customer_payment_profile_unmasked_request
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     assert response = @gateway.get_customer_payment_profile(
@@ -357,10 +320,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_successful_get_customer_shipping_address_request
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert customer_address_id = response.params['profile']['ship_to_list']['customer_address_id']
 
     assert response = @gateway.get_customer_shipping_address(
@@ -377,11 +337,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def test_successful_update_customer_payment_profile_request
     # Create a new Customer Profile with Payment Profile
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    # Get the customerPaymentProfileId
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     # Get the customerPaymentProfile
@@ -446,11 +402,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def test_successful_update_customer_payment_profile_request_with_credit_card_last_four
     # Create a new Customer Profile with Payment Profile
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    # Get the customerPaymentProfileId
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     # Get the customerPaymentProfile
@@ -492,11 +444,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def test_successful_update_customer_shipping_address_request
     # Create a new Customer Profile with Shipping Address
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    # Get the customerAddressId
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert customer_address_id = response.params['profile']['ship_to_list']['customer_address_id']
 
     # Get the customerShippingAddress
@@ -537,10 +485,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_successful_validate_customer_payment_profile_request_live
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
     assert @customer_address_id = response.params['profile']['ship_to_list']['customer_address_id']
 
@@ -559,10 +504,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def test_validate_customer_payment_profile_request_live_requires_billing_address
     @options[:profile][:payment_profiles].delete(:bill_to)
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
     assert @customer_address_id = response.params['profile']['ship_to_list']['customer_address_id']
 
@@ -580,10 +522,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def test_validate_customer_payment_profile_request_old_does_not_require_billing_address
     @options[:profile][:payment_profiles].delete(:bill_to)
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
     assert @customer_address_id = response.params['profile']['ship_to_list']['customer_address_id']
 
@@ -600,10 +539,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_should_create_duplicate_customer_profile_transactions_with_duplicate_window_alteration
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     key = (Time.now.to_f * 1000000).to_i.to_s
@@ -636,10 +572,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_should_not_create_duplicate_customer_profile_transactions_without_duplicate_window_alteration
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     key = (Time.now.to_f * 1000000).to_i.to_s
@@ -765,12 +698,21 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     return response
   end
 
-  def get_and_validate_customer_payment_profile_request_with_bank_account_response
-    payment_profile = @options[:profile].delete(:payment_profiles)
+  def get_customer_profile
     assert response = @gateway.create_customer_profile(@options)
+    assert response.test?
+    assert_success response
     @customer_profile_id = response.authorization
 
     assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    assert response.test?
+    assert_success response
+    response
+  end
+
+  def get_and_validate_customer_payment_profile_request_with_bank_account_response
+    payment_profile = @options[:profile].delete(:payment_profiles)
+    response = get_customer_profile
     assert_nil response.params['profile']['payment_profiles']
 
     assert response = @gateway.create_customer_payment_profile(
@@ -806,10 +748,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def get_and_validate_auth_capture_response
-    assert response = @gateway.create_customer_profile(@options)
-    @customer_profile_id = response.authorization
-
-    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    response = get_customer_profile
     @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
 
     key = (Time.now.to_f * 1000000).to_i.to_s
@@ -843,6 +782,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
   def get_and_validate_auth_only_response
     assert response = @gateway.create_customer_profile(@options)
+    assert_success response
     @customer_profile_id = response.authorization
 
     key = (Time.now.to_f * 1000000).to_i.to_s
