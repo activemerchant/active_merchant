@@ -45,7 +45,6 @@ class RemoteDataCashTest < Test::Unit::TestCase
       :issue_number => 5,
       :start_month => 12,
       :start_year => 2006,
-      :verification_value => 444
     )
 
     @address = {
