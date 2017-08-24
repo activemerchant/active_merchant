@@ -14,6 +14,7 @@ class PayuLatamTest < Test::Unit::TestCase
     @no_cvv_amex_card = credit_card("4097440000000004", verification_value: " ", brand: "american_express")
 
     @options = {
+      payment_country: 'AR',
       dni_number: '5415668464654',
       dni_type: 'TI',
       currency: "ARS",
