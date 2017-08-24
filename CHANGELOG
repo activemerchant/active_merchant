@@ -3,6 +3,7 @@
 == HEAD
 * SafeCharge: Update to Version 4.1.0 [nfarve] #2556
 * Qvalent: Support general credit [curiousepic] #2558
+* DataCash: Enable refunding recurring transactions [davidsantoso] #2560
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
