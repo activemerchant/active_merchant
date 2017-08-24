@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
       def add_payer(post, options)
         if address = options[:billing_address]
           payer = {}
-          post[:transaction][:paymentCountry] = options[:payment_country]
+          post[:transaction][:paymentCountry] = options[:payment_country] if options[:payment_country]
           payer[:fullName] = address[:name]
           payer[:contactPhone] = address[:phone]
           payer[:dniNumber] = options[:dni_number] if options[:dni_number]
