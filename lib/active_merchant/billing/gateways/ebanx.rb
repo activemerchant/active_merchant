@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, payment, options)
         add_payment(post, payment)
         add_address(post, options)
-
+        add_customer_responsible_person(post, payment, options) if post[:payment][:country] == 'BR'
         commit(:purchase, post)
       end
 
@@ -60,6 +60,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, payment, options)
         add_payment(post, payment)
         add_address(post, options)
+        add_customer_responsible_person(post, payment, options) if post[:payment][:country] == 'BR'
         post[:payment][:creditcard][:auto_capture] = false
 
         commit(:authorize, post)
@@ -129,6 +130,14 @@ module ActiveMerchant #:nodoc:
         post[:payment][:name] = payment.name
         post[:payment][:email] = options[:email] || "unspecified@example.com"
         post[:payment][:document] = options[:document]
+        post[:payment][:birth_date] = options[:birth_date] if options[:birth_date]
+      end
+
+      def add_customer_responsible_person(post, payment,  options)
+        post[:payment][:responsible] = {}
+        post[:payment][:responsible][:name] = payment.name
+        post[:payment][:responsible][:document] = options[:document]
+        post[:payment][:responsible][:birth_date] = options[:birth_date] if options[:birth_date]
       end
 
       def add_address(post, options)
@@ -147,6 +156,7 @@ module ActiveMerchant #:nodoc:
         post[:payment][:amount_total] = amount(money)
         post[:payment][:currency_code] = (options[:currency] || currency(money))
         post[:payment][:merchant_payment_code] = options[:order_id]
+        post[:payment][:instalments] = options[:instalments] || 1
       end
 
       def add_payment(post, payment)
