@@ -10,6 +10,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     @pending_card = credit_card("4097440000000004", verification_value: "444", first_name: "PENDING", last_name: "")
 
     @options = {
+      payment_country: 'AR',
       dni_number: '5415668464654',
       dni_type: 'TI',
       currency: "ARS",
@@ -55,6 +56,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => "512327"))
 
     options_brazil = {
+      payment_country: "BR",
       currency: "BRL",
       billing_address: address(
         address1: "Calle 100",
