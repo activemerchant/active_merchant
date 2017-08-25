@@ -175,6 +175,149 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
   end
 
+  def test_buyer_fields
+    options_buyer = {
+      shipping_address: address(
+        address1: "Calle 200",
+        address2: "N107",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip: "01019-030",
+        phone: "(11)756312345"
+      ),
+      buyer_name: 'Jorge Borges',
+      buyer_dni_number: '5415668464456',
+      buyer_dni_type: 'IT',
+      buyer_email: 'axaxaxas@mlo.org'
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.update(options_buyer))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":\"IT\",\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"\(11\)756312345/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_brazil_required_fields
+    options_brazil = {
+      payment_country: 'BR',
+      currency: "BRL",
+      billing_address: address(
+        address1: "Calle 100",
+        address2: "BL4",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip: "09210710",
+        phone: "(11)756312633"
+      ),
+      shipping_address: address(
+        address1: "Calle 200",
+        address2: "N107",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip: "01019-030",
+        phone: "(11)756312633"
+      ),
+      buyer_cnpj: "32593371000110"
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.update(options_brazil))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\"cnpj\":\"32593371000110\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_colombia_required_fields
+    options_colombia = {
+      payment_country: "CO",
+      currency: "COP",
+      billing_address: address(
+        address1: "Calle 100",
+        address2: "BL4",
+        city: "Bogota",
+        state: "Bogota DC",
+        country: "CO",
+        zip: "09210710",
+        phone: "(11)756312633"
+      ),
+      shipping_address: address(
+        address1: "Calle 200",
+        address2: "N107",
+        city: "Bogota",
+        state: "Bogota DC",
+        country: "CO",
+        zip: "01019-030",
+        phone: "(11)756312633"
+      ),
+      tx_tax: '3193',
+      tx_tax_return_base: '16806'
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.update(options_colombia))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\"additionalValues\":{\"TX_VALUE\":{\"value\":\"40.00\",\"currency\":\"COP\"},\"TX_TAX\":{\"value\":0,\"currency\":\"COP\"},\"TX_TAX_RETURN_BASE\":{\"value\":0,\"currency\":\"COP\"}}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_mexico_required_fields
+    options_mexico = {
+      payment_country: "MX",
+      currency: "MXN",
+      billing_address: address(
+        address1: "Calle 100",
+        address2: "BL4",
+        city: "Guadalajara",
+        state: "Jalisco",
+        country: "MX",
+        zip: "09210710",
+        phone: "(11)756312633"
+      ),
+      shipping_address: address(
+        address1: "Calle 200",
+        address2: "N107",
+        city: "Guadalajara",
+        state: "Jalisco",
+        country: "MX",
+        zip: "01019-030",
+        phone: "(11)756312633"
+      ),
+      birth_date: '1985-05-25'
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\"birthdate\":\"1985-05-25\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_payment_country_defaults_to_billing_address
+    options_mexico = {
+      currency: "MXN",
+      billing_address: address(
+        address1: "Calle 100",
+        address2: "BL4",
+        city: "Guadalajara",
+        state: "Jalisco",
+        country: "MX",
+        zip: "09210710",
+        phone: "(11)756312633"
+      ),
+      birth_date: '1985-05-25'
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\"paymentCountry\":\"MX\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed

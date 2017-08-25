@@ -12,6 +12,7 @@
 * MercadoPago: Default to alphanumeric order_id [davidsantoso]
 * Conekta: Add guard clause for details fallbacks [curiousepic] #2573
 * WePay: Don't default API version header [curiousepic] #2567
+* PayU Latam: Pass unique buyer fields and country requirements [curiousepic] #2570
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
