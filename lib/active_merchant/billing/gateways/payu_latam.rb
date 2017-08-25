@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_signature(post)
         add_payment_method(post, payment_method, options)
-        add_payer(post, options)
+        add_payer(post, payment_method, options)
         add_extra_parameters(post, options)
       end
 
@@ -138,6 +138,7 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction_elements(post, type, options)
         transaction = {}
+        transaction[:paymentCountry] = options[:payment_country] || (options[:billing_address][:country] if options[:billing_address])
         transaction[:type] = type
         transaction[:ipAddress] = options[:ip] if options[:ip]
         transaction[:userAgent] = options[:user_agent] if options[:user_agent]
@@ -152,28 +153,59 @@ module ActiveMerchant #:nodoc:
         order[:referenceCode] = options[:order_id] || generate_unique_id
         order[:description] = options[:description] || 'unspecified'
         order[:language] = 'en'
+        order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         post[:transaction][:order] = order
       end
 
+      def add_payer(post, payment_method, options)
+        address = options[:billing_address]
+        payer = {}
+        payer[:fullName] = payment_method.name.strip
+        payer[:contactPhone] = address[:phone] if (address && address[:phone])
+        payer[:dniNumber] = options[:dni_number] if options[:dni_number]
+        payer[:dniType] = options[:dni_type] if options[:dni_type]
+        payer[:emailAddress] = options[:email] if options[:email]
+        payer[:birthdate] = options[:birth_date] if options[:birth_date] && options[:payment_country] == 'MX'
+        payer[:billingAddress] = billing_address_fields(options)
+        post[:transaction][:payer] = payer
+      end
+
+      def billing_address_fields(options)
+        return unless address = options[:billing_address]
+        billing_address = {}
+        billing_address[:street1] = address[:address1]
+        billing_address[:street2] = address[:address2]
+        billing_address[:city] = address[:city]
+        billing_address[:state] = address[:state]
+        billing_address[:country] = address[:country]
+        billing_address[:postalCode] = address[:zip] if options[:payment_country] == 'MX'
+        billing_address[:phone] = address[:phone]
+        billing_address
+      end
+
       def add_buyer(post, options)
-        if address = options[:shipping_address]
-          buyer = {}
-          buyer[:fullName] = address[:name]
-          buyer[:dniNumber] = options[:dni_number] if options[:dni_number]
-          buyer[:dniType] = options[:dni_type] if options[:dni_type]
-          buyer[:emailAddress] = options[:email] if options[:email]
-          buyer[:contactPhone] = address[:phone]
-          shipping_address = {}
-          shipping_address[:street1] = address[:address1]
-          shipping_address[:street2] = address[:address2]
-          shipping_address[:city] = address[:city]
-          shipping_address[:state] = address[:state]
-          shipping_address[:country] = address[:country]
-          shipping_address[:postalCode] = address[:zip]
-          shipping_address[:phone] = address[:phone]
-          buyer[:shippingAddress] = shipping_address
-          post[:transaction][:order][:buyer] = buyer
-        end
+        buyer = {}
+        buyer[:fullName] = options[:buyer_name] if options[:buyer_name]
+        buyer[:dniNumber] = options[:buyer_dni_number] if options[:buyer_dni_number]
+        buyer[:dniType] = options[:buyer_dni_type] if options[:buyer_dni_type]
+        buyer[:cnpj] = options[:buyer_cnpj] if options[:buyer_cnpj] && options[:payment_country] == 'BR'
+        buyer[:emailAddress] = options[:buyer_email] if options[:buyer_email]
+        buyer[:contactPhone] = options[:shipping_address][:phone] if options[:shipping_address]
+        buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
+        post[:transaction][:order][:buyer] = buyer
+      end
+
+      def shipping_address_fields(options)
+        return unless address = options[:shipping_address]
+        shipping_address = {}
+        shipping_address[:street1] = address[:address1]
+        shipping_address[:street2] = address[:address2]
+        shipping_address[:city] = address[:city]
+        shipping_address[:state] = address[:state]
+        shipping_address[:country] = address[:country]
+        shipping_address[:postalCode] = address[:zip]
+        shipping_address[:phone] = address[:phone]
+        shipping_address
       end
 
       def add_invoice(post, money, options)
@@ -191,8 +223,8 @@ module ActiveMerchant #:nodoc:
 
         additional_values = {}
         additional_values[:TX_VALUE] = tx_value
-        additional_values[:TX_TAX] = tx_tax
-        additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base
+        additional_values[:TX_TAX] = tx_tax if options[:payment_country] == 'CO'
+        additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base if options[:payment_country] == 'CO'
 
         post[:transaction][:order][:additionalValues] = additional_values
       end
@@ -244,29 +276,6 @@ module ActiveMerchant #:nodoc:
       def add_process_without_cvv2(payment_method, options)
         return true if payment_method.verification_value.blank? && options[:cvv].blank?
         false
-      end
-
-      def add_payer(post, options)
-        if address = options[:billing_address]
-          payer = {}
-          post[:transaction][:paymentCountry] = address[:country]
-          payer[:fullName] = address[:name]
-          payer[:contactPhone] = address[:phone]
-          payer[:dniNumber] = options[:dni_number] if options[:dni_number]
-          payer[:dniType] = options[:dni_type] if options[:dni_type]
-          payer[:emailAddress] = options[:email] if options[:email]
-          payer[:contactPhone] = address[:phone]
-          billing_address = {}
-          billing_address[:street1] = address[:address1]
-          billing_address[:street2] = address[:address2]
-          billing_address[:city] = address[:city]
-          billing_address[:state] = address[:state]
-          billing_address[:country] = address[:country]
-          billing_address[:postalCode] = address[:zip]
-          billing_address[:phone] = address[:phone]
-          payer[:billingAddress] = billing_address
-          post[:transaction][:payer] = payer
-        end
       end
 
       def add_extra_parameters(post, options)
@@ -326,6 +335,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(params)
+        params.merge(test: test?)
         params.to_json
       end
 
