@@ -653,7 +653,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_equal "", doc.at_xpath("//billTo/address").content, data
         assert_equal "", doc.at_xpath("//billTo/city").content, data
-        assert_equal "", doc.at_xpath("//billTo/state").content, data
+        assert_equal "n/a", doc.at_xpath("//billTo/state").content, data
         assert_equal "", doc.at_xpath("//billTo/zip").content, data
         assert_equal "", doc.at_xpath("//billTo/country").content, data
       end
@@ -691,7 +691,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'DE'})
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
-        assert_equal "", doc.at_xpath("//billTo/state").content, data
+        assert_equal "n/a", doc.at_xpath("//billTo/state").content, data
         assert_equal "164 Waverley Street", doc.at_xpath("//billTo/address").content, data
         assert_equal "DE", doc.at_xpath("//billTo/country").content, data
       end
@@ -703,7 +703,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', address2: 'Apt 1234', country: 'DE'})
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
-        assert_equal "", doc.at_xpath("//billTo/state").content, data
+        assert_equal "n/a", doc.at_xpath("//billTo/state").content, data
         assert_equal "164 Waverley Street Apt 1234", doc.at_xpath("//billTo/address").content, data
         assert_equal "DE", doc.at_xpath("//billTo/country").content, data
       end

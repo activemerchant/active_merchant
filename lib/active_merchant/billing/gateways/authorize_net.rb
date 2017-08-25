@@ -719,7 +719,7 @@ module ActiveMerchant
         if ["US", "CA"].include?(address[:country])
           address[:state] || 'NC'
         else
-          address[:state]
+          address[:state] || 'n/a'
         end
       end
 

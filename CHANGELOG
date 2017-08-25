@@ -5,6 +5,7 @@
 * Qvalent: Support general credit [curiousepic] #2558
 * DataCash: Enable refunding recurring transactions [davidsantoso] #2560
 * Ebanx: Adds Brazil Specific Parameters [nfarve] #2559
+* Authorize.net: Restore default state value for non-US addresses [jasonwebster] #2563
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
