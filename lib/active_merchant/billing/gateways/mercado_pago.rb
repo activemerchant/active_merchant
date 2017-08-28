@@ -80,7 +80,13 @@ module ActiveMerchant #:nodoc:
         post[:security_code] = payment.verification_value
         post[:expiration_month] = payment.month
         post[:expiration_year] = payment.year
-        post[:cardholder] = { name: payment.name }
+        post[:cardholder] = {
+          name: payment.name,
+          identification: {
+            type: options[:cardholder_identification_type],
+            number: options[:cardholder_identification_number]
+          }
+        }
         post
       end
 
@@ -126,8 +132,7 @@ module ActiveMerchant #:nodoc:
             payer: {
               address: {
                 zip_code: address[:zip],
-                street_number: split_street_address(address[:address1]).first,
-                street_name: split_street_address(address[:address1]).last
+                street_name: "#{address[:address1]} #{address[:address2]}"
               }
             }
           })
@@ -141,9 +146,7 @@ module ActiveMerchant #:nodoc:
             shipments: {
               receiver_address: {
                 zip_code: address[:zip],
-                street_number: split_street_address(address[:address1]).first,
-                street_name: split_street_address(address[:address1]).last,
-                apartment: address[:address2]
+                street_name: "#{address[:address1]} #{address[:address2]}"
               }
             }
           })
@@ -167,10 +170,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
-        post[:order] = {
-          type: options[:order_type] || "mercadopago",
-          id: options[:order_id] || generate_integer_only_order_id
-        }
+        post[:external_reference] = options[:order_id] || generate_integer_only_order_id
       end
 
       def add_payment(post, options)
