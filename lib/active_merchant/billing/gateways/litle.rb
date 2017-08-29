@@ -6,14 +6,14 @@ module ActiveMerchant #:nodoc:
       SCHEMA_VERSION = '9.4'
 
       self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
-      self.live_url = 'https://payments.litle.com/vap/communicator/online'
+      self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
-      self.homepage_url = 'http://www.litle.com/'
-      self.display_name = 'Litle & Co.'
+      self.homepage_url = 'http://www.vantiv.com/'
+      self.display_name = 'Vantiv eCommerce'
 
       # Public: Create a new Litle gateway.
       #
