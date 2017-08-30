@@ -328,6 +328,10 @@ flo2cash_simple:
   password: ANOTHERCREDENTIAL
   account_id: ANOTHERCREDENTIAL
 
+flow:
+  api_key: "iY2dfcSvigHVBW9etXofyijdGCG9a1B1Y3U572HwgEMPc9bbX1iHlItSNBBUJ9vo05cDScCvwegCEAibbqhzwZD11HnI1lJUSLtowJc7iBblIlQ8t1dyxcaYmguXYehB"
+  organization: "chleo-sandbox"
+
 forte:
   location_id: "176008"
   account_id: "300111"
