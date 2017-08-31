@@ -606,7 +606,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
           :expiration_month => '09',
           :expiration_year => (Time.now.year + 1).to_s,
           :cardholder_name => 'Longbob Longsen',
-          :cryptogram => '111111111100cryptogram'
+          :cryptogram => '111111111100cryptogram',
+          :eci_indicator => '05'
         }
       ).
       returns(braintree_result(:id => "transaction_id"))
