@@ -143,6 +143,13 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_success void
   end
 
+  # Version sent here will need to match or be one ahead of the version set in the test account's dashboard
+  def test_successful_purchase_with_version
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(version: '2017-05-31'))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_invalid_login
     gateway = WepayGateway.new(
       client_id: 12515,

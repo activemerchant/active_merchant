@@ -10,8 +10,6 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
       self.display_name = 'WePay'
 
-      API_VERSION = "2017-02-01"
-
       def initialize(options = {})
         requires!(options, :client_id, :account_id, :access_token)
         super(options)
@@ -229,18 +227,13 @@ module ActiveMerchant #:nodoc:
         headers = {
           "Content-Type"      => "application/json",
           "User-Agent"        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "Authorization"     => "Bearer #{@options[:access_token]}",
-          "Api-Version"       => api_version(options)
+          "Authorization"     => "Bearer #{@options[:access_token]}"
         }
-
+        headers["Api-Version"] = options[:version] if options[:version]
         headers["Client-IP"] = options[:ip] if options[:ip]
         headers["WePay-Risk-Token"] = options[:risk_token] if options[:risk_token]
 
         headers
-      end
-
-      def api_version(options)
-        options[:version] || API_VERSION
       end
     end
   end
