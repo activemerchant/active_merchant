@@ -7,6 +7,7 @@
 * Ebanx: Adds Brazil Specific Parameters [nfarve] #2559
 * Authorize.net: Restore default state value for non-US addresses [jasonwebster] #2563
 * MercadoPago: Additional tweaks for transaction requests [davidsantoso]
+* Braintree Blue: Add eci_indicator field for Apple Pay [davidsantoso]
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
