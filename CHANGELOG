@@ -8,6 +8,7 @@
 * Authorize.net: Restore default state value for non-US addresses [jasonwebster] #2563
 * MercadoPago: Additional tweaks for transaction requests [davidsantoso]
 * Braintree Blue: Add eci_indicator field for Apple Pay [davidsantoso] #2565
+* Conekta: Pull required details from billing address [nfarve] #2568
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
