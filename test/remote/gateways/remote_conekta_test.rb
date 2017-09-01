@@ -36,10 +36,19 @@ class RemoteConektaTest < Test::Unit::TestCase
         name: "Mario Reyes",
         phone: "12345678",
       },
-      carrier: "Estafeta"
+      carrier: "Estafeta", 
+      email: "bob@something.com",
+      line_items: [{
+      name: "Box of Cohiba S1s",
+      description: "Imported From Mex.",
+      unit_price: 20000,
+      quantity: 1,
+      sku: "7500244909",
+      type: "food"
+     }]
     }
   end
-
+ 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -132,7 +141,7 @@ class RemoteConektaTest < Test::Unit::TestCase
       },
       line_items: [
         {
-          rname: "Box of Cohiba S1s",
+          name: "Box of Cohiba S1s",
           description: "Imported From Mex.",
           unit_price: 20000,
           quantity: 1,

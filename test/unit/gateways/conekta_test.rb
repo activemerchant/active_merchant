@@ -34,7 +34,7 @@ class ConektaTest < Test::Unit::TestCase
       :city => "Guerrero",
       :country => "Mexico",
       :zip => "5555",
-      :name => "Mario Reyes",
+      :customer => "Mario Reyes",
       :phone => "12345678",
       :carrier => "Estafeta"
     }
