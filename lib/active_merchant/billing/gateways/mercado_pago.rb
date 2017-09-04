@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
-        post[:external_reference] = options[:order_id] || generate_integer_only_order_id
+        post[:external_reference] = options[:order_id] || SecureRandom.hex(16)
       end
 
       def add_payment(post, options)
@@ -247,10 +247,6 @@ module ActiveMerchant #:nodoc:
         else
           raise ResponseError.new(response)
         end
-      end
-
-      def generate_integer_only_order_id
-        Time.now.to_i + rand(0..1000)
       end
     end
   end
