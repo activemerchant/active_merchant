@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
 
       def store(payment_method, options={})
         post = {}
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, true)
         if options[:order_id].present?
           add_unique_reference(post, options[:order_id])
           action = 'AddCardWithUniqueReference'
@@ -108,11 +108,13 @@ module ActiveMerchant #:nodoc:
         post[:Particular] = options[:description]
       end
 
-      def add_payment_method(post, payment_method)
+      def add_payment_method(post, payment_method, store_action = false)
         post[:CardNumber] = payment_method.number
         post[:CardType] = BRAND_MAP[payment_method.brand.to_s]
         post[:CardExpiry] = format(payment_method.month, :two_digits) + format(payment_method.year, :two_digits)
-        post[:CardHolderName] = payment_method.name
+        # the tokenisation method needs CardName instead of CardHolderName
+        card_holder_name_elem = store_action ? :CardName : :CardHolderName
+        post[card_holder_name_elem] = payment_method.name
         post[:CardCSC] = payment_method.verification_value if payment_method.verification_value
       end
 
