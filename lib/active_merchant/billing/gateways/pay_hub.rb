@@ -200,8 +200,8 @@ module ActiveMerchant #:nodoc:
 
       def json_error(raw_response)
         {
-          error_message: 'Invalid response received from the Payhub API.  Please contact wecare@payhub.com if you continue to receive this message.' +
-            '  (The raw response returned by the API was #{raw_response.inspect})'
+          error_message: "Invalid response received from the Payhub API.  Please contact wecare@payhub.com if you continue to receive this message." +
+            "  (The raw response returned by the API was #{raw_response.inspect})"
         }
       end
 
