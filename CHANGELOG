@@ -23,6 +23,7 @@
 * Forte: fix a bug in logic for selecting billing names [whitby3001] #2381
 * Paymentez: allow capture amount to exceed authorization amount [bpollack] #2900
 * JetPay: fix typo in error messages [reynhout] #2749
+* Braintree: add support for Maestro cards [matthewheath] #2571
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
