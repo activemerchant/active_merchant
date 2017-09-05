@@ -101,6 +101,23 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store(credit_card, options={})
+        post = {}
+        add_integration_key(post)
+        add_operation(post)
+        post[:country] = options[:billing_address][:country] || options[:address][:country]
+        post[:payment_type_code] = CARD_BRAND[credit_card.brand.to_sym]
+        post[:creditcard] = {
+          card_number: credit_card.number,
+          card_name: credit_card.name,
+          card_due_date: "#{credit_card.month}/#{credit_card.year}",
+          card_cvv: credit_card.verification_value
+        }
+        commit(:token, post)
+      end
+
+
+
       def supports_scrubbing?
         true
       end
