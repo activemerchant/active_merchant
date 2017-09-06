@@ -19,6 +19,51 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
+    @options_with_alternate_address = {
+      order_id: '1',
+      billing_address: {
+        name:     'PU JOI SO',
+        address1: '新北市店溪路3579號139樓',
+        company:  'Widgets Inc',
+        city:     '新北市',
+        zip:      '231509',
+        country:  'TW',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
+      },
+      email: 'pujoi@so.com',
+      customer: 'PU JOI SO',
+      description: 'Store Purchase'
+    }
+
+    @options_with_house_number_and_street = {
+      order_id: '1',
+      street: 'Top Level Drive',
+      house_number: '1000',
+      billing_address: address,
+      description: 'Store Purchase'
+    }
+
+    @options_with_shipping_house_number_and_shipping_street = {
+        order_id: '1',
+        street: 'Top Level Drive',
+        house_number: '1000',
+        billing_address: address,
+        shipping_house_number: '999',
+        shipping_street: 'Downtown Loop',
+        shipping_address: {
+            name:     'PU JOI SO',
+            address1: '新北市店溪路3579號139樓',
+            company:  'Widgets Inc',
+            city:     '新北市',
+            zip:      '231509',
+            country:  'TW',
+            phone:    '(555)555-5555',
+            fax:      '(555)555-6666'
+        },
+        description: 'Store Purchase'
+    }
+
     @avs_address = @options
     @avs_address.update(billing_address: {
         name:     'Jim Smith',
@@ -39,6 +84,51 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     assert_success response
     assert_equal '7914002629995504#8814002632606717', response.authorization
     assert response.test?
+  end
+
+  def test_successful_authorize_with_alternate_address
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options_with_alternate_address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/billingAddress.houseNumberOrName=%E6%96%B0%E5%8C%97%E5%B8%82%E5%BA%97%E6%BA%AA%E8%B7%AF3579%E8%99%9F139%E6%A8%93/, data)
+      assert_match(/billingAddress.street=Not\+Provided/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal '7914002629995504', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_house_number_and_street
+    response = stub_comms do
+      @gateway.authorize(@amount,
+                         @credit_card,
+                         @options_with_house_number_and_street)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/billingAddress.street=Top\+Level\+Drive/, data)
+      assert_match(/billingAddress.houseNumberOrName=1000/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_success response
+    assert_equal '7914002629995504', response.authorization
+  end
+
+  def test_successful_authorize_with_shipping_house_number_and_street
+    response = stub_comms do
+      @gateway.authorize(@amount,
+                         @credit_card,
+                         @options_with_shipping_house_number_and_shipping_street)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/billingAddress.street=Top\+Level\+Drive/, data)
+      assert_match(/billingAddress.houseNumberOrName=1000/, data)
+      assert_match(/deliveryAddress.street=Downtown\+Loop/, data)
+      assert_match(/deliveryAddress.houseNumberOrName=999/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_success response
+    assert_equal '7914002629995504', response.authorization
   end
 
   def test_successful_authorize

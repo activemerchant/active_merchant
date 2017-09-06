@@ -26,6 +26,43 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
+    @options_with_alternate_address = {
+        order_id: '1',
+        billing_address: {
+            name:     'PU JOI SO',
+            address1: '新北市店溪路3579號139樓',
+            company:  'Widgets Inc',
+            city:     '新北市',
+            zip:      '231509',
+            country:  'TW',
+            phone:    '(555)555-5555',
+            fax:      '(555)555-6666'
+        },
+        email: 'pujoi@so.com',
+        customer: 'PU JOI SO',
+        description: 'Store Purchase'
+    }
+
+    @options_with_house_number_and_street = {
+        order_id: '1',
+        house_number: '100',
+        street: 'Top Level Drive',
+        billing_address:       {
+            name:     'Jim Smith',
+            address1: '100 Top Level Dr',
+            company:  'Widgets Inc',
+            city:     'Ottawa',
+            state:    'ON',
+            zip:      'K1C2N6',
+            country:  'CA',
+            phone:    '(555)555-5555',
+            fax:      '(555)555-6666'
+        },
+        email: 'long@deb.com',
+        customer: 'Longdeb Longsen',
+        description: 'Store Purchase'
+    }
+
     @avs_credit_card = credit_card('4400000000000008',
                                     :month => 8,
                                     :year => 2018,
@@ -57,6 +94,22 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Refused', response.message
+  end
+
+  def test_successful_purchase_with_unusual_address
+    response = @gateway.purchase(@amount,
+                                 @credit_card,
+                                 @options_with_alternate_address)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_house_number_and_street
+    response = @gateway.purchase(@amount,
+                                 @credit_card,
+                                 @options.merge(street: 'Top Level Drive', house_number: '100'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
   end
 
   def test_successful_authorize_and_capture

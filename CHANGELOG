@@ -14,6 +14,7 @@
 * Authorize.net CIM: Handle multiple error messages [amandapuff] #2537
 * Beanstream: Pass email fields without address [curiousepic] #2615
 * Beanstream: Support recurringPayment for auth, capture, and purchase transactions [dtykocki] #2617
+* Barclaycard Smartpay: Pass street and house_number fields, in addition to standard address [deedeelavinder] #2603
 
 == Version 1.73.0 (September 28, 2017)
 * Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589
@@ -1790,7 +1791,7 @@ value [jduff]
 * Support default Return class for all Integrations that don't use returns [Soleone]
 * Add support for passing additional options when creating a Notification to all Integrations [Soleone]
 * Update BraintreeBlue#refund to have consistent method signature [Jonathan Rudenberg]
-* Add rails/init.rb for gem campatability in Rails [Rūdolfs Ošiņš]
+* Add rails/init.rb for gem campatability in Rails [R?dolfs O?i??]
 * Fix Paypal Express response parser [Jonathan Rudenberg]
 * Braintree/Transax: Add tax field [wisq]
 
@@ -2106,7 +2107,7 @@ value [jduff]
 * Update Secure Pay Au to meet specs for MessageInfo elements [cody]
 * Add support for the Australian Secure Pay payment gateway [cody]
 * Allow LinkPoint cancellations for recurring billing. [yanagimoto.shin]
-* Add support for Åland Islands to the country list [cody]
+* Add support for ?land Islands to the country list [cody]
 
 == Version 1.3.1 (January 28, 2008)
 

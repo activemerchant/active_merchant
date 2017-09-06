@@ -33,15 +33,8 @@ module ActiveMerchant #:nodoc:
         post = payment_request(money, options)
         post[:amount] = amount_hash(money, options[:currency])
         post[:card] = credit_card_hash(creditcard)
-
-        if address = (options[:billing_address] || options[:address])
-          post[:billingAddress] = address_hash(address)
-        end
-
-        if options[:shipping_address]
-          post[:deliveryAddress] = address_hash(options[:shipping_address])
-        end
-
+        post[:billingAddress] = billing_address_hash(options)
+        post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
         commit('authorise', post)
       end
 
@@ -230,17 +223,41 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def address_hash(address)
-        full_address = "#{address[:address1]} #{address[:address2]}" if address
-        street = address[:street] if address[:street]
-        house = address[:houseNumberOrName] ? address[:houseNumberOrName] : full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+      def billing_address_hash(options)
+        address = options[:address] || options[:billing_address] if options[:address] || options[:billing_address]
+        street = options[:street] || parse_street(address)
+        house = options[:house_number] || parse_house_number(address)
 
+        create_address_hash(address, house, street)
+      end
+
+      def shipping_address_hash(options)
+        address = options[:shipping_address]
+        street = options[:shipping_street] || parse_street(address)
+        house = options[:shipping_house_number] || parse_house_number(address)
+
+        create_address_hash(address, house, street)
+      end
+
+      def parse_street(address)
+        address_to_parse = "#{address[:address1]} #{address[:address2]}"
+        street = address[:street] || address_to_parse.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
+        street.empty? ? "Not Provided" : street
+      end
+
+      def parse_house_number(address)
+        address_to_parse = "#{address[:address1]} #{address[:address2]}"
+        house = address[:houseNumberOrName] || address_to_parse.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        house.empty? ? "Not Provided" : house
+      end
+
+      def create_address_hash(address, house, street)
         hash = {}
+        hash[:houseNumberOrName] = house
+        hash[:street]            = street
         hash[:city]              = address[:city] if address[:city]
-        hash[:street]            = street || full_address.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
-        hash[:houseNumberOrName] = house.empty? ? "Not Provided" : house
-        hash[:postalCode]        = address[:zip] if address[:zip]
         hash[:stateOrProvince]   = address[:state] if address[:state]
+        hash[:postalCode]        = address[:zip] if address[:zip]
         hash[:country]           = address[:country] if address[:country]
         hash
       end
