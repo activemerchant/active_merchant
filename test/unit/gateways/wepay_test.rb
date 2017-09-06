@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class WepayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = WepayGateway.new(
       client_id: 'client_id',
@@ -145,6 +147,22 @@ class WepayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match(/Invalid JSON response received from WePay/, response.message)
+  end
+
+  def test_no_version_by_default
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/Api-Version/, headers.to_s)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_version_override
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(version: '2017-05-31'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"Api-Version\"=>\"2017-05-31\"/, headers.to_s)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_scrub
