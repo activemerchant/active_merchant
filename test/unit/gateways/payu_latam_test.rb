@@ -175,7 +175,7 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
   end
 
-  def test_buyer_fields
+  def test_buyer_hash_options
     options_buyer = {
       shipping_address: address(
         address1: "Calle 200",
@@ -186,16 +186,25 @@ class PayuLatamTest < Test::Unit::TestCase
         zip: "01019-030",
         phone: "(11)756312345"
       ),
-      buyer_name: 'Jorge Borges',
-      buyer_dni_number: '5415668464456',
-      buyer_dni_type: 'IT',
-      buyer_email: 'axaxaxas@mlo.org'
+      buyer: {
+        name: 'Jorge Borges',
+        dni_number: '5415668464456',
+        email: 'axaxaxas@mlo.org'
+      }
     }
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.update(options_buyer))
     end.check_request do |endpoint, data, headers|
-      assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":\"IT\",\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"\(11\)756312345/, data)
+      assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":null,\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"\(11\)756312345\",\"shippingAddress\":{\"street1\":\"Calle 200\",\"street2\":\"N107\",\"city\":\"Sao Paulo\",\"state\":\"SP\",\"country\":\"BR\",\"postalCode\":\"01019-030\",\"phone\":\"\(11\)756312345\"}}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_buyer_fields_default_to_payer
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\"buyer\":{\"fullName\":\"APPROVED\",\"dniNumber\":\"5415668464654\",\"dniType\":\"TI\",\"emailAddress\":\"username@domain.com\",\"contactPhone\":\"7563126\"/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -221,7 +230,9 @@ class PayuLatamTest < Test::Unit::TestCase
         zip: "01019-030",
         phone: "(11)756312633"
       ),
-      buyer_cnpj: "32593371000110"
+      buyer: {
+        cnpj: "32593371000110"
+      }
     }
 
     stub_comms do

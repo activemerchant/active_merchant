@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
         add_credentials(post, 'SUBMIT_TRANSACTION')
         add_transaction_elements(post, transaction_type, options)
         add_order(post, options)
-        add_buyer(post, options)
+        add_buyer(post, payment_method, options)
         add_invoice(post, amount, options)
         add_signature(post)
         add_payment_method(post, payment_method, options)
@@ -183,15 +183,25 @@ module ActiveMerchant #:nodoc:
         billing_address
       end
 
-      def add_buyer(post, options)
+      def add_buyer(post, payment_method, options)
         buyer = {}
-        buyer[:fullName] = options[:buyer_name] if options[:buyer_name]
-        buyer[:dniNumber] = options[:buyer_dni_number] if options[:buyer_dni_number]
-        buyer[:dniType] = options[:buyer_dni_type] if options[:buyer_dni_type]
-        buyer[:cnpj] = options[:buyer_cnpj] if options[:buyer_cnpj] && options[:payment_country] == 'BR'
-        buyer[:emailAddress] = options[:buyer_email] if options[:buyer_email]
-        buyer[:contactPhone] = options[:shipping_address][:phone] if options[:shipping_address]
-        buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
+        if buyer_hash = options[:buyer]
+          buyer[:fullName] = buyer_hash[:name]
+          buyer[:dniNumber] = buyer_hash[:dni_number]
+          buyer[:dniType] = buyer_hash[:dni_type]
+          buyer[:cnpj] = buyer_hash[:cnpj] if options[:payment_country] == 'BR'
+          buyer[:emailAddress] = buyer_hash[:email]
+          buyer[:contactPhone] = options[:shipping_address][:phone] if options[:shipping_address]
+          buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
+        else
+          buyer[:fullName] = payment_method.name.strip
+          buyer[:dniNumber] = options[:dni_number]
+          buyer[:dniType] = options[:dni_type]
+          buyer[:cnpj] = options[:cnpj] if options[:payment_country] == 'BR'
+          buyer[:emailAddress] = options[:email]
+          buyer[:contactPhone] = (options[:shipping_address][:phone] if options[:shipping_address]) || (options[:billing_address][:phone] if options[:billing_address])
+          buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
+        end
         post[:transaction][:order][:buyer] = buyer
       end
 
