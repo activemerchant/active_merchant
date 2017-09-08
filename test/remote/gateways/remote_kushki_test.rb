@@ -51,6 +51,24 @@ class RemoteKushkiTest < Test::Unit::TestCase
     assert_equal 'Monto de la transacción es diferente al monto de la venta inicial', response.message
   end
 
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'Succeeded', refund.message
+  end
+
+  def test_failed_refund
+    purchase = @gateway.purchase(@amount, @credit_card)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, nil)
+    assert_failure refund
+    assert_equal 'Missing Authentication Token', refund.message
+  end
+
   def test_successful_void
     purchase = @gateway.purchase(@amount, @credit_card)
     assert_success purchase
@@ -63,7 +81,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void("000")
     assert_failure response
-    assert_equal 'Tipo de moneda no válida', response.message
+    assert_equal 'El monto de la transacción es requerido', response.message
   end
 
   def test_invalid_login
