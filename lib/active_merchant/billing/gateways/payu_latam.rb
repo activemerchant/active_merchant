@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
       def add_payer(post, payment_method, options)
         address = options[:billing_address]
         payer = {}
-        payer[:fullName] = payment_method.name.strip
+        payer[:fullName] = payment_method.is_a?(String) ? address[:name] : payment_method.name.strip
         payer[:contactPhone] = address[:phone] if address && address[:phone]
         payer[:dniNumber] = options[:dni_number] if options[:dni_number]
         payer[:dniType] = options[:dni_type] if options[:dni_type]
