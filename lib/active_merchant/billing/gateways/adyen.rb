@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_references(post, authorization, options = {})
-        post[:originalReference] = authorization
+        post[:originalReference] = psp_reference_from(authorization)
         post[:reference] = options[:order_id]
       end
 
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(action, response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, parameters, response),
           test: test?,
           error_code: success ? nil : error_code_from(response)
         )
@@ -207,8 +207,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response)
-        response['pspReference']
+      def authorization_from(action, parameters, response)
+        [parameters[:originalReference], response['pspReference']].compact.join("#").presence
       end
 
       def init_post(options = {})
@@ -221,6 +221,10 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
+      end
+
+      def psp_reference_from(authorization)
+        authorization.nil? ? nil : authorization.split("#").first
       end
 
     end
