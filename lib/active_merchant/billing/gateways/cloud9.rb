@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc: ALL
     # === Cloud 9 payment gateway.
     #
     class Cloud9Gateway < Gateway
-      self.test_url             = 'https://testlink.c9pg.com:5558/hj'
+      self.test_url             = 'https://testlink.c9pg.com:5568/restApi'
       self.live_url             = 'TBD'
       self.default_currency     = 'USD'
       self.display_name         = 'Cloud9 Payment Gateway'
@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc: ALL
       self.supported_countries  = %w[CA US]
       self.supported_cardtypes  = %i[visa master american_express jcb discover]
 
-      TRANSACTION_TYPES = [AUTHORIZE, PURCHASE, CAPTURE, ADD_TIP, VOID, REFUND, INQUIRY, MODIFY, BATCH].freeze
+      # TRANSACTION_TYPES = [AUTHORIZE, PURCHASE, CAPTURE, ADD_TIP, VOID, REFUND, INQUIRY, MODIFY, BATCH].freeze
       AUTHORIZE         = 'Auth'.freeze
       PURCHASE          = 'Sale'.freeze
       CAPTURE           = 'Finalize'.freeze
@@ -213,15 +213,15 @@ module ActiveMerchant #:nodoc: ALL
       # Add the Request Extend Group of options
       #
       # ==== Options
-      # * <tt>:invoice</tt> -- invoice number, optional
-      # * <tt>:order_id</tt> -- only used for purchase card (??), optional
+      # * <tt>:invoice_num</tt> -- invoice number, optional
+      # * <tt>:order_num</tt> -- only used for purchase card (??), optional
       # * <tt>:authorization_code</tt> -- only used for offline transactions, optional
       # * <tt>:voucher_serial_number</tt> -- only used for offline EBT transaction, optional
       # * <tt>:additional_info</tt> -- reserved for future use. data is delimited by a FS (0x1c) and is formatted as
       #                                follows: Key=Value0x1cKey=Value0x1cKey=Value, optional
       def add_request_extend_info_group(post, options)
-        optional_assign(post, :InvoiceNum, options[:invoice])
-        optional_assign(post, :OrderNum, options[:order_id])
+        optional_assign(post, :InvoiceNum, options[:invoice_num])
+        optional_assign(post, :OrderNum, options[:order_num])
         optional_assign(post, :AuthCode, options[:authorization_code])
         optional_assign(post, :VoucherNum, options[:voucher_serial_number])
         optional_assign(post, :AdditionalInfo, options[:additional_info])
@@ -233,25 +233,26 @@ module ActiveMerchant #:nodoc: ALL
       #                             the response message. The POS must submit it back for Void / Addtip / Finalize etc
       #                             based previous transactions.
       # ==== Options
-      # * <tt>:order_id</tt> -- source trace number provided by the merchant and it uniquely identifies a transaction, required
+      # * <tt>:source_trace_num</tt> -- source trace number provided by the merchant and it uniquely identifies a transaction, required
       def add_trace_group(post, options, authorization = nil)
-        requires(options, :order_id)
-        post[:SourceTraceNum] = options[:order_id]
+        requires!(options, :source_trace_num)
+        post[:SourceTraceNum] = options[:source_trace_num]
         post[:GTRC]           = authorization if authorization.present?
       end
 
-      # Add the Request Card Info Group of options - used when card info is from POS, not PDC. and the item, NeedSwipCard, must be “N”.
+      # Add the Request Card Info Group of options - used when card info is from POS, not PDC. and the item,
+      # NeedSwipeCard, must be “N”.
       #
       # ==== Options
-      # * <tt>:order_id</tt> -- source trace number provided by the merchant and it uniquely identifies a transaction, required
       def add_request_card_info_group(post, payment, options)
-        requires(options, :funding)
-
-        post[:Medium]   = FUNDING_TYPES.include?(options[:funding]) ? options[:funding] : FUNDING_CREDIT
-        add_credit_card(post, payment)
+        add_credit_card(post, payment, options)
+        post[:CommercialCard] = options[:commercial_card].present? && options[:commercial_card] ? 'Y' : 'N'
       end
 
-      def add_credit_card(post, credit_card)
+      # Extract request card info from credit_card parameter. This could be an AM CreditCard object, with either track
+      # data, or manually entered card info. It can also be a token from a previously saved card. If ommitted (nil),
+      # the NeedSwipeCard parameter is set to request card swipe from an attached terminal.
+      def add_credit_card(post, credit_card, options = {})
         if credit_card.respond_to?(:number)
           if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
             post[:Track2] = credit_card.track_data
@@ -261,9 +262,13 @@ module ActiveMerchant #:nodoc: ALL
             post[:CVVNum]           = credit_card.verification_value if credit_card.verification_value?
             post[:CardPresent]      = credit_card.manual_entry || false ? 'N' : 'Y'
           end
-          post[:requestCardToken] = 'Y'
+          post[:Medium]           = FUNDING_TYPES.include?(options[:funding]) ? options[:funding] : FUNDING_CREDIT
+          post[:RequestCardToken] = 'Y'
         elsif credit_card.kind_of?(String)
-          post['CardToken'] = credit_card
+          post[:CardToken] = credit_card
+        elsif credit_card.blank?
+          post[:NeedSwipeCard]    = 'Y'
+          post[:RequestCardToken] = 'Y'
         end
       end
 
