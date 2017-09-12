@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module BeanstreamCore
+      include Empty
+
       RECURRING_URL = 'https://www.beanstream.com/scripts/recurring_billing.asp'
       SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
 
@@ -177,6 +179,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def purchase_action(source)
         if source.is_a?(Check)
           :check_purchase
@@ -227,7 +230,7 @@ module ActiveMerchant #:nodoc:
           post[:ordAddress1]      = billing_address[:address1]
           post[:ordAddress2]      = billing_address[:address2]
           post[:ordCity]          = billing_address[:city]
-          post[:ordProvince]      = STATES[billing_address[:state].upcase] || billing_address[:state] if billing_address[:state]
+          post[:ordProvince]      = state_for(billing_address)
           post[:ordPostalCode]    = billing_address[:zip]
           post[:ordCountry]       = billing_address[:country]
         end
@@ -238,7 +241,7 @@ module ActiveMerchant #:nodoc:
           post[:shipAddress1]     = shipping_address[:address1]
           post[:shipAddress2]     = shipping_address[:address2]
           post[:shipCity]         = shipping_address[:city]
-          post[:shipProvince]     = STATES[shipping_address[:state].upcase] || shipping_address[:state] if shipping_address[:state]
+          post[:shipProvince]     = state_for(shipping_address)
           post[:shipPostalCode]   = shipping_address[:zip]
           post[:shipCountry]      = shipping_address[:country]
           post[:shippingMethod]   = shipping_address[:shipping_method]
@@ -246,8 +249,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def state_for(address)
+        STATES[address[:state].upcase] || address[:state] if address[:state]
+      end
+
       def prepare_address_for_non_american_countries(options)
         [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
+          next if empty?(address[:country])
           unless ['US', 'CA'].include?(address[:country])
             address[:state] = '--'
             address[:zip]   = '000000' unless address[:zip]
