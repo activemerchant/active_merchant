@@ -15,6 +15,7 @@
 * PayU Latam: Pass unique buyer fields and country requirements [curiousepic] #2570
 * PayU Latam: Correctly condition buyer element fields [curiousepic] #2578
 * Authorize.net: Remove numeric restriction on customer ID [dtykocki] #2579
+* Beanstream: Do not default state and zip with empty country [dtykocki] #2582
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
