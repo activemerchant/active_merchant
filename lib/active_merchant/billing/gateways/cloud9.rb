@@ -34,22 +34,63 @@ module ActiveMerchant #:nodoc: ALL
       STATUS_SUCCESS    = 'success'.freeze
       STATUS_TIMEOUT    = 'timeout'.freeze
 
-      # TODO: PMTSVC this is from Stripe, still to get error codes from Cloud9
+      # This is not all the error codes provided by TSYS. More time can be spent to map more completely. For now
+      # all unmapped values will go to :processing_error
       STANDARD_ERROR_CODE_MAPPING = {
-        'incorrect_number' => STANDARD_ERROR_CODE[:incorrect_number],
-        'invalid_number' => STANDARD_ERROR_CODE[:invalid_number],
-        'invalid_expiry_month' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        'invalid_expiry_year' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        'invalid_cvc' => STANDARD_ERROR_CODE[:invalid_cvc],
-        'expired_card' => STANDARD_ERROR_CODE[:expired_card],
-        'incorrect_cvc' => STANDARD_ERROR_CODE[:incorrect_cvc],
-        'incorrect_zip' => STANDARD_ERROR_CODE[:incorrect_zip],
-        'card_declined' => STANDARD_ERROR_CODE[:card_declined],
-        'call_issuer' => STANDARD_ERROR_CODE[:call_issuer],
-        'processing_error' => STANDARD_ERROR_CODE[:processing_error],
-        'incorrect_pin' => STANDARD_ERROR_CODE[:incorrect_pin],
-        'test_mode_live_card' => STANDARD_ERROR_CODE[:test_mode_live_card]
-      }.freeze
+        'D0006' => STANDARD_ERROR_CODE[:unsupported_feature],
+        'E0010' => STANDARD_ERROR_CODE[:config_error],
+        'E0011' => STANDARD_ERROR_CODE[:config_error],
+        'E0012' => STANDARD_ERROR_CODE[:unsupported_feature],
+        'E0013' => STANDARD_ERROR_CODE[:unsupported_feature],
+        'E0020' => STANDARD_ERROR_CODE[:config_error],
+        'E0021' => STANDARD_ERROR_CODE[:config_error],
+        'E0022' => STANDARD_ERROR_CODE[:config_error],
+        'D0023' => STANDARD_ERROR_CODE[:config_error],
+        'E0030' => STANDARD_ERROR_CODE[:config_error],
+        'D0050' => STANDARD_ERROR_CODE[:config_error],
+        'D0060' => STANDARD_ERROR_CODE[:config_error],
+        'D0070' => STANDARD_ERROR_CODE[:config_error],
+        'D0097' => STANDARD_ERROR_CODE[:unsupported_feature],
+        'D1003' => STANDARD_ERROR_CODE[:invalid_number],
+        'D1004' => STANDARD_ERROR_CODE[:config_error],
+        'D1005' => STANDARD_ERROR_CODE[:config_error],
+        'D1006' => STANDARD_ERROR_CODE[:config_error],
+        'D1007' => STANDARD_ERROR_CODE[:config_error],
+        'D1020' => STANDARD_ERROR_CODE[:config_error],
+        'D1201' => STANDARD_ERROR_CODE[:config_error],
+        'D1203' => STANDARD_ERROR_CODE[:config_error],
+        'D1206' => STANDARD_ERROR_CODE[:config_error],
+        'D1215' => STANDARD_ERROR_CODE[:invalid_number],
+        'D2001' => STANDARD_ERROR_CODE[:call_issuer],
+        'D2002' => STANDARD_ERROR_CODE[:pick_up_card],
+        'D2008' => STANDARD_ERROR_CODE[:incorrect_pin],
+        'D2009' => STANDARD_ERROR_CODE[:incorrect_pin],
+        'D2011' => STANDARD_ERROR_CODE[:expired_card],
+        'D2013' => STANDARD_ERROR_CODE[:config_error],
+        'D2014' => STANDARD_ERROR_CODE[:config_error],
+        'D2018' => STANDARD_ERROR_CODE[:incorrect_address],
+        'D2019' => STANDARD_ERROR_CODE[:config_error],
+        'D2020' => STANDARD_ERROR_CODE[:invalid_cvc],
+        'D2021' => STANDARD_ERROR_CODE[:call_issuer],
+        'D2024' => STANDARD_ERROR_CODE[:invalid_number],
+        'D2025' => STANDARD_ERROR_CODE[:card_declined],
+        'D2026' => STANDARD_ERROR_CODE[:card_declined],
+        'D2027' => STANDARD_ERROR_CODE[:card_declined],
+        'D2028' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        'D2029' => STANDARD_ERROR_CODE[:unsupported_feature],
+        'D2030' => STANDARD_ERROR_CODE[:config_error],
+        'D2031' => STANDARD_ERROR_CODE[:card_declined],
+        'D2032' => STANDARD_ERROR_CODE[:card_declined],
+        'D2999' => STANDARD_ERROR_CODE[:card_declined],
+        'E6004' => STANDARD_ERROR_CODE[:incorrect_address],
+        'E6999' => STANDARD_ERROR_CODE[:card_declined],
+        'D9000' => STANDARD_ERROR_CODE[:card_declined],
+        'D9001' => STANDARD_ERROR_CODE[:card_declined],
+        'D9002' => STANDARD_ERROR_CODE[:card_declined],
+        'D9003' => STANDARD_ERROR_CODE[:card_declined],
+        'F9901' => STANDARD_ERROR_CODE[:config_error]
+        # 'E0713' - TRANSACTION KEY EXPIRED
+      }
 
       # This gateway requires that a valid username and password be passed in the +options+ hash.
       #
@@ -61,6 +102,8 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>test</tt> -- determines which server to connect to
       def initialize(options = {})
         requires!(options, :merchant_id, :password, :terminal_id)
+        Gateway.logger = Logger.new(STDOUT)
+        # Gateway.logger.level = Logger::DEBUG
         super
       end
 
@@ -310,7 +353,6 @@ module ActiveMerchant #:nodoc: ALL
       def commit(action, parameters)
         data = ssl_post(target_url, post_data(action, parameters))
         response = parse(data)
-        message = message_from(response)
 
         success = response['Status'] == STATUS_SUCCESS
 
@@ -321,7 +363,7 @@ module ActiveMerchant #:nodoc: ALL
                      authorization: response['GTRC'],
                      avs_result: { :code => response['AVSResultCode'] },
                      :cvv_result => response['CCVResultCode'],
-                     :emv_authorization => emv_authorization_from_response(response),
+                     :emv_authorization => nil,
                      :error_code => success ? nil : error_code_from(response)
         )
       end
