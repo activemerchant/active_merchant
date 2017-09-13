@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
           post[:CVV] = credit_card.verification_value
           post[:Exp] = expdate(credit_card)
           post[:Name] = credit_card.name
-          post[:CardPresent] = true if credit_card.manual_entry
+          post[:CardPresent] = true if credit_card.respond_to?(:manual_entry) && credit_card.manual_entry
         end
       end
 
