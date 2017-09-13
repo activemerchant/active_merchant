@@ -132,6 +132,24 @@ class EbanxTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_successful_store
+    @gateway.expects(:ssl_request).returns(successful_store_response)
+
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+
+    assert_equal '70d4561db7ef543509d41b5f98f8418c8cd97b718962afd91bc12bebe7f0fd37cb7058a826c3c3840bee8f9333cf7194e8ce351c6607aed650afaad4503c1332', response.authorization
+    assert response.test?
+  end
+
+  def test_failed_store
+    @gateway.expects(:ssl_request).returns(failed_store_response)
+
+    response = @gateway.store(@credit_card, @options)
+    assert_failure response
+    assert_equal "BP-DR-75", response.error_code
+  end
+
   private
 
   def pre_scrubbed
@@ -203,6 +221,18 @@ class EbanxTest < Test::Unit::TestCase
   def failed_void_response
     %(
       {"status":"ERROR","status_code":"BP-CAN-1","status_message":"Parameter hash not informed"}
+    )
+  end
+
+  def successful_store_response
+    %(
+      {"status":"SUCCESS","payment_type_code":"visa","token":"70d4561db7ef543509d41b5f98f8418c8cd97b718962afd91bc12bebe7f0fd37cb7058a826c3c3840bee8f9333cf7194e8ce351c6607aed650afaad4503c1332","masked_card_number":"424242xxxxxx4242"}
+    )
+  end
+
+  def failed_store_response
+    %(
+      {"status":"ERROR","status_code":"BP-DR-75","status_message":"Card number is invalid"}
     )
   end
 end

@@ -149,4 +149,16 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:integration_key], transcript)
   end
 
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_store
+    response = @gateway.store(credit_card('1111111111111111'), @options)
+    assert_failure response
+    assert_equal 'Card number is invalid', response.message
+    assert_equal 'BP-DR-75', response.error_code
+  end
+
 end
