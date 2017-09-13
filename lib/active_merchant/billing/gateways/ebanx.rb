@@ -176,6 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(post, creditcard)
         post[:payment_type_code] = CARD_BRAND[creditcard.brand.to_sym]
+        return post[:creditcard] = { token: creditcard.payment_cryptogram } if creditcard.is_a?(NetworkTokenizationCreditCard)
         post[:creditcard] = {
           card_number: creditcard.number,
           card_name: creditcard.name,
