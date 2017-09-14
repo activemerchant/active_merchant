@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
       alias_method :delete, :unstore
 
       def supports_network_tokenization?
-        true
+        supports_network_tokenization_brands.present?
       end
 
       def verify_credentials
@@ -198,6 +198,11 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def supports_network_tokenization_brands
+        result = Braintree::MerchantGateway.new(@braintree_gateway).provision_raw_apple_pay
+        result.success? ? result.supported_networks : []
+      end
 
       def check_customer_exists(customer_vault_id)
         commit do
