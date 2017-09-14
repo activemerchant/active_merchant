@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        builder.to_xml
+        builder.to_xml(save_with: Nokogiri::XML::Node::SaveOptions::AS_XML)
       end
 
       def add_authentication(xml, options={})
