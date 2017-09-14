@@ -17,6 +17,7 @@
 * Authorize.net: Remove numeric restriction on customer ID [dtykocki] #2579
 * Beanstream: Do not default state and zip with empty country [dtykocki] #2582
 * Kushki: Add support for refunds [dtykocki] #2575
+* Adyen: Fix failing remote tests [dtykocki] #2584
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551

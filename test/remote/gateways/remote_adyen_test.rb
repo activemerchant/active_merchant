@@ -22,7 +22,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_email: "john.smith@test.com",
       shopper_ip: "77.110.174.153",
       shopper_reference: "John Smith",
-      :billing_address => address(),
+      billing_address: address(),
+      order_id: "123"
     }
   end
 
@@ -165,7 +166,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', month: 16)
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
-    assert_equal 'Expiry month should be between 1 and 12 inclusive Card', response.message
+    assert_equal 'Expiry month should be between 1 and 12 inclusive', response.message
   end
 
   def test_invalid_expiry_year_for_purchase
