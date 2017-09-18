@@ -390,6 +390,7 @@ module ActiveMerchant #:nodoc:
             xml.DS_MERCHANT_IDENTIFIER 'REQUIRED' if data[:store_in_vault]
           elsif data[:credit_card_token]
             xml.DS_MERCHANT_IDENTIFIER data[:credit_card_token]
+            xml.DS_MERCHANT_DIRECTPAYMENT 'true'
           end
         end
       end
