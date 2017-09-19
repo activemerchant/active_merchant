@@ -24,7 +24,8 @@ module ActiveMerchant #:nodoc:
         authorize: "direct",
         capture: "capture",
         refund: "refund",
-        void: "cancel"
+        void: "cancel",
+        store: "token"
       }
 
       HTTP_METHOD = {
@@ -32,7 +33,8 @@ module ActiveMerchant #:nodoc:
         authorize: :post,
         capture: :get,
         refund: :post,
-        void: :get
+        void: :get,
+        store: :post
       }
 
       def initialize(options={})
@@ -46,9 +48,10 @@ module ActiveMerchant #:nodoc:
         add_operation(post)
         add_invoice(post, money, options)
         add_customer_data(post, payment, options)
-        add_payment(post, payment)
+        add_card_or_token(post, payment)
         add_address(post, options)
-        add_customer_responsible_person(post, payment, options) if post[:payment][:country] == 'BR'
+        add_customer_responsible_person(post, payment, options)
+
         commit(:purchase, post)
       end
 
@@ -58,9 +61,9 @@ module ActiveMerchant #:nodoc:
         add_operation(post)
         add_invoice(post, money, options)
         add_customer_data(post, payment, options)
-        add_payment(post, payment)
+        add_card_or_token(post, payment)
         add_address(post, options)
-        add_customer_responsible_person(post, payment, options) if post[:payment][:country] == 'BR'
+        add_customer_responsible_person(post, payment, options)
         post[:payment][:creditcard][:auto_capture] = false
 
         commit(:authorize, post)
@@ -92,6 +95,15 @@ module ActiveMerchant #:nodoc:
         add_authorization(post, authorization)
 
         commit(:void, post)
+      end
+
+      def store(credit_card, options={})
+        post = {}
+        add_integration_key(post)
+        add_payment_details(post, credit_card)
+        post[:country] = customer_country(options)
+
+        commit(:store, post)
       end
 
       def verify(credit_card, options={})
@@ -127,13 +139,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, payment, options)
-        post[:payment][:name] = payment.name
+        post[:payment][:name] = payment.is_a?(String) ? "Not Provided" : payment.name
         post[:payment][:email] = options[:email] || "unspecified@example.com"
         post[:payment][:document] = options[:document]
         post[:payment][:birth_date] = options[:birth_date] if options[:birth_date]
       end
 
-      def add_customer_responsible_person(post, payment,  options)
+      def add_customer_responsible_person(post, payment, options)
+        return unless (options[:person_type] && options[:person_type].downcase == 'business') && customer_country(options) == 'br'
         post[:payment][:responsible] = {}
         post[:payment][:responsible][:name] = payment.name
         post[:payment][:responsible][:document] = options[:document]
@@ -147,7 +160,7 @@ module ActiveMerchant #:nodoc:
           post[:payment][:city] = address[:city]
           post[:payment][:state] = address[:state]
           post[:payment][:zipcode] = address[:zip]
-          post[:payment][:country] = address[:country]
+          post[:payment][:country] = address[:country].downcase
           post[:payment][:phone_number] = address[:phone]
         end
       end
@@ -159,14 +172,30 @@ module ActiveMerchant #:nodoc:
         post[:payment][:instalments] = options[:instalments] || 1
       end
 
-      def add_payment(post, payment)
-        post[:payment][:payment_type_code] = CARD_BRAND[payment.brand.to_sym]
-        post[:payment][:creditcard] = {
-          card_number: payment.number,
-          card_name: payment.name,
-          card_due_date: "#{payment.month}/#{payment.year}",
-          card_cvv: payment.verification_value
-        }
+      def add_card_or_token(post, payment)
+        if payment.is_a?(String)
+          payment, brand = payment.split("|")
+        end
+        post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
+        post[:payment][:creditcard] = payment_details(payment)
+      end
+
+      def add_payment_details(post, payment)
+        post[:payment_type_code] = CARD_BRAND[payment.brand.to_sym]
+        post[:creditcard] = payment_details(payment)
+      end
+
+      def payment_details(payment)
+        if payment.is_a?(String)
+          { token: payment }
+        else
+          {
+            card_number: payment.number,
+            card_name: payment.name,
+            card_due_date: "#{payment.month}/#{payment.year}",
+            card_cvv: payment.verification_value
+          }
+        end
       end
 
       def parse(body)
@@ -183,7 +212,7 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, parameters, response),
           test: test?,
           error_code: error_code_from(response, success)
         )
@@ -196,6 +225,8 @@ module ActiveMerchant #:nodoc:
           response.try(:[], "payment").try(:[], "status") == "PE"
         elsif action == :void
           response.try(:[], "payment").try(:[], "status") == "CA"
+        elsif action == :store
+          response.try(:[], "status") == "SUCCESS"
         else
           false
         end
@@ -206,8 +237,12 @@ module ActiveMerchant #:nodoc:
         response.try(:[], "payment").try(:[], "transaction_status").try(:[], "description")
       end
 
-      def authorization_from(response)
-        response.try(:[], "payment").try(:[], "hash")
+      def authorization_from(action, parameters, response)
+        if action == :store
+          response.try(:[], "token") + "|" + CARD_BRAND[parameters[:payment_type_code].to_sym]
+        else
+          response.try(:[], "payment").try(:[], "hash")
+        end
       end
 
       def post_data(action, parameters = {})
@@ -237,6 +272,12 @@ module ActiveMerchant #:nodoc:
         unless success
           return response["status_code"] if response["status"] == "ERROR"
           response.try(:[], "payment").try(:[], "transaction_status").try(:[], "code")
+        end
+      end
+
+      def customer_country(options)
+        if country = options[:country] || (options[:billing_address][:country] if options[:billing_address])
+          country.downcase
         end
       end
     end
