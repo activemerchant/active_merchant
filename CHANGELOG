@@ -19,6 +19,7 @@
 * Kushki: Add support for refunds [dtykocki] #2575
 * Adyen: Fix failing remote tests [dtykocki] #2584
 * MercadoPago: Send diners_club cards as diners [davidsantoso] #2585
+* WePay: Don't require email for Store [curiousepic] #2588
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
