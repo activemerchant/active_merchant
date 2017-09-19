@@ -76,8 +76,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options = {})
-        requires!(options, :email)
-
         post = {}
         post[:client_id] = @options[:client_id]
         post[:user_name] = "#{creditcard.first_name} #{creditcard.last_name}"
