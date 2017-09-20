@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
           xml['d4p1'].LastName payment.last_name
           xml['d4p1'].Phone address[:phone] if address[:phone]
           xml['d4p1'].PostalCode address[:zip] if address[:zip]
-          xml['d4p1'].SendEmail empty?(options[:send_email].present?) ? false : options[:send_email]
+          xml['d4p1'].SendEmail empty?(options[:send_email]) ? false : options[:send_email]
           xml['d4p1'].StateProvince address[:state] if address[:state]
           xml['d4p1'].Address2 address[:address2] if address[:address2]
           xml['d4p1'].Country address[:country] if address[:country]
