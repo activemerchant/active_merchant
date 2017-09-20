@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def card_number
-            decoded_params['card_number'].to_f
+            decoded_params['card_number']
           end
 
           def pay_token
