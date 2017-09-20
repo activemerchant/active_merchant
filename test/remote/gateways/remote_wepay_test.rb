@@ -88,8 +88,14 @@ class RemoteWepayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
   end
+
   def test_successful_store
     response = @gateway.store(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_store_with_defaulted_email
+    response = @gateway.store(@credit_card, {billing_address: address})
     assert_success response
   end
 
