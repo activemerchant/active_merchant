@@ -39,8 +39,12 @@ module ActiveMerchant #:nodoc:
             decoded_params['amount'].to_f
           end
 
+          def card_number
+            decoded_params['card_number'].to_f
+          end
+
           def pay_token
-            encoded_params['pay_token']
+            decoded_params['pay_token']
           end
 
           def generate_signature
