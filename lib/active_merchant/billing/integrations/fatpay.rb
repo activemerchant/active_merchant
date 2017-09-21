@@ -15,7 +15,6 @@ module ActiveMerchant #:nodoc:
         def self.notification(*args)
           Notification.new(*args)
         end
-
       end
     end
   end

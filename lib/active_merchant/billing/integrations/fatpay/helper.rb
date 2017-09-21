@@ -3,6 +3,14 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Fatpay
         class Helper < ActiveMerchant::Billing::Integrations::Helper
+          def initialize(order, account, options = {})
+            super
+            @forward_url = options[:forward_url]
+          end
+
+          def credential_based_url
+            @forward_url
+          end
 
           # def initialize(order, account, options = {})
           #   super
@@ -32,7 +40,6 @@ module ActiveMerchant #:nodoc:
           # def form_fields
           #   @fields.merge('signature' => generate_signature )
           # end
-
         end
       end
     end
