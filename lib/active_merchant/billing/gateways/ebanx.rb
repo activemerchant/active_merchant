@@ -261,12 +261,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def address_splitted_to_street_and_number(address, country)
+        return unless address
         case country.downcase
         when 'br'
           splitted = address.split(',').map(&:strip)
-          { street: splitted.try(:first), number: splitted.try(:last) } if splitted
+          { street: splitted.try(:first), number: splitted.try(:last) }
+        when 'co'
+          number = address.split.first
+          street = address.split[1..-1].join(" ") 
+          { street: street.blank? ? number : street, number: number }
         else
-          { street: address.split[1..-1].join(" "), number: address.split.first } if address
+          { street: address.split[1..-1].join(" "), number: address.split.first }
         end
       end
     end
