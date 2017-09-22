@@ -143,6 +143,23 @@ module ActiveMerchant #:nodoc:
         recurring_commit(:status, request)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<transactionKey>).+(</transactionKey>)), '\1[FILTERED]\2').
+          gsub(%r((<cardNumber>).+(</cardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<cardCode>).+(</cardCode>)), '\1[FILTERED]\2').
+          gsub(%r((<track1>).+(</track1>)), '\1[FILTERED]\2').
+          gsub(%r((<track2>).+(</track2>)), '\1[FILTERED]\2').
+          gsub(/(<routingNumber>).+(<\/routingNumber>)/, '\1[FILTERED]\2').
+          gsub(/(<accountNumber>).+(<\/accountNumber>)/, '\1[FILTERED]\2').
+          gsub(%r((<cryptogram>).+(</cryptogram>)), '\1[FILTERED]\2')
+      end
+
       private
 
       # Builds recurring billing request
