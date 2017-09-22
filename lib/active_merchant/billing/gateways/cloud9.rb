@@ -36,60 +36,111 @@ module ActiveMerchant #:nodoc: ALL
 
       # This is not all the error codes provided by TSYS. More time can be spent to map more completely. For now
       # all unmapped values will go to :processing_error
-      STANDARD_ERROR_CODE_MAPPING = {
-        'D0006' => STANDARD_ERROR_CODE[:unsupported_feature],
-        'E0010' => STANDARD_ERROR_CODE[:config_error],
-        'E0011' => STANDARD_ERROR_CODE[:config_error],
-        'E0012' => STANDARD_ERROR_CODE[:unsupported_feature],
-        'E0013' => STANDARD_ERROR_CODE[:unsupported_feature],
-        'E0020' => STANDARD_ERROR_CODE[:config_error],
-        'E0021' => STANDARD_ERROR_CODE[:config_error],
-        'E0022' => STANDARD_ERROR_CODE[:config_error],
-        'D0023' => STANDARD_ERROR_CODE[:config_error],
-        'E0030' => STANDARD_ERROR_CODE[:config_error],
-        'D0050' => STANDARD_ERROR_CODE[:config_error],
-        'D0060' => STANDARD_ERROR_CODE[:config_error],
-        'D0070' => STANDARD_ERROR_CODE[:config_error],
-        'D0097' => STANDARD_ERROR_CODE[:unsupported_feature],
-        'D1003' => STANDARD_ERROR_CODE[:invalid_number],
-        'D1004' => STANDARD_ERROR_CODE[:config_error],
-        'D1005' => STANDARD_ERROR_CODE[:config_error],
-        'D1006' => STANDARD_ERROR_CODE[:config_error],
-        'D1007' => STANDARD_ERROR_CODE[:config_error],
-        'D1020' => STANDARD_ERROR_CODE[:config_error],
-        'D1201' => STANDARD_ERROR_CODE[:config_error],
-        'D1203' => STANDARD_ERROR_CODE[:config_error],
-        'D1206' => STANDARD_ERROR_CODE[:config_error],
-        'D1215' => STANDARD_ERROR_CODE[:invalid_number],
-        'D2001' => STANDARD_ERROR_CODE[:call_issuer],
-        'D2002' => STANDARD_ERROR_CODE[:pick_up_card],
-        'D2008' => STANDARD_ERROR_CODE[:incorrect_pin],
-        'D2009' => STANDARD_ERROR_CODE[:incorrect_pin],
-        'D2011' => STANDARD_ERROR_CODE[:expired_card],
-        'D2013' => STANDARD_ERROR_CODE[:config_error],
-        'D2014' => STANDARD_ERROR_CODE[:config_error],
-        'D2018' => STANDARD_ERROR_CODE[:incorrect_address],
-        'D2019' => STANDARD_ERROR_CODE[:config_error],
-        'D2020' => STANDARD_ERROR_CODE[:invalid_cvc],
-        'D2021' => STANDARD_ERROR_CODE[:call_issuer],
-        'D2024' => STANDARD_ERROR_CODE[:invalid_number],
-        'D2025' => STANDARD_ERROR_CODE[:card_declined],
-        'D2026' => STANDARD_ERROR_CODE[:card_declined],
-        'D2027' => STANDARD_ERROR_CODE[:card_declined],
-        'D2028' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        'D2029' => STANDARD_ERROR_CODE[:unsupported_feature],
-        'D2030' => STANDARD_ERROR_CODE[:config_error],
-        'D2031' => STANDARD_ERROR_CODE[:card_declined],
-        'D2032' => STANDARD_ERROR_CODE[:card_declined],
-        'D2999' => STANDARD_ERROR_CODE[:card_declined],
-        'E6004' => STANDARD_ERROR_CODE[:incorrect_address],
-        'E6999' => STANDARD_ERROR_CODE[:card_declined],
-        'D9000' => STANDARD_ERROR_CODE[:card_declined],
-        'D9001' => STANDARD_ERROR_CODE[:card_declined],
-        'D9002' => STANDARD_ERROR_CODE[:card_declined],
-        'D9003' => STANDARD_ERROR_CODE[:card_declined],
-        'F9901' => STANDARD_ERROR_CODE[:config_error]
-        # 'E0713' - TRANSACTION KEY EXPIRED
+       STANDARD_ERROR_CODE_MAPPING = {
+        '01' => STANDARD_ERROR_CODE[:call_issuer],         # refer to issuer
+        '02' => STANDARD_ERROR_CODE[:call_issuer],         # refer to issuer - special condition
+        '03' => STANDARD_ERROR_CODE[:config_error],        # invalid merchant id
+        '04' => STANDARD_ERROR_CODE[:pick_up_card],        # pick up card (no fraud)
+        '05' => STANDARD_ERROR_CODE[:card_declined],       # do not honour
+        '06' => STANDARD_ERROR_CODE[:processing_error],    # general error
+        '07' => STANDARD_ERROR_CODE[:pick_up_card],        # pick up card (fraud condition)
+        # '08' => STANDARD_ERROR_CODE[:approved],
+        # '10' => STANDARD_ERROR_CODE[:partial_approval],
+        # '11' => STANDARD_ERROR_CODE[:vip_approval],
+        '12' => STANDARD_ERROR_CODE[:config_error],        # invalid transaction
+        '13' => STANDARD_ERROR_CODE[:invalid_number],      # invalid amount
+        '14' => STANDARD_ERROR_CODE[:invalid_number],      # invalid card number
+        '15' => STANDARD_ERROR_CODE[:config_error],        # no such issuer
+        '34' => STANDARD_ERROR_CODE[:unsupported_feature], # transaction cancelled - mastercard use only
+        '39' => STANDARD_ERROR_CODE[:config_error],        # no credit account
+        '41' => STANDARD_ERROR_CODE[:pick_up_card],        # pick up card (lost card)
+        '43' => STANDARD_ERROR_CODE[:pick_up_card],        # pick up card (stolen card)
+        '51' => STANDARD_ERROR_CODE[:card_declined],       # insufficient funds
+        '52' => STANDARD_ERROR_CODE[:config_error],        # no checking account
+        '53' => STANDARD_ERROR_CODE[:config_error],        # no savings account
+        '54' => STANDARD_ERROR_CODE[:expired_card],        # expired card
+        '55' => STANDARD_ERROR_CODE[:incorrect_pin],       # incorrect pin
+        '57' => STANDARD_ERROR_CODE[:config_error],        # transaction not permitted - card
+        '58' => STANDARD_ERROR_CODE[:config_error],        # transaction not permitted - terminal
+        '59' => STANDARD_ERROR_CODE[:config_error],        # transaction not permitted - merchant
+        '61' => STANDARD_ERROR_CODE[:card_declined],       # exceeds withdrawal limit
+        '62' => STANDARD_ERROR_CODE[:card_declined],       # invalid service code - restricted
+        '63' => STANDARD_ERROR_CODE[:card_declined],       # security violation
+        '65' => STANDARD_ERROR_CODE[:card_declined],       # activity limit exceeded
+        '75' => STANDARD_ERROR_CODE[:card_declined],       # pin retries exceeded
+        '78' => STANDARD_ERROR_CODE[:config_error],        # no account
+        '79' => STANDARD_ERROR_CODE[:config_error],        # no account
+        '82' => STANDARD_ERROR_CODE[:incorrect_cvc],       # CVV data not correct
+        '83' => STANDARD_ERROR_CODE[:incorrect_pin],       # cannot verify pin
+        # '85' => STANDARD_ERROR_CODE[:card_ok],           # no reason to decline
+        '86' => STANDARD_ERROR_CODE[:incorrect_pin],       # cannot verify pin
+        '93' => STANDARD_ERROR_CODE[:card_declined],       # decline - violation, cannot complete
+        '96' => STANDARD_ERROR_CODE[:processing_error],    # system malfunction
+        'N4' => STANDARD_ERROR_CODE[:card_declined],       # decline - exceeds issuer withdrawal limit
+        'N7' => STANDARD_ERROR_CODE[:incorrect_cvc],       # cvv2 value supplied is invalid
+
+        # Cloud9 specific errors
+        '001' => STANDARD_ERROR_CODE[:call_issuer],        # Refer to issuer
+        '002' => STANDARD_ERROR_CODE[:call_issuer],        # Refer to issuer-Special condition
+        '003' => STANDARD_ERROR_CODE[:config_error],       # Invalid Merchant ID
+        '004' => STANDARD_ERROR_CODE[:pick_up_card],       # Pick up card (no fraud)
+        '005' => STANDARD_ERROR_CODE[:card_declined],      # do not honour
+        '006' => STANDARD_ERROR_CODE[:card_declined],      # Error response text from check service
+        '007' => STANDARD_ERROR_CODE[:pick_up_card],       # pick up card (fraud account)
+        # '008' => STANDARD_ERROR_CODE[:approved],
+        # '010' => STANDARD_ERROR_CODE[:partial_approval],
+        # '011' => STANDARD_ERROR_CODE[:vip_approval],
+        '012' => STANDARD_ERROR_CODE[:config_error],       # invalid transaction
+        '013' => STANDARD_ERROR_CODE[:invalid_number],     # invalid amount
+        '014' => STANDARD_ERROR_CODE[:invalid_number],     # invalid card number
+        '015' => STANDARD_ERROR_CODE[:config_error],       # no such issuer
+        '019' => STANDARD_ERROR_CODE[:processing_error],   # Re-enter transaction
+        '021' => STANDARD_ERROR_CODE[:processing_error],   # Unable to back out transaction
+        '028' => STANDARD_ERROR_CODE[:processing_error],   # File is temporarily unavailable
+        '034' => STANDARD_ERROR_CODE[:unsupported_feature],# transaction cancelled - mastercard use only
+        '051' => STANDARD_ERROR_CODE[:card_declined],      # insufficient funds
+        '054' => STANDARD_ERROR_CODE[:expired_card],       # expired card
+        '055' => STANDARD_ERROR_CODE[:incorrect_pin],      # incorrect pin
+        '057' => STANDARD_ERROR_CODE[:config_error],       # transaction not permitted - card
+        '058' => STANDARD_ERROR_CODE[:config_error],       # transaction not permitted - terminal
+        '059' => STANDARD_ERROR_CODE[:config_error],       # transaction not permitted - merchant
+        '062' => STANDARD_ERROR_CODE[:card_declined],      # invalid service code - restricted
+        '075' => STANDARD_ERROR_CODE[:card_declined],      # pin retries exceeded
+        '076' => STANDARD_ERROR_CODE[:processing_error],   # Unable to locate, no match
+        '078' => STANDARD_ERROR_CODE[:config_error],       # no account
+        '079' => STANDARD_ERROR_CODE[:config_error],       # Already reversed at switch
+        '081' => STANDARD_ERROR_CODE[:processing_error],   # Cryptographic error
+        '082' => STANDARD_ERROR_CODE[:incorrect_cvc],      # CVV data not correct
+        '083' => STANDARD_ERROR_CODE[:incorrect_pin],      # cannot verify pin
+        # '085' => STANDARD_ERROR_CODE[:card_ok],          # no reason to decline
+        '091' => STANDARD_ERROR_CODE[:processing_error],   # no reply Issuer or switch is unavailable
+        '092' => STANDARD_ERROR_CODE[:processing_error],   # Destination not found
+        '093' => STANDARD_ERROR_CODE[:processing_error],   # Violation, cannot complete
+        '094' => STANDARD_ERROR_CODE[:processing_error],   # Unable to locate, no match
+        '096' => STANDARD_ERROR_CODE[:processing_error],   # System malfunction
+        #
+        #
+        '101' => STANDARD_ERROR_CODE[:config_error],       # Invalid GMID
+        '102' => STANDARD_ERROR_CODE[:config_error],       # Invalid GTID
+        '103' => STANDARD_ERROR_CODE[:config_error],       # Invalid GMPW
+        '104' => STANDARD_ERROR_CODE[:invalid_number],     # Invalid GTRC
+        '105' => STANDARD_ERROR_CODE[:invalid_number],     # Invalid Card Token
+        '106' => STANDARD_ERROR_CODE[:config_error],       # Invalid Database
+        '107' => STANDARD_ERROR_CODE[:processing_error],   # Processor does not support card type
+        '108' => STANDARD_ERROR_CODE[:processing_error],   # Processor not supported or not loaded to system
+        '109' => STANDARD_ERROR_CODE[:invalid_number],     # Invalid amount
+        '110' => STANDARD_ERROR_CODE[:processing_error],   # Void amount exceeds original authorized amount
+        '111' => STANDARD_ERROR_CODE[:config_error],       # Offline transaction can only be used for Credit/EBT Footstamp's sale
+        '112' => STANDARD_ERROR_CODE[:config_error],       # Credit/EBT Foodstamp card with cashback is not allowed
+        '113' => STANDARD_ERROR_CODE[:processing_error],   # Addtip must be based on Auth/Sale transaction
+        '114' => STANDARD_ERROR_CODE[:processing_error],   # Finalize must be based on Auth transaction
+        '115' => STANDARD_ERROR_CODE[:processing_error],   # Original transaction has already been voided
+        '116' => STANDARD_ERROR_CODE[:processing_error],   # Offline transaction must supply AuthCode
+        '117' => STANDARD_ERROR_CODE[:processing_error],   # Engine process transaction time out
+        '118' => STANDARD_ERROR_CODE[:processing_error],   # Proxy process message time out
+        '119' => STANDARD_ERROR_CODE[:processing_error],   # PDC process transaction time out
+        '120' => STANDARD_ERROR_CODE[:processing_error],   # Processor process transaction time out
+        '999' => STANDARD_ERROR_CODE[:processing_error],   # Processor no response code, Please refer response text
       }
 
       # This gateway requires that a valid username and password be passed in the +options+ hash.
@@ -156,7 +207,7 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>authorization</tt> -- the gateway trace number obtained from a previous Authorize transaction.
       # * <tt>options</tt> -- options to be passed to the processor
       def capture(amount, authorization, options = {})
-        modify = options['MainAmt'].present?
+        modify = options[:amount].present?
 
         post = {}
         add_configure_group(post, options)
@@ -169,11 +220,17 @@ module ActiveMerchant #:nodoc: ALL
         commit(modify ? MODIFY : CAPTURE, post)
       end
 
-      # TODO: PMTSVC -- waiting for Cloud9 feedback
-      def refund(money, identification)
+      def refund(amount, authorization, options = {})
+        auth_amount = options[:authorized_amount].to_i
+        amount    ||= auth_amount # if no amount passed, assume full refund
+        amount      = auth_amount - amount
+        modify      = amount != 0
+
         post = {}
         add_configure_group(post, options)
-        commit('refund', post)
+        add_request_amount_group(post, options, modify ? amount : nil)
+        add_trace_group(post, options, authorization)
+        commit(modify ? MODIFY : VOID, post)
       end
 
       # A Credit transaction is used to authorize a refund to a customer's credit card account without reference to a
@@ -209,8 +266,8 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>payment</tt> -- payment source, can be either a CreditCard or token.
       # from {Response#authorization}.
       def store(payment, options = {})
-        response = authorize(100, payment, options)
-        response.authorization = response.params['CardToken'] if response.success
+        options[:store] = true
+        authorize(100, payment, options)
       end
 
       private
@@ -278,9 +335,10 @@ module ActiveMerchant #:nodoc: ALL
       # ==== Options
       # * <tt>:source_trace_num</tt> -- source trace number provided by the merchant and it uniquely identifies a transaction, required
       def add_trace_group(post, options, authorization = nil)
-        requires!(options, :source_trace_num)
-        post[:SourceTraceNum] = options[:source_trace_num]
-        post[:GTRC]           = authorization if authorization.present?
+        # requires!(options, :source_trace_num)
+        # post[:SourceTraceNum] = options[:source_trace_num]
+        optional_assign(post, :SourceTraceNum, options[:source_trace_num])
+        post[:GTRC] = authorization if authorization.present?
       end
 
       # Add the Request Card Info Group of options - used when card info is from POS, not PDC. and the item,
@@ -339,20 +397,48 @@ module ActiveMerchant #:nodoc: ALL
 
       def error_code_from(response)
         code = response['ResponseCode']
-        STANDARD_ERROR_CODE_MAPPING[code]
+        STANDARD_ERROR_CODE_MAPPING[code] || STANDARD_ERROR_CODE[:processing_error]
       end
 
       def parse(body)
-        fields = {}
-        CGI::parse(body).each do |k, v|
-          fields[k.to_s] = v.kind_of?(Array) ? v[0] : v
-        end
-        fields
+        return {} if body.blank?
+        JSON.parse(body)
       end
 
-      def commit(action, parameters)
-        data = ssl_post(target_url, post_data(action, parameters))
-        response = parse(data)
+      def json_error(raw_response)
+        msg = 'Invalid response received from the Cloud9 API.'
+        msg += "  (The raw response returned by the API was #{raw_response.inspect})"
+        {
+          'Status':       STATUS_FAIL,
+          'ResponseCode': STANDARD_ERROR_CODE[:processing_error],
+          'ResponseText': msg
+        }
+      end
+
+      def response_error(raw_response)
+        begin
+          parse(raw_response)
+        rescue JSON::ParserError
+          json_error(raw_response)
+        end
+      end
+
+      def api_request(action, parameters = nil)
+        raw_response = response = nil
+        begin
+          raw_response = ssl_post(target_url, post_data(action, parameters), headers(parameters))
+          response = parse(raw_response)
+        rescue ResponseError => e
+          raw_response = e.response.body
+          response = response_error(raw_response)
+        rescue JSON::ParserError
+          response = json_error(raw_response)
+        end
+        response
+      end
+
+      def commit(action, parameters, options = {})
+        response = api_request(action, parameters)
 
         success = response['Status'] == STATUS_SUCCESS
 
@@ -360,12 +446,21 @@ module ActiveMerchant #:nodoc: ALL
                      success ? 'Transaction approved' : response['ResponseText'],
                      response,
                      test: test?,
-                     authorization: response['GTRC'],
-                     avs_result: { :code => response['AVSResultCode'] },
-                     :cvv_result => response['CCVResultCode'],
-                     :emv_authorization => nil,
-                     :error_code => success ? nil : error_code_from(response)
+                     authorization: options[:store] ? response['CardToken'] :response['GTRC'],
+                     avs_result: { code: response['AVSResultCode'] },
+                     cvv_result: response['CCVResultCode'],
+                     emv_authorization: nil,
+                     error_code: success ? nil : error_code_from(response)
         )
+      end
+
+      def headers(_options = {})
+        headers = {
+          'Content-Type': 'application/json',
+          'User-Agent':   "Cloud9/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+        }
+
+        headers
       end
 
       def message_from(response)
@@ -377,9 +472,10 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def post_data(action, parameters = {})
-        post = {:TransType => action}
+        post = {TransType: action}
 
-        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" unless value.nil? }.compact.join("&")
+        # post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" unless value.nil? }.compact.join("&")
+        JSON.generate(post.merge(parameters))
       end
 
       def target_url
