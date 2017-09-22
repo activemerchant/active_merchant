@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
       CARD_BRAND = {
         visa: "visa",
-        master: "master_card",
+        master: "mastercard",
         american_express: "amex",
         discover: "discover",
         diners_club: "diners"
