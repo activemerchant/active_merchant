@@ -415,4 +415,10 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:api_key], clean_transcript)
   end
+
+  def test_successful_store
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_equal 'SUCCESS', store.message
+  end
 end
