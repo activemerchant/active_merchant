@@ -3,9 +3,9 @@ module ActiveMerchant
     class PayeezyGateway < Gateway
       class_attribute :integration_url
 
-      self.test_url = 'https://api-cert.payeezy.com/v1/transactions'
-      self.integration_url = 'https://api-cat.payeezy.com/v1/transactions'
-      self.live_url = 'https://api.payeezy.com/v1/transactions'
+      self.test_url = 'https://api-cert.payeezy.com/v1'
+      self.integration_url = 'https://api-cat.payeezy.com/v1'
+      self.live_url = 'https://api.payeezy.com/v1'
 
       self.default_currency = 'USD'
       self.money_format = :cents
@@ -31,7 +31,7 @@ module ActiveMerchant
       end
 
       def purchase(amount, payment_method, options = {})
-        params = {transaction_type: 'purchase'}
+        params = payment_method.is_a?(String) ? { transaction_type: 'recurring' } : { transaction_type: 'purchase' }
 
         add_invoice(params, options)
         add_payment_method(params, payment_method, options)
@@ -69,6 +69,14 @@ module ActiveMerchant
 
         add_authorization_info(params, authorization)
         add_amount(params, (amount || amount_from_authorization(authorization)), options)
+
+        commit(params, options)
+      end
+
+      def store(payment_method, options = {})
+        params = {}
+
+        add_creditcard_for_tokenization(params, payment_method, options)
 
         commit(params, options)
       end
@@ -119,25 +127,32 @@ module ActiveMerchant
         params[:method] = method
       end
 
+      def add_creditcard_for_tokenization(params, payment_method, options)
+        params[:apikey] = @options[:apikey]
+        params[:js_security_key] = options[:js_security_key]
+        params[:ta_token] = options[:ta_token]
+        params[:callback] = 'Payeezy.callback'
+        params[:type] = 'FDToken'
+        card = add_card_data(payment_method)
+        params['credit_card.type'] = card[:type]
+        params['credit_card.cardholder_name'] = card[:cardholder_name]
+        params['credit_card.card_number'] = card[:card_number]
+        params['credit_card.exp_date'] = card[:exp_date]
+        params['credit_card.cvv'] = card[:cvv]
+      end
+
+      def is_store_action?(params)
+        params[:ta_token].present?
+      end
+
       def add_payment_method(params, payment_method, options)
         if payment_method.is_a? Check
           add_echeck(params, payment_method, options)
+        elsif payment_method.is_a? String
+          add_token(params, payment_method, options)
         else
           add_creditcard(params, payment_method)
         end
-      end
-
-      def add_creditcard(params, creditcard)
-        credit_card = {}
-
-        credit_card[:type] = CREDIT_CARD_BRAND[creditcard.brand]
-        credit_card[:cardholder_name] = creditcard.name
-        credit_card[:card_number] = creditcard.number
-        credit_card[:exp_date] = "#{format(creditcard.month, :two_digits)}#{format(creditcard.year, :two_digits)}"
-        credit_card[:cvv] = creditcard.verification_value if creditcard.verification_value?
-
-        params[:method] = 'credit_card'
-        params[:credit_card] = credit_card
       end
 
       def add_echeck(params, echeck, options)
@@ -154,6 +169,44 @@ module ActiveMerchant
 
         params[:method] = 'tele_check'
         params[:tele_check] = tele_check
+      end
+
+      def add_token(params, payment_method, options)
+        token = {}
+        token[:token_type] = 'FDToken'
+
+        type, cardholder_name, exp_date, card_number = payment_method.split('|')
+
+        token[:token_data] = {}
+        token[:token_data][:type] = type
+        token[:token_data][:cardholder_name] = cardholder_name
+        token[:token_data][:value] = card_number
+        token[:token_data][:exp_date] = exp_date
+        token[:token_data][:cvv] = options[:cvv] if options[:cvv]
+
+        params[:method] = 'token'
+        params[:token] = token
+      end
+
+      def add_creditcard(params, creditcard)
+        credit_card = add_card_data(creditcard)
+
+        params[:method] = 'credit_card'
+        params[:credit_card] = credit_card
+      end
+
+      def add_card_data(payment_method)
+        card = {}
+        card[:type] = CREDIT_CARD_BRAND[payment_method.brand]
+        card[:cardholder_name] = payment_method.name
+        card[:card_number] = payment_method.number
+        card[:exp_date] = format_exp_date(payment_method.month, payment_method.year)
+        card[:cvv] = payment_method.verification_value if payment_method.verification_value?
+        card
+      end
+
+      def format_exp_date(month, year)
+        "#{format(month, :two_digits)}#{format(year, :two_digits)}"
       end
 
       def add_address(params, options)
@@ -180,25 +233,18 @@ module ActiveMerchant
       end
 
       def commit(params, options)
-        url = if options[:integration]
-          integration_url
-        elsif test?
-          test_url
-        else
-          live_url
-        end
+        url = base_url(options) + endpoint(params)
 
         if transaction_id = params.delete(:transaction_id)
           url = "#{url}/#{transaction_id}"
         end
 
         begin
-          body = params.to_json
-          response = parse(ssl_post(url, body, headers(body)))
+          response = api_request(url, params)
         rescue ResponseError => e
           response = response_error(e.response.body)
         rescue JSON::ParserError
-          response = json_error(raw_response)
+          response = json_error(e.response.body)
         end
 
         Response.new(
@@ -213,17 +259,34 @@ module ActiveMerchant
         )
       end
 
-      def success_from(response)
-        response['transaction_status'] == 'approved'
+      def base_url(options)
+        if options[:integration]
+          integration_url
+        elsif test?
+          test_url
+        else
+          live_url
+        end
       end
 
-      def authorization_from(params, response)
-        [
-          response['transaction_id'],
-          response['transaction_tag'],
-          params[:method],
-          (response['amount'] && response['amount'].to_i)
-        ].join('|')
+      def endpoint(params)
+        is_store_action?(params) ? '/securitytokens' : '/transactions'
+      end
+
+      def api_request(url, params)
+        if is_store_action?(params)
+          callback = ssl_request(:get, "#{url}?#{post_data(params)}", nil, {})
+          payload = callback[/{(?:\n|.)*}/]
+          parse(payload)
+        else
+          body = params.to_json
+          parse(ssl_post(url, body, headers(body)))
+        end
+      end
+
+      def post_data(params)
+        return nil unless params
+        params.reject { |k, v| v.blank? }.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
       end
 
       def generate_hmac(nonce, current_timestamp, payload)
@@ -256,19 +319,55 @@ module ActiveMerchant
         response['Error'].to_h['messages'].to_a.map { |e| e['code'] }.join(', ')
       end
 
+      def success_from(response)
+        if response['transaction_status']
+          response['transaction_status'] == 'approved'
+        elsif response['results']
+          response['results']['status'] == 'success'
+        else
+          false
+        end
+      end
+
       def handle_message(response, success)
-        if success
+        if success && response['status'].present?
+          'Token successfully created.'
+        elsif success
           "#{response['gateway_message']} - #{response['bank_message']}"
         elsif %w(401 403).include?(response['code'])
           response['message']
         elsif response.key?('Error')
           response['Error']['messages'].first['description']
+        elsif response.key?('results')
+          response['results']['Error']['messages'].first['description']
         elsif response.key?('error')
           response['error']
         elsif response.key?('fault')
           response['fault'].to_h['faultstring']
         else
-          response['bank_message']
+          response['bank_message'] || 'Failure to successfully create token.'
+        end
+      end
+
+      def authorization_from(params, response)
+        if is_store_action?(params)
+          if success_from(response)
+            [
+              response['results']['token']['type'],
+              response['results']['token']['cardholder_name'],
+              response['results']['token']['exp_date'],
+              response['results']['token']['value']
+            ].join('|')
+          else
+            nil
+          end
+        else
+          [
+            response['transaction_id'],
+            response['transaction_tag'],
+            params[:method],
+            (response['amount'] && response['amount'].to_i)
+          ].join('|')
         end
       end
 

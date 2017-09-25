@@ -5,17 +5,15 @@ class PayeezyGateway < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = PayeezyGateway.new(
-      apikey: "45234543524353",
-      apisecret: "4235423325",
-      token: "rewrt-23543543542353542"
-    )
+    @gateway = PayeezyGateway.new(fixtures(:payeezy))
 
     @credit_card = credit_card
+    @bad_credit_card = credit_card('4111111111111113')
     @check = check
     @amount = 100
     @options = {
-      :billing_address => address
+      :billing_address => address,
+      :ta_token => '123'
     }
     @authorization = "ET1700|106625152|credit_card|4738"
   end
@@ -26,7 +24,7 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @credit_card, {})
     assert_failure response
     assert response.test?
-    assert_equal '||credit_card|', response.authorization
+    assert response.authorization
     assert_equal 'HMAC validation Failure', response.message
   end
 
@@ -36,7 +34,7 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @credit_card, {})
     assert_failure response
     assert response.test?
-    assert_equal '||credit_card|', response.authorization
+    assert response.authorization
     assert_equal 'Access denied', response.message
   end
 
@@ -46,7 +44,7 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @credit_card, {})
     assert_failure response
     assert response.test?
-    assert_equal '||credit_card|', response.authorization
+    assert response.authorization
     assert_equal 'Invalid ApiKey for given resource', response.message
   end
 
@@ -57,6 +55,40 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'ET114541|55083431|credit_card|1', response.authorization
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_equal 'Token successfully created.', response.message
+    assert response.test?
+  end
+
+  def test_successful_store_and_purchase
+    response = stub_comms do
+      @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_match %r{Token successfully created}, response.message
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    purchase = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success purchase
+  end
+
+  def test_failed_store
+    response = stub_comms do
+      @gateway.store(@bad_credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(failed_store_response)
+
+    assert_failure response
+    assert_equal 'The credit card number check failed', response.message
+    assert response.test?
   end
 
   def test_successful_purchase_with_echeck
@@ -359,6 +391,18 @@ class PayeezyGateway < Test::Unit::TestCase
   def successful_purchase_echeck_response
     <<-RESPONSE
     {\"correlation_id\":\"228.1449688619062\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET133078\",\"transaction_tag\":\"69864362\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"8535\",\"routing_number\":\"244183602\"}}
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+    "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.0715530338021\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0918\",\"value\":\"9715442510284242\"}}\n        })\n      "
+    RESPONSE
+  end
+
+  def failed_store_response
+    <<-RESPONSE
+    "\n       Payeezy.callback({\n        \t\"status\":400,\n        \t\"results\":{\"correlation_id\":\"228.0715669121910\",\"status\":\"failed\",\"Error\":{\"messages\":[{\"code\":\"invalid_card_number\",\"description\":\"The credit card number check failed\"}]},\"type\":\"FDToken\"}\n        })\n      "
     RESPONSE
   end
 

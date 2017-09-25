@@ -9,7 +9,8 @@ class RemotePayeezyTest < Test::Unit::TestCase
     @amount = 100
     @options = {
       :billing_address => address,
-      :merchant_ref => 'Store Purchase'
+      :merchant_ref => 'Store Purchase',
+      :ta_token => '123'
     }
     @options_mdd = {
       soft_descriptors: {
@@ -24,6 +25,30 @@ class RemotePayeezyTest < Test::Unit::TestCase
         merchant_contact_info: "8885551212"
       }
     }
+  end
+
+  def test_successful_store
+    assert response = @gateway.store(@credit_card,
+                                     @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    assert_success response
+    assert_equal 'Token successfully created.', response.message
+    assert response.authorization
+  end
+
+  def test_successful_store_and_purchase
+    assert response = @gateway.store(@credit_card,
+                                     @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    assert_success response
+    assert !response.authorization.blank?
+    assert purchase = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success purchase
+  end
+
+  def test_unsuccessful_store
+    assert response = @gateway.store(@bad_credit_card,
+                                     @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    assert_failure response
+    assert_equal 'The credit card number check failed', response.message
   end
 
   def test_successful_purchase

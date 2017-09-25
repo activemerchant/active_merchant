@@ -645,8 +645,8 @@ paybox_direct:
 
 # Working credentials, no need to replace
 payeezy:
-  apikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT
-  apisecret: 36ef1fc3b908b7a79ad2c29de931d2ccff26fcec35602c709a9e34318e936683
+  apikey: UyDMTXx6TD9WErF6ynw7xeEfCAn8fcGs
+  apisecret: 2a4974e242c91cab7f38910938f2a5db79e89756b084bbf7cab7849b50a9930f
   token: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6
 
 payex:
