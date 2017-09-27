@@ -6,8 +6,7 @@ class RemoteMigsTest < Test::Unit::TestCase
   include ActiveMerchant::PostsData
 
   def setup
-    @gateway = MigsGateway.new(fixtures(:migs_purchase))
-    @capture_gateway = MigsGateway.new(fixtures(:migs_capture))
+    @gateway = MigsGateway.new(fixtures(:migs))
 
     @amount = 100
     @declined_amount = 105
@@ -19,7 +18,7 @@ class RemoteMigsTest < Test::Unit::TestCase
 
     @options = {
       :order_id => '1',
-      :currency => 'USD'
+      :currency => 'SAR'
     }
   end
 
@@ -28,7 +27,7 @@ class RemoteMigsTest < Test::Unit::TestCase
       :order_id   => 1,
       :unique_id  => 9,
       :return_url => 'http://localhost:8080/payments/return',
-      :currency => 'USD'
+      :currency => 'SAR'
     }
 
     choice_url = @gateway.purchase_offsite_url(@amount, options)
@@ -43,7 +42,7 @@ class RemoteMigsTest < Test::Unit::TestCase
     }
 
     responses.each_pair do |card_type, response_text|
-      url = @capture_gateway.purchase_offsite_url(@amount, options.merge(:card_type => card_type))
+      url = @gateway.purchase_offsite_url(@amount, options.merge(:card_type => card_type))
       assert_response_match response_text, url
     end
   end
@@ -61,15 +60,24 @@ class RemoteMigsTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture
-    assert auth = @capture_gateway.authorize(@amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Approved', auth.message
-    assert capture = @capture_gateway.capture(@amount, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
   end
 
+  def test_authorize_and_void
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert void = @gateway.void(auth.authorization, @options)
+    assert_success void
+    assert_equal 'Approved', void.message
+  end
+
   def test_failed_authorize
-    assert response = @capture_gateway.authorize(@declined_amount, @credit_card, @options)
+    assert response = @gateway.authorize(@declined_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Declined', response.message
   end

@@ -25,14 +25,14 @@ module ActiveMerchant #:nodoc:
         'cvv2_not_checked' => 'X'
       }
 
-      self.test_url = 'https://raven.deepcovelabs.com/realtime/'
-      self.live_url = 'https://raven.deepcovelabs.com/realtime/'
+      self.live_url = 'https://raven.deepcovelabs.net/realtime/'
+      self.test_url = self.live_url
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master]
       self.money_format = :cents
       self.default_currency = 'USD'
-      self.homepage_url = 'http://www.deepcovelabs.com/raven'
+      self.homepage_url = 'https://www.deepcovelabs.com/raven'
       self.display_name = 'Raven'
 
       def initialize(options = {})

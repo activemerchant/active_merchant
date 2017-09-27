@@ -43,7 +43,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
   end
 
   def test_failed_authorize
@@ -72,7 +72,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
-    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', response.message
+    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
   end
 
   def test_partial_refund
@@ -95,7 +95,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
-    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', response.message
+    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
   end
 
   def test_failed_void

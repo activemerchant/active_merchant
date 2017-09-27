@@ -141,7 +141,7 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['US'], BluePayGateway.supported_countries
+    assert_equal ['US', 'CA'], BluePayGateway.supported_countries
   end
 
   def test_supported_card_types

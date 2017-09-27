@@ -12,7 +12,7 @@ module BraintreeCommon
   end
 
   def scrub(transcript)
-    return "Not currently supported." if transcript.blank?
+    return "" if transcript.blank?
     transcript.
       gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
       gsub(%r((&?ccnumber=)\d*(&?)), '\1[FILTERED]\2').

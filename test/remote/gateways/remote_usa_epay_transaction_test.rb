@@ -42,6 +42,12 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_extra_test_mode
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:test_mode => true))
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
     # For some reason this will fail with "You have tried this card too
     # many times, please contact merchant" unless a unique order id is

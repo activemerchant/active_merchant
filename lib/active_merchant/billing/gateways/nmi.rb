@@ -1,6 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class NmiGateway < Gateway
+      include Empty
 
       DUP_WINDOW_DEPRECATION_MESSAGE = "The class-level duplicate_window variable is deprecated. Please use the :dup_seconds transaction option instead."
 
@@ -29,7 +30,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -39,7 +40,7 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -58,6 +59,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
         add_reference(post, authorization)
+        add_payment_type(post, authorization)
 
         commit("void", post)
       end
@@ -66,6 +68,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_reference(post, authorization)
+        add_payment_type(post, authorization)
 
         commit("refund", post)
       end
@@ -73,7 +76,7 @@ module ActiveMerchant #:nodoc:
       def credit(amount, payment_method, options={})
         post = {}
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
 
         commit("credit", post)
@@ -81,7 +84,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(payment_method, options={})
         post = {}
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
@@ -91,11 +94,16 @@ module ActiveMerchant #:nodoc:
       def store(payment_method, options = {})
         post = {}
         add_invoice(post, nil, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
         commit("add_customer", post)
+      end
+
+      def verify_credentials
+        response = void("0")
+        response.message != "Authentication Failed"
       end
 
       def supports_scrubbing?
@@ -108,7 +116,12 @@ module ActiveMerchant #:nodoc:
           gsub(%r((ccnumber=)\d+), '\1[FILTERED]').
           gsub(%r((cvv=)\d+), '\1[FILTERED]').
           gsub(%r((checkaba=)\d+), '\1[FILTERED]').
-          gsub(%r((checkaccount=)\d+), '\1[FILTERED]')
+          gsub(%r((checkaccount=)\d+), '\1[FILTERED]').
+          gsub(%r((cryptogram=)[^&]+(&?)), '\1[FILTERED]\2')
+      end
+
+      def supports_network_tokenization?
+        true
       end
 
       private
@@ -124,23 +137,29 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_payment_method(post, payment_method)
+      def add_payment_method(post, payment_method, options)
         if(payment_method.is_a?(String))
           post[:customer_vault_id] = payment_method
+        elsif (payment_method.is_a?(NetworkTokenizationCreditCard))
+          post[:ccnumber] = payment_method.number
+          post[:ccexp] = exp_date(payment_method)
+          post[:token_cryptogram] = payment_method.payment_cryptogram
         elsif(card_brand(payment_method) == 'check')
           post[:payment] = 'check'
+          post[:firstname] = payment_method.first_name
+          post[:lastname] = payment_method.last_name
           post[:checkname] = payment_method.name
           post[:checkaba] = payment_method.routing_number
           post[:checkaccount] = payment_method.account_number
           post[:account_holder_type] = payment_method.account_holder_type
           post[:account_type] = payment_method.account_type
-          post[:sec_code] = 'WEB'
+          post[:sec_code] = options[:sec_code] || 'WEB'
         else
           post[:payment] = 'creditcard'
           post[:firstname] = payment_method.first_name
           post[:lastname] = payment_method.last_name
           post[:ccnumber] = payment_method.number
-          post[:cvv] = payment_method.verification_value
+          post[:cvv] = payment_method.verification_value unless empty?(payment_method.verification_value)
           post[:ccexp] = exp_date(payment_method)
         end
       end
@@ -181,7 +200,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        post[:transactionid] = authorization
+        transaction_id, _ = split_authorization(authorization)
+        post[:transactionid] = transaction_id
+      end
+
+      def add_payment_type(post, authorization)
+        _, payment_type = split_authorization(authorization)
+        post[:payment] = payment_type if payment_type
       end
 
       def exp_date(payment_method)
@@ -202,11 +227,19 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: response[:transactionid],
+          authorization: authorization_from(response, params[:payment]),
           avs_result: AVSResult.new(code: response[:avsresponse]),
           cvv_result: CVVResult.new(response[:cvvresponse]),
           test: test?
         )
+      end
+
+      def authorization_from(response, payment_type)
+        [ response[:transactionid], payment_type ].join("#")
+      end
+
+      def split_authorization(authorization)
+        authorization.split("#")
       end
 
       def headers

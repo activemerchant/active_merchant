@@ -14,27 +14,35 @@ module ActiveMerchant
         super
       end
 
-      def purchase(money, credit_card, options = {})
-        MultiResponse.run(true) do |r|
+      def purchase(money, credit_card_or_reference, options = {})
+        MultiResponse.run do |r|
+          if credit_card_or_reference.is_a?(String)
+            r.process { create_token(credit_card_or_reference, options) }
+            credit_card_or_reference = r.authorization
+          end
           r.process { create_payment(money, options) }
           r.process {
-            post = authorization_params(money, credit_card, options)
+            post = authorization_params(money, credit_card_or_reference, options)
             add_autocapture(post, false)
-            commit(synchronized_path("/payments/#{r.authorization}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
           }
           r.process {
-            post = capture_params(money, credit_card, options)
-            commit(synchronized_path("/payments/#{r.authorization}/capture"), post)
+            post = capture_params(money, credit_card_or_reference, options)
+            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/capture"), post)
           }
         end
       end
 
-      def authorize(money, credit_card, options = {})
-        MultiResponse.run(true) do |r|
+      def authorize(money, credit_card_or_reference, options = {})
+        MultiResponse.run do |r|
+          if credit_card_or_reference.is_a?(String)
+            r.process { create_token(credit_card_or_reference, options) }
+            credit_card_or_reference = r.authorization
+          end
           r.process { create_payment(money, options) }
           r.process {
-            post = authorization_params(money, credit_card, options)
-            commit(synchronized_path("/payments/#{r.authorization}/authorize"), post)
+            post = authorization_params(money, credit_card_or_reference, options)
+            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
           }
         end
       end
@@ -68,16 +76,14 @@ module ActiveMerchant
       end
 
       def store(credit_card, options = {})
-        MultiResponse.run(true) do |r|
-          r.process { create_subscription(options) }
-          r.process {
-            authorize_subscription(r.authorization, credit_card, options)
-          }
+        MultiResponse.run do |r|
+          r.process { create_store(options) }
+          r.process { authorize_store(r.authorization, credit_card, options)}
         end
       end
 
       def unstore(identification)
-        commit(synchronized_path "/subscriptions/#{identification}/cancel")
+        commit(synchronized_path "/cards/#{identification}/cancel")
       end
 
       def supports_scrubbing?
@@ -93,11 +99,11 @@ module ActiveMerchant
 
       private
 
-        def authorization_params(money, credit_card, options = {})
+        def authorization_params(money, credit_card_or_reference, options = {})
           post = {}
 
           add_amount(post, money, options)
-          add_credit_card(post, credit_card)
+          add_credit_card_or_reference(post, credit_card_or_reference)
           add_additional_params(:authorize, post, options)
 
           post
@@ -112,23 +118,21 @@ module ActiveMerchant
           post
         end
 
-        def create_subscription(options = {})
-          requires!(options, :currency)
+        def create_store(options = {})
           post = {}
-
-          add_currency(post, nil, options)
-          add_subscription_invoice(post, options)
-          commit('/subscriptions', post)
+          commit('/cards', post)
         end
 
-        def authorize_subscription(identification, credit_card, options = {})
-          requires!(options, :amount)
+        def authorize_store(identification, credit_card, options = {})
           post = {}
 
-          add_amount(post, nil, options)
-          add_credit_card(post, credit_card, options)
-          add_additional_params(:authorize_subscription, post, options)
-          commit(synchronized_path("/subscriptions/#{identification}/authorize"), post)
+          add_credit_card_or_reference(post, credit_card, options)
+          commit(synchronized_path("/cards/#{identification}/authorize"), post)
+        end
+
+        def create_token(identification, options)
+          post = {}
+          commit(synchronized_path("/cards/#{identification}/tokens"), post)
         end
 
         def create_payment(money, options = {})
@@ -151,14 +155,16 @@ module ActiveMerchant
 
           Response.new(success, message_from(success, response), response,
             :test => test?,
-            :authorization => response['id']
+            :authorization => authorization_from(response)
           )
         end
 
-        def add_subscription_invoice(post, options = {})
-          requires!(options, :order_id, :description)
-          post[:order_id]    = options[:order_id]
-          post[:description] = options[:description]
+        def authorization_from(response)
+          if response["token"]
+            response["token"].to_s
+          else
+             response["id"].to_s
+          end
         end
 
         def add_currency(post, money, options)
@@ -189,7 +195,7 @@ module ActiveMerchant
             post[:shipping_address] = map_address(options[:shipping_address])
           end
 
-          [:metadata, :brading_id, :variables].each do |field|
+          [:metadata, :branding_id, :variables].each do |field|
             post[field] = options[field] if options[field]
           end
         end
@@ -201,12 +207,16 @@ module ActiveMerchant
           end
         end
 
-        def add_credit_card(post, credit_card, options = {})
+        def add_credit_card_or_reference(post, credit_card_or_reference, options = {})
           post[:card]             ||= {}
-          post[:card][:number]     = credit_card.number
-          post[:card][:cvd]        = credit_card.verification_value
-          post[:card][:expiration] = expdate(credit_card)
-          post[:card][:issued_to]  = credit_card.name
+          if credit_card_or_reference.is_a?(String)
+            post[:card][:token] = credit_card_or_reference
+          else
+            post[:card][:number]     = credit_card_or_reference.number
+            post[:card][:cvd]        = credit_card_or_reference.verification_value
+            post[:card][:expiration] = expdate(credit_card_or_reference)
+            post[:card][:issued_to]  = credit_card_or_reference.name
+          end
         end
 
         def parse(body)
@@ -251,7 +261,7 @@ module ActiveMerchant
         end
 
         def format_order_id(order_id)
-          order_id.to_s.gsub(/#/, '')
+          truncate(order_id.to_s.gsub(/#/, ''), 20)
         end
 
         def headers

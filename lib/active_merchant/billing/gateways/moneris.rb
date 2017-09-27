@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         action = if post[:cavv]
           'cavv_preauth'
-        elsif post[:data_key].blank? 
+        elsif post[:data_key].blank?
           'preauth'
         else
           'res_preauth_cc'
@@ -132,6 +132,13 @@ module ActiveMerchant #:nodoc:
         commit 'refund', crediting_params(authorization, :amount => amount(money))
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def store(credit_card, options = {})
         post = {}
         post[:pan] = credit_card.number
@@ -155,27 +162,42 @@ module ActiveMerchant #:nodoc:
         commit('res_update_cc', post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<store_id>).+(</store_id>)), '\1[FILTERED]\2').
+          gsub(%r((<api_token>).+(</api_token>)), '\1[FILTERED]\2').
+          gsub(%r((<pan>).+(</pan>)), '\1[FILTERED]\2').
+          gsub(%r((<cvd_value>).+(</cvd_value>)), '\1[FILTERED]\2').
+          gsub(%r((<cavv>).+(</cavv>)), '\1[FILTERED]\2')
+      end
+
       private # :nodoc: all
 
       def expdate(creditcard)
         sprintf("%.4i", creditcard.year)[-2..-1] + sprintf("%.2i", creditcard.month)
       end
 
-      def add_payment_source(post, source, options)
-        if source.is_a?(String)
-          post[:data_key]   = source
+      def add_payment_source(post, payment_method, options)
+        if payment_method.is_a?(String)
+          post[:data_key]   = payment_method
           post[:cust_id]    = options[:customer]
         else
-          if source.respond_to?(:track_data) && source.track_data.present?
+          if payment_method.respond_to?(:track_data) && payment_method.track_data.present?
             post[:pos_code]   = '00'
-            post[:track2]     = source.track_data
+            post[:track2]     = payment_method.track_data
           else
-            post[:pan]        = source.number
-            post[:expdate]    = expdate(source)
-            post[:cvd_value]  = source.verification_value if source.verification_value?
-            post[:cavv] = source.payment_cryptogram if source.is_a?(NetworkTokenizationCreditCard)
+            post[:pan]        = payment_method.number
+            post[:expdate]    = expdate(payment_method)
+            post[:cvd_value]  = payment_method.verification_value if payment_method.verification_value?
+            post[:cavv] = payment_method.payment_cryptogram if payment_method.is_a?(NetworkTokenizationCreditCard)
+            post[:wallet_indicator] = wallet_indicator(payment_method.source.to_s) if payment_method.is_a?(NetworkTokenizationCreditCard)
+            post[:crypt_type] = (payment_method.eci || 7) if payment_method.is_a?(NetworkTokenizationCreditCard)
           end
-          post[:cust_id] = options[:customer] || source.name
+          post[:cust_id] = options[:customer] || payment_method.name
         end
       end
 
@@ -290,6 +312,12 @@ module ActiveMerchant #:nodoc:
         element
       end
 
+      def wallet_indicator(token_source)
+        return 'APP' if token_source == 'apple_pay'
+        return 'ANP' if token_source == 'android_pay'
+        nil
+      end
+
       def message_from(message)
         return 'Unspecified error' if message.blank?
         message.gsub(/[^\w]/, ' ').split.join(" ").capitalize
@@ -304,8 +332,8 @@ module ActiveMerchant #:nodoc:
           "indrefund"          => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
           "completion"         => [:order_id, :comp_amount, :txn_number, :crypt_type],
           "purchasecorrection" => [:order_id, :txn_number, :crypt_type],
-          "cavv_preauth"       => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
-          "cavv_purchase"      => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
+          "cavv_preauth"       => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+          "cavv_purchase"      => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
           "transact"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
           "Batchcloseall"      => [],
           "opentotals"         => [:ecr_number],

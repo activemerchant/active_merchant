@@ -193,6 +193,20 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_verify
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(successful_void_response)
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "The transaction was successful", response.message
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_authorization_response)
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+    assert_equal "Unknown order", response.message
+  end
+
   def test_successful_store
     @gateway.expects(:authorize).with(1, @credit_card, :billing_id => @billing_id).returns(OgoneResponse.new(true, '', @gateway.send(:parse, successful_purchase_response), :authorization => '3014726;RES'))
     @gateway.expects(:void).with('3014726;RES')
@@ -232,7 +246,7 @@ class OgoneTest < Test::Unit::TestCase
   end
 
   def test_create_readable_error_message_upon_failure
-    @gateway.expects(:ssl_post).returns(test_failed_authorization_due_to_unknown_order_number)
+    @gateway.expects(:ssl_post).returns(failed_authorization_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
@@ -720,7 +734,7 @@ class OgoneTest < Test::Unit::TestCase
     END
   end
 
-  def test_failed_authorization_due_to_unknown_order_number
+  def failed_authorization_response
     <<-END
     <?xml version="1.0"?>
     <ncresponse

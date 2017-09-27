@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(CA PR US)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+      self.ssl_version = :TLSv1
 
       self.homepage_url = 'https://www.globalpaymentsinc.com'
       self.display_name = 'Global Transport'
@@ -108,6 +109,10 @@ module ActiveMerchant #:nodoc:
           response[node.name.downcase.to_sym] = node.text
         end
 
+        ext_data = Nokogiri::HTML.parse(response[:extdata])
+        response[:approved_amount] = ext_data.xpath("//approvedamount").text
+        response[:balance_due] = ext_data.xpath("//balancedue").text
+
         response
       end
 
@@ -139,7 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        (response[:result] == "0")
+        response[:result] == "0" || response[:result] == "200"
       end
 
       def message_from(response)

@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class CreditcallTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = CreditcallGateway.new(terminal_id: 'login', transaction_key: 'password')
     @credit_card = credit_card
@@ -107,6 +109,49 @@ class CreditcallTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_verification_value_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<CSC>123</CSC>)m, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_verification_value_not_sent
+    @credit_card.verification_value = "  "
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/CSC/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_options_add_avs_additional_verification_fields
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/AdditionalVerification/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(verify_zip: 'false', verify_address: 'false'))
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/AdditionalVerification/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(verify_zip: 'true', verify_address: 'true'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<AdditionalVerification>\n      <Zip>K1C2N6<\/Zip>\n      <Address>/, data)
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(verify_zip: 'true', verify_address: 'false'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/ <AdditionalVerification>\n      <Zip>K1C2N6<\/Zip>\n    <\/AdditionalVerification>\n/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -128,7 +173,7 @@ class CreditcallTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>0999da90-b342-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814143753</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814183753</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result></Response>
+    <?xml version=\"1.0\" encoding=\"utf-8\"?><Response type=\"CardEaseXML\" version=\"1.0.0\"><TransactionDetails><CardEaseReference>0999da90-b342-e511-b302-00505692354f</CardEaseReference><LocalDateTime format=\"yyyyMMddHHmmss\">20150814143753</LocalDateTime><UTC format=\"yyyyMMddHHmmss\">20150814183753</UTC></TransactionDetails><Result><LocalResult>0</LocalResult><AuthorisationEntity>Unknown</AuthorisationEntity></Result><CardDetails><CardReference>c2c5fa63-3dd1-da11-8531-01422187e37</CardReference><CardHash>8CtuNPQnryhFt6amPWtp6PLZYXI=</CardHash><PAN>341111xxxxx1002</PAN><ExpiryDate format=”yyMM”>2012</ExpiryDate><CardScheme><Description>AMEX</Description></CardScheme></CardDetails></Response>
     )
   end
 

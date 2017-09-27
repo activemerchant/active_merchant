@@ -25,6 +25,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
       self.money_format = :cents
+      self.currencies_without_fractions = %w(IDR)
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://mastercard.com/mastercardsps'
@@ -63,6 +64,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_standard_parameters('pay', post, options[:unique_id])
+        add_3ds(post, options)
 
         commit(post)
       end
@@ -99,6 +101,17 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_advanced_user(post)
         add_standard_parameters('refund', post, options[:unique_id])
+
+        commit(post)
+      end
+
+      def void(authorization, options = {})
+        requires!(@options, :advanced_login, :advanced_password)
+
+        post = options.merge(:TransNo => authorization)
+
+        add_advanced_user(post)
+        add_standard_parameters('voidAuthorisation', post, options[:unique_id])
 
         commit(post)
       end
@@ -189,7 +202,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_amount(post, money, options)
-        post[:Amount] = amount(money)
+        post[:Amount] = localized_amount(money, options[:currency])
         post[:Currency] = options[:currency] if options[:currency]
       end
 
@@ -200,6 +213,15 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:OrderInfo] = options[:order_id]
+      end
+
+      def add_3ds(post, options)
+        post[:VerType] = options[:ver_type] if options[:ver_type]
+        post[:VerToken] = options[:ver_token] if options[:ver_token]
+        post["3DSXID"] = options[:three_ds_xid] if options[:three_ds_xid]
+        post["3DSECI"] = options[:three_ds_eci] if options[:three_ds_eci]
+        post["3DSenrolled"] = options[:three_ds_enrolled] if options[:three_ds_enrolled]
+        post["3DSstatus"] = options[:three_ds_status] if options[:three_ds_status]
       end
 
       def add_creditcard(post, creditcard)

@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
       self.display_name = "BridgePay"
       self.homepage_url = "http://www.bridgepaynetwork.com/"
 
-      self.test_url = "https://gatewaystage.itstgate.com/SmartPayments/transact.asmx/ProcessCreditCard"
-      self.live_url = "https://gateway.itstgate.com/SmartPayments/transact.asmx/ProcessCreditCard"
+      self.test_url = "https://gatewaystage.itstgate.com/SmartPayments/transact3.asmx"
+      self.live_url = "https://gateway.itstgate.com/SmartPayments/transact3.asmx"
 
       self.supported_countries = ["CA", "US"]
       self.default_currency = "USD"
@@ -19,30 +19,30 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(amount, creditcard, options={})
-        post = post_required_fields("Sale")
+      def purchase(amount, payment_method, options={})
+        post = initialize_required_fields("Sale")
 
         # Allow the same amount in multiple transactions.
         post[:ExtData] = "<Force>T</Force>"
         add_invoice(post, amount, options)
-        add_creditcard(post, creditcard)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
         commit(post)
       end
 
-      def authorize(amount, creditcard, options={})
-        post = post_required_fields("Auth")
+      def authorize(amount, payment_method, options={})
+        post = initialize_required_fields("Auth")
 
         add_invoice(post, amount, options)
-        add_creditcard(post, creditcard)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
         commit(post)
       end
 
       def capture(amount, authorization, options={})
-        post = post_required_fields("Force")
+        post = initialize_required_fields("Force")
 
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(amount, authorization, options={})
-        post = post_required_fields("Return")
+        post = initialize_required_fields("Return")
 
         add_invoice(post, amount, options)
         add_reference(post, authorization)
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
-        post = post_required_fields("Void")
+        post = initialize_required_fields("Void")
 
         add_reference(post, authorization)
 
@@ -75,9 +75,55 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store(creditcard, options={})
+        post = initialize_required_fields('')
+        post[:transaction] = 'Create'
+        post[:CardNumber]    = creditcard.number
+        post[:CustomerPaymentInfoKey] = ''
+        post[:token] = ''
+        add_payment_method(post, creditcard)
+
+        commit(post)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?Password=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?TransitNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?AccountNum=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
-      def post_required_fields(transaction_type)
+      def add_payment_method(post, payment_method)
+        if payment_method.respond_to? :brand
+          post[:NameOnCard] = payment_method.name if payment_method.name
+          post[:ExpDate]    = expdate(payment_method)
+          post[:CardNum]    = payment_method.number
+          post[:CVNum]      = payment_method.verification_value
+        elsif payment_method.is_a?(String)
+          add_token(post, payment_method)
+        else
+          post[:CheckNum] = payment_method.number
+          post[:TransitNum] = payment_method.routing_number
+          post[:AccountNum] = payment_method.account_number
+          post[:NameOnCheck] = payment_method.name
+          post[:ExtData] = "<AccountType>#{payment_method.account_type.capitalize}</AccountType>"
+        end
+      end
+
+      def add_token(post, payment_method)
+        payment_method = payment_method.split("|")
+        post[:ExtData] = "<Force>T</Force><CardVault><Transaction>Read</Transaction><CustomerPaymentInfoKey>#{payment_method[1]}</CustomerPaymentInfoKey><Token>#{payment_method[0]}</Token><ExpDate>#{payment_method[2]}</ExpDate></CardVault>"
+      end
+
+      def initialize_required_fields(transaction_type)
         post = {}
         post[:TransType] = transaction_type
         post[:Amount] = ""
@@ -92,6 +138,12 @@ module ActiveMerchant #:nodoc:
         post[:CVNum] = ""
         post[:MagData] = ""
         post[:ExtData] = ""
+        post[:MICR] = ""
+        post[:DL] = ""
+        post[:SS] = ""
+        post[:DOB] = ""
+        post[:StateCode] = ""
+        post[:CheckType] = ""
         post
       end
 
@@ -105,13 +157,6 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, amount, options)
         post[:Amount] = amount(amount)
         post[:InvNum] = options[:order_id]
-      end
-
-      def add_creditcard(post, creditcard)
-        post[:NameOnCard] = creditcard.name if creditcard.name
-        post[:ExpDate]    = expdate(creditcard)
-        post[:CardNum]    = creditcard.number
-        post[:CVNum]      = creditcard.verification_value
       end
 
       def expdate(creditcard)
@@ -137,12 +182,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(parameters)
-        url = (test? ? test_url : live_url)
         data = post_data(parameters)
-        raw = parse(ssl_post(url, data))
+        raw = parse(ssl_post(url(parameters), data))
 
         Response.new(
-          success_from(raw[:respmsg]),
+          success_from(raw),
           message_from(raw),
           raw,
           authorization: authorization_from(raw),
@@ -150,21 +194,33 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def success_from(result)
-        case result
-        when "Approved"
-          true
+      def url(params)
+        if params[:transaction]
+          "#{base_url}/ManageCardVault"
         else
-          false
+          action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
+          "#{base_url}/#{action}"
         end
       end
 
+      def base_url
+        test? ? test_url : live_url
+      end
+
+      def success_from(response)
+        response[:result] == "0"
+      end
+
       def message_from(response)
-        response[:respmsg]
+        response[:respmsg] || response[:message]
       end
 
       def authorization_from(response)
-        [response[:authcode], response[:pnref]].join("|")
+        if response[:token]
+          [response[:token], response[:customerpaymentinfokey], response[:expdate]].join("|")
+        else
+          [response[:authcode], response[:pnref]].join("|")
+        end
       end
 
       def split_authorization(authorization)

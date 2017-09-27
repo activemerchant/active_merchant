@@ -122,7 +122,8 @@ module ActiveMerchant
     end
 
     def assert_scrubbed(unexpected_value, transcript)
-      refute transcript.include?(unexpected_value.to_s), "Expected #{unexpected_value} to be scrubbed out of transcript"
+      regexp = (Regexp === unexpected_value ? unexpected_value : Regexp.new(Regexp.quote(unexpected_value.to_s)))
+      refute_match regexp, transcript, "Expected the value to be scrubbed out of the transcript"
     end
 
     private
@@ -144,6 +145,10 @@ module ActiveMerchant
       @default_expiration_date ||= Date.new((Time.now.year + 1), 9, 30)
     end
 
+    def formatted_expiration_date(credit_card)
+      credit_card.expiry_date.expiration.strftime('%Y-%m')
+    end
+
     def credit_card(number = '4242424242424242', options = {})
       defaults = {
         :number => number,
@@ -159,8 +164,10 @@ module ActiveMerchant
     end
 
     def credit_card_with_track_data(number = '4242424242424242', options = {})
+      exp_date = default_expiration_date.strftime("%y%m")
+
       defaults = {
-        :track_data => '%B' + number + '^LONGSEN/L. ^15121200000000000000**123******?',
+        :track_data => "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
       }.update(options)
 
       Billing::CreditCard.new(defaults)
@@ -224,6 +231,16 @@ module ActiveMerchant
         country:  'CA',
         phone:    '(555)555-5555',
         fax:      '(555)555-6666'
+      }.update(options)
+    end
+
+    def statement_address(options = {})
+      {
+        address1: '456 My Street',
+        address2: 'Apt 1',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6'
       }.update(options)
     end
 
@@ -310,5 +327,27 @@ module ActionViewHelperTestHelper
   protected
   def protect_against_forgery?
     false
+  end
+end
+
+
+class MockResponse
+  attr_reader   :code, :body, :message
+  attr_accessor :headers
+
+  def self.succeeded(body, message="")
+    MockResponse.new(200, body, message)
+  end
+
+  def self.failed(body, http_status_code=422, message="")
+    MockResponse.new(http_status_code, body, message)
+  end
+
+  def initialize(code, body, message="", headers={})
+    @code, @body, @message, @headers = code, body, message, headers
+  end
+
+  def [](header)
+    @headers[header]
   end
 end

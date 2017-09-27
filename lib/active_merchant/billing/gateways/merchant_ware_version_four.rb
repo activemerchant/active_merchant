@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
         :reference_purchase => 'RepeatSale',
         :authorize => "PreAuthorizationKeyed",
         :capture   => "PostAuthorization",
-        :void      => "VoidPreAuthorization",
+        :void      => "Void",
         :refund    => "Refund"
       }
 

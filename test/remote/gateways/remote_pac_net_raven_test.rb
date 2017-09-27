@@ -143,14 +143,14 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
   def test_authorize_and_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert void = @gateway.void(auth.authorization)
-    assert_failure void
+    assert_success void
     assert void.params['ApprovalCode']
     assert void.params['TrackingNumber']
-    assert_equal 'error:canNotBeVoided', void.params['ErrorCode']
+    assert_nil void.params['ErrorCode']
     assert_equal 'ok', void.params['RequestResult']
-    assert_equal "Error processing transaction because the payment may not be voided.", void.params['Message']
-    assert_equal 'Approved', void.params['Status']
-    assert_equal "Error processing transaction because the payment may not be voided.", void.message
+    assert_nil void.params['Message']
+    assert_equal 'Voided', void.params['Status']
+    assert_equal "This transaction has been voided", void.message
   end
 
   def test_authorize_capture_and_void

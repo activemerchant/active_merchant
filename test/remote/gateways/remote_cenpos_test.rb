@@ -119,6 +119,15 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_equal "Succeeded", void.message
   end
 
+  def test_void_can_receive_order_id
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    void = @gateway.void(response.authorization, order_id: SecureRandom.random_number(1000000))
+    assert_success void
+    assert_equal "Succeeded", void.message
+  end
+
   def test_failed_void
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response

@@ -119,6 +119,12 @@ class LinkpointTest < Test::Unit::TestCase
     assert_equal "DECLINED", response.params["approved"]
   end
 
+  def test_cleans_whitespace_from_pem
+    @gateway = LinkpointGateway.new(fixtures(:linkpoint).merge(pem: ' ' + fixtures(:linkpoint)[:pem]))
+    assert response = @gateway.authorize(1000, @credit_card, @options)
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

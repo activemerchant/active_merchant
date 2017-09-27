@@ -46,6 +46,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, payment_source)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
+        add_user_data(post, options)
 
         commit(:authorization, post)
       end
@@ -57,6 +58,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, payment_source)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
+        add_user_data(post, options)
 
         commit(:purchase, post)
       end
@@ -81,6 +83,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, credit_card, options)
         add_customer_data(post, options)
+        add_user_data(post, options)
 
         commit(:credit, post)
       end
@@ -142,10 +145,7 @@ module ActiveMerchant #:nodoc:
         end
 
        if shipping_address = options[:shipping_address]
-         first_name, last_name = parse_first_and_last_name(shipping_address[:name])
-
-         post[:ship_name1]      = first_name
-         post[:ship_name2]      = last_name
+         post[:ship_name1], post[:ship_name2] = split_names(shipping_address[:name])
          post[:ship_street]     = shipping_address[:address1]
          post[:ship_zip]        = shipping_address[:zip]
          post[:ship_city]       = shipping_address[:city]
@@ -163,6 +163,12 @@ module ActiveMerchant #:nodoc:
           add_transaction_id(params, source)
         else
           add_credit_card(params, source)
+        end
+      end
+
+      def add_user_data(post, options)
+        if options[:order_id]
+          post[:user_data] = "order_id:#{options[:order_id]}"
         end
       end
 
@@ -222,13 +228,6 @@ module ActiveMerchant #:nodoc:
         parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
-      def parse_first_and_last_name(value)
-        name = value.to_s.split(' ')
-
-        last_name = name.pop || ''
-        first_name = name.join(' ')
-        [ first_name, last_name ]
-      end
     end
   end
 end

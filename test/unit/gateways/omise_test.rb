@@ -23,7 +23,11 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal @gateway.supported_countries, %w( TH )
+    assert_equal @gateway.supported_countries, %w( TH JP )
+  end
+
+  def test_supported_cardtypes
+    assert_equal @gateway.supported_cardtypes, [:visa, :master, :jcb]
   end
 
   def test_supports_scrubbing
@@ -151,6 +155,13 @@ class OmiseTest < Test::Unit::TestCase
     desc = 'Charge for order 3947'
     @gateway.send(:add_amount, result, @amount, {description: desc})
     assert_equal desc, result[:description]
+  end
+
+  def test_add_amount_with_correct_currency
+    result = {}
+    jpy_currency = 'JPY'
+    @gateway.send(:add_amount, result, @amount, {currency: jpy_currency})
+    assert_equal jpy_currency, result[:currency]
   end
 
   def test_commit_transaction
@@ -349,7 +360,7 @@ class OmiseTest < Test::Unit::TestCase
           "description": "Charge for order 3947",
           "capture": true,
           "authorized": true,
-          "captured": true,
+          "paid": true,
           "transaction": "trxn_test_4zguktuecyuo77xgq38",
           "refunded": 0,
           "refunds": {
@@ -405,7 +416,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": null,
       "capture": true,
       "authorized": true,
-      "captured": true,
+      "paid": true,
       "transaction": "trxn_test_4zgf1d3f7t9k6gk8hn8",
       "refunded": 0,
       "refunds": {
@@ -504,7 +515,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": null,
       "capture": false,
       "authorized": true,
-      "captured": true,
+      "paid": true,
       "transaction": "trxn_test_4zmqf6njyokta57ljs1",
       "refunded": 0,
       "refunds": {
@@ -558,7 +569,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": null,
       "capture": false,
       "authorized": true,
-      "captured": false,
+      "paid": false,
       "transaction": null,
       "refunded": 0,
       "refunds": {
@@ -611,7 +622,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": "Charge for order 3947",
       "capture": false,
       "authorized": true,
-      "captured": true,
+      "paid": true,
       "transaction": "trxn_test_4z5gp0t3mpfsu28u8jo",
       "refunded": 0,
       "refunds": {
@@ -749,7 +760,7 @@ class OmiseTest < Test::Unit::TestCase
       "description": "activemerchant testing",
       "capture": true,
       "authorized": false,
-      "captured": false,
+      "paid": false,
       "transaction": null,
       "refunded": 0,
       "refunds": {

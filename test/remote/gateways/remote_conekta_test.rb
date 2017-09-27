@@ -36,7 +36,16 @@ class RemoteConektaTest < Test::Unit::TestCase
         name: "Mario Reyes",
         phone: "12345678",
       },
-      carrier: "Estafeta"
+      carrier: "Estafeta",
+      email: "bob@something.com",
+      line_items: [{
+      name: "Box of Cohiba S1s",
+      description: "Imported From Mex.",
+      unit_price: 20000,
+      quantity: 1,
+      sku: "7500244909",
+      type: "food"
+     }]
     }
   end
 
@@ -60,6 +69,30 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, response.authorization, @options)
     assert_success response
     assert_equal nil, response.message
+  end
+
+  def test_successful_void
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal nil, response.message
+
+    identifier = response.params["id"]
+
+    assert response = @gateway.void(identifier)
+    assert_success response
+    assert_equal nil, response.message
+  end
+
+  def test_unsuccessful_void
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal nil, response.message
+
+    identifier = response.params["id"]
+
+    assert response = @gateway.void(identifier)
+    assert_failure response
+    assert_equal "El cargo no existe o no es apto para esta operación.", response.message
   end
 
   def test_unsuccessful_refund
@@ -108,7 +141,7 @@ class RemoteConektaTest < Test::Unit::TestCase
       },
       line_items: [
         {
-          rname: "Box of Cohiba S1s",
+          name: "Box of Cohiba S1s",
           description: "Imported From Mex.",
           unit_price: 20000,
           quantity: 1,
@@ -131,6 +164,12 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert_equal "Wooden", response.params['details']['line_items'][-1]['description']
     assert_equal "TheCustomerName", response.params['details']['name']
     assert_equal "Guerrero", response.params['details']['billing_address']['city']
+  end
+
+  def test_failed_purchase_with_no_details
+    assert response = @gateway.purchase(@amount, @credit_card, {})
+    assert_failure response
+    assert_equal "Falta el correo del comprador.", response.message
   end
 
   def test_invalid_key

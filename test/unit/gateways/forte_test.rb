@@ -24,6 +24,14 @@ class ForteTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_passes_options
+    options = { order_id: '1' }
+
+    @gateway.expects(:commit).with(anything, has_entries(:order_number => '1'))
+
+    @gateway.purchase(@amount, @credit_card, options)
+  end
+
   def test_failed_purchase
     @gateway.expects(:handle_resp).returns(failed_purchase_response)
 

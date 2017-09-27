@@ -13,20 +13,96 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'CardStream'
 
       CURRENCY_CODES = {
-        "AUD" => '036',
-        "CAD" => '124',
-        "CZK" => '203',
-        "DKK" => '208',
-        "HKD" => '344',
-        "ICK" => '352',
-        "JPY" => '392',
-        "NOK" => '578',
-        "SGD" => '702',
-        "SEK" => '752',
-        "CHF" => '756',
-        "GBP" => '826',
-        "USD" => '840',
-        "EUR" => '978'
+        "AED" => "784",
+        "ALL" => "008",
+        "AMD" => "051",
+        "ANG" => "532",
+        "ARS" => "032",
+        "AUD" => "036",
+        "AWG" => "533",
+        "BAM" => "977",
+        "BBD" => "052",
+        "BGN" => "975",
+        "BMD" => "060",
+        "BOB" => "068",
+        "BRL" => "986",
+        "BSD" => "044",
+        "BWP" => "072",
+        "BZD" => "084",
+        "CAD" => "124",
+        "CHF" => "756",
+        "CLP" => "152",
+        "CNY" => "156",
+        "COP" => "170",
+        "CRC" => "188",
+        "CZK" => "203",
+        "DKK" => "208",
+        "DOP" => "214",
+        "EGP" => "818",
+        "EUR" => "978",
+        "GBP" => "826",
+        "GEL" => "981",
+        "GIP" => "292",
+        "GTQ" => "320",
+        "GYD" => "328",
+        "HKD" => "344",
+        "HNL" => "340",
+        "HRK" => "191",
+        "HUF" => "348",
+        "ISK" => "352",
+        "IDR" => "360",
+        "ILS" => "376",
+        "INR" => "356",
+        "JPY" => "392",
+        "JMD" => "388",
+        "KES" => "404",
+        "KRW" => "410",
+        "KYD" => "136",
+        "LBP" => "422",
+        "LKR" => "144",
+        "MAD" => "504",
+        "MVR" => "462",
+        "MWK" => "454",
+        "MXN" => "484",
+        "MYR" => "458",
+        "NAD" => "516",
+        "NGN" => "566",
+        "NIO" => "558",
+        "NOK" => "578",
+        "NPR" => "524",
+        "NZD" => "554",
+        "PAB" => "590",
+        "PEN" => "604",
+        "PGK" => "598",
+        "PHP" => "608",
+        "PKR" => "586",
+        "PLN" => "985",
+        "PYG" => "600",
+        "QAR" => "634",
+        "RON" => "946",
+        "RSD" => "941",
+        "RUB" => "643",
+        "RWF" => "646",
+        "SAR" => "682",
+        "SEK" => "752",
+        "SGD" => "702",
+        "SRD" => "968",
+        "THB" => "764",
+        "TND" => "788",
+        "TRY" => "949",
+        "TTD" => "780",
+        "TWD" => "901",
+        "TZS" => "834",
+        "UAH" => "980",
+        "UGX" => "800",
+        "USD" => "840",
+        "UYU" => "858",
+        "VND" => "704",
+        "WST" => "882",
+        "XAF" => "950",
+        "XCD" => "951",
+        "XOF" => "952",
+        "ZAR" => "710"
       }
 
       CVV_CODE = {
@@ -72,20 +148,22 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, creditcard, options = {})
+      def authorize(money, credit_card_or_reference, options = {})
         post = {}
+        add_pair(post, :captureDelay, -1)
         add_amount(post, money, options)
-        add_invoice(post, creditcard, money, options)
-        add_creditcard(post, creditcard)
+        add_invoice(post, credit_card_or_reference, money, options)
+        add_credit_card_or_reference(post, credit_card_or_reference)
         add_customer_data(post, options)
-        commit('PREAUTH', post)
+        commit('SALE', post)
       end
 
-      def purchase(money, creditcard, options = {})
+      def purchase(money, credit_card_or_reference, options = {})
         post = {}
+        add_pair(post, :captureDelay, 0)
         add_amount(post, money, options)
-        add_invoice(post, creditcard, money, options)
-        add_creditcard(post, creditcard)
+        add_invoice(post, credit_card_or_reference, money, options)
+        add_credit_card_or_reference(post, credit_card_or_reference)
         add_customer_data(post, options)
         commit('SALE', post)
       end
@@ -93,8 +171,9 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
-        add_amount(post, money, options)
-        commit('SALE', post)
+        add_pair(post, :amount, amount(money), :required => true)
+
+        commit('CAPTURE', post)
       end
 
       def refund(money, authorization, options = {})
@@ -107,7 +186,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
-        commit('REFUND', post)
+        commit('CANCEL', post)
       end
 
       def verify(creditcard, options={})
@@ -132,7 +211,7 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         add_pair(post, :amount, amount(money), :required => true)
-        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)) || currency_code(self.default_currency))
+        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)))
       end
 
       def add_customer_data(post, options)
@@ -144,20 +223,36 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_invoice(post, credit_card, money, options)
+      def add_invoice(post, credit_card_or_reference, money, options)
         add_pair(post, :transactionUnique, options[:order_id], :required => true)
         add_pair(post, :orderRef, options[:description] || options[:order_id], :required => true)
-        if ['american_express', 'diners_club'].include?(card_brand(credit_card).to_s)
-          add_pair(post, :item1Quantity, 1)
-          add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
-          add_pair(post, :item1GrossValue, amount(money))
+        add_pair(post, :statementNarrative1, options[:merchant_name]) if options[:merchant_name]
+        add_pair(post, :statementNarrative2, options[:dynamic_descriptor]) if options[:dynamic_descriptor]
+        if credit_card_or_reference.respond_to?(:number)
+          if ['american_express', 'diners_club'].include?(card_brand(credit_card_or_reference).to_s)
+            add_pair(post, :item1Quantity, 1)
+            add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
+            add_pair(post, :item1GrossValue, amount(money))
+          end
         end
 
-        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
         add_pair(post, :type, options[:type] || '1')
+        add_threeds_required(post, options)
       end
 
-      def add_creditcard(post, credit_card)
+      def add_credit_card_or_reference(post, credit_card_or_reference)
+        if credit_card_or_reference.respond_to?(:number)
+          add_credit_card(post, credit_card_or_reference)
+        else
+          add_reference(post, credit_card_or_reference.to_s)
+        end
+      end
+
+      def add_reference(post, reference)
+        add_pair(post, :xref, reference, :required => true)
+      end
+
+      def add_credit_card(post, credit_card)
         add_pair(post, :customerName, credit_card.name, :required => true)
         add_pair(post, :cardNumber, credit_card.number, :required => true)
 
@@ -174,8 +269,16 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :cardCVV, credit_card.verification_value)
       end
 
+      def add_threeds_required(post, options)
+        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
+      end
+
+      def normalize_line_endings(str)
+        str.gsub(/%0D%0A|%0A%0D|%0D/, "%0A")
+      end
+
       def add_hmac(post)
-        result = post.sort.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        result = post.sort.collect { |key, value| "#{key}=#{normalize_line_endings(CGI.escape(value.to_s))}" }.join("&")
         result = Digest::SHA512.hexdigest("#{result}#{@options[:shared_secret]}")
 
         add_pair(post, :signature, result)
@@ -186,18 +289,17 @@ module ActiveMerchant #:nodoc:
         pairs = body.split("&")
         pairs.each do |pair|
           a = pair.split("=")
-          # because some values pairs dont have a value
+          # because some value pairs don't have a value
           result[a[0].to_sym] = a[1] == nil ? '' : CGI.unescape(a[1])
         end
         result
       end
 
       def commit(action, parameters)
-
+        parameters.update(:countryCode => self.supported_countries[0]) unless ['CAPTURE', 'CANCEL'].include?(action)
         parameters.update(
           :merchantID => @options[:login],
-          :action => action,
-          :countryCode => self.supported_countries[0],
+          :action => action
         )
         # adds a signature to the post hash/array
         add_hmac(parameters)
@@ -210,12 +312,31 @@ module ActiveMerchant #:nodoc:
                      :test => test?,
                      :authorization => response[:xref],
                      :cvv_result => CVV_CODE[response[:avscv2ResponseCode].to_s[0, 1]],
-                     :avs_result => {
-                       :postal_match => AVS_POSTAL_MATCH[response[:avscv2ResponseCode].to_s[1, 1]],
-                       :street_match => AVS_STREET_MATCH[response[:avscv2ResponseCode].to_s[2, 1]]
-                     }
+                     :avs_result => avs_from(response)
         )
       end
+
+      def avs_from(response)
+        postal_match = AVS_POSTAL_MATCH[response[:avscv2ResponseCode].to_s[1, 1]]
+        street_match = AVS_STREET_MATCH[response[:avscv2ResponseCode].to_s[2, 1]]
+
+        code = if postal_match == "Y" && street_match == "Y"
+          "M"
+        elsif postal_match == "Y"
+          "P"
+        elsif street_match == "Y"
+          "A"
+        else
+          "I"
+        end
+
+        AVSResult.new({
+          :code => code,
+          :postal_match => postal_match,
+          :street_match => street_match
+        })
+      end
+
 
       def currency_code(currency)
         CURRENCY_CODES[currency]
@@ -228,6 +349,7 @@ module ActiveMerchant #:nodoc:
       def add_pair(post, key, value, options = {})
         post[key] = value if !value.blank? || options[:required]
       end
+
     end
   end
 end

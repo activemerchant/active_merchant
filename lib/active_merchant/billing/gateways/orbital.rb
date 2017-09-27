@@ -28,11 +28,13 @@ module ActiveMerchant #:nodoc:
     # Company will automatically be affiliated.
 
     class OrbitalGateway < Gateway
-      API_VERSION = "5.6"
+      include Empty
+
+      API_VERSION = "7.1"
 
       POST_HEADERS = {
         "MIME-Version" => "1.1",
-        "Content-Type" => "application/PTI56",
+        "Content-Type" => "application/PTI#{API_VERSION.gsub(/\./, '')}",
         "Content-transfer-encoding" => "text",
         "Request-number" => '1',
         "Document-type" => "Request",
@@ -63,11 +65,11 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :secondary_test_url, :secondary_live_url
 
-      self.test_url = "https://orbitalvar1.paymentech.net/authorize"
-      self.secondary_test_url = "https://orbitalvar2.paymentech.net/authorize"
+      self.test_url = "https://orbitalvar1.chasepaymentech.com/authorize"
+      self.secondary_test_url = "https://orbitalvar2.chasepaymentech.com/authorize"
 
-      self.live_url = "https://orbital1.paymentech.net/authorize"
-      self.secondary_live_url = "https://orbital2.paymentech.net/authorize"
+      self.live_url = "https://orbital1.chasepaymentech.com/authorize"
+      self.secondary_live_url = "https://orbital2.chasepaymentech.com/authorize"
 
       self.supported_countries = ["US", "CA"]
       self.default_currency = "CAD"
@@ -82,7 +84,9 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_CODES = {
         "AUD" => '036',
+        "BRL" => '986',
         "CAD" => '124',
+        "CLP" => '152',
         "CZK" => '203',
         "DKK" => '208',
         "HKD" => '344',
@@ -101,7 +105,9 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_EXPONENTS = {
         "AUD" => '2',
+        "BRL" => '2',
         "CAD" => '2',
+        "CLP" => '2',
         "CZK" => '2',
         "DKK" => '2',
         "HKD" => '2',
@@ -175,7 +181,7 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
-      SENSITIVE_FIELDS = [:account_num]
+      SENSITIVE_FIELDS = [:account_num, :cc_account_num]
 
       def initialize(options = {})
         requires!(options, :merchant_id)
@@ -185,7 +191,7 @@ module ActiveMerchant #:nodoc:
 
       # A – Authorization request
       def authorize(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_ONLY, money, options) do |xml|
+        order = build_new_order_xml(AUTH_ONLY, money, creditcard, options) do |xml|
           add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
@@ -205,7 +211,7 @@ module ActiveMerchant #:nodoc:
 
       # AC – Authorization and Capture
       def purchase(money, creditcard, options = {})
-        order = build_new_order_xml(AUTH_AND_CAPTURE, money, options) do |xml|
+        order = build_new_order_xml(AUTH_AND_CAPTURE, money, creditcard, options) do |xml|
           add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
@@ -223,7 +229,7 @@ module ActiveMerchant #:nodoc:
 
       # R – Refund request
       def refund(money, authorization, options = {})
-        order = build_new_order_xml(REFUND, money, options.merge(:authorization => authorization)) do |xml|
+        order = build_new_order_xml(REFUND, money, nil, options.merge(:authorization => authorization)) do |xml|
           add_refund(xml, options[:currency])
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
@@ -291,6 +297,19 @@ module ActiveMerchant #:nodoc:
         commit(order, :delete_customer_profile)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<OrbitalConnectionUsername>).+(</OrbitalConnectionUsername>)), '\1[FILTERED]\2').
+          gsub(%r((<OrbitalConnectionPassword>).+(</OrbitalConnectionPassword>)), '\1[FILTERED]\2').
+          gsub(%r((<AccountNum>).+(</AccountNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
+          gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def authorization_string(*args)
@@ -326,9 +345,46 @@ module ActiveMerchant #:nodoc:
         xml.tag! :SDMerchantEmail, soft_desc.merchant_email           if soft_desc.merchant_email
       end
 
+      def add_soft_descriptors_from_hash(xml, soft_desc)
+        xml.tag! :SDMerchantName, soft_desc[:merchant_name] || nil
+        xml.tag! :SDProductDescription, soft_desc[:product_description] || nil
+        xml.tag! :SDMerchantCity, soft_desc[:merchant_city] || nil
+        xml.tag! :SDMerchantPhone, soft_desc[:merchant_phone] || nil
+        xml.tag! :SDMerchantURL, soft_desc[:merchant_url] || nil
+        xml.tag! :SDMerchantEmail, soft_desc[:merchant_email] || nil
+      end
+
+      def add_level_2_tax(xml, options={})
+        if (level_2 = options[:level_2_data])
+          xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator])
+          xml.tag! :Tax, amount(level_2[:tax]) if level_2[:tax]
+        end
+      end
+
+      def add_level_2_advice_addendum(xml, options={})
+        if (level_2 = options[:level_2_data])
+          xml.tag! :AMEXTranAdvAddn1, byte_limit(level_2[:advice_addendum_1], 40) if level_2[:advice_addendum_1]
+          xml.tag! :AMEXTranAdvAddn2, byte_limit(level_2[:advice_addendum_2], 40) if level_2[:advice_addendum_2]
+          xml.tag! :AMEXTranAdvAddn3, byte_limit(level_2[:advice_addendum_3], 40) if level_2[:advice_addendum_3]
+          xml.tag! :AMEXTranAdvAddn4, byte_limit(level_2[:advice_addendum_4], 40) if level_2[:advice_addendum_4]
+        end
+      end
+
+      def add_level_2_purchase(xml, options={})
+        if (level_2 = options[:level_2_data])
+          xml.tag! :PCOrderNum,       byte_limit(level_2[:purchase_order], 17) if level_2[:purchase_order]
+          xml.tag! :PCDestZip,        byte_limit(format_address_field(level_2[:zip]), 10) if level_2[:zip]
+          xml.tag! :PCDestName,       byte_limit(format_address_field(level_2[:name]), 30) if level_2[:name]
+          xml.tag! :PCDestAddress1,   byte_limit(format_address_field(level_2[:address1]), 30) if level_2[:address1]
+          xml.tag! :PCDestAddress2,   byte_limit(format_address_field(level_2[:address2]), 30) if level_2[:address2]
+          xml.tag! :PCDestCity,       byte_limit(format_address_field(level_2[:city]), 20) if level_2[:city]
+          xml.tag! :PCDestState,      byte_limit(format_address_field(level_2[:state]), 2) if level_2[:state]
+        end
+      end
+
       def add_address(xml, creditcard, options)
         if(address = (options[:billing_address] || options[:address]))
-          avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
+          avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
 
           if avs_supported
             xml.tag! :AVSzip,      byte_limit(format_address_field(address[:zip]), 10)
@@ -338,9 +394,9 @@ module ActiveMerchant #:nodoc:
             xml.tag! :AVSstate,    byte_limit(format_address_field(address[:state]), 2)
             xml.tag! :AVSphoneNum, (address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil)
           end
-          # can't look in billing address?
+
           xml.tag! :AVSname, ((creditcard && creditcard.name) ? creditcard.name[0..29] : nil)
-          xml.tag! :AVScountryCode, (avs_supported ? address[:country] : '')
+          xml.tag! :AVScountryCode, (avs_supported ? (byte_limit(format_address_field(address[:country]), 2)) : '')
 
           # Needs to come after AVScountryCode
           add_destination_address(xml, address) if avs_supported
@@ -398,11 +454,23 @@ module ActiveMerchant #:nodoc:
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         unless creditcard.nil?
-          if %w( visa discover ).include?(creditcard.brand)
-            xml.tag! :CardSecValInd, (creditcard.verification_value? ? '1' : '9')
+          if creditcard.verification_value?
+            if %w( visa discover ).include?(creditcard.brand)
+              xml.tag! :CardSecValInd, '1'
+            end
+            xml.tag! :CardSecVal,  creditcard.verification_value
           end
-          xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
         end
+      end
+
+      def add_cdpt_eci_and_xid(xml, creditcard)
+        xml.tag! :AuthenticationECIInd, creditcard.eci
+        xml.tag! :XID, creditcard.transaction_id if creditcard.transaction_id
+      end
+
+      def add_cdpt_payment_cryptogram(xml, creditcard)
+        xml.tag! :DPANInd, 'Y'
+        xml.tag! :DigitalTokenCryptogram, creditcard.payment_cryptogram
       end
 
       def add_refund(xml, currency=nil)
@@ -508,7 +576,7 @@ module ActiveMerchant #:nodoc:
         @options[:ip_authentication] == true
       end
 
-      def build_new_order_xml(action, money, parameters = {})
+      def build_new_order_xml(action, money, creditcard, parameters = {})
         requires!(parameters, :order_id)
         xml = xml_envelope
         xml.tag! :Request do
@@ -531,14 +599,27 @@ module ActiveMerchant #:nodoc:
 
             yield xml if block_given?
 
+            if creditcard.is_a?(NetworkTokenizationCreditCard)
+              add_cdpt_eci_and_xid(xml, creditcard)
+            end
+
             xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
 
+            add_level_2_tax(xml, parameters)
+            add_level_2_advice_addendum(xml, parameters)
+
             # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
+
+            if creditcard.is_a?(NetworkTokenizationCreditCard)
+              add_cdpt_payment_cryptogram(xml, creditcard)
+            end
 
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
+            elsif parameters[:soft_descriptors].is_a?(Hash)
+              add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
 
             set_recurring_ind(xml, parameters)
@@ -548,6 +629,8 @@ module ActiveMerchant #:nodoc:
               tx_ref_num, _ = split_authorization(parameters[:authorization])
               xml.tag! :TxRefNum, tx_ref_num
             end
+
+            add_level_2_purchase(xml, parameters)
           end
         end
         xml.target!
@@ -571,8 +654,11 @@ module ActiveMerchant #:nodoc:
             add_xml_credentials(xml)
             xml.tag! :OrderID, format_order_id(order_id)
             xml.tag! :Amount, amount(money)
+            add_level_2_tax(xml, parameters)
             add_bin_merchant_and_terminal(xml, parameters)
             xml.tag! :TxRefNum, tx_ref_num
+            add_level_2_purchase(xml, parameters)
+            add_level_2_advice_addendum(xml, parameters)
           end
         end
         xml.target!
@@ -668,6 +754,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_customer_request_xml(creditcard, options = {})
+        ActiveMerchant.deprecated "Customer Profile support in Orbital is non-conformant to the ActiveMerchant API and will be removed in its current form in a future version. Please contact the ActiveMerchant maintainers if you have an interest in modifying it to conform to the store/unstore/update API."
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Profile do

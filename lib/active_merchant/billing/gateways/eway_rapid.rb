@@ -28,6 +28,8 @@ module ActiveMerchant #:nodoc:
       #                  :transaction_type - One of: Purchase (default), MOTO
       #                                      or Recurring.  For stored card payments (aka - TokenPayments),
       #                                      this must be either MOTO or Recurring.
+      #                  :invoice          - The merchant’s invoice number for this
+      #                                      transaction (optional).
       #                  :order_id         - A merchant-supplied identifier for the
       #                                      transaction (optional).
       #                  :description      - A merchant-supplied description of the
@@ -85,6 +87,8 @@ module ActiveMerchant #:nodoc:
       # identification - The transaction id which is returned in the
       #                  authorization of the successful purchase transaction
       # options        - A standard ActiveMerchant options hash:
+      #                  :invoice          - The merchant’s invoice number for this
+      #                                      transaction (optional).
       #                  :order_id         - A merchant-supplied identifier for the
       #                                      transaction (optional).
       #                  :description      - A merchant-supplied description of the
@@ -198,7 +202,7 @@ module ActiveMerchant #:nodoc:
         params[key] = {
           'TotalAmount' => localized_amount(money, currency_code),
           'InvoiceReference' => truncate(options[:order_id], 50),
-          'InvoiceNumber' => truncate(options[:order_id], 12),
+          'InvoiceNumber' => truncate(options[:invoice] || options[:order_id], 12),
           'InvoiceDescription' => truncate(options[:description], 64),
           'CurrencyCode' => currency_code,
         }
@@ -218,11 +222,7 @@ module ActiveMerchant #:nodoc:
       def add_address(params, address, options={})
         return unless address
 
-        if address[:name]
-          parts = address[:name].split(/\s+/)
-          params['FirstName'] = parts.shift if parts.size > 1
-          params['LastName'] = parts.join(" ")
-        end
+        params['FirstName'], params['LastName'] = split_names(address[:name])
         params['Title'] = address[:title]
         params['CompanyName'] = address[:company] unless options[:skip_company]
         params['Street1'] = truncate(address[:address1], 50)
@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         # Note: TransactionID is always null for store requests, but TokenCustomerID is also sent back for purchase from
-        # stored card transactions so we give precendence to TransactionID
+        # stored card transactions so we give precedence to TransactionID
         response['TransactionID'] || response['Customer']['TokenCustomerID']
       end
 

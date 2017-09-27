@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment_method(post, payment)
+        add_credit_card(post, payment)
         add_customer_data(post, options)
 
         commit('authorize', post)
@@ -103,11 +103,32 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method)
+        if card_brand(payment_method) == 'check'
+          add_check(post, payment_method)
+        else
+          add_credit_card(post, payment_method)
+        end
+      end
+
+      def add_credit_card(post, payment_method)
         post[:ccname] = payment_method.name
         post[:ccnum] = payment_method.number
         post[:cvv2] = payment_method.verification_value
         post[:expyear] = format(payment_method.year, :four_digits)
         post[:expmon] = format(payment_method.month, :two_digits)
+      end
+
+      ACCOUNT_TYPES = {
+        "checking" => "1",
+        "savings" => "2",
+      }
+
+      def add_check(post, payment_method)
+        post[:action] = 'ns_quicksale_check'
+        post[:ckacct] = payment_method.account_number
+        post[:ckaba] = payment_method.routing_number
+        post[:ckno] = payment_method.number
+        post[:ckaccttype] = ACCOUNT_TYPES[payment_method.account_type] if ACCOUNT_TYPES[payment_method.account_type]
       end
 
       def split_authorization(authorization)
@@ -142,7 +163,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def commit(action, post)
-        post[:action] = ACTIONS[action] if ACTIONS[action]
+        post[:action] = ACTIONS[action] unless post[:action]
         post[:acctid] = @options[:acctid]
         post[:subid] = @options[:subid]
         post[:merchantpin] = @options[:merchantpin]
@@ -151,7 +172,7 @@ module ActiveMerchant #:nodoc:
 
         raw = parse(ssl_post(live_url, post.to_query))
 
-        succeeded = success_from(raw['transresult'])
+        succeeded = success_from(raw['result'])
         Response.new(
           succeeded,
           message_from(succeeded, raw),
@@ -162,7 +183,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(result)
-        result == 'APPROVED'
+        result == '1'
       end
 
       def message_from(succeeded, response)

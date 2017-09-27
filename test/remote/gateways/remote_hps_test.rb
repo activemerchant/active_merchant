@@ -37,6 +37,12 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_with_descriptor
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(descriptor_name: 'Location Name'))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_no_address
     options = {
       order_id: '1',

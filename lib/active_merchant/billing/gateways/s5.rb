@@ -29,6 +29,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         request = build_xml_request do |xml|
+          add_identification(xml, options)
           add_payment(xml, money, 'sale', options)
           add_account(xml, payment)
           add_customer(xml, payment, options)
@@ -40,7 +41,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
         request = build_xml_request do |xml|
-          add_identification(xml, authorization)
+          add_identification(xml, options, authorization)
           add_payment(xml, money, 'refund', options)
         end
 
@@ -49,6 +50,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options={})
         request = build_xml_request do |xml|
+          add_identification(xml, options)
           add_payment(xml, money, 'authonly', options)
           add_account(xml, payment)
           add_customer(xml, payment, options)
@@ -60,7 +62,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         request = build_xml_request do |xml|
-          add_identification(xml, authorization)
+          add_identification(xml, options, authorization)
           add_payment(xml, money, 'capture', options)
         end
 
@@ -69,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         request = build_xml_request do |xml|
-          add_identification(xml, authorization)
+          add_identification(xml, options, authorization)
           add_payment(xml, nil, 'void', options)
         end
 
@@ -108,9 +110,10 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_identification(xml, authorization)
+      def add_identification(xml, options, authorization = nil)
         xml.Identification do
-          xml.ReferenceID authorization
+          xml.TransactionID options[:order_id] if options[:order_id]
+          xml.ReferenceID authorization if authorization
         end
       end
 

@@ -3,11 +3,19 @@ require 'test_helper'
 class RemoteNmiTest < Test::Unit::TestCase
   def setup
     @gateway = NmiGateway.new(fixtures(:nmi))
-    @amount = 100
+    @amount = Random.rand(100...1000)
     @credit_card = credit_card('4111111111111111', verification_value: 917)
     @check = check(
       :routing_number => '123123123',
       :account_number => '123123123'
+    )
+    @apple_pay_card = network_tokenization_credit_card('4111111111111111',
+      :payment_cryptogram => "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      :month              => "01",
+      :year               => "2024",
+      :source             => :apple_pay,
+      :eci                => "5",
+      :transaction_id     => "123456789"
     )
     @options = {
       :order_id => generate_unique_id,
@@ -24,6 +32,15 @@ class RemoteNmiTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_sans_cvv
+    @credit_card.verification_value = nil
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
@@ -51,6 +68,22 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_equal 'FAILED', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay_card
+    assert @gateway.supports_network_tokenization?
+    assert response = @gateway.purchase(@amount, @apple_pay_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
+  def test_failed_purchase_with_apple_pay_card
+    assert response = @gateway.purchase(99, @apple_pay_card, @options)
+    assert_failure response
+    assert response.test?
+    assert_equal 'DECLINE', response.message
   end
 
   def test_successful_authorization
@@ -95,6 +128,15 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_failure void
   end
 
+  def test_successful_void_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+
+    assert response = @gateway.void(response.authorization)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -108,6 +150,16 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, "badauth")
     assert_failure response
   end
+
+  def test_successful_refund_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+
+    assert response = @gateway.refund(@amount, response.authorization)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
 
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)
@@ -181,6 +233,15 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_success @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_verify_credentials
+    assert @gateway.verify_credentials
+
+    gateway = NmiGateway.new(login: 'unknown', password: 'unknown')
+    assert !gateway.verify_credentials
+    gateway = NmiGateway.new(login: fixtures(:nmi)[:login], password: 'unknown')
+    assert !gateway.verify_credentials
+  end
+
   def test_card_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -202,6 +263,19 @@ class RemoteNmiTest < Test::Unit::TestCase
 
     assert_scrubbed(@check.account_number, clean_transcript)
     assert_scrubbed(@check.routing_number, clean_transcript)
+
+    # "password=password is filtered, but can't be tested b/c of key match"
+    # assert_scrubbed(@gateway.options[:password], clean_transcript)
+  end
+
+  def test_network_tokenization_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@apple_pay_card.number, clean_transcript)
+    assert_scrubbed(@apple_pay_card.payment_cryptogram, clean_transcript)
 
     # "password=password is filtered, but can't be tested b/c of key match"
     # assert_scrubbed(@gateway.options[:password], clean_transcript)

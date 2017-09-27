@@ -1,5 +1,549 @@
 = ActiveMerchant CHANGELOG
 
+== HEAD
+
+== Version 1.72.0 (September 20, 2017)
+* Adyen: Fix failing remote tests [dtykocki] #2584
+* Authorize.net: Remove numeric restriction on customer ID [dtykocki] #2579
+* Authorize.net: Restore default state value for non-US addresses [jasonwebster] #2563
+* Beanstream: Do not default state and zip with empty country [dtykocki] #2582
+* Braintree Blue: Add eci_indicator field for Apple Pay [davidsantoso] #2565
+* Conekta: Add guard clause for details fallbacks [curiousepic] #2573
+* Conekta: Pull required details from billing address [nfarve] #2568
+* DataCash: Enable refunding recurring transactions [davidsantoso] #2560
+* Ebanx: Adds Brazil Specific Parameters [nfarve] #2559
+* Kushki: Add support for refunds [dtykocki] #2575
+* MercadoPago: Additional tweaks for transaction requests [davidsantoso]
+* MercadoPago: Default to alphanumeric order_id [davidsantoso]
+* MercadoPago: Send diners_club cards as diners [davidsantoso] #2585
+* PayU Latam: Correctly condition buyer element fields [curiousepic] #2578
+* PayU Latam: Pass unique buyer fields and country requirements [curiousepic] #2570
+* Qvalent: Support general credit [curiousepic] #2558
+* SafeCharge: Update to Version 4.1.0 [nfarve] #2556
+* WePay: Don't default API version header [curiousepic] #2567
+* WePay: Don't require email for Store [curiousepic] #2588
+
+== Version 1.71.0 (August 22, 2017)
+* Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551
+* Checkout V2: Add localized_amount support to add_invoice function [nicolas-maalouf-cko] #2452
+* Checkout V2: Add UAE to country list [shasum] #2548
+* Checkout V2: Fix success response code validation [nicolas-maalouf-cko] #2452
+* CreditCall: Only allow AVS when specified [curiousepic] #2549
+* CreditCall: Parse additional params from responses [nfarve] #2552
+* CreditCall: Parse more response params [nfavre] #2543
+* MercadoPago: Small tweaks to building requests [davidsantoso] #2555
+* Orbital: Support Network Tokenization Credit Cards [curiousepic] #2553
+* Orbital: Updgrade schema version to 7.1 [curiousepic] #2546
+* Remove HUF from default non-fractional currencies [curiousepic] #2538
+* Stripe: Add support for statement_address parameters for EMV transactions [malcolm-mergulhao] #2524
+* TransFirst Express: Don't send address2 without value [nfarve] #2545
+* TransFirst Express: Fix Optional Fields Being Passed Blank [nfarve] #2550
+* TransFirst: Fix partial refund [nfarve] #2541
+* Vantiv (Litle): Pass 3DS fields [curiousepic] #2536
+* Braintree Blue: Add phone to options [deedeelavinder] #2564
+
+== Version 1.70.0 (August 4, 2017)
+* Barclaycard Smartpay: Provider a default billing address house number [nfarve] #2520
+* FirstData E4: Fix duplicate XID and CAVV values in tokenized transactions [jasonwebster] #2529
+* FirstData E4: Loose XSD validation for Payeezy (FirstData E4) [jasonwebster] #2529
+* GlobalTransport: Support partial authorizations [dtykocki] #2511
+* Litle: Update schema and certification tests to v9.12 [curiousepic] #2522
+* Litle: Update urls and name to Vantiv [curiousepic] #2531
+* Mercado Pago: Add gateway support [davidsantoso] #2518
+* Orbital: Add support for level 2 data [dtykocki] #2515
+* PayU Latam: Pass DNI Number [curiousepic] #2517
+* Qvalent: Pass 3dSecure fields [curiousepic] #2508
+* SafeCharge: Correct UserID field name [curiousepic]
+* SafeCharge: Pass UserID field [curiousepic] #2507
+* AuthorizeNet: Allow Response Code 4 to be returned as successful [nfarve] #2530
+* Forte: Remove order number from captures in Forte Gateway [nfarve] #2532
+* PayU Latam: Add additional mandatory fields [deedeelavinder] #2528
+
+== Version 1.69.0 (July 12, 2017)
+* WePay: Add payer_rbits and transaction_rbits optional fields [davidsantoso]
+* Adyen: Use Active Merchant standard order_id option for reference [jasonwebster] #2483
+* Correct calculation for three-exponent currencies [curiousepic] #2486
+* SagePay: Use VPSTxId from authorization for refunds [dtykocki] #2489
+* Payflow: Move PAYPAL-NVP header option to a class attribute on the payment gateway [deuxpi] #2492
+* Optimal Payments: Pass CVD indicator accurately [curiousepic] #2491
+* SagePay: Make Repeat purchase if payment is a past authorization [curiousepic] #2495
+* Netbanx: map response errorCodes onto standard error code [iirving] #2456
+* Netbanx: Update supported countries and cardtypes [iirving] #2456
+* Barclaycard Smartpay: Support 0- and 3-exponent currencies [curiousepic] #2498
+* CyberSource: Fix XSD schema validation issues [jasonwebster] #2497
+* WorldPay: Support three-decimal currencies [curiousepic] #2501
+* NMI: Add first and lastname to echeck transactions [dtykocki] #2499
+* PayFlow: Add optional email field [davidsantoso] #2505
+* Worldpay: Support Credit on CFT-enabled merchant IDs [curiousepic] #2503
+* FirstPay: Add processor_id field [davidsantoso] #2506
+* Authorize.Net: Use two character default for billing state [dtykocki] #2496
+
+== Version 1.68.0 (June 27, 2017)
+* Authorize.Net: Return failed response if forced refund settlement fails [bizla] #2476
+* Authorize.net: Concatenate address1 and address2 [dtykocki] #2479
+* Braintree Blue: Braintree Blue: Add ECI indicator to Android Pay transactions [davidsantoso] #2474
+* Credorax: Support 0- and 3-exponent currencies [curiousepic]
+* Cybersource: update supported card types [bdewater] #2477
+* FirstData: Add a default network tokenization strategy for FirstData E4 [krystosterone] #2473
+* FirstPay: FirstPay: Update hostname and force TLSv1 minimum [davidsantoso] #2478
+* JetPay V2: Support store transactions and token based payments [shasum] #2475
+* Moneris: Add 3DS fields for decrypted Apple and Android Pay data [davidsantoso] #2457
+* Openpay: Send customer name and email in authorize and purchase [dtykocki] #2468
+* Payflow: Moved to name value pair (NVP) with payflow [jusleg] #2462
+* Payflow: Set PAYPAL_NVP header as optional [davidsantoso] #2480
+* QuickPay V10: Return last response for purchase and authorize [curiousepic] #2461
+* SafeCharge: Map billing address fields [davidsantoso] #2464
+* SafeCharge: Track currency from original transaction [davidsantoso] #2470
+* Support three-decimal currencies [curiousepic] #2466
+* Trexle: Add gateway support [hossamhossny] #2351
+
+== Version 1.67.0 (June 8, 2017)
+* Acapture: Pass 3D Secure fields [davidsantoso] #2451
+* Authorize.net: Pass Level 2 Data Fields [curiousepic] #2444
+* Credorax: Add 3D Secure authentication fields [davidsantoso] #2446
+* Ebanx: Add gateway support [davidsantoso] #2447
+* Ebanx: Reduce supported countries to Brazil and Mexico [davidsantoso]
+* FirstData Payeezy: Set default ECI value for auth/purchase transactions [jasonwebster] #2448
+* JetPay V2: Add new gateway [shasum] #2442
+* JetPay V2: Add optional tax data to capture calls [shasum] #2445
+* NMI: Add Network Tokenization support [shasum] #2431
+* Orbital: Pass soft descriptors from options hash [curiousepic]
+* Orbital: Update test and production urls [jcowhigjr] #2436
+* Payeezy: Add client_email field for telecheck [davidsantoso] #2455
+* Payeezy: Add customer_id_type and customer_id_number fields [davidsantoso] #2454
+* Quickpay V10: Fix store and token use for recurring payments [wsmoak] #2180
+* Elavon: Support custom fields [curiousepic] #2416
+* WePay: Support risk headers [shasum] #2419
+* WePay: Add Canada as supported country [shasum] #2419
+* Fat Zebra: Fix xid 3D Secure field [curiousepic]
+* SafeCharge: Mark support for European countries [curiousepic]
+* Checkout V2: Pass customer ip option [curiousepic]
+* Realex: Map AVS and CVV response codes [davidsantoso] #2424
+* Opp: Send disable3DSecure custom parameter if present [davidsantoso] #2432
+* SafeCharge: Map standard Active Merchant order_id field [davidsantoso] #2434
+* Payeezy: Default check number to 001 if not present [davidsantoso] #2439
+* Opp: Fix incorrect customParameter key to disable 3DS [davidsantoso]
+
+== Version 1.66.0 (May 4, 2017)
+* Support Rails 5.1 [jhawthorn] #2407
+* ProPay: Add Canada as supported country [davidsantoso]
+* ProPay: Add gateway support [davidsantoso] #2405
+* SafeCharge: Support credit transactions [shasum] #2404
+* WePay: Add scrub method [shasum] #2406
+* iVeri: Add gateway support [curiousepic] #2400
+* iVeri: Support 3DSecure data fields [davidsantoso] #2412
+* Opp: Fix transaction success criteria and clean up options [shasum] #2414
+
+== Version 1.65.0 (April 26, 2017)
+* Adyen: Add Adyen v18 gateway [adyenpayments] #2272
+* Authorize.Net: Force refund of unsettled payments via void [bizla] #2399
+* Barclays ePDQ: removed because it has been replaced by a new API [bdewater] #2331
+* Beanstream: Map ISO province codes for US and CA [shasum] #2396
+* Braintree Blue: Change :full_refund option to :force_full_refund_if_unsettled [bizla] #2403
+* Braintree Blue: Force refund of unsettled payments via void [bizla] #2398
+* Checkout V2: Fix sandbox URL [nicolas-maalouf-cko] #2391
+* Checkout V2: Fix success_from not properly checking two possible success codes [davidsantoso]
+* Cybersource: Rescue XML parse exception [shasum] #2380
+* GlobalCollect: Make message and error reporting more robust [curiousepic] #2370
+* GlobalCollect: Set REJECTED refunds as unsuccessful transactions [davidsantoso] #2365
+* GlobalCollect: Truncate firstName field to 15 characters [davidsantoso]
+* JetPay: Pass down authorization payment method token to refund a capture [davidsantoso]
+* Openpay: Support card points [shasum] #2401
+* Orbital: Don't send CVV indicator if CVV is not present [curiousepic] #2368
+* PayU LATAM: Fix incorrect capture method definition [davidsantoso]
+* Payeezy: Support dynamic soft descriptors [shasum] #2384
+* Pin: Add metadata optional field [shasum] #2363
+* Qvalent: Add soft descriptor fields. Add authorize, capture, and void [davidsantoso]
+* SafeCharge: Add gateway [davidsantoso]
+* SagePay: Support Repeat transactions [curiousepic] #2395
+* Stripe: Support custom application in X-Stripe-Client-User-Agent header [davidsantoso]
+* TransFirst Transaction Express: Support ACH [curiousepic] #2389
+* WePay: Support unique_id for idempotent transactions [shasum] #2367
+* Worldpay: Force refund of unsettled payments via void [bizla] #2402
+
+== Version 1.64.0 (March 6, 2017)
+* Authorize.net: Allow settings to be passed for CIM purchases [fwilkins] #2300
+* Authorize.net: Use new `unsupported_feature` standard error code [jasonwebster] #2322
+* Base Gateway: Add new `unsupported_feature` standard error code [jasonwebster] #2322
+* Braintree Blue: Pass cardholder_name with card [curiousepic] #2324
+* Braintree: Add Android Pay meta data fields [jknipp] #2347
+* CardStream: Add additional of currencies [shasum] #2337
+* Credorax: Return failure response reason [shasum] #2341
+* Digitzs: Add gateway [davidsantoso]
+* Digitzs: Remove merchant_id from gateway credentials [davidsantoso]
+* GlobalCollect: Pass options to Refund [curiousepic] #2330
+* Kushki: Add new gateway [shasum] #2326
+* Kushki: Remove body from void call [shasum] #2348
+* Linkpoint: Raise ArgumentError when trying to instantiate without `:pem` [jasonwebster] #2329
+* Omise: Enable Japan, JPY and JCB support [zdk] #2284
+* PayU LATAM: Count pending refunds as succeeded [curiousepic] #2336
+* PayU LATAM: Let Refund take amount value [curiousepic] #2334
+* Paymill: Send new required fields on tokenization requests [tschelabaumann] #2279
+* Revert "Authorize.net: Allow settings to be passed for CIM purchases" [curiousepic] #2339
+* Sage: Default billing state when outside US [shasum] #2340
+* Stripe: Remove idempotency key from verify [shasum] #2335
+* TransFirst Transaction Express: Don't send order_id with refunds [curiousepic] #2350
+* TransFirst Transaction Express: Fix improper AVS and CVV response code mapping [shasum] #2342
+* WePay: Update API version [shasum] #2349
+* USA ePay Advanced: Add quick_update_customer action [joshreeves] #2229
+
+== Version 1.63.0 (February 2, 2017)
+* Authorize.net: Add #unstore support [jimryan] #2293
+* AuthorizeNet: Fix line items quirk [shasum]
+* CardStream: Add dynamic descriptor option fields [curiousepic]
+* CardStream: Support PEN currency [shasum]
+* Culqi: Add new gateway [shasum]
+* CyberSource: Add Lebanon to supported countries [shasum]
+* Element: Add AVS and CVV codes to response [shasum]
+* Firstdata E4 (Payeezy): Set correct ECI value for card present swipes [jasonwebster] #2318
+* GlobalCollect: On purchase skip capture if not required [davidsantoso]
+* PaymentExpress: Update supported countries [shasum]
+* Remove leading or trailing whitespace from credit card name [davidsantoso]
+* Remove support for Ruby 2.0 [jasonwebster]
+* Secure Pay AU: Add scrubbing support to Secure Pay AU [bruno] #2253
+* Stripe: Fix error in handling of track-only contactless EMV data [jasonwebster]
+* Vanco: Update test URL [davidsantoso]
+* WePay: Build fee structure correctly [curiousepic]
+* WePay: Remove null address fields from request [davidsantoso]
+* WePay: Update WePay to API version 2016-12-07 [davidsantoso]
+* Wirecard: Send customer data in requests [davidsantoso]
+* Worldpay: Add session id attribute [shasum]
+* Worldpay: Do not default address when not provided [shasum]
+
+== Version 1.62.0 (December 5, 2016)
+* AuthorizeNet: Map to standard AVSResult codes [shasum]
+* CitrusPay: Add 3DSecureId field [davidsantoso]
+* CyberSource: Only get alpha2 country code when it's a known country [bruno] #2238
+* Fat Zebra: Add scrubbing to Fat Zebra gateway [bruno] #2037
+* Monei: Add US and CA as new supported countries [davidgf] #2209
+* NAB Transact: Add scrubbing to NAB Transact [bruno] #2038
+* iATS: Add scrubbing support to iATS [bruno] #2228
+* Stripe: Ensure ECI values for tokenized cards are padded [jasonwebster] #2250
+* Forte: Fix incorrect authorization_code response mapping [davidsantoso]
+* maxiPago: Send currency with request [curiousepic]
+* Credorax: Map order_id to field H9 [curiousepic]
+* Authorize.net: Remove duplicate country GB [shasum]
+* PayU Latam: Add processWithoutCvv2 field [shasum]
+* Fat Zebra: De-nest soft descriptor fields [curiousepic]
+* Credorax: Only pass c5 field for billing address1 [davidsantoso]
+* Orbital: Add support for CLP currency [curiousepic]
+* Authorize.net: Add line item fields and additional transaction settings [shasum]
+* Authorize.net: Pass through `header_email_receipt` [shasum]
+* Stripe: Scrub additional network tokenization related sensitive data [jasonwebster] #2251
+* Applying: Worldpay: Format non-fractional currency amounts correctly [jasonwebster] #2267
+
+== Version 1.61.0 (November 7, 2016)
+* Add codes AQ, BQ, SX, and SS to list of countries and update SD numeric code [zxlin]
+* AuthorizeNet: Update supported countries list [shasum]
+* Barclay SmartPay: Add support for credit [shasum]
+* Barclaycard SmartPay: Update supported countries [shasum]
+* BluePay: Add Canada to supported countries list [shasum]
+* BlueSnap: Update countries list [shasum]
+* Braintree Blue: Add Android Pay support [mrezentes]
+* Braintree Blue: Add remote test to verify card token [shasum]
+* Braintree Blue: Get Android Pay tx id from payment method, not options [mrezentes]
+* CardStream: Add MXN currency code [curiousepic]
+* CardStream: Set captureDelay to zero on purchase [davidsantoso]
+* CitrusPay: Add gateway [duff]
+* CitrusPay: Update URL to current API version [davidsantoso]
+* Clearhaus: Fix refund of captures [duff]
+* Clearhaus: Update list of non fractal currencies [curiousepic]
+* Clearhaus: Use localized amount [curiouspic]
+* Conekta: Add void action [MauricioMurga]
+* Credorax: Add gateway support [davidsantoso]
+* CyberSource, Paymill, Payflow: Add verify_credentials [duff]
+* CyberSource: Combine auth_reversal with Void [curiousepic]
+* CyberSource: Increase merchant defined data fields [davidsantoso]
+* CyberSource: Look up alpha2 country code [curiousepic]
+* CyberSource: Use localized_amount [curiousepic]
+* Element: Pass order_id and shipping address [curiousepic]
+* Fat Zebra: Add cavv, xid, and sli fields [curiousepic]
+* Fat Zebra: Fix improper descriptor nesting [curiousepic]
+* Find countries if they are differently cased [curiousepic]
+* GlobalCollect: Update credit card brand list [curiousepic]
+* Jetpay: Support endpoint for Canada [shasum]
+* Linkpoint: Clean whitespace from PEM [curiousepic]
+* Litle: Retain amount to send in auth reversals [curiousepic]
+* Litle: add scrubbing support [bruno]
+* MONEI: Update supported countries list [davidgf]
+* MiGS: Handle IDR currency [curiousepic]
+* Migs: Add support for void [mohsenottello]
+* Migs: Support some additional fields [duff]
+* Moneris: Fix unit test stubs [shasum]
+* Moneris: add scrubbing support [bruno]
+* NMI, FirstData: Support verify_credentials [curiousepic]
+* Openpay: Add support for verify [duff]
+* PayJunctionV2: Add gateway support [shasum]
+* PayU Latam: Add new gateway [shasum]
+* PayU Latam: Update supported countries list [shasum]
+* Payflow: Update supported countries list [shasum]
+* PaypalExpress: Add SoftDescriptor field [talyssonoc]
+* Redsys: Added DOP and CRC currency [davidsantoso]
+* Sage: Add support for scrubbing [bruno]
+* SagePay: Fix truncation [duff]
+* SecurionPay: Update supported countries list [shasum]
+* Stripe: Increase authorize amount during verify [davidsantoso]
+* Stripe: Set minimum authorize amount depending on currency [davidsantoso]
+* Stripe: Support new network tokenization API params [methodmissing]
+* Stripe: Update supported countries list [shasum]
+* TNS and CitrusPay: Support scrub and verify_credentials [duff]
+* TNS and CitrusPay: Update to version 36 of the API [duff]
+* TNS: Try TLS v1 [duff]
+* Telr: Add gateway support [curiousepic]
+* TransFirsTransactionExpress: Remove blank cvv element [davidsantoso]
+* TransFirsTransactionExpress: Take into account blank string CVV [davidsantoso]
+* Vanco: Improve handling of success determination [duff]
+* Worldpay: Add hcgAdditionalData element [davidsantoso]
+* Worldpay: Report error code [curiousepic]
+
+== Version 1.60.0 (July 4, 2016)
+* Orbital: Fix CC num leak on profile calls [drewblas]
+* VisaNetPeru: Add ability to refund [duff]
+* AuthorizeNet: Fix store using new profile [duff]
+* Clearhaus: Support private key for signature [curiousepic]
+* Clearhaus: Copy private_key when stripping [curiousepic]
+* CertoDirect: Remove gateway [shiroginne]
+* Braintree: Extra error messaging [jordan-brough]
+* AuthorizeNetCim: Set error code for AuthorizeNetCimGateway response [ka8725]
+* Quickpay v10: Remove amount requirement for store [curiousepic]
+* PSLCards: correct namespace in doc for Response object from ActiveRecord::Billing to ActiveMerchant::Billing [CJ Keeney]
+* Pagar.me: Add pagar.me [chrisenytc]
+* Stripe: Update Readme to show stripe support [rhlrjv]
+* Orbital: Add support for the BRL currency [duff]
+* GlobalTransport: Require TLSv1 [duff]
+* Openpay: Allow currency to be specified [darkaz]
+* DataCash: Use API version 2 [curiousepic]
+* Stripe: Support verify_credentials [duff]
+* AuthorizeNet: Support verify_credentials [duff]
+* BraintreeBlue: Support verify_credentials [duff]
+* Redsys: Added SAR currency [agseco]
+* QuickPay: Adding customer_ip for authorize action in quickpay [dinesh]
+* MaxiPago: add void and refund [shasum]
+* MaxiPago: Allow processor_id override [duff]
+* Stripe: Interpret string input to store method as token identifier [bizla]
+* MaxiPago: Add verify and scrub [shasum]
+* Stripe: Remove metadata restriction from EMV transactions [bizla]
+* SagePay: Add optional fields to SagePay requests [cristianstanescu]
+* CyberSource: Assign default with override for billing address and email [shasum]
+* CyberSource: Assign default order_id [duff]
+* TNS: Support asia_pacific endpoint [curiousepic]
+* TransFirsTransactionExpress: Fix exception [duff]
+* CyberSource: Add decision manager optional fields [shasum]
+* CyberSource: Add decision manager optional fields [shasum]
+* TNS: Add support for TLS v1.2 [curiousepic]
+* QuickpayV7: Default description field for store operation [duff]
+* Elavon: Support customer_number field [duff]
+* Map test_mode_live_card code to new standard error code [berkcaputcu]
+* Elavon: Pass customer_number correctly [duff]
+* Stripe: add SG to supported_countries attribute [timbeiko]
+
+== Version 1.59.0 (May 18, 2016)
+* Orbital: Allow AVS parts to be sent sans country [duff]
+* SecureNet: Return the right error message for declines [duff]
+* Moneris: Add verify [anellis]
+* Moneris: Add verify [anellis]
+* Jetpay: Add support for origin field[anellis]
+* Jetpay: Don't default origin field [duff]
+* GlobalCollect: New gateway support [curiousepic]
+* Openpay: Use strict_encode64 [duff]
+* Sage: Always pass along the billing state [duff]
+* VisaNet Peru: New gateway support [shasum]
+* Worldpay: Allow installationId to be specified at transaction time [duff]
+* SecurionPay: Support store [shasum]
+* Barclaycard Smartpay: Proper AVS return codes [curiousepic]
+* VisaNetPeru: Pass through CVV [duff]
+* Barclaycard Smartpay: Use strict_encode64 [duff]
+* VisaNetPeru: Fix error when billing address empty [shasum]
+* Vanco: Update live_url [duff]
+* Cardstream: Reference purchase [curiousepic]
+* Paymill: Fix error handling [methodmissing]
+* Latitude19: New gateway support [shasum]
+* BraintreeBlue: remove invalid test assertions [prburke]
+* Merchant e-Solutions: Pass order_id with capture [curiousepic]
+* CyberSource: Add rescue for ResponseErrors [curiousepic]
+* AuthorizeNet: Always pass recurringBilling flag if present [curiousepic]
+* S5: Pass order_id to TransactionID [curiousepic]
+* NMI: Set ACH sec_code from options if present [curiousepic]
+* VisaNet Peru: Refactor merchant_id and purchase_number handling [shasum]
+* Braintree Blue: Pass descriptor_url field [curiousepic]
+* VisaNet Peru: Add merchant_define_data option [duff]
+* Merchant e-Solutions: pass optional 3Dsecure params [curiousepic]
+* NMI: Fix refunds and voids of echecks [duff]
+* VisaNet Peru: Pass dummy email when not present [curiousepic]
+* PayU India: Add Maestro as supported card [curiousepic]
+* Cashnet: Don't retry [duff]
+* CardStream: Make Void call Cancel instead of Refund [curiousepic]
+* Remove AN and KV country codes as they're not recognized by ISO-3166-1 [apdunston]
+* Worldpay: Pass unchanged amount with correct currency exponent [curiousepic]
+* Improve our handling of currencies sans fractions [duff]
+* Stripe: Added support for the contactless magstripe entry mode option [rbalsdon]
+* VisaNet Peru: Change money format to dollars [shasum]
+* BlueSnap: Add gateway [duff]
+* VisaNet Peru: Select the most meaningful gateway error message [shasum]
+* SecurionPay: Update country list [duff]
+* Support for BIN 2 MasterCard brand detection [rbalsdon]
+* CardStream: Fix signature calculation [duff]
+* CyberSource: Update test and live URL [marquisong]
+* AuthorizeNet: Truncate nameOnAccount field [duff]
+* Tns: Fix ipAddress field [duff]
+* WorldNet: New gateway support [varyonic]
+* BraintreeBlue: Allow channel override [duff]
+* MerchantWarrior: Use Truncated Order Id [ThereExistsX]
+
+
+== Version 1.58.0 (March 1, 2016)
+* Move Electron check out of CreditCard into CreditCardMethods [ThereExistsX]
+* CardStream: Add AED and NZD currencies [sdball]
+* App55: Remove Gateway [ThereExistsX]
+* Mercury: Stripping the start and end sentinels on card-present track data for max-length track1 requests [ryanbalsdon]
+* SagePay: Update VISA Electron ranges [sdball]
+* Clearhaus: Make request signing more transparent & robust [sdball]
+* NCRSecurePay: Fix production URL [rwdaigle]
+* Add ACH support to Stripe [sdball]
+* PayPal Express: Fixing list of currencies without fractions [Krystosterone]
+* Cashnet: Default custcode option and proper redirect handling [rwdaigle]
+* TransFirst: Fix missing address and remove CC only fields for ACH [davidsantoso]
+* More prominent links to contribution docs [rwdaigle]
+
+
+== Version 1.57.0 (February 1, 2016)
+* AuthorizeNetCim: Add unmaskExpirationDate option [RamilGilmanov]
+* Element: Add gateway support [davidsantoso]
+* Cardstream: 3D-secure capture fix [duff]
+* Auth.net: Update store to create payment profiles [davidsantoso]
+* CyberSource: Add support for mdd_fields [duff]
+* Worldpay: Add support for verify [davidsantoso]
+* Element: Add guard clause to handle undocumented errors [davidsantoso]
+* Clearhaus: Add tests for signed requests [anellis]
+* Stripe: Support adding cards to account [anellis]
+* Clearhaus: Add text_on_statement option [anellis]
+* Payeezy: Void and verify support [davidsantoso]
+* Creditcall: Use ecommerce rather than cnp [duff]
+* Payeezy: Add support for echecks [davidsantoso]
+* Bridgepay: Add ability to store cards and pay with token [anellis]
+* Initial support for Android Pay network tokenization cards [mrezentes]
+* Transfirst: Fix exception when not all eCheck information is present [davidsantoso]
+* Auth.net: Add tests for echeck refunds [davidsantoso]
+* Transfirst: use default values for some eCheck data [davidsantoso]
+* Element: Update the live URL endpoint [davidsantoso]
+* Element: Parse responses from unexpected API errors [davidsantoso]
+* Transfirst: Remove unused fields for echeck [davidsantoso]
+* Sage: Internal refactoring into a single gateway class w/ common http conn [anellis]
+* Cardstream: Adjust authorize and capture transactions [anellis]
+* NCRSecurePay: New gateway support (Monetra white-label) [rwdaigle]
+* Element: Map ReferenceNumber to order_id [duff]
+* Element: Use a better MotoECICode default [duff]
+* BraintreeBlue: Return transaction id for failed transactions when available [prburke]
+* PayPal: Add InContextPaypalExpressGateway [xuorig]
+* TransFirst: CVV is a required tag [duff]
+* Checkout V2: Add Descriptor Name and City Options [anellis]
+* Forte: Pass order_id [anellis]
+* Merchant ESolutioins: Truncate order_id [anellis]
+* Transfirst Transaction Express: New gateway support [sdball]
+* Stripe: Add `stripe_account` header option [anellis]
+* Cardstream: Add AVS code and message [anellis]
+* Barclaycard Smartpay: New gateway support [curiousepic]
+* Transfirst: Fix missing address and remove CC only fields for ACH [davidsantoso]
+* Stripe: Support ACH payments [sdball]
+* NCRSecurePay: Fix production URL [rwdaigle]
+* Clearhaus: Make request signing more transparent & robust [sdball]
+* SagePay: Properly detect Electron brand [sdball]
+* Mercury: Fix for max-length track 1 [ryanbalsdon]
+
+
+== Version 1.56.0 (December 1, 2015)
+* Add Cardknox gateway [dlehren]
+* Mercury: Add support for card present track 2 [ryanbalsdon]
+* Cardstream: Improve default currency handling [duff]
+* Mercury: Strip start and end sentinels on track 2 [ryanbalsdon]
+* Redsys: Support new SHA256 authentication method [davidsantoso]
+* Cashnet: Allow custcode override [duff]
+* Add Rails 5 support [rafaelfranca]
+* Set required Ruby version for install to 2 or greater [rafaelfranca]
+* JetPay: Pass ud_fields in capture too [duff]
+* Stripe: Correctly detect test mode refunds [aprofeit]
+* Fix variables in remote gateways test template [sdball]
+* Micropayment: Update fieldnames for new API [duff]
+* Fix CreditCard#valid_number? erroring on non-digit characters [PatrickTulskie]
+* Stripe: Correctly detect test mode voids [methodmissing]
+* Garanti: Add test mode URL and update remote test credentials [cbilgili]
+* Cashnet: Allow custcode override on refund [duff]
+* Omise: Add a new optional api_version config [zdk]
+* Elavon: Include IP address in purchase and authorize requests [aprofeit]
+* TransFirst: Add support for ACH and more operations [davidsantoso]
+* FirstData_e4: Fix void for even dollar transactions [duff]
+
+== Version 1.55.0 (November 9, 2015)
+* CyberSource: send customer IP address when provided [fastjames]
+* Braintree: Simplify Braintree scrubbing when no transcript [duff]
+* AuthorizeNet: Allow market_type override [duff]
+* FirstData_e4: Support level_2 data [duff]
+* FirstData_e4: Fix level_2 and level_3 [duff]
+* MerchantWareFour: Use Void not PreAuthorizationVoid [duff]
+* JetPay: Allow partial captures [duff]
+* Creditcall: Fix production url [duff]
+* FirstData_e4: Fix float error in Void [duff]
+* Micropayment: Upgrade to new API [mrezentes]
+* Netbilling: Add order_id to user_info [mrezentes]
+* Stripe: scrub swipe/track, EMV data out of gateway transcripts [girasquid]
+* Remove integration_mode [mattfawcett]
+* Allow setting CVV requirement at instance level [fabiokr]
+* Add SecurionPay gateway [szajbus]
+* AuthorizeNet: Don't send currency to void [duff]
+* Add Komoju gateway [k2nr]
+* Replace Connection magic numbers with constant references [larrylv]
+* Add CAMS gateway [trevorgrayson]
+* PayPal Express: Fix AllowedPaymentMethod [edclements]
+* Litle: Store credit card from PayPage [dontmatta]
+* Orbital: Deprecate profile management API [ntalbott]
+* FirstData e4: Honor currency when supplied [tchill]
+* Authorize.net: Add config_error standard error code [andrewpaliga]
+* PayPal Express: Add support for TotalType in SetExpressCheckout [gingerhendrix]
+* eWay Rapid: Add :invoice option [DylanFM]
+* Braintree: Add nonce payment method [eric1234,cwoodcox]
+* Payflow: Allow passing of 3D Secure details via options [marquisong]
+* Elavon: Support capture via CCCOMPLETE without credit card [marquisong]
+* Securenet: Allow setting test_mode independently [wedstar]
+* Replace Base.integration_mode and Base.gateway_mode with just Base.mode [aprofeit]
+* Micropayment: Allow specification of a project [duff]
+* QuickpayV10: Truncate order_id [duff]
+* FirstData_e4: Fix Level 2 data [duff]
+* Remove some duplication around name handling [duff]
+* FirstData_e4: Support Tax1Number [duff]
+* Add Transact Pro gateway [varyonic]
+* Add Payeezy gateway [huoxito]
+* USAePay: Add test mode setting via options [marquisong]
+* Add Clearhaus gateway [dinesh]
+* WorldpayOnlinePayments: Fix logic to determine success [ao]
+* Paymill: store order_id in description field [nikoloff]
+* TWD isn't a zero decimal currency [duff]
+* PaypalExpress: Use custom zero decimal currencies [duff]
+* Stripe: Migrate from /refund to /refunds [matthelm]
+* Bogus: Adding basic EMV support [ryanbalsdon]
+* PayBox Direct: Refunds and working test credentials [ivanfer]
+* Vanco: Handle case of no billing_address [duff]
+* BluePay: Add support for CUSTOM_ID2 field [ajporterfield]
+* Creditcall: Handle no verification_value [duff]
+
+== Version 1.54.0 (October 2, 2015)
+* Beanstream: Add Network Tokenization support [girasquid]
+* CenPOS: Allow order_id on void [duff]
+* Provide better insight to CVV usage in requests [davidsantoso]
+* Ogone: Add verify [duff]
+* Beanstream: Add verify [mrezentes]
+* PayPal: Map standard error codes [JakeCataford]
+* Checkout.com: Fix an issue with empty phone numbers. [anotherjosmith]
+* Quickpay: Edit store and add ability to purchase with stored card [anellis]
+* Stripe: Set `receipt_email` to Stripe request if receipt delivery is requested [miccheng]
+* Worldpay US: Add eCheck support [mrezentes]
+* FirstData_e4: add level_3 data [mrezentes]
+* Vanco: Support passing ip address [duff]
+* Paybox Direct: Currency parsing fix [ivanfer]
+* QuickpayV10: Remove currency requirement from store. [anellis]
+* Raven: Use TLS 1.2 endpoint [bslobodin]
+
+== Version 1.53.0 (September 1, 2015)
+
 * Redsys: Add a number of currencies [agseco]
 * Raven: update description, test url, and routing; fix tests [bslobodin]
 * Raven: do not pass default (incorrect) PaymentType to #void [bslobodin]
@@ -51,7 +595,6 @@
 * Micropayment: Support Micropayment gateway [rwdaigle]
 * USAePay: Use names from the given billing and shipping address [marquisong]
 * Stripe: Add application fee on EMV authorize calls [bizla]
-
 
 == Version 1.52.0 (July 20, 2015)
 
@@ -109,6 +652,9 @@
 * Paystation: No longer require order_id everywhere [duff]
 * Checkout: Support descriptor_name and descriptor_city [duff]
 * Add supports_network_tokenization? to gateways [jnormore]
+* Bpoint: Handle message for invalid login [anellis]
+* TransFirst: Add scrubbing [davidsantoso]
+* TransFirst: Add back a few request fields [davidsantoso]
 
 
 == Version 1.50.0 (June 1, 2015)

@@ -7,6 +7,7 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4446661234567892')
     @declined_card = credit_card('4000300011112220')
+    @check = check
 
     @options = {
       order_id: generate_unique_id,
@@ -24,7 +25,19 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'DECLINED:0500900009:PICK UP CARD:', response.message
+    assert response.message =~ /DECLINED/
+  end
+
+  def test_successful_echeck_purchase
+    response = @gateway.purchase(@amount, @check, @options)
+    assert_equal 'Succeeded', response.message
+    assert_success response
+  end
+
+  def test_failed_echeck_purchase
+    response = @gateway.purchase(@amount, check(routing_number: "23433"), @options)
+    assert_failure response
+    assert response.message =~ /DECLINED/
   end
 
   def test_successful_authorize_and_capture
@@ -41,7 +54,7 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert response.message =~ /PICK UP CARD:/
+    assert response.message =~ /DECLINED/
   end
 
   def test_successful_refund
@@ -95,4 +108,5 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     assert_failure response
     assert response.message =~ /DECLINED/
   end
+
 end

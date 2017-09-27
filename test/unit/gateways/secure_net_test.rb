@@ -166,6 +166,22 @@ class SecureNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passes_with_test_mode
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, test_mode: false)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<TEST>FALSE</TEST>}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_without_test_mode
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<TEST>TRUE</TEST>}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   # Place raw successful response from gateway here

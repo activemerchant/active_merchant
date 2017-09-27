@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 require 'yaml'
 
 class FirstdataE4Test < Test::Unit::TestCase
@@ -40,10 +41,32 @@ class FirstdataE4Test < Test::Unit::TestCase
     FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
   end
 
+  def test_successful_purchase_with_specified_currency
+    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
+    assert response = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
+    assert_success response
+    assert_equal 'ET1700;106625152;4738', response.authorization
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+    assert_equal 'GBP', response.params['currency']
+
+    FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
+  end
+
   def test_successful_purchase_with_token
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014')
     assert_success response
+  end
+
+  def test_successful_purchase_with_specified_currency_and_token
+    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
+    assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014',
+                                        options_with_specified_currency)
+    assert_success response
+    assert_equal 'GBP', response.params['currency']
   end
 
   def test_successful_void
@@ -56,6 +79,14 @@ class FirstdataE4Test < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     assert response = @gateway.refund(@amount, @authorization)
     assert_success response
+  end
+
+  def test_successful_refund_with_specified_currency
+    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    @gateway.expects(:ssl_post).returns(successful_refund_with_specified_currency_response)
+    assert response = @gateway.refund(@amount, @authorization, options_with_specified_currency)
+    assert_success response
+    assert_equal 'GBP', response.params['currency']
   end
 
   def test_successful_store
@@ -134,55 +165,77 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_network_tokenization_requests_with_visa
+  def test_tax_fields_are_sent
     stub_comms do
-      credit_card = network_tokenization_credit_card('4111111111111111',
-        :brand              => 'visa',
-        :transaction_id     => "123",
-        :eci                => "05",
-        :payment_cryptogram => "111111111100cryptogram"
-      )
-
-      @gateway.purchase(@amount, credit_card, @options)
+      @gateway.purchase(@amount, @credit_card, @options.merge(tax1_amount: 830, tax1_number: "Br59a"))
     end.check_request do |endpoint, data, headers|
-      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
-      assert_match "<XID>123</XID>", data
-      assert_match "<CAVV>111111111100cryptogram</CAVV>", data
+      assert_match "<Tax1Amount>830", data
+      assert_match "<Tax1Number>Br59a", data
     end.respond_with(successful_purchase_response)
   end
 
-  def test_network_tokenization_requests_with_mastercard
+  def test_customer_ref_is_sent
     stub_comms do
-      credit_card = network_tokenization_credit_card('5555555555554444',
-        :brand              => 'mastercard',
-        :transaction_id     => "123",
-        :eci                => "05",
-        :payment_cryptogram => "111111111100cryptogram"
-      )
+      @gateway.purchase(@amount, @credit_card, @options.merge(customer: "932"))
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Customer_Ref>932", data
+    end.respond_with(successful_purchase_response)
+  end
 
-      @gateway.purchase(@amount, credit_card, @options)
+  def test_eci_default_value
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>07</Ecommerce_Flag>", data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_eci_option_value
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(eci: "05"))
     end.check_request do |endpoint, data, headers|
       assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
-      assert_match "<XID>123</XID>", data
-      assert_match "<CAVV>111111111100cryptogram</CAVV>", data
     end.respond_with(successful_purchase_response)
   end
 
   def test_network_tokenization_requests_with_amex
     stub_comms do
-      credit_card = network_tokenization_credit_card('378282246310005',
-        :brand              => 'american_express',
-        :transaction_id     => "123",
-        :eci                => "05",
-        :payment_cryptogram => Base64.encode64("111111111100cryptogram")
+      credit_card = network_tokenization_credit_card(
+        "378282246310005",
+        brand: "american_express",
+        transaction_id: "123",
+        eci: "05",
+        payment_cryptogram: "whatever_the_cryptogram_of_at_least_20_characters_is",
       )
 
       @gateway.purchase(@amount, credit_card, @options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |_, data, _|
       assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
-      assert_match "<XID>YW0=\n</XID>", data
-      assert_match "<CAVV>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</CAVV>", data
+      assert_match "<XID>mrLdtHIWq2nLXq7IrA==\n</XID>", data
+      assert_match "<CAVV>whateverthecryptogramofatlc=\n</CAVV>", data
+      assert_xml_valid_to_wsdl(data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_network_tokenization_requests_with_other_brands
+    %w(visa mastercard other).each do |brand|
+      stub_comms do
+        credit_card = network_tokenization_credit_card(
+          "378282246310005",
+          brand: brand,
+          transaction_id: "123",
+          eci: "05",
+          payment_cryptogram: "whatever_the_cryptogram_is",
+        )
+
+        @gateway.purchase(@amount, credit_card, @options)
+      end.check_request do |_, data, _|
+        assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+        assert_match "<XID>123</XID>", data
+        assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
+        assert_xml_valid_to_wsdl(data)
+      end.respond_with(successful_purchase_response)
+    end
   end
 
   def test_requests_include_card_authentication_data
@@ -199,6 +252,7 @@ class FirstdataE4Test < Test::Unit::TestCase
       assert_match "<Ecommerce_Flag>06</Ecommerce_Flag>", data
       assert_match "<CAVV>SAMPLECAVV</CAVV>", data
       assert_match "<XID>SAMPLEXID</XID>", data
+      assert_xml_valid_to_wsdl(data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -218,6 +272,7 @@ class FirstdataE4Test < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       assert_match "<Track1>Track Data</Track1>", data
+      assert_match "<Ecommerce_Flag>R</Ecommerce_Flag>", data
     end.respond_with(successful_purchase_response)
   end
 
@@ -234,6 +289,13 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   private
+
+  def assert_xml_valid_to_wsdl(data)
+    xsd = Nokogiri::XML::Schema(File.open("#{File.dirname(__FILE__)}/../../schema/firstdata_e4/v11.xsd"))
+    doc = Nokogiri::XML(data)
+    errors = xsd.validate(doc)
+    assert_empty errors, "XSD validation errors in the following XML:\n#{doc}"
+  end
 
   def pre_scrubbed
     <<-PRE_SCRUBBED
@@ -365,6 +427,94 @@ Canada
 TYPE: Purchase
 
 ACCT: Visa  $ 47.38 USD
+
+CARD NUMBER : ############1111
+DATE/TIME   : 28 Sep 12 07:54:48
+REFERENCE # :  000040 M
+AUTHOR. #   : ET120454
+TRANS. REF. : 77
+
+    Approved - Thank You 100
+
+
+Please retain this copy for your records.
+
+Cardholder will pay above amount to card
+issuer pursuant to cardholder agreement.
+=========================================</CTR>
+  </TransactionResult>
+    RESPONSE
+  end
+  def successful_purchase_with_specified_currency_response
+    <<-RESPONSE
+  <?xml version="1.0" encoding="UTF-8"?>
+  <TransactionResult>
+    <ExactID>AD1234-56</ExactID>
+    <Password></Password>
+    <Transaction_Type>00</Transaction_Type>
+    <DollarAmount>47.38</DollarAmount>
+    <SurchargeAmount></SurchargeAmount>
+    <Card_Number>############1111</Card_Number>
+    <Transaction_Tag>106625152</Transaction_Tag>
+    <Track1></Track1>
+    <Track2></Track2>
+    <PAN></PAN>
+    <Authorization_Num>ET1700</Authorization_Num>
+    <Expiry_Date>0913</Expiry_Date>
+    <CardHoldersName>Fred Burfle</CardHoldersName>
+    <VerificationStr1></VerificationStr1>
+    <VerificationStr2>773</VerificationStr2>
+    <CVD_Presence_Ind>0</CVD_Presence_Ind>
+    <ZipCode></ZipCode>
+    <Tax1Amount></Tax1Amount>
+    <Tax1Number></Tax1Number>
+    <Tax2Amount></Tax2Amount>
+    <Tax2Number></Tax2Number>
+    <Secure_AuthRequired></Secure_AuthRequired>
+    <Secure_AuthResult></Secure_AuthResult>
+    <Ecommerce_Flag></Ecommerce_Flag>
+    <XID></XID>
+    <CAVV></CAVV>
+    <CAVV_Algorithm></CAVV_Algorithm>
+    <Reference_No>77</Reference_No>
+    <Customer_Ref></Customer_Ref>
+    <Reference_3></Reference_3>
+    <Language></Language>
+    <Client_IP>1.1.1.10</Client_IP>
+    <Client_Email></Client_Email>
+    <Transaction_Error>false</Transaction_Error>
+    <Transaction_Approved>true</Transaction_Approved>
+    <EXact_Resp_Code>00</EXact_Resp_Code>
+    <EXact_Message>Transaction Normal</EXact_Message>
+    <Bank_Resp_Code>100</Bank_Resp_Code>
+    <Bank_Message>Approved</Bank_Message>
+    <Bank_Resp_Code_2></Bank_Resp_Code_2>
+    <SequenceNo>000040</SequenceNo>
+    <AVS>U</AVS>
+    <CVV2>M</CVV2>
+    <Retrieval_Ref_No>3146117</Retrieval_Ref_No>
+    <CAVV_Response></CAVV_Response>
+    <Currency>GBP</Currency>
+    <AmountRequested></AmountRequested>
+    <PartialRedemption>false</PartialRedemption>
+    <MerchantName>Friendly Inc DEMO0983</MerchantName>
+    <MerchantAddress>123 King St</MerchantAddress>
+    <MerchantCity>Toronto</MerchantCity>
+    <MerchantProvince>Ontario</MerchantProvince>
+    <MerchantCountry>Canada</MerchantCountry>
+    <MerchantPostal>L7Z 3K8</MerchantPostal>
+    <MerchantURL></MerchantURL>
+    <TransarmorToken>8938737759041111</TransarmorToken>
+    <CTR>=========== TRANSACTION RECORD ==========
+Friendly Inc DEMO0983
+123 King St
+Toronto, ON L7Z 3K8
+Canada
+
+
+TYPE: Purchase
+
+ACCT: Visa  £ 47.38 GBP
 
 CARD NUMBER : ############1111
 DATE/TIME   : 28 Sep 12 07:54:48
@@ -540,6 +690,92 @@ Canada
 TYPE: Refund
 
 ACCT: Visa  $ 23.69 USD
+
+CARD NUMBER : ############1111
+DATE/TIME   : 28 Sep 12 08:31:23
+REFERENCE # :  000041 M
+AUTHOR. #   : ET112216
+TRANS. REF. :
+
+    Approved - Thank You 100
+
+
+Please retain this copy for your records.
+
+=========================================</CTR>
+  </TransactionResult>
+    RESPONSE
+  end
+
+  def successful_refund_with_specified_currency_response
+    <<-RESPONSE
+  <?xml version="1.0" encoding="UTF-8"?>
+  <TransactionResult>
+    <ExactID>AD1234-56</ExactID>
+    <Password></Password>
+    <Transaction_Type>34</Transaction_Type>
+    <DollarAmount>123</DollarAmount>
+    <SurchargeAmount></SurchargeAmount>
+    <Card_Number>############1111</Card_Number>
+    <Transaction_Tag>888</Transaction_Tag>
+    <Track1></Track1>
+    <Track2></Track2>
+    <PAN></PAN>
+    <Authorization_Num>ET112216</Authorization_Num>
+    <Expiry_Date>0913</Expiry_Date>
+    <CardHoldersName>Fred Burfle</CardHoldersName>
+    <VerificationStr1></VerificationStr1>
+    <VerificationStr2></VerificationStr2>
+    <CVD_Presence_Ind>0</CVD_Presence_Ind>
+    <ZipCode></ZipCode>
+    <Tax1Amount></Tax1Amount>
+    <Tax1Number></Tax1Number>
+    <Tax2Amount></Tax2Amount>
+    <Tax2Number></Tax2Number>
+    <Secure_AuthRequired></Secure_AuthRequired>
+    <Secure_AuthResult></Secure_AuthResult>
+    <Ecommerce_Flag></Ecommerce_Flag>
+    <XID></XID>
+    <CAVV></CAVV>
+    <CAVV_Algorithm></CAVV_Algorithm>
+    <Reference_No></Reference_No>
+    <Customer_Ref></Customer_Ref>
+    <Reference_3></Reference_3>
+    <Language></Language>
+    <Client_IP>1.1.1.10</Client_IP>
+    <Client_Email></Client_Email>
+    <Transaction_Error>false</Transaction_Error>
+    <Transaction_Approved>true</Transaction_Approved>
+    <EXact_Resp_Code>00</EXact_Resp_Code>
+    <EXact_Message>Transaction Normal</EXact_Message>
+    <Bank_Resp_Code>100</Bank_Resp_Code>
+    <Bank_Message>Approved</Bank_Message>
+    <Bank_Resp_Code_2></Bank_Resp_Code_2>
+    <SequenceNo>000041</SequenceNo>
+    <AVS></AVS>
+    <CVV2>I</CVV2>
+    <Retrieval_Ref_No>9176784</Retrieval_Ref_No>
+    <CAVV_Response></CAVV_Response>
+    <Currency>GBP</Currency>
+    <AmountRequested></AmountRequested>
+    <PartialRedemption>false</PartialRedemption>
+    <MerchantName>Friendly Inc DEMO0983</MerchantName>
+    <MerchantAddress>123 King St</MerchantAddress>
+    <MerchantCity>Toronto</MerchantCity>
+    <MerchantProvince>Ontario</MerchantProvince>
+    <MerchantCountry>Canada</MerchantCountry>
+    <MerchantPostal>L7Z 3K8</MerchantPostal>
+    <MerchantURL></MerchantURL>
+    <CTR>=========== TRANSACTION RECORD ==========
+Friendly Inc DEMO0983
+123 King St
+Toronto, ON L7Z 3K8
+Canada
+
+
+TYPE: Refund
+
+ACCT: Visa  £ 23.69 GBP
 
 CARD NUMBER : ############1111
 DATE/TIME   : 28 Sep 12 08:31:23

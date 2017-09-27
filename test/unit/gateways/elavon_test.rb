@@ -49,6 +49,81 @@ class ElavonTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    authorization = '123456;00000000-0000-0000-0000-00000000000'
+
+    assert response = @gateway.capture(@amount, authorization, :credit_card => @credit_card)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal '123456;00000000-0000-0000-0000-00000000000', response.authorization
+    assert_equal "APPROVAL", response.message
+    assert response.test?
+  end
+
+  def test_successful_capture_with_auth_code
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    authorization = '123456;00000000-0000-0000-0000-00000000000'
+
+    assert response = @gateway.capture(@amount, authorization)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal '123456;00000000-0000-0000-0000-00000000000', response.authorization
+    assert_equal "APPROVAL", response.message
+    assert response.test?
+  end
+
+  def test_successful_capture_with_additional_options
+    authorization = '123456;00000000-0000-0000-0000-00000000000'
+    response = stub_comms do
+      @gateway.capture(@amount, authorization, :test_mode => true, :partial_shipment_flag => true)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/ssl_transaction_type=CCCOMPLETE/, data)
+      assert_match(/ssl_test_mode=TRUE/, data)
+      assert_match(/ssl_partial_shipment_flag=Y/, data)
+    end.respond_with(successful_capture_response)
+
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal '123456;00000000-0000-0000-0000-00000000000', response.authorization
+    assert_equal "APPROVAL", response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_ip
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(ip: '203.0.113.0'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = CGI.parse(data)
+      assert_equal ['203.0.113.0'], parsed['ssl_cardholder_ip']
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_authorization_with_ip
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(ip: '203.0.113.0'))
+    end.check_request do |_endpoint, data, _headers|
+      parsed = CGI.parse(data)
+      assert_equal ['203.0.113.0'], parsed['ssl_cardholder_ip']
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_failed_capture
+    @gateway.expects(:ssl_post).returns(failed_authorization_response)
+    authorization = '123456INVALID;00000000-0000-0000-0000-00000000000'
+
+    assert response = @gateway.capture(@amount, authorization, :credit_card => @credit_card)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -177,7 +252,7 @@ class ElavonTest < Test::Unit::TestCase
 
     @options[:billing_address][:zip] = bad_zip
 
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip))
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip), anything)
 
     @gateway.purchase(@amount, @credit_card, @options)
   end
@@ -185,9 +260,19 @@ class ElavonTest < Test::Unit::TestCase
   def test_zip_codes_with_letters_are_left_intact
     @options[:billing_address][:zip] = '.K1%Z_5E3-'
 
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'))
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'), anything)
 
     @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_custom_fields_in_request
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(:customer_number => '123', :custom_fields => {:a_key => "a value"}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/customer_number=123/, data)
+      assert_match(/a_key/, data)
+      refute_match(/ssl_a_key/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private
@@ -307,6 +392,29 @@ class ElavonTest < Test::Unit::TestCase
     "errorCode=5000
     errorName=Credit Card Number Invalid
     errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
+  end
+
+  def successful_capture_response
+    "ssl_card_number=42********4242
+    ssl_exp_date=0910
+    ssl_amount=1.00
+    ssl_customer_code=
+    ssl_salestax=
+    ssl_invoice_number=
+    ssl_result=0
+    ssl_result_message=APPROVAL
+    ssl_txn_id=00000000-0000-0000-0000-00000000000
+    ssl_approval_code=123456
+    ssl_cvv2_response=P
+    ssl_avs_response=X
+    ssl_account_balance=0.00
+    ssl_txn_time=08/07/2009 09:56:11 PM"
+  end
+
+  def failed_capture_response
+    "errorCode=5040
+    errorName=Invalid Transaction ID
+    errorMessage=The transaction ID is invalid for this transaction type"
   end
 
   def successful_store_response

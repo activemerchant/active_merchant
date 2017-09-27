@@ -82,6 +82,7 @@ class EwayRapidTest < Test::Unit::TestCase
         :partner_id => "SomePartner",
         :description => "The Really Long Description More Than Sixty Four Characters Gets Truncated",
         :order_id => "orderid1",
+        :invoice => "I1234",
         :currency => "INR",
         :email => "jim@example.com",
         :billing_address => {
@@ -121,12 +122,12 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_match(%r{"TotalAmount":"200"}, data)
       assert_match(%r{"InvoiceDescription":"The Really Long Description More Than Sixty Four Characters Gets"}, data)
       assert_match(%r{"InvoiceReference":"orderid1"}, data)
-      assert_match(%r{"InvoiceNumber":"orderid1"}, data)
+      assert_match(%r{"InvoiceNumber":"I1234"}, data)
       assert_match(%r{"CurrencyCode":"INR"}, data)
 
       assert_match(%r{"Title":"Mr."}, data)
-      assert_match(%r{"FirstName":"Jim"}, data)
-      assert_match(%r{"LastName":"Awesome Smith"}, data)
+      assert_match(%r{"FirstName":"Jim Awesome"}, data)
+      assert_match(%r{"LastName":"Smith"}, data)
       assert_match(%r{"CompanyName":"Awesome Co"}, data)
       assert_match(%r{"Street1":"1234 My Street"}, data)
       assert_match(%r{"Street2":"Apt 1"}, data)

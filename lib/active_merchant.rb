@@ -33,7 +33,6 @@ if(!defined?(ActiveSupport::VERSION) || (ActiveSupport::VERSION::STRING < "4.1")
   require 'active_support/core_ext/class/attribute_accessors'
 end
 
-require 'active_support/core_ext/class/delegating_attributes'
 require 'active_support/core_ext/module/attribute_accessors'
 
 require 'base64'

@@ -29,7 +29,7 @@ class NmiTest < Test::Unit::TestCase
 
     assert_success response
     assert response.test?
-    assert_equal "2762757839", response.authorization
+    assert_equal "2762757839#creditcard", response.authorization
   end
 
   def test_purchase_with_options
@@ -70,6 +70,8 @@ class NmiTest < Test::Unit::TestCase
       assert_match(/type=sale/, data)
       assert_match(/amount=1.00/, data)
       assert_match(/payment=check/, data)
+      assert_match(/firstname=#{@check.first_name}/, data)
+      assert_match(/lastname=#{@check.last_name}/, data)
       assert_match(/checkname=#{@check.name}/, CGI.unescape(data))
       assert_match(/checkaba=#{@check.routing_number}/, data)
       assert_match(/checkaccount=#{@check.account_number}/, data)
@@ -80,7 +82,7 @@ class NmiTest < Test::Unit::TestCase
 
     assert_success response
     assert response.test?
-    assert_equal "2762759808", response.authorization
+    assert_equal "2762759808#check", response.authorization
   end
 
   def test_failed_purchase_with_echeck
@@ -107,7 +109,7 @@ class NmiTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
 
     assert_success response
-    assert_equal "2762787830", response.authorization
+    assert_equal "2762787830#creditcard", response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -146,7 +148,7 @@ class NmiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "2762757839", response.authorization
+    assert_equal "2762757839#creditcard", response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -174,7 +176,7 @@ class NmiTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "2762757839", response.authorization
+    assert_equal "2762757839#creditcard", response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -213,7 +215,7 @@ class NmiTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "2762828010", response.authorization
+    assert_equal "2762828010#creditcard", response.authorization
     assert response.test?
   end
 
@@ -322,6 +324,30 @@ class NmiTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+  def test_includes_cvv_tag
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{cvv}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_blank_cvv_not_sent
+    @credit_card.verification_value = nil
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{cvv}, data)
+    end.respond_with(successful_purchase_response)
+
+    @credit_card.verification_value = "  "
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{cvv}, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_supported_countries

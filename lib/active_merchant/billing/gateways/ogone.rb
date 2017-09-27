@@ -206,6 +206,13 @@ module ActiveMerchant #:nodoc:
         perform_reference_credit(money, reference, options)
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       # Store a credit card by creating an Ogone Alias
       def store(payment_source, options = {})
         options.merge!(:alias_operation => 'BYPSP') unless(options.has_key?(:billing_id) || options.has_key?(:store))
@@ -423,8 +430,9 @@ module ActiveMerchant #:nodoc:
           raise "Unknown signature algorithm #{algorithm}"
         end
 
+        filtered_params = signed_parameters.select{|k,v| !v.blank?}
         sha_encryptor.hexdigest(
-          signed_parameters.sort_by{|k,v| k.upcase}.map{|k, v| "#{k.upcase}=#{v}#{secret}"}.join("")
+          filtered_params.sort_by{|k,v| k.upcase}.map{|k, v| "#{k.upcase}=#{v}#{secret}"}.join("")
         ).upcase
       end
 

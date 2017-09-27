@@ -59,13 +59,13 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
 
   def test_test_flag_should_be_set_when_using_test_login_in_production
-    Base.gateway_mode = :production
+    Base.mode = :production
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
     assert response.test?
   ensure
-    Base.gateway_mode = :test
+    Base.mode = :test
   end
 
   def test_transcript_scrubbing

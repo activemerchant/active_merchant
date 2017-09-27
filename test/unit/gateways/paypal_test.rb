@@ -180,11 +180,11 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, 1034)
+    assert_equal '10.34', @gateway.send(:amount, 1034)
 
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
+    assert_raise(ArgumentError) do
+      @gateway.send(:amount, '10.34')
+    end
   end
 
   def test_paypal_timeout_error
@@ -550,6 +550,67 @@ class PaypalTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
   end
 
+  def test_includes_cvv_tag
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{CVV2}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_blank_cvv_not_sent
+    @credit_card.verification_value = nil
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{CVV2}, data)
+    end.respond_with(successful_purchase_response)
+
+    @credit_card.verification_value = "  "
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{CVV2}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_declined
+    ["15005", "10754", "10752", "10759", "10761", "15002", "11084"].each do |error_code|
+      @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
+
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assertion_failed_message = "error_code #{error_code} should have been translated to :card_declined"
+      assert_equal(:card_declined, response.error_code, assertion_failed_message)
+    end
+  end
+
+  def test_incorrect_cvc
+    ["15004"].each do |error_code|
+      @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
+
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assertion_failed_message = "error_code #{error_code} should have been translated to :card_declined"
+      assert_equal(:incorrect_cvc, response.error_code, assertion_failed_message)
+    end
+  end
+
+  def test_invalid_cvc
+    ["10762"].each do |error_code|
+      @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
+
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assertion_failed_message = "error_code #{error_code} should have been translated to :card_declined"
+      assert_equal(:invalid_cvc, response.error_code, assertion_failed_message)
+    end
+  end
+
+  def test_error_code_with_no_mapping_returns_standardized_processing_error
+    @gateway.expects(:ssl_request).returns(response_with_error_code("999999"))
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal(:processing_error, response.error_code)
+  end
+
   private
 
   def pre_scrubbed
@@ -816,6 +877,41 @@ class PaypalTest < Test::Unit::TestCase
         <ShortMessage xsi:type="xs:string">Invalid Data</ShortMessage>
         <LongMessage xsi:type="xs:string">This transaction cannot be processed. Please enter a valid credit card number and type.</LongMessage>
         <ErrorCode xsi:type="xs:token">10527</ErrorCode>
+        <SeverityCode>Error</SeverityCode>
+      </Errors>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">72</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">11660982</Build>
+      <Amount xsi:type="cc:BasicAmountType" currencyID="USD">1.00</Amount>
+    </DoDirectPaymentResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+    RESPONSE
+  end
+
+  def response_with_error_code(error_code)
+    <<-RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ns="urn:ebay:api:PayPalAPI" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SOAP-ENV:Header>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType" />
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+      <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+        <Username xsi:type="xs:string" />
+        <Password xsi:type="xs:string" />
+        <Signature xsi:type="xs:string" />
+        <Subject xsi:type="xs:string" />
+      </Credentials>
+    </RequesterCredentials>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body id="_0">
+    <DoDirectPaymentResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2014-06-27T18:47:18Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">Failure</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">f3ab2d6fc76e4</CorrelationID>
+      <Errors xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:ErrorType">
+        <ShortMessage xsi:type="xs:string">Invalid Data</ShortMessage>
+        <LongMessage xsi:type="xs:string">This transaction cannot be processed. Please enter a valid credit card number and type.</LongMessage>
+        <ErrorCode xsi:type="xs:token">#{error_code}</ErrorCode>
         <SeverityCode>Error</SeverityCode>
       </Errors>
       <Version xmlns="urn:ebay:apis:eBLBaseComponents">72</Version>

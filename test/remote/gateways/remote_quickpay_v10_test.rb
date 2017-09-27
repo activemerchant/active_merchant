@@ -76,7 +76,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_unsuccessful_purchase_with_invalid_acquirers
     assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => "invalid"))
     assert_failure response
-    assert_equal 'Validation error: Unknown acquirer name', response.message
+    assert_equal 'Validation error', response.message
   end
 
   def test_unsuccessful_authorize_with_invalid_card
@@ -106,10 +106,9 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(@amount, '*****')
+    assert response = @gateway.capture(@amount, '1111')
     assert_failure response
-    assert_equal 'Validation error', response.message
-    assert_equal 'is invalid', response.params['errors']['id'][0]
+    assert_equal 'Not found: No Payment with id 1111', response.message
   end
 
   def test_successful_purchase_and_void
@@ -120,6 +119,12 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert void = @gateway.void(auth.authorization)
     assert_success void
     assert_equal 'OK', void.message
+  end
+
+  def test_unsuccessful_void
+    assert void = @gateway.void('123')
+    assert_failure void
+    assert_equal 'Not found: No Payment with id 123', void.message
   end
 
   def test_successful_authorization_capture_and_credit
@@ -164,12 +169,65 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@valid_card, @options.merge(:description => 'test', :currency => 'USD', :amount => @amount))
+    assert response = @gateway.store(@valid_card, @options)
     assert_success response
   end
 
+  def test_successful_store_and_reference_purchase
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+  end
+
+  def test_successful_store_and_reference_recurring_purchase
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert signup = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success signup
+    @options[:order_id] = generate_unique_id[0...10]
+    assert renewal = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success renewal
+  end
+
+  def test_successful_store_and_reference_authorize
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert authorization = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success authorization
+  end
+
+  def test_successful_store_and_credit
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert credit = @gateway.refund(@amount, purchase.authorization)
+    assert_success credit
+  end
+
+  def test_unsuccessful_store_and_credit
+    assert store = @gateway.store(@refund_rejected_card, @options)
+    assert_success store
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert credit = @gateway.refund(@amount, purchase.authorization)
+    assert_failure credit
+    assert_match(/Rejected test operation/, credit.message)
+  end
+
+  def test_successful_store_and_void_authorize
+    assert store = @gateway.store(@valid_card, @options)
+    assert_success store
+    assert authorize = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success authorize
+    assert void = @gateway.void(authorize.authorization)
+    assert_success void
+    assert_equal 'OK', void.message
+  end
+
   def test_successful_unstore
-    assert response = @gateway.store(@valid_card, @options.merge(:description => 'test', :amount => @amount, :currency => 'USD'))
+    assert response = @gateway.store(@valid_card, @options)
     assert_success response
 
     assert response = @gateway.unstore(response.authorization)

@@ -19,9 +19,7 @@ class TnsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    # Need to reverse the order, apparently.
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).twice.returns(successful_authorize_response).then.returns(successful_capture_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -159,7 +157,60 @@ class TnsTest < Test::Unit::TestCase
     assert_equal "FAILURE - DECLINED", response.message
   end
 
+  def test_north_america_region_url
+    @gateway = TnsGateway.new(
+      userid: 'userid',
+      password: 'password',
+      region: 'north_america'
+    )
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/secure.na.tnspayments.com/, endpoint)
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+  end
+
+  def test_asia_pacific_region_url
+    @gateway = TnsGateway.new(
+      userid: 'userid',
+      password: 'password',
+      region: 'asia_pacific'
+    )
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/secure.ap.tnspayments.com/, endpoint)
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+  end
+
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
+
+  def pre_scrubbed
+    %q[
+      D, {"provided":{"card":{"expiry":{"year":"17","month":"09"},"number":"5123456789012346","securityCode":"123"}},"type":"CARD"}
+      <- transaction/1 HTTP/1.1\r\nAuthorization: Basic bWVyY2hhbnQuVEVTVFNQUkVFRExZMDE6M2YzNGZlNTAzMzRmYmU2Y2JlMDRjMjgzNDExYTU4NjA=\r\nContent-Type:
+      <- {\"order\":{\"amount\":\"1.00\",\"currency\":\"USD\"},\"sourceOfFunds\":{\"provided\":{\"card\":{\"expiry\":{\"year\":\"17\",\"month\":\"09\"},\"number\":\"5123456789012346\",\"securityCode\":\"123\"}},\"type\":\"CARD\"}
+    ]
+  end
+
+  def post_scrubbed
+    %q[
+      D, {"provided":{"card":{"expiry":{"year":"17","month":"09"},"number":"[FILTERED]","securityCode":"[FILTERED]"}},"type":"CARD"}
+      <- transaction/1 HTTP/1.1\r\nAuthorization: Basic [FILTERED]Content-Type:
+      <- {\"order\":{\"amount\":\"1.00\",\"currency\":\"USD\"},\"sourceOfFunds\":{\"provided\":{\"card\":{\"expiry\":{\"year\":\"17\",\"month\":\"09\"},\"number\":\"[FILTERED]\",\"securityCode\":\"[FILTERED]\"}},\"type\":\"CARD\"}
+    ]
+  end
 
   def successful_authorize_response
     %(

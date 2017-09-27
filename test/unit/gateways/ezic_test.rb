@@ -148,7 +148,7 @@ class EzicTest < Test::Unit::TestCase
   end
 
   def failed_capture_response
-    MockResponse.failed("20105: Settlement amount cannot exceed authorized amount")
+    MockResponse.failed("", 611, "20105: Settlement amount cannot exceed authorized amount")
   end
 
   def successful_refund_response
@@ -156,30 +156,15 @@ class EzicTest < Test::Unit::TestCase
   end
 
   def failed_refund_response
-    MockResponse.failed("20183: Amount of refunds exceed original sale")
+    MockResponse.failed("", 611, "20183: Amount of refunds exceed original sale")
   end
 
   def failed_void_response
-    MockResponse.failed("Processor/Network Error")
+    MockResponse.failed("", 611, "Processor/Network Error")
   end
 
   def successful_authorize_raw_response
     MockResponse.succeeded(successful_authorize_response)
-  end
-
-  class MockResponse
-    attr_reader :code, :message, :body
-    def self.succeeded(message)
-      MockResponse.new(200, message)
-    end
-
-    def self.failed(message)
-      MockResponse.new(611, message)
-    end
-
-    def initialize(code, message)
-      @code, @message, @body = code, message, message
-    end
   end
 
 end

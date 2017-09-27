@@ -3,24 +3,18 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
-      SCHEMA_VERSION = '9.4'
+      SCHEMA_VERSION = '9.12'
 
       self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
-      self.live_url = 'https://payments.litle.com/vap/communicator/online'
+      self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
-      self.homepage_url = 'http://www.litle.com/'
-      self.display_name = 'Litle & Co.'
+      self.homepage_url = 'http://www.vantiv.com/'
+      self.display_name = 'Vantiv eCommerce'
 
-      # Public: Create a new Litle gateway.
-      #
-      # options - A hash of options:
-      #           :login         - The user.
-      #           :password      - The password.
-      #           :merchant_id   - The merchant id.
       def initialize(options={})
         requires!(options, :login, :password, :merchant_id)
         super
@@ -34,7 +28,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        commit(:sale, request)
+        commit(:sale, request, money)
       end
 
       def authorize(money, payment_method, options={})
@@ -45,11 +39,11 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        commit(:authorization, request)
+        commit(:authorization, request, money)
       end
 
       def capture(money, authorization, options={})
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, _, _ = split_authorization(authorization)
 
         request = build_xml_request do |doc|
           add_authentication(doc)
@@ -60,7 +54,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        commit(:capture, request)
+        commit(:capture, request, money)
       end
 
       def credit(money, authorization, options = {})
@@ -69,7 +63,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options={})
-        transaction_id, _ = split_authorization(authorization)
+        transaction_id, _, _ = split_authorization(authorization)
 
         request = build_xml_request do |doc|
           add_authentication(doc)
@@ -91,29 +85,49 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
-        transaction_id, kind = split_authorization(authorization)
+        transaction_id, kind, money = split_authorization(authorization)
 
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.send(void_type(kind), transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
+            doc.amount(money) if void_type(kind) == :authReversal
           end
         end
 
         commit(void_type(kind), request)
       end
 
-      def store(creditcard, options = {})
+      def store(payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.registerTokenRequest(transaction_attributes(options)) do
             doc.orderId(truncate(options[:order_id], 24))
-            doc.accountNumber(creditcard.number)
-            doc.cardValidationNum(creditcard.verification_value) if creditcard.verification_value
+            if payment_method.is_a?(String)
+              doc.paypageRegistrationId(payment_method)
+            else
+              doc.accountNumber(payment_method.number)
+              doc.cardValidationNum(payment_method.verification_value) if payment_method.verification_value
+            end
           end
         end
 
         commit(:registerToken, request)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<user>).+(</user>)), '\1[FILTERED]\2').
+          gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
+          gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2').
+          gsub(%r((<cardValidationNum>).+(</cardValidationNum>)), '\1[FILTERED]\2').
+          gsub(%r((<accountNumber>).+(</accountNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<paypageRegistrationId>).+(</paypageRegistrationId>)), '\1[FILTERED]\2').
+          gsub(%r((<authenticationValue>).+(</authenticationValue>)), '\1[FILTERED]\2')
       end
 
       private
@@ -161,7 +175,7 @@ module ActiveMerchant #:nodoc:
         add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
-        add_payment_method(doc, payment_method)
+        add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
         add_debt_repayment(doc, options)
@@ -180,7 +194,7 @@ module ActiveMerchant #:nodoc:
         doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
-      def add_payment_method(doc, payment_method)
+      def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
@@ -199,6 +213,11 @@ module ActiveMerchant #:nodoc:
           if payment_method.is_a?(NetworkTokenizationCreditCard)
             doc.cardholderAuthentication do
               doc.authenticationValue(payment_method.payment_cryptogram)
+            end
+          elsif options[:order_source] && options[:order_source].start_with?('3ds')
+            doc.cardholderAuthentication do
+              doc.authenticationValue(options[:cavv]) if options[:cavv]
+              doc.authenticationTransactionId(options[:xid]) if options[:xid]
             end
           end
         end
@@ -239,8 +258,10 @@ module ActiveMerchant #:nodoc:
       def add_order_source(doc, payment_method, options)
         if options[:order_source]
           doc.orderSource(options[:order_source])
-        elsif payment_method.is_a?(NetworkTokenizationCreditCard)
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :apple_pay
           doc.orderSource('applepay')
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard) && payment_method.source == :android_pay
+          doc.orderSource('androidpay')
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.orderSource('retail')
         else
@@ -286,11 +307,11 @@ module ActiveMerchant #:nodoc:
         parsed
       end
 
-      def commit(kind, request)
+      def commit(kind, request, money=nil)
         parsed = parse(kind, ssl_post(url, request, headers))
 
         options = {
-          authorization: authorization_from(kind, parsed),
+          authorization: authorization_from(kind, parsed, money),
           test: test?,
           :avs_result => { :code => AVS_RESPONSE_CODE[parsed[:fraudResult_avsResult]] },
           :cvv_result => parsed[:fraudResult_cardValidationResult]
@@ -304,13 +325,13 @@ module ActiveMerchant #:nodoc:
         %w(000 801 802).include?(parsed[:response])
       end
 
-      def authorization_from(kind, parsed)
-        (kind == :registerToken) ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind}"
+      def authorization_from(kind, parsed, money)
+        (kind == :registerToken) ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
       end
 
       def split_authorization(authorization)
-        transaction_id, kind = authorization.to_s.split(';')
-        [transaction_id, kind]
+        transaction_id, kind, money = authorization.to_s.split(';')
+        [transaction_id, kind, money]
       end
 
       def transaction_attributes(options)

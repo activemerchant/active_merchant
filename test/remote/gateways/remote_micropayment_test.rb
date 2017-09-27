@@ -10,15 +10,16 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
 
     @options = {
       order_id: generate_unique_id,
+      description: "Eggcellent",
       billing_address: address
     }
   end
 
   def test_invalid_login
-    gateway = MicropaymentGateway.new(access_key: "invalid")
+    gateway = MicropaymentGateway.new(access_key: "invalid", api_key:"invalid")
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Authorization failed - Reason: accesskey wrong", response.message
+    assert_equal "Authorization failed - Reason: api accesskey wrong", response.message
   end
 
   def test_successful_purchase
@@ -34,7 +35,19 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card)
+    assert_success response
+    assert_equal "Succeeded", response.message
+    assert_match %r(^\w+\|.+$), response.authorization
+
+    capture = @gateway.capture(@amount, response.authorization)
+    assert_success capture
+    assert_equal "Succeeded", capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_recurring
+    @credit_card.verification_value = ""
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(recurring: true))
     assert_success response
     assert_equal "Succeeded", response.message
     assert_match %r(^\w+\|.+$), response.authorization
@@ -65,19 +78,35 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
     assert_equal "3110", response.params["error"]
   end
 
-  def test_successful_void
-    response = @gateway.authorize(@amount, @credit_card, @options)
+  def test_successful_void_for_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+    assert_equal "Succeeded", response.message
 
     void = @gateway.void(response.authorization)
     assert_success void
     assert_equal "Succeeded", void.message
   end
 
+  def test_successful_authorize_and_capture_and_refund
+    response = @gateway.authorize(@amount, @credit_card,  @options.merge(recurring: false))
+    assert_success response
+    assert_equal "Succeeded", response.message
+    assert_match %r(^\w+\|.+$), response.authorization
+
+    capture = @gateway.capture(@amount, response.authorization)
+    assert_success capture
+    assert_equal "Succeeded", capture.message
+
+    refund = @gateway.refund(@amount, capture.authorization)
+    assert_success refund
+    assert_equal "Succeeded", refund.message
+  end
+
   def test_failed_void
     response = @gateway.void("")
     assert_failure response
-    assert_equal "\"sessionId\" is empty", response.message
+    assert_equal "\"transactionId\" is empty", response.message
     assert_equal "3101", response.params["error"]
   end
 
@@ -93,7 +122,7 @@ class RemoteMicropaymentTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(nil, "")
     assert_failure response
-    assert_equal "\"sessionId\" is empty", response.message
+    assert_equal "\"transactionId\" is empty", response.message
     assert_equal "3101", response.params["error"]
   end
 

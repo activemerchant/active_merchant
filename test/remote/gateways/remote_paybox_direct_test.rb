@@ -3,7 +3,6 @@
 require 'test_helper'
 
 class RemotePayboxDirectTest < Test::Unit::TestCase
-  
 
   def setup
     @gateway = PayboxDirectGateway.new(fixtures(:paybox_direct))
@@ -28,7 +27,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "PAYBOX : Numéro de porteur invalide", response.message
+    assert_equal "PAYBOX : Num\xE9ro de porteur invalide".force_encoding('ASCII-8BIT'), response.message
   end
 
   def test_authorize_and_capture
@@ -55,7 +54,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '', :order_id => '1')
     assert_failure response
-    assert_equal "Mandatory values missing keyword:13 Type:1", response.message
+    assert_equal "Invalid data", response.message
   end
   
   def test_purchase_and_partial_credit
@@ -68,14 +67,46 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     assert_success credit
   end
   
+  def test_successful_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, order_id: '1')
+    assert_success refund
+  end
+
+  def test_partial_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount/2, purchase.authorization, order_id: '1')
+    assert_success refund
+  end
+
+  def test_failed_refund
+    refund = @gateway.refund(@amount, '', order_id: '2') 
+    assert_failure refund
+    assert_equal 'Invalid data', refund.message
+  end
 
   def test_invalid_login
     gateway = PayboxDirectGateway.new(
-                :login => '199988899',
-                :password => '1999888F'
+                login: '199988899',
+                password: '1999888F',
+                rang: 100
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "PAYBOX : Accès refusé ou site/rang/clé invalide", response.message
+    assert_equal "Non autorise", response.message
+  end
+
+  def test_invalid_login_without_rang
+    gateway = PayboxDirectGateway.new(
+                login: '199988899',
+                password: '1999888F',
+              )
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal "Non autorise", response.message
   end
 end
