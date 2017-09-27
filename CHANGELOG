@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Braintree Blue: Explicitly require braintree-ruby version 2.78 [anotherjosmith]
 * Wirecard: Format non-fractional currency amounts correctly [bdewater] #2594
 
 == Version 1.72.0 (September 20, 2017)
