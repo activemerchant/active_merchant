@@ -2,6 +2,7 @@
 
 == HEAD
 * Braintree Blue: Explicitely require braintree-ruby version 2.78 [anotherjosmith]
+* Wirecard: Format non-fractional currency amounts correctly [bdewater] #2594
 
 == Version 1.72.0 (September 20, 2017)
 * Adyen: Fix failing remote tests [dtykocki] #2584
