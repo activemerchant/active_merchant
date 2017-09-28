@@ -47,8 +47,16 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
-    response = @gateway.capture(@amount, 'pspReference')
-    assert_equal '8814775564188305', response.authorization
+    response = @gateway.capture(@amount, '7914775043909934')
+    assert_equal '7914775043909934#8814775564188305', response.authorization
+    assert_success response
+    assert response.test?
+  end
+
+def test_successful_capture_with_compount_psp_reference
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    response = @gateway.capture(@amount, '7914775043909934#8514775559000000')
+    assert_equal '7914775043909934#8814775564188305', response.authorization
     assert_success response
     assert response.test?
   end
@@ -66,7 +74,7 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
-    assert_equal '8814775564188305', response.authorization
+    assert_equal '7914775043909934#8814775564188305', response.authorization
     assert response.test?
   end
 
@@ -81,8 +89,16 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    response = @gateway.refund(@amount, 'pspReference')
-    assert_equal '8514775559925128', response.authorization
+    response = @gateway.refund(@amount, '7914775043909934')
+    assert_equal '7914775043909934#8514775559925128', response.authorization
+    assert_equal '[refund-received]', response.message
+    assert response.test?
+  end
+
+  def test_successful_refund_with_compound_psp_reference
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    response = @gateway.refund(@amount, '7914775043909934#8514775559000000')
+    assert_equal '7914775043909934#8514775559925128', response.authorization
     assert_equal '[refund-received]', response.message
     assert response.test?
   end
@@ -97,8 +113,8 @@ class AdyenTest < Test::Unit::TestCase
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
-    response = @gateway.void('pspReference')
-    assert_equal '8614775821628806', response.authorization
+    response = @gateway.void('7914775043909934')
+    assert_equal '7914775043909934#8614775821628806', response.authorization
     assert_equal '[cancel-received]', response.message
     assert response.test?
   end
