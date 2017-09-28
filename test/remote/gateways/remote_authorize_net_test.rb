@@ -103,6 +103,12 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
   end
 
+  def test_successful_purchase_with_customer
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(customer: "abcd_123"))
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

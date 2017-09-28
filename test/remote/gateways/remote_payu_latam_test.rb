@@ -72,11 +72,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
         zip: "01019-030",
         phone: "(11)756312633"
       ),
-      buyer_name: 'Jorge Borges',
-      buyer_dni_number: '5415668464123',
-      buyer_dni_type: 'TI',
-      buyer_cnpj: '32593371000110',
-      buyer_email: 'axaxaxas@mlo.org'
+      buyer: {
+        name: 'Jorge Borges',
+        dni_number: '5415668464123',
+        dni_type: 'TI',
+        cnpj: '32593371000110',
+        email: 'axaxaxas@mlo.org'
+      }
     }
 
     response = gateway.purchase(@amount, @credit_card, @options.update(options_buyer))
@@ -109,7 +111,9 @@ class RemotePayuLatamTest < Test::Unit::TestCase
         zip: "01019-030",
         phone: "(11)756312633"
       ),
-      buyer_cnpj: "32593371000110"
+      buyer:{
+        cnpj: "32593371000110"
+      }
     }
 
     response = gateway.purchase(@amount, @credit_card, @options.update(options_brazil))

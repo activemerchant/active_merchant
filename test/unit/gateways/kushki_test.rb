@@ -62,6 +62,35 @@ class KushkiTest < Test::Unit::TestCase
     assert_equal '220', response.error_code
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    purchase = @gateway.purchase(@amount, @credit_card)
+    assert_success purchase
+
+    @gateway.expects(:ssl_request).returns(successful_refund_response)
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'Succeeded', refund.message
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+
+    purchase = @gateway.purchase(@amount, @credit_card)
+    assert_success purchase
+
+    @gateway.expects(:ssl_request).returns(failed_refund_response)
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_failure refund
+    assert_equal 'Ticket number inválido', refund.message
+    assert_equal 'K010', refund.error_code
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_charge_response)
     @gateway.expects(:ssl_post).returns(successful_token_response)
@@ -211,6 +240,24 @@ class KushkiTest < Test::Unit::TestCase
       {
         "code":"220",
         "message":"Monto de la transacción es diferente al monto de la venta inicial"
+      }
+    )
+  end
+
+  def successful_refund_response
+    %(
+      {
+        "code": "K000",
+        "message": "El reembolso solicitado se realizó con éxito."
+      }
+    )
+  end
+
+  def failed_refund_response
+    %(
+      {
+        "code": "K010",
+        "message": "Ticket number inválido"
       }
     )
   end

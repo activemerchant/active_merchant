@@ -164,6 +164,36 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_equal '4141491|1.0', response.authorization
   end
 
+  def test_sends_diners_club_as_diners
+    credit_card = credit_card('30569309025904', brand: 'diners_club')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /"payment_method_id"/
+        assert_match(%r(diners), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_sends_mastercard_as_master
+    credit_card = credit_card('5555555555554444', brand: 'master')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /"payment_method_id"/
+        assert_match(%r(master), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
+  end
+
   private
 
   def pre_scrubbed

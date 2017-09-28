@@ -1,19 +1,30 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* SafeCharge: Update to Version 4.1.0 [nfarve] #2556
-* Qvalent: Support general credit [curiousepic] #2558
+* Braintree Blue: Explicitly require braintree-ruby version 2.78 [anotherjosmith]
+* Wirecard: Format non-fractional currency amounts correctly [bdewater] #2594
+
+== Version 1.72.0 (September 20, 2017)
+* Adyen: Fix failing remote tests [dtykocki] #2584
+* Authorize.net: Remove numeric restriction on customer ID [dtykocki] #2579
+* Authorize.net: Restore default state value for non-US addresses [jasonwebster] #2563
+* Beanstream: Do not default state and zip with empty country [dtykocki] #2582
+* Braintree Blue: Add eci_indicator field for Apple Pay [davidsantoso] #2565
+* Conekta: Add guard clause for details fallbacks [curiousepic] #2573
+* Conekta: Pull required details from billing address [nfarve] #2568
 * DataCash: Enable refunding recurring transactions [davidsantoso] #2560
 * Ebanx: Adds Brazil Specific Parameters [nfarve] #2559
-* Authorize.net: Restore default state value for non-US addresses [jasonwebster] #2563
+* Kushki: Add support for refunds [dtykocki] #2575
 * MercadoPago: Additional tweaks for transaction requests [davidsantoso]
-* Braintree Blue: Add eci_indicator field for Apple Pay [davidsantoso] #2565
-* Conekta: Pull required details from billing address [nfarve] #2568
 * MercadoPago: Default to alphanumeric order_id [davidsantoso]
-* Conekta: Add guard clause for details fallbacks [curiousepic] #2573
-* WePay: Don't default API version header [curiousepic] #2567
+* MercadoPago: Send diners_club cards as diners [davidsantoso] #2585
+* PayU Latam: Correctly condition buyer element fields [curiousepic] #2578
 * PayU Latam: Pass unique buyer fields and country requirements [curiousepic] #2570
 * Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589
+* Qvalent: Support general credit [curiousepic] #2558
+* SafeCharge: Update to Version 4.1.0 [nfarve] #2556
+* WePay: Don't default API version header [curiousepic] #2567
+* WePay: Don't require email for Store [curiousepic] #2588
 
 == Version 1.71.0 (August 22, 2017)
 * Bambora formerly Beanstream: Change casing on customerIp variable [aengusbates] #2551

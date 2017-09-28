@@ -24,6 +24,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def refund(amount, authorization, options={})
+        action = "refund"
+
+        post = {}
+        post[:ticketNumber] = authorization
+
+        commit(action, post)
+      end
+
       def void(authorization, options={})
         action = "void"
 
@@ -129,7 +138,8 @@ module ActiveMerchant #:nodoc:
       ENDPOINT = {
         "tokenize" => "tokens",
         "charge" => "charges",
-        "void" => "charges"
+        "void" => "charges",
+        "refund" => "refund"
       }
 
       def commit(action, params)
@@ -152,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ssl_invoke(action, params)
-        if action == "void"
+        if ["void", "refund"].include?(action)
           ssl_request(:delete, url(action, params), nil, headers(action))
         else
           ssl_post(url(action, params), post_data(params), headers(action))
@@ -174,8 +184,8 @@ module ActiveMerchant #:nodoc:
       def url(action, params)
         base_url = test? ? test_url : live_url
 
-        if action == "void"
-          base_url + ENDPOINT[action] + "/" + params[:ticketNumber]
+        if ["void", "refund"].include?(action)
+          base_url + ENDPOINT[action] + "/" + params[:ticketNumber].to_s
         else
           base_url + ENDPOINT[action]
         end
@@ -194,7 +204,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if response["token"] || response["ticketNumber"]
+        return true if response["token"] || response["ticketNumber"] || response["code"] == "K000"
       end
 
       def message_from(succeeded, response)

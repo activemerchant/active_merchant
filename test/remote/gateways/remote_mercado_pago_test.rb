@@ -21,6 +21,14 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'accredited', response.message
   end
 
+  def test_successful_purchase_with_american_express
+    amex_card = credit_card('375365153556885', brand: 'american_express', verification_value: '1234')
+
+    response = @gateway.purchase(@amount, amex_card, @options)
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

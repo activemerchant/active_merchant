@@ -232,11 +232,41 @@ class BeanstreamTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_defaults_state_and_zip_with_country
+    address = { country: "AF" }
+    @options[:billing_address] = address
+    @options[:shipping_address] = address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/ordProvince=--/, data)
+      assert_match(/ordPostalCode=000000/, data)
+      assert_match(/shipProvince=--/, data)
+      assert_match(/shipPostalCode=000000/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_no_state_and_zip_default_with_missing_country
+    address = { }
+    @options[:billing_address] = address
+    @options[:shipping_address] = address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_no_match(/ordProvince=--/, data)
+      assert_no_match(/ordPostalCode=000000/, data)
+      assert_no_match(/shipProvince=--/, data)
+      assert_no_match(/shipPostalCode=000000/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
 
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
-
 
   private
 
@@ -266,7 +296,7 @@ class BeanstreamTest < Test::Unit::TestCase
 
   def successful_void_response
     "trnApproved=1&trnId=10100563&messageId=1&messageText=Approved&trnOrderNumber=6ca476d1a29da81a5f2d5d2c92ddeb&authCode=TEST&errorType=N&errorFields=&responseType=T&trnAmount=15%2E00&trnDate=9%2F9%2F2015+10%3A13%3A12+AM&avsProcessed=0&avsId=U&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Address+information+is+unavailable%2E&cvdId=2&cardType=VI&trnType=VP&paymentMethod=CC&ref1=reference+one&ref2=&ref3=&ref4=&ref5="
-  end 
+  end
 
   def unsuccessful_void_response
     "trnApproved=0&trnId=0&messageId=0&messageText=%3CLI%3EAdjustment+id+must+be+less+than+8+characters%3Cbr%3E&trnOrderNumber=&authCode=&errorType=U&errorFields=adjId&responseType=T&trnAmount=&trnDate=9%2F9%2F2015+10%3A15%3A20+AM&avsProcessed=0&avsId=0&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Address+Verification+not+performed+for+this+transaction%2E&cardType=&trnType=VP&paymentMethod=CC&ref1=&ref2=&ref3=&ref4=&ref5="
