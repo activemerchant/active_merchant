@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BarclaycardSmartpayGateway < Gateway
-      self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
-      self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
+      self.test_url = 'https://pal-test.adyen.com/pal/servlet'
+      self.live_url = 'https://pal-live.adyen.com/pal/servlet'
 
       self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'GE', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
       self.default_currency = 'EUR'
