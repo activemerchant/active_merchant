@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           avs_result: AVSResult.new(:code => parse_avs_code(response)),
-          authorization: response['recurringDetailReference'] || response['pspReference']
+          authorization: response['recurringDetailReference'] || authorization_from(post, response)
         )
 
       rescue ResponseError => e
@@ -156,6 +156,13 @@ module ActiveMerchant #:nodoc:
           end
         end
         raise
+      end
+
+      def authorization_from(parameters, response)
+        authorization = [parameters[:originalReference], response['pspReference']].compact
+
+        return nil if authorization.empty?
+        return authorization.join("#")
       end
 
       def parse_avs_code(response)
@@ -259,8 +266,12 @@ module ActiveMerchant #:nodoc:
       def modification_request(reference, options)
         hash = {}
         hash[:merchantAccount]    = @options[:merchant]
-        hash[:originalReference]  = reference if reference
+        hash[:originalReference]  = psp_reference_from(reference)
         hash.keep_if { |_, v| v }
+      end
+
+      def psp_reference_from(authorization)
+        authorization.nil? ? nil : authorization.split("#").first
       end
 
       def payment_request(money, options)
