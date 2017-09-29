@@ -84,8 +84,6 @@ module ActiveMerchant #:nodoc:
         post[:cvv] = creditcard.verification_value unless options[:recurring]
         post[:expiration_month] = creditcard.month
         post[:expiration_year] = creditcard.year
-        post[:original_ip] = options[:ip] if options[:ip]
-        post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
 
         if(billing_address = (options[:billing_address] || options[:address]))
           post[:address] = {}
@@ -100,6 +98,8 @@ module ActiveMerchant #:nodoc:
           post[:client_secret] = @options[:client_secret]
           commit('/credit_card/transfer', post, options)
         else
+          post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
+          post[:original_ip] = options[:ip] if options[:ip]
           commit('/credit_card/create', post, options)
         end
       end
