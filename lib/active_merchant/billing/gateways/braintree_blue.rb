@@ -568,6 +568,7 @@ module ActiveMerchant #:nodoc:
         if options[:recurring]
           parameters[:recurring] = true
         end
+        parameters[:skip_cvv] = true if options[:skip_cvv]
 
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
           if options[:payment_method_token]
