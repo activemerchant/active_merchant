@@ -31,6 +31,16 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
         })
   end
 
+  def test_successful_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    assert_success response
+    assert_equal '7914002629995504#8814002632606717', response.authorization
+    assert response.test?
+  end
+
   def test_successful_authorize
     @gateway.stubs(:ssl_post).returns(successful_authorize_response)
 
@@ -53,6 +63,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, '7914002629995504', @options)
     assert_success response
+    assert_equal '7914002629995504#8814002632606717', response.authorization
     assert response.test?
   end
 
@@ -64,13 +75,27 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_refund
-    @gateway.expects(:ssl_post).returns(successful_refund_response)
+  def test_legacy_capture_psp_reference_passed_for_refund
+    response = stub_comms do
+      @gateway.refund(@amount, '8814002632606717', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/originalReference=8814002632606717/, data)
+    end.respond_with(successful_refund_response)
 
-    response = @gateway.refund(@amount, '7914002629995504', @options)
     assert_success response
     assert response.test?
+  end
 
+  def test_successful_refund
+    response = stub_comms do
+      @gateway.refund(@amount, '7914002629995504#8814002632606717', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/originalReference=7914002629995504&/, data)
+      assert_no_match(/8814002632606717/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success response
+    assert response.test?
   end
 
   def test_failed_refund
