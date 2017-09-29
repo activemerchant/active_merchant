@@ -5,7 +5,7 @@ class RemoteWepayTest < Test::Unit::TestCase
     @gateway = WepayGateway.new(fixtures(:wepay))
 
     @amount = 2000
-    @credit_card = credit_card('5496198584584769')
+    @credit_card = credit_card('5496198584584769', verification_value: '321')
     @declined_card = credit_card('')
 
     @options = {
@@ -27,6 +27,14 @@ class RemoteWepayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_token
     store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_recurring_and_ip
+    store = @gateway.store(@credit_card, @options.merge(recurring: true, ip: '127.0.0.1'))
     assert_success store
 
     response = @gateway.purchase(@amount, store.authorization, @options)
