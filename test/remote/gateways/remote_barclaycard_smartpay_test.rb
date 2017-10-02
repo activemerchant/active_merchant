@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   def setup
     @gateway = BarclaycardSmartpayGateway.new(fixtures(:barclaycard_smartpay))
+    BarclaycardSmartpayGateway.ssl_strict = false
 
     @amount = 100
     @credit_card = credit_card('4111111111111111', :month => 8, :year => 2018, :verification_value => 737)
@@ -40,6 +41,10 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
         zip:      '95014',
         country:  'US'
         })
+  end
+
+  def teardown
+    BarclaycardSmartpayGateway.ssl_strict = true
   end
 
   def test_successful_purchase
