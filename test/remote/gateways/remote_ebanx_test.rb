@@ -20,7 +20,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
         country: 'BR',
         phone_number: '8522847035'
       }),
-      order_id: generate_unique_id,
+      order_id: "100001",
+      payment_unique_id: generate_unique_id,
       document: "853.513.468-93"
     }
   end
@@ -33,7 +34,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_more_options
     options = @options.merge({
-      order_id: generate_unique_id,
+      order_id: "100002",
+      payment_unique_id: generate_unique_id,
       ip: "127.0.0.1",
       email: "joe@example.com",
       birth_date: "10/11/1980"
