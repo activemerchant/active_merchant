@@ -26,7 +26,6 @@ module ActiveMerchant #:nodoc:
         post[:TransType] = '1'
         add_invoice(post, money, options)
         add_payment_method(post, payment)
-
         commit('sale', post)
       end
 
@@ -35,7 +34,6 @@ module ActiveMerchant #:nodoc:
         post[:TransType] = '5'
         add_invoice(post, money, options)
         add_payment_method(post, payment)
-
         commit('authonly', post)
       end
 
@@ -80,6 +78,7 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
       CURRENCY_CODES["ISK"] = "352"
       CURRENCY_CODES["EUR"] = "978"
+      CURRENCY_CODES["USD"] = "840"
 
       def add_invoice(post, money, options)
         post[:TrAmount] = amount(money)
