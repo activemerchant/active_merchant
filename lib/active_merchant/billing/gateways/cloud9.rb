@@ -70,6 +70,7 @@ module ActiveMerchant #:nodoc: ALL
         '75' => STANDARD_ERROR_CODE[:card_declined],       # pin retries exceeded
         '78' => STANDARD_ERROR_CODE[:config_error],        # no account
         '79' => STANDARD_ERROR_CODE[:config_error],        # no account
+        '80' => STANDARD_ERROR_CODE[:processing_error],    # No Financial impact (used in reversal responses to declined originals)
         '82' => STANDARD_ERROR_CODE[:incorrect_cvc],       # CVV data not correct
         '83' => STANDARD_ERROR_CODE[:incorrect_pin],       # cannot verify pin
         # '85' => STANDARD_ERROR_CODE[:card_ok],           # no reason to decline
@@ -280,9 +281,9 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>:password</tt> -- required
       # * <tt>:allow_partial_auth</tt> -- allow partial authorization if full amount is not available; defaults +false+
       def add_configure_group(post, options)
-        post[:GMID] = options[:merchant_id]
-        post[:GTID] = options[:terminal_id]
-        post[:GMPW] = options[:password]
+        post[:GMID] = @options[:merchant_id]
+        post[:GTID] = @options[:terminal_id]
+        post[:GMPW] = @options[:password]
         optional_assign(post, :AllowsPartialAuth, options[:allow_partial_auth])
       end
 
@@ -359,8 +360,15 @@ module ActiveMerchant #:nodoc: ALL
             post[:Track2] = credit_card.track_data
           else
             post[:AccountNum]       = credit_card.number
-            post[:ExpDate]          = credit_card.month.to_s + credit_card.year.to_s[-2..-1]
+            post[:ExpDate]          = if credit_card.month.present? && credit_card.year.present?
+                                        (credit_card.month + 100).to_s[1..2] + credit_card.year.to_s[-2..-1]
+                                      else
+                                        nil
+                                      end
             post[:CVVNum]           = credit_card.verification_value if credit_card.verification_value?
+            post[:CustomerName]     = credit_card.name if credit_card.name.present?
+            post[:CustomerZipCode]  = options[:address][:zip] if options.dig(:address, :zip).present?
+            post[:CustomerAddress]  = options[:address][:address1] if options.dig(:address, :address1).present?
             post[:CardPresent]      = credit_card.manual_entry || false ? 'N' : 'Y'
           end
           post[:Medium]           = FUNDING_TYPES.include?(options[:funding]) ? options[:funding] : FUNDING_CREDIT
@@ -455,12 +463,10 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def headers(_options = {})
-        headers = {
+        {
           'Content-Type': 'application/json',
           'User-Agent':   "Cloud9/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
         }
-
-        headers
       end
 
       def message_from(response)
