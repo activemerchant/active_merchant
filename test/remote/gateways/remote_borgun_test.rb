@@ -117,11 +117,28 @@ class RemoteBorgunTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_successful_void_with_no_currency_in_authorization
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    *new_auth, _ = auth.authorization.split("|")
+    assert void = @gateway.void(new_auth.join("|"))
+    assert_success void
+  end
+
   def test_successful_void_usd
     auth = @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'USD'))
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization, currency: 'USD')
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
+
+  def test_successful_void_usd_with_options
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(currency: 'USD'))
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization, @options.merge(currency: 'USD'))
     assert_success void
   end
 

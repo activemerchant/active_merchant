@@ -6,6 +6,7 @@
 * Adyen: Update list of supported countries [dtykocki] #2600
 * Credorax: Update response codes [curiousepic] #2595
 * Borgun: Add support for USD transactions [dtykocki] #2602
+* Borgun: Include currency code from split authorization for voids [dtykocki] #2605
 
 == Version 1.73.0 (September 28, 2017)
 * Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589
