@@ -6,7 +6,7 @@ module ActiveMerchant
       self.test_url = 'https://api-cert.payeezy.com/v1/transactions'
       self.integration_url = 'https://api-cat.payeezy.com/v1/transactions'
       self.live_url = 'https://api.payeezy.com/v1/transactions'
-
+      
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_countries = %w(US CA)
@@ -81,6 +81,40 @@ module ActiveMerchant
 
         commit(params, options)
       end
+      
+      def store(credit_card, options={})
+        url = 'https://api-cert.payeezy.com/v1/securitytokens'
+        
+        params = [
+          "apikey=#{@options[:apikey]}",
+          "js_security_key=#{@options[:js_security_key]}",
+          "ta_token=#{options[:ta_token]}",
+          "callback=Payeezy.callback",
+          "type=FDToken",
+          "credit_card.type=#{CREDIT_CARD_BRAND[credit_card.brand]}",
+          "credit_card.cardholder_name=#{credit_card.name}",
+          "credit_card.card_number=#{credit_card.number}",
+          "credit_card.exp_date=#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}",
+          "credit_card.cvv=123"
+        ]
+        
+        url = url + "?" + params.join("&")
+
+        begin
+          raw_response  = ssl_get(url)
+          response      = JSON.parse(raw_response.gsub('Payeezy.callback(','').gsub(')',''))
+        rescue ResponseError => e
+          response = response_error(e.response.body)
+        rescue JSON::ParserError
+          response = json_error(raw_response)
+        end
+        
+        Response.new(
+          success_from(response),
+          handle_message(response, success_from(response)),
+          response,
+        )
+      end
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
@@ -122,11 +156,26 @@ module ActiveMerchant
       def add_payment_method(params, payment_method, options)
         if payment_method.is_a? Check
           add_echeck(params, payment_method, options)
-        else
+        elsif payment_method.is_a? CreditCard
           add_creditcard(params, payment_method)
+        else
+          add_token(params, payment_method)
         end
       end
-
+      
+      def add_token(params, creditcard)
+        token = {}
+        token[:token_type]            = 'FDToken'
+        token_data                    = {}
+        token_data['type']            = CREDIT_CARD_BRAND[creditcard.brand]
+        token_data['cardholder_name'] = creditcard.name
+        token_data['value']           = creditcard.token
+        token_data['exp_date']        = "#{format(creditcard.month, :two_digits)}#{format(creditcard.year, :two_digits)}"
+        token[:token_data]            = token_data
+        params[:method]               = 'token'
+        params[:token]                = token
+      end
+      
       def add_creditcard(params, creditcard)
         credit_card = {}
 
@@ -245,6 +294,7 @@ module ActiveMerchant
           'Content-Type' => 'application/json',
           'apikey' => options[:apikey],
           'token' => options[:token],
+          'js_security_key' => options[:js_security_key],
           'nonce' => nonce.to_s,
           'timestamp' => current_timestamp.to_s,
           'Authorization' => generate_hmac(nonce, current_timestamp, payload)
