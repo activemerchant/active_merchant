@@ -127,6 +127,19 @@ class EbanxTest < Test::Unit::TestCase
     assert_equal "NOK", response.error_code
   end
 
+  def test_successful_store_and_purchase
+    @gateway.expects(:ssl_request).returns(successful_store_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_equal 'a61a7c98535718801395991b5112f888d359c2d632e2c3bb8afe75aa23f3334d7fd8dc57d7721f8162503773063de59ee85901b5714a92338c6d9c0352aee78c|visa', store.authorization
+
+    @gateway.expects(:ssl_request).returns(successful_purchase_with_stored_card_response)
+
+    response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -203,6 +216,18 @@ class EbanxTest < Test::Unit::TestCase
   def failed_void_response
     %(
       {"status":"ERROR","status_code":"BP-CAN-1","status_message":"Parameter hash not informed"}
+    )
+  end
+
+  def successful_store_response
+    %(
+      {"status":"SUCCESS","payment_type_code":"visa","token":"a61a7c98535718801395991b5112f888d359c2d632e2c3bb8afe75aa23f3334d7fd8dc57d7721f8162503773063de59ee85901b5714a92338c6d9c0352aee78c","masked_card_number":"411111xxxxxx1111"}
+    )
+  end
+
+  def successful_purchase_with_stored_card_response
+    %(
+      {"payment":{"hash":"59d3e2955021c5e2b180e1ea9670e2d9675c15453a2ab346","pin":"252076123","merchant_payment_code":"a942f8a68836e888fa8e8af1e8ca4bf2","order_number":null,"status":"CO","status_date":"2017-10-03 19:18:45","open_date":"2017-10-03 19:18:44","confirm_date":"2017-10-03 19:18:45","transfer_date":null,"amount_br":"3.31","amount_ext":"1.00","amount_iof":"0.01","currency_rate":"3.3000","currency_ext":"USD","due_date":"2017-10-06","instalments":"1","payment_type_code":"visa","details":{"billing_descriptor":""},"transaction_status":{"acquirer":"EBANX","code":"OK","description":"Accepted"},"pre_approved":true,"capture_available":false,"customer":{"document":"85351346893","email":"unspecified@example.com","name":"NOT PROVIDED","birth_date":null}},"status":"SUCCESS"}
     )
   end
 end
