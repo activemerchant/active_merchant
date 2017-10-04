@@ -55,9 +55,10 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         post = {}
-        # TransType and TrAmount must match original values from auth or purchase.
-        _, _, _, _, _, transtype, tramount = split_authorization(authorization)
+        # TransType, TrAmount, and currency must match original values from auth or purchase.
+        _, _, _, _, _, transtype, tramount, currency = split_authorization(authorization)
         post[:TransType] = transtype
+        options[:currency] = options[:currency] || CURRENCY_CODES.key(currency)
         add_invoice(post, tramount.to_i, options)
         add_reference(post, authorization)
         commit('void', post)
@@ -94,7 +95,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        dateandtime, batch, transaction, rrn, authcode, _, _ = split_authorization(authorization)
+        dateandtime, batch, transaction, rrn, authcode, _, _, _ = split_authorization(authorization)
         post[:DateAndTime] = dateandtime
         post[:Batch] = batch
         post[:Transaction] = transaction
@@ -165,13 +166,14 @@ module ActiveMerchant #:nodoc:
           response[:rrn],
           response[:authcode],
           response[:transtype],
-          response[:tramount]
+          response[:tramount],
+          response[:trcurrency]
         ].join("|")
       end
 
       def split_authorization(authorization)
-        dateandtime, batch, transaction, rrn, authcode, transtype, tramount = authorization.split("|")
-        [dateandtime, batch, transaction, rrn, authcode, transtype, tramount]
+        dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency = authorization.split("|")
+        [dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency]
       end
 
       def headers
