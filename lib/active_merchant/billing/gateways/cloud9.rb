@@ -77,6 +77,7 @@ module ActiveMerchant #:nodoc: ALL
         '86' => STANDARD_ERROR_CODE[:incorrect_pin],       # cannot verify pin
         '93' => STANDARD_ERROR_CODE[:card_declined],       # decline - violation, cannot complete
         '96' => STANDARD_ERROR_CODE[:processing_error],    # system malfunction
+        'FF' => STANDARD_ERROR_CODE[:processing_error],    # network error
         'N4' => STANDARD_ERROR_CODE[:card_declined],       # decline - exceeds issuer withdrawal limit
         'N7' => STANDARD_ERROR_CODE[:incorrect_cvc],       # cvv2 value supplied is invalid
 
@@ -119,6 +120,7 @@ module ActiveMerchant #:nodoc: ALL
         '093' => STANDARD_ERROR_CODE[:processing_error],   # Violation, cannot complete
         '094' => STANDARD_ERROR_CODE[:processing_error],   # Unable to locate, no match
         '096' => STANDARD_ERROR_CODE[:processing_error],   # System malfunction
+        '0FF' => STANDARD_ERROR_CODE[:processing_error],   # Network error
         #
         #
         '101' => STANDARD_ERROR_CODE[:config_error],       # Invalid GMID
@@ -404,8 +406,12 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def error_code_from(response)
-        code = response['ResponseCode']
+        code = response['ErrorCode'] || response['ResponseCode'] # Cloud9 errors take precedence over TSYS
         STANDARD_ERROR_CODE_MAPPING[code] || STANDARD_ERROR_CODE[:processing_error]
+      end
+
+      def error_message_from(response)
+        response['ErrorText'] || response['ResponseText'] # Cloud9 errors take precedence over TSYS
       end
 
       def parse(body)
@@ -451,7 +457,7 @@ module ActiveMerchant #:nodoc: ALL
         success = response['Status'] == STATUS_SUCCESS
 
         Response.new(success,
-                     success ? 'Transaction approved' : response['ResponseText'],
+                     success ? 'Transaction approved' : error_message_from(response),
                      response,
                      test: test?,
                      authorization: options[:store] ? response['CardToken'] :response['GTRC'],
