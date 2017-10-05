@@ -47,6 +47,40 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_reauthorize_using_token
+    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+    reauthorize = @gateway.authorize(@amount, @token, @options)
+    assert_equal('TEST_RU_8fcc4f2f-8c0d-483d-a0a3-eaad7356623e', reauthorize.params['token'])
+    assert_success reauthorize
+    assert_equal 'SUCCESS', reauthorize.message
+  end
+
+  def test_failed_reauthorize_using_token
+    @gateway.expects(:ssl_request).returns(failed_reauthorize_response)
+    reauthorize = @gateway.authorize(@amount, 'invalid-token', @options)
+    assert_failure reauthorize
+    assert_not_equal 'SUCCESS', reauthorize.message
+  end
+
+  def test_successful_purchase_using_token
+    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).returns(successful_token_response)
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+    assert_equal 'SUCCESS', authorize.message
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+    response = @gateway.purchase(@amount + 1, authorize.params['token'], @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_failed_purchase_using_token
+    @gateway.expects(:ssl_request).returns(failed_purchase_response)
+    response = @gateway.purchase(@amount, 'invalid-token', @options)
+    assert_failure response
+    assert_not_equal 'SUCCESS', response.message
+  end
+
   def test_failed_authorize_and_capture
     @gateway.expects(:ssl_request).returns(failed_authorize_response)
     authorize = @gateway.authorize(@amount, @declined_card, @options)
@@ -198,11 +232,17 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def successful_token_response
     %({"token": "TEST_RU_8fcc4f2f-8c0d-483d-a0a3-eaad7356623e","paymentMethod": {"type": "ObfuscatedCard","name": "Longbob Longsen","expiryMonth": 10,"expiryYear": 2016,"cardType": "VISA","maskedCardNumber": "**** **** **** 1111"},"reusable": true})
   end
+
   def successful_authorize_response
     %({"orderCode": "a46502d0-80ba-425b-a6db-2c57e9de91da","token": "TEST_RU_8fcc4f2f-8c0d-483d-a0a3-eaad7356623e","orderDescription": "Test Purchase","amount": 0,"currencyCode": "GBP","authorizeOnly": true,"paymentStatus": "AUTHORIZED","paymentResponse": {"type": "ObfuscatedCard","name": "Longbob Longsen","expiryMonth": 10,"expiryYear": 2016,"cardType": "VISA_CREDIT","maskedCardNumber": "**** **** **** 1111"},"environment": "TEST","authorizedAmount": 1000})
   end
+
   def failed_authorize_response
     %({"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can't be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{'reusable':false,'paymentMethod':{'type':'Card','name':'Example Name','expiryMonth':'**','expiryYear':'****','cardNumber':'**** **** **** 1111','cvc':''},'clientKey':'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810'}"}    )
+  end
+
+  def failed_reauthorize_response
+    %({"httpStatusCode": 404, "customCode": "TKN_NOT_FOUND", "message": "EXT_1: Token asdasda does not exist", "description": "Token used with request does not exist, please create a new token", "errorHelpUrl": nil, "originalRequest": "{'token':'asdasda','cvv':'111','orderDescription':'Worldpay Order','amount':1000,'currencyCode':'GBP','name':'','billingAddress':{'address1':'','address2':'','address3':'','postalCode':'','city':'','state':'','countryCode':''},'customerOrderCode':'90231d0c-5ad2-47cc-b69b-c1ff4fe7c385','orderType':'ECOM','authorizeOnly':true}"}, @message="EXT_1: Token asdasda does not exist", @success=false, @test=true, @authorization="EXT_1: Token asdasda does not exist", @fraud_review=nil, @error_code="TKN_NOT_FOUND", @emv_authorization=nil, @avs_result={"code": nil, "message": nil, "street_match": nil, "postal_match": nil}, @cvv_result={"code": nil, "message": nil})
   end
 
   def successful_purchase_response
