@@ -8,6 +8,7 @@
 * Borgun: Add support for USD transactions [dtykocki] #2602
 * Borgun: Include currency code from split authorization for voids [dtykocki] #2605
 * Ebanx: Support Store and person_type option [curiousepic] #2604
+* Elavon: Update endpoint URLs [curiousepic] #2608
 
 == Version 1.73.0 (September 28, 2017)
 * Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589
