@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_url, :live_url, :delimiter, :actions
 
-      self.test_url = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do'
-      self.live_url = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do'
+      self.test_url = 'https://api.demo.convergepay.com/VirtualMerchantDemo/process.do'
+      self.live_url = 'https://api.convergepay.com/VirtualMerchant/process.do'
 
       self.display_name = 'Elavon MyVirtualMerchant'
       self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL)
