@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options={})
         requires!(options, :merchant_id, :account_id, :api_login, :api_key)
         super
+        @options[:payment_country] ||= options[:payment_country] if options[:payment_country]
       end
 
       def purchase(amount, payment_method, options={})
@@ -138,7 +139,7 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction_elements(post, type, options)
         transaction = {}
-        transaction[:paymentCountry] = options[:payment_country] || (options[:billing_address][:country] if options[:billing_address])
+        transaction[:paymentCountry] = @options[:payment_country] || (options[:billing_address][:country] if options[:billing_address])
         transaction[:type] = type
         transaction[:ipAddress] = options[:ip] if options[:ip]
         transaction[:userAgent] = options[:user_agent] if options[:user_agent]

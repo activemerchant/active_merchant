@@ -307,6 +307,26 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_payment_country_set_from_credential_or_options
+    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'payment_country')
+    assert_match gateway.options[:payment_country], "payment_country"
+
+    stub_comms do
+      gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\"paymentCountry\":\"payment_country\"/, data)
+    end.respond_with(successful_purchase_response)
+
+    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key')
+    assert_nil gateway.options[:payment_country]
+
+    stub_comms do
+      gateway.purchase(@amount, @credit_card, @options.merge(payment_country: 'payment_country'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\"paymentCountry\":\"payment_country\"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_payment_country_defaults_to_billing_address
     options_mexico = {
       currency: "MXN",
