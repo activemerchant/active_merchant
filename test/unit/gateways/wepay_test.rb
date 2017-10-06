@@ -125,10 +125,18 @@ class WepayTest < Test::Unit::TestCase
     assert_equal "this checkout has already been cancelled", response.message
   end
 
-  def test_successful_store
+  def test_successful_store_via_create
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
     response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal "3322208138", response.authorization
+  end
+
+  def test_successful_store_via_transfer
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    response = @gateway.store(@credit_card, @options.merge(recurring: true))
     assert_success response
     assert_equal "3322208138", response.authorization
   end
