@@ -2,7 +2,7 @@ require "test_helper"
 
 class RemotePayuLatamTest < Test::Unit::TestCase
   def setup
-    @gateway = PayuLatamGateway.new(fixtures(:payu_latam))
+    @gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(payment_country: 'AR'))
 
     @amount = 4000
     @credit_card = credit_card("4097440000000004", verification_value: "444", first_name: "APPROVED", last_name: "")
