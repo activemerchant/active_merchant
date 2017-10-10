@@ -19,6 +19,7 @@
 * Elavon: Add scrubbing support [bpollack] #2700
 * Data Cash: Add scrubbing support [bpollack] #2700
 * Litle: Fix testing URL [wsmoak] #2673
+* Barclays ePDQ Extra Plus: Add missing Entrust root certificates [pacso] #2614
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
