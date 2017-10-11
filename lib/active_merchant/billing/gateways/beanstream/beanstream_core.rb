@@ -221,11 +221,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
+        post[:ordEmailAddress]  = options[:email] if options[:email]
+        post[:shipEmailAddress] = options[:shipping_email] || options[:email] if options[:email]
+
         prepare_address_for_non_american_countries(options)
 
         if billing_address = options[:billing_address] || options[:address]
           post[:ordName]          = billing_address[:name]
-          post[:ordEmailAddress]  = options[:email]
           post[:ordPhoneNumber]   = billing_address[:phone]
           post[:ordAddress1]      = billing_address[:address1]
           post[:ordAddress2]      = billing_address[:address2]
@@ -234,9 +236,9 @@ module ActiveMerchant #:nodoc:
           post[:ordPostalCode]    = billing_address[:zip]
           post[:ordCountry]       = billing_address[:country]
         end
+
         if shipping_address = options[:shipping_address]
           post[:shipName]         = shipping_address[:name]
-          post[:shipEmailAddress] = options[:email]
           post[:shipPhoneNumber]  = shipping_address[:phone]
           post[:shipAddress1]     = shipping_address[:address1]
           post[:shipAddress2]     = shipping_address[:address2]
@@ -465,4 +467,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

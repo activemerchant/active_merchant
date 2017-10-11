@@ -18,7 +18,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     @declined_mastercard = credit_card('5100000020002000')
 
     @amex                = credit_card('371100001000131', {:verification_value => 1234})
-    @declined_amex       = credit_card('342400001000180')
+    @declined_amex       = credit_card('342400001000180', {:verification_value => 1234})
 
     # Canadian EFT
     @check               = check(
@@ -104,6 +104,19 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_state_in_iso_format
     assert response = @gateway.purchase(@amount, @visa, @options.merge(billing_address: address, shipping_address: address))
+    assert_success response
+    assert_false response.authorization.blank?
+    assert_equal "Approved", response.message
+  end
+
+  def test_successful_purchase_with_only_email
+    options = {
+      :order_id => generate_unique_id,
+      :email => 'xiaobozzz@example.com',
+      :shipping_email => 'ship@mail.com'
+    }
+
+    assert response = @gateway.purchase(@amount, @visa, options)
     assert_success response
     assert_false response.authorization.blank?
     assert_equal "Approved", response.message
