@@ -57,11 +57,34 @@ class BeanstreamTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      refute_match(/recurringPayment=true/, data)
+    end.respond_with(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal '10000028;15.00;P', response.authorization
+  end
+
+  def test_successful_purchase_with_recurring
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options.merge(recurring: true))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/recurringPayment=true/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_authorize_with_recurring
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @decrypted_credit_card, @options.merge(recurring: true))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/recurringPayment=true/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_successful_test_request_in_production_environment
