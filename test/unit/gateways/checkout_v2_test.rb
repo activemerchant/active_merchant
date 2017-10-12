@@ -18,9 +18,27 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-
     assert_equal 'charge_test_941CA9CE174U76BD29C8', response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_includes_avs_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_equal 'S', response.avs_result["code"]
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+    assert_equal 'X', response.avs_result["postal_match"]
+    assert_equal 'X', response.avs_result["street_match"]
+  end
+
+  def test_successful_purchase_includes_cvv_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_equal 'Y', response.cvv_result["code"]
   end
 
   def test_purchase_with_additional_fields
