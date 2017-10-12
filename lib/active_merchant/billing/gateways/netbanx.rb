@@ -241,9 +241,13 @@ module ActiveMerchant #:nodoc:
         {
           'Accept'        => 'application/json',
           'Content-type'  => 'application/json',
-          'Authorization' => "Basic #{Base64.strict_encode64(@options[:api_key].to_s).strip}",
+          'Authorization' => "Basic #{basic_auth}",
           'User-Agent'    => "Netbanx-Paysafe v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
+      end
+
+      def basic_auth
+        Base64.strict_encode64("#{@options[:account_number]}:#{@options[:api_key]}")
       end
 
       def error_code_from(response)
