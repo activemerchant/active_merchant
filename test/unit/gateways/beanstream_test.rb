@@ -264,6 +264,20 @@ class BeanstreamTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_sends_email_without_addresses
+    @options[:billing_address] = nil
+    @options[:shipping_address] = nil
+    @options[:shipping_email] = "ship@mail.com"
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @decrypted_credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/ordEmailAddress=xiaobozzz%40example.com/, data)
+      assert_match(/shipEmailAddress=ship%40mail.com/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
