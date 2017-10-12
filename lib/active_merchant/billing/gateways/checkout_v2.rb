@@ -17,10 +17,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        MultiResponse.run do |r|
+        multi = MultiResponse.run do |r|
           r.process { authorize(amount, payment_method, options) }
           r.process { capture(amount, r.authorization, options) }
         end
+
+        merged_params = multi.responses.map { |r| r.params }.reduce({}, :merge)
+        succeeded = success_from(merged_params)
+
+        Response.new(
+          succeeded,
+          message_from(succeeded, merged_params),
+          merged_params,
+          authorization: authorization_from(merged_params),
+          avs_result: avs_result(:purchase, succeeded, merged_params),
+          cvv_result: cvv_result(:purchase, succeeded, merged_params),
+          error_code: error_code_from(succeeded, merged_params),
+          test: test?
+        )
       end
 
       def authorize(amount, payment_method, options={})
@@ -98,8 +112,8 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address]
         if(address && post[:card])
           post[:card][:billingDetails] = {}
-          post[:card][:billingDetails][:address1] = address[:address1]
-          post[:card][:billingDetails][:address2] = address[:address2]
+          post[:card][:billingDetails][:addressLine1] = address[:address1]
+          post[:card][:billingDetails][:addressLine2] = address[:address2]
           post[:card][:billingDetails][:city] = address[:city]
           post[:card][:billingDetails][:state] = address[:state]
           post[:card][:billingDetails][:country] = address[:country]
@@ -125,8 +139,8 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response),
           error_code: error_code_from(succeeded, response),
           test: test?,
-          avs_result: avs_result(action, response),
-          cvv_result: cvv_result(action, response))
+          avs_result: avs_result(action, succeeded, response),
+          cvv_result: cvv_result(action, succeeded, response))
       end
 
       def headers
@@ -148,12 +162,20 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
-      def avs_result(action, response)
-        action == :purchase ? AVSResult.new(code: response["card"]["avsCheck"]) : nil
+      def avs_result(action, succeeded, response)
+        if succeeded
+          action == :purchase ? AVSResult.new(code: response["card"]["avsCheck"]) : nil
+        else
+          nil
+        end
       end
 
-      def cvv_result(action, response)
-        action == :purchase ? CVVResult.new(response["card"]["cvvCheck"]) : nil
+      def cvv_result(action, succeeded, response)
+        if succeeded
+          action == :purchase ? CVVResult.new(response["card"]["cvvCheck"]) : nil
+        else
+          nil
+        end
       end
 
       def parse(body)

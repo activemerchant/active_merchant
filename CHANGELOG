@@ -16,6 +16,7 @@
 * Beanstream: Support recurringPayment for auth, capture, and purchase transactions [dtykocki] #2617
 * Barclaycard Smartpay: Pass street and house_number fields, in addition to standard address [deedeelavinder] #2603
 * Payeezy: Adds support for store [deedeelavinder] #2591
+* Checkout V2: Expose AVS and CVV results for purchases [dtykocki] #2619
 
 == Version 1.73.0 (September 28, 2017)
 * Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589

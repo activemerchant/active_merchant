@@ -33,6 +33,21 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_includes_avs_result
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'S', response.avs_result["code"]
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+  end
+
+  def test_successful_purchase_includes_cvv_result
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'Y', response.cvv_result["code"]
+  end
+
   def test_successful_purchase_with_descriptors
     options = @options.merge(descriptor_name: "shop", descriptor_city: "london")
     response = @gateway.purchase(@amount, @credit_card, options)
