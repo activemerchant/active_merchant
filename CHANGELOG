@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Redsys: Support the DKK currency type [bpollack] #2618
 * Netbanx: Fix basic auth by sending the account_number and api_key [anotherjosmith] #2616
 * WePay: Only send ip and device for non-recurring transactions [dtykocki] #2597
 * Barclaycard Smartpay: Use authorization pspReference for refunds [davidsantoso] #2599
