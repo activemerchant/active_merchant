@@ -59,6 +59,7 @@ module ActiveMerchant #:nodoc:
         "COP" => '170',
         "CRC" => '188',
         "CZK" => '203',
+        "DKK" => '208',
         "DOP" => '214',
         "EUR" => '978',
         "GBP" => '826',
