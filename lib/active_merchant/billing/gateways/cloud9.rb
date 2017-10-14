@@ -377,6 +377,7 @@ module ActiveMerchant #:nodoc: ALL
           post[:RequestCardToken] = 'Y'
         elsif credit_card.kind_of?(String)
           post[:CardToken] = credit_card
+          post[:Medium]    = FUNDING_CREDIT
         elsif credit_card.blank?
           post[:NeedSwipeCard]    = 'Y'
           post[:RequestCardToken] = 'Y'
