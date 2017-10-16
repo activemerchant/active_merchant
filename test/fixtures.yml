@@ -1113,16 +1113,6 @@ stripe:
 stripe_destination:
   stripe_user_id: "acct_17FRNfIPBJTitsen"
 
-# Used only for remote tests that use EMV credit card mocks
-stripe_emv_uk:
-  login:
-  fee_refund_login:
-
-# Used only for remote tests that use EMV credit card mocks
-stripe_emv_us:
-  login:
-  fee_refund_login:
-
 # Externally verified bank account for testing
 stripe_verified_bank_account:
   customer_id: "cus_7s22nNueP2Hjj6"
