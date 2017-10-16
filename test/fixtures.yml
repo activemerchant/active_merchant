@@ -638,6 +638,15 @@ pay_secure:
   login: LOGIN
   password: PASSWORD
 
+# Contact PayTrace for test account: 'https://www.paytrace.net/sandbox-account/'
+# or
+# Use public test account `demo123` but might require
+# disabling `required if configured` options to 100% remote tests.
+# See remote_pay_trace_test.rb for details
+pay_trace:
+  username: demo123
+  password: demo123
+
 paybox_direct:
   login: 199988863
   password: 1999888I
