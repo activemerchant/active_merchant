@@ -139,18 +139,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, payment, options)
-        post[:payment][:name] = payment.is_a?(String) ? "Not Provided" : payment.name
+        post[:payment][:name] = customer_name(payment, options)
         post[:payment][:email] = options[:email] || "unspecified@example.com"
         post[:payment][:document] = options[:document]
         post[:payment][:birth_date] = options[:birth_date] if options[:birth_date]
       end
 
       def add_customer_responsible_person(post, payment, options)
-        return unless (options[:person_type] && options[:person_type].downcase == 'business') && customer_country(options) == 'br'
-        post[:payment][:responsible] = {}
-        post[:payment][:responsible][:name] = payment.name
-        post[:payment][:responsible][:document] = options[:document]
-        post[:payment][:responsible][:birth_date] = options[:birth_date] if options[:birth_date]
+        post[:payment][:person_type] = options[:person_type] if options[:person_type]
+        if options[:person_type] && options[:person_type].downcase == 'business'
+          post[:payment][:responsible] = {}
+          post[:payment][:responsible][:name] = customer_name(payment, options)
+          post[:payment][:responsible][:document] = options[:document] if options[:document]
+          post[:payment][:responsible][:birth_date] = options[:birth_date] if options[:birth_date]
+        end
       end
 
       def add_address(post, options)
@@ -278,6 +280,15 @@ module ActiveMerchant #:nodoc:
       def customer_country(options)
         if country = options[:country] || (options[:billing_address][:country] if options[:billing_address])
           country.downcase
+        end
+      end
+
+      def customer_name(payment, options)
+        address_name = options[:billing_address][:name] if options[:billing_address] && options[:billing_address][:name]
+        if payment.is_a?(String)
+          address_name || "Not Provided"
+        else
+          payment.name
         end
       end
     end
