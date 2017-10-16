@@ -122,11 +122,27 @@ module ActiveMerchant
       def add_payment_method(params, payment_method, options)
         if payment_method.is_a? Check
           add_echeck(params, payment_method, options)
-        else
+        elsif payment_method.is_a? CreditCard
           add_creditcard(params, payment_method)
+        else
+          add_token(params, payment_method)
         end
       end
-
+      
+      # creditcard information example: Hashie::Mash.new(token: 9591518102870026, name: 'firstname lastname', month: 3, year: 2020, brand: 'visa')
+      def add_token(params, creditcard)
+        token = {}
+        token[:token_type]            = 'FDToken'
+        token_data                    = {}
+        token_data['type']            = CREDIT_CARD_BRAND[creditcard.brand]
+        token_data['cardholder_name'] = creditcard.name
+        token_data['value']           = creditcard.token
+        token_data['exp_date']        = "#{format(creditcard.month, :two_digits)}#{format(creditcard.year, :two_digits)}"
+        token[:token_data]            = token_data
+        params[:method]               = 'token'
+        params[:token]                = token
+      end
+      
       def add_creditcard(params, creditcard)
         credit_card = {}
 
