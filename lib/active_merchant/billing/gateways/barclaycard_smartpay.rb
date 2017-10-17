@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
         post = payment_request(money, options)
         post[:amount] = amount_hash(money, options[:currency])
         post[:card] = credit_card_hash(creditcard)
-        post[:billingAddress] = billing_address_hash(options)
+        post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
         post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
         commit('authorise', post)
       end

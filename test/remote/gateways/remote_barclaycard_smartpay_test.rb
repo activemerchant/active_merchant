@@ -63,6 +63,13 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
         description: 'Store Purchase'
     }
 
+    @options_with_no_address = {
+        order_id: '1',
+        email: 'long@bob.com',
+        customer: 'Longbob Longsen',
+        description: 'Store Purchase'
+    }
+
     @avs_credit_card = credit_card('4400000000000008',
                                     :month => 8,
                                     :year => 2018,
@@ -108,6 +115,14 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount,
                                  @credit_card,
                                  @options.merge(street: 'Top Level Drive', house_number: '100'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_no_address
+    response = @gateway.purchase(@amount,
+                                 @credit_card,
+                                 @options_with_no_address)
     assert_success response
     assert_equal '[capture-received]', response.message
   end
