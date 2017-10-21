@@ -1,3 +1,8 @@
+require 'timeout'
+require 'socket'
+require 'openssl'
+require 'active_merchant/errors'
+
 module ActiveMerchant
   module NetworkConnectionRetries
     DEFAULT_RETRIES = 3
