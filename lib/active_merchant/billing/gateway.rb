@@ -1,5 +1,12 @@
 require 'net/http'
 require 'net/https'
+require 'securerandom'
+require 'json'
+require 'active_merchant/country'
+require 'active_merchant/posts_data'
+require 'active_merchant/deprecated'
+require 'active_merchant/version'
+require 'active_merchant/billing/credit_card_formatting'
 require 'active_merchant/billing/response'
 
 module ActiveMerchant #:nodoc:
