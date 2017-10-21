@@ -1,6 +1,8 @@
 require 'time'
 require 'date'
 require "active_merchant/billing/model"
+require 'active_merchant/billing/credit_card_formatting'
+require 'active_merchant/billing/credit_card_methods'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
