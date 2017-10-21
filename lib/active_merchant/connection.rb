@@ -2,6 +2,8 @@ require 'uri'
 require 'net/http'
 require 'net/https'
 require 'benchmark'
+require 'active_merchant/errors'
+require 'active_merchant/network_connection_retries'
 
 module ActiveMerchant
   class Connection
