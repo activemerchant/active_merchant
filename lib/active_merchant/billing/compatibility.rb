@@ -1,3 +1,5 @@
+require 'active_merchant/deprecated'
+
 module ActiveMerchant
   module Billing
     module Compatibility
@@ -117,4 +119,3 @@ module ActiveMerchant
     Compatibility::Model.send(:include, Rails::Model)
   end
 end
-
