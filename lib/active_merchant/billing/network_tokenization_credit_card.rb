@@ -1,3 +1,5 @@
+require 'active_merchant/billing/credit_card'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class NetworkTokenizationCreditCard < CreditCard
