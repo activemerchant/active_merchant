@@ -1,3 +1,6 @@
+require 'active_merchant/connection'
+require 'active_merchant/errors'
+
 module ActiveMerchant #:nodoc:
   module PostsData  #:nodoc:
 
