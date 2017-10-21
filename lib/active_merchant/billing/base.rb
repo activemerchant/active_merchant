@@ -1,3 +1,5 @@
+require 'active_merchant/deprecated'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Base
