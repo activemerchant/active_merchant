@@ -1,25 +1,27 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Redsys: Support the DKK currency type [bpollack] #2618
-* Netbanx: Fix basic auth by sending the account_number and api_key [anotherjosmith] #2616
-* WePay: Only send ip and device for non-recurring transactions [dtykocki] #2597
-* Barclaycard Smartpay: Use authorization pspReference for refunds [davidsantoso] #2599
+
+== Version 1.74.0 (October 24, 2017)
 * Adyen: Update list of supported countries [dtykocki] #2600
-* Credorax: Update response codes [curiousepic] #2595
-* Borgun: Add support for USD transactions [dtykocki] #2602
-* Borgun: Include currency code from split authorization for voids [dtykocki] #2605
-* Ebanx: Support Store and person_type option [curiousepic] #2604
-* Elavon: Update endpoint URLs [curiousepic] #2608
-* PayU Latam: Set payment_country gateway attribute [curiousepic] #2611
 * Authorize.net CIM: Handle multiple error messages [amandapuff] #2537
+* Barclaycard Smartpay: Pass street and house_number fields, in addition to standard address [deedeelavinder] #2603
+* Barclaycard Smartpay: Use authorization pspReference for refunds [davidsantoso] #2599
 * Beanstream: Pass email fields without address [curiousepic] #2615
 * Beanstream: Support recurringPayment for auth, capture, and purchase transactions [dtykocki] #2617
-* Barclaycard Smartpay: Pass street and house_number fields, in addition to standard address [deedeelavinder] #2603
-* Payeezy: Adds support for store [deedeelavinder] #2591
+* Borgun: Add support for USD transactions [dtykocki] #2602
+* Borgun: Include currency code from split authorization for voids [dtykocki] #2605
 * Checkout V2: Expose AVS and CVV results for purchases [dtykocki] #2619
-* EBANX: Pass person_type and name for stored cards [curiousepic] #2621
+* Credorax: Update response codes [curiousepic] #2595
 * CyberSource: Support 3DSecure requests [curiousepic] #2624
+* Ebanx: Pass person_type and name for stored cards [curiousepic] #2621
+* Ebanx: Support Store and person_type option [curiousepic] #2604
+* Elavon: Update endpoint URLs [curiousepic] #2608
+* Netbanx: Fix basic auth by sending the account_number and api_key [anotherjosmith] #2616
+* Payeezy: Adds support for store [deedeelavinder] #2591
+* PayU Latam: Set payment_country gateway attribute [curiousepic] #2611
+* Redsys: Support the DKK currency type [bpollack] #2618
+* WePay: Only send ip and device for non-recurring transactions [dtykocki] #2597
 
 == Version 1.73.0 (September 28, 2017)
 * Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589
