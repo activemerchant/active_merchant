@@ -60,6 +60,10 @@ module ActiveMerchant #:nodoc:
         post = payment_request(money, options)
         post[:amount] = amount_hash(money, options[:currency])
         post[:card] = credit_card_hash(creditcard)
+        post[:dateOfBirth] = options[:date_of_birth] if options[:date_of_birth]
+        post[:entityType]  = options[:entity_type] if options[:entity_type]
+        post[:nationality] = options[:nationality] if options[:nationality]
+        post[:shopperName] = options[:shopper_name] if options[:shopper_name]
 
         commit('refundWithData', post)
       end

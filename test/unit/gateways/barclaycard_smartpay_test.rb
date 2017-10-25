@@ -64,6 +64,31 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
         description: 'Store Purchase'
     }
 
+    @options_with_credit_fields = {
+      order_id: '1',
+      billing_address:       {
+              name:     'Jim Smith',
+              address1: '100 Street',
+              company:  'Widgets Inc',
+              city:     'Ottawa',
+              state:    'ON',
+              zip:      'K1C2N6',
+              country:  'CA',
+              phone:    '(555)555-5555',
+              fax:      '(555)555-6666'},
+      email: 'long@bob.com',
+      customer: 'Longbob Longsen',
+      description: 'Store Purchase',
+      date_of_birth: '1990-10-11',
+      entity_type: 'NaturalPerson',
+      nationality: 'US',
+      shopper_name: {
+        firstName: 'Longbob',
+        lastName: 'Longsen',
+        gender: 'MALE'
+      }
+    }
+
     @avs_address = @options
     @avs_address.update(billing_address: {
         name:     'Jim Smith',
@@ -208,6 +233,20 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     response = @gateway.credit(nil, @credit_card, @options)
     assert_failure response
+  end
+
+  def test_credit_contains_all_fields
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options_with_credit_fields)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/dateOfBirth=1990-10-11&/, data)
+      assert_match(/entityType=NaturalPerson&/, data)
+      assert_match(/nationality=US&/, data)
+      assert_match(/shopperName.firstName=Longbob&/, data)
+    end.respond_with(successful_credit_response)
+
+    assert_success response
+    assert response.test?
   end
 
   def test_successful_void

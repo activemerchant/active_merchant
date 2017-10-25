@@ -70,6 +70,31 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
         description: 'Store Purchase'
     }
 
+    @options_with_credit_fields = {
+      order_id: '1',
+      billing_address:       {
+              name:     'Jim Smith',
+              address1: '100 Street',
+              company:  'Widgets Inc',
+              city:     'Ottawa',
+              state:    'ON',
+              zip:      'K1C2N6',
+              country:  'CA',
+              phone:    '(555)555-5555',
+              fax:      '(555)555-6666'},
+      email: 'long@bob.com',
+      customer: 'Longbob Longsen',
+      description: 'Store Purchase',
+      date_of_birth: '1990-10-11',
+      entity_type: 'NaturalPerson',
+      nationality: 'US',
+      shopper_name: {
+        firstName: 'Longbob',
+        lastName: 'Longsen',
+        gender: 'MALE'
+      }
+    }
+
     @avs_credit_card = credit_card('4400000000000008',
                                     :month => 8,
                                     :year => 2018,
@@ -175,13 +200,19 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    response = @gateway.credit(@amount, @credit_card, @options)
+    response = @gateway.credit(@amount, @credit_card, @options_with_credit_fields)
     assert_success response
   end
 
   def test_failed_credit
     response = @gateway.credit(nil, @declined_card, @options)
     assert_failure response
+  end
+
+  def test_failed_credit_insufficient_validation
+    # This test will fail currently (the credit will succeed), but it should succeed after October 29th
+    # response = @gateway.credit(@amount, @credit_card, @options)
+    # assert_failure response
   end
 
   def test_successful_void
