@@ -89,7 +89,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
       }
     }
 
-    @avs_address = @options
+    @avs_address = @options.clone
     @avs_address.update(billing_address: {
         name:     'Jim Smith',
         street:   'Test AVS result',

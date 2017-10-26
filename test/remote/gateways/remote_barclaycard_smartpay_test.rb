@@ -100,7 +100,7 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
                                     :year => 2018,
                                     :verification_value => 737)
 
-    @avs_address = @options
+    @avs_address = @options.clone
     @avs_address.update(billing_address: {
         name:     'Jim Smith',
         street:   'Test AVS result',
