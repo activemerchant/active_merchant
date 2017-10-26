@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc: ALL
     #
     class Cloud9Gateway < Gateway
       self.test_url             = 'https://testlink.c9pg.com:5568/restApi'
-      self.live_url             = 'TBD'
+      self.live_url             = 'https://link.c9pg.com:5568/restApi'
       self.default_currency     = 'USD'
       self.display_name         = 'Cloud9 Payment Gateway'
       self.homepage_url         = 'http://cloud9paymentgateway.com'
