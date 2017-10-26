@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* FirstData E4 (Payeezy): Ensure numeric ECI values are zero padded [jasonwebster] #2630
 
 == Version 1.74.0 (October 24, 2017)
 * Adyen: Update list of supported countries [dtykocki] #2600
