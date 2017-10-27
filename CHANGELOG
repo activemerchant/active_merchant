@@ -16,6 +16,7 @@
 * PayU Latam: Count pending Voids as successful [curiousepic] #2677
 * Mercado Pago: Ensure acess tokens are URL escaped [bpollack] #2675
 * MiGS: Update hash format to SHA256 and restore remote tests [bpollack] #2676
+* MiGS: Support verify calls [bpollack] #2664
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632

@@ -121,6 +121,13 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       # Checks the status of a previous transaction
       # This can be useful when a response is not received due to network issues
       #
