@@ -35,6 +35,25 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'charges', post, options)
       end
 
+      def charge_bank_account(money, description, order_id, options = {})
+        requires!(options, :customer)
+        post = {}
+        post[:method] = 'bank_account'
+        post[:amount] = amount(money)
+        post[:customer] = options[:customer]
+        post[:description] = description
+        post[:order_id] = order_id
+        MultiResponse.run(:first) do |r|
+          r.process { commit(:post, 'customers', post[:customer], options) }
+
+          if(r.success? && !r.params['id'].blank?)
+            customer_id = r.params['id']
+
+            r.process { commit(:post, 'charges', post.merge(customer_id: customer_id), options) }
+          end
+        end
+      end
+
       def capture(money, authorization, options = {})
         post = {}
         post[:amount] = amount(money) if money
