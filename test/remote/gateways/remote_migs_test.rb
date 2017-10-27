@@ -74,6 +74,12 @@ class RemoteMigsTest < Test::Unit::TestCase
     assert_equal 'Approved', void.message
   end
 
+  def test_verify
+    assert verify = @gateway.verify(@credit_card, @options)
+    assert_success verify
+    assert_equal 'Approved', verify.message
+  end
+
   def test_failed_authorize
     assert response = @gateway.authorize(@declined_amount, @credit_card, @options)
     assert_failure response
