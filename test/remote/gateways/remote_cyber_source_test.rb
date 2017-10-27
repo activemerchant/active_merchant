@@ -319,7 +319,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_successful_create_subscription_with_monthly_options
     response = @gateway.store(@credit_card, @subscription_options.merge(:setup_fee => 99.0, :subscription => {:amount => 49.0, :automatic_renew => false, frequency: 'monthly'}))
     assert_equal 'Successful transaction', response.message
-    response = @gateway.retrieve(";#{response.params['subscriptionID']};", :order_id => @subscription_options[:order_id])
+    response = @gateway.retrieve(response.authorization, order_id: @subscription_options[:order_id])
     assert_equal "0.49", response.params['recurringAmount']
     assert_equal 'monthly', response.params['frequency']
   end

@@ -618,7 +618,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'recurringSubscriptionInfo' do
           if reference
-            _, subscription_id, _ = reference.split(";")
+            subscription_id = reference.split(";")[6]
             xml.tag! 'subscriptionID',  subscription_id
           end
 
@@ -709,7 +709,7 @@ module ActiveMerchant #:nodoc:
         success = response[:decision] == "ACCEPT"
         message = response[:message]
 
-        authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken], action, amount, options[:currency]].compact.join(";") : nil
+        authorization = success ? authorization_from(response, action, amount, options) : nil
 
         Response.new(success, message, response,
           :test => test?,
@@ -758,6 +758,11 @@ module ActiveMerchant #:nodoc:
       def reason_message(reason_code)
         return if reason_code.blank?
         @@response_codes[:"r#{reason_code}"]
+      end
+
+      def authorization_from(response, action, amount, options)
+        [options[:order_id], response[:requestID], response[:requestToken], action, amount,
+         options[:currency], response[:subscriptionID]].join(";")
       end
     end
   end
