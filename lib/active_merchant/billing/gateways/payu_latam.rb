@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
         transaction = {}
         transaction[:paymentCountry] = @options[:payment_country] || (options[:billing_address][:country] if options[:billing_address])
         transaction[:type] = type
-        transaction[:ipAddress] = options[:ip] if options[:ip]
+        transaction[:ipAddress] = options[:ip] || ''
         transaction[:userAgent] = options[:user_agent] if options[:user_agent]
         transaction[:cookie] = options[:cookie] if options[:cookie]
         transaction[:deviceSessionId] = options[:device_session_id] if options[:device_session_id]
@@ -151,6 +151,7 @@ module ActiveMerchant #:nodoc:
       def add_order(post, options)
         order = {}
         order[:accountId] = @options[:account_id]
+        order[:partnerId] = options[:partnerId] if options[:partnerId]
         order[:referenceCode] = options[:order_id] || generate_unique_id
         order[:description] = options[:description] || 'unspecified'
         order[:language] = 'en'
@@ -192,7 +193,7 @@ module ActiveMerchant #:nodoc:
           buyer[:dniType] = buyer_hash[:dni_type]
           buyer[:cnpj] = buyer_hash[:cnpj] if options[:payment_country] == 'BR'
           buyer[:emailAddress] = buyer_hash[:email]
-          buyer[:contactPhone] = options[:shipping_address][:phone] if options[:shipping_address]
+          buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
           buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         else
           buyer[:fullName] = payment_method.name.strip
@@ -200,7 +201,7 @@ module ActiveMerchant #:nodoc:
           buyer[:dniType] = options[:dni_type]
           buyer[:cnpj] = options[:cnpj] if options[:payment_country] == 'BR'
           buyer[:emailAddress] = options[:email]
-          buyer[:contactPhone] = (options[:shipping_address][:phone] if options[:shipping_address]) || (options[:billing_address][:phone] if options[:billing_address])
+          buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
           buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         end
         post[:transaction][:order][:buyer] = buyer
@@ -268,20 +269,13 @@ module ActiveMerchant #:nodoc:
         else
           credit_card = {}
           credit_card[:number] = payment_method.number
-          credit_card[:securityCode] = add_security_code(payment_method, options)
+          credit_card[:securityCode] = payment_method.verification_value || options[:cvv]
           credit_card[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
           credit_card[:name] = payment_method.name.strip
           credit_card[:processWithoutCvv2] = true if add_process_without_cvv2(payment_method, options)
           post[:transaction][:creditCard] = credit_card
           post[:transaction][:paymentMethod] = BRAND_MAP[payment_method.brand.to_s]
         end
-      end
-
-      def add_security_code(payment_method, options)
-        return payment_method.verification_value unless payment_method.verification_value.blank?
-        return options[:cvv] unless options[:cvv].blank?
-        return "0000" if BRAND_MAP[payment_method.brand.to_s] == "AMEX"
-        "000"
       end
 
       def add_process_without_cvv2(payment_method, options)

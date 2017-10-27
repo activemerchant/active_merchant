@@ -196,7 +196,7 @@ class PayuLatamTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.update(options_buyer))
     end.check_request do |endpoint, data, headers|
-      assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":null,\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"\(11\)756312345\",\"shippingAddress\":{\"street1\":\"Calle 200\",\"street2\":\"N107\",\"city\":\"Sao Paulo\",\"state\":\"SP\",\"country\":\"BR\",\"postalCode\":\"01019-030\",\"phone\":\"\(11\)756312345\"}}/, data)
+      assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":null,\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"7563126\",\"shippingAddress\":{\"street1\":\"Calle 200\",\"street2\":\"N107\",\"city\":\"Sao Paulo\",\"state\":\"SP\",\"country\":\"BR\",\"postalCode\":\"01019-030\",\"phone\":\"\(11\)756312345\"}}/, data)
     end.respond_with(successful_purchase_response)
   end
 

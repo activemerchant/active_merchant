@@ -23,6 +23,8 @@
 * PayU Latam: Set payment_country gateway attribute [curiousepic] #2611
 * Redsys: Support the DKK currency type [bpollack] #2618
 * WePay: Only send ip and device for non-recurring transactions [dtykocki] #2597
+* PayU Latam: Adds `partnerID`, adjusts phone preferences, allows empty `ip_address`, and adjusts for no `cvv`
+*   [deedeelavinder] #2634
 
 == Version 1.73.0 (September 28, 2017)
 * Adyen: Use original authorization pspReference on Refunds [lyverovski] #2589
