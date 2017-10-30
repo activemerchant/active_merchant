@@ -41,8 +41,14 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_equal 'Accepted', response.message
   end
 
-  def test_successful_purchase_as_brazil_business_with_cnpj
-    response = @gateway.purchase(@amount, @credit_card, @options.update(person_type: 'business', document: '32593371000110'))
+  def test_successful_purchase_as_brazil_business_with_responsible_fields
+    options = @options.update(document: "32593371000110",
+                              person_type: 'business',
+                              responsible_name: 'Business Person',
+                              responsible_document: '32593371000111',
+                              responsible_birth_date: "1/11/1975")
+
+    response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Accepted', response.message
   end
@@ -135,10 +141,16 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_store_and_purchase_as_brazil_business
-    store = @gateway.store(@credit_card, @options.update(person_type: 'business', document: '32593371000110'))
+    options = @options.update(document: "32593371000110",
+                              person_type: 'business',
+                              responsible_name: 'Business Person',
+                              responsible_document: '32593371000111',
+                              responsible_birth_date: "1/11/1975")
+
+    store = @gateway.store(@credit_card, options)
     assert_success store
 
-    assert purchase = @gateway.purchase(@amount, store.authorization, @options.update(person_type: 'business', document: '32593371000110'))
+    assert purchase = @gateway.purchase(@amount, store.authorization, options)
     assert_success purchase
     assert_equal 'Accepted', purchase.message
   end
