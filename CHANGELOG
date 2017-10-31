@@ -6,6 +6,7 @@
 * PayU Latam: Adds `partnerID`, adjusts phone preferences, allows empty `ip_address`, and adjusts for no `cvv` [deedeelavinder] #2634
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
 * Ebanx: Pass fields for business person responsible [curiousepic] #2635
+* Ebanx: Support Colombian transactions [bpollack] #2636
 
 == Version 1.74.0 (October 24, 2017)
 * Adyen: Update list of supported countries [dtykocki] #2600
