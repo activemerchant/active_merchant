@@ -149,9 +149,9 @@ module ActiveMerchant #:nodoc:
         post[:payment][:person_type] = options[:person_type] if options[:person_type]
         if options[:person_type] && options[:person_type].downcase == 'business'
           post[:payment][:responsible] = {}
-          post[:payment][:responsible][:name] = customer_name(payment, options)
-          post[:payment][:responsible][:document] = options[:document] if options[:document]
-          post[:payment][:responsible][:birth_date] = options[:birth_date] if options[:birth_date]
+          post[:payment][:responsible][:name] = options[:responsible_name] if options[:responsible_name]
+          post[:payment][:responsible][:document] = options[:responsible_document] if options[:responsible_document]
+          post[:payment][:responsible][:birth_date] = options[:responsible_birth_date] if options[:responsible_birth_date]
         end
       end
 
