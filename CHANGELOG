@@ -7,6 +7,7 @@
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
 * Ebanx: Pass fields for business person responsible [curiousepic] #2635
 * Ebanx: Support Colombian transactions [bpollack] #2636
+* Sage Payment Solutions: Scrub check info [curiousepic] #2639
 
 == Version 1.74.0 (October 24, 2017)
 * Adyen: Update list of supported countries [dtykocki] #2600
