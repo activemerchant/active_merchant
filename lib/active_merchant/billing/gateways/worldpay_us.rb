@@ -3,11 +3,14 @@ require "nokogiri"
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayUsGateway < Gateway
+      class_attribute :backup_url
+
       self.display_name = "Worldpay US"
       self.homepage_url = "http://www.worldpay.com/us"
 
       # No sandbox, just use test cards.
-      self.live_url = 'https://trans.worldpay.us/cgi-bin/process.cgi'
+      self.live_url   = 'https://trans.worldpay.us/cgi-bin/process.cgi'
+      self.backup_url = 'https://trans.gwtx01.com/cgi-bin/process.cgi'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -70,6 +73,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def url
+        @options[:use_backup_url] ? self.backup_url : self.live_url
+      end
 
       def add_customer_data(post, options)
         if(billing_address = (options[:billing_address] || options[:address]))
@@ -170,7 +177,7 @@ module ActiveMerchant #:nodoc:
 
         post[:authonly] = '1' if action == 'authorize'
 
-        raw = parse(ssl_post(live_url, post.to_query))
+        raw = parse(ssl_post(url, post.to_query))
 
         succeeded = success_from(raw['result'])
         Response.new(
