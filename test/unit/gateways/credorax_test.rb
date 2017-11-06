@@ -204,6 +204,16 @@ class CredoraxTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_adds_a9_field
+    options_with_3ds = @options.merge({transaction_type: '8'})
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=8/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_purchase_response
