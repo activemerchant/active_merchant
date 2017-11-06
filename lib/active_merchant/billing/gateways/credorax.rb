@@ -129,6 +129,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_3d_secure(post, options)
         add_echo(post, options)
+        add_transaction_type(post, options)
 
         commit(:purchase, post)
       end
@@ -141,6 +142,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_3d_secure(post, options)
         add_echo(post, options)
+        add_transaction_type(post, options)
 
         commit(:authorize, post)
       end
@@ -182,7 +184,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_email(post, options)
         add_echo(post, options)
-
+        add_transaction_type(post, options)
+        
         commit(:credit, post)
       end
 
@@ -262,6 +265,10 @@ module ActiveMerchant #:nodoc:
         # The d2 parameter is used during the certification process
         # See remote tests for full certification test suite
         post[:d2] = options[:echo] unless options[:echo].blank?
+      end
+
+      def add_transaction_type(post, options)
+        post[:a9] = options[:transaction_type] if options[:transaction_type]
       end
 
       ACTIONS = {
