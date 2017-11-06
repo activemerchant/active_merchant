@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
         add_settle_with_auth(post)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
 
         commit(:post, 'auths', post)
       end
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
 
         commit(:post, 'auths', post)
       end
@@ -132,13 +132,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
-        post[:currencyCode] = options[:currency] if options[:currency]
         add_order_id(post, options)
-
-        if options[:billing_address]
-          post[:billingDetails]  = map_address(options[:billing_address])
-        end
-
       end
 
       def add_payment(post, credit_card_or_reference, options = {})
@@ -150,6 +144,9 @@ module ActiveMerchant #:nodoc:
           post[:card][:cvv]        = credit_card_or_reference.verification_value
           post[:card][:cardExpiry] = expdate(credit_card_or_reference)
         end
+
+        post[:currencyCode] = options[:currency] if options[:currency]
+        post[:billingDetails]  = map_address(options[:billing_address]) if options[:billing_address]
       end
 
       def expdate(credit_card)
