@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
       def add_order(post, options)
         order = {}
         order[:accountId] = @options[:account_id]
-        order[:partnerId] = options[:partnerId] if options[:partnerId]
+        order[:partnerId] = options[:partner_id] if options[:partner_id]
         order[:referenceCode] = options[:order_id] || generate_unique_id
         order[:description] = options[:description] || 'unspecified'
         order[:language] = 'en'
