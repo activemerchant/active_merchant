@@ -702,7 +702,12 @@ module ActiveMerchant #:nodoc:
         end
 
         success = response[:decision] == "ACCEPT"
-        message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]
+
+        response_code = ('r' + response.fetch(:reasonCode,'')).to_sym
+        # CyberSource sometimes returns a REJECT with reason_code 100.
+        # Set message to 'Failure' instead of 'Successful transaction' in that case.
+        message = (!success && response_code == :r100) ? "Failure" : @@response_codes[response_code] rescue response[:message]
+
         authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken] ].compact.join(";") : nil
 
         Response.new(success, message, response,
