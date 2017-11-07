@@ -58,7 +58,7 @@ class PayeezyGateway < Test::Unit::TestCase
   end
 
   def test_successful_store
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
     end.respond_with(successful_store_response)
 
@@ -68,7 +68,7 @@ class PayeezyGateway < Test::Unit::TestCase
   end
 
   def test_successful_store_and_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
     end.respond_with(successful_store_response)
 
@@ -82,7 +82,7 @@ class PayeezyGateway < Test::Unit::TestCase
   end
 
   def test_failed_store
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@bad_credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
     end.respond_with(failed_store_response)
 
