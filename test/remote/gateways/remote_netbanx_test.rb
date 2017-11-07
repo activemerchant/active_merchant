@@ -3,13 +3,13 @@ require 'test_helper'
 class RemoteNetbanxTest < Test::Unit::TestCase
   def setup
     @gateway = NetbanxGateway.new(fixtures(:netbanx))
-
     @amount = 100
     @credit_card = credit_card('4530910000012345')
     @declined_amount = 11
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      currency: 'CAD'
     }
   end
 
@@ -54,7 +54,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'OK', capture.message
   end
@@ -63,7 +63,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
     assert_success capture
   end
 
@@ -127,7 +127,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
 
     # the following shall fail if you run it immediately after the capture
@@ -141,7 +141,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization)
+    assert void = @gateway.void(auth.authorization, @options)
     assert_success void
     assert_equal 'OK', void.message
   end

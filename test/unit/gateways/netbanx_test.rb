@@ -9,7 +9,8 @@ class NetbanxTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      currency: 'CAD'
     }
   end
 
