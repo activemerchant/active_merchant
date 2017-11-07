@@ -10,6 +10,7 @@
 * Sage Payment Solutions: Scrub check info [curiousepic] #2639
 * Worldbank US: Allow using the backup URL [bpollack] #2641
 * Cyber Source: Correctly passes subscriptionID for store [deedeelavinder] #2633
+* Worldbank US: Allow using the backup URL per-request [bpollack] #2645
 
 == Version 1.74.0 (October 24, 2017)
 * Adyen: Update list of supported countries [dtykocki] #2600

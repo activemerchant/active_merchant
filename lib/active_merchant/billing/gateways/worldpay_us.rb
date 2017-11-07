@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit('purchase', post)
+        commit('purchase', options, post)
       end
 
       def authorize(money, payment, options={})
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, payment)
         add_customer_data(post, options)
 
-        commit('authorize', post)
+        commit('authorize', options, post)
       end
 
       def capture(amount, authorization, options={})
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit('capture', post)
+        commit('capture', options, post)
       end
 
       def refund(amount, authorization, options={})
@@ -55,14 +55,14 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("refund", post)
+        commit("refund", options, post)
       end
 
       def void(authorization, options={})
         post = {}
         add_reference(post, authorization)
 
-        commit('void', post)
+        commit('void', options, post)
       end
 
       def verify(credit_card, options={})
@@ -74,8 +74,8 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def url
-        @options[:use_backup_url] ? self.backup_url : self.live_url
+      def url(options)
+        options[:use_backup_url].to_s == "true" ? self.backup_url : self.live_url
       end
 
       def add_customer_data(post, options)
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
         "void" => "ns_void",
       }
 
-      def commit(action, post)
+      def commit(action, options, post)
         post[:action] = ACTIONS[action] unless post[:action]
         post[:acctid] = @options[:acctid]
         post[:subid] = @options[:subid]
@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
 
         post[:authonly] = '1' if action == 'authorize'
 
-        raw = parse(ssl_post(url, post.to_query))
+        raw = parse(ssl_post(url(options), post.to_query))
 
         succeeded = success_from(raw['result'])
         Response.new(
