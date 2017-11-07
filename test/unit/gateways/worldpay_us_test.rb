@@ -176,14 +176,8 @@ class WorldpayUsTest < Test::Unit::TestCase
   end
 
   def test_backup_url
-    gateway = WorldpayUsGateway.new(
-      acctid: 'acctid',
-      subid: 'subid',
-      merchantpin: 'merchantpin',
-      use_backup_url: true
-    )
-    response = stub_comms(gateway) do
-      gateway.purchase(@amount, @credit_card, use_backup_url: true)
+    response = stub_comms(@gateway) do
+      @gateway.purchase(@amount, @credit_card, use_backup_url: true)
     end.check_request do |endpoint, data, headers|
       assert_equal WorldpayUsGateway.backup_url, endpoint
     end.respond_with(successful_purchase_response)
