@@ -504,6 +504,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_three_d_secure(xml, creditcard, options)
+        xml.tag! :AuthenticationECIInd, options[:eci] if options[:eci]
+        if options[:cavv]
+          cavv_tag_name = { 'master' => :AAV, 'visa' => :CAVV }[creditcard.brand]
+          xml.tag! cavv_tag_name, options[:cavv] if cavv_tag_name
+        end
+      end
+
       def parse(body)
         response = {}
         xml = REXML::Document.new(body)
@@ -621,6 +629,8 @@ module ActiveMerchant #:nodoc:
             elsif parameters[:soft_descriptors].is_a?(Hash)
               add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
+
+            add_three_d_secure(xml, creditcard, parameters) unless creditcard.is_a?(NetworkTokenizationCreditCard)
 
             set_recurring_ind(xml, parameters)
 
