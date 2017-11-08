@@ -12,6 +12,7 @@
 * Cyber Source: Correctly passes subscriptionID for store [deedeelavinder] #2633
 * Worldbank US: Allow using the backup URL per-request [bpollack] #2645
 * Netbanx: Only send currency and billing_details for auths and sales [anotherjosmith] #2643
+* Netbanx: Revert "Fixes basic auth for netbanx by sending the account_number and api_key" [anotherjosmith] #2644
 
 == Version 1.74.0 (October 24, 2017)
 * Adyen: Update list of supported countries [dtykocki] #2600
