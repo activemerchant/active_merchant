@@ -1,18 +1,20 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* FirstData E4 (Payeezy): Ensure numeric ECI values are zero padded [jasonwebster] #2630
-* Barclaycard Smartpay: Extra data fields for credits [bpollack] #2631
-* PayU Latam: Adds `partnerID`, adjusts phone preferences, allows empty `ip_address`, and adjusts for no `cvv` [deedeelavinder] #2634
+
+== Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
+* Barclaycard Smartpay: Extra data fields for credits [bpollack] #2631
+* Cyber Source: Correctly passes subscriptionID for store [deedeelavinder] #2633
 * Ebanx: Pass fields for business person responsible [curiousepic] #2635
 * Ebanx: Support Colombian transactions [bpollack] #2636
-* Sage Payment Solutions: Scrub check info [curiousepic] #2639
-* Worldbank US: Allow using the backup URL [bpollack] #2641
-* Cyber Source: Correctly passes subscriptionID for store [deedeelavinder] #2633
-* Worldbank US: Allow using the backup URL per-request [bpollack] #2645
+* FirstData E4 (Payeezy): Ensure numeric ECI values are zero padded [jasonwebster] #2630
 * Netbanx: Only send currency and billing_details for auths and sales [anotherjosmith] #2643
 * Netbanx: Revert "Fixes basic auth for netbanx by sending the account_number and api_key" [anotherjosmith] #2644
+* PayU Latam: Adds `partnerID`, adjusts phone preferences, allows empty `ip_address`, and adjusts for no `cvv` [deedeelavinder] #2634
+* Sage Payment Solutions: Scrub check info [curiousepic] #2639
+* Worldbank US: Allow using the backup URL [bpollack] #2641
+* Worldbank US: Allow using the backup URL per-request [bpollack] #2645
 
 == Version 1.74.0 (October 24, 2017)
 * Adyen: Update list of supported countries [dtykocki] #2600
