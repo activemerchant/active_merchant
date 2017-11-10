@@ -66,7 +66,7 @@ class FatZebraTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_recurring_flag
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(recurring: true))
     end.check_request do |method, endpoint, data, headers|
       assert_match(%r("extra":{"ecm":"32"}), data)

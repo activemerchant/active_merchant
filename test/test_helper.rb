@@ -17,6 +17,7 @@ require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/time/acts_like'
 
 ActiveMerchant::Billing::Base.mode = :test
+
 unless ENV['ALLOW_REMOTE_REQUESTS'] == 'true'
   WebMock.disable_net_connect!
 end

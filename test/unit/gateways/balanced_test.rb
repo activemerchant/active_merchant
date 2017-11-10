@@ -31,7 +31,7 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_outside_token
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, "/cards/CCVOX2d7Ar6Ze5TOxHsebeH", @options)
     end.check_request do |method, endpoint, data, headers|
       assert_equal("https://api.balancedpayments.com/cards/CCVOX2d7Ar6Ze5TOxHsebeH/debits", endpoint)
@@ -219,7 +219,7 @@ class BalancedTest < Test::Unit::TestCase
   def test_successful_purchase_with_legacy_outside_token
     legacy_outside_token = '/v1/marketplaces/MP6oR9hHNlu2BLVsRRoQL3Gg/cards/CC7m1Mtqk6rVJo5tcD1qitAC'
 
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, legacy_outside_token, @options)
     end.check_request do |method, endpoint, data, headers|
       assert_equal("https://api.balancedpayments.com/cards/CC7m1Mtqk6rVJo5tcD1qitAC/debits", endpoint)
@@ -235,7 +235,7 @@ class BalancedTest < Test::Unit::TestCase
     v11_authorization = "/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5/debits||/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5"
 
     [v1_authorization, v11_authorization].each do |authorization|
-      stub_comms(@gateway, :ssl_request) do
+      stub_comms(method: :ssl_request) do
         @gateway.capture(@amount, authorization)
       end.check_request do |method, endpoint, data, headers|
         assert_equal("https://api.balancedpayments.com/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5/debits", endpoint)
@@ -248,7 +248,7 @@ class BalancedTest < Test::Unit::TestCase
     v11_authorization = "/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5/debits||/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5"
 
     [v1_authorization, v11_authorization].each do |authorization|
-      stub_comms(@gateway, :ssl_request) do
+      stub_comms(method: :ssl_request) do
         @gateway.void(authorization)
       end.check_request do |method, endpoint, data, headers|
         assert_equal :put, method
@@ -263,7 +263,7 @@ class BalancedTest < Test::Unit::TestCase
     v11_authorization = "|/debits/WD2x6vLS7RzHYEcdymqRyNAO/refunds|"
 
     [v1_authorization, v11_authorization].each do |authorization|
-      stub_comms(@gateway, :ssl_request) do
+      stub_comms(method: :ssl_request) do
         @gateway.refund(nil, authorization)
       end.check_request do |method, endpoint, data, headers|
         assert_equal("https://api.balancedpayments.com/debits/WD2x6vLS7RzHYEcdymqRyNAO/refunds", endpoint)
@@ -273,7 +273,7 @@ class BalancedTest < Test::Unit::TestCase
 
   def test_passing_address
     a = address
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, address: a)
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
@@ -290,7 +290,7 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_passing_address_without_zip
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, address: address(zip: nil))
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
@@ -301,7 +301,7 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_passing_address_with_blank_zip
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, address: address(zip: "   "))
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/

@@ -197,14 +197,14 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms(@gateway) do
+    response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorization_response)
     assert_success response
   end
 
   def test_unsuccessful_verify
-    response = stub_comms(@gateway) do
+    response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorization_response)
     assert_failure response

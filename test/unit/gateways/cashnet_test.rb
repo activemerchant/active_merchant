@@ -106,7 +106,7 @@ class Cashnet < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_fname_and_lname
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, {})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/fname=Longbob/, data)
@@ -115,7 +115,7 @@ class Cashnet < Test::Unit::TestCase
   end
 
   def test_invalid_response
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(invalid_response)
 
@@ -125,7 +125,7 @@ class Cashnet < Test::Unit::TestCase
 
   def test_passes_custcode_from_credentials
     gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: "TheCustCode")
-    stub_comms(gateway, :ssl_request) do
+    stub_comms(gateway: gateway, method: :ssl_request) do
       gateway.purchase(@amount, @credit_card, {})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/custcode=TheCustCode/, data)
@@ -134,7 +134,7 @@ class Cashnet < Test::Unit::TestCase
 
   def test_allows_custcode_override
     gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: "TheCustCode")
-    stub_comms(gateway, :ssl_request) do
+    stub_comms(gateway: gateway, method: :ssl_request) do
       gateway.purchase(@amount, @credit_card, custcode: "OveriddenCustCode")
     end.check_request do |method, endpoint, data, headers|
       assert_match(/custcode=OveriddenCustCode/, data)

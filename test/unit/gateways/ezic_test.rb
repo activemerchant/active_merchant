@@ -91,7 +91,7 @@ class EzicTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms(@gateway, :raw_ssl_request) do
+    response = stub_comms(method: :raw_ssl_request) do
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_raw_response, failed_void_response)
     assert_success response

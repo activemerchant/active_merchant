@@ -236,7 +236,7 @@ class PayuLatamTest < Test::Unit::TestCase
       }
     }
 
-    stub_comms(gateway) do
+    stub_comms(gateway: gateway) do
       gateway.purchase(@amount, @credit_card, @options.update(options_brazil))
     end.check_request do |endpoint, data, headers|
       assert_match(/\"cnpj\":\"32593371000110\"/, data)
@@ -270,7 +270,7 @@ class PayuLatamTest < Test::Unit::TestCase
       tx_tax_return_base: '16806'
     }
 
-    stub_comms(gateway) do
+    stub_comms(gateway: gateway) do
       gateway.purchase(@amount, @credit_card, @options.update(options_colombia))
     end.check_request do |endpoint, data, headers|
       assert_match(/\"additionalValues\":{\"TX_VALUE\":{\"value\":\"40.00\",\"currency\":\"COP\"},\"TX_TAX\":{\"value\":0,\"currency\":\"COP\"},\"TX_TAX_RETURN_BASE\":{\"value\":0,\"currency\":\"COP\"}}/, data)
@@ -303,7 +303,7 @@ class PayuLatamTest < Test::Unit::TestCase
       birth_date: '1985-05-25'
     }
 
-    stub_comms(gateway) do
+    stub_comms(gateway: gateway) do
       gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
     end.check_request do |endpoint, data, headers|
       assert_match(/\"birthdate\":\"1985-05-25\"/, data)

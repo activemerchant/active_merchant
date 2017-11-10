@@ -216,7 +216,7 @@ class ClearhausTest < Test::Unit::TestCase
     card = credit_card('4111111111111111', month: '06', year: '2018', verification_value: '123')
     options = { currency: 'EUR', ip: '1.1.1.1' }
 
-    stub_comms gateway, :ssl_request do
+    stub_comms(gateway: gateway, method: :ssl_request) do
       response = gateway.authorize(2050, card, options)
       assert_success response
 
@@ -235,7 +235,7 @@ class ClearhausTest < Test::Unit::TestCase
     card = credit_card('4111111111111111', month: '06', year: '2018', verification_value: '123')
     options = { currency: 'EUR', ip: '1.1.1.1' }
 
-    stub_comms gateway, :ssl_request do
+    stub_comms(gateway: gateway, method: :ssl_request) do
       response = gateway.authorize(2050, card, options)
       assert_success response
 

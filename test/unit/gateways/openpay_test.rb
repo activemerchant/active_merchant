@@ -96,14 +96,14 @@ class OpenpayTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorization_response, successful_void_response)
     assert_success response
   end
 
   def test_unsuccessful_verify
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
@@ -169,7 +169,7 @@ class OpenpayTest < Test::Unit::TestCase
   end
 
   def test_passing_device_session_id
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, device_session_id: 'TheDeviceSessionID')
     end.check_request do |method, endpoint, data, headers|
       assert_match(%r{"device_session_id":"TheDeviceSessionID"}, data)

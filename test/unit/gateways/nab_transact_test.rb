@@ -137,7 +137,7 @@ class NabTransactTest < Test::Unit::TestCase
   end
 
   def test_request_timeout_default
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/<timeoutValue>60/, data)
@@ -146,7 +146,7 @@ class NabTransactTest < Test::Unit::TestCase
 
   def test_override_request_timeout
     gateway = NabTransactGateway.new(login: 'login', password: 'password', request_timeout: 44)
-    stub_comms(gateway, :ssl_request) do
+    stub_comms(gateway: gateway, method: :ssl_request) do
       gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/<timeoutValue>44/, data)
@@ -220,7 +220,7 @@ Conn close
   end
 
   def assert_metadata(name, location, &block)
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       block.call
     end.check_request do |method, endpoint, data, headers|
       metadata_matcher = Regexp.escape(valid_metadata(name, location))
