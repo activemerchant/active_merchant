@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = nestable_hash
         add_order(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_customer_data(post, options, payment)
         add_address(post, payment, options)
 
@@ -106,15 +106,17 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options)
         year  = format(payment.year, :two_digits)
         month = format(payment.month, :two_digits)
         expirydate =   "#{month}#{year}"
+        pre_authorization = options[:pre_authorization] ? 'PRE_AUTHORIZATION' : 'FINAL_AUTHORIZATION'
 
         post["cardPaymentMethodSpecificInput"] = {
             "paymentProductId" => BRAND_MAP[payment.brand],
             "skipAuthentication" => "true", # refers to 3DSecure
-            "skipFraudService" => "true"
+            "skipFraudService" => "true",
+            "authorizationMode" => pre_authorization
         }
         post["cardPaymentMethodSpecificInput"]["card"] = {
             "cvv" => payment.verification_value,

@@ -45,6 +45,26 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal 1, response.responses.size
   end
 
+  def test_authorize_with_pre_authorization_flag
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, @options.merge(pre_authorization: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/PRE_AUTHORIZATION/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_authorize_without_pre_authorization_flag
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/FINAL_AUTHORIZATION/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_trucates_first_name_to_15_chars
     credit_card = credit_card('4567350000427977', { first_name: "thisisaverylongfirstname" })
 
