@@ -5,6 +5,7 @@ require 'bundler/setup'
 
 require 'test/unit'
 require 'mocha/test_unit'
+require 'webmock/test_unit'
 
 require 'yaml'
 require 'json'
@@ -16,6 +17,9 @@ require 'active_support/core_ext/numeric/time'
 require 'active_support/core_ext/time/acts_like'
 
 ActiveMerchant::Billing::Base.mode = :test
+unless ENV['ALLOW_REMOTE_REQUESTS'] == 'true'
+  WebMock.disable_net_connect!
+end
 
 if ENV['DEBUG_ACTIVE_MERCHANT'] == 'true'
   require 'logger'
