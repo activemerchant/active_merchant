@@ -25,16 +25,7 @@ module ActiveMerchant #:nodoc:
         merged_params = multi.responses.map { |r| r.params }.reduce({}, :merge)
         succeeded = success_from(merged_params)
 
-        Response.new(
-          succeeded,
-          message_from(succeeded, merged_params),
-          merged_params,
-          authorization: authorization_from(merged_params),
-          avs_result: avs_result(:purchase, succeeded, merged_params),
-          cvv_result: cvv_result(:purchase, succeeded, merged_params),
-          error_code: error_code_from(succeeded, merged_params),
-          test: test?
-        )
+        response(:purchase, succeeded, merged_params)
       end
 
       def authorize(amount, payment_method, options={})
@@ -132,6 +123,15 @@ module ActiveMerchant #:nodoc:
         end
 
         succeeded = success_from(response)
+
+        response(action, succeeded, response)
+      end
+
+      def response(action, succeeded, response)
+        successful_response = succeeded && action == :purchase || action == :authorize
+        avs_result = successful_response ? avs_result(response) : nil
+        cvv_result = successful_response ? cvv_result(response) : nil
+
         Response.new(
           succeeded,
           message_from(succeeded, response),
@@ -139,8 +139,9 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response),
           error_code: error_code_from(succeeded, response),
           test: test?,
-          avs_result: avs_result(action, succeeded, response),
-          cvv_result: cvv_result(action, succeeded, response))
+          avs_result: avs_result,
+          cvv_result: cvv_result
+        )
       end
 
       def headers
@@ -162,20 +163,12 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
-      def avs_result(action, succeeded, response)
-        if succeeded
-          action == :purchase ? AVSResult.new(code: response["card"]["avsCheck"]) : nil
-        else
-          nil
-        end
+      def avs_result(response)
+        response['card'] && response['card']['avsCheck'] ? AVSResult.new(code: response['card']['avsCheck']) : nil
       end
 
-      def cvv_result(action, succeeded, response)
-        if succeeded
-          action == :purchase ? CVVResult.new(response["card"]["cvvCheck"]) : nil
-        else
-          nil
-        end
+      def cvv_result(response)
+        response['card'] && response['card']['cvvCheck'] ? CVVResult.new(response['card']['cvvCheck']) : nil
       end
 
       def parse(body)
