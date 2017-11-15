@@ -22,6 +22,7 @@ module ActiveMerchant #:nodoc: ALL
       INQUIRY           = 'Inquiry'.freeze
       MODIFY            = 'Modify'.freeze
       BATCH             = 'Batch'.freeze
+      CREATE_TOKEN      = 'CreateCardToken'.freeze
 
       TAX_INDICATORS    = %w[Ntprvd Prvded NonTax].freeze
       FUNDING_CREDIT    = 'Credit'.freeze
@@ -155,7 +156,6 @@ module ActiveMerchant #:nodoc: ALL
       # === Optional Options
       # * <tt>test</tt> -- determines which server to connect to
       def initialize(options = {})
-        requires!(options, :merchant_id, :password, :terminal_id)
         Gateway.logger = Logger.new(STDOUT)
         # Gateway.logger.level = Logger::DEBUG
         super
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc: ALL
         add_encryption_data_group(post, options)
         add_pin_group(post, payment)
 
-        commit(PURCHASE, post)
+        commit(PURCHASE, '', post)
       end
 
       # An Authorize transaction places a temporary hold on the customer’s account. Approvals on authorizations are
@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc: ALL
         add_encryption_data_group(post, options)
         add_pin_group(post, payment)
 
-        commit(AUTHORIZE, post)
+        commit(AUTHORIZE, '', post)
       end
 
       # Capture is used to finalize a previously authorized transaction. A Finalize transaction is used to change an
@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc: ALL
         add_action_group(post, options)
         add_trace_group(post, options, authorization)
 
-        commit(modify ? MODIFY : CAPTURE, post)
+        commit(modify ? MODIFY : CAPTURE, '', post)
       end
 
       def refund(amount, authorization, options = {})
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_request_amount_group(post, options, modify ? amount : nil)
         add_trace_group(post, options, authorization)
-        commit(modify ? MODIFY : VOID, post)
+        commit(modify ? MODIFY : VOID, '', post)
       end
 
       # A Credit transaction is used to authorize a refund to a customer's credit card account without reference to a
@@ -248,7 +248,7 @@ module ActiveMerchant #:nodoc: ALL
         add_request_amount_group(post, options, amount)
         add_trace_group(post, options, authorization)
         add_request_card_info_group(post, payment, options)
-        commit(REFUND, post)
+        commit(REFUND, '', post)
       end
 
       # A Void transaction is used to cancel an authorized transaction before it has been settled.
@@ -260,32 +260,41 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_trace_group(post, options, authorization)
         add_request_extend_info_group(post, options)
-        commit(VOID, post)
+        commit(VOID, '', post)
       end
 
-      # Cloud9 doesn't have a pure tokenizing function at the moment. So what we do here, is to make an Authorize call
-      # with a small amount, and requesting a token to be returned.
+      # CreateCardToken requests token information for a card or token.
       #
-      # * <tt>payment</tt> -- payment source, can be either a CreditCard or token.
+      # * <tt>card</tt> -- either a CreditCard or token.
       # from {Response#authorization}.
-      def store(payment, options = {})
-        options[:store] = true
-        authorize(100, payment, options)
+      def store(card, options = {})
+        post = {}
+        add_configure_group(post, options)
+        add_request_card_info_group(post, card, options)
+
+        commit(CREATE_TOKEN, '', post)
       end
 
       private
 
       # Add the Configure Group of options - used for ALL transactions
       #
+      # * <tt>terminal_id_required</tt> -- optional, defaults to true
       # ==== Options
       # * <tt>:merchant_id</tt> -- required
       # * <tt>:terminal_id</tt> -- required
       # * <tt>:password</tt> -- required
       # * <tt>:allow_partial_auth</tt> -- allow partial authorization if full amount is not available; defaults +false+
-      def add_configure_group(post, options)
+      def add_configure_group(post, options, terminal_id_required = true)
+        if terminal_id_required
+          requires!(@options, :merchant_id, :password, :terminal_id)
+        else
+          requires!(@options, :merchant_id, :password)
+        end
+
         post[:GMID] = @options[:merchant_id]
-        post[:GTID] = @options[:terminal_id]
         post[:GMPW] = @options[:password]
+        optional_assign(post, :GTID, @options[:terminal_id])
         optional_assign(post, :AllowsPartialAuth, options[:allow_partial_auth])
       end
 
@@ -374,15 +383,13 @@ module ActiveMerchant #:nodoc: ALL
             post[:CardPresent]      = credit_card.manual_entry || false ? 'N' : 'Y'
           end
           post[:Medium]           = FUNDING_TYPES.include?(options[:funding]) ? options[:funding] : FUNDING_CREDIT
-          post[:RequestCardToken] = 'Y'
         elsif credit_card.kind_of?(String)
           post[:CardToken]        = credit_card
           post[:Medium]           = FUNDING_CREDIT
-          post[:RequestCardToken] = 'Y'
         elsif credit_card.blank?
           post[:NeedSwipeCard]    = 'Y'
-          post[:RequestCardToken] = 'Y'
         end
+        post[:RequestCardToken] = 'Y'
       end
 
       def add_pin_group(post, credit_card)
@@ -439,10 +446,11 @@ module ActiveMerchant #:nodoc: ALL
         end
       end
 
-      def api_request(action, parameters = nil)
+      def api_request(action, endpoint, parameters = nil)
         raw_response = response = nil
         begin
-          raw_response = ssl_post(target_url, post_data(action, parameters), headers(parameters))
+          endpoint = '/' + endpoint if endpoint&.size > 0
+          raw_response = ssl_post(target_url + endpoint, post_data(action, parameters), headers(parameters))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -453,8 +461,17 @@ module ActiveMerchant #:nodoc: ALL
         response
       end
 
-      def commit(action, parameters, options = {})
-        response = api_request(action, parameters)
+      def authorization_from(action, response)
+        case action
+        when CREATE_TOKEN
+          response['CardToken']
+        else
+          response['GTRC']
+        end
+      end
+
+      def commit(action, endpoint, parameters, options = {})
+        response = api_request(action, endpoint, parameters)
 
         success = response['Status'] == STATUS_SUCCESS
 
@@ -462,7 +479,7 @@ module ActiveMerchant #:nodoc: ALL
                      success ? 'Transaction approved' : error_message_from(response),
                      response,
                      test: test?,
-                     authorization: options[:store] ? response['CardToken'] :response['GTRC'],
+                     authorization: authorization_from(action, response),
                      avs_result: { code: response['AVSResultCode'] },
                      cvv_result: response['CCVResultCode'],
                      emv_authorization: nil,
