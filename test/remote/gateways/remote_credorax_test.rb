@@ -28,6 +28,13 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
+  def test_successful_purchase_with_extra_options
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(transaction_type: '8'))
+    assert_success response
+    assert_equal "1", response.params["H9"]
+    assert_equal "Succeeded", response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
