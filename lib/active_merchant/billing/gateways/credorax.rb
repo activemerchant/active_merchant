@@ -129,6 +129,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_3d_secure(post, options)
         add_echo(post, options)
+        post[:a9] = '8' if options[:tokenized_card_data]
 
         commit(:purchase, post)
       end
@@ -141,6 +142,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_3d_secure(post, options)
         add_echo(post, options)
+        post[:a9] = '8' if options[:tokenized_card_data]
 
         commit(:authorize, post)
       end
@@ -182,6 +184,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_email(post, options)
         add_echo(post, options)
+        post[:a9] = '8' if options[:tokenized_card_data]
 
         commit(:credit, post)
       end
