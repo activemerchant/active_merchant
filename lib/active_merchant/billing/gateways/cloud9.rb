@@ -3,8 +3,8 @@ module ActiveMerchant #:nodoc: ALL
     # === Cloud 9 payment gateway.
     #
     class Cloud9Gateway < Gateway
-      self.test_url             = 'https://testlink.c9pg.com:5568/restApi'
-      self.live_url             = 'https://link.c9pg.com:5568/restApi'
+      self.test_url             = 'https://testlink.c9pg.com:11911'
+      self.live_url             = 'https://link.c9pg.com:11911'
       self.default_currency     = 'USD'
       self.display_name         = 'Cloud9 Payment Gateway'
       self.homepage_url         = 'http://cloud9paymentgateway.com'
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc: ALL
         add_encryption_data_group(post, options)
         add_pin_group(post, payment)
 
-        commit(PURCHASE, '', post)
+        commit(PURCHASE, 'restApi', post)
       end
 
       # An Authorize transaction places a temporary hold on the customer’s account. Approvals on authorizations are
@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc: ALL
         add_encryption_data_group(post, options)
         add_pin_group(post, payment)
 
-        commit(AUTHORIZE, '', post)
+        commit(AUTHORIZE, 'restApi', post)
       end
 
       # Capture is used to finalize a previously authorized transaction. A Finalize transaction is used to change an
@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc: ALL
         add_action_group(post, options)
         add_trace_group(post, options, authorization)
 
-        commit(modify ? MODIFY : CAPTURE, '', post)
+        commit(modify ? MODIFY : CAPTURE, 'restApi', post)
       end
 
       def refund(amount, authorization, options = {})
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_request_amount_group(post, options, modify ? amount : nil)
         add_trace_group(post, options, authorization)
-        commit(modify ? MODIFY : VOID, '', post)
+        commit(modify ? MODIFY : VOID, 'restApi', post)
       end
 
       # A Credit transaction is used to authorize a refund to a customer's credit card account without reference to a
@@ -248,7 +248,7 @@ module ActiveMerchant #:nodoc: ALL
         add_request_amount_group(post, options, amount)
         add_trace_group(post, options, authorization)
         add_request_card_info_group(post, payment, options)
-        commit(REFUND, '', post)
+        commit(REFUND, 'restApi', post)
       end
 
       # A Void transaction is used to cancel an authorized transaction before it has been settled.
@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_trace_group(post, options, authorization)
         add_request_extend_info_group(post, options)
-        commit(VOID, '', post)
+        commit(VOID, 'restApi', post)
       end
 
       # CreateCardToken requests token information for a card or token.
@@ -272,7 +272,7 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_request_card_info_group(post, card, options)
 
-        commit(CREATE_TOKEN, '', post)
+        commit(CREATE_TOKEN, 'restApi', post)
       end
 
       private
