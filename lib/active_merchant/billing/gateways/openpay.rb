@@ -35,25 +35,6 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'charges', post, options)
       end
 
-      def charge_bank_account(money, description, order_id, options = {})
-        requires!(options, :customer)
-        post = {}
-        post[:method] = 'bank_account'
-        post[:amount] = amount(money)
-        post[:customer] = options[:customer]
-        post[:description] = description
-        post[:order_id] = order_id
-        MultiResponse.run(:first) do |r|
-          r.process { commit(:post, 'customers', post[:customer], options) }
-
-          if(r.success? && !r.params['id'].blank?)
-            customer_id = r.params['id']
-
-            r.process { commit(:post, 'charges', post.merge(customer_id: customer_id), options) }
-          end
-        end
-      end
-
       def capture(money, authorization, options = {})
         post = {}
         post[:amount] = amount(money) if money
@@ -108,6 +89,50 @@ module ActiveMerchant #:nodoc:
         else
           commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
         end
+      end
+
+      def charge(customer_id, money, params = {})
+        requires!(params, :description, :order_id)
+        post = {}
+        post[:method] = 'bank_account'
+        post[:amount] = amount(money)
+        post[:description] = params[:description]
+        post[:order_id] = params[:order_id]
+        commit(:post, "customers/#{customer_id}/charges", post, {})
+      end
+
+      def payout(customer_id, money, params = {})
+        requires!(params, :description, :order_id, :holder_name, :clabe)
+        post = {}
+        post[:method] = 'bank_account'
+        post[:amount] = amount(money)
+        post[:bank_account] = { holder_name: params[:holder_name], clabe: params[:clabe] }
+        post[:description] = params[:description]
+        post[:order_id] = params[:order_id]
+        commit(:post, "customers/#{customer_id}/payouts", post, {})
+      end
+
+      def create_customer(params = {})
+        requires!(params, :name, :last_name, :email, :phone_number, :clabe, :requires_account)
+        post = {}
+        post[:name] = params[:name]
+        post[:last_name] = params[:last_name]
+        post[:email] = params[:email]
+        post[:phone_number] = params[:phone_number]
+        post[:clabe] = params[:clabe]
+        post[:requires_account] = params[:requires_account]
+        commit(:post, 'customers', post, {})
+      end
+
+      def update_customer(customer_id, params = {})
+        requires!(params, :name, :last_name, :email, :phone_number, :clabe)
+        post = {}
+        post[:name] = params[:name]
+        post[:last_name] = params[:last_name]
+        post[:email] = params[:email]
+        post[:phone_number] = params[:phone_number]
+        post[:clabe] = params[:clabe]
+        commit(:put, "customers/#{customer_id}", post, {})
       end
 
       def supports_scrubbing
