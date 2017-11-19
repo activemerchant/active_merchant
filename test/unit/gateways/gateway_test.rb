@@ -83,11 +83,23 @@ class GatewayTest < Test::Unit::TestCase
   def test_localized_amount_should_ignore_money_format_for_non_fractional_currencies
     Gateway.money_format = :dollars
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
-    assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
+    assert_equal '12', @gateway.send(:localized_amount, 1234, 'ISK')
 
     Gateway.money_format = :cents
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
-    assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
+    assert_equal '12', @gateway.send(:localized_amount, 1234, 'ISK')
+  end
+
+  def test_localized_amount_returns_three_decimal_places_for_three_decimal_currencies
+    @gateway.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
+
+    Gateway.money_format = :dollars
+    assert_equal '0.100', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '1.234', @gateway.send(:localized_amount, 1234, 'BHD')
+
+    Gateway.money_format = :cents
+    assert_equal '100', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '1234', @gateway.send(:localized_amount, 1234, 'BHD')
   end
 
   def test_split_names

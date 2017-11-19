@@ -175,6 +175,10 @@ module ActiveMerchant #:nodoc:
 
         verify: 9,
 
+        purchase_echeck: 11,
+        refund_echeck: 16,
+        void_echeck: 16,
+
         wallet_sale: 14,
       }
 
@@ -187,7 +191,15 @@ module ActiveMerchant #:nodoc:
         if credit_card?(payment_method)
           action = :purchase
           request = build_xml_transaction_request do |doc|
-            add_payment_method(doc, payment_method)
+            add_credit_card(doc, payment_method)
+            add_contact(doc, payment_method.name, options)
+            add_amount(doc, amount)
+            add_order_number(doc, options)
+          end
+        elsif echeck?(payment_method)
+          action = :purchase_echeck
+          request = build_xml_transaction_request do |doc|
+            add_echeck(doc, payment_method)
             add_contact(doc, payment_method.name, options)
             add_amount(doc, amount)
             add_order_number(doc, options)
@@ -207,7 +219,7 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options={})
         if credit_card?(payment_method)
           request = build_xml_transaction_request do |doc|
-            add_payment_method(doc, payment_method)
+            add_credit_card(doc, payment_method)
             add_contact(doc, payment_method.name, options)
             add_amount(doc, amount)
           end
@@ -243,15 +255,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(amount, authorization, options={})
-        transaction_id = split_authorization(authorization)[1]
+        action, transaction_id = split_authorization(authorization)
 
         request = build_xml_transaction_request do |doc|
-          add_amount(doc, amount)
+          add_amount(doc, amount) unless action == 'purchase_echeck'
           add_original_transaction_data(doc, transaction_id)
-          add_order_number(doc, options)
         end
 
-        commit(:refund, request)
+        commit(refund_type(action), request)
       end
 
       def credit(amount, payment_method, options={})
@@ -265,7 +276,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         request = build_xml_transaction_request do |doc|
-          add_payment_method(doc, credit_card)
+          add_credit_card(doc, credit_card)
           add_contact(doc, credit_card.name, options)
         end
 
@@ -287,7 +298,7 @@ module ActiveMerchant #:nodoc:
               add_customer_id(doc, customer_id)
               doc["v1"].pmt do
                 doc["v1"].type 0 # add
-                add_payment_method(doc, payment_method)
+                add_credit_card(doc, payment_method)
               end
             end
           end
@@ -338,8 +349,8 @@ module ActiveMerchant #:nodoc:
           response,
           error_code: error_code_from(succeeded, response),
           authorization: authorization_from(action, response),
-          avs_result: AVSResult.new(code: response["AVSCode"]),
-          cvv_result: CVVResult.new(response["CVV2Response"]),
+          avs_result: AVSResult.new(code: response["avsRslt"]),
+          cvv_result: CVVResult.new(response["secRslt"]),
           test: test?
         )
       end
@@ -384,8 +395,9 @@ module ActiveMerchant #:nodoc:
 
           message = RESPONSE_MESSAGES[code]
           extended = EXTENDED_RESPONSE_MESSAGES[extended_code]
+          ach_response = response["achResponse"]
 
-          [message, extended].compact.join('. ')
+          [message, extended, ach_response].compact.join('. ')
         else
           response["faultstring"]
         end
@@ -402,7 +414,11 @@ module ActiveMerchant #:nodoc:
 
       # -- helper methods ----------------------------------------------------
       def credit_card?(payment_method)
-        payment_method.respond_to?(:number)
+        payment_method.respond_to?(:verification_value)
+      end
+
+      def echeck?(payment_method)
+        payment_method.respond_to?(:routing_number)
       end
 
       def split_authorization(authorization)
@@ -410,7 +426,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def void_type(action)
-        :"void_#{action}"
+        action == 'purchase_echeck' ? :void_echeck : :"void_#{action}"
+      end
+
+      def refund_type(action)
+        action == 'purchase_echeck' ? :refund_echeck : :refund
       end
 
       # -- request methods ---------------------------------------------------
@@ -483,11 +503,18 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_payment_method(doc, payment_method)
+      def add_credit_card(doc, payment_method)
         doc["v1"].card {
           doc["v1"].pan payment_method.number
           doc["v1"].sec payment_method.verification_value if payment_method.verification_value?
           doc["v1"].xprDt expiration_date(payment_method)
+        }
+      end
+
+      def add_echeck(doc, payment_method)
+        doc["v1"].achEcheck {
+          doc["v1"].bankRtNr payment_method.routing_number
+          doc["v1"].acctNr payment_method.account_number
         }
       end
 
@@ -510,15 +537,17 @@ module ActiveMerchant #:nodoc:
           doc["v1"].title options[:title] if options[:title]
 
           if (billing_address = options[:billing_address])
-            doc["v1"].phone do
-              doc["v1"].type (options[:phone_number_type] || "4")
-              doc["v1"].nr billing_address[:phone].gsub(/\D/, '') if billing_address[:phone]
+            if billing_address[:phone]
+              doc["v1"].phone do
+                doc["v1"].type (options[:phone_number_type] || "4")
+                doc["v1"].nr billing_address[:phone].gsub(/\D/, '')
+              end
             end
-            doc["v1"].addrLn1 billing_address[:address1]
-            doc["v1"].addrLn2 billing_address[:address2]
-            doc["v1"].city billing_address[:city]
-            doc["v1"].state billing_address[:state]
-            doc["v1"].zipCode billing_address[:zip]
+            doc["v1"].addrLn1 billing_address[:address1] if billing_address[:address1]
+            doc["v1"].addrLn2 billing_address[:address2] if billing_address[:address2]
+            doc["v1"].city billing_address[:city] if billing_address[:city]
+            doc["v1"].state billing_address[:state] if billing_address[:state]
+            doc["v1"].zipCode billing_address[:zip] if billing_address[:zip]
             doc["v1"].ctry "US"
           end
 
@@ -529,15 +558,21 @@ module ActiveMerchant #:nodoc:
           if (shipping_address = options[:shipping_address])
             doc["v1"].ship do
               doc["v1"].fullName fullname
-              doc["v1"].addrLn1 shipping_address[:address1]
+              doc["v1"].addrLn1 shipping_address[:address1] if shipping_address[:address1]
               doc["v1"].addrLn2 shipping_address[:address2] if shipping_address[:address2]
-              doc["v1"].city shipping_address[:city]
-              doc["v1"].state shipping_address[:state]
-              doc["v1"].zipCode shipping_address[:zip]
+              doc["v1"].city shipping_address[:city] if shipping_address[:city]
+              doc["v1"].state shipping_address[:state] if shipping_address[:state]
+              doc["v1"].zipCode shipping_address[:zip] if shipping_address[:zip]
               doc["v1"].phone shipping_address[:phone].gsub(/\D/, '') if shipping_address[:phone]
               doc["v1"].email shipping_address[:email] if shipping_address[:email]
             end
           end
+        end
+      end
+
+      def add_name(doc, payment_method)
+        doc["v1"].contact do
+          doc["v1"].fullName payment_method.name
         end
       end
 

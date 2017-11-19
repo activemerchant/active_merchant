@@ -4,13 +4,11 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://stage.wepayapi.com/v2'
       self.live_url = 'https://wepayapi.com/v2'
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'https://www.wepay.com/'
       self.default_currency = 'USD'
       self.display_name = 'WePay'
-
-      API_VERSION = "2016-12-07"
 
       def initialize(options = {})
         requires!(options, :client_id, :account_id, :access_token)
@@ -78,8 +76,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options = {})
-        requires!(options, :email)
-
         post = {}
         post[:client_id] = @options[:client_id]
         post[:user_name] = "#{creditcard.first_name} #{creditcard.last_name}"
@@ -88,8 +84,6 @@ module ActiveMerchant #:nodoc:
         post[:cvv] = creditcard.verification_value unless options[:recurring]
         post[:expiration_month] = creditcard.month
         post[:expiration_year] = creditcard.year
-        post[:original_ip] = options[:ip] if options[:ip]
-        post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
 
         if(billing_address = (options[:billing_address] || options[:address]))
           post[:address] = {}
@@ -104,8 +98,21 @@ module ActiveMerchant #:nodoc:
           post[:client_secret] = @options[:client_secret]
           commit('/credit_card/transfer', post, options)
         else
+          post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
+          post[:original_ip] = options[:ip] if options[:ip]
           commit('/credit_card/create', post, options)
         end
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((\\?"cc_number\\?":\\?")[^\\"]+(\\?"))i, '\1[FILTERED]\2').
+          gsub(%r((\\?"cvv\\?":\\?")[^\\"]+(\\?"))i, '\1[FILTERED]\2').
+          gsub(%r((Authorization: Bearer )\w+)i, '\1[FILTERED]\2')
       end
 
       private
@@ -126,6 +133,7 @@ module ActiveMerchant #:nodoc:
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
         post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]
         post[:reference_id] = options[:order_id] if options[:order_id]
+        post[:unique_id] = options[:unique_id] if options[:unique_id]
         post[:redirect_uri] = options[:redirect_uri] if options[:redirect_uri]
         post[:callback_uri] = options[:callback_uri] if options[:callback_uri]
         post[:fallback_uri] = options[:fallback_uri] if options[:fallback_uri]
@@ -136,6 +144,8 @@ module ActiveMerchant #:nodoc:
         post[:preapproval_id] = options[:preapproval_id] if options[:preapproval_id]
         post[:prefill_info] = options[:prefill_info] if options[:prefill_info]
         post[:funding_sources] = options[:funding_sources] if options[:funding_sources]
+        post[:payer_rbits] = options[:payer_rbits] if options[:payer_rbits]
+        post[:transaction_rbits] = options[:transaction_rbits] if options[:transaction_rbits]
         add_fee(post, options)
       end
 
@@ -212,16 +222,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options)
-        {
-          "Content-Type"  => "application/json",
-          "User-Agent"    => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "Authorization" => "Bearer #{@options[:access_token]}",
-          "Api-Version"   => api_version(options)
+        headers = {
+          "Content-Type"      => "application/json",
+          "User-Agent"        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "Authorization"     => "Bearer #{@options[:access_token]}"
         }
-      end
+        headers["Api-Version"] = options[:version] if options[:version]
+        headers["Client-IP"] = options[:ip] if options[:ip]
+        headers["WePay-Risk-Token"] = options[:risk_token] if options[:risk_token]
 
-      def api_version(options)
-        options[:version] || API_VERSION
+        headers
       end
     end
   end

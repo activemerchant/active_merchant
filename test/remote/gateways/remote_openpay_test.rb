@@ -21,6 +21,13 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_nil response.message
   end
 
+  def test_successful_purchase_with_email
+    @options[:email] = '%d@example.org' % Time.now
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -47,6 +54,13 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_nil response.message
+  end
+
+  def test_successful_authorize_with_email
+    @options[:email] = '%d@example.org' % Time.now
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_nil response.message
@@ -104,6 +118,17 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_successful_purchase_with_device_session_id
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(device_session_id: 'weur2ty732yu2y47824u23yu4i'))
     assert_success response
+  end
+
+  def test_successful_purchase_with_card_points
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(use_card_points: 'NONE'))
+    assert_success response
+  end
+
+  def test_failed_purchase_with_card_points
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(use_card_points: 'MIXED'))
+    assert_failure response
+    assert_match %r{cardNumber not allowed for Card points}, response.message
   end
 
   def test_successful_store

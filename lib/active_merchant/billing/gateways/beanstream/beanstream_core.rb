@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module BeanstreamCore
+      include Empty
+
       RECURRING_URL = 'https://www.beanstream.com/scripts/recurring_billing.asp'
       SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
 
@@ -59,6 +61,72 @@ module ActiveMerchant #:nodoc:
         :cancel => 'C'
       }
 
+      STATES = {
+        "ALBERTA" => "AB",
+        "BRITISH COLUMBIA" => "BC",
+        "MANITOBA" => "MB",
+        "NEW BRUNSWICK" => "NB",
+        "NEWFOUNDLAND AND LABRADOR" => "NL",
+        "NOVA SCOTIA" => "NS",
+        "ONTARIO" => "ON",
+        "PRINCE EDWARD ISLAND" => "PE",
+        "QUEBEC" => "QC",
+        "SASKATCHEWAN" => "SK",
+        "NORTHWEST TERRITORIES" => "NT",
+        "NUNAVUT" => "NU",
+        "YUKON" => "YT",
+        "ALABAMA" => "AL",
+        "ALASKA" => "AK",
+        "ARIZONA" => "AZ",
+        "ARKANSAS" => "AR",
+        "CALIFORNIA" => "CA",
+        "COLORADO" => "CO",
+        "CONNECTICUT" => "CT",
+        "DELAWARE" => "DE",
+        "FLORIDA" => "FL",
+        "GEORGIA" => "GA",
+        "HAWAII" => "HI",
+        "IDAHO" => "ID",
+        "ILLINOIS" => "IL",
+        "INDIANA" => "IN",
+        "IOWA" => "IA",
+        "KANSAS" => "KS",
+        "KENTUCKY" => "KY",
+        "LOUISIANA" => "LA",
+        "MAINE" => "ME",
+        "MARYLAND" => "MD",
+        "MASSACHUSETTS" => "MA",
+        "MICHIGAN" => "MI",
+        "MINNESOTA" => "MN",
+        "MISSISSIPPI" => "MS",
+        "MISSOURI" => "MO",
+        "MONTANA" => "MT",
+        "NEBRASKA" => "NE",
+        "NEVADA" => "NV",
+        "NEW HAMPSHIRE" => "NH",
+        "NEW JERSEY" => "NJ",
+        "NEW MEXICO" => "NM",
+        "NEW YORK" => "NY",
+        "NORTH CAROLINA" => "NC",
+        "NORTH DAKOTA" => "ND",
+        "OHIO" => "OH",
+        "OKLAHOMA" => "OK",
+        "OREGON" => "OR",
+        "PENNSYLVANIA" => "PA",
+        "RHODE ISLAND" => "RI",
+        "SOUTH CAROLINA" => "SC",
+        "SOUTH DAKOTA" => "SD",
+        "TENNESSEE" => "TN",
+        "TEXAS" => "TX",
+        "UTAH" => "UT",
+        "VERMONT" => "VT",
+        "VIRGINIA" => "VA",
+        "WASHINGTON" => "WA",
+        "WEST VIRGINIA" => "WV",
+        "WISCONSIN" => "WI",
+        "WYOMING" => "WY"
+      }
+
       def self.included(base)
         base.default_currency = 'CAD'
 
@@ -70,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
         # The homepage URL of the gateway
         base.homepage_url = 'http://www.beanstream.com/'
-        base.live_url = 'https://www.beanstream.com/scripts/process_transaction.asp'
+        base.live_url = 'https://api.na.bambora.com/scripts/process_transaction.asp'
 
         # The name of the gateway
         base.display_name = 'Beanstream.com'
@@ -93,6 +161,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_reference(post, reference)
         add_transaction_type(post, :capture)
+        add_recurring_payment(post, options)
         commit(post)
       end
 
@@ -111,6 +180,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def purchase_action(source)
         if source.is_a?(Check)
           :check_purchase
@@ -120,7 +190,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_ip(post, options)
-        post[:customerIP] = options[:ip] if options[:ip]
+        post[:customerIp] = options[:ip] if options[:ip]
       end
 
       def void_action(original_transaction_type)
@@ -152,27 +222,29 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
+        post[:ordEmailAddress]  = options[:email] if options[:email]
+        post[:shipEmailAddress] = options[:shipping_email] || options[:email] if options[:email]
+
         prepare_address_for_non_american_countries(options)
 
         if billing_address = options[:billing_address] || options[:address]
           post[:ordName]          = billing_address[:name]
-          post[:ordEmailAddress]  = options[:email]
           post[:ordPhoneNumber]   = billing_address[:phone]
           post[:ordAddress1]      = billing_address[:address1]
           post[:ordAddress2]      = billing_address[:address2]
           post[:ordCity]          = billing_address[:city]
-          post[:ordProvince]      = billing_address[:state]
+          post[:ordProvince]      = state_for(billing_address)
           post[:ordPostalCode]    = billing_address[:zip]
           post[:ordCountry]       = billing_address[:country]
         end
+
         if shipping_address = options[:shipping_address]
           post[:shipName]         = shipping_address[:name]
-          post[:shipEmailAddress] = options[:email]
           post[:shipPhoneNumber]  = shipping_address[:phone]
           post[:shipAddress1]     = shipping_address[:address1]
           post[:shipAddress2]     = shipping_address[:address2]
           post[:shipCity]         = shipping_address[:city]
-          post[:shipProvince]     = shipping_address[:state]
+          post[:shipProvince]     = state_for(shipping_address)
           post[:shipPostalCode]   = shipping_address[:zip]
           post[:shipCountry]      = shipping_address[:country]
           post[:shippingMethod]   = shipping_address[:shipping_method]
@@ -180,13 +252,22 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def state_for(address)
+        STATES[address[:state].upcase] || address[:state] if address[:state]
+      end
+
       def prepare_address_for_non_american_countries(options)
         [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
+          next if empty?(address[:country])
           unless ['US', 'CA'].include?(address[:country])
             address[:state] = '--'
             address[:zip]   = '000000' unless address[:zip]
           end
         end
+      end
+
+      def add_recurring_payment(post, options)
+        post[:recurringPayment] = true if options[:recurring].to_s == 'true'
       end
 
       def add_invoice(post, options)
@@ -391,4 +472,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

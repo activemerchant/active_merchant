@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
 
       XSD_VERSION = "1.121"
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :switch, :dankort, :maestro]
       self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG LB)
 
       self.default_currency = 'USD'
@@ -39,7 +39,12 @@ module ActiveMerchant #:nodoc:
         :visa  => '001',
         :master => '002',
         :american_express => '003',
-        :discover => '004'
+        :discover => '004',
+        :diners_club => '005',
+        :jcb => '007',
+        :switch => '024',
+        :dankort => '034',
+        :maestro => '042'
       }
 
       @@response_codes = {
@@ -253,6 +258,8 @@ module ActiveMerchant #:nodoc:
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
+        xml.tag! 'payerAuthEnrollService', {'run' => 'true'} if options[:payer_auth_enroll_service]
+        add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
         xml.target!
       end
@@ -288,6 +295,8 @@ module ActiveMerchant #:nodoc:
           add_check_service(xml)
         else
           add_purchase_service(xml, payment_method_or_reference, options)
+          xml.tag! 'payerAuthEnrollService', {'run' => 'true'} if options[:payer_auth_enroll_service]
+          add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
         xml.target!
@@ -350,6 +359,7 @@ module ActiveMerchant #:nodoc:
             add_check_service(xml, options)
           else
             add_purchase_service(xml, payment_method, options)
+            add_payment_network_token(xml) if network_tokenization?(payment_method)
           end
         end
         add_subscription_create_service(xml, options)
@@ -466,6 +476,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_decision_manager_fields(xml, options)
+        return unless options[:decision_manager_enabled]
+
         xml.tag! 'decisionManager' do
           xml.tag! 'enabled', options[:decision_manager_enabled] if options[:decision_manager_enabled]
           xml.tag! 'profile', options[:decision_manager_profile] if options[:decision_manager_profile]
@@ -473,6 +485,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mdd_fields(xml, options)
+        return unless options.keys.any? { |key| key.to_s.start_with?("mdd_field") }
+
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
             key = "mdd_field_#{each}".to_sym
@@ -498,7 +512,7 @@ module ActiveMerchant #:nodoc:
 
       def add_auth_service(xml, payment_method, options)
         if network_tokenization?(payment_method)
-          add_network_tokenization(xml, payment_method, options)
+          add_auth_network_tokenization(xml, payment_method, options)
         else
           xml.tag! 'ccAuthService', {'run' => 'true'}
         end
@@ -508,7 +522,7 @@ module ActiveMerchant #:nodoc:
         payment_method.is_a?(NetworkTokenizationCreditCard)
       end
 
-      def add_network_tokenization(xml, payment_method, options)
+      def add_auth_network_tokenization(xml, payment_method, options)
         return unless network_tokenization?(payment_method)
 
         case card_brand(payment_method).to_sym
@@ -534,9 +548,11 @@ module ActiveMerchant #:nodoc:
             xml.tag!("xid", Base64.encode64(cryptogram[20...40]))
           end
         end
+      end
 
+      def add_payment_network_token(xml)
         xml.tag! 'paymentNetworkToken' do
-          xml.tag!('transactionType', "1")
+          xml.tag!('transactionType', '1')
         end
       end
 
@@ -602,7 +618,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'recurringSubscriptionInfo' do
           if reference
-            _, subscription_id, _ = reference.split(";")
+            subscription_id = reference.split(";")[6]
             xml.tag! 'subscriptionID',  subscription_id
           end
 
@@ -686,11 +702,14 @@ module ActiveMerchant #:nodoc:
           response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
         rescue ResponseError => e
           response = parse(e.response.body)
+        rescue REXML::ParseException => e
+          response = { message: e.to_s }
         end
 
         success = response[:decision] == "ACCEPT"
-        message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]
-        authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken], action, amount, options[:currency]].compact.join(";") : nil
+        message = response[:message]
+
+        authorization = success ? authorization_from(response, action, amount, options) : nil
 
         Response.new(success, message, response,
           :test => test?,
@@ -707,9 +726,10 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "//c:replyMessage")
           root.elements.to_a.each do |node|
-            case node.name
+            case node.expanded_name
             when 'c:reasonCode'
-              reply[:message] = reply(node.text)
+              reply[:reasonCode] = node.text
+              reply[:message] = reason_message(node.text)
             else
               parse_element(reply, node)
             end
@@ -726,13 +746,23 @@ module ActiveMerchant #:nodoc:
           node.elements.each{|e| parse_element(reply, e) }
         else
           if node.parent.name =~ /item/
-            parent = node.parent.name + (node.parent.attributes["id"] ? "_" + node.parent.attributes["id"] : '')
-            reply[(parent + '_' + node.name).to_sym] = node.text
-          else
-            reply[node.name.to_sym] = node.text
+            parent = node.parent.name
+            parent += '_' + node.parent.attributes["id"] if node.parent.attributes["id"]
+            parent += '_'
           end
+          reply["#{parent}#{node.name}".to_sym] ||= node.text
         end
         return reply
+      end
+
+      def reason_message(reason_code)
+        return if reason_code.blank?
+        @@response_codes[:"r#{reason_code}"]
+      end
+
+      def authorization_from(response, action, amount, options)
+        [options[:order_id], response[:requestID], response[:requestToken], action, amount,
+         options[:currency], response[:subscriptionID]].join(";")
       end
     end
   end

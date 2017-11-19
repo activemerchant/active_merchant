@@ -1,13 +1,14 @@
 require "test_helper"
 
 class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
+
   def setup
     @gateway = TransFirstTransactionExpressGateway.new(fixtures(:trans_first_transaction_express))
 
     @amount = 100
     @declined_amount = 21
-    @partial_amount = 1110
     @credit_card = credit_card("4485896261017708")
+    @check = check
 
     billing_address = address({
       address1: "450 Main",
@@ -39,7 +40,42 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "Succeeded", response.message
+    assert_not_nil response.avs_result
+    assert_not_nil response.cvv_result
+    assert_equal "Street address does not match, but 5-digit postal code matches.", response.avs_result["message"]
+    assert_equal "CVV matches", response.cvv_result["message"]
   end
+ 
+  def test_successful_purchase_no_avs
+    options = @options.dup
+    options[:shipping_address] = nil
+    options[:billing_address] = nil
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_only_required
+    # Test the purchase with only the required billing and shipping information
+    options = @options.dup
+    options[:shipping_address] = {
+      address1: "450 Main",
+      zip: "85284",
+    }
+
+    options[:billing_address] = {
+      address1: "450 Main",
+      zip: "85284",
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+    assert_not_nil response.avs_result
+    assert_not_nil response.cvv_result
+    assert_equal "Street address does not match, but 5-digit postal code matches.", response.avs_result["message"]
+    assert_equal "CVV matches", response.cvv_result["message"]
+  end
+
 
   def test_successful_purchase_without_cvv
     credit_card_opts = {
@@ -74,11 +110,10 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal "Succeeded", response.message
   end
 
-  def test_partial_purchase
-    response = @gateway.purchase(@partial_amount, @credit_card, @options)
+  def test_successful_purchase_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
-    assert_match /0*555$/, response.params["amt"]
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_purchase
@@ -86,6 +121,12 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "Not sufficient funds", response.message
     assert_equal "51", response.params["rspCode"]
+  end
+
+  def test_failed_purchase_with_echeck
+    assert response = @gateway.purchase(@amount, check(routing_number: "121042883"), @options)
+    assert_failure response
+    assert_equal 'Error. Bank routing number validation negative (ABA).', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -147,10 +188,19 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = @gateway.void("")
+    response = @gateway.void("purchase|000015212561")
     assert_failure response
-    assert_equal "Validation Failure", response.message
-    assert_equal "50011", response.error_code
+    assert_equal "Invalid transaction", response.message
+    assert_equal "12", response.error_code
+  end
+
+  def test_successful_echeck_purchase_void
+    response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+
+    void = @gateway.void(response.authorization)
+    assert_success void
+    assert_equal "Succeeded", void.message
   end
 
   # gateway does not settle fast enough to test refunds
@@ -178,6 +228,21 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "Validation Failure", response.message
     assert_equal "50011", response.error_code
+  end
+
+  def test_successful_refund_with_echeck
+    purchase = @gateway.purchase(@amount, @check, @options)
+    assert_success purchase
+    assert_match /purchase_echeck/, purchase.authorization
+
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+  end
+
+  def test_failed_refund_with_echeck
+    refund = @gateway.refund(@amount, 'purchase_echeck|000028706091')
+    assert_failure refund
+    assert_equal "Invalid transaction", refund.message
   end
 
   # Credit is only supported with specific approval from Transaction Express
@@ -211,7 +276,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.verify(credit_card(""), @options)
     assert_failure response
     assert_equal "Validation Failure", response.message
-    assert_equal "50011", response.error_code
+    assert_equal "51308", response.error_code
   end
 
   def test_successful_store
@@ -261,7 +326,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.store(credit_card("123"), @options)
     assert_failure response
     assert_equal "Validation Failure", response.message
-    assert_equal "50011", response.error_code
+    assert_equal "51308", response.error_code
   end
 
   # def test_dump_transcript

@@ -259,9 +259,11 @@ module ActiveMerchant #:nodoc:
           if brand = card_type(@credit_card.brand)
             xml.tag! 'cardType'     , brand
           end
-          if @credit_card.verification_value
+          if @credit_card.verification_value?
             xml.tag! 'cvdIndicator' , '1' # Value Provided
             xml.tag! 'cvd'          , @credit_card.verification_value
+          else
+            xml.tag! 'cvdIndicator' , '0'
           end
         end
       end

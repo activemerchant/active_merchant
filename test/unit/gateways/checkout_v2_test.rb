@@ -18,9 +18,46 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-
     assert_equal 'charge_test_941CA9CE174U76BD29C8', response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_includes_avs_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_equal 'S', response.avs_result["code"]
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+    assert_equal 'X', response.avs_result["postal_match"]
+    assert_equal 'X', response.avs_result["street_match"]
+  end
+
+  def test_successful_purchase_includes_cvv_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_equal 'Y', response.cvv_result["code"]
+  end
+
+  def test_successful_authorize_includes_avs_result
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    assert_equal 'S', response.avs_result["code"]
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+    assert_equal 'X', response.avs_result["postal_match"]
+    assert_equal 'X', response.avs_result["street_match"]
+  end
+
+  def test_successful_authorize_includes_cvv_result
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    assert_equal 'Y', response.cvv_result["code"]
   end
 
   def test_purchase_with_additional_fields
@@ -47,7 +84,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "charge_test_941CA9CE174U76BD29C8", response.authorization
+    assert_equal "charge_test_AF1A29AD350Q748C7EA8", response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -80,7 +117,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "charge_test_941CA9CE174U76BD29C8", response.authorization
+    assert_equal "charge_test_AF1A29AD350Q748C7EA8", response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -149,6 +186,9 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_match %r{Invalid JSON response}, response.message
   end
 
+  def test_supported_countries
+    assert_equal ['AD', 'AE', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA'], @gateway.supported_countries
+  end
 
   private
 
@@ -218,23 +258,68 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def successful_authorize_response
     %(
-     {
-       "id":"charge_test_941CA9CE174U76BD29C8",
-       "liveMode":false,
-       "created":"2015-05-27T20:45:58Z",
-       "value":200.0,
-       "currency":"USD",
-       "trackId":"1",
-       "description":null,
-       "email":"longbob.longsen@gmail.com",
-       "chargeMode":1,
-       "transactionIndicator":1,
-       "customerIp":null,
-       "responseMessage":"Authorised",
-       "responseAdvancedInfo":"Authorised",
-       "responseCode":"10000"
-      }
-    )
+      {
+        "id":"charge_test_AF1A29AD350Q748C7EA8",
+        "liveMode":false,
+        "created":"2017-11-13T14:05:27Z",
+        "value":200,
+        "currency":"USD",
+        "trackId":"1",
+        "description":null,
+        "email":"longbob.longsen@example.com",
+        "chargeMode":1,
+        "transactionIndicator":1,
+        "customerIp":null,
+        "responseMessage":"Approved",
+        "responseAdvancedInfo":"Approved",
+        "responseCode":"10000",
+        "status":"Authorised",
+        "authCode":"923189",
+        "isCascaded":false,
+        "autoCapture":"N",
+        "autoCapTime":0.0,
+        "card":{"customerId":
+        "cust_12DCEB24-ACEA-48AB-BEF2-35A3C09BE581",
+        "expiryMonth":"06",
+        "expiryYear":"2018",
+        "billingDetails":{
+          "addressLine1":"456 My Street",
+          "addressLine2":"Apt 1",
+          "postcode":"K1C2N6",
+          "country":"CA",
+          "city":"Ottawa",
+          "state":"ON",
+          "phone":{"number":"(555)555-5555"}
+         },
+        "id":"card_CFA314F4-388D-4CF4-BE6F-940D894C9E64",
+        "last4":"4242",
+        "bin":"424242",
+        "paymentMethod":"Visa",
+        "fingerprint":"F639CAB2745BEE4140BF86DF6B6D6E255C5945AAC3788D923FA047EA4C208622",
+        "name":"Longbob Longsen",
+        "cvvCheck":"Y",
+        "avsCheck":"S"
+      },
+      "riskCheck":true,
+      "customerPaymentPlans":null,
+      "metadata":{},
+      "shippingDetails":{
+        "addressLine1":null,
+        "addressLine2":null,
+        "postcode":null,
+        "country":null,
+        "city":null,
+        "state":null,
+        "phone":{}
+      },
+      "products":[],
+      "udf1":null,
+      "udf2":null,
+      "udf3":null,
+      "udf4":null,
+      "udf5":null
+    }
+  )
   end
 
   def failed_authorize_response

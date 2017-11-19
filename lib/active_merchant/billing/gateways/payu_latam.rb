@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options={})
         requires!(options, :merchant_id, :account_id, :api_login, :api_key)
         super
+        @options[:payment_country] ||= options[:payment_country] if options[:payment_country]
       end
 
       def purchase(amount, payment_method, options={})
@@ -45,11 +46,11 @@ module ActiveMerchant #:nodoc:
         commit('auth', post)
       end
 
-      def capture(authorization, options={})
+      def capture(amount, authorization, options={})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
-        add_transaction_type(post, 'CAPTURE')
+        add_transaction_elements(post, 'CAPTURE', options)
         add_reference(post, authorization)
 
         commit('capture', post)
@@ -59,17 +60,17 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
-        add_transaction_type(post, 'VOID')
+        add_transaction_elements(post, 'VOID', options)
         add_reference(post, authorization)
 
         commit('void', post)
       end
 
-      def refund(authorization, options={})
+      def refund(amount, authorization, options={})
         post = {}
 
         add_credentials(post, 'SUBMIT_TRANSACTION')
-        add_transaction_type(post, 'REFUND')
+        add_transaction_elements(post, 'REFUND', options)
         add_reference(post, authorization)
 
         commit('refund', post)
@@ -116,13 +117,13 @@ module ActiveMerchant #:nodoc:
 
       def auth_or_sale(post, transaction_type, amount, payment_method, options)
         add_credentials(post, 'SUBMIT_TRANSACTION')
-        add_transaction_type(post, transaction_type)
+        add_transaction_elements(post, transaction_type, options)
         add_order(post, options)
-        add_buyer(post, options)
+        add_buyer(post, payment_method, options)
         add_invoice(post, amount, options)
         add_signature(post)
         add_payment_method(post, payment_method, options)
-        add_payer(post, options)
+        add_payer(post, payment_method, options)
         add_extra_parameters(post, options)
       end
 
@@ -136,36 +137,87 @@ module ActiveMerchant #:nodoc:
         post[:merchant] = merchant
       end
 
-      def add_transaction_type(post, type)
+      def add_transaction_elements(post, type, options)
         transaction = {}
+        transaction[:paymentCountry] = @options[:payment_country] || (options[:billing_address][:country] if options[:billing_address])
         transaction[:type] = type
+        transaction[:ipAddress] = options[:ip] || ''
+        transaction[:userAgent] = options[:user_agent] if options[:user_agent]
+        transaction[:cookie] = options[:cookie] if options[:cookie]
+        transaction[:deviceSessionId] = options[:device_session_id] if options[:device_session_id]
         post[:transaction] = transaction
       end
 
       def add_order(post, options)
         order = {}
         order[:accountId] = @options[:account_id]
+        order[:partnerId] = options[:partner_id] if options[:partner_id]
         order[:referenceCode] = options[:order_id] || generate_unique_id
         order[:description] = options[:description] || 'unspecified'
         order[:language] = 'en'
+        order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         post[:transaction][:order] = order
       end
 
-      def add_buyer(post, options)
-        if address = options[:shipping_address]
-          buyer = {}
-          buyer[:fullName] = address[:name]
-          shipping_address = {}
-          shipping_address[:street1] = address[:address1]
-          shipping_address[:street2] = address[:address2]
-          shipping_address[:city] = address[:city]
-          shipping_address[:state] = address[:state]
-          shipping_address[:country] = address[:country]
-          shipping_address[:postalCode] = address[:zip]
-          shipping_address[:phone] = address[:phone]
-          buyer[:shippingAddress] = shipping_address
-          post[:transaction][:order][:buyer] = buyer
+      def add_payer(post, payment_method, options)
+        address = options[:billing_address]
+        payer = {}
+        payer[:fullName] = payment_method.name.strip
+        payer[:contactPhone] = address[:phone] if (address && address[:phone])
+        payer[:dniNumber] = options[:dni_number] if options[:dni_number]
+        payer[:dniType] = options[:dni_type] if options[:dni_type]
+        payer[:emailAddress] = options[:email] if options[:email]
+        payer[:birthdate] = options[:birth_date] if options[:birth_date] && options[:payment_country] == 'MX'
+        payer[:billingAddress] = billing_address_fields(options)
+        post[:transaction][:payer] = payer
+      end
+
+      def billing_address_fields(options)
+        return unless address = options[:billing_address]
+        billing_address = {}
+        billing_address[:street1] = address[:address1]
+        billing_address[:street2] = address[:address2]
+        billing_address[:city] = address[:city]
+        billing_address[:state] = address[:state]
+        billing_address[:country] = address[:country]
+        billing_address[:postalCode] = address[:zip] if options[:payment_country] == 'MX'
+        billing_address[:phone] = address[:phone]
+        billing_address
+      end
+
+      def add_buyer(post, payment_method, options)
+        buyer = {}
+        if buyer_hash = options[:buyer]
+          buyer[:fullName] = buyer_hash[:name]
+          buyer[:dniNumber] = buyer_hash[:dni_number]
+          buyer[:dniType] = buyer_hash[:dni_type]
+          buyer[:cnpj] = buyer_hash[:cnpj] if options[:payment_country] == 'BR'
+          buyer[:emailAddress] = buyer_hash[:email]
+          buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
+          buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
+        else
+          buyer[:fullName] = payment_method.name.strip
+          buyer[:dniNumber] = options[:dni_number]
+          buyer[:dniType] = options[:dni_type]
+          buyer[:cnpj] = options[:cnpj] if options[:payment_country] == 'BR'
+          buyer[:emailAddress] = options[:email]
+          buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
+          buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         end
+        post[:transaction][:order][:buyer] = buyer
+      end
+
+      def shipping_address_fields(options)
+        return unless address = options[:shipping_address]
+        shipping_address = {}
+        shipping_address[:street1] = address[:address1]
+        shipping_address[:street2] = address[:address2]
+        shipping_address[:city] = address[:city]
+        shipping_address[:state] = address[:state]
+        shipping_address[:country] = address[:country]
+        shipping_address[:postalCode] = address[:zip]
+        shipping_address[:phone] = address[:phone]
+        shipping_address
       end
 
       def add_invoice(post, money, options)
@@ -173,8 +225,18 @@ module ActiveMerchant #:nodoc:
         tx_value[:value] = amount(money)
         tx_value[:currency] = options[:currency] || currency(money)
 
+        tx_tax = {}
+        tx_tax[:value] = options[:tax] || '0'
+        tx_tax[:currency] = options[:currency] || currency(money)
+
+        tx_tax_return_base = {}
+        tx_tax_return_base[:value] = options[:tax_return_base] || '0'
+        tx_tax_return_base[:currency] = options[:currency] || currency(money)
+
         additional_values = {}
         additional_values[:TX_VALUE] = tx_value
+        additional_values[:TX_TAX] = tx_tax if options[:payment_country] == 'CO'
+        additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base if options[:payment_country] == 'CO'
 
         post[:transaction][:order][:additionalValues] = additional_values
       end
@@ -207,7 +269,7 @@ module ActiveMerchant #:nodoc:
         else
           credit_card = {}
           credit_card[:number] = payment_method.number
-          credit_card[:securityCode] = add_security_code(payment_method, options)
+          credit_card[:securityCode] = payment_method.verification_value || options[:cvv]
           credit_card[:expirationDate] = format(payment_method.year, :four_digits).to_s + '/' + format(payment_method.month, :two_digits).to_s
           credit_card[:name] = payment_method.name.strip
           credit_card[:processWithoutCvv2] = true if add_process_without_cvv2(payment_method, options)
@@ -216,35 +278,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_security_code(payment_method, options)
-        return payment_method.verification_value unless payment_method.verification_value.blank?
-        return options[:cvv] unless options[:cvv].blank?
-        return "0000" if BRAND_MAP[payment_method.brand.to_s] == "AMEX"
-        "000"
-      end
-
       def add_process_without_cvv2(payment_method, options)
         return true if payment_method.verification_value.blank? && options[:cvv].blank?
         false
-      end
-
-      def add_payer(post, options)
-        if address = options[:billing_address]
-          payer = {}
-          post[:transaction][:paymentCountry] = address[:country]
-          payer[:fullName] = address[:name]
-          payer[:contactPhone] = address[:phone]
-          billing_address = {}
-          billing_address[:street1] = address[:address1]
-          billing_address[:street2] = address[:address2]
-          billing_address[:city] = address[:city]
-          billing_address[:state] = address[:state]
-          billing_address[:country] = address[:country]
-          billing_address[:postalCode] = address[:zip]
-          billing_address[:phone] = address[:phone]
-          payer[:billingAddress] = billing_address
-          post[:transaction][:payer] = payer
-        end
       end
 
       def add_extra_parameters(post, options)
@@ -304,6 +340,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(params)
+        params.merge(test: test?)
         params.to_json
       end
 
@@ -321,6 +358,8 @@ module ActiveMerchant #:nodoc:
           response["code"] == "SUCCESS" && response["creditCardToken"] && response["creditCardToken"]["creditCardTokenId"].present?
         when 'verify_credentials'
           response["code"] == "SUCCESS"
+        when 'refund'
+        response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "PENDING" || response["transactionResponse"]["state"] == "APPROVED")
         else
           response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "APPROVED")
         end

@@ -77,6 +77,9 @@ module ActiveMerchant #:nodoc:
       # :call_issuer - Transaction requires voice authentication, call issuer
       # :pickup_card - Issuer requests that you pickup the card from merchant
       # :test_mode_live_card - Card was declined. Request was in test mode, but used a non test card.
+      # :unsupported_feature - Transaction failed due to gateway or merchant
+      #                        configuration not supporting a feature used, such
+      #                        as network tokenization.
 
       STANDARD_ERROR_CODE = {
         :incorrect_number => 'incorrect_number',
@@ -93,7 +96,8 @@ module ActiveMerchant #:nodoc:
         :call_issuer => 'call_issuer',
         :pickup_card => 'pick_up_card',
         :config_error => 'config_error',
-        :test_mode_live_card => 'test_mode_live_card'
+        :test_mode_live_card => 'test_mode_live_card',
+        :unsupported_feature => 'unsupported_feature',
       }
 
       cattr_reader :implementations
@@ -121,8 +125,9 @@ module ActiveMerchant #:nodoc:
       class_attribute :supported_cardtypes
       self.supported_cardtypes = []
 
-      class_attribute :currencies_without_fractions
-      self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF HUF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      class_attribute :currencies_without_fractions, :currencies_with_three_decimal_places
+      self.currencies_without_fractions = %w(BIF BYR CLP CVE DJF GNF ISK JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.currencies_with_three_decimal_places = %w()
 
       class_attribute :homepage_url
       class_attribute :display_name
@@ -259,15 +264,26 @@ module ActiveMerchant #:nodoc:
         self.currencies_without_fractions.include?(currency.to_s)
       end
 
+      def three_decimal_currency?(currency)
+        self.currencies_with_three_decimal_places.include?(currency.to_s)
+      end
+
       def localized_amount(money, currency)
         amount = amount(money)
 
-        return amount unless non_fractional_currency?(currency)
-
-        if self.money_format == :cents
-          sprintf("%.0f", amount.to_f / 100)
-        else
-          amount.split('.').first
+        return amount unless non_fractional_currency?(currency) || three_decimal_currency?(currency)
+        if non_fractional_currency?(currency)
+          if self.money_format == :cents
+            sprintf("%.0f", amount.to_f / 100)
+          else
+            amount.split('.').first
+          end
+        elsif three_decimal_currency?(currency)
+          if self.money_format == :cents
+            amount.to_s
+          else
+            sprintf("%.3f", (amount.to_f / 10))
+          end
         end
       end
 

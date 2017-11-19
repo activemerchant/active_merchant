@@ -12,6 +12,7 @@ class StripeTest < Test::Unit::TestCase
 
     @options = {
       :billing_address => address(),
+      :statement_address => statement_address(),
       :description => 'Test Purchase'
     }
 
@@ -437,6 +438,25 @@ class StripeTest < Test::Unit::TestCase
     @options[:currency] = 'JPY'
 
     @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_adds_application_to_x_stripe_client_user_agent_header
+    application = {
+      name: "app",
+      version: "1.0",
+      url: "https://example.com"
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "cus_xxx|card_xxx", @options.merge({application: application}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/\"application\"/, headers["X-Stripe-Client-User-Agent"])
+      assert_match(/\"name\":\"app\"/, headers["X-Stripe-Client-User-Agent"])
+      assert_match(/\"version\":\"1.0\"/, headers["X-Stripe-Client-User-Agent"])
+      assert_match(/\"url\":\"https:\/\/example.com\"/, headers["X-Stripe-Client-User-Agent"])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_successful_purchase_with_token_including_customer
@@ -879,6 +899,32 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:city], post[:card][:address_city]
   end
 
+  def test_add_statement_address
+    post = {}
+
+    @gateway.send(:add_statement_address, post, @options)
+
+    assert_equal @options[:statement_address][:zip], post[:statement_address][:postal_code]
+    assert_equal @options[:statement_address][:state], post[:statement_address][:state]
+    assert_equal @options[:statement_address][:address1], post[:statement_address][:line1]
+    assert_equal @options[:statement_address][:address2], post[:statement_address][:line2]
+    assert_equal @options[:statement_address][:country], post[:statement_address][:country]
+    assert_equal @options[:statement_address][:city], post[:statement_address][:city]
+  end
+
+  def test_add_statement_address_returns_nil_if_required_fields_missing
+    post = {}
+    [:address1, :city, :zip, :state].each do |required_key|
+      missing_required = @options.tap do |options|
+        options[:statement_address].delete_if { |k| k == required_key }
+      end
+
+      @gateway.send(:add_statement_address, post, missing_required)
+
+      assert_equal nil, post[:statement_address]
+    end
+  end
+
   def test_ensure_does_not_respond_to_credit
     assert !@gateway.respond_to?(:credit)
   end
@@ -910,9 +956,31 @@ class StripeTest < Test::Unit::TestCase
       headers && headers['Idempotency-Key'] == 'test123'
     }.returns(successful_purchase_response)
 
-    @gateway.purchase(@amount, @credit_card, @options.merge(:idempotency_key => 'test123'))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(:idempotency_key => 'test123'))
+    assert_success response
   end
 
+  def test_optional_idempotency_on_void
+    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+      headers && headers['Idempotency-Key'] == 'test123'
+    }.returns(successful_purchase_response(true))
+
+    response = @gateway.void('ch_test_charge', @options.merge(:idempotency_key => 'test123'))
+    assert_success response
+  end
+
+  def test_optional_idempotency_on_verify
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      headers && headers['Idempotency-Key'] == nil
+    end.returns(successful_void_response)
+
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      headers && headers['Idempotency-Key'] == 'test123'
+    end.returns(successful_authorization_response)
+
+    response = @gateway.verify(@credit_card, @options.merge(:idempotency_key => 'test123'))
+    assert_success response
+  end
 
   def test_initialize_gateway_with_version
     @gateway = StripeGateway.new(:login => 'login', :version => '2013-12-03')

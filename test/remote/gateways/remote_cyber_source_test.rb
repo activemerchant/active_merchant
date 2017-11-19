@@ -9,6 +9,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', verification_value: '321')
     @declined_card = credit_card('801111111111111')
     @pinless_debit_card = credit_card('4002269999999999')
+    @three_ds_enrolled_card = credit_card('4000000000000002',
+      verification_value: '321',
+      month: "12",
+      year: "#{Time.now.year + 2}",
+      brand: :visa
+    )
 
     @amount = 100
 
@@ -313,7 +319,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_successful_create_subscription_with_monthly_options
     response = @gateway.store(@credit_card, @subscription_options.merge(:setup_fee => 99.0, :subscription => {:amount => 49.0, :automatic_renew => false, frequency: 'monthly'}))
     assert_equal 'Successful transaction', response.message
-    response = @gateway.retrieve(";#{response.params['subscriptionID']};", :order_id => @subscription_options[:order_id])
+    response = @gateway.retrieve(response.authorization, order_id: @subscription_options[:order_id])
     assert_equal "0.49", response.params['recurringAmount']
     assert_equal 'monthly', response.params['frequency']
   end
@@ -361,6 +367,32 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.retrieve(response.authorization, :order_id => generate_unique_id)
     assert response.success?
     assert response.test?
+  end
+
+  def test_3ds_purchase_request
+    assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true))
+    assert_equal "475", response.params["reasonCode"]
+    assert !response.params["acsURL"].blank?
+    assert !response.params["paReq"].blank?
+    assert !response.params["xid"].blank?
+    assert !response.success?
+  end
+
+  def test_3ds_authorize_request
+    assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @options.merge(payer_auth_enroll_service: true))
+    assert_equal "475", response.params["reasonCode"]
+    assert !response.params["acsURL"].blank?
+    assert !response.params["paReq"].blank?
+    assert !response.params["xid"].blank?
+    assert !response.success?
+  end
+
+  def test_3ds_transactions_with_unenrolled_card
+    assert response = @gateway.purchase(1202, @credit_card, @options.merge(payer_auth_enroll_service: true))
+    assert response.success?
+
+    assert response = @gateway.authorize(1202, @credit_card, @options.merge(payer_auth_enroll_service: true))
+    assert response.success?
   end
 
   def test_verify_credentials

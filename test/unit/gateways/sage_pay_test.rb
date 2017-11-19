@@ -285,6 +285,35 @@ class SagePayTest < Test::Unit::TestCase
     assert_equal "Joikam Lomström", @gateway.send(:truncate, "Joikam Lomström Rate", 20)
   end
 
+  def test_successful_authorization_and_capture_and_refund
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+
+    capture = stub_comms do
+      @gateway.capture(@amount, auth.authorization)
+    end.respond_with(successful_capture_response)
+    assert_success capture
+
+    refund = stub_comms do
+      @gateway.refund(@amount, capture.authorization,
+        order_id: generate_unique_id,
+        description: "Refund txn"
+       )
+    end.respond_with(successful_refund_response)
+    assert_success refund
+  end
+
+  def test_repeat_purchase_with_reference_token
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "1455548a8d178beecd88fe6a285f50ff;{0D2ACAF0-FA64-6DFF-3869-7ADDDC1E0474};15353766;BS231FNE14;purchase", @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/RelatedVPSTxId=%7B0D2ACAF0-FA64-6DFF-3869-7ADDDC1E0474%/, data)
+      assert_match(/TxType=REPEAT/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def purchase_with_options(optional)
@@ -336,6 +365,25 @@ PostCodeResult=MATCHED
 CV2Result=NOTMATCHED
 3DSecureStatus=NOTCHECKED
 Token=1
+    RESP
+  end
+
+  def successful_refund_response
+    <<-RESP
+VPSProtocol=3.00
+Status=OK
+StatusDetail=0000 : The Authorisation was Successful.
+SecurityKey=KUMJBP02HM
+TxAuthNo=15282432
+VPSTxId={08C870A9-1E53-3852-BA44-CBC91612CBCA}
+    RESP
+  end
+
+  def successful_capture_response
+    <<-RESP
+VPSProtocol=3.00
+Status=OK
+StatusDetail=2004 : The Release was Successful.
     RESP
   end
 

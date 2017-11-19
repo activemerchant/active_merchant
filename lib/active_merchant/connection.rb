@@ -49,7 +49,7 @@ module ActiveMerchant
     end
 
     def request(method, body, headers = {})
-      request_start = Time.now.to_f
+      request_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       retry_exceptions(:max_retries => max_retries, :logger => logger, :tag => tag) do
         begin
@@ -89,7 +89,7 @@ module ActiveMerchant
       end
 
     ensure
-      info "connection_request_total_time=%.4fs" % [Time.now.to_f - request_start], tag
+      info "connection_request_total_time=%.4fs" % [Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start], tag
     end
 
     private
