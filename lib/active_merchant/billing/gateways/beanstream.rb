@@ -75,6 +75,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_transaction_type(post, :authorization)
         add_customer_ip(post, options)
+        add_recurring_payment(post, options)
         commit(post)
       end
 
@@ -86,6 +87,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_transaction_type(post, purchase_action(source))
         add_customer_ip(post, options)
+        add_recurring_payment(post, options)
         commit(post)
       end
 

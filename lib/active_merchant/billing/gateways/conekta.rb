@@ -82,16 +82,15 @@ module ActiveMerchant #:nodoc:
 
       def add_details_data(post, options)
         details = {}
-        details[:name] = options[:customer] if options[:customer]
+        details[:name] = options[:customer] || (options[:billing_address][:name] if options[:billing_address])
+        details[:phone] = options[:phone] || (options[:billing_address][:phone] if options[:billing_address])
         details[:email] = options[:email] if options[:email]
-        details[:phone] = options[:phone] if options[:phone]
-        post[:device_fingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
         details[:ip] = options[:ip] if options[:ip]
         add_billing_address(details, options)
         add_line_items(details, options)
         add_shipment(details, options)
-
         post[:details] = details
+        post[:device_fingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
       end
 
       def add_shipment(post, options)

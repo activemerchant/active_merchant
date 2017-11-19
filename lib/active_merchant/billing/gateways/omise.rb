@@ -14,18 +14,20 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = API_URL
 
       # Currency supported by Omise
-      # * Thai Baht with Satang, i.e. 9000 => 90 THB
+      # * Thai Baht with Satang, 50000 (THB500.00)
+      # * Japanese Yen, 500 (JPY500)
       self.default_currency = 'THB'
       self.money_format     = :cents
 
       #Country supported by Omise
       # * Thailand
-      self.supported_countries = %w( TH )
+      self.supported_countries = %w( TH JP )
 
       # Credit cards supported by Omise
       # * VISA
       # * MasterCard
-      self.supported_cardtypes = [:visa, :master]
+      # * JCB
+      self.supported_cardtypes = [:visa, :master, :jcb]
 
       # Omise main page
       self.homepage_url = 'https://www.omise.co/'
@@ -39,8 +41,10 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>:public_key</tt> -- Omise's public key (REQUIRED).
-      # * <tt>:secret_key</tt> -- Omise's secret key (REQUIRED).
+      # * <tt>:public_key</tt>  -- Omise's public key  (REQUIRED).
+      # * <tt>:secret_key</tt>  -- Omise's secret key  (REQUIRED).
+      # * <tt>:api_version</tt> -- Omise's API Version (OPTIONAL), default version is '2014-07-27'
+      #                            See version at page https://dashboard.omise.co/api-version/edit
 
       def initialize(options={})
         requires!(options, :public_key, :secret_key)

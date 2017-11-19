@@ -177,6 +177,14 @@ class CardStreamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success purchase
+
+    purchase = stub_comms do
+      @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: "PEN"))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/currencyCode=604/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
   end
 
   def test_successful_purchase_without_street_address

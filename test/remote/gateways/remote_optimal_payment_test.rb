@@ -44,6 +44,13 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
     assert_equal 'auth declined', response.message
   end
 
+  def test_purchase_with_no_cvv
+    @credit_card.verification_value = ''
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'no_error', response.message
+  end
+
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -134,6 +141,6 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'invalid credentials', response.message
+    assert_equal 'invalid merchant account', response.message
   end
 end

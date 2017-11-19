@@ -33,7 +33,7 @@ class RemoteMerchantPartnersTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Invalid account number", response.message
+    assert_match(/Invalid account/, response.message)
     assert response.params["result"].start_with?("DECLINED")
   end
 
@@ -51,7 +51,7 @@ class RemoteMerchantPartnersTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Invalid account number", response.message
+    assert_match(/Invalid account/, response.message)
     assert response.params["result"].start_with?("DECLINED")
   end
 
@@ -103,7 +103,7 @@ class RemoteMerchantPartnersTest < Test::Unit::TestCase
   def test_failed_credit
     response = @gateway.credit(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Invalid account number", response.message
+    assert_match(/Invalid account/, response.message)
     assert response.params["result"].start_with?("DECLINED")
   end
 
@@ -116,7 +116,7 @@ class RemoteMerchantPartnersTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal "Invalid account number", response.message
+    assert_match(/Invalid account/, response.message)
     assert response.params["result"].start_with?("DECLINED")
   end
 

@@ -116,7 +116,12 @@ module ActiveMerchant #:nodoc:
           gsub(%r((ccnumber=)\d+), '\1[FILTERED]').
           gsub(%r((cvv=)\d+), '\1[FILTERED]').
           gsub(%r((checkaba=)\d+), '\1[FILTERED]').
-          gsub(%r((checkaccount=)\d+), '\1[FILTERED]')
+          gsub(%r((checkaccount=)\d+), '\1[FILTERED]').
+          gsub(%r((cryptogram=)[^&]+(&?)), '\1[FILTERED]\2')
+      end
+
+      def supports_network_tokenization?
+        true
       end
 
       private
@@ -135,8 +140,14 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(post, payment_method, options)
         if(payment_method.is_a?(String))
           post[:customer_vault_id] = payment_method
+        elsif (payment_method.is_a?(NetworkTokenizationCreditCard))
+          post[:ccnumber] = payment_method.number
+          post[:ccexp] = exp_date(payment_method)
+          post[:token_cryptogram] = payment_method.payment_cryptogram
         elsif(card_brand(payment_method) == 'check')
           post[:payment] = 'check'
+          post[:firstname] = payment_method.first_name
+          post[:lastname] = payment_method.last_name
           post[:checkname] = payment_method.name
           post[:checkaba] = payment_method.routing_number
           post[:checkaccount] = payment_method.account_number

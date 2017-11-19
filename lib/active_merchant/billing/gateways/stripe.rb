@@ -71,7 +71,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
         @api_key = options[:login]
         @fee_refund_api_key = options[:fee_refund_login]
-
         super
       end
 
@@ -159,6 +158,7 @@ module ActiveMerchant #:nodoc:
       def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(auth_minimum_amount(options), payment, options) }
+          options[:idempotency_key] = nil
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -303,7 +303,9 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, payment, options)
         end
 
-        unless emv_payment?(payment)
+        if emv_payment?(payment)
+          add_statement_address(post, options)
+        else
           add_amount(post, money, options, true)
           add_customer_data(post, options)
           post[:description] = options[:description]
@@ -363,6 +365,18 @@ module ActiveMerchant #:nodoc:
           post[:card][:address_state] = address[:state] if address[:state]
           post[:card][:address_city] = address[:city] if address[:city]
         end
+      end
+
+      def add_statement_address(post, options)
+        return unless statement_address = options[:statement_address]
+        return unless [:address1, :city, :zip, :state].all? { |key| statement_address[key].present? } 
+
+        post[:statement_address] = {}
+        post[:statement_address][:line1] = statement_address[:address1]
+        post[:statement_address][:line2] = statement_address[:address2] if statement_address[:address2].present?
+        post[:statement_address][:city] = statement_address[:city]
+        post[:statement_address][:postal_code] = statement_address[:zip]
+        post[:statement_address][:state] = statement_address[:state]
       end
 
       def add_creditcard(post, creditcard, options)
@@ -475,12 +489,17 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "Stripe-Version" => api_version(options),
-          "X-Stripe-Client-User-Agent" => user_agent,
+          "X-Stripe-Client-User-Agent" => stripe_client_user_agent(options),
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
         headers.merge!("Idempotency-Key" => idempotency_key) if idempotency_key
         headers.merge!("Stripe-Account" => options[:stripe_account]) if options[:stripe_account]
         headers
+      end
+
+      def stripe_client_user_agent(options)
+        return user_agent unless options[:application]
+        JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
       end
 
       def api_version(options)

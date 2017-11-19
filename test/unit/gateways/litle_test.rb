@@ -21,6 +21,15 @@ class LitleTest < Test::Unit::TestCase
         number:  "44444444400009",
         payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
       })
+    @decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        source: :android_pay,
+        month: '01',
+        year: '2021',
+        brand: "visa",
+        number:  "4457000300000007",
+        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+      })
     @amount = 100
     @options = {}
   end
@@ -114,6 +123,13 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_add_android_pay_order_source
+    stub_comms do
+      @gateway.purchase(@amount, @decrypted_android_pay)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>androidpay</orderSource>", data
+    end.respond_with(successful_purchase_response)
+  end
 
   def test_successful_authorize_and_capture
     response = stub_comms do

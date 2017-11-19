@@ -164,8 +164,10 @@ module ActiveMerchant
     end
 
     def credit_card_with_track_data(number = '4242424242424242', options = {})
+      exp_date = default_expiration_date.strftime("%y%m")
+
       defaults = {
-        :track_data => '%B' + number + '^LONGSEN/L. ^15121200000000000000**123******?',
+        :track_data => "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
       }.update(options)
 
       Billing::CreditCard.new(defaults)
@@ -229,6 +231,16 @@ module ActiveMerchant
         country:  'CA',
         phone:    '(555)555-5555',
         fax:      '(555)555-6666'
+      }.update(options)
+    end
+
+    def statement_address(options = {})
+      {
+        address1: '456 My Street',
+        address2: 'Apt 1',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6'
       }.update(options)
     end
 

@@ -168,6 +168,7 @@ module ActiveMerchant
             unless money.nil?
               xml.tag! :TxnDetails do
                 xml.tag! :amount, amount(money)
+                xml.tag! :capturemethod, 'ecomm'
               end
             end
           end
@@ -188,6 +189,7 @@ module ActiveMerchant
             xml.tag! :TxnDetails do
               xml.tag! :merchantreference, format_reference_number(options[:order_id])
               xml.tag! :amount, amount(money)
+              xml.tag! :capturemethod, 'ecomm'
             end
           end
         end

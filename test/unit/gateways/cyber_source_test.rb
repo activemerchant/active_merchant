@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class CyberSourceTest < Test::Unit::TestCase
   include CommStub
@@ -58,7 +59,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD", response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
     assert response.test?
   end
 
@@ -94,7 +95,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @check, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD", response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
     assert response.test?
   end
 
@@ -104,7 +105,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:pinless_debit_card => true))
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD", response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
     assert response.test?
   end
 
@@ -175,6 +176,17 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    refute_equal 'Successful transaction', response.message
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_unsuccessful_authorization_with_reply
+    @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response_with_reply)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    refute_equal 'Successful transaction', response.message
+    assert_equal '481', response.params['reasonCode']
     assert_instance_of Response, response
     assert_failure response
   end
@@ -343,11 +355,6 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_auth_with_network_tokenization_for_visa
-    @gateway.expects(:ssl_post).with do |host, request_body|
-      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
-      true
-    end.returns(successful_purchase_response)
-
     credit_card = network_tokenization_credit_card('4111111111111111',
       :brand              => 'visa',
       :transaction_id     => "123",
@@ -355,12 +362,37 @@ class CyberSourceTest < Test::Unit::TestCase
       :payment_cryptogram => "111111111100cryptogram"
     )
 
-    assert response = @gateway.authorize(@amount, credit_card, @options)
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card, @options)
+    end.check_request do |_endpoint, body, _headers|
+      assert_xml_valid_to_xsd(body)
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', body
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_successful_purchase_with_network_tokenization_for_visa
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |_endpoint, body, _headers|
+      assert_xml_valid_to_xsd(body)
+      assert_match %r'<ccAuthService run="true">.+?<ccCaptureService run="true"/>'m, body
+    end.respond_with(successful_purchase_response)
+
     assert_success response
   end
 
   def test_successful_auth_with_network_tokenization_for_mastercard
     @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_xml_valid_to_xsd(request_body)
       assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
@@ -378,6 +410,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_auth_with_network_tokenization_for_amex
     @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_xml_valid_to_xsd(request_body)
       assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
       true
     end.returns(successful_purchase_response)
@@ -402,6 +435,28 @@ class CyberSourceTest < Test::Unit::TestCase
 
     assert response = @gateway.authorize(100, @credit_card, @options.merge(currency: "JPY"))
     assert_success response
+  end
+
+  def test_malformed_xml_handling
+    @gateway.expects(:ssl_post).returns(malformed_xml_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match %r(Missing end tag for), response.message
+    assert response.test?
+  end
+
+  def test_3ds_response
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_enroll_service: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/\<payerAuthEnrollService run=\"true\"\/\>/, data)
+    end.respond_with(threedeesecure_purchase_response)
+
+    assert_failure purchase
+    assert_equal "YTJycDdLR3RIVnpmMXNFejJyazA=", purchase.params["xid"]
+    assert_equal "eNpVUe9PwjAQ/d6/ghA/r2tBYMvRBEUFFEKQEP1Yu1Om7gfdJoy/3nZsgk2a3Lveu757B+utRhw/oyo0CphjlskPbIXBsC25TvuPD/lkc3xn2d2R6y+3LWA5WuFOwA/qLExiwRzX4UAbSEwLrbYyzgVItbuZLkS353HWA1pDAhHq6Vgw3ule9/pAT5BALCMUqnwznZJCKwRaZQiopIhzXYpB1wXaAAKF/hbbPE8zn9L9fu9cUB2VREBtAQF6FrQsbJSZOQ9hIF7Xs1KNg6dVZzXdxGk0f1nc4+eslMfREKitIBDIHAV3WZ+Z2+Ku3/F8bjRXeQIysmrEFeOOa0yoIYHUfjQ6Icbt02XGTFRojbFqRmoQATykSYymxlD+YjPDWfntxBqrcusg8wbmWGcrXNFD4w3z2IkfVkZRy6H13mi9YhP9W/0vhyyqPw==", purchase.params["paReq"]
+    assert_equal "https://0eafstag.cardinalcommerce.com/EAFService/jsp/v1/redirect", purchase.params["acsURL"]
   end
 
   def test_scrub
@@ -487,6 +542,64 @@ class CyberSourceTest < Test::Unit::TestCase
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-28121162"><wsu:Created>2008-01-15T21:50:41.580Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>a1efca956703a2a5037178a8a28f7357</c:merchantReferenceCode><c:requestID>2004338415330008402434</c:requestID><c:decision>REJECT</c:decision><c:reasonCode>231</c:reasonCode><c:requestToken>Afvvj7KfIgU12gooCFE2/DanQIApt+G1OgTSA+R9PTnyhFTb0KRjgFY+ynyIFNdoKKAghwgx</c:requestToken><c:ccAuthReply><c:reasonCode>231</c:reasonCode></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def unsuccessful_authorization_response_with_reply
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Header>
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+          <wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-5307043">
+            <wsu:Created>2017-05-10T01:15:14.835Z</wsu:Created>
+          </wsu:Timestamp></wsse:Security>
+        </soap:Header>
+        <soap:Body>
+          <c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.121">
+            <c:merchantReferenceCode>TEST11111111111</c:merchantReferenceCode>
+            <c:requestID>1841784762620176127166</c:requestID>
+            <c:decision>REJECT</c:decision>
+            <c:reasonCode>481</c:reasonCode>
+            <c:requestToken>AMYJY9fl62i+vx2OEQYAx9zv/9UBZAAA5h5D</c:requestToken>
+            <c:purchaseTotals>
+              <c:currency>USD</c:currency>
+            </c:purchaseTotals>
+            <c:ccAuthReply>
+              <c:reasonCode>100</c:reasonCode>
+              <c:amount>1186.43</c:amount>
+              <c:authorizationCode>123456</c:authorizationCode>
+              <c:avsCode>N</c:avsCode>
+              <c:avsCodeRaw>N</c:avsCodeRaw>
+              <c:cvCode>M</c:cvCode>
+              <c:cvCodeRaw>M</c:cvCodeRaw>
+              <c:authorizedDateTime>2017-05-10T01:15:14Z</c:authorizedDateTime>
+              <c:processorResponse>00</c:processorResponse>
+              <c:reconciliationID>013445773WW7EWMB0RYI9</c:reconciliationID>
+            </c:ccAuthReply>
+            <c:afsReply>
+              <c:reasonCode>100</c:reasonCode>
+              <c:afsResult>96</c:afsResult>
+              <c:hostSeverity>1</c:hostSeverity>
+              <c:consumerLocalTime>20:15:14</c:consumerLocalTime>
+              <c:afsFactorCode>C^H</c:afsFactorCode>
+              <c:internetInfoCode>MM-IPBST</c:internetInfoCode>
+              <c:suspiciousInfoCode>MUL-EM</c:suspiciousInfoCode>
+              <c:velocityInfoCode>VEL-ADDR^VEL-CC^VEL-NAME</c:velocityInfoCode>
+              <c:ipCountry>us</c:ipCountry>
+              <c:ipState>nv</c:ipState><c:ipCity>las vegas</c:ipCity>
+              <c:ipRoutingMethod>fixed</c:ipRoutingMethod>
+              <c:scoreModelUsed>default</c:scoreModelUsed>
+              <c:cardBin>540510</c:cardBin>
+              <c:binCountry>US</c:binCountry>
+              <c:cardAccountType>PURCHASING</c:cardAccountType>
+              <c:cardScheme>MASTERCARD CREDIT</c:cardScheme>
+              <c:cardIssuer>werewrewrew.</c:cardIssuer>
+            </c:afsReply>
+            <c:decisionReply><c:casePriority>3</c:casePriority><c:activeProfileReply/></c:decisionReply>
+          </c:replyMessage>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 
@@ -582,5 +695,30 @@ class CyberSourceTest < Test::Unit::TestCase
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-32551101"><wsu:Created>2007-07-12T18:31:53.838Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>TEST11111111111</c:merchantReferenceCode><c:requestID>1842651133440156177166</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/</c:requestToken><c:purchaseTotals><c:currency>JPY</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1</c:amount><c:authorizationCode>004542</c:authorizationCode><c:avsCode>A</c:avsCode><c:avsCodeRaw>I7</c:avsCodeRaw><c:authorizedDateTime>2007-07-12T18:31:53Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>23439130C40VZ2FB</c:reconciliationID></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
     XML
+  end
+
+  def malformed_xml_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Header>
+<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-2636690"><wsu:Created>2008-01-15T21:42:03.343Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>b0a6cf9aa07f1a8495f89c364bbd6a9a</c:merchantReferenceCode><c:requestID>2004333231260008401927</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Afvvj7Ke2Fmsbq0wHFE2sM6R4GAptYZ0jwPSA+R9PhkyhFTb0KRjoE4+ynthZrG6tMBwjAtT</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>123456</c:authorizationCode><c:avsCode>Y</c:avsCode><c:avsCodeRaw>Y</c:avsCodeRaw><c:cvCode>M</c:cvCode><c:cvCodeRaw>M</c:cvCodeRaw><c:authorizedDateTime>2008-01-15T21:42:03Z</c:authorizedDateTime><c:processorResponse>00</c:processorResponse><c:authFactorCode>U</c:authFactorCode><p></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def threedeesecure_purchase_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Header>
+<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1347906680"><wsu:Created>2017-10-17T20:39:27.392Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.121"><c:merchantReferenceCode>1a5ba4804da54b384c6e8a2d8057ea99</c:merchantReferenceCode><c:requestID>5082727663166909004012</c:requestID><c:decision>REJECT</c:decision><c:reasonCode>475</c:reasonCode><c:requestToken>AhjzbwSTE4kEGDR65zjsGwFLjtwzsJ0gXLJx6Xb0ky3SA7ek8AYA/A17</c:requestToken><c:payerAuthEnrollReply><c:reasonCode>475</c:reasonCode><c:acsURL>https://0eafstag.cardinalcommerce.com/EAFService/jsp/v1/redirect</c:acsURL><c:paReq>eNpVUe9PwjAQ/d6/ghA/r2tBYMvRBEUFFEKQEP1Yu1Om7gfdJoy/3nZsgk2a3Lveu757B+utRhw/oyo0CphjlskPbIXBsC25TvuPD/lkc3xn2d2R6y+3LWA5WuFOwA/qLExiwRzX4UAbSEwLrbYyzgVItbuZLkS353HWA1pDAhHq6Vgw3ule9/pAT5BALCMUqnwznZJCKwRaZQiopIhzXYpB1wXaAAKF/hbbPE8zn9L9fu9cUB2VREBtAQF6FrQsbJSZOQ9hIF7Xs1KNg6dVZzXdxGk0f1nc4+eslMfREKitIBDIHAV3WZ+Z2+Ku3/F8bjRXeQIysmrEFeOOa0yoIYHUfjQ6Icbt02XGTFRojbFqRmoQATykSYymxlD+YjPDWfntxBqrcusg8wbmWGcrXNFD4w3z2IkfVkZRy6H13mi9YhP9W/0vhyyqPw==</c:paReq><c:proxyPAN>1198888</c:proxyPAN><c:xid>YTJycDdLR3RIVnpmMXNFejJyazA=</c:xid><c:proofXML>&lt;AuthProof&gt;&lt;Time&gt;2017 Oct 17 20:39:27&lt;/Time&gt;&lt;DSUrl&gt;https://csrtestcustomer34.cardinalcommerce.com/merchantacsfrontend/vereq.jsp?acqid=CYBS&lt;/DSUrl&gt;&lt;VEReqProof&gt;&lt;Message id="a2rp7KGtHVzf1sEz2rk0"&gt;&lt;VEReq&gt;&lt;version&gt;1.0.2&lt;/version&gt;&lt;pan&gt;XXXXXXXXXXXX0002&lt;/pan&gt;&lt;Merchant&gt;&lt;acqBIN&gt;469216&lt;/acqBIN&gt;&lt;merID&gt;1234567&lt;/merID&gt;&lt;/Merchant&gt;&lt;Browser&gt;&lt;deviceCategory&gt;0&lt;/deviceCategory&gt;&lt;/Browser&gt;&lt;/VEReq&gt;&lt;/Message&gt;&lt;/VEReqProof&gt;&lt;VEResProof&gt;&lt;Message id="a2rp7KGtHVzf1sEz2rk0"&gt;&lt;VERes&gt;&lt;version&gt;1.0.2&lt;/version&gt;&lt;CH&gt;&lt;enrolled&gt;Y&lt;/enrolled&gt;&lt;acctID&gt;1198888&lt;/acctID&gt;&lt;/CH&gt;&lt;url&gt;https://testcustomer34.cardinalcommerce.com/merchantacsfrontend/pareq.jsp?vaa=b&amp;amp;gold=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&lt;/url&gt;&lt;protocol&gt;ThreeDSecure&lt;/protocol&gt;&lt;/VERes&gt;&lt;/Message&gt;&lt;/VEResProof&gt;&lt;/AuthProof&gt;</c:proofXML><c:veresEnrolled>Y</c:veresEnrolled><c:authenticationPath>ENROLLED</c:authenticationPath></c:payerAuthEnrollReply></c:replyMessage></soap:Body></soap:Envelope>
+      XML
+  end
+
+  def assert_xml_valid_to_xsd(data, root_element = '//s:Body/*')
+    schema_file = File.open("#{File.dirname(__FILE__)}/../../schema/cyber_source/CyberSourceTransaction_#{CyberSourceGateway::XSD_VERSION}.xsd")
+    doc = Nokogiri::XML(data)
+    root = Nokogiri::XML(doc.xpath(root_element).to_s)
+    xsd = Nokogiri::XML::Schema(schema_file)
+    errors = xsd.validate(root)
+    assert_empty errors, "XSD validation errors in the following XML:\n#{root}"
   end
 end

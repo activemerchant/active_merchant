@@ -54,6 +54,15 @@ class RemoteLitleTest < Test::Unit::TestCase
         number:  "44444444400009",
         payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
       })
+    @decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
+      {
+        source: :android_pay,
+        month: '01',
+        year: '2021',
+        brand: "visa",
+        number:  "4457000300000007",
+        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+      })
   end
 
   def test_successful_authorization
@@ -109,8 +118,25 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_3ds_fields
+    options = @options.merge({
+      order_source: '3dsAuthenticated',
+      xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+      cavv: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
+    })
+    assert response = @gateway.purchase(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_successful_purchase_with_apple_pay
     assert response = @gateway.purchase(10010, @decrypted_apple_pay)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_android_pay
+    assert response = @gateway.purchase(10000, @decrypted_android_pay)
     assert_success response
     assert_equal 'Approved', response.message
   end

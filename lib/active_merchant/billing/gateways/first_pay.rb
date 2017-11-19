@@ -3,7 +3,7 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FirstPayGateway < Gateway
-      self.live_url = 'https://secure.1stpaygateway.net/secure/gateway/xmlgateway.aspx'
+      self.live_url = 'https://secure.goemerchant.com/secure/gateway/xmlgateway.aspx'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -12,6 +12,7 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'http://1stpaygateway.net/'
       self.display_name = '1stPayGateway.Net'
+      self.ssl_version = :TLSv1
 
       def initialize(options={})
         requires!(options, :transaction_center_id, :gateway_id)
@@ -66,6 +67,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:owner_email] = options[:email] if options[:email]
         post[:remote_ip_address] = options[:ip] if options[:ip]
+        post[:processor_id] = options[:processor_id] if options[:processor_id]
       end
 
       def add_address(post, creditcard, options)

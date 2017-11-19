@@ -113,6 +113,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:device_session_id] = options[:device_session_id]
         post[:currency] = (options[:currency] || currency(money)).upcase
+        post[:use_card_points] = options[:use_card_points] if options[:use_card_points]
         add_creditcard(post, creditcard, options)
         post
       end
@@ -129,8 +130,20 @@ module ActiveMerchant #:nodoc:
             holder_name: creditcard.name
           }
           add_address(card, options)
+          add_customer_data(post, creditcard, options)
           post[:card] = card
         end
+      end
+
+      def add_customer_data(post, creditcard, options)
+        if options[:email]
+          customer = {
+            name: creditcard.name || options[:name],
+            email: options[:email]
+          }
+          post[:customer] = customer
+        end
+        post
       end
 
       def add_address(card, options)
