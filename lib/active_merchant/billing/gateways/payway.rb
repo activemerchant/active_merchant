@@ -5,7 +5,7 @@ module ActiveMerchant
 
       self.supported_countries = [ 'AU' ]
       self.supported_cardtypes = [ :visa, :master, :diners_club, :american_express, :bankcard ]
-      self.display_name        = 'Pay Way'
+      self.display_name        = 'PayWay'
       self.homepage_url        = 'http://www.payway.com.au'
       self.default_currency    = 'AUD'
       self.money_format        = :cents
