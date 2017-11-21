@@ -43,12 +43,13 @@ Instantiating such an object is simple:
 
 ```ruby
 credit_card = ActiveMerchant::Billing::CreditCard.new(
-  :first_name => 'Steve',
-  :last_name  => 'Smith',
-  :month      => '9',
-  :year       => '2014',
-  :type       => 'visa',
-  :number     => '4242424242424242')
+  :first_name         => 'Steve',
+  :last_name          => 'Smith',
+  :month              => '9',
+  :year               => '2022',
+  :brand              => 'visa',
+  :number             => '4242424242424242',
+  :verification_value => '424')
 ```
 
 Most often, though, you'll be using user-supplied data. In a typical Rails controller:
