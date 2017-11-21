@@ -14,8 +14,8 @@ module ActiveMerchant #:nodoc:
       self.require_verification_value = false
       self.require_name = false
 
-      attr_accessor :payment_cryptogram, :eci, :transaction_id
-      attr_writer :source
+      attr_accessor :payment_cryptogram, :transaction_id
+      attr_writer :source, :eci
 
       SOURCES = [:apple_pay, :android_pay]
 
@@ -24,6 +24,14 @@ module ActiveMerchant #:nodoc:
           @source
         else
           :apple_pay
+        end
+      end
+
+      def eci
+        if brand == "discover" && source == :apple_pay
+          "04"
+        else
+          @eci
         end
       end
 
