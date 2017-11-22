@@ -135,6 +135,12 @@ card_stream:
 cardknox:
   api_key: ActiveMerchant_Test
 
+# Working credentials, no need to replace
+cardprocess:
+  user_id: 8a8294174e735d0c014e78beb6c5154f
+  password: cTZjAm9c87
+  entity_id: 8a8294174e735d0c014e78beb6b9154b
+
 # Cashnet doesn't provide public testing data
 cashnet:
   merchant: 'X'
