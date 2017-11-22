@@ -256,6 +256,9 @@ module ActiveMerchant #:nodoc:
         token_info               = {}
         token_info['litleToken'] = cardtoken.token
         token_info['expDate'] = cardtoken.exp_date if cardtoken.exp_date?
+        puts "BIGHOTDOG"
+        puts cardtoken.verification_value
+        puts "NOTHOTDOG"
         token_info['cardValidationNum'] = cardtoken.verification_value unless cardtoken.verification_value.blank?
         token_info['type'] = cardtoken.type unless cardtoken.type.blank?
 

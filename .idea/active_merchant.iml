@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="RUBY_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="bundler (v1.14.3, ruby-2.0.0-p648) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="coderay (v1.1.1, ruby-2.0.0-p648) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="method_source (v0.8.1, ruby-2.0.0-p648) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="nokogiri (v1.5.6, ruby-2.0.0-p648) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="pry (v0.10.4, ruby-2.0.0-p648) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="slop (v3.6.0, ruby-2.0.0-p648) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="test-unit (v2.0.0.0, ruby-2.0.0-p648) [gem]" level="application" />
+  </component>
+</module>
