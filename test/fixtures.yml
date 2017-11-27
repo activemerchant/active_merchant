@@ -502,6 +502,11 @@ migs:
   advanced_login: activemerchant
   advanced_password: test12345
 
+mobilexpress:
+  merchant_key: MERCHANT_KEY
+  api_password: API_PASSWORD
+  pos_id: OPTIONAL_POS_ID
+
 modern_payments:
   login: login
   password: password
