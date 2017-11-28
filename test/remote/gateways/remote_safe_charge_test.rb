@@ -13,6 +13,40 @@ class RemoteSafeChargeTest < Test::Unit::TestCase
       description: 'Store Purchase',
       currency: "EUR"
     }
+
+    @three_ds_gateway = SafeChargeGateway.new(fixtures(:safe_charge_three_ds))
+    @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
+    @three_ds_non_enrolled_card = credit_card('5333 3062 3122 6927')
+    @three_ds_invalid_pa_res_card = credit_card('4012 0010 3749 0006')
+  end
+
+  def test_successful_3ds_purchase
+    response = @three_ds_gateway.purchase(@amount, @three_ds_enrolled_card, @options)
+    assert_success response
+    assert !response.params["acsurl"].blank?
+    assert !response.params["pareq"].blank?
+    assert !response.params["xid"].blank?
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_regular_purchase_through_3ds_flow_with_non_enrolled_card
+    response = @three_ds_gateway.purchase(@amount, @three_ds_non_enrolled_card, @options)
+    assert_success response
+    assert response.params["acsurl"].blank?
+    assert response.params["pareq"].blank?
+    assert response.params["xid"].blank?
+    assert response.params["threedflow"] = 1
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_regular_purchase_through_3ds_flow_with_invalid_pa_res
+    response = @three_ds_gateway.purchase(@amount, @three_ds_invalid_pa_res_card, @options)
+    assert_success response
+    assert !response.params["acsurl"].blank?
+    assert !response.params["pareq"].blank?
+    assert !response.params["xid"].blank?
+    assert response.params["threedflow"] = 1
+    assert_equal 'Success', response.message
   end
 
   def test_successful_purchase

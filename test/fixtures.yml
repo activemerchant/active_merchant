@@ -1053,6 +1053,10 @@ safe_charge:
   client_login_id: 'SpreedlyTestTRX'
   client_password: '5Jp5xKmgqY'
 
+safe_charge_three_ds:
+  client_login_id: 'SpreedlyManTestTRX'
+  client_password: 'iGx9DQQHQG'
+
 sage:
   login: 214282982451
   password: 'Z5W2S8J7X8T5'
