@@ -22,7 +22,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         post = {}
-        add_transaction_data("Sale", post, money, options)
+        post[:sg_APIType] = 1
+        add_transaction_data("Sale3D", post, money, options)
         add_payment(post, payment)
         add_customer_details(post, payment, options)
 
@@ -150,19 +151,30 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.root.xpath('*').each do |node|
-          response[node.name.underscore.downcase.to_sym] = node.text
+          if node.elements.size == 0
+            response[node.name.underscore.downcase.to_sym] = node.text
+          else
+            node.traverse do |childnode|
+              childnode_to_response(response, childnode)
+            end
+          end
         end
-
         response
       end
 
-      def childnode_to_response(response, node, childnode)
-        name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        if name == 'payment_method_data' && !childnode.elements.empty?
-          response[name.to_sym] = Hash.from_xml(childnode.to_s).values.first
+      def childnode_to_response(response, childnode)
+        if childnode.elements.size == 0
+          element_name_to_symbol(response, childnode)
         else
-          response[name.to_sym] = childnode.text
+          childnode.traverse do |childnode|
+            element_name_to_symbol(response, childnode)
+          end
         end
+      end
+
+      def element_name_to_symbol(response, childnode)
+        name = "#{childnode.name.downcase}"
+        response[name.to_sym] = childnode.text
       end
 
       def commit(parameters)

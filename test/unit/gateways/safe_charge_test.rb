@@ -1,9 +1,12 @@
 require 'test_helper'
 
 class SafeChargeTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = SafeChargeGateway.new(client_login_id: 'login', client_password: 'password')
     @credit_card = credit_card
+    @three_ds_enrolled_card = credit_card('4012 0010 3749 0014')
     @amount = 100
 
     @options = {
@@ -158,6 +161,20 @@ class SafeChargeTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_3ds_response
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @three_ds_enrolled_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/Sale3D/, data)
+      assert_match(/sg_APIType/, data)
+    end.respond_with(successful_3ds_purchase_response)
+
+    assert_success purchase
+    assert_equal "MDAwMDAwMDAwMDE1MTAxMDgzMTA=", purchase.params["xid"]
+    assert_equal "eJxVUdtuwjAM/ZWK95GYgijIjVTWaUNTGdqQ4DUKFq2gF9J0A75+SVcuixTF59g+sY5xlWqi+ItUo0lgQnUtd+Rl27BXyScYAQce+MB7ApfRJx0FfpOus7IQ0Of9AbIrtK1apbIwAqU6zuYLMQSY8ABZBzEnPY8FfzhjGCH7o7GQOYlIq9J4K6qNd5VD1mZQlU1h9FkEQ47sCrDRB5EaU00ZO5RKHtKyth2ORXYfaNm4qLYqp2wrkjj6ud8XSFbRKYl3F/uGyFwFbqUhMeAwBvC5B6Opz6c+IGt5lLn73hlgR+kAVu6PqMu4xCOB1l1NhTqLydg6ckNIp6osyFZYJ28xsvvAz2/OT2WsRa+bdf2+X6cXtd9oHxZNPks+ojB0DrcFTi2zrkDAJ62cA8icBOuWx7oF2+jf4n8B", purchase.params["pareq"]
+    assert_equal "https://pit.3dsecure.net/VbVTestSuiteService/pit1/acsService/paReq?summary=MjRlZGYwY2EtZTk5Zi00NDJjLTljOTAtNWUxZmRhMjEwODg3", purchase.params["acsurl"]
+  end
+
   private
 
   def pre_scrubbed
@@ -285,6 +302,12 @@ reading 727 bytes...
   def failed_void_response
     %(
       <Response><Version>4.1.0</Version><ClientLoginID>SpreedlyTestTRX</ClientLoginID><ClientUniqueID></ClientUniqueID><TransactionID>101508208633</TransactionID><Status>ERROR</Status><AuthCode></AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><Reason>Invalid Amount</Reason><ErrCode>-1100</ErrCode><ExErrCode>1201</ExErrCode><CustomData></CustomData><AcquirerID>-1</AcquirerID><IssuerBankName></IssuerBankName><IssuerBankCountry></IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>2jmj7l5rSw0yVb/vlWAYkK/YBwk=</UniqueCC><CustomData2></CustomData2><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType></CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo></Response>
+    )
+  end
+
+  def successful_3ds_purchase_response
+    %(
+      <Response><Version>4.1.0</Version><ClientLoginID>SpreedlyManTestTRX</ClientLoginID><ClientUniqueID>98bd80c8c9534088311153ad6a67d108</ClientUniqueID><TransactionID>101510108310</TransactionID><Status>APPROVED</Status><AuthCode></AuthCode><AVSCode></AVSCode><CVV2Reply></CVV2Reply><ReasonCodes><Reason code="0"></Reason></ReasonCodes><ErrCode>0</ErrCode><ExErrCode>0</ExErrCode><Token>ZQBpAFAAMwBTAEcAMQBZAHcASQA4ADoAPQBlACQAZAB3ACMAWwAyAFoAWQBLAFUAPwBTAHYAKQAnAHQAUAA2AHYAYwAoAG0ARgBNAEEAcAAlAGEAMwA=</Token><CustomData></CustomData><ThreeDResponse><Auth3DResponse><Result>Y</Result><PaReq>eJxVUdtuwjAM/ZWK95GYgijIjVTWaUNTGdqQ4DUKFq2gF9J0A75+SVcuixTF59g+sY5xlWqi+ItUo0lgQnUtd+Rl27BXyScYAQce+MB7ApfRJx0FfpOus7IQ0Of9AbIrtK1apbIwAqU6zuYLMQSY8ABZBzEnPY8FfzhjGCH7o7GQOYlIq9J4K6qNd5VD1mZQlU1h9FkEQ47sCrDRB5EaU00ZO5RKHtKyth2ORXYfaNm4qLYqp2wrkjj6ud8XSFbRKYl3F/uGyFwFbqUhMeAwBvC5B6Opz6c+IGt5lLn73hlgR+kAVu6PqMu4xCOB1l1NhTqLydg6ckNIp6osyFZYJ28xsvvAz2/OT2WsRa+bdf2+X6cXtd9oHxZNPks+ojB0DrcFTi2zrkDAJ62cA8icBOuWx7oF2+jf4n8B</PaReq><MerchantID>000000000000715</MerchantID><ACSurl>https://pit.3dsecure.net/VbVTestSuiteService/pit1/acsService/paReq?summary=MjRlZGYwY2EtZTk5Zi00NDJjLTljOTAtNWUxZmRhMjEwODg3</ACSurl><XID>MDAwMDAwMDAwMDE1MTAxMDgzMTA=</XID><ThreeDReason></ThreeDReason></Auth3DResponse></ThreeDResponse><AcquirerID>19</AcquirerID><IssuerBankName>Visa Production Support Client Bid 1</IssuerBankName><IssuerBankCountry>us</IssuerBankCountry><Reference></Reference><AGVCode></AGVCode><AGVError></AGVError><UniqueCC>rDNDlh6XR8R6CVdGQyqDkZzdqE0=</UniqueCC><CustomData2></CustomData2><ThreeDFlow>1</ThreeDFlow><CreditCardInfo><IsPrepaid>0</IsPrepaid><CardType>Debit</CardType><CardProgram></CardProgram><CardProduct></CardProduct></CreditCardInfo><IsPartialApproval>0</IsPartialApproval><AmountInfo><RequestedAmount>1</RequestedAmount><RequestedCurrency>EUR</RequestedCurrency><ProcessedAmount>1</ProcessedAmount><ProcessedCurrency>EUR</ProcessedCurrency></AmountInfo><RRN></RRN><ICC></ICC><CVVReply></CVVReply></Response>
     )
   end
 end
