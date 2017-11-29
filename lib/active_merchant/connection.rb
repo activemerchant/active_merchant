@@ -25,7 +25,7 @@ module ActiveMerchant
     attr_accessor :ca_path
     attr_accessor :pem
     attr_accessor :pem_password
-    attr_accessor :wiredump_device
+    attr_reader :wiredump_device
     attr_accessor :logger
     attr_accessor :tag
     attr_accessor :ignore_http_status
@@ -46,6 +46,11 @@ module ActiveMerchant
       @ssl_version = nil
       @proxy_address = nil
       @proxy_port = nil
+    end
+
+    def wiredump_device=(device)
+      raise ArgumentError, "can't wiredump to frozen #{device.class}" if device && device.frozen?
+      @wiredump_device = device
     end
 
     def request(method, body, headers = {})
