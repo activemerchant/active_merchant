@@ -178,4 +178,11 @@ class ConnectionTest < Test::Unit::TestCase
     end
   end
 
+  def test_wiredump_service_raises_on_frozen_object
+    transcript = ''.freeze
+    assert_raise ArgumentError, "can't wiredump to frozen object" do
+      @connection.wiredump_device = transcript
+    end
+  end
+
 end
