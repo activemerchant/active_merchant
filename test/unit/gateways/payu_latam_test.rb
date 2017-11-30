@@ -4,7 +4,7 @@ class PayuLatamTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key')
+    @gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'AR')
 
     @amount = 4000
     @credit_card = credit_card("4097440000000004", verification_value: "444", first_name: "APPROVED", last_name: "")
@@ -209,8 +209,9 @@ class PayuLatamTest < Test::Unit::TestCase
   end
 
   def test_brazil_required_fields
+    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'BR')
+
     options_brazil = {
-      payment_country: 'BR',
       currency: "BRL",
       billing_address: address(
         address1: "Calle 100",
@@ -235,16 +236,17 @@ class PayuLatamTest < Test::Unit::TestCase
       }
     }
 
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.update(options_brazil))
+    stub_comms(gateway) do
+      gateway.purchase(@amount, @credit_card, @options.update(options_brazil))
     end.check_request do |endpoint, data, headers|
       assert_match(/\"cnpj\":\"32593371000110\"/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_colombia_required_fields
+    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'CO')
+
     options_colombia = {
-      payment_country: "CO",
       currency: "COP",
       billing_address: address(
         address1: "Calle 100",
@@ -268,16 +270,17 @@ class PayuLatamTest < Test::Unit::TestCase
       tx_tax_return_base: '16806'
     }
 
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.update(options_colombia))
+    stub_comms(gateway) do
+      gateway.purchase(@amount, @credit_card, @options.update(options_colombia))
     end.check_request do |endpoint, data, headers|
       assert_match(/\"additionalValues\":{\"TX_VALUE\":{\"value\":\"40.00\",\"currency\":\"COP\"},\"TX_TAX\":{\"value\":0,\"currency\":\"COP\"},\"TX_TAX_RETURN_BASE\":{\"value\":0,\"currency\":\"COP\"}}/, data)
     end.respond_with(successful_purchase_response)
   end
 
   def test_mexico_required_fields
+    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'MX')
+
     options_mexico = {
-      payment_country: "MX",
       currency: "MXN",
       billing_address: address(
         address1: "Calle 100",
@@ -300,52 +303,10 @@ class PayuLatamTest < Test::Unit::TestCase
       birth_date: '1985-05-25'
     }
 
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
+    stub_comms(gateway) do
+      gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
     end.check_request do |endpoint, data, headers|
       assert_match(/\"birthdate\":\"1985-05-25\"/, data)
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_payment_country_set_from_credential_or_options
-    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'payment_country')
-    assert_match gateway.options[:payment_country], "payment_country"
-
-    stub_comms do
-      gateway.purchase(@amount, @credit_card, @options)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/\"paymentCountry\":\"payment_country\"/, data)
-    end.respond_with(successful_purchase_response)
-
-    gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key')
-    assert_nil gateway.options[:payment_country]
-
-    stub_comms do
-      gateway.purchase(@amount, @credit_card, @options.merge(payment_country: 'payment_country'))
-    end.check_request do |endpoint, data, headers|
-      assert_match(/\"paymentCountry\":\"payment_country\"/, data)
-    end.respond_with(successful_purchase_response)
-  end
-
-  def test_payment_country_defaults_to_billing_address
-    options_mexico = {
-      currency: "MXN",
-      billing_address: address(
-        address1: "Calle 100",
-        address2: "BL4",
-        city: "Guadalajara",
-        state: "Jalisco",
-        country: "MX",
-        zip: "09210710",
-        phone: "(11)756312633"
-      ),
-      birth_date: '1985-05-25'
-    }
-
-    stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
-    end.check_request do |endpoint, data, headers|
-      assert_match(/\"paymentCountry\":\"MX\"/, data)
     end.respond_with(successful_purchase_response)
   end
 

@@ -6,6 +6,7 @@
 * Credorax: Pass Transaction Type field [curiousepic] #2653
 * Add CardProcess Gateway [bpollack] #2659
 * Safe Charge: Provision 3DS option for approved merchants [deedeelavinder] #2661
+* PayU Latam: Require payment_country on initialize [curiousepic] #2663
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
