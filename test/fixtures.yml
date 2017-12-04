@@ -675,6 +675,10 @@ payment_express:
   login: LOGIN
   password: PASSWORD
 
+paymentez:
+  application_code: APPCODE
+  app_key: APPKEY
+
 paymill:
   private_key: a9580be4a7b9d0151a3da88c6c935ce0
   public_key: 57313835619696ac361dc591bc973626
