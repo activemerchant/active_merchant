@@ -45,6 +45,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_no_cvv
+    credit_card = @credit_card
+    credit_card.verification_value = nil
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_successful_purchase_with_more_options
     options = @options.merge!(fraudOffset: '1')
     response = @gateway.purchase(@amount, @credit_card, options)
