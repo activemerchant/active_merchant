@@ -76,6 +76,11 @@ beanstream_interac:
 bit_pay:
   api_key: 'rKrahSl7WRrYeKRUhGzbvW3nBzo0jG4FPaL8uPYaoPk'
 
+blackbaud_bbps:
+  hostname: hostname_from_blackbaud
+  username: username
+  password: password
+
 blue_pay:
   login: '100096218902'
   password: 'MBUVE4G1BACMFM4W3XQHUUL2SMQRP.LW'
