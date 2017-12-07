@@ -22,8 +22,9 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         post = {}
-        post[:sg_APIType] = 1
-        add_transaction_data("Sale3D", post, money, options)
+        post[:sg_APIType] = 1 if options[:three_d_secure]
+        trans_type = options[:three_d_secure] ? "Sale3D" : "Sale"
+        add_transaction_data(trans_type, post, money, options)
         add_payment(post, payment)
         add_customer_details(post, payment, options)
 

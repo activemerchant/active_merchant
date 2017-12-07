@@ -14,6 +14,7 @@ class SafeChargeTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @three_ds_options = @options.merge(three_d_secure: true)
   end
 
   def test_successful_purchase
@@ -163,7 +164,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
   def test_3ds_response
     purchase = stub_comms do
-      @gateway.purchase(@amount, @three_ds_enrolled_card, @options)
+      @gateway.purchase(@amount, @three_ds_enrolled_card, @three_ds_options)
     end.check_request do |endpoint, data, headers|
       assert_match(/Sale3D/, data)
       assert_match(/sg_APIType/, data)
