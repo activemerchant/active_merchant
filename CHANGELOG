@@ -12,6 +12,7 @@
 * SafeCharge: add support for VendorID, WebsiteID, and IP logging [bpollack] #2667
 * Safe Charge: Adds 3DS flag [deedeelavinder] #2668
 * CardProcess: Fix success? to always return true or false [bpollack] #2674
+* SagePay: Correct CVV, AVS codes for Sagepay [singhai0] #2670
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
