@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* PayU Latam: Change default text for description [nfarve] #2669
 * Checkout V2: Allows AVS and CVV result details to come through on authorizations [deedeelavinder] #2650
 * Global Collect: Adds boolean option for pre_authorization [deeedeelavinder] #2651
 * Credorax: Pass Transaction Type field [curiousepic] #2653

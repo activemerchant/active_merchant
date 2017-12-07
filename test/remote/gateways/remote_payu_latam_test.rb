@@ -146,11 +146,11 @@ class RemotePayuLatamTest < Test::Unit::TestCase
         zip: "01019-030",
         phone: "(11)756312633"
       ),
-      tx_tax: '3193',
-      tx_tax_return_base: '16806'
+      tax: "3193",
+      tax_return_base: "16806"
     }
 
-    response = gateway.purchase(@amount, @credit_card, @options.update(options_colombia))
+    response = gateway.purchase(2000000, @credit_card, @options.update(options_colombia))
     assert_success response
     assert_equal "APPROVED", response.message
     assert response.test?
@@ -184,6 +184,15 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     }
 
     response = gateway.purchase(@amount, @credit_card, @options.update(options_mexico))
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_no_description
+    options = @options
+    options.delete(:description)
+    response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal "APPROVED", response.message
     assert response.test?
