@@ -121,6 +121,9 @@ module ActiveMerchant #:nodoc:
         post[:sg_UserID] = options[:user_id] if options[:user_id]
         post[:sg_AuthType] = options[:auth_type] if options[:auth_type]
         post[:sg_ExpectedFulfillmentCount] = options[:expected_fulfillment_count] if options[:expected_fulfillment_count]
+        post[:sg_WebsiteID] = options[:website_id] if options[:website_id]
+        post[:sg_IPAddress] = options[:ip] if options[:ip]
+        post[:sg_VendorID] = options[:vendor_id] if options[:vendor_id]
       end
 
       def add_payment(post, payment)

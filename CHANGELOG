@@ -8,6 +8,7 @@
 * Safe Charge: Provision 3DS option for approved merchants [deedeelavinder] #2661
 * PayU Latam: Require payment_country on initialize [curiousepic] #2663
 * Adyen: Remove CVV as Required Field and Determines shopperInteraction [nfarve] #2665
+* SafeCharge: add support for VendorID, WebsiteID, and IP logging [bpollack] #2667
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
