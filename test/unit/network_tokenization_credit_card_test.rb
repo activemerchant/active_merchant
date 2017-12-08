@@ -17,6 +17,15 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     @tokenized_bogus_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :bogus_pay
     })
+    @tokenized_apple_pay_discover_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      number: "6011111111111117",
+      brand: "discover",
+      month: default_expiration_date.month,
+      year: default_expiration_date.year,
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      eci: "05",
+      source: :apple_pay
+    })
   end
 
   def test_type
@@ -39,5 +48,13 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     assert_equal @tokenized_apple_pay_card.source, :apple_pay
     assert_equal @tokenized_android_pay_card.source, :android_pay
     assert_equal @tokenized_bogus_pay_card.source, :apple_pay
+  end
+
+  def test_eci
+    assert_equal "05", @tokenized_card.eci
+  end
+
+  def test_discover_eci_override
+    assert_equal "04", @tokenized_apple_pay_discover_card.eci
   end
 end
