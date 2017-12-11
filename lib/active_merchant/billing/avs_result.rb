@@ -70,12 +70,17 @@ module ActiveMerchant
       def initialize(attrs)
         attrs ||= {}
         
-        @code = attrs[:code].upcase unless attrs[:code].blank?
+        if attrs[:code].blank?
+          @code = generate_avs_code(street_match: attrs[:street_match], postal_match: attrs[:postal_match])
+        else
+          @code = attrs[:code].upcase
+        end
+
         @message = self.class.messages[code]
-        
+
         if attrs[:street_match].blank?
           @street_match = STREET_MATCH_CODE[code]
-        else  
+        else
           @street_match = attrs[:street_match].upcase
         end
           
@@ -92,6 +97,22 @@ module ActiveMerchant
           'street_match' => street_match,
           'postal_match' => postal_match
         }
+      end
+
+      def generate_avs_code(street_match:, postal_match:)
+        return if street_match.blank? && postal_match.blank?
+
+        if street_match == 'Y' && postal_match == 'Y'
+          'Y'
+        elsif street_match == 'Y'
+          'A'
+        elsif postal_match == 'Y'
+          'P'
+        elsif street_match == 'N' && postal_match == 'N'
+          'N'
+        else
+          'U'
+        end
       end
     end
   end

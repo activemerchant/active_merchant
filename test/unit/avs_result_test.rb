@@ -56,4 +56,15 @@ class AVSResultTest < Test::Unit::TestCase
     avs_data = AVSResult.new(:postal_match => 'Y')
     assert_equal 'Y', avs_data.postal_match
   end
+
+  def test_generate_avs_code
+    assert_equal 'Y', AVSResult.new(:postal_match => 'Y', :street_match => 'Y').code
+    assert_equal 'N', AVSResult.new(:postal_match => 'N', :street_match => 'N').code
+    assert_equal 'P', AVSResult.new(:postal_match => 'Y', :street_match => 'N').code
+    assert_equal 'P', AVSResult.new(:postal_match => 'Y').code
+    assert_equal 'A', AVSResult.new(:postal_match => 'N', :street_match => 'Y').code
+    assert_equal 'A', AVSResult.new(:street_match => 'Y').code
+    assert_equal 'U', AVSResult.new(:postal_match => 'X', :street_match => 'X').code
+    assert_nil AVSResult.new(:postal_match => '', :street_match => '').code
+  end
 end
