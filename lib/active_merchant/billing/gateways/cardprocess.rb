@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['result']['code'] =~ /^(000\.000\.|000\.100\.1|000\.[36])/
+        !(response['result']['code'] =~ /^(000\.000\.|000\.100\.1|000\.[36])/).nil?
       end
 
       def message_from(response)
