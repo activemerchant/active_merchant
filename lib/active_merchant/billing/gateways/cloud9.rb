@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc: ALL
 
       # This is not all the error codes provided by TSYS. More time can be spent to map more completely. For now
       # all unmapped values will go to :processing_error
-       STANDARD_ERROR_CODE_MAPPING = {
+      STANDARD_ERROR_CODE_MAPPING = {
         '01' => STANDARD_ERROR_CODE[:call_issuer],         # refer to issuer
         '02' => STANDARD_ERROR_CODE[:call_issuer],         # refer to issuer - special condition
         '03' => STANDARD_ERROR_CODE[:config_error],        # invalid merchant id
@@ -214,13 +214,19 @@ module ActiveMerchant #:nodoc: ALL
 
         post = {}
         add_configure_group(post, options)
-        if modify
-          add_request_amount_group(post, options, amount)
-        end
+        add_request_amount_group(post, options, amount) if modify
         add_action_group(post, options)
         add_trace_group(post, options, authorization)
 
-        commit(modify ? MODIFY : CAPTURE, 'restApi', post)
+        if modify
+          MultiResponse.run do |r|
+            r.process { commit(MODIFY, 'restApi', post) }
+            return r.primary_response unless r.primary_response.success?
+            r.process { commit(CAPTURE, 'restApi', post) }
+          end.responses.last
+        else
+          commit(CAPTURE, 'restApi', post)
+        end
       end
 
       def refund(amount, authorization, options = {})
@@ -430,11 +436,11 @@ module ActiveMerchant #:nodoc: ALL
 
       def json_error(raw_response)
         msg = 'Invalid response received from the Cloud9 API.'
-        msg += "  (The raw response returned by the API was #{raw_response.inspect})"
+        msg + "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          'Status':       STATUS_FAIL,
-          'ResponseCode': STANDARD_ERROR_CODE[:processing_error],
-          'ResponseText': msg
+          'Status'       => STATUS_FAIL,
+          'ResponseCode' => STANDARD_ERROR_CODE[:processing_error],
+          'ResponseText' => msg
         }
       end
 
