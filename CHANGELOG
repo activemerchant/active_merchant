@@ -14,6 +14,7 @@
 * CardProcess: Fix success? to always return true or false [bpollack] #2674
 * SagePay: Correct CVV, AVS codes for Sagepay [singhai0] #2670
 * PayU Latam: Count pending Voids as successful [curiousepic] #2677
+* Mercado Pago: Ensure acess tokens are URL escaped [bpollack] #2675
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632

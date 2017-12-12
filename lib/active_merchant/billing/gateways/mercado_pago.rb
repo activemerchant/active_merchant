@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
 
       def url(action)
         full_url = (test? ? test_url : live_url)
-        full_url + "/#{action}?access_token=#{@options[:access_token]}"
+        full_url + "/#{action}?access_token=#{CGI.escape(@options[:access_token])}"
       end
 
       def headers
