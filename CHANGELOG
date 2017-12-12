@@ -11,6 +11,7 @@
 * Adyen: Remove CVV as Required Field and Determines shopperInteraction [nfarve] #2665
 * SafeCharge: add support for VendorID, WebsiteID, and IP logging [bpollack] #2667
 * Safe Charge: Adds 3DS flag [deedeelavinder] #2668
+* CardProcess: Fix success? to always return true or false [bpollack] #2674
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
