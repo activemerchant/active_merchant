@@ -611,18 +611,19 @@ class StripeTest < Test::Unit::TestCase
   def test_successful_refund_with_refund_fee_amount
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
-    @gateway.expects(:ssl_request).returns(successful_application_fee_list_response).in_sequence(s)
-    @gateway.expects(:ssl_request).returns(successful_refunded_application_fee_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_fetch_application_fee_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_application_fee_response).in_sequence(s)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
     assert_success response
   end
 
+  # What is the significance of this??? it's to test that the first response is used as primary. so identical to above with an extra assertion
   def test_refund_with_fee_response_gives_a_charge_authorization
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
-    @gateway.expects(:ssl_request).returns(successful_application_fee_list_response).in_sequence(s)
-    @gateway.expects(:ssl_request).returns(successful_refunded_application_fee_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_fetch_application_fee_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_application_fee_response).in_sequence(s)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
     assert_success response
@@ -632,17 +633,17 @@ class StripeTest < Test::Unit::TestCase
   def test_unsuccessful_refund_with_refund_fee_amount_when_application_fee_id_not_found
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
-    @gateway.expects(:ssl_request).returns(unsuccessful_application_fee_list_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(unsuccessful_fetch_application_fee_response).in_sequence(s)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
     assert_failure response
-    assert_match(/^Application fee id could not be found/, response.message)
+    assert_match(/^Application fee id could not be retrieved/, response.message)
   end
 
   def test_unsuccessful_refund_with_refund_fee_amount_when_refunding_application_fee
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
-    @gateway.expects(:ssl_request).returns(successful_application_fee_list_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_fetch_application_fee_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(generic_error_response).in_sequence(s)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
@@ -1939,52 +1940,55 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_refunded_application_fee_response
+  def successful_partially_refunded_application_fee_response
     <<-RESPONSE
     {
-      "id": "fee_id",
-      "object": "application_fee",
-      "created": 1375375417,
-      "livemode": false,
+      "id": "fr_C8qmJKrZVMTjjF",
+      "object": "fee_refund",
       "amount": 10,
+      "balance_transaction": "txn_1BkZ4uAWOtgoysognvusG5N5",
+      "created": 1516027008,
       "currency": "usd",
-      "user": "acct_id",
-      "user_email": "acct_id",
-      "application": "ca_application",
-      "charge": "ch_test_charge",
-      "refunded": false,
-      "amount_refunded": 10
+      "fee": "fee_1BkZ4rIPBJTitsenGWcxYWCZ",
+      "metadata": {}
     }
     RESPONSE
   end
 
-  def successful_application_fee_list_response
+  def successful_fetch_application_fee_response
     <<-RESPONSE
     {
-      "object": "list",
-      "count": 2,
-      "url": "/v1/application_fees",
-      "data": [
-        {
-          "object": "application_fee",
-          "id": "application_fee_id"
-        },
-        {
-          "object": "another_fee",
-          "id": "another_fee_id"
-        }
-      ]
+      "id": "ch_1Bja3MIPBJTitsenv28Gy6iN",
+      "object": "charge",
+      "amount": 100,
+      "amount_refunded": 100,
+      "application": "ca_6E9gvTfZGEMknxpoHhC8xoeyMit55FAV",
+      "application_fee": "fee_1Bja3MIPBJTitsenKqV8Hc6R",
+      "balance_transaction": "txn_1Bja3OIPBJTitsenJ5amtW58",
+      "captured": true,
+      "created": 1515792428,
+      "currency": "usd",
+      "customer": null,
+      "description": "ActiveMerchant Test Purchase",
+      "destination": null,
+      "dispute": null,
+      "failure_code": null,
+      "failure_message": null,
+      "fraud_details": {},
+      "invoice": null,
+      "livemode": false
     }
     RESPONSE
   end
 
-  def unsuccessful_application_fee_list_response
+  def unsuccessful_fetch_application_fee_response
     <<-RESPONSE
     {
-      "object": "list",
-      "count": 0,
-      "url": "/v1/application_fees",
-      "data": []
+      "error": {
+        "type": "invalid_request_error",
+        "message": "No such charge: bad_auth",
+        "param": "id"
+      }
     }
     RESPONSE
   end
