@@ -357,7 +357,7 @@ module ActiveMerchant #:nodoc:
           response["code"] == "SUCCESS" && response["creditCardToken"] && response["creditCardToken"]["creditCardTokenId"].present?
         when 'verify_credentials'
           response["code"] == "SUCCESS"
-        when 'refund'
+        when 'refund', 'void'
         response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "PENDING" || response["transactionResponse"]["state"] == "APPROVED")
         else
           response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "APPROVED")
@@ -374,8 +374,10 @@ module ActiveMerchant #:nodoc:
           return "VERIFIED" if success
           "FAILED"
         else
-          response_message = response["transactionResponse"]["responseMessage"] if response["transactionResponse"]
-          response_code = response["transactionResponse"]["responseCode"] if response["transactionResponse"]
+          if response["transactionResponse"]
+            response_message = response["transactionResponse"]["responseMessage"]
+            response_code = response["transactionResponse"]["responseCode"] || response["transactionResponse"]["pendingReason"]
+          end
           return response_code if success
           response["error"] || response_message || response_code || "FAILED"
         end
