@@ -96,7 +96,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.void("7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal "PENDING_REVIEW", response.message
   end
 
   def test_failed_void
@@ -530,15 +530,15 @@ class PayuLatamTest < Test::Unit::TestCase
       "transactionResponse": {
         "orderId": 840434914,
         "transactionId": "e66fd9aa-f485-4f10-b1d6-be8e9e354b63",
-        "state": "APPROVED",
+        "state": "PENDING",
         "paymentNetworkResponseCode": "0",
         "paymentNetworkResponseErrorMessage": null,
         "trazabilityCode": "49263990",
         "authorizationCode": "NPS-011111",
-        "pendingReason": null,
-        "responseCode": "APPROVED",
+        "pendingReason": "PENDING_REVIEW",
+        "responseCode": null,
         "errorCode": null,
-        "responseMessage": "APROBADA - Autorizada",
+        "responseMessage": null,
         "transactionDate": null,
         "transactionTime": null,
         "operationDate": 1486655230074,
