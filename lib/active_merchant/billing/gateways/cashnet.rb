@@ -4,6 +4,7 @@ module ActiveMerchant #:nodoc:
       include Empty
 
       self.live_url      = "https://commerce.cashnet.com/"
+      self.test_url      = "https://train.cashnet.com/"
 
       self.supported_countries = ["US"]
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
@@ -25,6 +26,7 @@ module ActiveMerchant #:nodoc:
       #   "ActiveMerchant/#{ActiveMerchant::VERSION}")
       # * <tt>:default_item_code</tt> -- Default item code (defaults to "FEE",
       #   can be overridden on a per-transaction basis with options[:item_code])
+      # * <tt>:test</tt> -- Run the gateway against the test url (defaults to false)
       def initialize(options = {})
         requires!(
           options,
@@ -58,7 +60,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, fields)
         fields[:amount] = amount(money)
-        url = live_url + CGI.escape(@options[:merchant_gateway_name])
+        url = gateway_url + CGI.escape(@options[:merchant_gateway_name])
         raw_response = ssl_post(url, post_data(action, fields))
         parsed_response = parse(raw_response)
 
@@ -140,6 +142,10 @@ module ActiveMerchant #:nodoc:
         message = "Unparsable response received from Cashnet. Please contact Cashnet if you continue to receive this message."
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
+      end
+
+      def gateway_url
+        test? ? test_url : live_url
       end
 
       CASHNET_CODES = {
