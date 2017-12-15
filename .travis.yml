@@ -38,8 +38,7 @@ script:
   - bundle exec rake test
 
 after_script:
-  - export RAILS_VER=$(echo $BUNDLE_GEMFILE | sed -r 's/.*Gemfile.(\S+)/\1/g')
-  - export FOLDER=ruby_${TRAVIS_RUBY_VERSION}.$RAILS_VER
+  - export FOLDER=ruby_${TRAVIS_RUBY_VERSION}.${BUNDLE_GEMFILE#*Gemfile.}
   - testspace [${FOLDER}]$PWD/test/reports/TEST*.xml{test}
 
 notifications:
