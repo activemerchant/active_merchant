@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def successful_result_message?(response)
-        response[:authorization_result].start_with?('OK')
+        response[:authorization_result] ? response[:authorization_result].start_with?('OK') : false
       end
 
       def success_from(response)
@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if(!successful_result_message?(response))
+        if !successful_result_message?(response) && response[:authorization_result]
           return response[:authorization_result].strip
         elsif(response[:status] == 'Failure')
           return response[:errors]
