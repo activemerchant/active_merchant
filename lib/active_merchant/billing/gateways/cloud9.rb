@@ -1,3 +1,5 @@
+# frozen-string-literal: true
+
 module ActiveMerchant #:nodoc: ALL
   module Billing
     # === Cloud 9 payment gateway.
@@ -12,35 +14,35 @@ module ActiveMerchant #:nodoc: ALL
       self.supported_countries  = %w[CA US]
       self.supported_cardtypes  = %i[visa master american_express jcb discover]
 
-      # TRANSACTION_TYPES = [AUTHORIZE, PURCHASE, CAPTURE, ADD_TIP, VOID, REFUND, INQUIRY, MODIFY, BATCH].freeze
-      AUTHORIZE         = 'Auth'.freeze
-      PURCHASE          = 'Sale'.freeze
-      CAPTURE           = 'Finalize'.freeze
-      ADD_TIP           = 'Addtip'.freeze
-      VOID              = 'Void'.freeze
-      REFUND            = 'Refund'.freeze
-      INQUIRY           = 'Inquiry'.freeze
-      MODIFY            = 'Modify'.freeze
-      BATCH             = 'Batch'.freeze
-      CREATE_TOKEN      = 'CreateCardToken'.freeze
+      # TRANSACTION_TYPES = [AUTHORIZE, PURCHASE, CAPTURE, ADD_TIP, VOID, REFUND, INQUIRY, MODIFY, BATCH]
+      AUTHORIZE         = 'Auth'
+      PURCHASE          = 'Sale'
+      CAPTURE           = 'Finalize'
+      ADD_TIP           = 'Addtip'
+      VOID              = 'Void'
+      REFUND            = 'Refund'
+      INQUIRY           = 'Inquiry'
+      MODIFY            = 'Modify'
+      BATCH             = 'Batch'
+      CREATE_TOKEN      = 'CreateCardToken'
 
       TAX_INDICATORS    = %w[Ntprvd Prvded NonTax].freeze
-      FUNDING_CREDIT    = 'Credit'.freeze
+      FUNDING_CREDIT    = 'Credit'
       FUNDING_TYPES     = [FUNDING_CREDIT, 'Debit', 'EBT Food', 'EBT Cash', 'Prepaid', 'Gift'].freeze
       ENCRYPT_TARGETS   = %w[Track1 Track2 PAN].freeze
 
-      STATUS_CANCEL     = 'cancel'.freeze
-      STATUS_FAIL       = 'fail'.freeze
-      STATUS_INVALID    = 'invalidData'.freeze
-      STATUS_SUCCESS    = 'success'.freeze
-      STATUS_TIMEOUT    = 'timeout'.freeze
+      STATUS_CANCEL     = 'cancel'
+      STATUS_FAIL       = 'fail'
+      STATUS_INVALID    = 'invalidData'
+      STATUS_SUCCESS    = 'success'
+      STATUS_TIMEOUT    = 'timeout'
 
-      ENTRY_SWIPE       = 'Swipe'.freeze
-      ENTRY_MANUAL      = 'Manual'.freeze
-      ENTRY_PROXIMITY   = 'Proximity'.freeze
-      ENTRY_CONTACT     = 'ChipContact'.freeze
-      ENTRY_CONTACTLESS = 'ChipContactless'.freeze
-      ENTRY_EMV_FB_SWP  = 'EMVFallback2Swip'.freeze
+      ENTRY_SWIPE       = 'Swipe'
+      ENTRY_MANUAL      = 'Manual'
+      ENTRY_PROXIMITY   = 'Proximity'
+      ENTRY_CONTACT     = 'ChipContact'
+      ENTRY_CONTACTLESS = 'ChipContactless'
+      ENTRY_EMV_FB_SWP  = 'EMVFallback2Swip'
 
       STANDARD_ERROR_CODE_MAPPING = {
         '001' => STANDARD_ERROR_CODE[:call_issuer],        # Refer to issuer
@@ -416,7 +418,7 @@ module ActiveMerchant #:nodoc: ALL
       def api_request(action, endpoint, parameters = nil)
         raw_response = response = nil
         begin
-          endpoint = '/' + endpoint if endpoint&.size.positive?
+          endpoint = '/' + endpoint if endpoint&.size&.positive?
           raw_response = ssl_post(target_url + endpoint, post_data(action, parameters), headers(parameters))
           response = parse(raw_response)
         rescue ResponseError => e
@@ -442,15 +444,16 @@ module ActiveMerchant #:nodoc: ALL
 
         success = response['Status'] == STATUS_SUCCESS
 
-        Response.new(success,
-                     success ? 'Transaction approved' : error_message_from(response),
-                     response,
-                     test: test?,
-                     authorization: authorization_from(action, response),
-                     avs_result: { code: response['AVSResultCode'] },
-                     cvv_result: response['CCVResultCode'],
-                     emv_authorization: nil,
-                     error_code: success ? nil : error_code_from(response)
+        Response.new(
+          success,
+          success ? 'Transaction approved' : error_message_from(response),
+          response,
+          test: test?,
+          authorization: authorization_from(action, response),
+          avs_result: { code: response['AVSResultCode'] },
+          cvv_result: response['CCVResultCode'],
+          emv_authorization: nil,
+          error_code: success ? nil : error_code_from(response)
         )
       end
 
