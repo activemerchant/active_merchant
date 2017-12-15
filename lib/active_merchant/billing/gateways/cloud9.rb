@@ -35,54 +35,14 @@ module ActiveMerchant #:nodoc: ALL
       STATUS_SUCCESS    = 'success'.freeze
       STATUS_TIMEOUT    = 'timeout'.freeze
 
-      # This is not all the error codes provided by TSYS. More time can be spent to map more completely. For now
-      # all unmapped values will go to :processing_error
-      STANDARD_ERROR_CODE_MAPPING = {
-        '01' => STANDARD_ERROR_CODE[:call_issuer],         # refer to issuer
-        '02' => STANDARD_ERROR_CODE[:call_issuer],         # refer to issuer - special condition
-        '03' => STANDARD_ERROR_CODE[:config_error],        # invalid merchant id
-        '04' => STANDARD_ERROR_CODE[:pick_up_card],        # pick up card (no fraud)
-        '05' => STANDARD_ERROR_CODE[:card_declined],       # do not honour
-        '06' => STANDARD_ERROR_CODE[:processing_error],    # general error
-        '07' => STANDARD_ERROR_CODE[:pick_up_card],        # pick up card (fraud condition)
-        # '08' => STANDARD_ERROR_CODE[:approved],
-        # '10' => STANDARD_ERROR_CODE[:partial_approval],
-        # '11' => STANDARD_ERROR_CODE[:vip_approval],
-        '12' => STANDARD_ERROR_CODE[:config_error],        # invalid transaction
-        '13' => STANDARD_ERROR_CODE[:invalid_number],      # invalid amount
-        '14' => STANDARD_ERROR_CODE[:invalid_number],      # invalid card number
-        '15' => STANDARD_ERROR_CODE[:config_error],        # no such issuer
-        '34' => STANDARD_ERROR_CODE[:unsupported_feature], # transaction cancelled - mastercard use only
-        '39' => STANDARD_ERROR_CODE[:config_error],        # no credit account
-        '41' => STANDARD_ERROR_CODE[:pick_up_card],        # pick up card (lost card)
-        '43' => STANDARD_ERROR_CODE[:pick_up_card],        # pick up card (stolen card)
-        '51' => STANDARD_ERROR_CODE[:card_declined],       # insufficient funds
-        '52' => STANDARD_ERROR_CODE[:config_error],        # no checking account
-        '53' => STANDARD_ERROR_CODE[:config_error],        # no savings account
-        '54' => STANDARD_ERROR_CODE[:expired_card],        # expired card
-        '55' => STANDARD_ERROR_CODE[:incorrect_pin],       # incorrect pin
-        '57' => STANDARD_ERROR_CODE[:config_error],        # transaction not permitted - card
-        '58' => STANDARD_ERROR_CODE[:config_error],        # transaction not permitted - terminal
-        '59' => STANDARD_ERROR_CODE[:config_error],        # transaction not permitted - merchant
-        '61' => STANDARD_ERROR_CODE[:card_declined],       # exceeds withdrawal limit
-        '62' => STANDARD_ERROR_CODE[:card_declined],       # invalid service code - restricted
-        '63' => STANDARD_ERROR_CODE[:card_declined],       # security violation
-        '65' => STANDARD_ERROR_CODE[:card_declined],       # activity limit exceeded
-        '75' => STANDARD_ERROR_CODE[:card_declined],       # pin retries exceeded
-        '78' => STANDARD_ERROR_CODE[:config_error],        # no account
-        '79' => STANDARD_ERROR_CODE[:config_error],        # no account
-        '80' => STANDARD_ERROR_CODE[:processing_error],    # No Financial impact (used in reversal responses to declined originals)
-        '82' => STANDARD_ERROR_CODE[:incorrect_cvc],       # CVV data not correct
-        '83' => STANDARD_ERROR_CODE[:incorrect_pin],       # cannot verify pin
-        # '85' => STANDARD_ERROR_CODE[:card_ok],           # no reason to decline
-        '86' => STANDARD_ERROR_CODE[:incorrect_pin],       # cannot verify pin
-        '93' => STANDARD_ERROR_CODE[:card_declined],       # decline - violation, cannot complete
-        '96' => STANDARD_ERROR_CODE[:processing_error],    # system malfunction
-        'FF' => STANDARD_ERROR_CODE[:processing_error],    # network error
-        'N4' => STANDARD_ERROR_CODE[:card_declined],       # decline - exceeds issuer withdrawal limit
-        'N7' => STANDARD_ERROR_CODE[:incorrect_cvc],       # cvv2 value supplied is invalid
+      ENTRY_SWIPE       = 'Swipe'.freeze
+      ENTRY_MANUAL      = 'Manual'.freeze
+      ENTRY_PROXIMITY   = 'Proximity'.freeze
+      ENTRY_CONTACT     = 'ChipContact'.freeze
+      ENTRY_CONTACTLESS = 'ChipContactless'.freeze
+      ENTRY_EMV_FB_SWP  = 'EMVFallback2Swip'.freeze
 
-        # Cloud9 specific errors
+      STANDARD_ERROR_CODE_MAPPING = {
         '001' => STANDARD_ERROR_CODE[:call_issuer],        # Refer to issuer
         '002' => STANDARD_ERROR_CODE[:call_issuer],        # Refer to issuer-Special condition
         '003' => STANDARD_ERROR_CODE[:config_error],       # Invalid Merchant ID
@@ -122,8 +82,6 @@ module ActiveMerchant #:nodoc: ALL
         '094' => STANDARD_ERROR_CODE[:processing_error],   # Unable to locate, no match
         '096' => STANDARD_ERROR_CODE[:processing_error],   # System malfunction
         '0FF' => STANDARD_ERROR_CODE[:processing_error],   # Network error
-        #
-        #
         '101' => STANDARD_ERROR_CODE[:config_error],       # Invalid GMID
         '102' => STANDARD_ERROR_CODE[:config_error],       # Invalid GTID
         '103' => STANDARD_ERROR_CODE[:config_error],       # Invalid GMPW
@@ -181,7 +139,7 @@ module ActiveMerchant #:nodoc: ALL
         commit(PURCHASE, 'restApi', post)
       end
 
-      # An Authorize transaction places a temporary hold on the customer’s account. Approvals on authorizations are
+      # An Authorize transaction places a temporary hold on the customers account. Approvals on authorizations are
       # used later to transfer funds by Finalize or AddTip.
       #
       # * <tt>amount</tt> -- the requested purchase amount
@@ -351,7 +309,8 @@ module ActiveMerchant #:nodoc: ALL
       #                             the response message. The POS must submit it back for Void / Addtip / Finalize etc
       #                             based previous transactions.
       # ==== Options
-      # * <tt>:source_trace_num</tt> -- source trace number provided by the merchant and it uniquely identifies a transaction, required
+      # * <tt>:source_trace_num</tt> -- source trace number provided by the merchant and it uniquely identifies a
+      # * transaction, required
       def add_trace_group(post, options, authorization = nil)
         # requires!(options, :source_trace_num)
         # post[:SourceTraceNum] = options[:source_trace_num]
@@ -360,7 +319,7 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       # Add the Request Card Info Group of options - used when card info is from POS, not PDC. and the item,
-      # NeedSwipeCard, must be “N”.
+      # NeedSwipCard, must be N.
       #
       # ==== Options
       def add_request_card_info_group(post, payment, options)
@@ -370,30 +329,32 @@ module ActiveMerchant #:nodoc: ALL
 
       # Extract request card info from credit_card parameter. This could be an AM CreditCard object, with either track
       # data, or manually entered card info. It can also be a token from a previously saved card. If ommitted (nil),
-      # the NeedSwipeCard parameter is set to request card swipe from an attached terminal.
+      # the NeedSwipCard parameter is set to request card swipe from an attached terminal.
       def add_credit_card(post, credit_card, options = {})
+        post[:NeedSwipCard] = 'N'
         if credit_card.respond_to?(:number)
           if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
-            post[:Track2] = credit_card.track_data
+            post[:Track2]    = credit_card.track_data
+            post[:EntryMode] = ENTRY_SWIPE
           else
-            post[:AccountNum]       = credit_card.number
-            post[:ExpDate]          = if credit_card.month.present? && credit_card.year.present?
-                                        (credit_card.month + 100).to_s[1..2] + credit_card.year.to_s[-2..-1]
-                                      else
-                                        nil
-                                      end
-            post[:CVVNum]           = credit_card.verification_value if credit_card.verification_value?
-            post[:CustomerName]     = credit_card.name if credit_card.name.present?
-            post[:CustomerZipCode]  = options[:address][:zip] if options.dig(:address, :zip).present?
-            post[:CustomerAddress]  = options[:address][:address1] if options.dig(:address, :address1).present?
-            post[:CardPresent]      = credit_card.manual_entry || false ? 'N' : 'Y'
+            post[:AccountNum]      = credit_card.number
+            post[:ExpDate]         = if credit_card.month.present? && credit_card.year.present?
+                                       (credit_card.month + 100).to_s[1..2] + credit_card.year.to_s[-2..-1]
+                                     end
+            post[:CVVNum]          = credit_card.verification_value if credit_card.verification_value?
+            post[:CustomerName]    = credit_card.name if credit_card.name.present?
+            post[:CustomerZipCode] = options[:address][:zip] if options.dig(:address, :zip).present?
+            post[:CustomerAddress] = options[:address][:address1] if options.dig(:address, :address1).present?
+            post[:CardPresent]     = credit_card.manual_entry || false ? 'N' : 'Y'
+            post[:EntryMode]       = ENTRY_MANUAL
           end
-          post[:Medium]           = FUNDING_TYPES.include?(options[:funding]) ? options[:funding] : FUNDING_CREDIT
-        elsif credit_card.kind_of?(String)
-          post[:CardToken]        = credit_card
-          post[:Medium]           = FUNDING_CREDIT
+          post[:Medium] = FUNDING_TYPES.include?(options[:funding]) ? options[:funding] : FUNDING_CREDIT
+        elsif credit_card.is_a?(String)
+          post[:CardToken] = credit_card
+          post[:Medium]    = FUNDING_CREDIT
+          post[:EntryMode] = ENTRY_MANUAL
         elsif credit_card.blank?
-          post[:NeedSwipeCard]    = 'Y'
+          post[:NeedSwipCard] = 'Y'
         end
         post[:RequestCardToken] = 'Y'
       end
@@ -407,12 +368,14 @@ module ActiveMerchant #:nodoc: ALL
         end
       end
 
-      # Add the Encryption Data Group of options - used when card info is from POS, not PDC. and the item, NeedSwipCard, must be “N”.
+      # Add the Encryption Data Group of options - used when card info is from POS, not PDC. and the item, NeedSwipCard,
+      # must be N.
       #
       # ==== Options
       # * <tt>:encryption_key_id</tt> -- used to retrieve the private key, which is required for decryption
       # * <tt>:encryption_target</tt> -- type of data that is being encrypted
-      # * <tt>:encrypted_block</tt> -- track data or card number provided in an encrypted block. be Present when card data is encrypted
+      # * <tt>:encrypted_block</tt> -- track data or card number provided in an encrypted block. be Present when card
+      # * data is encrypted
       def add_encryption_data_group(post, options)
         requires!(options, [:encryption_target] + ENCRYPT_TARGETS, :encryption_key_id) if options[:encrypted_block].present?
         optional_assign(post, :KeyID, options[:encryption_key_id])
@@ -445,17 +408,15 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def response_error(raw_response)
-        begin
-          parse(raw_response)
-        rescue JSON::ParserError
-          json_error(raw_response)
-        end
+        parse(raw_response)
+      rescue JSON::ParserError
+        json_error(raw_response)
       end
 
       def api_request(action, endpoint, parameters = nil)
         raw_response = response = nil
         begin
-          endpoint = '/' + endpoint if endpoint&.size > 0
+          endpoint = '/' + endpoint if endpoint&.size.positive?
           raw_response = ssl_post(target_url + endpoint, post_data(action, parameters), headers(parameters))
           response = parse(raw_response)
         rescue ResponseError => e
@@ -509,9 +470,8 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def post_data(action, parameters = {})
-        post = {TransType: action}
+        post = { TransType: action }
 
-        # post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" unless value.nil? }.compact.join("&")
         JSON.generate(post.merge(parameters))
       end
 
