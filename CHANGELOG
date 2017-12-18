@@ -19,6 +19,7 @@
 * MiGS: Support verify calls [bpollack] #2664
 * iATS: Fix Messages with Failure on iATS Server [nfarve] #2680
 * Barclaycard Smartpay: Correct repsonse for fraud rejects #2683
+* Adyen: Allow incomplete addresses in some situations [bpollack] #2684
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
