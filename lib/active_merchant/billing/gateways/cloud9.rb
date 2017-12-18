@@ -20,7 +20,9 @@ module ActiveMerchant #:nodoc: ALL
       CAPTURE           = 'Finalize'
       ADD_TIP           = 'Addtip'
       VOID              = 'Void'
+      REVERSE           = 'Reverse'
       REFUND            = 'Refund'
+      ADJUST            = 'Adjust'
       INQUIRY           = 'Inquiry'
       MODIFY            = 'Modify'
       BATCH             = 'Batch'
@@ -199,7 +201,7 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_request_amount_group(post, options, modify ? amount : nil)
         add_trace_group(post, options, authorization)
-        commit(modify ? MODIFY : VOID, 'restApi', post)
+        commit(modify ? MODIFY : REVERSE, 'restApi', post)
       end
 
       # A Credit transaction is used to authorize a refund to a customer's credit card account without reference to a
@@ -217,7 +219,8 @@ module ActiveMerchant #:nodoc: ALL
         commit(REFUND, 'restApi', post)
       end
 
-      # A Void transaction is used to cancel an authorized transaction before it has been settled.
+      # A Void transaction is used to cancel an authorized or captured transaction. We use the REVERSE API call here
+      # since that is agnostic to whether the transaction has been batched or not.
       #
       # * <tt>authorization</tt> -- the gateway trace number for a previous Authorize to be voided.
       # * <tt>options</tt> -- options to be passed to the processor
@@ -226,10 +229,10 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_trace_group(post, options, authorization)
         add_request_extend_info_group(post, options)
-        commit(VOID, 'restApi', post)
+        commit(REVERSE, 'restApi', post)
       end
 
-      # CreateCardToken requests token information for a card or token.
+      # Store requests token information for a card or token.
       #
       # * <tt>card</tt> -- either a CreditCard or token.
       # from {Response#authorization}.
