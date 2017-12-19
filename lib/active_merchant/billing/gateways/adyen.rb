@@ -4,8 +4,8 @@ module ActiveMerchant #:nodoc:
 
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
-      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/v18'
-      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/v18'
+      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/v30'
+      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/v30'
 
       self.supported_countries = ['AT','AU','BE','BG','BR','CH','CY','CZ','DE','DK','EE','ES','FI','FR','GB','GI','GR','HK','HU','IE','IS','IT','LI','LT','LU','LV','MC','MT','MX','NL','NO','PL','PT','RO','SE','SG','SK','SI','US']
       self.default_currency = 'USD'
@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
         add_extra_data(post, options)
         add_shopper_interaction(post,payment,options)
         add_address(post, options)
+        add_shopperName(post, options);
         commit('authorise', post)
       end
 
@@ -92,12 +93,14 @@ module ActiveMerchant #:nodoc:
 
       def add_extra_data(post, options)
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
-        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
-        post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
+        post[:shopperIP] = options[:ip] if options[:ip]
+        post[:shopperReference] = options[:customer_id] || options[:customer]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
+        post[:telephoneNumber] =  options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+            options[:billing_address][:phone])
       end
 
       def add_shopper_interaction(post, payment, options={})
@@ -108,14 +111,29 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
         if address = options[:billing_address] || options[:address]
-          post[:card][:billingAddress] = {}
-          post[:card][:billingAddress][:street] = address[:address1] if address[:address1]
-          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] if address[:address2]
-          post[:card][:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:card][:billingAddress][:city] = address[:city] if address[:city]
-          post[:card][:billingAddress][:stateOrProvince] = address[:state] if address[:state]
-          post[:card][:billingAddress][:country] = address[:country] if address[:country]
+          post[:billingAddress] = {}
+          post[:billingAddress][:street] = address[:address1] if address[:address1]
+          post[:billingAddress][:houseNumberOrName] = address[:address2] if address[:address2]
+          post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
+          post[:billingAddress][:city] = address[:city] if address[:city]
+          post[:billingAddress][:stateOrProvince] = address[:state] if address[:state]
+          post[:billingAddress][:country] = address[:country] if address[:country]
         end
+        if shipping_address = options[:shipping_address] || address
+          post[:deliveryAddress] = {}
+          post[:deliveryAddress][:street] = shipping_address[:address1] if shipping_address[:address1]
+          post[:deliveryAddress][:houseNumberOrName] = shipping_address[:address2] if shipping_address[:address2]
+          post[:deliveryAddress][:postalCode] = shipping_address[:zip] if shipping_address[:zip]
+          post[:deliveryAddress][:city] = shipping_address[:city] if shipping_address[:city]
+          post[:deliveryAddress][:stateOrProvince] = shipping_address[:state] if shipping_address[:state]
+          post[:deliveryAddress][:country] = shipping_address[:country] if shipping_address[:country]
+        end
+      end
+
+      def add_shopperName(post, options)
+        post['shopperName']['firstname'] = options[:billing_address][:first_name]
+        post['shopperName']['lastname'] = options[:billing_address][:last_name]
+        post['shopperName']['gender'] = 'UNKNOWN'
       end
 
       def add_invoice(post, money, options)

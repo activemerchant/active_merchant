@@ -20,9 +20,10 @@ class RemoteAdyenTest < Test::Unit::TestCase
     @options = {
       reference: '345123',
       shopper_email: "john.smith@test.com",
-      shopper_ip: "77.110.174.153",
-      shopper_reference: "John Smith",
+      ip: "77.110.174.153",
+      customer_id: "1234567",
       billing_address: address(),
+      shipping_address: address(),
       order_id: "123"
     }
   end
