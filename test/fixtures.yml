@@ -1277,3 +1277,7 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+zuora:
+  username: USERNAME
+  password: PASSWORD
