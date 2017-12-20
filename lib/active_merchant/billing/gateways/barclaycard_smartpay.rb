@@ -211,8 +211,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if response.has_key?('authCode')
         return true if response['result'] == 'Success'
+        return true if response['resultCode'] == 'Authorised'
         return true if response['resultCode'] == 'Received'
         successful_responses = %w([capture-received] [cancel-received] [refund-received])
         successful_responses.include?(response['response'])
