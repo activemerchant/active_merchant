@@ -18,6 +18,7 @@
 * MiGS: Update hash format to SHA256 and restore remote tests [bpollack] #2676
 * MiGS: Support verify calls [bpollack] #2664
 * iATS: Fix Messages with Failure on iATS Server [nfarve] #2680
+* Barclaycard Smartpay: Correct repsonse for fraud rejects #2683
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
