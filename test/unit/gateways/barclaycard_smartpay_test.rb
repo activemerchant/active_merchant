@@ -313,6 +313,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_avs_response)
 
     response = @gateway.authorize(@amount, @credit_card, @avs_address)
+    assert_failure response
     assert_equal "N", response.avs_result['code']
     assert response.test?
   end
