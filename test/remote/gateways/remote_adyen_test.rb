@@ -195,22 +195,19 @@ class RemoteAdyenTest < Test::Unit::TestCase
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_missing_city_for_purchase
     @options[:billing_address].delete(:city)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_missing_house_number_or_name_for_purchase
     @options[:billing_address].delete(:address2)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_invalid_country_for_purchase

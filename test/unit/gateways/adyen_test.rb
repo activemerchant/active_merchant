@@ -153,15 +153,16 @@ def test_successful_capture_with_compount_psp_reference
 
   def test_add_address
     post = {:card => {:billingAddress => {}}}
+    @options[:billing_address].delete(:address1)
+    @options[:billing_address].delete(:address2)
     @gateway.send(:add_address, post, @options)
-    assert_equal @options[:billing_address][:address1], post[:card][:billingAddress][:street]
-    assert_equal @options[:billing_address][:address2], post[:card][:billingAddress][:houseNumberOrName]
+    assert_equal 'N/A', post[:card][:billingAddress][:street]
+    assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
     assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
     assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
     assert_equal @options[:billing_address][:state], post[:card][:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
   end
-
 
   private
 
