@@ -23,6 +23,7 @@
 * Moneris US: Add scrubbing support [bpollack] #2702
 * Mercury: Add scrubbing support [bpollack] #2702
 * Fat Zebra: Tweak remote scrubbing test [bpollack] #2704
+* Card Connect: Add new gateway [nfarve] #2706
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669

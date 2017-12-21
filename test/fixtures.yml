@@ -122,6 +122,12 @@ cams:
   username: testintegrationc
   password: password9
 
+# Working credentials, no need to replace
+card_connect:
+  merchant_id: "496160873888"
+  username: testing
+  password: testing123
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
