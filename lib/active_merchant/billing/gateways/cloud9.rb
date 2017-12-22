@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_request_amount_group(post, options, modify ? amount : nil)
         add_trace_group(post, options, authorization)
-        commit(modify ? MODIFY : REVERSE, 'restApi', post)
+        commit(modify ? ADJUST : REVERSE, 'restApi', post)
       end
 
       # A Credit transaction is used to authorize a refund to a customer's credit card account without reference to a
