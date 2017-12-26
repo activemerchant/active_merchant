@@ -75,7 +75,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
       :password => ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_match %r{error}i, response.message
+    assert_match %r{Invalid Credentials}i, response.message
     assert_failure response
   end
 
