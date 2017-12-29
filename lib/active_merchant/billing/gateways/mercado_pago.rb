@@ -117,7 +117,8 @@ module ActiveMerchant #:nodoc:
         post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {
           ip_address: options[:ip_address]
-        }
+        }.merge(options[:additional_info] || {})
+
 
         add_address(post, options)
         add_shipping_address(post, options)
