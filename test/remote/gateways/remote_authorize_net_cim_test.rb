@@ -81,10 +81,9 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.test?
     assert_success response
     assert_nil response.authorization
-    assert response = @gateway.get_customer_profile(:email => 'johndoe@test.com')
-    assert_nil response.params['profile']['merchant_customer_id']
-    assert_equal 'Up to 255 Characters', response.params['profile']['description']
-    #assert_equal 'new email address', response.params['profile']['email']
+    assert profile = @gateway.get_customer_profile(:email => 'johndoe@test.com')
+    assert_nil profile.params['profile']['merchant_customer_id']
+    assert_equal 'Up to 255 Characters', profile.params['profile']['description']
   end
 
   # NOTE - prior_auth_capture should be used to complete an auth_only request

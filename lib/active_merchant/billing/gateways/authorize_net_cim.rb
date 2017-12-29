@@ -220,9 +220,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:email</tt> -- The Email address associated with the customer to retrieve. (CONDITIONAL)
       # * <tt>:merchant_customer_id</tt> -- The Merchant assigned ID of the customer to retrieve. (CONDITIONAL)
       def get_customer_profile(options)
-        requires!(options, :customer_profile_id) unless options[:email] || options[:merchant_customer_id]
-        requires!(options, :email) unless options[:customer_profile_id] || options[:merchant_customer_id]
-        requires!(options, :merchant_customer_id) unless options[:customer_profile_id] || options[:email]
+        raise ArgumentError, "Requires one of customer_profile_id, email, or merchant_customer_id" unless options[:customer_profile_id] || options[:email] || options[:merchant_customer_id]
 
         request = build_request(:get_customer_profile, options)
         commit(:get_customer_profile, request)
