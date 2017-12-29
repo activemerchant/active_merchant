@@ -5,7 +5,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
   def setup
     @gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus))
     @amount = 100
-    @credit_card     = credit_card('4000100011112224')
+    @credit_card     = credit_card('4000100011112224', :verification_value => '987')
     @mastercard      = credit_card('5399999999999999', :brand => "mastercard")
     @declined_card   = credit_card('1111111111111111')
     @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
@@ -223,5 +223,15 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Some of the data entered is incorrect. please retry.', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
   end
 end
