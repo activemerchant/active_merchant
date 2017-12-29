@@ -6,6 +6,11 @@
 * Moneris US: ensure unit tests are local-only [bpollack] #2696
 * Payflow: Change Verify Method for Amex Cards [nfarve] #2693
 * Safe Charge: fix an issue with variable shadowing in the adapter [bpollack] #2697
+* Crashnet: add scrubbing support [bpollack] #2695
+* Barclays EPDQ: add scrubbing support [bpollack] #2695
+* Fat Zebra: add remote scrubbing test [bpollack] #2695
+* Clearhaus: add remote scrubbing test [bpollack] #2695
+* Borgun: add remote scrubbing test [bpollack] #2695
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
