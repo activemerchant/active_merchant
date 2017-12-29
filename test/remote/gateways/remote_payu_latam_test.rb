@@ -201,14 +201,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "ANTIFRAUD_REJECTED", response.message
     assert_equal "DECLINED", response.params["transactionResponse"]["state"]
   end
 
   def test_failed_purchase_with_no_options
     response = @gateway.purchase(@amount, @declined_card, {})
     assert_failure response
-    assert_equal "ANTIFRAUD_REJECTED", response.message
+    assert_equal "DECLINED", response.params["transactionResponse"]["state"]
   end
 
   def test_successful_authorize
@@ -221,8 +220,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @pending_card, @options)
     assert_failure response
-    assert_equal "PENDING_TRANSACTION_REVIEW", response.message
-    assert_equal "PENDING", response.params["transactionResponse"]["state"]
+    assert_equal "DECLINED", response.params["transactionResponse"]["state"]
   end
 
   def test_well_formed_refund_fails_as_expected
@@ -276,6 +274,27 @@ class RemotePayuLatamTest < Test::Unit::TestCase
 
     gateway = PayuLatamGateway.new(merchant_id: "X", account_id: "512322", api_login: "X", api_key: "X", payment_country: "AR")
     assert !gateway.verify_credentials
+  end
+
+  def test_successful_verify
+    verify = @gateway.verify(@credit_card, @options)
+
+    assert_success verify
+    assert_equal "APPROVED", verify.message
+  end
+
+  def test_successful_verify_with_specified_amount
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 5100))
+
+    assert_success verify
+    assert_equal "APPROVED", verify.message
+  end
+
+  def test_failed_verify_with_specified_amount
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 1699))
+
+    assert_failure verify
+    assert_equal "The order value is less than minimum allowed. Minimum value allowed 17 ARS", verify.message
   end
 
   def test_transcript_scrubbing
