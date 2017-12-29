@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Forte: ensure unit tests are local-only [bpollack] #2696
+* Moneris US: ensure unit tests are local-only [bpollack] #2696
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
