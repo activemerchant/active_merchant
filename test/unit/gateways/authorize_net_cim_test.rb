@@ -12,15 +12,17 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     @credit_card = credit_card
     @address = address
     @customer_profile_id = '3187'
+    @email = 'johndoe@test.com'
+    @merchant_customer_id = '1000'
     @customer_payment_profile_id = '7813'
     @customer_address_id = '4321'
     @payment = {
       :credit_card => @credit_card
     }
     @profile = {
-      :merchant_customer_id => 'Up to 20 chars', # Optional
+      :merchant_customer_id => @merchant_customer_id, # Optional
       :description => 'Up to 255 Characters', # Optional
-      :email => 'Up to 255 Characters', # Optional
+      :email => @email, # Optional
       :payment_profiles => { # Optional
         :customer_type => 'individual or business', # Optional
         :bill_to => @address,
@@ -342,6 +344,20 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal @customer_profile_id, response.authorization
+
+    @gateway.expects(:ssl_post).returns(successful_get_customer_profile_response)
+
+    assert response = @gateway.get_customer_profile(:email => @email)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal @email, response.params['email']
+
+    @gateway.expects(:ssl_post).returns(successful_get_customer_profile_response)
+
+    assert response = @gateway.get_customer_profile(:merchant_customer_id => @merchant_customer_id)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal @merchant_customer_id, response.params['merchant_customer_id']
   end
 
   def test_should_get_customer_profile_ids_request
@@ -815,6 +831,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
             <text>Successful.</text>
           </message>
         </messages>
+        <merchantCustomerId>#{@merchant_customer_id}</merchantCustomerId>
+        <email>#{@email}</email>
         <customerProfileId>#{@customer_profile_id}</customerProfileId>
         <profile>
           <paymentProfiles>
@@ -864,9 +882,9 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           </message>
         </messages>
         <profile>
-          <merchantCustomerId>Up to 20 chars</merchantCustomerId>
+          <merchantCustomerId>#{@merchant_customer_id}</merchantCustomerId>
           <description>Up to 255 Characters</description>
-          <email>Up to 255 Characters</email>
+          <email>#{@email}</email>
           <customerProfileId>#{@customer_profile_id}</customerProfileId>
           <paymentProfiles>
             <customerPaymentProfileId>1000</customerPaymentProfileId>
