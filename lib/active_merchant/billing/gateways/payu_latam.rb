@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         minimum = MINIMUMS[options[:currency].upcase] if options[:currency]
-        amount = minimum || 100
+        amount = options[:verify_amount] || minimum || 100
 
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, credit_card, options) }

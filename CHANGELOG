@@ -21,6 +21,7 @@
 * Barclaycard Smartpay: Correct repsonse for fraud rejects #2683
 * Adyen: Allow incomplete addresses in some situations [bpollack] #2684
 * Paymentez: Add new gateway [bpollack] #2685
+* PayU Latam: Provide a mechanism to override the amount in verify [dtykocki] #2688
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
