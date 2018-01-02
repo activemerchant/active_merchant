@@ -25,7 +25,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
                  'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
-                 'UAbQBYAFIAMwA=|09|18|1.00|USD', response.authorization
+                 "UAbQBYAFIAMwA=|%02d|%d|1.00|USD" % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
     assert response.test?
   end
 
@@ -45,7 +45,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111534|101508189855|MQBVAG4ASABkAEgAagB3AEsAbgAtACoAWgAzAFwAW' \
                  'wBNAF8ATQBUAD0AegBQAGwAQAAtAD0AXAB5AFkALwBtAFAALABaAHoAOgBFAE' \
-                 'wAUAA1AFUAMwA=|09|18|1.00|USD', response.authorization
+                 "wAUAA1AFUAMwA=|%02d|%d|1.00|USD" % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
     assert response.test?
   end
 
@@ -138,7 +138,7 @@ class SafeChargeTest < Test::Unit::TestCase
 
     assert_equal '111534|101508189855|MQBVAG4ASABkAEgAagB3AEsAbgAtACoAWgAzAFwAW' \
                  'wBNAF8ATQBUAD0AegBQAGwAQAAtAD0AXAB5AFkALwBtAFAALABaAHoAOgBFAE' \
-                 'wAUAA1AFUAMwA=|09|18|1.00|USD', response.authorization
+                 "wAUAA1AFUAMwA=|%02d|%d|1.00|USD" % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
     assert response.test?
   end
 
