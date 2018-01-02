@@ -45,7 +45,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment, options={})
-        authorize(0, payment, options)
+        if credit_card_type(payment) == 'Amex'
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, payment, options) }
+            r.process(:ignore_result) { void(r.authorization, options) }
+          end
+        else
+          authorize(0, payment, options)
+        end
       end
 
       def verify_credentials

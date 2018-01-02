@@ -663,7 +663,7 @@ payex:
 # Working credentials, no need to replace
 payflow:
   login: 'spreedlyIntegrations'
-  password: 'y9q)(j7H'
+  password: 'L9DjqEKjXCkU'
   partner: 'PayPal'
 
 payflow_uk:
