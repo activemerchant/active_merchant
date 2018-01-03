@@ -168,6 +168,7 @@ module ActiveMerchant
             xml.amount(amount(amount))
 
             add_payment_source(xml, payment)
+            xml.refTransId(transaction_id_from(options[:transaction_id])) if options[:transaction_id]
             add_invoice(xml, 'refundTransaction', options)
             add_customer_data(xml, payment, options)
             add_settings(xml, payment, options)
@@ -421,6 +422,12 @@ module ActiveMerchant
             xml.setting do
               xml.settingName("headerEmailReceipt")
               xml.settingValue(options[:header_email_receipt])
+            end
+          end
+          if options[:test_request]
+            xml.setting do
+              xml.settingName("testRequest")
+              xml.settingValue("1")
             end
           end
         end
