@@ -136,6 +136,17 @@ module ActiveMerchant #:nodoc:
         commit(:update, nil, form, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?ssl_pin=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?ssl_card_number=)[^&\\n\r\n]*)i, '\1[FILTERED]').
+          gsub(%r((&?ssl_cvv2cvc2=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_invoice(form,options)
