@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
 * Checkout V2: Allows AVS and CVV result details to come through on authorizations [deedeelavinder] #2650
 * Global Collect: Adds boolean option for pre_authorization [deeedeelavinder] #2651
