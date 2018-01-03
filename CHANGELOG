@@ -25,6 +25,7 @@
 * Mercado Pago: Support X-Device-Session-ID Header [bpollack] #2689
 * Mercado Pago: Support arbitrary additional_info JSON [bpollack] #2691
 * FirstData E4: Override ECI value for Apple Pay transactions with Discover [jasonwebster] #2671
+* Quickbooks: Add payment context to Quickbooks charges and refunds [bdewater] #2694
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632
