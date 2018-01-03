@@ -168,7 +168,7 @@ module ActiveMerchant
             xml.amount(amount(amount))
 
             add_payment_source(xml, payment)
-            xml.refTransId(transaction_id_from(options[:transaction_id])) if options[:transaction_id] 
+            xml.refTransId(transaction_id_from(options[:transaction_id])) if options[:transaction_id]
             add_invoice(xml, 'refundTransaction', options)
             add_customer_data(xml, payment, options)
             add_settings(xml, payment, options)
