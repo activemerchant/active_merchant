@@ -332,4 +332,14 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visa_delta, @params)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@visa_delta.number, transcript)
+    assert_scrubbed(@visa_delta.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end
