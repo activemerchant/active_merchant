@@ -5,6 +5,7 @@
 * Forte: ensure unit tests are local-only [bpollack] #2696
 * Moneris US: ensure unit tests are local-only [bpollack] #2696
 * Payflow: Change Verify Method for Amex Cards [nfarve] #2693
+* Safe Charge: fix an issue with variable shadowing in the adapter [bpollack] #2697
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
