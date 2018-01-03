@@ -77,6 +77,16 @@ module ActiveMerchant
         commit(build_transaction_refund_request(money, reference))
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(/(<pan>)\d+(<\/pan>)/i, '\1[FILTERED]\2').
+          gsub(/(<cv2>)\d+(<\/cv2>)/i, '\1[FILTERED]\2').
+          gsub(/(<password>).+(<\/password>)/i, '\1[FILTERED]\2')
+      end
 
       private
 
