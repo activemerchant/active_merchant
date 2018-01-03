@@ -243,7 +243,7 @@ class MonerisUsTest < Test::Unit::TestCase
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', avs_enabled: true)
 
     billing_address = address(address1: "1234 Anystreet", address2: "")
-    stub_comms do
+    stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: "1")
     end.check_request do |endpoint, data, headers|
       assert_match(%r{avs_street_number>1234<}, data)
@@ -255,7 +255,7 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_avs_enabled_but_not_provided
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', avs_enabled: true)
 
-    stub_comms do
+    stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
     end.check_request do |endpoint, data, headers|
       assert_no_match(%r{avs_street_number>}, data)
