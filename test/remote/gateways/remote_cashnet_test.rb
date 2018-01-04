@@ -52,4 +52,15 @@ class CashnetTest < Test::Unit::TestCase
     assert_match %r{Amount to refund exceeds}, refund.message
     assert_equal "302", refund.params["result"]
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end
