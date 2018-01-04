@@ -170,8 +170,8 @@ module ActiveMerchant #:nodoc:
         if childnode.elements.size == 0
           element_name_to_symbol(response, childnode)
         else
-          childnode.traverse do |childnode|
-            element_name_to_symbol(response, childnode)
+          childnode.traverse do |node|
+            element_name_to_symbol(response, node)
           end
         end
       end
