@@ -1,8 +1,10 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
 * Forte: ensure unit tests are local-only [bpollack] #2696
 * Moneris US: ensure unit tests are local-only [bpollack] #2696
+* Payflow: Change Verify Method for Amex Cards [nfarve] #2693
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669

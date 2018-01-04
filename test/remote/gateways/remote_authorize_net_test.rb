@@ -569,6 +569,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_echeck_refund
+    purchase = @gateway.purchase(@amount, @check, @options)
+    assert_success purchase
+
+    @options.update(transaction_id:  purchase.params['transaction_id'], test_request: true)
+    refund = @gateway.credit(@amount, @check, @options)
+    assert_failure refund
+    assert_match %r{The transaction cannot be found}, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+  end
+
   def test_failed_credit
     response = @gateway.credit(@amount, @declined_card, @options)
     assert_failure response
