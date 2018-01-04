@@ -144,7 +144,9 @@ module ActiveMerchant #:nodoc:
         transcript
           .gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2')
           .gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
+          .gsub(%r((<Password>).+(</Password>))i, '\1[FILTERED]\2')
           .gsub(%r((<CAVV>).+(</CAVV>)), '\1[FILTERED]\2')
+          .gsub(%r((Card Number : ).*\d)i, '\1[FILTERED]')
       end
 
       def supports_network_tokenization?

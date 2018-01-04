@@ -237,7 +237,16 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
-  def test_dump_transcript
-    # See firstdata_e4_test.rb for an example of a scrubbed transcript
+  def test_transcript_scrubbing
+    cc_with_different_cvc = credit_card(verification_value: '999')
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, cc_with_different_cvc, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(cc_with_different_cvc.number, transcript)
+    assert_scrubbed(cc_with_different_cvc.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
+
 end
