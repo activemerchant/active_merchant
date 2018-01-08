@@ -9,7 +9,8 @@ group :development, :test do
   gem 'test-unit'
   gem 'minitest'
   gem 'pry'
-  gem 'pry-byebug'
+  gem 'pry-byebug', '3.4.2'
+  gem 'byebug', '9.0.6'
 end
 
 eval File.read(File.expand_path("../Gemfile_common", __FILE__))
