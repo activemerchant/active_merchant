@@ -75,6 +75,17 @@ module ActiveMerchant #:nodoc:
         commit('CardVerify', post, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?GlobalPassword=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_address(post, options)
