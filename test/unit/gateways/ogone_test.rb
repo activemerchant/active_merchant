@@ -445,6 +445,11 @@ class OgoneTest < Test::Unit::TestCase
     assert_instance_of Hash, response.params
   end
 
+  def test_transcript_scrubbing
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
   private
 
   def string_to_digest
@@ -752,6 +757,54 @@ class OgoneTest < Test::Unit::TestCase
     ALIAS="2">
     </ncresponse>
     END
+  end
+
+  def pre_scrub
+    %q{
+opening connection to secure.ogone.com:443...
+opened
+starting SSL for secure.ogone.com:443...
+SSL established
+<- "POST /ncol/test/orderdirect.asp HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: secure.ogone.com\r\nContent-Length: 455\r\n\r\n"
+<- "CARDNO=4000100011112224&CN=Longbob+Longsen&COM=Store+Purchase&CVC=123&ECI=7&ED=0919&Operation=SAL&OwnerZip=K1C2N6&Owneraddress=456+My+Street&PSPID=spreedlyinc&PSWD=spreedly1test&SHASign=A67038AB141C6E54C51315F993DC83F5C28A9E585C6C8A79346F802E6557C0C8EE233A5FF1352AAD3C6AA5D476CF49F2B0DF512C63BA624F0583B72C1DCABCEF&USERID=spreedlytest&amount=100&currency=EUR&orderID=7de271d36c1c36999a6039d99179b2&ownercty=CA&ownertelno=%28555%29555-5555&ownertown=Ottawa"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Cache-Control: private, max-age=0\r\n"
+-> "Content-Length: 152\r\n"
+-> "Content-Type: text/XML; Charset=iso-8859-1\r\n"
+-> "Expires: Mon, 08 Jan 2018 18:13:04 GMT\r\n"
+-> "Strict-Transport-Security: max-age=31536000;includeSubdomains\r\n"
+-> "Date: Mon, 08 Jan 2018 18:14:05 GMT\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 152 bytes...
+-> "<?xml version=\"1.0\"?><ncresponse\r\norderID=\"7de271d36c1c36999a6039d99179b2\"\r\nPAYID=\"3029762647\"\r\nNCERROR=\"0\"\r\nSTATUS=\"9\"\r\nNCERRORPLUS=\"!\">\r\n</ncresponse>"
+read 152 bytes
+Conn close
+    }
+  end
+
+  def post_scrub
+    %q{
+opening connection to secure.ogone.com:443...
+opened
+starting SSL for secure.ogone.com:443...
+SSL established
+<- "POST /ncol/test/orderdirect.asp HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: secure.ogone.com\r\nContent-Length: 455\r\n\r\n"
+<- "CARDNO=[FILTERED]&CN=Longbob+Longsen&COM=Store+Purchase&CVC=[FILTERED]&ECI=7&ED=0919&Operation=SAL&OwnerZip=K1C2N6&Owneraddress=456+My+Street&PSPID=spreedlyinc&PSWD=[FILTERED]&SHASign=A67038AB141C6E54C51315F993DC83F5C28A9E585C6C8A79346F802E6557C0C8EE233A5FF1352AAD3C6AA5D476CF49F2B0DF512C63BA624F0583B72C1DCABCEF&USERID=spreedlytest&amount=100&currency=EUR&orderID=7de271d36c1c36999a6039d99179b2&ownercty=CA&ownertelno=%28555%29555-5555&ownertown=Ottawa"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Cache-Control: private, max-age=0\r\n"
+-> "Content-Length: 152\r\n"
+-> "Content-Type: text/XML; Charset=iso-8859-1\r\n"
+-> "Expires: Mon, 08 Jan 2018 18:13:04 GMT\r\n"
+-> "Strict-Transport-Security: max-age=31536000;includeSubdomains\r\n"
+-> "Date: Mon, 08 Jan 2018 18:14:05 GMT\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 152 bytes...
+-> "<?xml version=\"1.0\"?><ncresponse\r\norderID=\"7de271d36c1c36999a6039d99179b2\"\r\nPAYID=\"3029762647\"\r\nNCERROR=\"0\"\r\nSTATUS=\"9\"\r\nNCERRORPLUS=\"!\">\r\n</ncresponse>"
+read 152 bytes
+Conn close
+    }
   end
 
 end
