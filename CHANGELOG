@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Litle: Add Support for Echeck [nfarve] #2776
 * Orbital: Correct level 2 tax handling [deedeelavinder] #2729
 * Payeezy: Change determination method of endpoint for store request [deedeelavinder] #2731
 * Adyen: Return refusal_reason_raw when present [curiousepic] #2728

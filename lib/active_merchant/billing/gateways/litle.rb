@@ -23,23 +23,33 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options={})
         request = build_xml_request do |doc|
           add_authentication(doc)
-          doc.sale(transaction_attributes(options)) do
-            add_auth_purchase_params(doc, money, payment_method, options)
+          if check?(payment_method)
+            doc.echeckSale(transaction_attributes(options)) do
+              add_echeck_purchase_params(doc, money, payment_method, options)
+            end
+          else
+            doc.sale(transaction_attributes(options)) do
+              add_auth_purchase_params(doc, money, payment_method, options)
+            end
           end
         end
-
-        commit(:sale, request, money)
+       check?(payment_method) ? commit(:echeckSales, request, money) : commit(:sale, request, money)
       end
 
       def authorize(money, payment_method, options={})
         request = build_xml_request do |doc|
           add_authentication(doc)
-          doc.authorization(transaction_attributes(options)) do
-            add_auth_purchase_params(doc, money, payment_method, options)
+          if check?(payment_method)
+            doc.echeckVerification(transaction_attributes(options)) do
+              add_echeck_purchase_params(doc, money, payment_method, options)
+            end
+          else
+            doc.authorization(transaction_attributes(options)) do
+              add_auth_purchase_params(doc, money, payment_method, options)
+            end
           end
         end
-
-        commit(:authorization, request, money)
+        check?(payment_method) ? commit(:echeckVerification, request, money) : commit(:authorization, request, money)
       end
 
       def capture(money, authorization, options={})
@@ -62,19 +72,24 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      def refund(money, authorization, options={})
-        transaction_id, _, _ = split_authorization(authorization)
-
+      def refund(money, payment, options={})
         request = build_xml_request do |doc|
           add_authentication(doc)
           add_descriptor(doc, options)
-          doc.credit(transaction_attributes(options)) do
-            doc.litleTxnId(transaction_id)
-            doc.amount(money) if money
+          doc.send(refund_type(payment), transaction_attributes(options)) do
+            if payment.is_a?(String)
+              transaction_id, kind, _ = split_authorization(payment)
+              doc.litleTxnId(transaction_id)
+              doc.amount(money) if money
+            elsif check?(payment)
+              add_echeck_purchase_params(doc, money, payment, options)
+            else
+              add_auth_purchase_params(doc, money, payment, options)
+            end
           end
         end
 
-        commit(:credit, request)
+        commit(refund_type(payment), request)
       end
 
       def verify(creditcard, options = {})
@@ -124,6 +139,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<user>).+(</user>)), '\1[FILTERED]\2').
           gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
           gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2').
+          gsub(%r((<accNum>).+(</accNum>)), '\1[FILTERED]\2').
+          gsub(%r((<routingNum>).+(</routingNum>)), '\1[FILTERED]\2').
           gsub(%r((<cardValidationNum>).+(</cardValidationNum>)), '\1[FILTERED]\2').
           gsub(%r((<accountNumber>).+(</accountNumber>)), '\1[FILTERED]\2').
           gsub(%r((<paypageRegistrationId>).+(</paypageRegistrationId>)), '\1[FILTERED]\2').
@@ -160,7 +177,27 @@ module ActiveMerchant #:nodoc:
       }
 
       def void_type(kind)
-        (kind == 'authorization') ? :authReversal : :void
+        if kind == 'authorization'
+          :authReversal
+        elsif kind == 'echeckSales'
+          :echeckVoid
+        else
+          :void
+        end
+      end
+
+      def refund_type(payment)
+        transaction_id, kind, _ = split_authorization(payment)
+        if check?(payment) || kind  == 'echeckSales'
+          :echeckCredit
+        else
+          :credit
+        end
+      end
+
+      def check?(payment_method)
+        return false if payment_method.is_a?(String)
+        card_brand(payment_method) == 'check'
       end
 
       def add_authentication(doc)
@@ -193,6 +230,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_echeck_purchase_params(doc, money, payment_method, options)
+        doc.orderId(truncate(options[:order_id], 24))
+        doc.amount(money)
+        add_order_source(doc, payment_method, options)
+        add_billing_address(doc, payment_method, options)
+        add_payment_method(doc, payment_method, options)
+        add_descriptor(doc, options)
+      end
+
       def add_descriptor(doc, options)
         if options[:descriptor_name] || options[:descriptor_phone]
           doc.customBilling do
@@ -214,6 +260,13 @@ module ActiveMerchant #:nodoc:
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
             doc.track(payment_method.track_data)
+          end
+        elsif check?(payment_method)
+          doc.echeck do
+            doc.accType(payment_method.account_type)
+            doc.accNum(payment_method.account_number)
+            doc.routingNum(payment_method.routing_number)
+            doc.checkNum(payment_method.number)
           end
         else
           doc.card do
@@ -239,7 +292,13 @@ module ActiveMerchant #:nodoc:
         return if payment_method.is_a?(String)
 
         doc.billToAddress do
-          doc.name(payment_method.name)
+          if check?(payment_method)
+            doc.name(payment_method.name)
+            doc.firstName(payment_method.first_name)
+            doc.lastName(payment_method.last_name)
+          else
+            doc.name(payment_method.name)
+          end
           doc.email(options[:email]) if options[:email]
 
           add_address(doc, options[:billing_address])

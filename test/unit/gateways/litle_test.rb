@@ -32,6 +32,18 @@ class LitleTest < Test::Unit::TestCase
       })
     @amount = 100
     @options = {}
+    @check = check(
+      name: 'Tom Black',
+      routing_number:  '011075150',
+      account_number: '4099999992',
+      account_type: 'Checking'
+    )
+    @authorize_check = check(
+      name: 'John Smith',
+      routing_number: '011075150',
+      account_number: '1099999999',
+      account_type: 'Checking'
+    )
   end
 
   def test_successful_purchase
@@ -42,6 +54,17 @@ class LitleTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal "100000000000000006;sale;100", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_echeck
+    response = stub_comms do
+      @gateway.purchase(2004, @check)
+    end.respond_with(successful_purchase_with_echeck_response)
+
+    assert_success response
+
+    assert_equal "621100411297330000;echeckSales;2004", response.authorization
     assert response.test?
   end
 
@@ -264,6 +287,15 @@ class LitleTest < Test::Unit::TestCase
     assert_equal "360", response.params["response"]
   end
 
+  def test_successful_void_of_echeck
+    response = stub_comms do
+      @gateway.void("945032206979933000;echeckSales;2004")
+    end.respond_with(successful_void_of_echeck_response)
+
+    assert_success response
+    assert_equal "986272331806746000;echeckVoid;", response.authorization
+  end
+
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card)
@@ -382,6 +414,20 @@ class LitleTest < Test::Unit::TestCase
             <cardValidationResult>M</cardValidationResult>
           </fraudResult>
         </saleResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_purchase_with_echeck_response
+    %(
+      <litleOnlineResponse version='9.12' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <echeckSalesResponse id='42' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>621100411297330000</litleTxnId>
+          <orderId>42</orderId>
+          <response>000</response>
+          <responseTime>2018-01-09T14:02:20</responseTime>
+          <message>Approved</message>
+        </echeckSalesResponse>
       </litleOnlineResponse>
     )
   end
@@ -516,6 +562,20 @@ class LitleTest < Test::Unit::TestCase
           <responseTime>2014-03-31T12:44:52</responseTime>
           <message>Approved</message>
         </voidResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_void_of_echeck_response
+    %(
+      <litleOnlineResponse version='9.12' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <echeckVoidResponse id='' reportGroup='Default Report Group' customerId=''>
+          <litleTxnId>986272331806746000</litleTxnId>
+          <response>000</response>
+          <responseTime>2018-01-09T14:20:00</responseTime>
+          <message>Approved</message>
+          <postDate>2018-01-09</postDate>
+        </echeckVoidResponse>
       </litleOnlineResponse>
     )
   end
