@@ -15,6 +15,7 @@ require 'support/gateway_support'
 require 'support/ssl_verify'
 require 'support/outbound_hosts'
 require 'bundler/gem_tasks'
+require 'ci/reporter/rake/test_unit'
 
 task :tag_release do
   system "git tag 'v#{ActiveMerchant::VERSION}'"
@@ -23,7 +24,7 @@ end
 
 desc "Run the unit test suite"
 task :default => 'test:units'
-task :test => 'test:units'
+task :test => ['ci:setup:testunit', 'test:units']
 
 namespace :test do
   Rake::TestTask.new(:units) do |t|

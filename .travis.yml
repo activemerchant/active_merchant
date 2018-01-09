@@ -1,5 +1,4 @@
 language: ruby
-script: "bundle exec rake test:units"
 sudo: false
 cache: bundler
 
@@ -17,6 +16,11 @@ gemfile:
 - Gemfile.rails50
 - Gemfile.rails51
 
+before_install:
+  - mkdir -p $HOME/bin
+  - curl -fsSL https://testspace-client.s3.amazonaws.com/testspace-linux.tgz | tar -zxvf- -C $HOME/bin
+  - testspace config url $TS_ORG.testspace.com
+
 matrix:
   exclude:
     - rvm: 2.1
@@ -29,6 +33,13 @@ matrix:
       gemfile: Gemfile.rails40
     - rvm: 2.4.1
       gemfile: Gemfile.rails41
+
+script:
+  - bundle exec rake test
+
+after_script:
+  - export FOLDER=ruby_${TRAVIS_RUBY_VERSION}.${BUNDLE_GEMFILE#*Gemfile.}
+  - testspace [${FOLDER}]$PWD/test/reports/TEST*.xml{test}
 
 notifications:
   email:
