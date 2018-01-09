@@ -31,6 +31,7 @@
 * Payment Express: use testing URLs when testing [oklas] #2231
 * Redsys: Fix payments with cc token [Leonardo Diez] #2586
 * Redsys: Missing cardnumber params in xml_signed_fields [nerburish] #2628
+* Bogus: allow authorizing with a tokenized card [Azdaroth] #2703
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
