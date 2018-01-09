@@ -28,6 +28,11 @@ class BogusTest < Test::Unit::TestCase
     assert_equal("Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error", e.message)
   end
 
+  def test_authorize_using_credit_card_token
+    token = @gateway.store(credit_card(CC_SUCCESS_PLACEHOLDER)).authorization
+    assert @gateway.authorize(1000, token).success?
+  end
+
   def test_purchase
     assert  @gateway.purchase(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response = @gateway.purchase(1000, credit_card(CC_FAILURE_PLACEHOLDER))

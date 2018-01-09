@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
       def authorize_swipe(money, paysource, options = {})
         money = amount(money)
         case normalize(paysource)
-        when /1$/
+        when /1$/, AUTHORIZATION
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
