@@ -4,15 +4,51 @@ require "support/mercury_helper"
 class RemoteMercuryTest < Test::Unit::TestCase
   include MercuryHelper
 
+  # MercuryCert.Net Testing Guide https://developer.vantiv.com/docs/DOC-1358
+  # Defines various special values for certain configurations and behaviors, such as
+  #
+  # Test Merchant IDs
+  # Mercury U.S. EMV Chip Test Card Information; requires amounts under $10.99
+  # Mercury U.S. Magnetic Stripe Test Card Information; requires amounts under $10.99 or between $60.00--$9,999.00
+  #
+  # Trigger Amounts
+  #   Partial Trigger Amounts
+  # Card | Partial Trigger | Amount | Returns Partial Approval Amount | Additional Comments
+  # Visa $23.54 $20.00 CardLookup returns “FSA” for card usage
+  # MasterCard $23.62 $20.00
+  # Discover $23.07 $20.00
+  # American Express $23.80 $20.00
+  #
+  #   All Test Cards
+  # The below amount triggers may be used with any of the test cards.
+  #  Trigger Amount Trigger Response
+  # 20.01 Call AMEX, Call DISCOVER, Visa/MC CALL CENTER
+  # 20.04 PIC UP
+  # 20.08 Amex, Disc, MC: AP WITH ID
+  # 20.12 Disc, Visa, MC: INVLD TRAN CODE
+  # 20.13 INVLD AMOUNT
+  # 20.19 Disc, Visa, MC: PLEASE RETRY
+  # 20.54 INVLD EXP DATE
+  # 20.55 INVLD PIN
+  # 20.75 Disc, MC, Visa: MAX PIN TRIES; Debit Declines
+  # 20.91 ISSUER UNAVAIL, Disc: CALL DISCOVER
+  # 23.00 ISSUER UNAVAIL (Timeout)
+  # 24.00 10 second delay—currently returns decline
+
+  # MercuryPay test environment limits access to known 'not real' accounts
+  MERCURY_PAY_VALID_VISA = "4003000123456781"
+  MERCURY_PAY_VALID_MASTERCARD = "5499990123456781"
+  MERCURY_PAY_VALID_AMEX = "373953244361001"
+  MERCURY_PAY_VALID_DISCOVER = "6011000997235373"
+
+  MERCURY_PAY_OTHER_CC = "4005550000000480"
+
   def setup
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
     @amount = 100
 
-    @credit_card = credit_card("4003000123456781", :brand => "visa", :month => "12", :year => "15")
-
-    @track_1_data = "%B4003000123456781^LONGSEN/L. ^15121200000000000000**123******?*"
-    @track_2_data = ";5413330089010608=2512101097750213?"
+    @credit_card = credit_card(MERCURY_PAY_VALID_VISA)
 
     @options = {
       :order_id => "c111111111.1",
@@ -105,7 +141,9 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_avs_and_cvv_results_with_track_data
-    @credit_card.track_data = @track_1_data
+    pend "between 5e83afa38f5fe74821c0f73e6622198b2f719ea9 and 2eff2e81be3489b852167ebd5e3dea46a68a3de2, seems MercuryPay is inconsistent in returning nil and P 'not processed' when request omits AVS/CVV with track_data"
+
+    @credit_card = credit_card_with_track_data(MERCURY_PAY_VALID_VISA)
     response = @gateway.authorize(333, @credit_card, @options_with_billing)
 
     assert_success response
@@ -121,12 +159,25 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_equal({"code"=>'P', "message"=>'CVV not processed'}, response.cvv_result)
   end
 
+  # Is this supposed to be testing capture-less-than-authorize, or allow_partial_auth?
+  # MercuryPay test framework seems to not carry across pre-auth-partial-code to capture, so unclear whether this
+  # gateway adapter should take responsibility for blocking over-authorized amounts
   def test_partial_capture
-    visa_partial_card = credit_card("4005550000000480")
-
+    # In pre-auth request, a VISA with 23.54 triggers partial approval, if allow_partial_auth: true, else DECLINES
+    visa_partial_card = credit_card(MERCURY_PAY_OTHER_CC)
     response = @gateway.authorize(2354, visa_partial_card, @options)
+    assert_failure response
+    assert_equal "DECLINE", response.message
 
+    response = @gateway.authorize(2354, visa_partial_card, @options.merge(allow_partial_auth: true))
     assert_success response
+    assert_equal('20.00', response.params['authorize'])
+
+    # VISA w/ 23.54 likely should trigger partial on `capture` but that seems not to be implemented by MercuryPay
+    pend('MercuryPay pre-authed for 20.00, so this request ought to decline but test framework forgot') do
+      capture = @gateway.capture(2100, response.authorization)
+      assert_failure capture
+    end
 
     capture = @gateway.capture(2000, response.authorization)
     assert_success capture
@@ -144,7 +195,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_mastercard_authorize_and_capture_with_refund
-    mc = credit_card("5499990123456781", :brand => "master")
+    mc = credit_card(MERCURY_PAY_VALID_MASTERCARD) #, :brand => "master")
 
     response = @gateway.authorize(200, mc, @options)
     assert_success response
@@ -161,7 +212,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_amex_authorize_and_capture_with_refund
-    amex = credit_card("373953244361001", :brand => "american_express", :verification_value => "1234")
+    amex = credit_card(MERCURY_PAY_VALID_AMEX)#, :brand => "american_express", :verification_value => "1234")
 
     response = @gateway.authorize(201, amex, @options)
     assert_success response
@@ -177,7 +228,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_discover_authorize_and_capture
-    discover = credit_card("6011000997235373", :brand => "discover")
+    discover = credit_card(MERCURY_PAY_VALID_DISCOVER) #, :brand => "discover")
 
     response = @gateway.authorize(225, discover, @options_with_billing)
     assert_success response
@@ -212,7 +263,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
   
   def test_successful_authorize_and_capture_with_track_1_data
-    @credit_card.track_data = @track_1_data
+    @credit_card = credit_card_with_track_data(MERCURY_PAY_VALID_VISA)
     response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '1.00', response.params['authorize']
@@ -223,7 +274,8 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_with_track_2_data
-    @credit_card.track_data = @track_2_data
+    @credit_card = credit_card_track_2(MERCURY_PAY_VALID_VISA)
+
     response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '1.00', response.params['authorize']
