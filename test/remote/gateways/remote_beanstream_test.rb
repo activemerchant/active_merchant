@@ -78,8 +78,8 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_equal "Approved", response.message
   end
 
-  def test_successful_visa_purchase_no_cvv
-    assert response = @gateway.purchase(@amount, @visa_no_cvv, @options)
+  def test_successful_visa_purchase_no_cvv_with_recurring
+    assert response = @gateway.purchase(@amount, @visa_no_cvv, @options.merge(recurring: true))
     assert_success response
     assert_false response.authorization.blank?
     assert_equal "Approved", response.message

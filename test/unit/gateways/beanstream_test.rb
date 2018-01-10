@@ -60,7 +60,7 @@ class BeanstreamTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      refute_match(/recurringPayment=true/, data)
+      refute_match(/recurringPayment=1/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -71,7 +71,7 @@ class BeanstreamTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options.merge(recurring: true))
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/recurringPayment=true/, data)
+      assert_match(/recurringPayment=1/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -81,7 +81,7 @@ class BeanstreamTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @decrypted_credit_card, @options.merge(recurring: true))
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/recurringPayment=true/, data)
+      assert_match(/recurringPayment=1/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
