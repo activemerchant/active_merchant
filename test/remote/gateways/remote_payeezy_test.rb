@@ -10,7 +10,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
     @options = {
       :billing_address => address,
       :merchant_ref => 'Store Purchase',
-      :ta_token => '123'
+      :ta_token => '120'
     }
     @options_mdd = {
       soft_descriptors: {
@@ -200,6 +200,31 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_match(/Server Error/, response.message) # 42 is 'unable to send trans'
     assert_failure response
     assert_equal "500", response.error_code
+  end
+
+  def test_transcript_scrubbing_store
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end
+
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:token], transcript)
+    assert_scrubbed(@gateway.options[:apikey], transcript)
+  end
+
+  def test_transcript_scrubbing_store_with_missing_ta_token
+    transcript = capture_transcript(@gateway) do
+      @options.delete(:ta_token)
+      @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end
+
+    transcript = @gateway.scrub(transcript)
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:token], transcript)
+    assert_scrubbed(@gateway.options[:apikey], transcript)
   end
 
   def test_transcript_scrubbing
