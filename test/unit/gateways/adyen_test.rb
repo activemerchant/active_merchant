@@ -53,7 +53,7 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
-def test_successful_capture_with_compount_psp_reference
+  def test_successful_capture_with_compount_psp_reference
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, '7914775043909934#8514775559000000')
     assert_equal '7914775043909934#8814775564188305', response.authorization
