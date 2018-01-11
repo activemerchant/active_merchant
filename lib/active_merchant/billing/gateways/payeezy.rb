@@ -104,9 +104,10 @@ module ActiveMerchant
       def scrub(transcript)
         transcript.
           gsub(%r((Token: )(\w|-)+), '\1[FILTERED]').
-          gsub(%r((\\?"card_number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((card_number\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"cvv\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"account_number\\?":\\?")\d+), '\1[FILTERED]').
+          gsub(%r((\\?"apisecret\\?":\\?")\d+), '\1[FILTERED]').
           gsub(%r((\\?"routing_number\\?":\\?")\d+), '\1[FILTERED]')
       end
 

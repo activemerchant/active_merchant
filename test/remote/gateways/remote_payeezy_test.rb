@@ -222,5 +222,19 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_scrubbed(@check.account_number, transcript)
     assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:token], transcript)
+    assert_scrubbed(@gateway.options[:apisecret], transcript)
+  end
+
+  def test_transcript_scrubbing_store
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@credit_card,
+                     @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end
+    File.open("dumpit.txt", "w") { |f| f.write(transcript) }
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:token], transcript)
+    assert_scrubbed(@gateway.options[:apisecret], transcript)
   end
 end
