@@ -295,6 +295,9 @@ exact:
 ezic:
   account_id: "120536457270"
 
+ezidebit:
+  digital_key: DIGITAL_KEY
+
 # Working credentials, no need to replace
 fat_zebra:
   username: TEST
