@@ -491,7 +491,7 @@ module ActiveMerchant #:nodoc:
 
       def encrypt(key, order_id)
         block_length = 8
-        cipher = OpenSSL::Cipher::Cipher.new('DES3')
+        cipher = OpenSSL::Cipher.new('DES3')
         cipher.encrypt
 
         cipher.key = Base64.strict_decode64(key)
