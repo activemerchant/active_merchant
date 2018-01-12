@@ -253,6 +253,10 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_scrub_store
+    assert_equal @gateway.scrub(pre_scrubbed_store), post_scrubbed_store
+  end
+
   def test_scrub_echeck
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
@@ -300,7 +304,7 @@ class PayeezyGateway < Test::Unit::TestCase
     opened
     starting SSL for api-cert.payeezy.com:443...
       SSL established
-    <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT\r\nToken: [FILTERED]\r\nNonce: 5803993876.636232\r\nTimestamp: 1449523748359\r\nAuthorization: NGRlZjJkMWNlMDc5NGI5OTVlYTQxZDRkOGQ4NjRhNmZhNDgwZmIyNTZkMWJhN2M3MDdkNDI0ZWI1OGUwMGExMA==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\nContent-Length: 365\r\n\r\n"
+    <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: [FILTERED]\r\nToken: [FILTERED]\r\nNonce: 5803993876.636232\r\nTimestamp: 1449523748359\r\nAuthorization: NGRlZjJkMWNlMDc5NGI5OTVlYTQxZDRkOGQ4NjRhNmZhNDgwZmIyNTZkMWJhN2M3MDdkNDI0ZWI1OGUwMGExMA==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\nContent-Length: 365\r\n\r\n"
     <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"method\":\"credit_card\",\"credit_card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"0916\",\"cvv\":\"[FILTERED]\"},\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
     -> "HTTP/1.1 201 Created\r\n"
     -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
@@ -379,6 +383,62 @@ class PayeezyGateway < Test::Unit::TestCase
     -> "\r\n"
     reading 491 bytes...
     -> "{\"correlation_id\":\"228.1449689594381\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET196703\",\"transaction_tag\":\"69865571\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"[FILTERED]\",\"routing_number\":\"[FILTERED]\"}}
+    TRANSCRIPT
+  end
+
+  def pre_scrubbed_store
+    <<-TRANSCRIPT
+    opening connection to api-cert.payeezy.com:443...
+    opened
+    starting SSL for api-cert.payeezy.com:443...
+    SSL established
+    <- "GET /v1/securitytokens?apikey=UyDMTXx6TD9WErF6ynw7xeEfCAn8fcGs&js_security_key=js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c&ta_token=120&callback=Payeezy.callback&type=FDToken&credit_card.type=Visa&credit_card.cardholder_name=Longbob+Longsen&credit_card.card_number=4242424242424242&credit_card.exp_date=0919&credit_card.cvv=123 HTTP/1.1\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\n\r\n"
+    -> "HTTP/1.1 200 Success\r\n"
+    -> "Content-Language: en-US\r\n"
+    -> "Content-Type: application/json\r\n"
+    -> "correlation_id: 228.1574930196886\r\n"
+    -> "Date: Fri, 12 Jan 2018 09:28:22 GMT\r\n"
+    -> "statuscode: 201\r\n"
+    -> "X-Archived-Client-IP: 10.180.205.250\r\n"
+    -> "X-Backside-Transport: OK OK,OK OK\r\n"
+    -> "X-Client-IP: 10.180.205.250,54.218.45.37\r\n"
+    -> "X-Global-Transaction-ID: 463881989\r\n"
+    -> "X-Powered-By: Servlet/3.0\r\n"
+    -> "Content-Length: 266\r\n"
+    -> "Connection: Close\r\n"
+    -> "\r\n"
+    reading 266 bytes...
+    -> "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.1574930196886\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"2158545373614242\"}}\n        })\n      "
+    read 266 bytes
+    Conn close
+    TRANSCRIPT
+  end
+
+  def post_scrubbed_store
+    <<-TRANSCRIPT
+    opening connection to api-cert.payeezy.com:443...
+    opened
+    starting SSL for api-cert.payeezy.com:443...
+    SSL established
+    <- "GET /v1/securitytokens?apikey=[FILTERED]js_security_key=js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c&ta_token=120&callback=Payeezy.callback&type=FDToken&credit_card.type=Visa&credit_card.cardholder_name=Longbob+Longsen&credit_card.card_number=[FILTERED]credit_card.exp_date=0919&credit_card.cvv=[FILTERED] HTTP/1.1\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\n\r\n"
+    -> "HTTP/1.1 200 Success\r\n"
+    -> "Content-Language: en-US\r\n"
+    -> "Content-Type: application/json\r\n"
+    -> "correlation_id: 228.1574930196886\r\n"
+    -> "Date: Fri, 12 Jan 2018 09:28:22 GMT\r\n"
+    -> "statuscode: 201\r\n"
+    -> "X-Archived-Client-IP: 10.180.205.250\r\n"
+    -> "X-Backside-Transport: OK OK,OK OK\r\n"
+    -> "X-Client-IP: 10.180.205.250,54.218.45.37\r\n"
+    -> "X-Global-Transaction-ID: 463881989\r\n"
+    -> "X-Powered-By: Servlet/3.0\r\n"
+    -> "Content-Length: 266\r\n"
+    -> "Connection: Close\r\n"
+    -> "\r\n"
+    reading 266 bytes...
+    -> "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.1574930196886\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"2158545373614242\"}}\n        })\n      "
+    read 266 bytes
+    Conn close
     TRANSCRIPT
   end
 
