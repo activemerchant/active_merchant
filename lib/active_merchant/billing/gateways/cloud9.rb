@@ -195,13 +195,14 @@ module ActiveMerchant #:nodoc: ALL
         auth_amount = options[:authorized_amount].to_i
         amount    ||= auth_amount # if no amount passed, assume full refund
         amount      = auth_amount - amount
-        modify      = amount != 0
+        void        = amount == 0
 
         post = {}
         add_configure_group(post, options)
-        add_request_amount_group(post, options, modify ? amount : nil)
+        add_request_amount_group(post, options, void ? nil : amount)
         add_trace_group(post, options, authorization)
-        commit(modify ? ADJUST : REVERSE, 'restApi', post)
+        add_custom_group(post, void)
+        commit(void ? REVERSE : ADJUST, 'restApi', post)
       end
 
       # A Credit transaction is used to authorize a refund to a customer's credit card account without reference to a
@@ -229,6 +230,7 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_trace_group(post, options, authorization)
         add_request_extend_info_group(post, options)
+        add_custom_group(post)
         commit(REVERSE, 'restApi', post)
       end
 
@@ -386,6 +388,13 @@ module ActiveMerchant #:nodoc: ALL
         optional_assign(post, :KeyID, options[:encryption_key_id])
         optional_assign(post, :EncrtTrgt, options[:encryption_target])
         optional_assign(post, :EncrptBlock, options[:encrypted_block])
+      end
+
+      # Add the Custom Group of options - used for now to set CreditOnFailure to circumvent rejects from TSYS for voids.
+      #
+      # <tt>void</tt> -- set to true if command would be VOID
+      def add_custom_group(post, void = true)
+        post[:CreditOnFailure] = 'Y' if void
       end
 
       def error_code_from(response)
