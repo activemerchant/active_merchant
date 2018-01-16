@@ -17,7 +17,8 @@ class BorgunTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      terminal_id: '3'
     }
   end
 
@@ -94,6 +95,14 @@ class BorgunTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       assert_match(/#{@credit_card.verification_value}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_terminal_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, { terminal_id: '3' })
+    end.check_request do |endpoint, data, headers|
+      assert_match(/TerminalID&gt;3/, data)
     end.respond_with(successful_purchase_response)
   end
 

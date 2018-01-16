@@ -84,6 +84,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:TrAmount] = amount(money)
         post[:TrCurrency] = CURRENCY_CODES[options[:currency] || currency(money)]
+        post[:TerminalID] = options[:terminal_id] || '1'
       end
 
       def add_payment_method(post, payment_method)
@@ -129,7 +130,6 @@ module ActiveMerchant #:nodoc:
         post[:Version] = '1000'
         post[:Processor] = @options[:processor]
         post[:MerchantID] = @options[:merchant_id]
-        post[:TerminalID] = 1
 
         url = (test? ? test_url : live_url)
         request = build_request(action, post)
