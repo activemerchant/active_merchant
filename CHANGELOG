@@ -27,6 +27,7 @@
 * Payeezy: Ensure store calls are properly scrubbed [dtykocki] #2709
 * Payeezy: Add unit test for scrubbing store call [dtykocki] #2710
 * Element: Correct URL used by store transactions [dtykocki] #2711
+* Borgun: Add support for specifying TerminalID [bpollack] #2712
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
