@@ -23,9 +23,13 @@ class RemoteEzidebitTest < Test::Unit::TestCase
     }
     @store_options = @options.merge(
       billing_address: @address,
-      start_date: '2018-01-11',
+      start_date: '2018-01-19',
       last_name: 'Longsen',
       first_name: 'Longbob'
+    )
+    @recurring_options = @store_options.merge(
+      scheduler_period_type: 'M',
+      day_of_month: 15
     )
   end
 
@@ -44,7 +48,13 @@ class RemoteEzidebitTest < Test::Unit::TestCase
   def test_successful_store
     response = @gateway.store(@credit_card, @store_options)
     assert_success response
-    assert_equal response.authorization, @store_options[:order_id]
+    assert_match /\d+/, response.authorization
+  end
+
+  def test_successful_recurring
+    response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert_success response
+    assert_match /\d+/, response.authorization
   end
 
   def test_invalid_login
@@ -63,7 +73,7 @@ class RemoteEzidebitTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:client_id], transcript)
+    assert_scrubbed(@gateway.options[:digital_key], transcript)
   end
 
 end

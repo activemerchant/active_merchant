@@ -60,11 +60,35 @@ module ActiveMerchant #:nodoc:
         commit('ProcessRealtimeCreditCardPayment', request, options)
       end
 
+      # public
+      #
+      # tokenise a payment method. Ezidebit creates a customer and then
+      # attaches a creditcard to said customer.
+      # the authorization we return is the :customer_ref which is the
+      # ID within Ezidebit for the customer record.
       def store(payment, options = {})
         MultiResponse.run do |r|
           r.process { add_customer_details(options) }
+          # subsquent operations don't return this value so let's store it
+          options[:customer_ref] = r.authorization
           r.process { add_card_to_customer(payment, options) }
         end        
+      end
+
+      # public
+      #
+      # Evergiving specific, not the classic ActiveMerchant
+      # supported methods (there's no standard ARB/recurrence methods)
+      # the authorization we return is the :customer_ref which is the
+      # ID within Ezidebit for the customer record.
+      def recurring(money, payment, options = {})
+        MultiResponse.run do |r|
+          r.process { add_customer_details(options) }
+          # subsquent operations don't return this value so let's store it
+          options[:customer_ref] = r.authorization
+          r.process { add_card_to_customer(payment, options) }
+          r.process { create_schedule(money, options) }
+        end
       end
 
       def supports_scrubbing?
@@ -79,6 +103,33 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      # private
+      # creates a schedule (recurring/subscription plan) for a customer
+      # that was created
+      def create_schedule(money, options = {})
+        request = build_soap_request do |xml|
+          xml['px'].CreateSchedule do
+            add_authentication(xml)
+            xml['px'].EziDebitCustomerID
+            xml['px'].YourSystemReference options[:order_id]
+            xml['px'].ScheduleStartDate options[:start_date]
+            xml['px'].SchedulePeriodType options[:scheduler_period_type]
+            xml['px'].DayOfWeek options[:day_of_week] unless empty?(options[:day_of_week])
+            xml['px'].DayOfMonth options[:day_of_month]
+            xml['px'].FirstWeekOfMonth options[:first_week_of_month] unless empty?(options[:first_week_of_month])
+            xml['px'].SecondWeekOfMonth options[:second_week_of_month] unless empty?(options[:second_week_of_month])
+            xml['px'].ThirdWeekOfMonth options[:third_week_of_month] unless empty?(options[:third_week_of_month])
+            xml['px'].FourthWeekOfMonth options[:fourth_week_of_month] unless empty?(options[:fourth_week_of_month])
+            xml['px'].PaymentAmountInCents amount(money)
+            xml['px'].LimitToNumberOfPayments options[:limit_to_number_of_payments] || 0
+            xml['px'].LimitToTotalAmountInCents options[:limit_to_total_amount_in_cents] || 0
+            xml['px'].KeepManualPayments options[:keep_manual_payments] || 'YES'
+          end
+        end
+
+        commit('CreateSchedule', request, options)
+      end
 
       # private
       # adding a customer requires a vast number of details to identify a
@@ -194,7 +245,7 @@ module ActiveMerchant #:nodoc:
           (empty?(element.content) ? false : element.content)
         end
 
-        response[:customer_store] = if (element = doc.at_xpath("//#{action}Result/Data"))
+        response[:result_data] = if (element = doc.at_xpath("//#{action}Result/Data"))
           (empty?(element.content) ? false : element.content)
         end
 
@@ -204,7 +255,7 @@ module ActiveMerchant #:nodoc:
       # private
       # returns the corresponding header to send as a SOAPAction
       def soap_action_namespace(action)
-        ns = if action == 'AddCustomer'
+        ns = if %w(AddCustomer CreateSchedule).include? action
                SOAP_ACTION_NONPCI_NS
              else
                SOAP_ACTION_PCI_NS
@@ -225,9 +276,9 @@ module ActiveMerchant #:nodoc:
       # private
       # a way to select the correct URL to talk to
       def url(action)
-        # Joy! AddCustomer does not use the same URL as the payments
-        # or editing of the customer details to add the card
-        endpoint = if action == 'AddCustomer'
+        # Joy! AddCustomer or CreateSchedule do not use the same URL as the
+        # payments or editing of the customer details to add the card
+        endpoint = if %w(AddCustomer CreateSchedule).include? action
                      'nonpci'
                    else
                      'pci'
@@ -254,8 +305,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response, action)
-        if action == 'EditCustomerCreditCard'
-          response[:customer_store] == 'S'
+        if %w(EditCustomerCreditCard CreateSchedule).include? action
+          response[:result_data] == 'S'
         else
           response[:error_code] == '0' && (response[:customer_ref].present? || response[:response_code] == 0)
         end
@@ -273,10 +324,13 @@ module ActiveMerchant #:nodoc:
       # as the authorisation, since that's a reference that's searchable
       # via the admin ui
       def authorization_from(response, action, options)
-        if action == 'AddCustomer'
+        if %w(EditCustomerCreditCard CreateSchedule).include? action
+          # these two actions do not return any information except success
+          # or failure ... and since we call them always after the AddCustomer
+          # we have to set the value in the options hash to access it here
+          options[:customer_ref]
+        elsif action == 'AddCustomer'
           response[:customer_ref]
-        elsif action == 'EditCustomerCreditCard'
-          options[:order_id]
         else
           [response[:bank_receipt_id], response[:exchange_payment_id]].join('|')
         end
