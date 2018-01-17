@@ -35,6 +35,7 @@ module ActiveMerchant #:nodoc:
         post[:card] = credit_card_hash(creditcard)
         post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
         post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
+        add_3ds(post, options) if options[:execute_threed]
         commit('authorise', post)
       end
 
@@ -222,6 +223,8 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           "#{test? ? self.test_url : self.live_url}/Recurring/v12/storeToken"
+        when 'finalize3ds'
+          "#{test? ? self.test_url : self.live_url}/Payment/v12/authorise3d"
         else
           "#{test? ? self.test_url : self.live_url}/Payment/v12/#{action}"
         end
@@ -311,6 +314,11 @@ module ActiveMerchant #:nodoc:
         hash[:shopperEmail]     = options[:email] if options[:email]
         hash[:shopperReference] = options[:customer] if options[:customer]
         hash.keep_if { |_, v| v }
+      end
+
+      def add_3ds(post, options)
+        post[:additionalData] = { executeThreeD: 'true' }
+        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
       end
     end
   end
