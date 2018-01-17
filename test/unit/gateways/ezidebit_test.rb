@@ -18,6 +18,11 @@ class EzidebitTest < Test::Unit::TestCase
       first_name: 'Longbob',
       last_name: 'Longsen'
     )
+    @recurring_options = @store_options.merge(
+      start_date: '2018-01-19',
+      scheduler_period_type: 'M',
+      day_of_month: 15
+    )
   end
 
   def test_successful_purchase
@@ -43,7 +48,15 @@ class EzidebitTest < Test::Unit::TestCase
       @gateway.store(@credit_card, @options)
     end.respond_with(successful_add_customer_response, successful_add_card_to_customer_response)
     assert_success response
-    assert_equal '82a01ca3-0907-4252-a862-6d473259c51c', response.authorization
+    assert_equal '782943', response.authorization
+  end
+
+  def test_successful_recurring
+    response = stub_comms do
+      @gateway.recurring(@amount, @credit_card, @recurring_options)
+    end.respond_with(successful_add_customer_response, successful_add_card_to_customer_response, successful_create_schedule_response)
+    assert_success response
+    assert_equal '782943', response.authorization
   end
 
   def test_scrub
@@ -179,6 +192,22 @@ Conn close
               <Data>S</Data>
             </EditCustomerCreditCardResult>
           </EditCustomerCreditCardResponse>
+        </s:Body>
+      </s:Envelope>
+    XML
+  end
+
+  def successful_create_schedule_response
+    <<-XML
+      <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+        <s:Body>
+          <CreateScheduleResponse xmlns="https://px.ezidebit.com.au/">
+            <CreateScheduleResult xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+              <Data>S</Data>
+              <Error>0</Error>
+              <ErrorMessage i:nil="true"/>
+            </CreateScheduleResult>
+          </CreateScheduleResponse>
         </s:Body>
       </s:Envelope>
     XML
