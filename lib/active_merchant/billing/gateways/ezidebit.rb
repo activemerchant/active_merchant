@@ -125,6 +125,7 @@ module ActiveMerchant #:nodoc:
             xml['px'].LimitToNumberOfPayments options[:limit_to_number_of_payments] || 0
             xml['px'].LimitToTotalAmountInCents options[:limit_to_total_amount_in_cents] || 0
             xml['px'].KeepManualPayments options[:keep_manual_payments] || 'YES'
+            xml['px'].Username options[:username] unless empty?(options[:username])
           end
         end
 
@@ -153,6 +154,7 @@ module ActiveMerchant #:nodoc:
             xml['px'].SmsPaymentReminder 'NO'
             xml['px'].SmsFailedNotification 'NO'
             xml['px'].SmsExpiredCard 'NO'
+            xml['px'].Username options[:username] unless empty?(options[:username])
           end
         end
 
@@ -170,6 +172,7 @@ module ActiveMerchant #:nodoc:
             xml['px'].YourSystemReference options[:order_id]
             add_payment(xml, payment)
             xml['px'].Reactivate 'YES'
+            xml['px'].Username options[:username] unless empty?(options[:username])
           end
         end
 
