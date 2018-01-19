@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
       CREDIT_CARDS = {
         :visa => "VISA",
         :master => "MC",
+        :mcdebit => "MCDEBIT",
         :delta => "DELTA",
         :solo => "SOLO",
         :switch => "MAESTRO",

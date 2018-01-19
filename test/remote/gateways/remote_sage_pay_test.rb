@@ -54,6 +54,16 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :brand => 'master'
     )
 
+    @mastercard_debit = CreditCard.new(
+      :number => '5573470000000000',
+      :month => 12,
+      :year => next_year,
+      :verification_value => 419,
+      :first_name => 'Tekin',
+      :last_name => 'Suleyman',
+      :brand => 'mcdebit'
+      )
+
     @electron = CreditCard.new(
       :number => '4917300000000008',
       :month => 12,
@@ -173,6 +183,13 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_mastercard_debit_purchase
+    assert response = @gateway.purchase(@amount, @mastercard_debit, @options)
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
   def test_successful_amex_purchase
     assert response = @gateway.purchase(@amount, @amex, @options)
     assert_success response
@@ -232,6 +249,18 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_mastercard_debit_purchase_with_optional_FIxxxx_fields
+    @options[:recipient_account_number] = '1234567890'
+    @options[:recipient_surname] = 'Withnail'
+    @options[:recipient_postcode] = 'AB11AB'
+    @options[:recipient_dob] = '19701223'
+    assert response = @gateway.purchase(@amount, @mastercard_debit, @options)
+    assert_success response
+
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
   def test_successful_purchase_with_apply_avscv2_field
     @options[:apply_avscv2] = 1
     response = @gateway.purchase(@amount, @visa, @options)
@@ -253,6 +282,17 @@ class RemoteSagePayTest < Test::Unit::TestCase
       '41.97: Finding Nemo:2:11.05:1.94:12.99:25.98: Delivery:---:---:---:---' \
       ':4.99'
     response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+  end
+
+  def test_successful_mastercard_debit_purchase_with_basket
+    # Example from "Sage Pay Direct Integration and Protocol Guidelines 3.00"
+    # Published: 27/08/2015
+    @options[:basket] = '4:Pioneer NSDV99 DVD-Surround Sound System:1:424.68:' \
+      '74.32:499.00: 499.00:Donnie Darko Director’s Cut:3:11.91:2.08:13.99:' \
+      '41.97: Finding Nemo:2:11.05:1.94:12.99:25.98: Delivery:---:---:---:---' \
+      ':4.99'
+    response = @gateway.purchase(@amount, @mastercard_debit, @options)
     assert_success response
   end
 
