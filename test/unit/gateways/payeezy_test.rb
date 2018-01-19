@@ -125,7 +125,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'ET156862|69601979|credit_card|100', response.authorization
     assert response.test?
@@ -238,6 +238,13 @@ class PayeezyGateway < Test::Unit::TestCase
       json_address = '{"street":"456 My Street","city":"Ottawa","state_province":"ON","zip_postal_code":"K1C2N6","country":"CA"}'
       assert_match json_address, data
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_gateway_message_surfaces
+    @gateway.expects(:ssl_post).returns(below_minimum_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Below Minimum Sale', response.message
   end
 
   def test_card_type
@@ -534,6 +541,12 @@ message:
   def successful_refund_echeck_response
     <<-RESPONSE
     {\"correlation_id\":\"228.1449688783287\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"refund\",\"transaction_id\":\"69864710\",\"transaction_tag\":\"69864710\",\"method\":\"tele_check\",\"amount\":\"50\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
+    RESPONSE
+  end
+
+  def below_minimum_response
+    <<-RESPONSE
+    {\"correlation_id\":\"123.1234678982\",\"transaction_status\":\"declined\",\"validation_status\":\"success\",\"transaction_type\":\"authorize\",\"transaction_tag\":\"92384753\",\"method\":\"credit_card\",\"amount\":\"250\",\"currency\":\"USD\",\"card\":{\"type\":\"Mastercard\",\"cardholder_name\":\"Omri Test\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"0123\"},\"gateway_resp_code\":\"36\",\"gateway_message\":\"Below Minimum Sale\"}
     RESPONSE
   end
 
