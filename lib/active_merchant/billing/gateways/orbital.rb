@@ -183,6 +183,8 @@ module ActiveMerchant #:nodoc:
 
       SENSITIVE_FIELDS = [:account_num, :cc_account_num]
 
+      CAVV_TAGNAMES_BY_CARD_BRAND = { 'master' => :AAV, 'visa' => :CAVV }.freeze
+
       def initialize(options = {})
         requires!(options, :merchant_id)
         requires!(options, :login, :password) unless options[:ip_authentication]
@@ -506,8 +508,9 @@ module ActiveMerchant #:nodoc:
 
       def add_three_d_secure(xml, creditcard, options)
         xml.tag! :AuthenticationECIInd, options[:eci] if options[:eci]
+        xml.tag! :XID, options[:xid] if options[:xid]
         if options[:cavv]
-          cavv_tag_name = { 'master' => :AAV, 'visa' => :CAVV }[creditcard.brand]
+          cavv_tag_name = CAVV_TAGNAMES_BY_CARD_BRAND[creditcard.brand]
           xml.tag! cavv_tag_name, options[:cavv] if cavv_tag_name
         end
       end

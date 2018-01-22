@@ -75,19 +75,21 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_three_d_secure_visa
     stub_comms do
-      @gateway.purchase(50, credit_card, @options.merge(eci: '5', cavv: "encodedCAVV"))
+      @gateway.purchase(50, credit_card, @options.merge(eci: '5', cavv: "encodedCAVV", xid: "encodedXID"))
     end.check_request do |endpoint, data, headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<CAVV>encodedCAVV</CAVV>}, data
+      assert_match %{<XID>encodedXID</XID>}, data
     end.respond_with(successful_purchase_response)
   end
 
   def test_three_d_secure_master
     stub_comms do
-      @gateway.purchase(50, credit_card('5105105105105100', brand: 'master'), @options.merge(eci: '5', cavv: "encodedCAVV"))
+      @gateway.purchase(50, credit_card('5105105105105100', brand: 'master'), @options.merge(eci: '5', cavv: "encodedCAVV", xid: "encodedXID"))
     end.check_request do |endpoint, data, headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>encodedCAVV</AAV>}, data
+      assert_match %{<XID>encodedXID</XID>}, data
     end.respond_with(successful_purchase_response)
   end
 
