@@ -183,8 +183,6 @@ module ActiveMerchant #:nodoc:
 
       SENSITIVE_FIELDS = [:account_num, :cc_account_num]
 
-      CAVV_TAGNAMES_BY_CARD_BRAND = { 'master' => :AAV, 'visa' => :CAVV }.freeze
-
       def initialize(options = {})
         requires!(options, :merchant_id)
         requires!(options, :login, :password) unless options[:ip_authentication]
@@ -507,12 +505,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_three_d_secure(xml, creditcard, options)
+        # <xs:element name="AuthenticationECIInd" type="valid-eci-types" minOccurs="0"/>
+  			# <xs:element name="CAVV" type="xs:string" minOccurs="0"/>
+  			# <xs:element name="XID" type="xs:string" minOccurs="0"/>
+  			# <xs:element name="AAV" type="xs:string" minOccurs="0"/>
+
         xml.tag! :AuthenticationECIInd, options[:eci] if options[:eci]
+        xml.tag! :CAVV, options[:cavv] if options[:cavv] && creditcard.brand == 'visa'
         xml.tag! :XID, options[:xid] if options[:xid]
-        if options[:cavv]
-          cavv_tag_name = CAVV_TAGNAMES_BY_CARD_BRAND[creditcard.brand]
-          xml.tag! cavv_tag_name, options[:cavv] if cavv_tag_name
-        end
+        xml.tag! :AAV, options[:cavv] if options[:cavv] && creditcard.brand == 'master'
       end
 
       def parse(body)
@@ -614,6 +615,8 @@ module ActiveMerchant #:nodoc:
               add_cdpt_eci_and_xid(xml, creditcard)
             end
 
+            add_three_d_secure(xml, creditcard, parameters) unless creditcard.is_a?(NetworkTokenizationCreditCard)
+
             xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
@@ -633,7 +636,6 @@ module ActiveMerchant #:nodoc:
               add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
 
-            add_three_d_secure(xml, creditcard, parameters) unless creditcard.is_a?(NetworkTokenizationCreditCard)
 
             set_recurring_ind(xml, parameters)
 
