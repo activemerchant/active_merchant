@@ -512,16 +512,20 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_three_d_secure(xml, creditcard, options)
+      def add_three_d_secure(xml, creditcard, parameters)
         # <xs:element name="AuthenticationECIInd" type="valid-eci-types" minOccurs="0"/>
   			# <xs:element name="CAVV" type="xs:string" minOccurs="0"/>
   			# <xs:element name="XID" type="xs:string" minOccurs="0"/>
-  			# <xs:element name="AAV" type="xs:string" minOccurs="0"/>
 
-        xml.tag! :AuthenticationECIInd, translate_eci(options[:eci], creditcard) if options[:eci]
-        xml.tag! :CAVV, options[:cavv] if options[:cavv] && creditcard.brand == 'visa'
-        xml.tag! :XID, options[:xid] if options[:xid]
-        xml.tag! :AAV, options[:cavv] if options[:cavv] && creditcard.brand == 'master'
+        return if creditcard.is_a?(NetworkTokenizationCreditCard)
+
+        xml.tag! :AuthenticationECIInd, translate_eci(parameters[:eci], creditcard) if parameters[:eci]
+        xml.tag! :CAVV, parameters[:cavv] if parameters[:cavv] && creditcard.brand == 'visa'
+        xml.tag! :XID, parameters[:xid] if parameters[:xid]
+      end
+
+      def add_mastercard_three_d_secure(xml, creditcard, parameters)
+        xml.tag! :AAV, parameters[:cavv] if parameters[:cavv] && creditcard.brand == 'master'
       end
 
       def parse(body)
@@ -623,7 +627,7 @@ module ActiveMerchant #:nodoc:
               add_cdpt_eci_and_xid(xml, creditcard)
             end
 
-            add_three_d_secure(xml, creditcard, parameters) unless creditcard.is_a?(NetworkTokenizationCreditCard)
+            add_three_d_secure(xml, creditcard, parameters)
 
             xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
@@ -638,12 +642,13 @@ module ActiveMerchant #:nodoc:
               add_cdpt_payment_cryptogram(xml, creditcard)
             end
 
+            add_mastercard_three_d_secure(xml, creditcard, parameters)
+
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
             elsif parameters[:soft_descriptors].is_a?(Hash)
               add_soft_descriptors_from_hash(xml, parameters[:soft_descriptors])
             end
-
 
             set_recurring_ind(xml, parameters)
 
