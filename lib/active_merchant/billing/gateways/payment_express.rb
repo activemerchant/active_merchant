@@ -128,7 +128,8 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<PostPassword>).+(</PostPassword>)), '\1[FILTERED]\2').
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]\2').
           gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
           gsub(%r((<Cvc2>)\d+(</Cvc2>)), '\1[FILTERED]\2')
       end

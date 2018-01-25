@@ -31,6 +31,7 @@
 * Barclaycard Smartpay: 3DS Implementation [nfarve] #2714
 * Payeezy: Surface gateway_message on failure [curiousepic] #2717
 * CenPos: Switch main transaction URL [bpollack] #2722
+* Payment Express: Scrub merchant password [curiousepic] #2723
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
