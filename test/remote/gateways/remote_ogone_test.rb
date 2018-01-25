@@ -14,7 +14,8 @@ class RemoteOgoneTest < Test::Unit::TestCase
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
       :description => 'Store Purchase',
-      :currency => fixtures(:ogone)[:currency] || 'EUR'
+      :currency => fixtures(:ogone)[:currency] || 'EUR',
+      :origin => 'STORE'
     }
   end
 

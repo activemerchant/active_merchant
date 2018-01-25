@@ -334,6 +334,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, options)
         add_pair post, 'orderID', options[:order_id] || generate_unique_id[0...30]
         add_pair post, 'COM',     options[:description]
+        add_pair post, 'ORIG',    options[:origin] if options[:origin]
       end
 
       def add_creditcard(post, creditcard)
