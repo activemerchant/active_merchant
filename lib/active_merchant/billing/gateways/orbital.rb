@@ -520,8 +520,11 @@ module ActiveMerchant #:nodoc:
         return if creditcard.is_a?(NetworkTokenizationCreditCard)
 
         xml.tag! :AuthenticationECIInd, translate_eci(parameters[:eci], creditcard) if parameters[:eci]
-        xml.tag! :CAVV, parameters[:cavv] if parameters[:cavv] && creditcard.brand == 'visa'
-        xml.tag! :XID, parameters[:xid] if parameters[:xid]
+
+        if creditcard&.brand == 'visa'
+          xml.tag! :CAVV, parameters[:cavv] if parameters[:cavv]
+          xml.tag! :XID, parameters[:xid] if parameters[:xid]
+        end
       end
 
       def add_mastercard_three_d_secure(xml, creditcard, parameters)

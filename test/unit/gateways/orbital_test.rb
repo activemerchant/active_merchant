@@ -32,7 +32,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     @options = { :order_id => '1'}
 
-    $test_three_d_secure_master = false
   end
 
   def test_successful_purchase
@@ -86,12 +85,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_three_d_secure_master
-    $test_three_d_secure_master = true
     stub_comms do
       @gateway.purchase(50, credit_card('5105105105105100', brand: 'master'), @options.merge(eci: '2', cavv: "encodedCAVV", xid: "encodedXID"))
     end.check_request do |endpoint, data, headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
-      assert_match %{<XID>encodedXID</XID>}, data
       assert_match %{<AAV>encodedCAVV</AAV>}, data
     end.respond_with(successful_purchase_response)
   end
@@ -101,7 +98,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.purchase(50, credit_card('5105105105105100', brand: 'master'), @options.merge(eci: '1', cavv: "encodedCAVV", xid: "encodedXID"))
     end.check_request do |endpoint, data, headers|
       assert_match %{<AuthenticationECIInd>6</AuthenticationECIInd>}, data
-      assert_match %{<XID>encodedXID</XID>}, data
       assert_match %{<AAV>encodedCAVV</AAV>}, data
     end.respond_with(successful_purchase_response)
   end
