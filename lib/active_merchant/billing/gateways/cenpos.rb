@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = "CenPOS"
       self.homepage_url = "https://www.cenpos.com/"
 
-      self.live_url = "https://ww3.cenpos.net/6/transact.asmx"
+      self.live_url = "https://ww2.payment1.cenpos.net/6/transact.asmx"
 
       self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IN IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
       self.default_currency = "USD"
@@ -180,7 +180,6 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Accept-Encoding" => "gzip,deflate",
           "Content-Type"  => "text/xml;charset=UTF-8",
           "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCreditCard"
         }
