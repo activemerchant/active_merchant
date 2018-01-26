@@ -25,7 +25,14 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     options = @options.merge(
       order_id: '1',
       ip: "127.0.0.1",
-      email: "joe@example.com"
+      email: "joe@example.com",
+      sdk_identifier: 'Channel',
+      sdk_creator: 'Bob',
+      integrator: 'Bill',
+      creator: 'Super',
+      name: 'Cala',
+      version: '1.0',
+      extension_ID: '5555555'
     )
 
     response = @gateway.purchase(@amount, @credit_card, options)

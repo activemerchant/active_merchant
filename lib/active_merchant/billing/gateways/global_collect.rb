@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment, options)
         add_customer_data(post, options, payment)
         add_address(post, payment, options)
+        add_creator_info(post, options)
 
         commit(:authorize, post)
       end
@@ -41,6 +42,7 @@ module ActiveMerchant #:nodoc:
         post = nestable_hash
         add_order(post, money, options)
         add_customer_data(post, options)
+        add_creator_info(post, options)
         commit(:capture, post, authorization)
       end
 
@@ -48,11 +50,13 @@ module ActiveMerchant #:nodoc:
         post = nestable_hash
         add_amount(post, money, options)
         add_refund_customer_data(post, options)
+        add_creator_info(post, options)
         commit(:refund, post, authorization)
       end
 
       def void(authorization, options={})
         post = nestable_hash
+        add_creator_info(post, options)
         commit(:void, post, authorization)
       end
 
@@ -97,6 +101,17 @@ module ActiveMerchant #:nodoc:
         post["order"]["references"]["invoiceData"] = {
           "invoiceNumber" => options[:invoice]
         }
+      end
+
+      def add_creator_info(post, options)
+        post['sdkIdentifier'] = options[:sdk_identifier] if options[:sdk_identifier]
+        post['sdkCreator'] = options[:sdk_creator] if options[:sdk_creator]
+        post['integrator'] = options[:integrator] if options[:integrator]
+        post['shoppingCartExtension'] = {}
+        post['shoppingCartExtension']['creator'] = options[:creator] if options[:creator]
+        post['shoppingCartExtension']['name'] = options[:name] if options[:name]
+        post['shoppingCartExtension']['version'] = options[:version] if options[:version]
+        post['shoppingCartExtension']['extensionID'] = options[:extension_ID] if options[:extension_ID]
       end
 
       def add_amount(post, money, options={})
