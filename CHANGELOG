@@ -32,6 +32,7 @@
 * Payeezy: Surface gateway_message on failure [curiousepic] #2717
 * Payment Express: Scrub merchant password [curiousepic] #2723
 * Stripe: Fix Partial Application Fee Refunds [curiousepic] #2713
+* GooglePay: Support network tokenized cards [joshnuss] #2725
 
 == Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
