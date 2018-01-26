@@ -84,6 +84,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<MerchantKey>)[^<]*(</MerchantKey>))i, '\1[FILTERED]\2').
           gsub(%r((<APIpassword>)[^<]*(</APIpassword>))i, '\1[FILTERED]\2').
           gsub(%r((<CardNum>).+(</CardNum>))i, '\1[FILTERED]\2').
+          gsub(%r((<CardNumber>).+(</CardNumber>))i, '\1[FILTERED]\2').
           gsub(%r((<CVV>).+(</CVV>))i, '\1[FILTERED]\2')
       end
 
