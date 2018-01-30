@@ -45,6 +45,8 @@ module ActiveMerchant #:nodoc:
             add_authentication(xml, options)
             add_invoice(xml, money, options)
             add_payment(xml, payment)
+            add_customer_data(xml, options)
+            add_transaction(xml, options)
           end
         end
 
@@ -97,9 +99,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(xml, options)
-        xml.CustomerID options[:customer_id]
+        xml.CustomerID options[:customer_id] unless empty?(options[:customer_id])
         xml.CustomerName options[:customer_name] unless empty?(options[:customer_name])
         xml.ClientIP options[:ip] unless empty?(options[:ip])
+      end
+
+      def add_transaction(xml, options)
+        xml.TransactionId (options[:order_id] || SecureRandom.hex(10))
       end
 
       def add_token_store(xml, card_token)
