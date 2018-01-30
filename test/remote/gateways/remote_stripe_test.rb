@@ -423,6 +423,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_match "Invalid API Key provided", response.message
   end
 
+  # These "track data present" tests fail with invalid expiration dates. The
+  # test track data probably needs to be updated.
   def test_card_present_purchase
     @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
