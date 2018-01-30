@@ -22,9 +22,11 @@ class RemoteMobilexpressTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_more_options
     options = {
-      order_id: '1',
       ip: "127.0.0.1",
-      email: "joe@example.com"
+      email: "joe@example.com",
+      customer_id: SecureRandom.uuid,
+      customer_name: 'Bob Longson',
+      ip: '127.0.0.1'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
