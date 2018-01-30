@@ -80,8 +80,14 @@ module ActiveMerchant
               # It's kind of ambiguous whether the RFC allows bodies
               # for DELETE requests. But Net::HTTP's delete method
               # very unambiguously does not.
-              raise ArgumentError, "DELETE requests do not support a request body" if body
-              http.delete(endpoint.request_uri, headers)
+              if body
+                debug body
+                req = Net::HTTP::Delete.new(endpoint.request_uri, headers)
+                req.body = body
+                http.request(req)
+              else
+                http.delete(endpoint.request_uri, headers)
+              end
             else
               raise ArgumentError, "Unsupported request method #{method.to_s.upcase}"
             end

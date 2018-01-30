@@ -51,6 +51,12 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal 'success', response.body
   end
 
+  def test_successful_delete_with_body_request
+    Net::HTTP.any_instance.expects(:request).at_most(3).returns(@ok)
+    response = @connection.request(:delete, 'data', {})
+    assert_equal 'success', response.body
+  end
+
   def test_get_raises_argument_error_if_passed_data
     assert_raises(ArgumentError) do
       @connection.request(:get, 'data', {})
