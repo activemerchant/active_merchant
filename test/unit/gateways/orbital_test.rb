@@ -15,8 +15,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @customer_ref_num = "ABC"
 
     @level_2 = {
-      tax_indicator: 1,
-      tax: 10,
+      tax_indicator: "1",
+      tax: "10",
       advice_addendum_1: 'taa1 - test',
       advice_addendum_2: 'taa2 - test',
       advice_addendum_3: 'taa3 - test',
@@ -46,8 +46,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(level_2_data: @level_2))
     end.check_request do |endpoint, data, headers|
-      assert_match %{<TaxInd>#{@level_2[:tax_indicator]}</TaxInd>}, data
-      assert_match %{<Tax>#{@level_2[:tax]}</Tax>}, data
+      assert_match %{<TaxInd>#{@level_2[:tax_indicator].to_i}</TaxInd>}, data
+      assert_match %{<Tax>#{@level_2[:tax].to_i}</Tax>}, data
       assert_match %{<AMEXTranAdvAddn1>#{@level_2[:advice_addendum_1]}</AMEXTranAdvAddn1>}, data
       assert_match %{<AMEXTranAdvAddn2>#{@level_2[:advice_addendum_2]}</AMEXTranAdvAddn2>}, data
       assert_match %{<AMEXTranAdvAddn3>#{@level_2[:advice_addendum_3]}</AMEXTranAdvAddn3>}, data

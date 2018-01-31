@@ -23,8 +23,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       :jcb => "3566002020140006"}
 
     @level_2_options = {
-      tax_indicator: 1,
-      tax: 10,
+      tax_indicator: "1",
+      tax: "75",
       advice_addendum_1: 'taa1 - test',
       advice_addendum_2: 'taa2 - test',
       advice_addendum_3: 'taa3 - test',

@@ -356,8 +356,8 @@ module ActiveMerchant #:nodoc:
 
       def add_level_2_tax(xml, options={})
         if (level_2 = options[:level_2_data])
-          xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator])
-          xml.tag! :Tax, amount(level_2[:tax]) if level_2[:tax]
+          xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator].to_i)
+          xml.tag! :Tax, level_2[:tax].to_i if level_2[:tax]
         end
       end
 
