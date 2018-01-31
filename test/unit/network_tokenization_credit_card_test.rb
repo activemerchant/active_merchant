@@ -14,6 +14,9 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     @tokenized_android_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :android_pay
     })
+    @tokenized_google_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
+      source: :google_pay
+    })
     @tokenized_bogus_pay_card = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new({
       source: :bogus_pay
     })
@@ -27,6 +30,7 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     assert @tokenized_card.credit_card?
     assert @tokenized_apple_pay_card.credit_card?
     assert @tokenized_android_pay_card.credit_card?
+    assert @tokenized_google_pay_card.credit_card?
     assert @tokenized_bogus_pay_card.credit_card?
   end
 
@@ -38,6 +42,7 @@ class NetworkTokenizationCreditCardTest < Test::Unit::TestCase
     assert_equal @tokenized_card.source, :apple_pay
     assert_equal @tokenized_apple_pay_card.source, :apple_pay
     assert_equal @tokenized_android_pay_card.source, :android_pay
+    assert_equal @tokenized_google_pay_card.source, :google_pay
     assert_equal @tokenized_bogus_pay_card.source, :apple_pay
   end
 end
