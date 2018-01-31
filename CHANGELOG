@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
 * Forte: ensure unit tests are local-only [bpollack] #2696
 * Moneris US: ensure unit tests are local-only [bpollack] #2696
