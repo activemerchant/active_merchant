@@ -205,11 +205,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(action, response)
-        case action.to_s
-        when 'authorise'
+        return authorize_message_from(response) if action.to_s == 'authorise'
+        response['response'] || response['message']
+      end
+
+      def authorize_message_from(response)
+        if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
+          "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
+        else
           response['refusalReason'] || response['resultCode'] || response['message']
-        when 'capture', 'refund', 'cancel'
-          response['response'] || response['message']
         end
       end
 

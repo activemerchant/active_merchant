@@ -146,6 +146,14 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_avs_check_returns_refusal_reason_raw
+    @gateway.expects(:ssl_post).returns(failed_authorize_avs_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Refused | 05 : Do not honor', response.message
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -339,6 +347,12 @@ class AdyenTest < Test::Unit::TestCase
       "refusalReason":"Refused",
       "resultCode":"Refused"
     }
+    RESPONSE
+  end
+
+  def failed_authorize_avs_response
+    <<-RESPONSE
+    {\"additionalData\":{\"cvcResult\":\"0 Unknown\",\"fraudResultType\":\"GREEN\",\"avsResult\":\"3 AVS unavailable\",\"fraudManualReview\":\"false\",\"avsResultRaw\":\"U\",\"refusalReasonRaw\":\"05 : Do not honor\",\"authorisationMid\":\"494619000001174\",\"acquirerCode\":\"AdyenVisa_BR_494619\",\"acquirerReference\":\"802320302458\",\"acquirerAccountCode\":\"AdyenVisa_BR_Cabify\"},\"fraudResult\":{\"accountScore\":0,\"results\":[{\"FraudCheckResult\":{\"accountScore\":0,\"checkId\":46,\"name\":\"DistinctCountryUsageByShopper\"}}]},\"pspReference\":\"1715167376763498\",\"refusalReason\":\"Refused\",\"resultCode\":\"Refused\"}
     RESPONSE
   end
 end
