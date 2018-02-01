@@ -198,6 +198,9 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
+            doc.expDate(options[:expiration_date]) if options[:expiration_date].present?
+            doc.cardValidationNum(options[:card_validation_num]) if options[:card_validation_num].present?
+            doc.type(options[:type]) if options[:type].present?
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
