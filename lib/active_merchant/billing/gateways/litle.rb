@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         transaction_id, _, _ = split_authorization(authorization)
+        options[:partial] = true if money
 
         request = build_xml_request do |doc|
           add_authentication(doc)
@@ -339,6 +340,7 @@ module ActiveMerchant #:nodoc:
         attributes[:id] = truncate(options[:id] || options[:order_id], 24)
         attributes[:reportGroup] = options[:merchant] || 'Default Report Group'
         attributes[:customerId] = options[:customer]
+        attributes[:partial] = options[:partial]
         attributes.delete_if { |key, value| value == nil }
         attributes
       end
