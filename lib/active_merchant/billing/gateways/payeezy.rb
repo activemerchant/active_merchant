@@ -74,7 +74,7 @@ module ActiveMerchant
       end
 
       def store(payment_method, options = {})
-        params = {}
+        params = {transaction_type: 'store'}
 
         add_creditcard_for_tokenization(params, payment_method, options)
 
@@ -149,7 +149,7 @@ module ActiveMerchant
       end
 
       def is_store_action?(params)
-        params[:ta_token].present?
+        params[:transaction_type] == 'store'
       end
 
       def add_payment_method(params, payment_method, options)
