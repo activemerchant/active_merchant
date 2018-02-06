@@ -136,16 +136,10 @@ module ActiveMerchant
 
       def add_creditcard_for_tokenization(params, payment_method, options)
         params[:apikey] = @options[:apikey]
-        params[:js_security_key] = options[:js_security_key]
         params[:ta_token] = options[:ta_token]
-        params[:callback] = 'Payeezy.callback'
         params[:type] = 'FDToken'
-        card = add_card_data(payment_method)
-        params['credit_card.type'] = card[:type]
-        params['credit_card.cardholder_name'] = card[:cardholder_name]
-        params['credit_card.card_number'] = card[:card_number]
-        params['credit_card.exp_date'] = card[:exp_date]
-        params['credit_card.cvv'] = card[:cvv]
+        params[:credit_card] = add_card_data(payment_method)
+        params[:auth] = 'false'
       end
 
       def is_store_action?(params)
@@ -277,18 +271,12 @@ module ActiveMerchant
       end
 
       def endpoint(params)
-        is_store_action?(params) ? '/securitytokens' : '/transactions'
+        is_store_action?(params) ? '/transactions/tokens' : '/transactions'
       end
 
       def api_request(url, params)
-        if is_store_action?(params)
-          callback = ssl_request(:get, "#{url}?#{post_data(params)}", nil, {})
-          payload = callback[/{(?:\n|.)*}/]
-          parse(payload)
-        else
-          body = params.to_json
-          parse(ssl_post(url, body, headers(body)))
-        end
+        body = params.to_json
+        parse(ssl_post(url, body, headers(body)))
       end
 
       def post_data(params)
@@ -331,6 +319,8 @@ module ActiveMerchant
           response['transaction_status'] == 'approved'
         elsif response['results']
           response['results']['status'] == 'success'
+        elsif response['status']
+          response['status'] == 'success'
         else
           false
         end
@@ -360,10 +350,10 @@ module ActiveMerchant
         if is_store_action?(params)
           if success_from(response)
             [
-              response['results']['token']['type'],
-              response['results']['token']['cardholder_name'],
-              response['results']['token']['exp_date'],
-              response['results']['token']['value']
+              response['token']['type'],
+              response['token']['cardholder_name'],
+              response['token']['exp_date'],
+              response['token']['value']
             ].join('|')
           else
             nil

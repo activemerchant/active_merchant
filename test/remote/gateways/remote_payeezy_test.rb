@@ -10,7 +10,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
     @options = {
       :billing_address => address,
       :merchant_ref => 'Store Purchase',
-      :ta_token => '120'
+      :ta_token => 'NOIW'
     }
     @options_mdd = {
       soft_descriptors: {
