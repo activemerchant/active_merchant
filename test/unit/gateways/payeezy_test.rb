@@ -463,13 +463,13 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def successful_store_response
     <<-RESPONSE
-    "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.0715530338021\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0918\",\"value\":\"9715442510284242\"}}\n        })\n      "
-    RESPONSE
+    {\"correlation_id\":\"124.1792879391754\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"9045348309244242\"}}
+        RESPONSE
   end
 
   def failed_store_response
     <<-RESPONSE
-    "\n       Payeezy.callback({\n        \t\"status\":400,\n        \t\"results\":{\"correlation_id\":\"228.0715669121910\",\"status\":\"failed\",\"Error\":{\"messages\":[{\"code\":\"invalid_card_number\",\"description\":\"The credit card number check failed\"}]},\"type\":\"FDToken\"}\n        })\n      "
+    {\"correlation_id\":\"124.1792940806770\",\"status\":\"failed\",\"Error\":{\"messages\":[{\"code\":\"invalid_card_number\",\"description\":\"The credit card number check failed\"}]},\"type\":\"FDToken\"}
     RESPONSE
   end
 
