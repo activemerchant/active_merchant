@@ -677,6 +677,11 @@ payflow_uk:
   password: PASSWORD
   partner: PayPalUk
 
+# Working credentials, no need to replace
+paylane:
+  login: test-api-molejnik
+  password: spa6du5b
+
 payment_express:
   login: LOGIN
   password: PASSWORD
