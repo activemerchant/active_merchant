@@ -43,6 +43,7 @@ class RemotePaymentSolutionsTest < Test::Unit::TestCase
         country:  'USA',
         email: "joe@example.com",}),
       program_code: '1',
+      sidecar_value: '01',
       pay_code: 'IGS25XX46027DCP',
       market_source: SecureRandom.uuid
     }
