@@ -210,7 +210,7 @@ module ActiveMerchant #:nodoc:
         if action == "refund"
           response["error"].nil?
         else
-          ["active", "approved", "authorized", "cancelled"].include?(response["status"])
+          ["active", "approved", "authorized", "cancelled", "in_process"].include?(response["status"])
         end
       end
 
