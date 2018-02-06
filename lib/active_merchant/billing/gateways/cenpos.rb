@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Accept-Encoding" => "gzip,deflate",
+          "Accept-Encoding" => "identity",
           "Content-Type"  => "text/xml;charset=UTF-8",
           "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCreditCard"
         }
