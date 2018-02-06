@@ -60,6 +60,7 @@ module ActiveMerchant #:nodoc:
               add_credit_card(xml, payment, options)
               add_customer_data(xml, payment, options)
               add_payment(xml, options)
+              add_sidecar(xml, options)
             end
           end
         end
@@ -118,6 +119,15 @@ module ActiveMerchant #:nodoc:
         xml['d4p1'].PayType empty?(options[:pay_type]) ? 'OneTime' : options[:pay_type]
         xml['d4p1'].ProcessDateTime Time.current.strftime("%FT%T")
         xml['d4p1'].ProgramCode options[:program_code] if options[:program_code].present?
+      end
+
+      def add_sidecar(xml, options = {})
+        xml['d4p1'].SideCar do
+          xml['d4p1'].NameValuePair do
+            xml['d4p1'].Name 'field_c6'
+            xml['d4p1'].Value options[:sidecar_value]
+          end
+        end
       end
 
       def add_credit_card(xml, payment, options={})
