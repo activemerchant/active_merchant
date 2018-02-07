@@ -7,6 +7,7 @@
 * Payeezy: Update Store method [nfarve] #2733
 * CenPOS: Remove gzip encoding header [curiousepic] #2735
 * Mercado Pago: Allow binary_mode to be changed [nfarve] #2736
+* Stripe: Accept strings for refund_fee_amount [curiousepic] #2738
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
