@@ -149,10 +149,10 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run(:first) do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options) }
 
-          return r unless options[:refund_fee_amount]
-
-          r.process { fetch_application_fee(identification, options) }
-          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r.responses.last), options) }
+          if options[:refund_fee_amount] && options[:refund_fee_amount].to_s != '0'
+            r.process { fetch_application_fee(identification, options) }
+            r.process { refund_application_fee(options[:refund_fee_amount].to_i, application_fee_from_response(r.responses.last), options) }
+          end
         end
       end
 
