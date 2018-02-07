@@ -122,6 +122,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_sidecar(xml, options = {})
+        return if empty?(options[:sidecar_value])
         xml['d4p1'].SideCar do
           xml['d4p1'].NameValuePair do
             xml['d4p1'].Name 'field_c6'
