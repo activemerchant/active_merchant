@@ -109,6 +109,31 @@ class RemoteMigsTest < Test::Unit::TestCase
     assert_equal 'Required field vpc_Merchant was not present in the request', response.message
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_transcript_scrubbing_of_advanced_password
+    gateway = MigsGateway.new(fixtures(:migs).merge(advanced_login: 'advlogin', advanced_password: 'advpass'))
+    purchase = gateway.purchase(@amount, @credit_card, @options)
+
+    transcript = capture_transcript(@gateway) do
+      gateway.refund(@amount, purchase.authorization, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:advanced_password], transcript)
+  end
+
   private
 
   def assert_response_match(regexp, url)
