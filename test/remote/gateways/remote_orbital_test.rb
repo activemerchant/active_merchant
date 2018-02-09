@@ -12,6 +12,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @options = {
       :order_id => generate_unique_id,
       :address => address,
+      :merchant_id => 'merchant1234'
     }
 
     @cards = {
@@ -293,5 +294,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:merchant_id], transcript)
   end
 end
