@@ -12,6 +12,7 @@
 * MIGS: Scrub sensitive data [curiousepic] #2740
 * Worldpay US: Scrub sensitive data [curiousepic] #2742
 * WorldPay: Remove Israel from supported country list [dtykocki] #2746
+* Optimal Payments: Scrub sensitive data [curiousepic] #2743
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
