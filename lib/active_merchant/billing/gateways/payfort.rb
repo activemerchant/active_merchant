@@ -216,6 +216,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           error_code: response['response_code'],
+          fraud_review: valid_signature?(response),
           authorization: authorization_from(response),
           test: test?
         )
@@ -299,6 +300,10 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         SUCCESS_CODES.include?(response['response_code'][0..1])
+      end
+
+      def valid_signature?(response)
+        sign(response.except('signature')) == response['signature']
       end
 
       def message_from(response)
