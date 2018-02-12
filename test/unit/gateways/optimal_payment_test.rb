@@ -232,6 +232,10 @@ class OptimalPaymentTest < Test::Unit::TestCase
     end
   end
 
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
 
   def full_request
@@ -383,5 +387,53 @@ class OptimalPaymentTest < Test::Unit::TestCase
   <duplicateFound>false</duplicateFound>
 </ccTxnResponseV1>
     XML
+  end
+
+  def pre_scrubbed
+    <<-EOS
+opening connection to webservices.test.optimalpayments.com:443...
+opened
+starting SSL for webservices.test.optimalpayments.com:443...
+SSL established
+<- "POST /creditcardWS/CreditCardServlet/v1 HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: webservices.test.optimalpayments.com\r\nContent-Length: 1616\r\n\r\n"
+<- "txnMode=ccPurchase&txnRequest=%3CccAuthRequestV1%20xmlns=%22http://www.optimalpayments.com/creditcard/xmlschema/v1%22%20xmlns:xsi=%22http://www.w3.org/2001/XMLSchema-instance%22%20xsi:schemaLocation=%22http://www.optimalpayments.com/creditcard/xmlschema/v1%22%3E%0A%20%20%3CmerchantAccount%3E%0A%20%20%20%20%3CaccountNum%3E1001134550%3C/accountNum%3E%0A%20%20%20%20%3CstoreID%3Etest%3C/storeID%3E%0A%20%20%20%20%3CstorePwd%3Etest%3C/storePwd%3E%0A%20%20%3C/merchantAccount%3E%0A%20%20%3CmerchantRefNum%3E1%3C/merchantRefNum%3E%0A%20%20%3Camount%3E1.0%3C/amount%3E%0A%20%20%3Ccard%3E%0A%20%20%20%20%3CcardNum%3E4387751111011%3C/cardNum%3E%0A%20%20%20%20%3CcardExpiry%3E%0A%20%20%20%20%20%20%3Cmonth%3E9%3C/month%3E%0A%20%20%20%20%20%20%3Cyear%3E2019%3C/year%3E%0A%20%20%20%20%3C/cardExpiry%3E%0A%20%20%20%20%3CcardType%3EVI%3C/cardType%3E%0A%20%20%20%20%3CcvdIndicator%3E1%3C/cvdIndicator%3E%0A%20%20%20%20%3Ccvd%3E123%3C/cvd%3E%0A%20%20%3C/card%3E%0A%20%20%3CbillingDetails%3E%0A%20%20%20%20%3CcardPayMethod%3EWEB%3C/cardPayMethod%3E%0A%20%20%20%20%3CfirstName%3EJim%3C/firstName%3E%0A%20%20%20%20%3ClastName%3ESmith%3C/lastName%3E%0A%20%20%20%20%3Cstreet%3E456%20My%20Street%3C/street%3E%0A%20%20%20%20%3Cstreet2%3EApt%201%3C/street2%3E%0A%20%20%20%20%3Ccity%3EOttawa%3C/city%3E%0A%20%20%20%20%3Cstate%3EON%3C/state%3E%0A%20%20%20%20%3Ccountry%3ECA%3C/country%3E%0A%20%20%20%20%3Czip%3EK1C2N6%3C/zip%3E%0A%20%20%20%20%3Cphone%3E(555)555-5555%3C/phone%3E%0A%20%20%20%20%3Cemail%3Eemail@example.com%3C/email%3E%0A%20%20%3C/billingDetails%3E%0A%20%20%3CcustomerIP%3E1.2.3.4%3C/customerIP%3E%0A%3C/ccAuthRequestV1%3E%0A"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Server: WebServer32xS10i3\r\n"
+-> "Content-Length: 632\r\n"
+-> "X-ApplicationUid: GUID=610a301289c34e8254330b7edc724f5b\r\n"
+-> "Content-Type: application/xml\r\n"
+-> "Date: Mon, 12 Feb 2018 21:57:42 GMT\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 632 bytes...
+-> "<"
+-> "?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ccTxnResponseV1 xmlns=\"http://www.optimalpayments.com/creditcard/xmlschema/v1\"><confirmationNumber>498871860</confirmationNumber><decision>ACCEPTED</decision><code>0</code><description>No Error</description><authCode>369231</authCode><avsResponse>X</avsResponse><cvdResponse>M</cvdResponse><detail><tag>InternalResponseCode</tag><value>0</value></detail><detail><tag>SubErrorCode</tag><value>0</value></detail><detail><tag>InternalResponseDescription</tag><value>no_error</value></detail><txnTime>2018-02-12T16:57:42.289-05:00</txnTime><duplicateFound>false</duplicateFound></ccTxnResponseV1>"
+read 632 bytes
+Conn close
+    EOS
+  end
+
+  def post_scrubbed
+    <<-EOS
+opening connection to webservices.test.optimalpayments.com:443...
+opened
+starting SSL for webservices.test.optimalpayments.com:443...
+SSL established
+<- "POST /creditcardWS/CreditCardServlet/v1 HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: webservices.test.optimalpayments.com\r\nContent-Length: 1616\r\n\r\n"
+<- "txnMode=ccPurchase&txnRequest=%3CccAuthRequestV1%20xmlns=%22http://www.optimalpayments.com/creditcard/xmlschema/v1%22%20xmlns:xsi=%22http://www.w3.org/2001/XMLSchema-instance%22%20xsi:schemaLocation=%22http://www.optimalpayments.com/creditcard/xmlschema/v1%22%3E%0A%20%20%3CmerchantAccount%3E%0A%20%20%20%20%3CaccountNum%3E1001134550%3C/accountNum%3E%0A%20%20%20%20%3CstoreID%3Etest%3C/storeID%3E%0A%20%20%20%20%3CstorePwd%3E[FILTERED]%3C/storePwd%3E%0A%20%20%3C/merchantAccount%3E%0A%20%20%3CmerchantRefNum%3E1%3C/merchantRefNum%3E%0A%20%20%3Camount%3E1.0%3C/amount%3E%0A%20%20%3Ccard%3E%0A%20%20%20%20%3CcardNum%3E[FILTERED]%3C/cardNum%3E%0A%20%20%20%20%3CcardExpiry%3E%0A%20%20%20%20%20%20%3Cmonth%3E9%3C/month%3E%0A%20%20%20%20%20%20%3Cyear%3E2019%3C/year%3E%0A%20%20%20%20%3C/cardExpiry%3E%0A%20%20%20%20%3CcardType%3EVI%3C/cardType%3E%0A%20%20%20%20%3CcvdIndicator%3E1%3C/cvdIndicator%3E%0A%20%20%20%20%3Ccvd%3E[FILTERED]%3C/cvd%3E%0A%20%20%3C/card%3E%0A%20%20%3CbillingDetails%3E%0A%20%20%20%20%3CcardPayMethod%3EWEB%3C/cardPayMethod%3E%0A%20%20%20%20%3CfirstName%3EJim%3C/firstName%3E%0A%20%20%20%20%3ClastName%3ESmith%3C/lastName%3E%0A%20%20%20%20%3Cstreet%3E456%20My%20Street%3C/street%3E%0A%20%20%20%20%3Cstreet2%3EApt%201%3C/street2%3E%0A%20%20%20%20%3Ccity%3EOttawa%3C/city%3E%0A%20%20%20%20%3Cstate%3EON%3C/state%3E%0A%20%20%20%20%3Ccountry%3ECA%3C/country%3E%0A%20%20%20%20%3Czip%3EK1C2N6%3C/zip%3E%0A%20%20%20%20%3Cphone%3E(555)555-5555%3C/phone%3E%0A%20%20%20%20%3Cemail%3Eemail@example.com%3C/email%3E%0A%20%20%3C/billingDetails%3E%0A%20%20%3CcustomerIP%3E1.2.3.4%3C/customerIP%3E%0A%3C/ccAuthRequestV1%3E%0A"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Server: WebServer32xS10i3\r\n"
+-> "Content-Length: 632\r\n"
+-> "X-ApplicationUid: GUID=610a301289c34e8254330b7edc724f5b\r\n"
+-> "Content-Type: application/xml\r\n"
+-> "Date: Mon, 12 Feb 2018 21:57:42 GMT\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 632 bytes...
+-> "<"
+-> "?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<ccTxnResponseV1 xmlns=\"http://www.optimalpayments.com/creditcard/xmlschema/v1\"><confirmationNumber>498871860</confirmationNumber><decision>ACCEPTED</decision><code>0</code><description>No Error</description><authCode>369231</authCode><avsResponse>X</avsResponse><cvdResponse>M</cvdResponse><detail><tag>InternalResponseCode</tag><value>0</value></detail><detail><tag>SubErrorCode</tag><value>0</value></detail><detail><tag>InternalResponseDescription</tag><value>no_error</value></detail><txnTime>2018-02-12T16:57:42.289-05:00</txnTime><duplicateFound>false</duplicateFound></ccTxnResponseV1>"
+read 632 bytes
+Conn close
+    EOS
   end
 end
