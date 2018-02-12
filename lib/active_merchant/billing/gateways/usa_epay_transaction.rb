@@ -106,6 +106,18 @@ module ActiveMerchant #:nodoc:
         commit(command, post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?UMcard=)\d*(&?))i, '\1[FILTERED]\2').
+          gsub(%r((&?UMcvv2=)\d*(&?))i, '\1[FILTERED]\2').
+          gsub(%r((&?UMmagstripe=)[^&]*)i, '\1[FILTERED]\2').
+          gsub(%r((&?UMkey=)[^&]*)i, '\1[FILTERED]')
+      end
+
     private
 
       def add_amount(post, money)
