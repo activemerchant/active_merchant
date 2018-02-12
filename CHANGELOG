@@ -10,6 +10,7 @@
 * Stripe: Accept strings for refund_fee_amount [curiousepic] #2738
 * Orbital: Complete scrub test coverage [curiousepic] #2739
 * MIGS: Scrub sensitive data [curiousepic] #2740
+* Worldpay US: Scrub sensitive data [curiousepic] #2742
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
