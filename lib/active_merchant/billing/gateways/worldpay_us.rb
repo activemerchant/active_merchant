@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((&?merchantpin=)[^&]*)i, '\1[FILTERED]').
           gsub(%r((&?ccnum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?ckno=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?ckacct=)[^&]*)i, '\1[FILTERED]').
           gsub(%r((&?cvv2=)[^&]*)i, '\1[FILTERED]')
       end
 
