@@ -131,7 +131,7 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     end
     transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed(@check.number, transcript)
+    assert_scrubbed(@check.account_number, transcript)
     assert_scrubbed(@gateway.options[:merchantpin], transcript)
   end
 end
