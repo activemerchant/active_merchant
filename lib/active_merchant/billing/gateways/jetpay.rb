@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         "043" =>  "Pick up card (stolen card).",
         "051" =>  "Insufficient funds.",
         "052" =>  "No checking account.",
-        "053" =>  "Mp savomgs accpimt.",
+        "053" =>  "No savings account.",
         "054" =>  "Expired Card.",
         "055" =>  "Incorrect PIN.",
         "057" =>  "Transaction not permitted to cardholder.",
