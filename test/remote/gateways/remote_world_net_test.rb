@@ -162,6 +162,42 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_recurring
+    options = {
+      order_id: generate_order_id,
+      subscription_name: 'Subscription Test',
+      subscription_description: 'A test subscription from the remote test in ActiveMerchant',
+      period_type: 'MONTHLY',
+      length: 0,
+      currency: 'EUR',
+      recurring_amount: @amount,
+      initial_amount: 0,
+      type: 'AUTOMATIC',
+      start_date: Time.now.gmtime.strftime("%d-%m-%Y")
+    }
+
+    response = @gateway.recurring(@credit_card, options)
+    assert_success response
+  end
+
+  def test_failed_recurring
+    options = {
+      order_id: generate_order_id,
+      subscription_name: 'Subscription Test',
+      subscription_description: 'A test subscription from the remote test in ActiveMerchant',
+      period_type: 'FOOBAR',
+      length: 0,
+      currency: 'EUR',
+      recurring_amount: @amount,
+      initial_amount: 0,
+      type: 'AUTOMATIC',
+      start_date: Time.now.gmtime.strftime("%d-%m-%Y")
+    }
+
+    response = @gateway.recurring(@credit_card, options)
+    assert_failure response
+  end
+
   def test_purchase_with_stored_card
     response = @gateway.store(@credit_card, @options)
     assert_success response
