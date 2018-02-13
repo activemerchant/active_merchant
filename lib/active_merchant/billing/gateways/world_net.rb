@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
         sub_info[:periodtype] = options[:period_type]
         sub_info[:length] = options[:length]
         sub_info[:currency] = options[:currency]
-        sub_info[:recurringamount] = amount(options[:recurring_amount]) unless options[:type] && options[:type] == 'MANUAL'
+        sub_info[:recurringamount] = amount(options[:recurring_amount]) unless options[:type] == 'MANUAL'
         sub_info[:initialamount] = amount(options[:initial_amount]) if options[:initial_amount]
         sub_info[:type] = options[:type]
         sub_info[:onupdate] = options[:on_update] || 'CONTINUE'
