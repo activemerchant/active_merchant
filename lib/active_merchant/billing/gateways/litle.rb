@@ -131,6 +131,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       CARD_TYPE = {
         'visa'             => 'VI',
         'master'           => 'MC',
@@ -178,7 +179,18 @@ module ActiveMerchant #:nodoc:
         add_payment_method(doc, payment_method, options)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
+        add_merchant_data(doc, options)
         add_debt_repayment(doc, options)
+      end
+
+      def add_merchant_data(doc, options={})
+        if options[:affiliate] || options[:campaign] || options[:merchant_grouping_id]
+          doc.merchantData do
+            doc.affiliate(options[:affiliate]) if options[:affiliate]
+            doc.campaign(options[:campaign]) if options[:campaign]
+            doc.merchantGroupingId(options[:merchant_grouping_id]) if options[:merchant_grouping_id]
+          end
+        end
       end
 
       def add_descriptor(doc, options)
