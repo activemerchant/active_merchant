@@ -108,6 +108,15 @@ module ActiveMerchant #:nodoc:
         commit('SECURECARDREMOVAL', post)
       end
 
+      def recurring(payment, options = {})
+        requires!(options, :order_id)
+
+        MultiResponse.run do |r|
+          r.process { store(payment, options) }
+          r.process { subscription(r.authorization, options) }
+        end
+      end
+
       def supports_scrubbing?
         true
       end
@@ -119,6 +128,16 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def subscription(card_reference, options = {})
+        post = {}
+        post[:merchantref] = options[:order_id]
+        add_card_reference(post, card_reference)
+        post[:startdate] = options[:start_date]
+        add_new_stored_subscription(post, options)
+
+        commit('ADDSUBSCRIPTION', post)
+      end
 
       def add_customer_data(post, options)
         post[:email] = options[:email]
@@ -165,6 +184,22 @@ module ActiveMerchant #:nodoc:
         [payment.first_name, payment.last_name].join(' ').slice(0, 60)
       end
 
+      def add_new_stored_subscription(post, options)
+        sub_info = {}
+        sub_info[:merchantref] = options[:order_id]
+        sub_info[:name] = options[:subscription_name]
+        sub_info[:description] = options[:subscription_description]
+        sub_info[:periodtype] = options[:period_type]
+        sub_info[:length] = options[:length]
+        sub_info[:currency] = options[:currency]
+        sub_info[:recurringamount] = amount(options[:recurring_amount]) unless options[:type] == 'MANUAL'
+        sub_info[:initialamount] = amount(options[:initial_amount]) if options[:initial_amount]
+        sub_info[:type] = options[:type]
+        sub_info[:onupdate] = options[:on_update] || 'CONTINUE'
+        sub_info[:ondelete] = options[:on_delete] || 'CANCEL'
+        post[:newstoredsubscriptioninfo] = sub_info
+      end
+
       def parse(action, body)
         results = {}
         xml = Nokogiri::XML(body)
@@ -195,7 +230,7 @@ module ActiveMerchant #:nodoc:
         case action
         when 'SECURECARDREGISTRATION'
           response[:cardreference].present?
-        when 'SECURECARDREMOVAL'
+        when 'SECURECARDREMOVAL', 'ADDSUBSCRIPTION'
           response[:datetime].present? && response[:hash].present?
         else
           response[:responsecode] == 'A'
@@ -223,6 +258,8 @@ module ActiveMerchant #:nodoc:
         case action
         when 'SECURECARDREGISTRATION'
           response[:cardreference]
+        when 'ADDSUBSCRIPTION'
+          response[:merchantref]
         else
           response[:uniqueref]
         end
@@ -238,6 +275,8 @@ module ActiveMerchant #:nodoc:
                                           build_store_signature(parameters)
                                         when 'SECURECARDREMOVAL'
                                           build_unstore_signature(parameters)
+                                        when 'ADDSUBSCRIPTION'
+                                          build_subscription_signature(parameters)
                                         else
                                           build_signature(parameters)
                                         end
@@ -271,6 +310,15 @@ module ActiveMerchant #:nodoc:
         str += parameters[:merchantref]
         str += parameters[:datetime]
         str += parameters[:cardreference]
+        Digest::MD5.hexdigest(str + @options[:secret])
+      end
+
+      def build_subscription_signature(parameters)
+        str = parameters[:terminalid]
+        str += parameters[:merchantref]
+        str += parameters[:cardreference]
+        str += parameters[:datetime]
+        str += parameters[:startdate]
         Digest::MD5.hexdigest(str + @options[:secret])
       end
 
@@ -322,6 +370,32 @@ module ActiveMerchant #:nodoc:
             :datetime,
             :hash
           ]
+        when 'ADDSUBSCRIPTION'
+          [
+            :merchantref,
+            :terminalid,
+            :cardreference,
+            :datetime,
+            :recurringamount,
+            :initialamount,
+            :startdate,
+            :newstoredsubscriptioninfo,
+            :hash
+          ]
+        when 'NEWSTOREDSUBSCRIPTIONINFO'
+          [
+            :merchantref,
+            :name,
+            :description,
+            :periodtype,
+            :length,
+            :currency,
+            :recurringamount,
+            :initialamount,
+            :type,
+            :onupdate,
+            :ondelete
+          ]
         end
       end
 
@@ -330,10 +404,27 @@ module ActiveMerchant #:nodoc:
         xml.instruct!(:xml, version: '1.0', encoding: 'utf-8')
         xml.tag!(action) do
           fields.each do |field|
-            xml.tag!(field.to_s.upcase, data[field]) if data[field]
+            if data[field]
+              if data[field].is_a?(Hash)
+                # there's a sub element (usually newstoredsubscriptioninfo)
+                add_children(xml, data, field)
+              else
+                xml.tag!(field.to_s.upcase, data[field])
+              end
+            end
           end
         end
         xml.target!
+      end
+
+      def add_children(xml, data, field)
+        # we have a whole set of fields within this array
+        sub_fields = fields(field.to_s.upcase)
+        xml.tag!(field.to_s.upcase) {
+          sub_fields.each do |sub_field|
+            xml.tag!(sub_field.to_s.upcase, data[field][sub_field]) if data[field][sub_field]
+          end
+        }
       end
 
       def expdate(credit_card)

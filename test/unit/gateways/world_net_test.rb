@@ -11,6 +11,28 @@ class WorldNetTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @recurring_options = {
+      order_id: '1',
+      subscription_name: 'Subscription Test',
+      subscription_description: 'A test subscription from the remote test in ActiveMerchant',
+      period_type: 'MONTHLY',
+      length: 0,
+      currency: 'EUR',
+      recurring_amount: @amount,
+      initial_amount: 0,
+      type: 'AUTOMATIC',
+      start_date: Time.now.gmtime.strftime("%d-%m-%Y")
+    }
+    @recurring_failed_options = {
+      order_id: '1',
+      period_type: 'FOOBAR',
+      length: 0,
+      currency: 'EUR',
+      recurring_amount: @amount,
+      initial_amount: 0,
+      type: 'AUTOMATIC',
+      start_date: Time.now.gmtime.strftime("%d-%m-%Y")
+    }
     @refund_options = {
       operator: 'mr.nobody',
       reason: 'returned'
@@ -140,6 +162,18 @@ class WorldNetTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_successful_recurring
+    @gateway.expects(:ssl_post).times(2).returns(successful_store_response).then.returns(successful_subscription_response)
+    response = @gateway.recurring(@credit_card, @recurring_options)
+    assert_success response
+  end
+
+  def test_failed_recurring
+    @gateway.expects(:ssl_post).times(2).returns(successful_store_response).then.returns(failed_subscription_response)
+    response = @gateway.recurring(@credit_card, @recurring_failed_options)
+    assert_failure response
+  end
+
   private
 
   def pre_scrubbed
@@ -256,5 +290,15 @@ Conn close
   def failed_void_response
     %q(<?xml version="1.0" encoding="UTF-8"?>
 <ERROR><ERRORSTRING>cvc-elt.1: Cannot find the declaration of element &apos;VOID&apos;.</ERRORSTRING></ERROR>)
+  end
+
+  def successful_subscription_response
+    %q(<?xml version="1.0" encoding="UTF-8"?>
+    <ADDSUBSCRIPTIONRESPONSE><MERCHANTREF>151850561606</MERCHANTREF><DATETIME>13-02-2018:07:07:00:480</DATETIME><HASH>3a1b9d6869c6918e989d75a088ab5eae</HASH></ADDSUBSCRIPTIONRESPONSE>)
+  end
+
+  def failed_subscription_response
+    %q(<?xml version="1.0" encoding="UTF-8"?>
+<ERROR><ERRORSTRING>cvc-enumeration-valid: Value &apos;FOOBAR&apos; is not facet-valid with respect to enumeration &apos;[DAILY, WEEKLY, FORTNIGHTLY, MONTHLY, QUARTERLY, YEARLY]&apos;. It must be a value from the enumeration.</ERRORSTRING></ERROR>)
   end
 end
