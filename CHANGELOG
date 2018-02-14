@@ -16,6 +16,7 @@
 * USA Epay Transaction: Scrub sensitive data [curiousepic] #2745
 * MIGS: Add unit test for scrub [curiousepic] #2747
 * Worldpay US: Fix bank account scrub [curiousepic] #2748
+* Litle: Add support for merchantData elements [dtykocki] #2751
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698

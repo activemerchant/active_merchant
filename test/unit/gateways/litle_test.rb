@@ -56,6 +56,21 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_passing_merchant_data
+    options = @options.merge(
+      affiliate: 'some-affiliate',
+      campaign: 'super-awesome-campaign',
+      merchant_grouping_id: 'brilliant-group'
+    )
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<affiliate>some-affiliate</affiliate>), data)
+      assert_match(%r(<campaign>super-awesome-campaign</campaign>), data)
+      assert_match(%r(<merchantGroupingId>brilliant-group</merchantGroupingId>), data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_passing_name_on_card
     stub_comms do
       @gateway.purchase(@amount, @credit_card)

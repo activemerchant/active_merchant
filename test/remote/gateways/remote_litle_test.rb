@@ -71,6 +71,17 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_authorization_with_merchant_data
+    options = @options.merge(
+      affiliate: 'some-affiliate',
+      campaign: 'super-awesome-campaign',
+      merchant_grouping_id: 'brilliant-group'
+    )
+    assert response = @gateway.authorize(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_avs_and_cvv_result
     assert response = @gateway.authorize(10010, @credit_card1, @options)
     assert_equal "X", response.avs_result["code"]
@@ -137,6 +148,17 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_android_pay
     assert response = @gateway.purchase(10000, @decrypted_android_pay)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_merchant_data
+    options = @options.merge(
+      affiliate: 'some-affiliate',
+      campaign: 'super-awesome-campaign',
+      merchant_grouping_id: 'brilliant-group'
+    )
+    assert response = @gateway.purchase(10010, @credit_card1, options)
     assert_success response
     assert_equal 'Approved', response.message
   end
