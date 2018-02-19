@@ -25,6 +25,16 @@ class PaymentezTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_token
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, '123456789012345678901234567890', @options)
+    assert_success response
+
+    assert_equal 'PR-926', response.authorization
+    assert response.test?
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -37,6 +47,15 @@ class PaymentezTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_store_response, successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'CI-635', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_token
+    @gateway.stubs(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, '123456789012345678901234567890', @options)
     assert_success response
     assert_equal 'CI-635', response.authorization
     assert response.test?

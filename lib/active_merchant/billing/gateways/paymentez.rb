@@ -52,8 +52,9 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_customer_data(post, options)
+        action = payment.is_a?(String) ? 'debit' : 'debit_cc'
 
-        commit_transaction('debit_cc', post)
+        commit_transaction(action, post)
       end
 
       def authorize(money, payment, options = {})
@@ -62,10 +63,15 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_customer_data(post, options)
 
-        MultiResponse.run do |r|
-          r.process { store(payment, options) }
-          post[:card] = { token: r.authorization }
-          r.process { commit_transaction('authorize', post) }
+        if payment.is_a?(String)
+          post[:card] = { token: payment }
+          commit_transaction('authorize', post)
+        else
+          MultiResponse.run do |r|
+            r.process { store(payment, options) }
+            post[:card] = { token: r.authorization }
+            r.process { commit_transaction('authorize', post) }
+          end
         end
       end
 
@@ -148,12 +154,16 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         post[:card] ||= {}
-        post[:card][:number] = payment.number
-        post[:card][:holder_name] = payment.name
-        post[:card][:expiry_month] = payment.month
-        post[:card][:expiry_year] = payment.year
-        post[:card][:cvc] = payment.verification_value
-        post[:card][:type] = CARD_MAPPING[payment.brand]
+        if payment.is_a?(String)
+          post[:card][:token] = payment
+        else
+          post[:card][:number] = payment.number
+          post[:card][:holder_name] = payment.name
+          post[:card][:expiry_month] = payment.month
+          post[:card][:expiry_year] = payment.year
+          post[:card][:cvc] = payment.verification_value
+          post[:card][:type] = CARD_MAPPING[payment.brand]
+        end
       end
 
       def parse(body)
