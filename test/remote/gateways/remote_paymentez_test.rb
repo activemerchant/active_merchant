@@ -32,6 +32,14 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_token
+    store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+    token = store_response.authorization
+    purchase_response = @gateway.purchase(@amount, token, @options)
+    assert_success purchase_response
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -61,6 +69,17 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_equal 'Operation Successful', capture.message
   end
 
+  def test_successful_authorize_and_capture_with_token
+    store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+    token = store_response.authorization
+    auth = @gateway.authorize(@amount, token, @options)
+    assert_success auth
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Operation Successful', capture.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
@@ -77,7 +96,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'Carrier not supported', response.message
+    assert_equal 'The capture method is not supported by carrier', response.message
   end
 
   def test_store
