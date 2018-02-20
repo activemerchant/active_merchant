@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AD AE AT AU BD BE BG BN CA CH CY CZ DE DK
       EE EG ES FI FR GB GI GR HK HU ID IE IL IM IN IS IT JO KW LB LI LK LT LU
-      LV MC MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM TR TT
+      LV MC MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM TR
       UM US VA VN ZA)
       self.default_currency = "USD"
       self.money_format = :cents
@@ -252,7 +252,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(action, post, authorization = nil)
         {
-          "Content-type"  => content_type,
+          "Content-Type"  => content_type,
           "Authorization" => auth_digest(action, post, authorization),
           "Date" => date
         }
