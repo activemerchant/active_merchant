@@ -681,6 +681,7 @@ payflow_uk:
 paylane:
   login: test-api-molejnik
   password: spa6du5b
+  apikey: dcfe4c616a7b2fe2671baf00124a3a9b83cf59d8
 
 payment_express:
   login: LOGIN

@@ -19,6 +19,7 @@ class RemotePaylaneTest < Test::Unit::TestCase
     @credit_card4 = credit_card('4055018123456780')
     @credit_card5 = credit_card('4012001037167778')
     @credit_card6 = credit_card('4012001038443335')
+    @credit_card7 = credit_card('4055019123456788')
 
     @credit_card_fail1 = credit_card('4012001036275556')
     @credit_card_fail2 = credit_card('4012001038488884')
@@ -34,6 +35,24 @@ class RemotePaylaneTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_by_token
+    response = @gateway.get_token(@credit_card7, @options)
+    response = @gateway.purchase(@amount, response.params['token'], @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_by_account
+    direct_debit = {}
+    direct_debit[:account] = {}
+    direct_debit[:account][:account_holder] = 'Hans Muller'
+    direct_debit[:account][:account_country] =  'DE'
+    direct_debit[:account][:iban] = 'BE68844010370034'
+    direct_debit[:account][:bic] = 'BICBICDE'
+    direct_debit[:account][:mandate_id] = '54321'
+    response = @gateway.purchase(@amount, direct_debit, @options)
     assert_success response
   end
 
@@ -136,7 +155,7 @@ class RemotePaylaneTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PaylaneGateway.new(login: 'aa', password: 'bb')
+    gateway = PaylaneGateway.new(login: 'aa', password: 'bb', apikey: 'cc')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
