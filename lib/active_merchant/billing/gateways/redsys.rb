@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         "GTQ" => '320',
         "HUF" => '348',
         "IDR" => '360',
-	      "INR" => '356',
+	"INR" => '356',
         "JPY" => '392',
         "KRW" => '410',
         "MYR" => '458',
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         "THB" => '764',
         "TWD" => '901',
         "USD" => '840',
-	      "UYU" => '858'
+	"UYU" => '858'
       }
 
       # The set of supported transactions for this gateway.
