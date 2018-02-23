@@ -2,8 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaylaneGateway < Gateway
       self.test_url = self.live_url = 'https://direct.paylane.com/rest/'
-      class_attribute :token_url
-      self.token_url = 'https://direct.paylane.com/rest.js/'
 
       # here is the list of supported countries: http://paylane.com/support/faq/offer/do-you-accept-merchants-from-my-country/
       # but it can be extended anytime (you just need to contact paylane at http://paylane.com/contact/)
@@ -40,10 +38,9 @@ module ActiveMerchant #:nodoc:
       }.freeze
 
       def initialize(options={})
-        requires!(options, :login, :password, :apikey)
+        requires!(options, :login, :password)
         @login = options[:login]
         @password = options[:password]
-        @apikey = options[:apikey]
         super
       end
 
@@ -110,14 +107,6 @@ module ActiveMerchant #:nodoc:
             gsub(%r(("card_code\\?":\\?")\d+), '\1[FILTERED]')
       end
 
-      def get_token(credit_card, options={})
-        #returned token is valid for 15 minutes
-        post = {}
-        fill_card_data(post, credit_card)
-        post[:public_api_key] = @apikey
-        commit('cards/generateToken', post)
-      end
-
       private
 
       def add_customer_data(post, options)
@@ -161,7 +150,11 @@ module ActiveMerchant #:nodoc:
           post[:account][:mandate_id] = payment[:account][:mandate_id]
         else
           post[:card] = {}
-          fill_card_data(post[:card], payment)
+          post[:card][:card_number] = payment.number
+          post[:card][:expiration_month] = sprintf('%02d', payment.month)
+          post[:card][:expiration_year] = payment.year.to_s
+          post[:card][:name_on_card] = "#{payment.first_name} #{payment.last_name}"
+          post[:card][:card_code] = payment.verification_value
         end
       end
 
@@ -173,14 +166,6 @@ module ActiveMerchant #:nodoc:
         else
           "cards/sale" # normal sale with standard card data
         end
-      end
-
-      def fill_card_data(card_obj, payment)
-        card_obj[:card_number] = payment.number
-        card_obj[:expiration_month] = sprintf('%02d', payment.month)
-        card_obj[:expiration_year] = payment.year.to_s
-        card_obj[:name_on_card] = "#{payment.first_name} #{payment.last_name}"
-        card_obj[:card_code] = payment.verification_value
       end
 
       def parse(body)
@@ -201,12 +186,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        # for some non-obvious reason Paylane has different API url for token generation (and only for it)...
-        if action.include? "generateToken"
-          url = "#{token_url}#{action}"
-        else
-          url = "#{(test? ? test_url : live_url)}#{action}"
-        end
+        url = "#{(test? ? test_url : live_url)}#{action}"
 
         begin
           raw_response = ssl_post(url, post_data(parameters), request_headers)

@@ -2,7 +2,8 @@ require 'test_helper'
 
 class RemotePaylaneTest < Test::Unit::TestCase
   def setup
-    @gateway = PaylaneGateway.new(fixtures(:paylane))
+    @credentials = fixtures(:paylane)
+    @gateway = PaylaneGateway.new(@credentials)
 
     @amount = 10000 # 100.00$ ActiveMerchant accepts all amounts as Integer values in cents
     @failed_amount_303 = 30300 # 303.00$ ActiveMerchant accepts all amounts as Integer values in cents
@@ -25,6 +26,8 @@ class RemotePaylaneTest < Test::Unit::TestCase
     @credit_card_fail2 = credit_card('4012001038488884')
     @credit_card_fail3 = credit_card('4012001037461114')
 
+    @token_url = 'https://direct.paylane.com/rest.js/'
+
     @options = {
       billing_address: address,
       description: 'Store Purchase',
@@ -33,14 +36,46 @@ class RemotePaylaneTest < Test::Unit::TestCase
     }
   end
 
+  def helper_fill_card_data(payment)
+    post = {}
+    post[:card_number] = payment.number
+    post[:expiration_month] = sprintf('%02d', payment.month)
+    post[:expiration_year] = payment.year.to_s
+    post[:name_on_card] = "#{payment.first_name} #{payment.last_name}"
+    post[:card_code] = payment.verification_value
+    post[:public_api_key] = @credentials[:apikey]
+    post
+  end
+
+  def helper_prepare_request(uri, post)
+    request = Net::HTTP::Post.new(uri.request_uri)
+    request["content-type"] = "application/json"
+    request.basic_auth(@credentials[:login], @credentials[:password])
+    request.body = post.to_json
+    request
+  end
+
+  def helper_get_token(payment, _options)
+    post = helper_fill_card_data(payment)
+    uri = URI.parse("#{@token_url}cards/generateToken")
+    request = helper_prepare_request(uri, post)
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    response = http.request(request)
+    response_json = JSON.parse(response.body)
+    response_json['token']
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
   end
 
   def test_successful_purchase_by_token
-    response = @gateway.get_token(@credit_card7, @options)
-    response = @gateway.purchase(@amount, response.params['token'], @options)
+    # get token is a helper method, because generateToken enpoint is only for JS client
+    # token must be generated in it and then passed to PaylaneGateway module
+    token = helper_get_token(@credit_card7, @options)
+    response = @gateway.purchase(@amount, token, @options)
     assert_success response
   end
 
@@ -155,7 +190,7 @@ class RemotePaylaneTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PaylaneGateway.new(login: 'aa', password: 'bb', apikey: 'cc')
+    gateway = PaylaneGateway.new(login: 'aa', password: 'bb')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

@@ -2,7 +2,7 @@ require 'test_helper'
 
 class PaylaneTest < Test::Unit::TestCase
   def setup
-    @gateway = PaylaneGateway.new(login: 'tt', password: 'aa', apikey: 'zz')
+    @gateway = PaylaneGateway.new(login: 'tt', password: 'aa')
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
         :number             => 4111111111111111,
         :month              => 2,
