@@ -69,7 +69,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'Succeeded!', response.message
 
     assert_equal 'joebob@example.com', response.params['payment_method_email']
-    assert_equal '1234 My Street', response.params['payment_method_address1']
+    assert_equal '456 My Street', response.params['payment_method_address1']
     assert_equal 'Apt 1', response.params['payment_method_address2']
     assert_equal 'Ottawa', response.params['payment_method_city']
     assert_equal 'ON', response.params['payment_method_state']
@@ -122,7 +122,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'Authorization', response.params['transaction_type']
 
     assert_equal 'joebob@example.com', response.params['payment_method_email']
-    assert_equal '1234 My Street', response.params['payment_method_address1']
+    assert_equal '456 My Street', response.params['payment_method_address1']
     assert_equal 'Apt 1', response.params['payment_method_address2']
     assert_equal 'Ottawa', response.params['payment_method_city']
     assert_equal 'ON', response.params['payment_method_state']
@@ -188,7 +188,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, options)
     assert_success response
     assert_equal 'joebob@example.com', response.params['payment_method_email']
-    assert_equal '1234 My Street', response.params['payment_method_address1']
+    assert_equal '456 My Street', response.params['payment_method_address1']
     assert_equal 'Apt 1', response.params['payment_method_address2']
     assert_equal 'Ottawa', response.params['payment_method_city']
     assert_equal 'ON', response.params['payment_method_state']
