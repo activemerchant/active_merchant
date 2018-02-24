@@ -56,6 +56,7 @@ module ActiveMerchant #:nodoc:
         "CAD" => '124',
         "CHF" => '756',
         "CLP" => '152',
+        "CNY" => '156',
         "COP" => '170',
         "CRC" => '188',
         "CZK" => '203',
@@ -65,7 +66,10 @@ module ActiveMerchant #:nodoc:
         "GBP" => '826',
         "GTQ" => '320',
         "HUF" => '348',
+        "IDR" => '360',
+	"INR" => '356',
         "JPY" => '392',
+        "KRW" => '410',
         "MYR" => '458',
         "MXN" => '484',
         "NOK" => '578',
@@ -77,8 +81,9 @@ module ActiveMerchant #:nodoc:
         "SEK" => '752',
         "SGD" => '702',
         "THB" => '764',
+        "TWD" => '901',
         "USD" => '840',
-        "UYU" => '858'
+	"UYU" => '858'
       }
 
       # The set of supported transactions for this gateway.
