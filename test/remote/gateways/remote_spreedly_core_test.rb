@@ -238,6 +238,33 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'Succeeded!', response.message
   end
 
+  def test_successful_verify_with_token
+    assert response = @gateway.verify(@existing_payment_method)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Verification', response.params['transaction_type']
+    assert_includes %w(cached retained), response.params['payment_method_storage_state']
+  end
+
+  def test_failed_verify_with_token
+    assert response = @gateway.verify(@declined_payment_method)
+    assert_failure response
+  end
+
+  def test_successful_verify_with_credit_card
+    assert response = @gateway.verify(@credit_card)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Verification', response.params['transaction_type']
+    assert_includes %w(cached retained), response.params['payment_method_storage_state']
+  end
+
+  def test_failed_verify_with_declined_credit_card
+    assert response = @gateway.verify(@declined_card)
+    assert_failure response
+    assert_match %r(Unable to process the verify transaction), response.message
+  end
+
   def test_invalid_login
     gateway = SpreedlyCoreGateway.new(:login => 'Bogus', :password => 'MoreBogus', :gateway_token => 'EvenMoreBogus')
 
