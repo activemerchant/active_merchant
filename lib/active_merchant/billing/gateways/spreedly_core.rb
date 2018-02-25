@@ -123,6 +123,11 @@ module ActiveMerchant #:nodoc:
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
       end
 
+      # Public: Get the transaction with the given token.
+      def find(transaction_token)
+        commit("transactions/#{transaction_token}.xml", nil, :get)
+      end
+
       private
 
       def save_card(retain, credit_card, options)

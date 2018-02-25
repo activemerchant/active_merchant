@@ -10,6 +10,8 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @declined_card = credit_card('4012888888881881')
     @existing_payment_method = '9AjLflWs7SOKuqJLveOZya9bixa'
     @declined_payment_method = 'n3JElNt9joT1mJ3CxvWjyEN39N'
+    @existing_transaction  = 'LKA3RchoqYO0njAfhHVw60ohjrC'
+    @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
 
   def test_successful_purchase_with_token
@@ -263,6 +265,19 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert response = @gateway.verify(@declined_card)
     assert_failure response
     assert_match %r(Unable to process the verify transaction), response.message
+  end
+
+  def test_successful_find_transaction
+    assert response = @gateway.find(@existing_transaction)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'AddPaymentMethod', response.params['transaction_type']
+  end
+
+  def test_failed_find_transaction
+    assert response = @gateway.find(@not_found_transaction)
+    assert_failure response
+    assert_match %r(Unable to find the transaction), response.message
   end
 
   def test_invalid_login

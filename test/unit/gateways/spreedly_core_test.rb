@@ -8,6 +8,8 @@ class SpreedlyCoreTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 103
+    @existing_transaction  = 'LKA3RchoqYO0njAfhHVw60ohjrC'
+    @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
 
   def test_successful_purchase_with_payment_method_token
@@ -259,8 +261,26 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal "Succeeded!", response.message
   end
 
+  def test_successful_find
+    @gateway.expects(:raw_ssl_request).returns(successful_find_response)
+    response = @gateway.find(@existing_transaction)
+    assert_success response
+
+    assert_equal "Succeeded!", response.message
+    assert_equal "LKA3RchoqYO0njAfhHVw60ohjrC", response.authorization
+  end
+
+  def test_failed_find
+    @gateway.expects(:raw_ssl_request).returns(failed_find_response)
+    response = @gateway.find(@not_found_transaction)
+    assert_failure response
+
+    assert_match %r(Unable to find the transaction), response.message
+    assert_match %r(#{@not_found_transaction}), response.message
+  end
 
   private
+
   def successful_purchase_response
     MockResponse.succeeded <<-XML
       <transaction>
@@ -1008,6 +1028,70 @@ class SpreedlyCoreTest < Test::Unit::TestCase
           <fingerprint>db33a42fcf2908a3795bd4ea881de2e0f015</fingerprint>
         </payment_method>
       </transaction>
+    XML
+  end
+
+  def successful_find_response
+    MockResponse.succeeded <<-XML
+      <transaction>
+        <token>LKA3RchoqYO0njAfhHVw60ohjrC</token>
+        <created_at type="dateTime">2012-12-07T19:03:50Z</created_at>
+        <updated_at type="dateTime">2012-12-07T19:03:50Z</updated_at>
+        <succeeded type="boolean">true</succeeded>
+        <transaction_type>AddPaymentMethod</transaction_type>
+        <retained type="boolean">false</retained>
+        <state>succeeded</state>
+        <message key="messages.transaction_succeeded">Succeeded!</message>
+        <payment_method>
+          <token>67KlSyyvBAt9VUMJg3lUeWbBaWX</token>
+          <created_at type="dateTime">2012-12-07T19:03:50Z</created_at>
+          <updated_at type="dateTime">2017-07-29T23:25:21Z</updated_at>
+          <email nil="true"/>
+          <data>
+            <how_many>2</how_many>
+          </data>
+          <storage_state>redacted</storage_state>
+          <test type="boolean">false</test>
+          <last_four_digits>4444</last_four_digits>
+          <first_six_digits nil="true"/>
+          <card_type>master</card_type>
+          <first_name>Jim</first_name>
+          <last_name>TesterDude</last_name>
+          <month type="integer">9</month>
+          <year type="integer">2022</year>
+          <address1 nil="true"/>
+          <address2 nil="true"/>
+          <city nil="true"/>
+          <state nil="true"/>
+          <zip nil="true"/>
+          <country nil="true"/>
+          <phone_number nil="true"/>
+          <company nil="true"/>
+          <full_name>Jim TesterDude</full_name>
+          <eligible_for_card_updater type="boolean">true</eligible_for_card_updater>
+          <shipping_address1 nil="true"/>
+          <shipping_address2 nil="true"/>
+          <shipping_city nil="true"/>
+          <shipping_state nil="true"/>
+          <shipping_zip nil="true"/>
+          <shipping_country nil="true"/>
+          <shipping_phone_number nil="true"/>
+          <payment_method_type>credit_card</payment_method_type>
+          <errors>
+          </errors>
+          <verification_value></verification_value>
+          <number></number>
+          <fingerprint nil="true"/>
+        </payment_method>
+      </transaction>
+    XML
+  end
+
+  def failed_find_response
+    MockResponse.failed <<-XML
+      <errors>
+        <error key="errors.transaction_not_found">Unable to find the transaction AdyQXaG0SVpSoMPdmFlvd3aA3uz.</error>
+      </errors>
     XML
   end
 
