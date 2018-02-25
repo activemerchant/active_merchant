@@ -22,6 +22,7 @@
 * Barclaycard Smartpay: Remove Georgia from supported country list [bpollack] #2755
 * Merchant Warrior: Remove requirement for state field [joshnuss] #2638
 * Wirecard: Adding missing DigiCert Global Root G2 Cert [filipebarcos] #2759
+* Spreedly: Add verify and find_transaction calls [abarrak] #2760
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
