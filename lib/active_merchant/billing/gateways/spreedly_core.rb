@@ -164,7 +164,6 @@ module ActiveMerchant #:nodoc:
       def auth_purchase_request(money, payment_method_token, options)
         build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
-          doc.ip(options[:ip])
           add_extra_options(:gateway_specific_fields, doc, options)
           doc.payment_method_token(payment_method_token)
           doc.retain_on_success(true) if options[:store]
@@ -175,8 +174,8 @@ module ActiveMerchant #:nodoc:
         doc.amount amount(money) unless money.nil?
         doc.currency_code(options[:currency] || currency(money) || default_currency)
         doc.order_id(options[:order_id])
-        doc.ip(options[:ip])
-        doc.description(options[:description])
+        doc.ip(options[:ip]) if options[:ip]
+        doc.description(options[:description]) if options[:description]
       end
 
       def add_credit_card(doc, credit_card, options)
