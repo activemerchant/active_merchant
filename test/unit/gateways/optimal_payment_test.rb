@@ -234,6 +234,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
 
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed_double_escaped), post_scrubbed_double_escaped
   end
 
   private
@@ -436,4 +437,16 @@ read 632 bytes
 Conn close
     EOS
   end
+
+  def pre_scrubbed_double_escaped
+  <<-PRE_SCRUBBED
+txnMode=ccPurchase&txnRequest=%3CccAuthRequestV1+xmlns%3D%22http%3A%2F%2Fwww.optimalpayments.com%2Fcreditcard%2Fxmlschema%2Fv1%22+xmlns%3Axsi%3D%22http%3A%2F%2Fwww.w3.org%2F2001%2FXMLSchema-instance%22+xsi%3AschemaLocation%3D%22http%3A%2F%2Fwww.optimalpayments.com%2Fcreditcard%2Fxmlschema%2Fv1%22%3E%0A++%3CmerchantAccount%3E%0A++++%3CaccountNum%3E89986098%3C%2FaccountNum%3E%0A++++%3CstoreID%3Etest%3C%2FstoreID%3E%0A++++%3CstorePwd%3Etest%3C%2FstorePwd%3E%0A++%3C%2FmerchantAccount%3E%0A++%3CmerchantRefNum%3E1%3C%2FmerchantRefNum%3E%0A++%3Camount%3E1.0%3C%2Famount%3E%0A++%3Ccard%3E%0A++++%3CcardNum%3E4387751111011%3C%2FcardNum%3E%0A++++%3CcardExpiry%3E%0A++++++%3Cmonth%3E9%3C%2Fmonth%3E%0A++++++%3Cyear%3E2015%3C%2Fyear%3E%0A++++%3C%2FcardExpiry%3E%0A++++%3CcardType%3EVI%3C%2FcardType%3E%0A++++%3CcvdIndicator%3E1%3C%2FcvdIndicator%3E%0A++++%3Ccvd%3E123%3C%2Fcvd%3E%0A++%3C%2Fcard%3E%0A++%3CbillingDetails%3E%0A++++%3CcardPayMethod%3EWEB%3C%2FcardPayMethod%3E%0A++++%3CfirstName%3EJim%3C%2FfirstName%3E%0A++++%3ClastName%3ESmith%3C%2FlastName%3E%0A++++%3Cstreet%3E1234+My+Street%3C%2Fstreet%3E%0A++++%3Cstreet2%3EApt+1%3C%2Fstreet2%3E%0A++++%3Ccity%3EOttawa%3C%2Fcity%3E%0A++++%3Cstate%3EON%3C%2Fstate%3E%0A++++%3Ccountry%3ECA%3C%2Fcountry%3E%0A++++%3Czip%3EK1C2N6%3C%2Fzip%3E%0A++++%3Cphone%3E%28555%29555-5555%3C%2Fphone%3E%0A++++%3Cemail%3Eemail%40example.com%3C%2Femail%3E%0A++%3C%2FbillingDetails%3E%0A++%3CcustomerIP%3E1.2.3.4%3C%2FcustomerIP%3E%0A%3C%2FccAuthRequestV1%3E%0A
+  PRE_SCRUBBED
+end
+
+def post_scrubbed_double_escaped
+  <<-POST_SCRUBBED
+txnMode=ccPurchase&txnRequest=%3CccAuthRequestV1+xmlns%3D%22http%3A%2F%2Fwww.optimalpayments.com%2Fcreditcard%2Fxmlschema%2Fv1%22+xmlns%3Axsi%3D%22http%3A%2F%2Fwww.w3.org%2F2001%2FXMLSchema-instance%22+xsi%3AschemaLocation%3D%22http%3A%2F%2Fwww.optimalpayments.com%2Fcreditcard%2Fxmlschema%2Fv1%22%3E%0A++%3CmerchantAccount%3E%0A++++%3CaccountNum%3E89986098%3C%2FaccountNum%3E%0A++++%3CstoreID%3Etest%3C%2FstoreID%3E%0A++++%3CstorePwd%3E[FILTERED]%3C%2FstorePwd%3E%0A++%3C%2FmerchantAccount%3E%0A++%3CmerchantRefNum%3E1%3C%2FmerchantRefNum%3E%0A++%3Camount%3E1.0%3C%2Famount%3E%0A++%3Ccard%3E%0A++++%3CcardNum%3E[FILTERED]%3C%2FcardNum%3E%0A++++%3CcardExpiry%3E%0A++++++%3Cmonth%3E9%3C%2Fmonth%3E%0A++++++%3Cyear%3E2015%3C%2Fyear%3E%0A++++%3C%2FcardExpiry%3E%0A++++%3CcardType%3EVI%3C%2FcardType%3E%0A++++%3CcvdIndicator%3E1%3C%2FcvdIndicator%3E%0A++++%3Ccvd%3E[FILTERED]%3C%2Fcvd%3E%0A++%3C%2Fcard%3E%0A++%3CbillingDetails%3E%0A++++%3CcardPayMethod%3EWEB%3C%2FcardPayMethod%3E%0A++++%3CfirstName%3EJim%3C%2FfirstName%3E%0A++++%3ClastName%3ESmith%3C%2FlastName%3E%0A++++%3Cstreet%3E1234+My+Street%3C%2Fstreet%3E%0A++++%3Cstreet2%3EApt+1%3C%2Fstreet2%3E%0A++++%3Ccity%3EOttawa%3C%2Fcity%3E%0A++++%3Cstate%3EON%3C%2Fstate%3E%0A++++%3Ccountry%3ECA%3C%2Fcountry%3E%0A++++%3Czip%3EK1C2N6%3C%2Fzip%3E%0A++++%3Cphone%3E%28555%29555-5555%3C%2Fphone%3E%0A++++%3Cemail%3Eemail%40example.com%3C%2Femail%3E%0A++%3C%2FbillingDetails%3E%0A++%3CcustomerIP%3E1.2.3.4%3C%2FcustomerIP%3E%0A%3C%2FccAuthRequestV1%3E%0A
+  POST_SCRUBBED
+end
 end

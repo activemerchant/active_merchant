@@ -65,9 +65,9 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((%3CstorePwd%3E).*(%3C(%3F|/)storePwd%3E))i, '\1[FILTERED]\2').
-          gsub(%r((%3CcardNum%3E)\d*(%3C(%3F|/)cardNum%3E))i, '\1[FILTERED]\2').
-          gsub(%r((%3Ccvd%3E)\d*(%3C(%3F|/)cvd%3E))i, '\1[FILTERED]\2')
+          gsub(%r((%3CstorePwd%3E).*(%3C(%2F|/)storePwd%3E))i, '\1[FILTERED]\2').
+          gsub(%r((%3CcardNum%3E)\d*(%3C(%2F|/)cardNum%3E))i, '\1[FILTERED]\2').
+          gsub(%r((%3Ccvd%3E)\d*(%3C(%2F|/)cvd%3E))i, '\1[FILTERED]\2')
       end
 
       private
