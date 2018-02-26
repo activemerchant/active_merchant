@@ -297,4 +297,17 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:merchant_id], transcript)
   end
+
+  def test_transcript_scrubbing_profile
+    transcript = capture_transcript(@gateway) do
+      @gateway.add_customer_profile(@credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:merchant_id], transcript)
+  end
 end

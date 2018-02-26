@@ -306,8 +306,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<OrbitalConnectionUsername>).+(</OrbitalConnectionUsername>)), '\1[FILTERED]\2').
           gsub(%r((<OrbitalConnectionPassword>).+(</OrbitalConnectionPassword>)), '\1[FILTERED]\2').
           gsub(%r((<AccountNum>).+(</AccountNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CCAccountNum>).+(</CCAccountNum>)), '\1[FILTERED]\2').
           gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
-          gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2')
+          gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2').
+          gsub(%r((<CustomerMerchantID>).+(</CustomerMerchantID>)), '\1[FILTERED]\2')
       end
 
       private
