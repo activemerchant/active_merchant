@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BlueSnapTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = BlueSnapGateway.new(api_username: 'login', api_password: 'password')
     @credit_card = credit_card
@@ -118,6 +120,14 @@ class BlueSnapTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_failure response
     assert_equal "14002", response.error_code
+  end
+
+  def test_currency_added_correctly
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<currency>CAD<\/currency>/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_verify_good_credentials
