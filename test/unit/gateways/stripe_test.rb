@@ -713,6 +713,17 @@ class StripeTest < Test::Unit::TestCase
     assert_equal 'ch_test_charge', response.authorization
   end
 
+  def test_declined_request_advanced_pickup_card_code
+    @gateway.expects(:ssl_request).returns(declined_pickup_card_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+
+    assert_equal Gateway::STANDARD_ERROR_CODE[:pickup_card], response.error_code
+    refute response.test? # unsuccessful request defaults to live
+    assert_equal 'ch_test_charge', response.authorization
+  end
+
   def test_declined_request_advanced_decline_code_not_in_standard_mapping
     @gateway.expects(:ssl_request).returns(declined_generic_decline_purchase_response)
 
@@ -2027,6 +2038,20 @@ class StripeTest < Test::Unit::TestCase
         "type": "card_error",
         "code": "card_declined",
         "decline_code": "call_issuer",
+        "charge": "ch_test_charge"
+      }
+    }
+    RESPONSE
+  end
+
+  def declined_pickup_card_purchase_response
+    <<-RESPONSE
+    {
+      "error": {
+        "message": "Your card was declined.",
+        "type": "card_error",
+        "code": "card_declined",
+        "decline_code": "pickup_card",
         "charge": "ch_test_charge"
       }
     }
