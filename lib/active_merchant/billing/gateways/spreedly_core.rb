@@ -88,6 +88,23 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/void.xml", '')
       end
 
+      # Public: Determine whether a credit card is chargeable card and available for purchases.
+      #
+      # payment_method - The CreditCard or the Spreedly payment method token.
+      # options        - A hash of options:
+      #                  :store - Retain the payment method if the verify
+      #                           succeeds.  Defaults to false.  (optional)
+      def verify(payment_method, options = {})
+        if payment_method.is_a?(String)
+          verify_with_token(payment_method, options)
+        else
+          MultiResponse.run do |r|
+            r.process { save_card(false, payment_method, options) }
+            r.process { verify_with_token(r.authorization, options) }
+          end
+        end
+      end
+
       # Public: Store a credit card in the Spreedly vault and retain it.
       #
       # credit_card    - The CreditCard to store
@@ -104,6 +121,11 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       def unstore(authorization, options={})
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
+      end
+
+      # Public: Get the transaction with the given token.
+      def find(transaction_token)
+        commit("transactions/#{transaction_token}.xml", nil, :get)
       end
 
       private
@@ -128,10 +150,20 @@ module ActiveMerchant #:nodoc:
         commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
+      def verify_with_token(payment_method_token, options)
+        request = build_xml_request('transaction') do |doc|
+          add_invoice(doc, nil, options)
+          doc.payment_method_token(payment_method_token)
+          doc.retain_on_success(true) if options[:store]
+          add_extra_options(:gateway_specific_fields, doc, options)
+        end
+
+        commit("gateways/#{@options[:gateway_token]}/verify.xml", request)
+      end
+
       def auth_purchase_request(money, payment_method_token, options)
         build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
-          doc.ip(options[:ip])
           add_extra_options(:gateway_specific_fields, doc, options)
           doc.payment_method_token(payment_method_token)
           doc.retain_on_success(true) if options[:store]
@@ -139,11 +171,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(doc, money, options)
-        doc.amount amount(money)
+        doc.amount amount(money) unless money.nil?
         doc.currency_code(options[:currency] || currency(money) || default_currency)
         doc.order_id(options[:order_id])
-        doc.ip(options[:ip])
-        doc.description(options[:description])
+        doc.ip(options[:ip]) if options[:ip]
+        doc.description(options[:description]) if options[:description]
       end
 
       def add_credit_card(doc, credit_card, options)
@@ -244,4 +276,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
