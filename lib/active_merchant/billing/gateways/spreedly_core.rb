@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
           purchase_with_token(money, payment_method, options)
         else
           MultiResponse.run do |r|
-            r.process { save_card(false, payment_method, options) }
+            r.process { save_card(options[:store], payment_method, options) }
             r.process { purchase_with_token(money, r.authorization, options) }
           end
         end
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           authorize_with_token(money, payment_method, options)
         else
           MultiResponse.run do |r|
-            r.process { save_card(false, payment_method, options) }
+            r.process { save_card(options[:store], payment_method, options) }
             r.process { authorize_with_token(money, r.authorization, options) }
           end
         end
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
           verify_with_token(payment_method, options)
         else
           MultiResponse.run do |r|
-            r.process { save_card(false, payment_method, options) }
+            r.process { save_card(options[:store], payment_method, options) }
             r.process { verify_with_token(r.authorization, options) }
           end
         end

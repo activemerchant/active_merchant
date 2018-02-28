@@ -57,7 +57,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Purchase', response.params['transaction_type']
-    assert_equal 'used', response.params['payment_method_storage_state']
+    assert_equal 'cached', response.params['payment_method_storage_state']
   end
 
   def test_successful_purchase_with_card_and_address
