@@ -8,8 +8,8 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('5555555555554444')
     @declined_card = credit_card('4012888888881881')
-    @existing_payment_method = '9AjLflWs7SOKuqJLveOZya9bixa'
-    @declined_payment_method = 'n3JElNt9joT1mJ3CxvWjyEN39N'
+    @existing_payment_method = 'WQ9zJ1UOgak8BrNEi3g5RCianlY'
+    @declined_payment_method = 'PeEjf13ZeTiakKKBorXwWZjnUSp'
     @existing_transaction  = 'LKA3RchoqYO0njAfhHVw60ohjrC'
     @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
@@ -23,7 +23,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   def test_failed_purchase_with_token
     assert response = @gateway.purchase(@amount, @declined_payment_method)
     assert_failure response
-    assert_match %r(Unable to process the transaction), response.message
+    assert_match %r(Unable to process the purchase transaction), response.message
   end
 
   def test_successful_authorize_with_token_and_capture
@@ -40,7 +40,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   def test_failed_authorize_with_token
     assert response = @gateway.authorize(@amount, @declined_payment_method)
     assert_failure response
-    assert_match %r(Unable to process the transaction), response.message
+    assert_match %r(Unable to process the authorize transaction), response.message
   end
 
   def test_failed_capture
