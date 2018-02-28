@@ -10,6 +10,8 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @declined_card = credit_card('4012888888881881')
     @existing_payment_method = '9AjLflWs7SOKuqJLveOZya9bixa'
     @declined_payment_method = 'n3JElNt9joT1mJ3CxvWjyEN39N'
+    @existing_transaction  = 'LKA3RchoqYO0njAfhHVw60ohjrC'
+    @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
 
   def test_successful_purchase_with_token
@@ -69,7 +71,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'Succeeded!', response.message
 
     assert_equal 'joebob@example.com', response.params['payment_method_email']
-    assert_equal '1234 My Street', response.params['payment_method_address1']
+    assert_equal '456 My Street', response.params['payment_method_address1']
     assert_equal 'Apt 1', response.params['payment_method_address2']
     assert_equal 'Ottawa', response.params['payment_method_city']
     assert_equal 'ON', response.params['payment_method_state']
@@ -122,7 +124,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'Authorization', response.params['transaction_type']
 
     assert_equal 'joebob@example.com', response.params['payment_method_email']
-    assert_equal '1234 My Street', response.params['payment_method_address1']
+    assert_equal '456 My Street', response.params['payment_method_address1']
     assert_equal 'Apt 1', response.params['payment_method_address2']
     assert_equal 'Ottawa', response.params['payment_method_city']
     assert_equal 'ON', response.params['payment_method_state']
@@ -188,7 +190,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, options)
     assert_success response
     assert_equal 'joebob@example.com', response.params['payment_method_email']
-    assert_equal '1234 My Street', response.params['payment_method_address1']
+    assert_equal '456 My Street', response.params['payment_method_address1']
     assert_equal 'Apt 1', response.params['payment_method_address2']
     assert_equal 'Ottawa', response.params['payment_method_city']
     assert_equal 'ON', response.params['payment_method_state']
@@ -236,6 +238,46 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert response = @gateway.void(response.authorization)
     assert_success response
     assert_equal 'Succeeded!', response.message
+  end
+
+  def test_successful_verify_with_token
+    assert response = @gateway.verify(@existing_payment_method)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Verification', response.params['transaction_type']
+    assert_includes %w(cached retained), response.params['payment_method_storage_state']
+  end
+
+  def test_failed_verify_with_token
+    assert response = @gateway.verify(@declined_payment_method)
+    assert_failure response
+  end
+
+  def test_successful_verify_with_credit_card
+    assert response = @gateway.verify(@credit_card)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Verification', response.params['transaction_type']
+    assert_includes %w(cached retained), response.params['payment_method_storage_state']
+  end
+
+  def test_failed_verify_with_declined_credit_card
+    assert response = @gateway.verify(@declined_card)
+    assert_failure response
+    assert_match %r(Unable to process the verify transaction), response.message
+  end
+
+  def test_successful_find_transaction
+    assert response = @gateway.find(@existing_transaction)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'AddPaymentMethod', response.params['transaction_type']
+  end
+
+  def test_failed_find_transaction
+    assert response = @gateway.find(@not_found_transaction)
+    assert_failure response
+    assert_match %r(Unable to find the transaction), response.message
   end
 
   def test_invalid_login
