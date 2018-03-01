@@ -100,8 +100,20 @@ module ActiveMerchant #:nodoc:
         @express ||= PayflowExpressGateway.new(@options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<CardNum>)[^<]*(</CardNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CVNum>)[^<]*(</CVNum>)), '\1[FILTERED]\2').
+          gsub(%r((<AcctNum>)[^<]*(</AcctNum>)), '\1[FILTERED]\2').
+          gsub(%r((<Password>)[^<]*(</Password>)), '\1[FILTERED]\2')
+      end
 
       private
+
       def build_sale_or_authorization_request(action, money, funding_source, options)
         if funding_source.is_a?(String)
           build_reference_sale_or_authorization_request(action, money, funding_source, options)
@@ -332,4 +344,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
