@@ -131,7 +131,7 @@ module ActiveMerchant
         transaction_id, transaction_tag, method, _ = authorization.split('|')
         params[:transaction_id] = transaction_id
         params[:transaction_tag] = transaction_tag
-        params[:method] = method
+        params[:method] = (method == 'token') ? 'credit_card' : method
       end
 
       def add_creditcard_for_tokenization(params, payment_method, options)
