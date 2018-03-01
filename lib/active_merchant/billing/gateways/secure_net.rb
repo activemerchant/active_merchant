@@ -61,8 +61,19 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<CARDNUMBER>)\d+(</CARDNUMBER>))i, '\1[FILTERED]\2').
+          gsub(%r((<CARDCODE>)\d+(</CARDCODE>))i, '\1[FILTERED]\2').
+          gsub(%r((<SECUREKEY>).+(</SECUREKEY>))i, '\1[FILTERED]\2')
+      end
 
       private
+
       def commit(request)
         xml = build_request(request)
         url = test? ? self.test_url : self.live_url
@@ -255,4 +266,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

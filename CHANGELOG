@@ -29,6 +29,7 @@
 * Stripe: Support pickup_card decline code [dtykocki] #2764
 * Improve scrub testing for five gateways [curiousepic] #2767
 * Payflow: Support scrub [curiousepic] #2768
+* SecureNet: Support scrub [curiousepic] #2769
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
