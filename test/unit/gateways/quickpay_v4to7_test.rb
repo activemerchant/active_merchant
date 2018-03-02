@@ -145,7 +145,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   end
 
   def test_finalize_is_disabled_by_default
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       @gateway.capture(@amount, "12345")
     end.check_request do |method, endpoint, data, headers|
       assert data =~ /finalize=0/
@@ -153,7 +153,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   end
 
   def test_finalize_is_enabled
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       @gateway.capture(@amount, "12345", finalize: true)
     end.check_request do |method, endpoint, data, headers|
       assert data =~ /finalize=1/

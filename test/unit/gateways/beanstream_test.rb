@@ -57,7 +57,7 @@ class BeanstreamTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       refute_match(/recurringPayment=true/, data)
@@ -68,7 +68,7 @@ class BeanstreamTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_recurring
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options.merge(recurring: true))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/recurringPayment=true/, data)
@@ -78,7 +78,7 @@ class BeanstreamTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_recurring
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.authorize(@amount, @decrypted_credit_card, @options.merge(recurring: true))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/recurringPayment=true/, data)
@@ -244,7 +244,7 @@ class BeanstreamTest < Test::Unit::TestCase
   end
 
   def test_includes_network_tokenization_fields
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/3DSecureXID/, data)
@@ -259,7 +259,7 @@ class BeanstreamTest < Test::Unit::TestCase
     address = { country: "AF" }
     @options[:billing_address] = address
     @options[:shipping_address] = address
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/ordProvince=--/, data)
@@ -275,7 +275,7 @@ class BeanstreamTest < Test::Unit::TestCase
     address = { }
     @options[:billing_address] = address
     @options[:shipping_address] = address
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert_no_match(/ordProvince=--/, data)
@@ -291,7 +291,7 @@ class BeanstreamTest < Test::Unit::TestCase
     @options[:billing_address] = nil
     @options[:shipping_address] = nil
     @options[:shipping_email] = "ship@mail.com"
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @decrypted_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/ordEmailAddress=xiaobozzz%40example.com/, data)

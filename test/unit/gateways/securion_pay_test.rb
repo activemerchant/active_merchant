@@ -64,7 +64,7 @@ class SecurionPayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, "tok_xxx")
     end.check_request do |method, endpoint, data, headers|
       assert_match(/card=tok_xxx/, data)
@@ -85,7 +85,7 @@ class SecurionPayTest < Test::Unit::TestCase
   end
 
   def test_client_data_submitted_with_purchase
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       updated_options = @options.merge({ description: "test charge", ip: "127.127.127.127", user_agent: "browser XXX", referrer: "http://www.foobar.com", email: "foo@bar.com" })
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
@@ -98,7 +98,7 @@ class SecurionPayTest < Test::Unit::TestCase
   end
 
   def test_client_data_submitted_with_purchase_without_email_or_order
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       updated_options = @options.merge({ description: "test charge", ip: "127.127.127.127", user_agent: "browser XXX", referrer: "http://www.foobar.com" })
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
@@ -137,7 +137,7 @@ class SecurionPayTest < Test::Unit::TestCase
   end
 
   def test_address_is_included_with_card_data
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert data =~ /card\[addressLine1\]/
@@ -257,14 +257,14 @@ class SecurionPayTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
   end
 
   def test_successful_verify_with_failed_void
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
@@ -272,7 +272,7 @@ class SecurionPayTest < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.verify(@declined_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response

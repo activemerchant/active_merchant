@@ -160,7 +160,7 @@ class OppTest < Test::Unit::TestCase
   def test_passes_3d_secure_fields
     options = @complete_request_options.merge({eci: "eci", cavv: "cavv", xid: "xid"})
 
-    response = stub_comms(@gateway, :raw_ssl_request) do
+    response = stub_comms(method: :raw_ssl_request) do
       @gateway.purchase(@amount, @valid_card, options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/threeDSecure.eci=eci/, data)

@@ -94,7 +94,7 @@ class CheckoutTest < Test::Unit::TestCase
 
   def test_successful_void
     @options['orderid'] = '9c38d0506da258e216fa072197faaf37'
-    void = stub_comms(@gateway, :ssl_request) do
+    void = stub_comms(method: :ssl_request) do
       @gateway.void('36919371|9c38d0506da258e216fa072197faaf37|1|CAD|100', @options)
     end.check_request do |method, endpoint, data, headers|
       # Should only be one pair of track id tags.
@@ -133,7 +133,7 @@ class CheckoutTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
@@ -141,7 +141,7 @@ class CheckoutTest < Test::Unit::TestCase
   end
 
   def test_successful_verify_with_failed_void
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.verify(credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
@@ -149,7 +149,7 @@ class CheckoutTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_verify
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.verify(credit_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response

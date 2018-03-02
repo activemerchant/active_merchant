@@ -115,7 +115,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   end
 
   def test_bad_order_id_format
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       @gateway.authorize(100, credit_card, order_id: "Una#cce-ptable44Format")
     end.check_request do |method, endpoint, data, headers|
       assert_match(/MERCHANT_ORDER%3E\d\d\d\dUnaccept%3C/, data)
@@ -123,7 +123,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
   end
 
   def test_order_id_numeric_start_but_too_long
-    stub_comms(@gateway, :ssl_request) do
+    stub_comms(method: :ssl_request) do
       @gateway.authorize(100, credit_card, order_id: "1234ThisIs]FineButTooLong")
     end.check_request do |method, endpoint, data, headers|
       assert_match(/MERCHANT_ORDER%3E1234ThisIsFi%3C/, data)

@@ -58,7 +58,7 @@ class WebpayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_token
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, "cus_xxx|card_xxx")
     end.check_request do |method, endpoint, data, headers|
       assert_match(/customer=cus_xxx/, data)

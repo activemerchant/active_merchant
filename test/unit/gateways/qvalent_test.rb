@@ -175,7 +175,7 @@ class QvalentTest < Test::Unit::TestCase
   end
 
   def test_3d_secure_fields
-    response = stub_comms(@gateway, :ssl_request) do
+    response = stub_comms(method: :ssl_request) do
       @gateway.purchase(@amount, @credit_card, {xid: '123', cavv: '456', eci: '5'})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/xid=123/, data)
