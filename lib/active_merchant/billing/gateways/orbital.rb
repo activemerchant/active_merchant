@@ -504,14 +504,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def translate_eci(eci, creditcard)
-        if creditcard.brand == 'master'
-          { 1 => 6, 2 => 5}[eci.to_i]
-        else
-          eci
-        end
-      end
-
       def add_three_d_secure(xml, creditcard, parameters)
         # <xs:element name="AuthenticationECIInd" type="valid-eci-types" minOccurs="0"/>
   			# <xs:element name="CAVV" type="xs:string" minOccurs="0"/>
@@ -519,7 +511,7 @@ module ActiveMerchant #:nodoc:
 
         return if creditcard.is_a?(NetworkTokenizationCreditCard)
 
-        xml.tag! :AuthenticationECIInd, translate_eci(parameters[:eci], creditcard) if parameters[:eci]
+        xml.tag! :AuthenticationECIInd, parameters[:eci].to_i if parameters[:eci]
 
         if creditcard&.brand == 'visa'
           xml.tag! :CAVV, parameters[:cavv] if parameters[:cavv]
