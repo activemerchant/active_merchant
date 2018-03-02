@@ -128,6 +128,8 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{transaction_token}.xml", nil, :get)
       end
 
+      alias_method :status, :find
+
       private
 
       def save_card(retain, credit_card, options)

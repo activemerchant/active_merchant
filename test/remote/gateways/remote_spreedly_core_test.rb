@@ -9,7 +9,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @credit_card = credit_card('5555555555554444')
     @declined_card = credit_card('4012888888881881')
     @existing_payment_method = 'WQ9zJ1UOgak8BrNEi3g5RCianlY'
-    @declined_payment_method = 'PeEjf13ZeTiakKKBorXwWZjnUSp'
+    @declined_payment_method = 'AMc22hrKtQFpYHTvjNx0lGRWZVv'
     @existing_transaction  = 'LKA3RchoqYO0njAfhHVw60ohjrC'
     @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
