@@ -31,6 +31,7 @@
 * Payflow: Support scrub [curiousepic] #2768
 * SecureNet: Support scrub [curiousepic] #2769
 * Payeezy: Update transaction method when using stored cards [dtykocki] #2770
+* Citrus Pay, DIBS, 1stPayGateway, Global Transport, NETbilling, Ogone, TNS: remove TLS 1.0 requirement [bdewater] #2774
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
