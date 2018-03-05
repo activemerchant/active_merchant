@@ -31,7 +31,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'NETbilling'
       self.homepage_url = 'http://www.netbilling.com'
       self.supported_countries = ['US']
-      self.ssl_version = :TLSv1
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
       def initialize(options = {})
