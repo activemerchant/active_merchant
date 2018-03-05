@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Allow setting min/max SSL version for a connection on Ruby 2.5 [bdewater] #2775
 * Remove support for Rails < 4.2, add support for Rails 5.2 and Ruby 2.5 [bdewater]
 * Spreedly: Support verify and find transactions [abarrak] #2798
 * Adyen: Support merchant-specific subdomains [curiousepic] #2799
