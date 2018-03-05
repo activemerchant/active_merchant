@@ -116,6 +116,22 @@ class CardStreamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response_with_descriptors)
   end
 
+  def test_successful_visacreditcard_purchase_with_default_ip
+    stub_comms do
+      @gateway.purchase(284, @visacreditcard, @visacredit_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/remoteAddress=1\.1\.1\.1/, data)
+    end.respond_with(successful_purchase_response_with_descriptors)
+  end
+
+  def test_successful_visacreditcard_purchase_with_default_country
+    stub_comms do
+      @gateway.purchase(284, @visacreditcard, @visacredit_options.delete(:billing_address))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/customerCountryCode=GB/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_visacreditcard_purchase_via_reference
     @gateway.expects(:ssl_post).returns(successful_reference_purchase_response)
 
@@ -200,7 +216,7 @@ class CardStreamTest < Test::Unit::TestCase
   end
 
   def test_hmac_signature_added_to_post
-    post_params = "action=SALE&amount=10000&captureDelay=0&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
+    post_params = "action=SALE&amount=10000&captureDelay=0&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerCountryCode=GB&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&remoteAddress=1.1.1.1&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")
 
     @gateway.expects(:ssl_post).with do |url, data|
