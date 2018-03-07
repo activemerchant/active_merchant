@@ -39,6 +39,7 @@
 * GlobalCollect: Update supported country list [dtykocki] #2783
 * Adyen: Support store action [curiousepic] #2784
 * Psigate: Update Test URL and Card [nfarve] #2785
+* USA ePay Transaction: Support ACH/eChecks [curiousepic] #2786
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
