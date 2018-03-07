@@ -335,7 +335,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_destination(post, options)
-        post[:destination] = options[:destination] if options[:destination]
+        if options[:destination]
+          post[:destination] = {}
+          post[:destination][:account] = options[:destination]
+          post[:destination][:amount] = options[:destination_amount] if options[:destination_amount]
+        end
       end
 
       def add_expand_parameters(post, options)

@@ -857,7 +857,15 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({:destination => 'subaccountid'}))
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/destination=subaccountid/, data)
+      assert_match(/destination\[account\]=subaccountid/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_destination_amount_is_submitted_for_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:destination => 'subaccountid', :destination_amount => @amount - 20}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/destination\[amount\]=#{@amount - 20}/, data)
     end.respond_with(successful_purchase_response)
   end
 
