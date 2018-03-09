@@ -832,6 +832,10 @@ psl_visa_debit_address:
   state:
   zip:
 
+punto_pagos:
+  key: KEY
+  secret: VALUE
+
 pxpay:
   login: LOGIN
   password: PASSWORD
