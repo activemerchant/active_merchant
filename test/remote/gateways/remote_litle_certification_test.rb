@@ -895,6 +895,42 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
   end
 
+  def test53
+    check = check(
+      routing_number: '011100012',
+      account_number: '1099999998'
+    )
+    options     = {
+      :order_id => '53'
+    }
+
+    store_response = @gateway.store(check, options)
+
+    assert_success store_response
+    assert_equal '998', store_response.params['eCheckAccountSuffix']
+    assert_equal 'EC', store_response.params['type']
+    assert_equal '801', store_response.params['response']
+    assert_equal 'Account number was successfully registered', store_response.message
+    puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
+  end
+
+  def test54
+    check = check(
+      routing_number: '1145_7895',
+      account_number: '1022222102'
+    )
+    options     = {
+      :order_id => '54'
+    }
+
+    store_response = @gateway.store(check, options)
+
+    assert_failure store_response
+    assert_equal '900', store_response.params['response']
+    assert_equal 'Invalid Bank Routing Number', store_response.message
+    puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
+  end
+
   # Implicit Token Registration Tests
   def test55
     credit_card = CreditCard.new(:number             => '5435101234510196',

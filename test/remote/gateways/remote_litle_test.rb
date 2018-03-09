@@ -75,6 +75,10 @@ class RemoteLitleTest < Test::Unit::TestCase
       account_number: '1099999999',
       account_type: 'Checking'
     )
+    @store_check = check(
+      routing_number: '011100012',
+      account_number: '1099999998'
+    )
   end
 
   def test_successful_authorization
@@ -357,6 +361,19 @@ class RemoteLitleTest < Test::Unit::TestCase
     credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4100280190123000'))
     assert store_response = @gateway.store(credit_card, :order_id => '50')
     assert_success store_response
+
+    token = store_response.authorization
+    assert_equal store_response.params['litleToken'], token
+
+    assert response = @gateway.purchase(10010, token)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_echeck_store_and_purchase
+    assert store_response = @gateway.store(@store_check)
+    assert_success store_response
+    assert_equal 'Account number was successfully registered', store_response.message
 
     token = store_response.authorization
     assert_equal store_response.params['litleToken'], token

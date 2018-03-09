@@ -120,6 +120,11 @@ module ActiveMerchant #:nodoc:
             doc.orderId(truncate(options[:order_id], 24))
             if payment_method.is_a?(String)
               doc.paypageRegistrationId(payment_method)
+            elsif check?(payment_method)
+              doc.echeckForToken do
+                doc.accNum(payment_method.account_number)
+                doc.routingNum(payment_method.routing_number)
+              end
             else
               doc.accountNumber(payment_method.number)
               doc.cardValidationNum(payment_method.verification_value) if payment_method.verification_value
