@@ -11,3 +11,4 @@ Gemfile*.lock
 /doc/
 .ruby-version
 .DS_Store
+transcript.log

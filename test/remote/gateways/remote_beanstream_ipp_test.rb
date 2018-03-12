@@ -1,8 +1,10 @@
 require 'test_helper'
 
-class RemoteIppTest < Test::Unit::TestCase
+class RemoteBeanstreamIppTest < Test::Unit::TestCase
   def setup
-    @gateway = IppGateway.new(fixtures(:ipp))
+    ipp_options = fixtures(:ipp)
+    ipp_options[:region] = 1
+    @gateway = BeanstreamGateway.new(ipp_options)
 
     @credit_card = credit_card('4005550000000001')
 
@@ -11,10 +13,12 @@ class RemoteIppTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase',
     }
+
+    @amount = 200
   end
 
   #def test_dump_transcript
-  #  skip("Transcript scrubbing for this gateway has been tested.")
+    #skip("Transcript scrubbing for this gateway has been tested.")
   #  dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   #end
 
@@ -36,7 +40,8 @@ class RemoteIppTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(105, @credit_card, @options)
+    response = @gateway.purchase(200, credit_card('4123456789010053'), @options)
+
     assert_failure response
     assert_equal 'Do Not Honour', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
