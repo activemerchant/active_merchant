@@ -20,15 +20,17 @@ applications.
 
 If you'd like to contribute to Active Merchant, please start with our [contribution guide](CONTRIBUTING.md).
 
-# Modification on this branch:
+## Modifications on this branch
 ### New feature: 
-Integrated the ipp gateway into beanstream gateway, use this class as an unified entrance for both the gateways.
+Integrated the [IPP(Bambora)](https://www.bambora.com/) gateway into [Beanstream](https://www.beanstream.com/) gateway, use this class as an unified entrance for both the gateways.
 ### New parameter:
-Get the :region field from options parameter, if :region is 0 - US & CA, 1 - AU.
+Add the <em>:region</em> to the <strong>options</strong> parameter:
+1. For US & CA, <em>:region</em> is 0;
+1. For AU, <em>:region</em> is 1.
 ### New logic:
-1. Proess payment request from US & CA using beanstream service (default);
-2. Proess payment request from AU using ipp service.
+1. Proess payment requests from US & CA using Beanstream service (default);
+2. Proess payment requests from AU using IPP service.
 ### Others:
-Will remove ipp gateway file.
+Remove IPP gateway files.
 
 
