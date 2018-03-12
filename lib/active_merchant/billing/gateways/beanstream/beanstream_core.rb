@@ -144,16 +144,6 @@ module ActiveMerchant #:nodoc:
         base.display_name = 'Beanstream.com'
       end
 
-      # Only <tt>:login</tt> is required by default,
-      # which is the merchant's merchant ID. If you'd like to perform void,
-      # capture or refund transactions then you'll also need to add a username
-      # and password to your account under administration -> account settings ->
-      # order settings -> Use username/password validation
-      def initialize(options = {})
-        requires!(options, :login)
-        super
-      end
-
       def capture(money, authorization, options = {})
         reference, _, _ = split_auth(authorization)
 
