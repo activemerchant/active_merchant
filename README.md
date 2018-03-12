@@ -28,8 +28,8 @@ Add the <em>:region</em> to the <strong>options</strong> parameter:
 1. For US & CA, <em>:region</em> is 0;
 1. For AU, <em>:region</em> is 1.
 ### New logic:
-1. Proess payment requests from US & CA using Beanstream service (default);
-2. Proess payment requests from AU using IPP service.
+1. Process payment requests from US & CA by Beanstream service (default);
+2. Process payment requests from AU by IPP(Bambora) service.
 ### Others:
 Remove IPP gateway files.
 
