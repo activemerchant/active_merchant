@@ -1,4 +1,5 @@
 require 'active_merchant/billing/gateways/beanstream/beanstream_core'
+require 'active_merchant/billing/gateways/beanstream/ipp_core'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -65,30 +66,115 @@ module ActiveMerchant #:nodoc:
     #     :custom => 'reference one'
     #   )
     class BeanstreamGateway < Gateway
+      attr_accessor :region
       include BeanstreamCore
+      include IPPCore
+
+      # Only <tt>:login</tt> is required by default,
+      # which is the merchant's merchant ID. If you'd like to perform void,
+      # capture or refund transactions then you'll also need to add a username
+      # and password to your account under administration -> account settings ->
+      # order settings -> Use username/password validation
+      def initialize(options = {})
+        #region: 0 - US & CA, 1 - AU
+        @region = empty?(options[:region]) ? 0 : options[:region]
+
+        [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
+          next if empty?(address[:country])
+          unless ['AU'].include?(address[:country])
+            @region = 1
+          end
+        end
+
+        if @region == 1
+          self.money_format = :cents
+          requires!(options, :username, :password)
+        else
+          requires!(options, :login)
+        end
+        
+        #puts "region " + @region.to_s
+        super
+      end
 
       def authorize(money, source, options = {})
-        post = {}
-        add_amount(post, money)
-        add_invoice(post, options)
-        add_source(post, source)
-        add_address(post, options)
-        add_transaction_type(post, :authorization)
-        add_customer_ip(post, options)
-        add_recurring_payment(post, options)
-        commit(post)
+        if @region == 1
+          ipp_authorize(money, source, options)
+        else
+          post = {}
+          add_amount(post, money)
+          add_invoice(post, options)
+          add_source(post, source)
+          add_address(post, options)
+          add_transaction_type(post, :authorization)
+          add_customer_ip(post, options)
+          add_recurring_payment(post, options)
+          commit(post)
+        end
       end
 
       def purchase(money, source, options = {})
-        post = {}
-        add_amount(post, money)
-        add_invoice(post, options)
-        add_source(post, source)
-        add_address(post, options)
-        add_transaction_type(post, purchase_action(source))
-        add_customer_ip(post, options)
-        add_recurring_payment(post, options)
-        commit(post)
+        if @region == 1
+          ipp_purchase(money, source, options)
+        else
+          post = {}
+          add_amount(post, money)
+          add_invoice(post, options)
+          add_source(post, source)
+          add_address(post, options)
+          add_transaction_type(post, purchase_action(source))
+          add_customer_ip(post, options)
+          add_recurring_payment(post, options)
+          commit(post)
+        end
+      end
+
+      def capture(money, authorization, options = {})
+        if @region == 1
+          ipp_capture(money, authorization, options)
+        else
+          reference, _, _ = split_auth(authorization)
+
+          post = {}
+          add_amount(post, money)
+          add_reference(post, reference)
+          add_transaction_type(post, :capture)
+          add_recurring_payment(post, options)
+          commit(post)
+        end
+      end
+
+      def refund(money, source, options = {})
+        if @region == 1
+          ipp_refund(money, source, options)
+        else
+          post = {}
+          reference, _, type = split_auth(source)
+          add_reference(post, reference)
+          add_transaction_type(post, refund_action(type))
+          add_amount(post, money)
+          commit(post)
+        end
+      end
+
+      def supports_scrubbing?
+        if @region == 1
+          ipp_supports_scrubbing?
+        else
+          true
+        end
+      end
+
+      def scrub(transcript)
+        if @region == 1
+          ipp_scrub(transcript)
+        else
+          transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
+        end
       end
 
       def void(authorization, options = {})
@@ -189,18 +275,6 @@ module ActiveMerchant #:nodoc:
         options.merge!({:vault_id => vault_id, :operation => secure_profile_action(:modify)})
         add_secure_profile_variables(post,options)
         commit(post, true)
-      end
-
-      def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
-          gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
-          gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
       end
 
       private
