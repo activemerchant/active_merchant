@@ -65,6 +65,15 @@ module ActiveMerchant #:nodoc:
     #     :tax2 => 100,
     #     :custom => 'reference one'
     #   )
+    #
+    # Modification on 2018-03-12:
+    # New feature: integrated the ipp gateway into beanstream gateway, use this class as an unified entrance for both the gateways
+    # Get the :region field from options parameter, :region: 0 - US & CA, 1 - AU
+    # Proess payment request from US & CA using beanstream service (default)
+    # Proess payment request from AU using ipp service
+    # Will remove ipp gateway file
+    #
+
     class BeanstreamGateway < Gateway
       attr_accessor :region
       include BeanstreamCore
@@ -79,12 +88,12 @@ module ActiveMerchant #:nodoc:
         #region: 0 - US & CA, 1 - AU
         @region = empty?(options[:region]) ? 0 : options[:region]
 
-        [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
-          next if empty?(address[:country])
-          unless ['AU'].include?(address[:country])
-            @region = 1
-          end
-        end
+        # [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
+        #   next if empty?(address[:country])
+        #   unless ['AU'].include?(address[:country])
+        #     @region = 1
+        #   end
+        # end
 
         if @region == 1
           self.money_format = :cents
@@ -93,7 +102,6 @@ module ActiveMerchant #:nodoc:
           requires!(options, :login)
         end
         
-        #puts "region " + @region.to_s
         super
       end
 
