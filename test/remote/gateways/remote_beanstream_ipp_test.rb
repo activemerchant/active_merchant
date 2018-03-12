@@ -8,6 +8,8 @@ class RemoteBeanstreamIppTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4005550000000001')
 
+    @credit_card_declined_5 = credit_card('4123456789010053')
+
     @options = {
       order_id: '1',
       billing_address: address,
@@ -15,6 +17,7 @@ class RemoteBeanstreamIppTest < Test::Unit::TestCase
     }
 
     @amount = 200
+    @amount_fail = 105
   end
 
   #def test_dump_transcript
@@ -34,13 +37,13 @@ class RemoteBeanstreamIppTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(200, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal '', response.message
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(200, credit_card('4123456789010053'), @options)
+    response = @gateway.purchase(@amount, @credit_card_declined_5, @options)
 
     assert_failure response
     assert_equal 'Do Not Honour', response.message
@@ -48,32 +51,32 @@ class RemoteBeanstreamIppTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture
-    response = @gateway.authorize(200, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    response = @gateway.capture(200, response.authorization)
+    response = @gateway.capture(@amount, response.authorization)
     assert_success response
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(105, @credit_card, @options)
+    response = @gateway.authorize(@amount_fail, @credit_card, @options)
     assert_failure response
   end
 
   def test_failed_capture
-    response = @gateway.capture(200, '')
+    response = @gateway.capture(@amount, '')
     assert_failure response
   end
 
   def test_successful_refund
-    response = @gateway.purchase(200, @credit_card, @options)
-    response = @gateway.refund(200, response.authorization, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.refund(@amount, response.authorization, @options)
     assert_success response
     assert_equal '', response.message
   end
 
   def test_failed_refund
-    response = @gateway.purchase(200, @credit_card, @options)
-    response = @gateway.refund(105, response.authorization, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.refund(@amount_fail, response.authorization, @options)
     assert_failure response
     assert_equal 'Do Not Honour', response.message
   end
@@ -83,7 +86,7 @@ class RemoteBeanstreamIppTest < Test::Unit::TestCase
       username: '',
       password: '',
     )
-    response = gateway.purchase(200, @credit_card, @options)
+    response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
 end
