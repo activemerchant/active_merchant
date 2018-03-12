@@ -22,7 +22,7 @@ If you'd like to contribute to Active Merchant, please start with our [contribut
 
 ## Modifications on this branch
 ### New feature: 
-Integrated the [IPP(Bambora)](https://www.bambora.com/) gateway into [Beanstream](https://www.beanstream.com/) gateway, use this class as an unified entrance for both the gateways.
+Integrated the [IPP(Bambora)](https://www.bambora.com/) gateway into [Beanstream](https://www.beanstream.com/) gateway, use BeanstreamGateway as an unified entrance for both the gateways.
 ### New parameter:
 Add the <em>:region</em> to the <strong>options</strong> parameter:
 1. For US & CA, <em>:region</em> is 0;
