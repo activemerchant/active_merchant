@@ -45,21 +45,21 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_extra_data(post, options)
-        add_shopper_interaction(post,payment,options)
+        add_shopper_interaction(post, payment, options)
         add_address(post, options)
         commit('authorise', post)
       end
 
       def capture(money, authorization, options={})
         post = init_post(options)
-        add_invoice_for_modification(post, money, authorization, options)
+        add_invoice_for_modification(post, money, options)
         add_references(post, authorization, options)
         commit('capture', post)
       end
 
       def refund(money, authorization, options={})
         post = init_post(options)
-        add_invoice_for_modification(post, money, authorization, options)
+        add_invoice_for_modification(post, money, options)
         add_references(post, authorization, options)
         commit('refund', post)
       end
@@ -70,9 +70,20 @@ module ActiveMerchant #:nodoc:
         commit('cancel', post)
       end
 
+      def store(credit_card, options={})
+        requires!(options, :order_id)
+        post = init_post(options)
+        add_invoice(post, 0, options)
+        add_payment(post, credit_card)
+        add_extra_data(post, options)
+        add_recurring(post, options)
+        add_address(post, options)
+        commit('authorise', post)
+      end
+
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(0, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -101,7 +112,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_interaction(post, payment, options={})
-        shopper_interaction = payment.verification_value ?  "Ecommerce" : "ContAuth"
+        if payment.is_a?(String)
+          shopper_interaction = "ContAuth"
+        elsif payment.verification_value
+          shopper_interaction = "Ecommerce"
+        else
+          shopper_interaction = "ContAuth"
+        end
+
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
       end
 
@@ -127,7 +145,7 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount
       end
 
-      def add_invoice_for_modification(post, money, authorization, options)
+      def add_invoice_for_modification(post, money, options)
         amount = {
           value: amount(money),
           currency: options[:currency] || currency(money)
@@ -136,22 +154,36 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
-        card = {
-          expiryMonth: payment.month,
-          expiryYear: payment.year,
-          holderName: payment.name,
-          number: payment.number,
-          cvc: payment.verification_value
-        }
+        if payment.is_a?(String)
+          _, recurring_detail_reference = payment.split("|")
+          post[:selectedRecurringDetailReference] = recurring_detail_reference
+          add_recurring(post)
+        else
+          card = {
+            expiryMonth: payment.month,
+            expiryYear: payment.year,
+            holderName: payment.name,
+            number: payment.number,
+            cvc: payment.verification_value
+          }
 
-        card.delete_if{|k,v| v.blank? }
-        requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
-        post[:card] = card
+          card.delete_if{|k,v| v.blank? }
+          requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
+          post[:card] = card
+        end
       end
 
       def add_references(post, authorization, options = {})
-        post[:originalReference] = psp_reference_from(authorization)
+        original, _ = authorization.split("|")
+        post[:originalReference] = original
         post[:reference] = options[:order_id]
+      end
+
+      def add_recurring(post, options={})
+        recurring = {
+          contract: "RECURRING"
+        }
+        post[:recurring] = recurring
       end
 
       def parse(body)
@@ -175,7 +207,7 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(action, response),
           response,
-          authorization: authorization_from(action, parameters, response),
+          authorization: authorization_from(action, response),
           test: test?,
           error_code: success ? nil : error_code_from(response)
         )
@@ -217,8 +249,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(action, parameters, response)
-        [parameters[:originalReference], response['pspReference']].compact.join("#").presence
+      def authorization_from(action, response)
+        return nil if response['pspReference'].nil?
+        recurring = response['additionalData']['recurring.recurringDetailReference'] if response ['additionalData']
+        "#{response['pspReference']}|#{recurring}"
       end
 
       def init_post(options = {})
@@ -232,11 +266,6 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
       end
-
-      def psp_reference_from(authorization)
-        authorization.nil? ? nil : authorization.split("#").first
-      end
-
     end
   end
 end
