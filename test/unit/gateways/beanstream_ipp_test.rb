@@ -67,8 +67,6 @@ class BeansteamIppTest < Test::Unit::TestCase
       assert_match(%r{<Receipt>receipt<}, data)
       assert_match(%r{<Amount>100<}, data)
     end.respond_with(successful_capture_response)
-    puts response.inspect
-
     assert_success response
   end
 

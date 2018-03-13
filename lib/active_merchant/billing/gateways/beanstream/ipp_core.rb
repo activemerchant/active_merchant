@@ -9,23 +9,25 @@ module ActiveMerchant #:nodoc:
         "06" => Gateway::STANDARD_ERROR_CODE[:processing_error],
         "14" => Gateway::STANDARD_ERROR_CODE[:invalid_number],
         "54" => Gateway::STANDARD_ERROR_CODE[:expired_card],
+        "04" => Gateway::STANDARD_ERROR_CODE[:pickup_card]
       }
 
       IPP_LIVE_URL = 'https://www.bambora.co.nz/interface/api/dts.asmx'
       IPP_TEST_URL = 'https://demo.bambora.co.nz/interface/api/dts.asmx'
 
-      # def self.included(base)
-      #   base.ipp_live_url = 'https://www.bambora.co.nz/interface/api/dts.asmx
-      #   base.ipp_test_url = 'https://demo.bambora.co.nz/interface/api/dts.asmx
+      def self.included(base)
+        base.default_currency = 'AUD'
+        base.live_url = 'https://www.bambora.co.nz/interface/api/dts.asmx'
+        base.test_url = 'https://demo.bambora.co.nz/interface/api/dts.asmx'
   
-      #   base.ipp_supported_countries = ['AU']
-      #   base.ipp_supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
+        base.supported_countries = ['AU']
+        base.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
   
-      #   base.ipp_homepage_url = 'http://www.bambora.co.nz/'
-      #   base.ipp_display_name = 'IPP'
+        base.homepage_url = 'http://www.bambora.co.nz/'
+        base.display_name = 'IPP'
   
-      #   base.ipp_money_format = :cents
-      # end
+        base.money_format = :cents
+      end
 
       def ipp_purchase(money, payment, options={})
         ipp_commit("SubmitSinglePayment") do |xml|

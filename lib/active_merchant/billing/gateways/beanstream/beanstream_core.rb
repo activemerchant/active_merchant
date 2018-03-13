@@ -1,8 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module BeanstreamCore
-      include Empty
-
       RECURRING_URL = 'https://www.beanstream.com/scripts/recurring_billing.asp'
       SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
 
