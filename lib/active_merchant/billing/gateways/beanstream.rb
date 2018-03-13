@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
     class BeanstreamGateway < Gateway
       attr_accessor :region
       include Empty
-      
+
       # Only <tt>:login</tt> is required by default,
       # which is the merchant's merchant ID. If you'd like to perform void,
       # capture or refund transactions then you'll also need to add a username
@@ -95,10 +95,10 @@ module ActiveMerchant #:nodoc:
         # end
 
         if @region == 1
-          Gateway.include IPPCore
+          include_ipp
           requires!(options, :username, :password)
         else
-          Gateway.include BeanstreamCore
+          include_beanstream
           requires!(options, :login)
         end
         
@@ -286,6 +286,14 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      def include_ipp
+        BeanstreamGateway.include IPPCore
+      end
+
+      def include_beanstream
+        BeanstreamGateway.include BeanstreamCore
+      end
+      
       def build_response(*args)
         Response.new(*args)
       end
