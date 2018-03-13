@@ -4,7 +4,6 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    ActiveMerchant.expects(:deprecated).with("ARB functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it.")
     @gateway = AuthorizeNetArbGateway.new(
       :login => 'X',
       :password => 'Y'
