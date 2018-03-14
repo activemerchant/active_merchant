@@ -36,6 +36,7 @@
 * Citrus Pay, DIBS, 1stPayGateway, Global Transport, NETbilling, Ogone, TNS: remove TLS 1.0 requirement [bdewater] #2774
 * CardStream: Default IP and customer country [dtykocki] #2773
 * Stripe: Support destination amount [dtykocki] #2777
+* GlobalCollect: Update supported country list [dtykocki] #2783
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
