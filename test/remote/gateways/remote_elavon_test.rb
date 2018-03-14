@@ -60,8 +60,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_authorization
-    @credit_card.number = "1234567890123"
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @bad_credit_card, @options)
     assert_failure response
     assert_equal 'The Credit Card Number supplied in the authorization request appears to be invalid.', response.message
   end
