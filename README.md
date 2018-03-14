@@ -32,5 +32,23 @@ Add the <em>:region</em> to the <strong>options</strong> parameter:
 2. Process payment requests from AU by IPP(Bambora) service.
 ### Others:
 Remove IPP gateway files.
+### Tests:
+
+#### Unit
+<pre>
+<code>
+bundle exec rake test:units TEST=test/unit/gateways/beanstream_test.rb
+
+bundle exec rake test:units TEST=test/unit/gateways/beanstream_ipp_test.rb
+</code>
+</pre>
+#### Remote
+<pre>
+<code>
+bundle exec rake test:remote TEST=test/remote/gateways/remote_beanstream_test.rb
+
+bundle exec rake test:remote TEST=test/remote/gateways/remote_beanstream_ipp_test.rb
+</code>
+</pre>
 
 
