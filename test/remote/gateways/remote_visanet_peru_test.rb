@@ -83,7 +83,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal "El pedido ha sido rechazado por Decision Manager", response.message
+    assert_equal "REJECT", response.message
   end
 
   def test_failed_capture
@@ -100,6 +100,17 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     refund = @gateway.refund(@amount, response.authorization)
     assert_success refund
     assert_equal "OK", refund.message
+  end
+
+  def test_successful_refund_unsettled
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    new_auth = "_|#{response.authorization.split('|')[1]}"
+    refund = @gateway.refund(@amount, new_auth, @options.merge(force_full_refund_if_unsettled: true, ruc: '20341198217'))
+    # this test will fail currently because there is no E2E test working for visanet
+    # assert_success refund
+    # assert_equal "OK", refund.message
   end
 
   def test_failed_refund

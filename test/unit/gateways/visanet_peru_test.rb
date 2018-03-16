@@ -23,7 +23,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_success response
     assert_equal "OK", response.message
 
-    assert_match %r([0-9]{9}$), response.authorization
+    assert_match %r([0-9]{9}|$), response.authorization
     assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert response.test?
   end
@@ -42,7 +42,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "OK", response.message
-    assert_match %r(^[0-9]{9}$), response.authorization
+    assert_match %r(^[0-9]{9}|$), response.authorization
     assert_equal @options[:order_id], response.params["externalTransactionId"]
     assert_equal "1.00", response.params["data"]["IMP_AUTORIZADO"]
     assert response.test?
@@ -60,7 +60,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal "El pedido ha sido rechazado por Decision Manager", response.message
+    assert_equal "REJECT", response.message
   end
 
   def test_successful_capture
@@ -70,17 +70,17 @@ class VisanetPeruTest < Test::Unit::TestCase
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal "OK", capture.message
-    assert_match %r(^[0-9]{9}$), capture.authorization
+    assert_match %r(^[0-9]{9}|$), capture.authorization
     assert_equal @options[:order_id], capture.params["externalTransactionId"]
     assert capture.test?
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
-    invalid_purchase_number = "122333444"
-    response = @gateway.capture("authorize" + "|" + invalid_purchase_number)
+    invalid_purchase_number = "900000044"
+    response = @gateway.capture(invalid_purchase_number)
     assert_failure response
-    assert_equal "[ 'NUMORDEN 12233344 no se encuentra registrado', 'No se realizo el deposito' ]", response.message
+    assert_equal '[ "NUMORDEN 900000044 no se encuentra registrado", "No se realizo el deposito" ]', response.message
     assert_equal 400, response.error_code
   end
 
@@ -256,32 +256,58 @@ class VisanetPeruTest < Test::Unit::TestCase
   end
 
   def failed_authorize_response_bad_email
-    <<-RESPONSE
-    {
-      "errorCode": 400,
-      "errorMessage": "El pedido ha sido rechazado por Decision Manager"
-    }
-    RESPONSE
+    %q(
+      {
+        "errorCode": 400,
+        "errorMessage": "REJECT",
+        "millis": 513,
+        "transactionUUID": "e2f0f73d-2f44-4f05-9e13-dad3bf378c57",
+        "transactionDate": 1519932476254,
+        "data": {
+          "FECHAYHORA_TX": "01\/03\/2018 21:26",
+          "RES_CVV2": null,
+          "CSIMENSAJE": null,
+          "ID_UNICO": null,
+          "ETICKET": null,
+          "DECISIONCS": "REJECT",
+          "CSIPORCENTAJEDESCUENTO": null,
+          "NROCUOTA": null,
+          "CSIIMPORTECOMERCIO": null,
+          "CSICODIGOPROGRAMA": null,
+          "DSC_ECI": null,
+          "ECI": "00",
+          "DSC_COD_ACCION": "Operacion denegada",
+          "NOM_EMISOR": null,
+          "IMPCUOTAAPROX": null,
+          "CSITIPOCOBRO": null,
+          "NUMREFERENCIA": null,
+          "RESPUESTA": "2",
+          "NUMORDEN": "376876217",
+          "CODACCION": "670",
+          "IMP_AUTORIZADO": "0.00",
+          "COD_AUTORIZA": null,
+          "CODTIENDA": "vndp",
+          "PAN": null,
+          "reviewTransaction": "false",
+          "ORI_TARJETA": null
+        },
+        "transactionLog": {
+
+        }
+      }
+    )
   end
 
   def successful_capture_response
-    <<-RESPONSE
-    {
-      "errorCode": 0,
-      "errorMessage": "OK",
-      "externalTransactionId": "#{@options[:order_id]}",
-      "merchantId": "101266802"
-    }
-    RESPONSE
+   '{"errorCode":0,"errorMessage":"OK","transactionUUID":"8517cf68-4820-4224-959b-01c8117385e0","externalTransactionId":"de9dc65c094fb4f1defddc562731af81","transactionDateTime":1519937673906,"transactionDuration":0,"merchantId":"543025501","userTokenId":null,"aliasName":null,"data":{"FECHAYHORA_TX":null,"DSC_ECI":null,"DSC_COD_ACCION":null,"NOM_EMISOR":null,"ESTADO":"Depositado","RESPUESTA":"1","ID_UNICO":null,"NUMORDEN":null,"CODACCION":null,"ETICKET":null,"IMP_AUTORIZADO":null,"DECISIONCS":null,"COD_AUTORIZA":null,"CODTIENDA":"543025501","PAN":null,"ORI_TARJETA":null}}'
   end
 
   def failed_capture_response
-    <<-RESPONSE
+    %q(
     {
-      "errorCode": 400,
-      "errorMessage": "[ 'NUMORDEN 12233344 no se encuentra registrado', 'No se realizo el deposito' ]"
+      "errorCode":400,"errorMessage":"[ \"NUMORDEN 900000044 no se encuentra registrado\", \"No se realizo el deposito\" ]","millis":513,"transactionUUID":"e2f0f73d-2f44-4f05-9e13-dad3bf378c57","transactionDate":1519932476254,"data":{"FECHAYHORA_TX":null,"DSC_ECI":null,"DSC_COD_ACCION":null,"NOM_EMISOR":null,"ESTADO":"","RESPUESTA":"2","ID_UNICO":null,"NUMORDEN":null,"CODACCION":null,"ETICKET":null,"IMP_AUTORIZADO":null,"DECISIONCS":null,"COD_AUTORIZA":null,"CODTIENDA":"543025501","PAN":null,"ORI_TARJETA":null},"transactionLog":{}
     }
-    RESPONSE
+    )
   end
 
   def successful_verify_response
@@ -290,7 +316,27 @@ class VisanetPeruTest < Test::Unit::TestCase
       "errorCode": 0,
       "errorMessage": "OK",
       "externalTransactionId": "#{@options[:order_id]}",
-      "merchantId": "101266802"
+      "merchantId": "101266802",
+      "userTokenId": null,
+      "aliasName": null,
+      "data": {
+        "FECHAYHORA_TX": null,
+        "DSC_ECI": null,
+        "DSC_COD_ACCION": null,
+        "NOM_EMISOR": null,
+        "ESTADO": "Anulado",
+        "RESPUESTA": "1",
+        "ID_UNICO": null,
+        "NUMORDEN": null,
+        "CODACCION": null,
+        "ETICKET": null,
+        "IMP_AUTORIZADO": null,
+        "DECISIONCS": null,
+        "COD_AUTORIZA": null,
+        "CODTIENDA": "543025501",
+        "PAN": null,
+        "ORI_TARJETA": null
+      }
     }
     RESPONSE
   end
@@ -313,7 +359,27 @@ class VisanetPeruTest < Test::Unit::TestCase
       "errorCode": 0,
       "errorMessage": "OK",
       "externalTransactionId": "987654321",
-      "merchantId": "101266802"
+      "merchantId": "101266802",
+      "userTokenId": null,
+      "aliasName": null,
+      "data": {
+        "FECHAYHORA_TX": null,
+        "DSC_ECI": null,
+        "DSC_COD_ACCION": null,
+        "NOM_EMISOR": null,
+        "ESTADO": "Anulado",
+        "RESPUESTA": "1",
+        "ID_UNICO": null,
+        "NUMORDEN": null,
+        "CODACCION": null,
+        "ETICKET": null,
+        "IMP_AUTORIZADO": null,
+        "DECISIONCS": null,
+        "COD_AUTORIZA": null,
+        "CODTIENDA": "543025501",
+        "PAN": null,
+        "ORI_TARJETA": null
+      }
     }
     RESPONSE
   end
@@ -322,7 +388,28 @@ class VisanetPeruTest < Test::Unit::TestCase
     <<-RESPONSE
     {
       "errorCode": 400,
-      "errorMessage": "[ 'NUMORDEN no se encuentra registrado.', 'No se ha realizado la anulacion del pedido' ]"
+      "errorMessage": "[ 'NUMORDEN no se encuentra registrado.', 'No se ha realizado la anulacion del pedido' ]",
+      "data": {
+        "FECHAYHORA_TX": null,
+        "DSC_ECI": null,
+        "DSC_COD_ACCION": null,
+        "NOM_EMISOR": null,
+        "ESTADO": " ",
+        "RESPUESTA": "2",
+        "ID_UNICO": null,
+        "NUMORDEN": null,
+        "CODACCION": null,
+        "ETICKET": null,
+        "IMP_AUTORIZADO": null,
+        "DECISIONCS": null,
+        "COD_AUTORIZA": null,
+        "CODTIENDA": "543025501",
+        "PAN": null,
+        "ORI_TARJETA": null
+      },
+      "transactionLog": {
+
+      }
     }
     RESPONSE
   end
@@ -348,7 +435,14 @@ class VisanetPeruTest < Test::Unit::TestCase
     <<-RESPONSE
     {
       "errorCode": 400,
-      "errorMessage": "[ 'NUMORDEN 122333444 no se encuentra registrado', 'No se realizo la anulacion del deposito' ]"
+      "errorMessage": "[ 'NUMORDEN 122333444 no se encuentra registrado', 'No se realizo la anulacion del deposito' ]",
+      "data": {
+        "ESTADO": "",
+        "RESPUESTA": "2"
+      },
+      "transactionLog": {
+
+      }
     }
     RESPONSE
   end

@@ -34,25 +34,32 @@ module ActiveMerchant #:nodoc:
         params[:email] = options[:email] || 'unknown@email.com'
         params[:createAlias] = false
 
-        commit("authorize", params)
+        commit("authorize", params, options)
       end
 
       def capture(authorization, options={})
         params = {}
+        options[:id_unico] = split_authorization(authorization)[1]
         add_auth_order_id(params, authorization, options)
-        commit("deposit", params)
+        commit("deposit", params, options)
       end
 
       def void(authorization, options={})
         params = {}
         add_auth_order_id(params, authorization, options)
-        commit("void", params)
+        commit("void", params, options)
       end
 
       def refund(amount, authorization, options={})
         params = {}
+        params[:amount] = amount(amount) if amount
         add_auth_order_id(params, authorization, options)
-        commit("cancelDeposit", params)
+        response = commit("cancelDeposit", params, options)
+        return response if response.success? || split_authorization(authorization).length == 1 || !options[:force_full_refund_if_unsettled]
+
+        # Attempt RefundSingleTransaction if unsettled
+        prepare_refund_data(params, authorization, options)
+        commit('refund', params, options)
       end
 
       def verify(credit_card, options={})
@@ -88,7 +95,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_order_id(params, authorization, options)
-        params[:purchaseNumber] = authorization
+        purchase_number, _ = split_authorization(authorization)
+        params[:purchaseNumber] = purchase_number
         params[:externalTransactionId] = options[:order_id]
       end
 
@@ -118,22 +126,35 @@ module ActiveMerchant #:nodoc:
         params[:antifraud] = antifraud
       end
 
-      def commit(action, params)
+      def prepare_refund_data(params, authorization, options)
+        params.delete(:purchaseNumber)
+        params[:externalReferenceId] = params.delete(:externalTransactionId)
+        _, transaction_id = split_authorization(authorization)
+
+        options.update(transaction_id: transaction_id)
+        params[:ruc] = options[:ruc]
+      end
+
+      def split_authorization(authorization)
+        authorization.split('|')
+      end
+
+      def commit(action, params, options={})
         begin
-          raw_response = ssl_request(method(action), url(action, params), params.to_json, headers)
+          raw_response = ssl_request(method(action), url(action, params, options), params.to_json, headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
-          response_error(raw_response)
+          response_error(raw_response, options, action)
         rescue JSON::ParserError
           unparsable_response(raw_response)
         else
           Response.new(
             success_from(response),
-            message_from(response),
+            message_from(response, options, action),
             response,
             :test => test?,
-            :authorization => authorization_from(params),
+            :authorization => authorization_from(params, response, options),
             :error_code => response["errorCode"]
           )
         end
@@ -146,20 +167,23 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def url(action, params)
+      def url(action, params, options={})
         if (action == "authorize")
           "#{base_url}/#{@options[:merchant_id]}"
+        elsif (action == 'refund')
+          "#{base_url}/#{@options[:merchant_id]}/#{action}/#{options[:transaction_id]}"
         else
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{params[:purchaseNumber]}"
         end
       end
 
       def method(action)
-        (action == "authorize") ? :post : :put
+        (%w(authorize refund).include? action) ? :post : :put
       end
 
-      def authorization_from(params)
-        params[:purchaseNumber]
+      def authorization_from(params, response, options)
+        id_unico = response['data']['ID_UNICO'] || options[:id_unico]
+        "#{params[:purchaseNumber]}|#{id_unico}"
       end
 
       def base_url
@@ -174,15 +198,19 @@ module ActiveMerchant #:nodoc:
         response["errorCode"] == 0
       end
 
-      def message_from(response)
+      def message_from(response, options, action)
         if empty?(response["errorMessage"]) || response["errorMessage"] == "[ ]"
-          response["data"]["DSC_COD_ACCION"]
+          action == 'refund' ? "#{response["data"]["DSC_COD_ACCION"]}, #{options[:error_message]}" : response['data']['DSC_COD_ACCION']
+        elsif action == 'refund'
+          message = "#{response["errorMessage"]}, #{options[:error_message]}"
+          options[:error_message] = response["errorMessage"]
+          message
         else
-          response["errorMessage"]
+          response['errorMessage']
         end
       end
 
-      def response_error(raw_response)
+      def response_error(raw_response, options, action)
         begin
           response = parse(raw_response)
         rescue JSON::ParserError
@@ -190,7 +218,7 @@ module ActiveMerchant #:nodoc:
         else
           return Response.new(
             false,
-            message_from(response),
+            message_from(response, options, action),
             response,
             :test => test?,
             :authorization => response["transactionUUID"],
