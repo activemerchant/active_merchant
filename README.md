@@ -22,14 +22,15 @@ If you'd like to contribute to Active Merchant, please start with our [contribut
 
 ## Modifications on this branch
 ### New feature: 
-Integrated the [Bambora Pacifc(IPP.rb)](https://www.bambora.com/) gateway into [Bambora North America(Beanstream)](https://www.beanstream.com/) gateway, use BeanstreamGateway as an unified entrance for both the gateways.
+Integrated the [Bambora Pacifc(ipp_core.rb)](https://www.bambora.com/) gateway into [Bambora North America(beanstream.rb)](https://www.beanstream.com/) gateway, use BeanstreamGateway as an unified entrance for both the gateways.
 ### New parameter:
 Add the <em>:region</em> to the <strong>options</strong> parameter:
 1. For US & CA, <em>:region</em> is 0;
 1. For AU, <em>:region</em> is 1.
+1. For NZ, <em>:region</em> is.
 ### New logic:
-1. Process payment requests from US & CA by Beanstream service (default);
-2. Process payment requests from AU & NZ by IPP(Bambora) service.
+1. Process payment requests from US & CA by Bambora North America service (default);
+2. Process payment requests from AU & NZ by Bambora Pacific service.
 ### Others:
 Remove IPP gateway files.
 ### Tests:
