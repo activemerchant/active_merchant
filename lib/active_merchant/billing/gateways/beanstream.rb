@@ -87,9 +87,13 @@ module ActiveMerchant #:nodoc:
         #region: 0 - US & CA, 1 - AU & NZ
         @region = empty?(options[:region]) ? 0 : options[:region]
 
+        # I want to add this logic to judge the region from shipping & billing address
+        # but don't know if it is a correct way.
+        # I think this can be decided by shopify which will integrate with.
+
         # [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
         #   next if empty?(address[:country])
-        #   unless ['AU'].include?(address[:country])
+        #   unless ['AU', 'NZ'].include?(address[:country])
         #     @region = 1
         #   end
         # end
