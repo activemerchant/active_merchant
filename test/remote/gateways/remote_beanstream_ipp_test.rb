@@ -101,9 +101,10 @@ class RemoteBeanstreamIppTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = IppGateway.new(
+    gateway = BeanstreamGateway.new(
       username: '',
       password: '',
+      region: 1
     )
     response = gateway.purchase(@amount, @credit_card_visa, @options)
     assert_failure response
