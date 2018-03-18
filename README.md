@@ -26,10 +26,10 @@ Integrated the [IPP(Bambora)](https://www.bambora.com/) gateway into [Beanstream
 ### New parameter:
 Add the <em>:region</em> to the <strong>options</strong> parameter:
 1. For US & CA, <em>:region</em> is 0;
-1. For AU, <em>:region</em> is 1.
+1. For AU & NZ, <em>:region</em> is 1.
 ### New logic:
 1. Process payment requests from US & CA by Beanstream service (default);
-2. Process payment requests from AU by IPP(Bambora) service.
+2. Process payment requests from AU & NZ by IPP(Bambora) service.
 ### Others:
 Remove IPP gateway files.
 ### Tests:

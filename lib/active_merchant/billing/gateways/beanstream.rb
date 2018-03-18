@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       # and password to your account under administration -> account settings ->
       # order settings -> Use username/password validation
       def initialize(options = {})
-        #region: 0 - US & CA, 1 - AU
+        #region: 0 - US & CA, 1 - AU & NZ
         @region = empty?(options[:region]) ? 0 : options[:region]
 
         # [ options[:billing_address], options[:shipping_address] ].compact.each do |address|

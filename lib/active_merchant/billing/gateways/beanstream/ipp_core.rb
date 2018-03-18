@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
         base.live_url = 'https://www.bambora.co.nz/interface/api/dts.asmx'
         base.test_url = 'https://demo.bambora.co.nz/interface/api/dts.asmx'
   
-        base.supported_countries = ['AU']
+        base.supported_countries = ['AU', 'NZ']
         base.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
   
         base.homepage_url = 'http://www.bambora.co.nz/'
