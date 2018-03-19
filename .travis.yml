@@ -9,6 +9,7 @@ rvm:
 - 2.2
 
 gemfile:
+- Gemfile.rails52
 - Gemfile.rails51
 - Gemfile.rails50
 - Gemfile.rails42
