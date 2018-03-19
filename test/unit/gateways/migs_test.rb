@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'openssl'
 
 class MigsTest < Test::Unit::TestCase
   def setup
