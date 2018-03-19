@@ -48,6 +48,14 @@ class PayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_specified_language
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(language: 'es'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -64,6 +72,14 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_success response
     assert_equal "APPROVED", response.message
     assert_match %r(^\d+\|(\w|-)+$), response.authorization
+  end
+
+  def test_successful_authorize_with_specified_language
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(language: 'es'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failed_authorize
@@ -83,6 +99,14 @@ class PayuLatamTest < Test::Unit::TestCase
     assert_equal "PENDING", response.params["transactionResponse"]["state"]
   end
 
+  def test_pending_refund_with_specified_language
+    stub_comms do
+      @gateway.refund(@amount, "7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options.merge(language: 'es'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(pending_refund_response)
+  end
+
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
@@ -97,6 +121,14 @@ class PayuLatamTest < Test::Unit::TestCase
     response = @gateway.void("7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options)
     assert_success response
     assert_equal "PENDING_REVIEW", response.message
+  end
+
+  def test_successful_void_with_specified_language
+    stub_comms do
+      @gateway.void("7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options.merge(language: 'es'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(successful_void_response)
   end
 
   def test_failed_void
@@ -165,6 +197,14 @@ class PayuLatamTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, "4000|authorization", @options)
     assert_success response
     assert_equal "APPROVED", response.message
+  end
+
+  def test_successful_capture_with_specified_language
+    stub_comms do
+      @gateway.capture(@amount, "4000|authorization", @options.merge(language: 'es'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"language":"es"/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failed_capture

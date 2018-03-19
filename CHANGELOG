@@ -40,6 +40,7 @@
 * Adyen: Support store action [curiousepic] #2784
 * Psigate: Update Test URL and Card [nfarve] #2785
 * USA ePay Transaction: Support ACH/eChecks [curiousepic] #2786
+* PayU Latam: Support language parameter [dtykocki] #2787
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
