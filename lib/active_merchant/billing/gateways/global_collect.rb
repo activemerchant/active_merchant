@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options, payment)
         add_address(post, payment, options)
         add_creator_info(post, options)
+        add_fraud_fields(post, options)
 
         commit(:authorize, post)
       end
@@ -202,6 +203,14 @@ module ActiveMerchant #:nodoc:
             "surname" => shipping_address[:lastname]
           }
         end
+      end
+
+      def add_fraud_fields(post, options)
+        fraud_fields = {}
+        fraud_fields.merge!(options[:fraud_fields]) if options[:fraud_fields]
+        fraud_fields.merge!({customerIpAddress: options[:ip]}) if options[:ip]
+
+        post["fraudFields"] = fraud_fields unless fraud_fields.empty?
       end
 
       def parse(body)
