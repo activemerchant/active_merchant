@@ -17,6 +17,14 @@ class RemotePayflowTest < Test::Unit::TestCase
       :customer => 'codyexample'
     }
 
+    @extra_options = {
+      :order_id => "123",
+      :description => "Description string",
+      :order_desc => "OrderDesc string",
+      :comment => "Comment string",
+      :comment2 => "Comment2 string"
+    }
+
     @check = check(
       :routing_number => '111111118',
       :account_number => '1234567801'
@@ -25,6 +33,15 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(100000, @credit_card, @options)
+    assert_equal "Approved", response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+    assert !response.fraud_review?
+  end
+
+  def test_successful_purchase_with_extra_options
+    assert response = @gateway.purchase(100000, @credit_card, @options.merge(@extra_options))
     assert_equal "Approved", response.message
     assert_success response
     assert response.test?

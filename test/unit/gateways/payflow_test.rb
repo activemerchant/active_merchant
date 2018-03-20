@@ -50,6 +50,33 @@ class PayflowTest < Test::Unit::TestCase
     refute response.fraud_review?
   end
 
+  def test_successful_authorization_with_more_options
+    options = @options.merge(
+      {
+        order_id: "123",
+        description: "Description string",
+        order_desc: "OrderDesc string",
+        comment: "Comment string",
+        comment2: "Comment2 string"
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<InvNum>123</InvNum>), data
+      assert_match %r(<Description>Description string</Description>), data
+      assert_match %r(<OrderDesc>OrderDesc string</OrderDesc>), data
+      assert_match %r(<Comment>Comment string</Comment>), data
+      assert_match %r(<ExtData Name=\"COMMENT2\" Value=\"Comment2 string\"/>), data
+    end.respond_with(successful_authorization_response)
+    assert_equal "Approved", response.message
+    assert_success response
+    assert response.test?
+    assert_equal "VUJN1A6E11D9", response.authorization
+    refute response.fraud_review?
+  end
+
   def test_successful_purchase_with_fraud_review
     @gateway.stubs(:ssl_post).returns(successful_purchase_with_fraud_review_response)
 
