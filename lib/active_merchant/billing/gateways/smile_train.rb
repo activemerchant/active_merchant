@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
       def add_metadata(post, options)
         post[:domainName] = currency_code(options[:currency])
         post[:submittedBy] = options[:submitted_by]
-        post[:mailcode] = options[:mailcode]
+        post[:mailCode] = options[:mailcode]
       end
 
       def add_subscription_data(post, options)
