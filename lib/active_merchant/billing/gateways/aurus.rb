@@ -3,8 +3,8 @@
 module ActiveMerchant  #:nodoc: ALL
   module Billing
     class AurusGateway < Gateway
-      self.test_url = 'https://localhost:8080/auruspay/aesdk'
-      self.live_url = 'https://%<server>s:%<port>s/auruspay/aesdk'
+      self.test_url = 'http://localhost:8080/auruspay/aesdk'
+      self.live_url = 'http://live.auruspay.com/auruspay/aesdk'
 
       self.default_currency     = 'USD'
       self.display_name         = 'Aurus Payment Gateway'
@@ -14,9 +14,10 @@ module ActiveMerchant  #:nodoc: ALL
       self.supported_cardtypes  = %i[visa master american_express jcb discover]
 
       # Actions
-      CLOSE_TRANSACTION_REQ = :CloseTransactionRequest
-      GET_STATUS_REQ        = :GetStatusRequest
-      TRANSACTION_REQ       = :TransRequest
+      CLOSE_TRANSACTION_REQ = :CloseTransaction
+      GET_STATUS_REQ        = :GetStatus
+      INIT_AESDK_REQ        = :InitAesdk
+      TRANSACTION_REQ       = :Trans
 
       # Endpoints
       INIT_ENDPOINT              = 'initaesdk'
@@ -30,54 +31,26 @@ module ActiveMerchant  #:nodoc: ALL
       CAPTURE   = '05' # Post-Auth
       VOID      = '06'
 
-      STANDARD_ERROR_CODE_MAPPING = {}.freeze
+      STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options = {})
-        requires!(options, :server_dns, :server_port)
+        requires!(options, :merchant_id, :terminal_id)
+        Gateway.logger = Logger.new(STDOUT)
+        Gateway.logger.level = Logger::DEBUG
         super
       end
 
-      def purchase(money, payment, options = {})
-        post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
+      def purchase(money, payment, options = {}); end
 
-        commit(TRANSACTION_REQ, TRANSACTION_ENDPOINT, post)
-      end
+      def authorize(money, payment, options = {}); end
 
-      def authorize(money, payment, options = {})
-        post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
+      def capture(_money, _authorization, _options = {}); end
 
-        commit(TRANSACTION_REQ, TRANSACTION_ENDPOINT, post)
-      end
+      def refund(_money, _authorization, _options = {}); end
 
-      def capture(_money, _authorization, _options = {})
-        post = {}
-        commit(TRANSACTION_REQ, TRANSACTION_ENDPOINT, post)
-      end
+      def void(_authorization, _options = {}); end
 
-      def refund(_money, _authorization, _options = {})
-        post = {}
-        commit(TRANSACTION_REQ, TRANSACTION_ENDPOINT, post)
-      end
-
-      def void(_authorization, _options = {})
-        post = {}
-        commit(TRANSACTION_REQ, TRANSACTION_ENDPOINT, post)
-      end
-
-      def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
-      end
+      def verify(credit_card, options = {}); end
 
       def supports_scrubbing?
         true
@@ -88,6 +61,14 @@ module ActiveMerchant  #:nodoc: ALL
       end
 
       private
+
+      def action_request(action)
+        (action.to_s + 'Request').to_sym
+      end
+
+      def action_response(action)
+        action.to_s + 'Response'
+      end
 
       def add_customer_data(_post, _options); end
 
@@ -100,9 +81,27 @@ module ActiveMerchant  #:nodoc: ALL
 
       def add_payment(_post, _payment); end
 
-      def parse(body)
+      def parse(body, action)
         return {} if body.blank?
-        JSON.parse(body)
+        response = JSON.parse(body)
+        raise ResponseError.new(body) unless response[action_response(action)].present?
+        response[action_response(action)]
+      end
+
+      def json_error(raw_response)
+        msg = 'Invalid response received from the Aurus API.'
+        msg + "  (The raw response returned by the API was #{raw_response.inspect})"
+        {
+          'Status'       => STATUS_FAIL,
+          'ResponseCode' => STANDARD_ERROR_CODE[:processing_error],
+          'ResponseText' => msg
+        }
+      end
+
+      def response_error(raw_response)
+        parse(raw_response)
+      rescue JSON::ParserError
+        json_error(raw_response)
       end
 
       def api_request(endpoint, action, parameters = nil)
@@ -110,7 +109,7 @@ module ActiveMerchant  #:nodoc: ALL
         begin
           endpoint = '/' + endpoint if endpoint&.size&.positive?
           raw_response = ssl_post(target_url + endpoint, post_data(action, parameters), headers(parameters))
-          response = parse(raw_response)
+          response = parse(raw_response, action)
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
@@ -127,7 +126,7 @@ module ActiveMerchant  #:nodoc: ALL
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           avs_result: AVSResult.new(code: response["some_avs_response_key"]),
           cvv_result: CVVResult.new(response["some_cvv_response_key"]),
           test: test?,
@@ -135,11 +134,20 @@ module ActiveMerchant  #:nodoc: ALL
         )
       end
 
-      def success_from(_response); end
+      def success_from(_response)
+        true # TODO: fix this!
+      end
 
       def message_from(_response); end
 
-      def authorization_from(_response); end
+      def authorization_from(action, response)
+        case action
+        when TRANSACTION_REQ
+          response['TransactionIdentifier']
+        else
+          'OK' # TODO: flesh out for other calls
+        end
+      end
 
       def post_data(action, parameters = {}); end
 
@@ -152,19 +160,20 @@ module ActiveMerchant  #:nodoc: ALL
       def headers(_options = {})
         {
           'Content-Type': 'application/json',
+          'Accept':       'application/json',
           'User-Agent':   "Aurus/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end
 
       def post_data(action, parameters = {})
         post = {}
-        post[action] = parameters
+        post[action_request(action)] = parameters
 
         JSON.generate(post)
       end
 
       def target_url
-        format(live_url, server: @options[:server_dns], port: @options[:server_port])
+        test? ? self.test_url : self.live_url
       end
 
     end
