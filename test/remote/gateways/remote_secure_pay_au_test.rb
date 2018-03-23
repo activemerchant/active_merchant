@@ -21,7 +21,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242', { month: 9, year: 15 })
 
     @options = {
-      order_id: '2',
+      order_id: 'order123',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -166,6 +166,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert response = @gateway.purchase(12300, 'test1234', @options)
     assert_success response
     assert_equal response.params['amount'], '12300'
+    assert_equal response.params['ponum'], 'order123'
 
     assert_equal 'Approved', response.message
   end
