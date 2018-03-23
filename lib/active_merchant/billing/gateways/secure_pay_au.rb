@@ -207,6 +207,7 @@ module ActiveMerchant # :nodoc:
         end
         xml.tag! 'amount', amount(money)
         xml.tag! 'periodicType', PERIODIC_TYPES[action] if PERIODIC_TYPES[action]
+        xml.tag! 'transactionReference', options[:order_id] if options[:order_id]
 
         xml.target!
       end
