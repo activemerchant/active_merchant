@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request), {"Content-Type" => "text/xml; charset=utf-8"}))
 
         Response.new(success?(response), message_from(response), response,
           :test => test?,
@@ -204,6 +204,7 @@ module ActiveMerchant #:nodoc:
         end
         xml.tag! 'amount', amount(money)
         xml.tag! 'periodicType', PERIODIC_TYPES[action] if PERIODIC_TYPES[action]
+        xml.tag! 'transactionReference', options[:order_id] if options[:order_id]
 
         xml.target!
       end
@@ -239,7 +240,7 @@ module ActiveMerchant #:nodoc:
       def commit_periodic(request)
         my_request = build_periodic_request(request)
         #puts my_request
-        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
+        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request, {"Content-Type" => "text/xml; charset=utf-8"}))
 
         Response.new(success?(response), message_from(response), response,
           :test => test?,
