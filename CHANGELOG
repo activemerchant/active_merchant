@@ -43,6 +43,7 @@
 * PayU Latam: Support language parameter [dtykocki] #2787
 * Payflow: Pass OrderDesc field [curiousepic] #2789
 * Global Collect: Add arbitrary fraudField params [curiousepic] #2790
+* Paystation: Support verify action [curiousepic] #2793
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
