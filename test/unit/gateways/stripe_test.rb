@@ -853,6 +853,22 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
   end
 
+  def test_exchange_rate_is_submitted_for_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:exchange_rate => 0.96251}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/exchange_rate=0.96251/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_exchange_rate_is_submitted_for_capture
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, "ch_test_charge", @options.merge({:exchange_rate => 0.96251}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/exchange_rate=0.96251/, data)
+    end.respond_with(successful_capture_response)
+  end
+
   def test_destination_is_submitted_for_purchase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({:destination => 'subaccountid'}))
