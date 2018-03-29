@@ -37,14 +37,14 @@ module ActiveMerchant #:nodoc:
       # money          - The monetary amount of the transaction in cents.
       # payment_method - The CreditCard or the Spreedly payment method token.
       # options        - A hash of options:
-      #                  :store - Retain the payment method if the purchase
-      #                           succeeds.  Defaults to false.  (optional)
+      #                  :retain - Retain the payment method if the purchase
+      #                            succeeds.  Defaults to false.  (optional)
       def purchase(money, payment_method, options = {})
         if payment_method.is_a?(String)
           purchase_with_token(money, payment_method, options)
         else
           MultiResponse.run do |r|
-            r.process { save_card(false, payment_method, options) }
+            r.process { save_card(payment_method, options) }
             r.process { purchase_with_token(money, r.authorization, options) }
           end
         end
@@ -55,14 +55,14 @@ module ActiveMerchant #:nodoc:
       # money          - The monetary amount of the transaction in cents.
       # payment_method - The CreditCard or the Spreedly payment method token.
       # options        - A hash of options:
-      #                  :store - Retain the payment method if the authorize
-      #                           succeeds.  Defaults to false.  (optional)
+      #                  :retain - Retain the payment method if the authorize
+      #                            succeeds.  Defaults to false.  (optional)
       def authorize(money, payment_method, options = {})
         if payment_method.is_a?(String)
           authorize_with_token(money, payment_method, options)
         else
           MultiResponse.run do |r|
-            r.process { save_card(false, payment_method, options) }
+            r.process { save_card(payment_method, options) }
             r.process { authorize_with_token(money, r.authorization, options) }
           end
         end
@@ -88,13 +88,30 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/void.xml", '')
       end
 
+      # Public: Determine whether a credit card is chargeable card and available for purchases.
+      #
+      # payment_method - The CreditCard or the Spreedly payment method token.
+      # options        - A hash of options:
+      #                  :retain - Retain the payment method if the verify
+      #                            succeeds.  Defaults to false.  (optional)
+      def verify(payment_method, options = {})
+        if payment_method.is_a?(String)
+          verify_with_token(payment_method, options)
+        else
+          MultiResponse.run do |r|
+            r.process { save_card(payment_method, options) }
+            r.process { verify_with_token(r.authorization, options) }
+          end
+        end
+      end
+
       # Public: Store a credit card in the Spreedly vault and retain it.
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
       def store(credit_card, options={})
-        retain = (options.has_key?(:retain) ? options[:retain] : true)
-        save_card(retain, credit_card, options)
+        options[:retain] = true unless options.key?(:retain) || options.key?(:store)
+        save_card(credit_card, options)
       end
 
       # Public: Redact the CreditCard in Spreedly. This wipes the sensitive
@@ -105,6 +122,13 @@ module ActiveMerchant #:nodoc:
       def unstore(authorization, options={})
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
       end
+
+      # Public: Get the transaction with the given token.
+      def find(transaction_token)
+        commit("transactions/#{transaction_token}.xml", nil, :get)
+      end
+
+      alias_method :status, :find
 
       def supports_scrubbing?
         true
@@ -120,11 +144,11 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def save_card(retain, credit_card, options)
+      def save_card(credit_card, options)
         request = build_xml_request('payment_method') do |doc|
           add_credit_card(doc, credit_card, options)
           add_extra_options(:data, doc, options)
-          doc.retained(true) if retain
+          doc.retained(true) if options[:store] || options[:retain]
         end
 
         commit("payment_methods.xml", request, :post, :payment_method_token)
@@ -140,10 +164,20 @@ module ActiveMerchant #:nodoc:
         commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
+      def verify_with_token(payment_method_token, options)
+        request = build_xml_request('transaction') do |doc|
+          add_invoice(doc, nil, options)
+          doc.payment_method_token(payment_method_token)
+          doc.retain_on_success(true) if options[:store]
+          add_extra_options(:gateway_specific_fields, doc, options)
+        end
+
+        commit("gateways/#{@options[:gateway_token]}/verify.xml", request)
+      end
+
       def auth_purchase_request(money, payment_method_token, options)
         build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
-          doc.ip(options[:ip])
           add_extra_options(:gateway_specific_fields, doc, options)
           doc.payment_method_token(payment_method_token)
           doc.retain_on_success(true) if options[:store]
@@ -151,11 +185,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(doc, money, options)
-        doc.amount amount(money)
+        doc.amount amount(money) unless money.nil?
         doc.currency_code(options[:currency] || currency(money) || default_currency)
         doc.order_id(options[:order_id])
-        doc.ip(options[:ip])
-        doc.description(options[:description])
+        doc.ip(options[:ip]) if options[:ip]
+        doc.description(options[:description]) if options[:description]
       end
 
       def add_credit_card(doc, credit_card, options)
