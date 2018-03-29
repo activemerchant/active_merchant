@@ -92,7 +92,9 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_store
-    assert response = @gateway.purchase(@amount, @credit_card, store: true)
+    retained_option = { %i(retain store).sample => true }
+
+    assert response = @gateway.purchase(@amount, @credit_card, retained_option)
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Purchase', response.params['transaction_type']
@@ -145,7 +147,9 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_store
-    assert response = @gateway.authorize(@amount, @credit_card, store: true)
+    retained_option = { %i(retain store).sample => true }
+
+    assert response = @gateway.authorize(@amount, @credit_card, retained_option)
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Authorization', response.params['transaction_type']

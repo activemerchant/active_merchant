@@ -10,4 +10,3 @@ Gemfile*.lock
 .rvmrc
 /doc/
 .ruby-version
-.ruby-gemset
