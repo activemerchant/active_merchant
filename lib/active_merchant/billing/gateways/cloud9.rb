@@ -243,6 +243,17 @@ module ActiveMerchant #:nodoc: ALL
         add_configure_group(post, options)
         add_request_card_info_group(post, card, options)
 
+        # generally this is called by openslot after a token has already been
+        # created on the client-side. this new create token request is just
+        # a way to get metadata about the card, thus does not require AVS
+        # verification. furthermore, we don't even have the billing address
+        # info here at this point, only the previously created token, thus AVS
+        # verification fails 100% of the time. thus we must disable it, only
+        # when we are doing a pure store. when we are instead doing a charge,
+        # we must not disable AVS verification. hence why this parameter is not
+        # part of the `#add_request_card_info_group` method
+        post[:VerifyCard] = 'N'
+
         commit(CREATE_TOKEN, 'restApi', post)
       end
 
