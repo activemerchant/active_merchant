@@ -62,11 +62,11 @@ be2bill:
   password: your_test_password
 
 beanstream:
-  login: '300205342' #merchant id
-  user: 'lumiit' #username
-  password: 'Lumiitdev01' #password
-  secure_profile_api_key: '33a3E81D359143d98C01DF8eC84A8ed1' #API Access Passcode
-  recurring_api_key: '33a3E81D359143d98C01DF8eC84A8ed1' #API Access Passcode
+  login: 'merchant id'
+  user: 'username'
+  password: 'password'
+  secure_profile_api_key: 'API Access Passcode
+  recurring_api_key: 'API Access Passcode'
 
 beanstream_interac:
   login: merchant id
