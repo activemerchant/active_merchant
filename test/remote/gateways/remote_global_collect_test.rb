@@ -21,6 +21,20 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_fraud_fields
+    options = @options.merge(
+      fraud_fields:
+      {
+        "website" => "www.example.com",
+        "giftMessage" => "Happy Day!"
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_more_options
     options = @options.merge(
       order_id: '1',

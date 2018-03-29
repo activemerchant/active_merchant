@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module BeanstreamCore
+      include Empty
+
       RECURRING_URL = 'https://www.beanstream.com/scripts/recurring_billing.asp'
       SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
 
@@ -140,6 +142,7 @@ module ActiveMerchant #:nodoc:
 
         # The name of the gateway
         base.display_name = 'Beanstream.com'
+        base.money_format = :dollar
       end
 
       def capture(money, authorization, options = {})
@@ -456,7 +459,6 @@ module ActiveMerchant #:nodoc:
 
         params.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
-
     end
   end
 end

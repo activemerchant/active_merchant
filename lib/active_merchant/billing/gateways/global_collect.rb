@@ -7,10 +7,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = "https://api-sandbox.globalcollect.com/"
       self.live_url = "https://api.globalcollect.com/"
 
-      self.supported_countries = %w(AD AE AT AU BD BE BG BN CA CH CY CZ DE DK
-      EE EG ES FI FR GB GI GR HK HU ID IE IL IM IN IS IT JO KW LB LI LK LT LU
-      LV MC MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM TR
-      UM US VA VN ZA)
+      self.supported_countries = ["AD", "AE", "AG", "AI", "AL", "AM", "AO", "AR", "AS", "AT", "AU", "AW", "AX", "AZ", "BA", "BB", "BD", "BE", "BF", "BG", "BH", "BI", "BJ", "BL", "BM", "BN", "BO", "BQ", "BR", "BS", "BT", "BW", "BY", "BZ", "CA", "CC", "CD", "CF", "CH", "CI", "CK", "CL", "CM", "CN", "CO", "CR", "CU", "CV", "CW", "CX", "CY", "CZ", "DE", "DJ", "DK", "DM", "DO", "DZ", "EC", "EE", "EG", "ER", "ES", "ET", "FI", "FJ", "FK", "FM", "FO", "FR", "GA", "GB", "GD", "GE", "GF", "GH", "GI", "GL", "GM", "GN", "GP", "GQ", "GR", "GS", "GT", "GU", "GW", "GY", "HK", "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IM", "IN", "IS", "IT", "JM", "JO", "JP", "KE", "KG", "KH", "KI", "KM", "KN", "KR", "KW", "KY", "KZ", "LA", "LB", "LC", "LI", "LK", "LR", "LS", "LT", "LU", "LV", "MA", "MC", "MD", "ME", "MF", "MG", "MH", "MK", "MM", "MN", "MO", "MP", "MQ", "MR", "MS", "MT", "MU", "MV", "MW", "MX", "MY", "MZ", "NA", "NC", "NE", "NG", "NI", "NL", "NO", "NP", "NR", "NU", "NZ", "OM", "PA", "PE", "PF", "PG", "PH", "PL", "PN", "PS", "PT", "PW", "QA", "RE", "RO", "RS", "RU", "RW", "SA", "SB", "SC", "SE", "SG", "SH", "SI", "SJ", "SK", "SL", "SM", "SN", "SR", "ST", "SV", "SZ", "TC", "TD", "TG", "TH", "TJ", "TL", "TM", "TN", "TO", "TR", "TT", "TV", "TW", "TZ", "UA", "UG", "US", "UY", "UZ", "VC", "VE", "VG", "VI", "VN", "WF", "WS", "ZA", "ZM", "ZW"]
       self.default_currency = "USD"
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -34,6 +31,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options, payment)
         add_address(post, payment, options)
         add_creator_info(post, options)
+        add_fraud_fields(post, options)
 
         commit(:authorize, post)
       end
@@ -205,6 +203,14 @@ module ActiveMerchant #:nodoc:
             "surname" => shipping_address[:lastname]
           }
         end
+      end
+
+      def add_fraud_fields(post, options)
+        fraud_fields = {}
+        fraud_fields.merge!(options[:fraud_fields]) if options[:fraud_fields]
+        fraud_fields.merge!({customerIpAddress: options[:ip]}) if options[:ip]
+
+        post["fraudFields"] = fraud_fields unless fraud_fields.empty?
       end
 
       def parse(body)

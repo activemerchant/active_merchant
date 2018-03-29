@@ -9,7 +9,8 @@ class BeanstreamTest < Test::Unit::TestCase
     @gateway = BeanstreamGateway.new(
                  :login => 'merchant id',
                  :user => 'username',
-                 :password => 'password'
+                 :password => 'password',
+                 :region => 0
                )
 
     @credit_card = credit_card

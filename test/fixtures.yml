@@ -62,11 +62,11 @@ be2bill:
   password: your_test_password
 
 beanstream:
-  login: 'merchant id'
-  user: 'username'
-  password: 'password'
-  secure_profile_api_key: 'API Access Passcode
-  recurring_api_key: 'API Access Passcode'
+  login: merchant id
+  user: username
+  password: password
+  secure_profile_api_key: API Access Passcode
+  recurring_api_key: API Access Passcode
 
 beanstream_interac:
   login: merchant id

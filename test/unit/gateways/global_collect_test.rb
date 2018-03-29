@@ -65,6 +65,29 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorization_with_extra_options
+    options = @options.merge(
+      {
+        order_id: "123",
+        ip: "127.0.0.1",
+        fraud_fields:
+        {
+          "website" => "www.example.com",
+          "giftMessage" => "Happy Day!"
+        }
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@accepted_amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r("fraudFields":{"website":"www.example.com","giftMessage":"Happy Day!","customerIpAddress":"127.0.0.1"}), data
+      assert_match %r("merchantReference":"123"), data
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_trucates_first_name_to_15_chars
     credit_card = credit_card('4567350000427977', { first_name: "thisisaverylongfirstname" })
 
