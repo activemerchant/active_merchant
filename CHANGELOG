@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
 * Litle: Add Support for Echeck [nfarve] #2776
 * Orbital: Correct level 2 tax handling [deedeelavinder] #2729
