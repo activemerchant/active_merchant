@@ -8,7 +8,9 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('5555555555554444')
     @declined_card = credit_card('4012888888881881')
-    @existing_transaction  = 'LKA3RchoqYO0njAfhHVw60ohjrC'
+    @existing_payment_method = '3rEkRlZur2hXKbwwRBidHJAIUTO'
+    @declined_payment_method = 'UPfh3J3JbekLeYC88BP741JWnS5'
+    @existing_transaction = 'PJ5ICgM6h7v9pBNxDCJjRHDDxBC'
     @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
 
@@ -273,7 +275,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert response = @gateway.find(@existing_transaction)
     assert_success response
     assert_equal 'Succeeded!', response.message
-    assert_equal 'AddPaymentMethod', response.params['transaction_type']
+    assert_equal 'Purchase', response.params['transaction_type']
   end
 
   def test_failed_find_transaction
