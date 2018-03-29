@@ -130,6 +130,18 @@ module ActiveMerchant #:nodoc:
 
       alias_method :status, :find
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2').
+          gsub(%r((<verification_value>).+(</verification_value>)), '\1[FILTERED]\2').
+          gsub(%r((<payment_method_token>).+(</payment_method_token>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def save_card(credit_card, options)

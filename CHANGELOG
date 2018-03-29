@@ -1,6 +1,10 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.78.0 (March 29, 2018)
+* Litle: Add store for echecks [nfarve] #2779
+* Litle: Add Support for Echeck [nfarve] #2776
 * Orbital: Correct level 2 tax handling [deedeelavinder] #2729
 * Payeezy: Change determination method of endpoint for store request [deedeelavinder] #2731
 * Adyen: Return refusal_reason_raw when present [curiousepic] #2728
@@ -27,6 +31,25 @@
 * Orbital: Scrub profile transactions [curiousepic] #2762
 * BlueSnap: Fix currency passing [curiousepic] #2765
 * Stripe: Support pickup_card decline code [dtykocki] #2764
+* Improve scrub testing for five gateways [curiousepic] #2767
+* Payflow: Support scrub [curiousepic] #2768
+* SecureNet: Support scrub [curiousepic] #2769
+* Payeezy: Update transaction method when using stored cards [dtykocki] #2770
+* Citrus Pay, DIBS, 1stPayGateway, Global Transport, NETbilling, Ogone, TNS: remove TLS 1.0 requirement [bdewater] #2774
+* CardStream: Default IP and customer country [dtykocki] #2773
+* Stripe: Support destination amount [dtykocki] #2777
+* GlobalCollect: Update supported country list [dtykocki] #2783
+* Adyen: Support store action [curiousepic] #2784
+* Psigate: Update Test URL and Card [nfarve] #2785
+* USA ePay Transaction: Support ACH/eChecks [curiousepic] #2786
+* PayU Latam: Support language parameter [dtykocki] #2787
+* Payflow: Pass OrderDesc field [curiousepic] #2789
+* Global Collect: Add arbitrary fraudField params [curiousepic] #2790
+* Paystation: Support verify action [curiousepic] #2793
+* Checkout V2: Return error codes in response [curiousepic] #2791
+* CardStream: Change refund to use REFUND_SALE [dtykocki] #2795
+* Spreedly: Scrub sensitive transaction data [abarrak] #2781
+* Stripe: Add `exchange_rate` parameter [WilsonChiang] #2796
 
 == Version 1.77.0 (January 31, 2018)
 * Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698

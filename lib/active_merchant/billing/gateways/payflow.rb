@@ -100,8 +100,20 @@ module ActiveMerchant #:nodoc:
         @express ||= PayflowExpressGateway.new(@options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<CardNum>)[^<]*(</CardNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CVNum>)[^<]*(</CVNum>)), '\1[FILTERED]\2').
+          gsub(%r((<AcctNum>)[^<]*(</AcctNum>)), '\1[FILTERED]\2').
+          gsub(%r((<Password>)[^<]*(</Password>)), '\1[FILTERED]\2')
+      end
 
       private
+
       def build_sale_or_authorization_request(action, money, funding_source, options)
         if funding_source.is_a?(String)
           build_reference_sale_or_authorization_request(action, money, funding_source, options)
@@ -121,6 +133,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
@@ -152,6 +165,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
@@ -184,6 +198,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'BillTo' do
                 xml.tag! 'Name', check.name
               end
@@ -332,4 +347,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       def capture(amount, authorization, options={})
         post = {}
 
-        add_credentials(post, 'SUBMIT_TRANSACTION')
+        add_credentials(post, 'SUBMIT_TRANSACTION', options)
         add_transaction_elements(post, 'CAPTURE', options)
         add_reference(post, authorization)
 
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
 
-        add_credentials(post, 'SUBMIT_TRANSACTION')
+        add_credentials(post, 'SUBMIT_TRANSACTION', options)
         add_transaction_elements(post, 'VOID', options)
         add_reference(post, authorization)
 
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
       def refund(amount, authorization, options={})
         post = {}
 
-        add_credentials(post, 'SUBMIT_TRANSACTION')
+        add_credentials(post, 'SUBMIT_TRANSACTION', options)
         add_transaction_elements(post, 'REFUND', options)
         add_reference(post, authorization)
 
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def auth_or_sale(post, transaction_type, amount, payment_method, options)
-        add_credentials(post, 'SUBMIT_TRANSACTION')
+        add_credentials(post, 'SUBMIT_TRANSACTION', options)
         add_transaction_elements(post, transaction_type, options)
         add_order(post, options)
         add_buyer(post, payment_method, options)
@@ -126,9 +126,9 @@ module ActiveMerchant #:nodoc:
         add_extra_parameters(post, options)
       end
 
-      def add_credentials(post, command)
+      def add_credentials(post, command, options={})
         post[:test] = test? unless command == 'CREATE_TOKEN'
-        post[:language] = 'en'
+        post[:language] = options[:language] || 'en'
         post[:command] = command
         merchant = {}
         merchant[:apiLogin] = @options[:api_login]
@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
         order[:partnerId] = options[:partner_id] if options[:partner_id]
         order[:referenceCode] = options[:order_id] || generate_unique_id
         order[:description] = options[:description] || 'Compra en ' + @options[:merchant_id]
-        order[:language] = 'en'
+        order[:language] = options[:language] || 'en'
         order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         post[:transaction][:order] = order
       end

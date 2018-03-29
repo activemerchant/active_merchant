@@ -8,8 +8,6 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('5555555555554444')
     @declined_card = credit_card('4012888888881881')
-    @existing_payment_method = 'WQ9zJ1UOgak8BrNEi3g5RCianlY'
-    @declined_payment_method = 'AMc22hrKtQFpYHTvjNx0lGRWZVv'
     @existing_transaction  = 'LKA3RchoqYO0njAfhHVw60ohjrC'
     @not_found_transaction = 'AdyQXaG0SVpSoMPdmFlvd3aA3uz'
   end
@@ -290,5 +288,28 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @existing_payment_method)
     assert_failure response
     assert_match %r{Unable to authenticate}, response.message
+  end
+
+  def test_scrubbing_purchase
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_scrubbing_purchase_with_token
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @existing_payment_method)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@existing_payment_method, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

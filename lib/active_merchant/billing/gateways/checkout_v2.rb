@@ -212,7 +212,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(succeeded, response)
-        succeeded ? nil : STANDARD_ERROR_CODE_MAPPING[response["responseCode"]]
+        return if succeeded
+        if response["errorCode"] && response["errorMessageCodes"]
+          "#{response["errorCode"]}: #{response["errorMessageCodes"].join(", ")}"
+        elsif response["errorCode"]
+          response["errorCode"]
+        else
+          STANDARD_ERROR_CODE_MAPPING[response["responseCode"]]
+        end
       end
     end
   end
