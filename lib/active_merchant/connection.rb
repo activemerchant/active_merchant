@@ -44,7 +44,7 @@ module ActiveMerchant
       @max_retries  = MAX_RETRIES
       @ignore_http_status = false
       @ssl_version = nil
-      @proxy_address = nil
+      @proxy_address = :DEFAULT
       @proxy_port = nil
     end
 
@@ -105,7 +105,12 @@ module ActiveMerchant
 
     private
     def http
-      http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
+
+      http = if proxy_address == :DEFAULT
+               Net::HTTP.new(endpoint.host, endpoint.port)
+             else
+               Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
+             end
       configure_debugging(http)
       configure_timeouts(http)
       configure_ssl(http)
