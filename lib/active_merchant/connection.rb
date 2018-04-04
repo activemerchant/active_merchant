@@ -44,7 +44,7 @@ module ActiveMerchant
       @max_retries  = MAX_RETRIES
       @ignore_http_status = false
       @ssl_version = nil
-      @proxy_address = nil
+      @proxy_address = :ENV
       @proxy_port = nil
     end
 
