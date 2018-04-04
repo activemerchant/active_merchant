@@ -79,6 +79,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options={})
         request = build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
+          add_extra_options(:gateway_specific_fields, doc, options)
         end
 
         commit("transactions/#{authorization}/credit.xml", request)
