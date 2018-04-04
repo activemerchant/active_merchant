@@ -63,10 +63,45 @@ class RemoteLitleTest < Test::Unit::TestCase
         number:  "4457000300000007",
         payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
       })
+    @check = check(
+      name: 'Tom Black',
+      routing_number:  '011075150',
+      account_number: '4099999992',
+      account_type: 'Checking'
+    )
+    @authorize_check = check(
+      name: 'John Smith',
+      routing_number: '011075150',
+      account_number: '1099999999',
+      account_type: 'Checking'
+    )
+    @store_check = check(
+      routing_number: '011100012',
+      account_number: '1099999998'
+    )
   end
 
   def test_successful_authorization
     assert response = @gateway.authorize(10010, @credit_card1, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_authorization_with_merchant_data
+    options = @options.merge(
+      affiliate: 'some-affiliate',
+      campaign: 'super-awesome-campaign',
+      merchant_grouping_id: 'brilliant-group'
+    )
+    assert response = @gateway.authorize(10010, @credit_card1, options)
+  end
+
+  def test_successful_authorization_with_echeck
+    options = @options.merge({
+      order_id: '38',
+      order_source: 'telephone'
+    })
+    assert response = @gateway.authorize(3002, @authorize_check, options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -141,6 +176,27 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_merchant_data
+    options = @options.merge(
+      affiliate: 'some-affiliate',
+      campaign: 'super-awesome-campaign',
+      merchant_grouping_id: 'brilliant-group'
+    )
+    assert response = @gateway.purchase(10010, @credit_card1, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_echeck
+    options = @options.merge({
+      order_id: '42',
+      order_source: 'telephone'
+    })
+    assert response = @gateway.purchase(2004, @check, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(60060, @credit_card2, {
         :order_id=>'6',
@@ -176,6 +232,18 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', void.message
   end
 
+  def test_void_with_echeck
+    options = @options.merge({
+      order_id: '42',
+      order_source: 'telephone'
+    })
+    assert sale = @gateway.purchase(2004, @check, options)
+
+    assert void = @gateway.void(sale.authorization)
+    assert_success void
+    assert_equal 'Approved', void.message
+  end
+
   def test_void_authorization
     assert auth = @gateway.authorize(10010, @credit_card1, @options)
 
@@ -192,6 +260,18 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_partial_refund
     assert purchase = @gateway.purchase(10010, @credit_card1, @options)
+
+    assert refund = @gateway.refund(444, purchase.authorization)
+    assert_success refund
+    assert_equal 'Approved', refund.message
+  end
+
+  def test_partial_refund_with_echeck
+    options = @options.merge({
+      order_id: '82',
+      order_source: 'telephone'
+    })
+    assert purchase = @gateway.purchase(2004, @check, options)
 
     assert refund = @gateway.refund(444, purchase.authorization)
     assert_success refund
@@ -229,19 +309,19 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_capture_unsuccessful
-    assert capture_response = @gateway.capture(10010, 123456789012345360)
+    assert capture_response = @gateway.capture(10010, '123456789012345360')
     assert_failure capture_response
     assert_equal 'No transaction found with specified litleTxnId', capture_response.message
   end
 
   def test_refund_unsuccessful
-    assert credit_response = @gateway.refund(10010, 123456789012345360)
+    assert credit_response = @gateway.refund(10010, '123456789012345360')
     assert_failure credit_response
     assert_equal 'No transaction found with specified litleTxnId', credit_response.message
   end
 
   def test_void_unsuccessful
-    assert void_response = @gateway.void(123456789012345360)
+    assert void_response = @gateway.void('123456789012345360')
     assert_failure void_response
     assert_equal 'No transaction found with specified litleTxnId', void_response.message
   end
@@ -281,6 +361,19 @@ class RemoteLitleTest < Test::Unit::TestCase
     credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4100280190123000'))
     assert store_response = @gateway.store(credit_card, :order_id => '50')
     assert_success store_response
+
+    token = store_response.authorization
+    assert_equal store_response.params['litleToken'], token
+
+    assert response = @gateway.purchase(10010, token)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_echeck_store_and_purchase
+    assert store_response = @gateway.store(@store_check)
+    assert_success store_response
+    assert_equal 'Account number was successfully registered', store_response.message
 
     token = store_response.authorization
     assert_equal store_response.params['litleToken'], token
@@ -330,6 +423,22 @@ class RemoteLitleTest < Test::Unit::TestCase
 
     assert_scrubbed(credit_card.number, transcript)
     assert_scrubbed(credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_echeck_scrubbing
+    options = @options.merge({
+      order_id: '42',
+      order_source: 'telephone'
+    })
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(2004, @check, options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end

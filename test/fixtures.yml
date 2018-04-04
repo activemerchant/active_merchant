@@ -131,6 +131,12 @@ cams:
   username: testintegrationc
   password: password9
 
+# Working credentials, no need to replace
+card_connect:
+  merchant_id: "496160873888"
+  username: testing
+  password: testing123
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
@@ -143,6 +149,12 @@ card_stream:
 # Working credentials, no need to replace
 cardknox:
   api_key: ActiveMerchant_Test
+
+# Working credentials, no need to replace
+cardprocess:
+  user_id: 8a8294174e735d0c014e78beb6c5154f
+  password: cTZjAm9c87
+  entity_id: 8a8294174e735d0c014e78beb6b9154b
 
 # Cashnet doesn't provide public testing data
 cashnet:
@@ -209,7 +221,7 @@ commercegate:
   card_number: "XXXXXXXXXXXXXXXX"
 
 conekta:
-  key: key_eYvWV7gSDkNYXsmr
+  key: key_6FTbuwqhYs6zvyyeL3PySg
 
 # Working credentials, no need to replace
 creditcall:
@@ -259,10 +271,11 @@ efsnet:
   login: X
   password: Y
 
+# Provided for url update test
 elavon:
-  login: LOGIN
-  password: PASSWORD
-  user: USER (often the same as LOGIN)
+  login: "000127"
+  user: ssltest
+  password: "IERAOBEE5V0D6Q3Q6R51TG89XAIVGEQ3LGLKMKCKCVQBGGGAU7FN627GPA54P5HR"
 
 element:
   account_id: "1013963"
@@ -546,6 +559,10 @@ money_movers:
   login: demo
   password: password
 
+mundipagg:
+  api_key: api_key
+  gateway_id: gateway_id
+
 # Working credentials, no need to replace
 nab_transact:
   login: ABC0001
@@ -672,8 +689,8 @@ paybox_direct:
 
 # Working credentials, no need to replace
 payeezy:
-  apikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT
-  apisecret: 36ef1fc3b908b7a79ad2c29de931d2ccff26fcec35602c709a9e34318e936683
+  apikey: UyDMTXx6TD9WErF6ynw7xeEfCAn8fcGs
+  apisecret: 2a4974e242c91cab7f38910938f2a5db79e89756b084bbf7cab7849b50a9930f
   token: fdoa-a480ce8951daa73262734cf102641994c1e55e7cdf4c02b6
 
 payex:
@@ -684,7 +701,7 @@ payex:
 # Working credentials, no need to replace
 payflow:
   login: 'spreedlyIntegrations'
-  password: 'y9q)(j7H'
+  password: 'L9DjqEKjXCkU'
   partner: 'PayPal'
 
 payflow_uk:
@@ -699,6 +716,10 @@ payment_express:
 payment_solutions:
   username: USERNAME
   password: PASSWORD
+
+paymentez:
+  application_code: APPCODE
+  app_key: APPKEY
 
 paymill:
   private_key: a9580be4a7b9d0151a3da88c6c935ce0
@@ -1083,6 +1104,10 @@ safe_charge:
   client_login_id: 'SpreedlyTestTRX'
   client_password: '5Jp5xKmgqY'
 
+safe_charge_three_ds:
+  client_login_id: 'SpreedlyManTestTRX'
+  client_password: 'iGx9DQQHQG'
+
 sage:
   login: 214282982451
   password: 'Z5W2S8J7X8T5'
@@ -1143,16 +1168,6 @@ stripe:
 # Working credentials, no need to replace
 stripe_destination:
   stripe_user_id: "acct_17FRNfIPBJTitsen"
-
-# Used only for remote tests that use EMV credit card mocks
-stripe_emv_uk:
-  login:
-  fee_refund_login:
-
-# Used only for remote tests that use EMV credit card mocks
-stripe_emv_us:
-  login:
-  fee_refund_login:
 
 # Externally verified bank account for testing
 stripe_verified_bank_account:

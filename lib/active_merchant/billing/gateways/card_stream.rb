@@ -155,6 +155,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, credit_card_or_reference, money, options)
         add_credit_card_or_reference(post, credit_card_or_reference)
         add_customer_data(post, options)
+        add_remote_address(post, options)
         commit('SALE', post)
       end
 
@@ -165,6 +166,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, credit_card_or_reference, money, options)
         add_credit_card_or_reference(post, credit_card_or_reference)
         add_customer_data(post, options)
+        add_remote_address(post, options)
         commit('SALE', post)
       end
 
@@ -172,6 +174,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_pair(post, :xref, authorization)
         add_pair(post, :amount, amount(money), :required => true)
+        add_remote_address(post, options)
 
         commit('CAPTURE', post)
       end
@@ -180,12 +183,23 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_pair(post, :xref, authorization)
         add_amount(post, money, options)
-        commit('REFUND', post)
+        add_remote_address(post, options)
+        response = commit('REFUND_SALE', post)
+
+        return response if response.success?
+        return response unless options[:force_full_refund_if_unsettled]
+
+        if response.params["responseCode"] == "65541"
+          void(authorization, options)
+        else
+          response
+        end
       end
 
       def void(authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
+        add_remote_address(post, options)
         commit('CANCEL', post)
       end
 
@@ -220,6 +234,9 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :customerAddress, "#{address[:address1]} #{address[:address2]}".strip)
           add_pair(post, :customerPostCode, address[:zip])
           add_pair(post, :customerPhone, options[:phone])
+          add_pair(post, :customerCountryCode, address[:country] || 'GB')
+        else
+          add_pair(post, :customerCountryCode, 'GB')
         end
       end
 
@@ -271,6 +288,10 @@ module ActiveMerchant #:nodoc:
 
       def add_threeds_required(post, options)
         add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
+      end
+
+      def add_remote_address(post, options={})
+        add_pair(post, :remoteAddress, options[:ip] || '1.1.1.1')
       end
 
       def normalize_line_endings(str)

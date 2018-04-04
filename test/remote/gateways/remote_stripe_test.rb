@@ -66,12 +66,44 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "wow@example.com", response.params["metadata"]["email"]
   end
 
+  def test_successful_purchase_with_destination
+    destination = fixtures(:stripe_destination)[:stripe_user_id]
+    custom_options = @options.merge(:destination => destination)
+    assert response = @gateway.purchase(@amount, @credit_card, custom_options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert_equal destination, response.params["destination"]
+    assert response.params["paid"]
+    assert_equal "ActiveMerchant Test Purchase", response.params["description"]
+    assert_equal "wow@example.com", response.params["metadata"]["email"]
+  end
+
+  def test_successful_purchase_with_destination_and_amount
+    destination = fixtures(:stripe_destination)[:stripe_user_id]
+    custom_options = @options.merge(:destination => destination, :destination_amount => @amount - 20)
+    assert response = @gateway.purchase(@amount, @credit_card, custom_options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert_equal destination, response.params["destination"]
+    assert response.params["paid"]
+    assert_equal "ActiveMerchant Test Purchase", response.params["description"]
+    assert_equal "wow@example.com", response.params["metadata"]["email"]
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_match %r{Your card was declined}, response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert_match /ch_[a-zA-Z\d]+/, response.authorization
+  end
+
+  def test_unsuccessful_purchase_with_destination_and_amount
+    destination = fixtures(:stripe_destination)[:stripe_user_id]
+    custom_options = @options.merge(:destination => destination, :destination_amount => @amount + 20)
+    assert response = @gateway.purchase(@amount, @credit_card, custom_options)
+    assert_failure response
+    assert_match %r{must be less than or equal to the charge amount}, response.message
   end
 
   def test_successful_echeck_purchase_with_verified_account
@@ -96,6 +128,36 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
     refute authorization.params["captured"]
+    assert_equal "ActiveMerchant Test Purchase", authorization.params["description"]
+    assert_equal "wow@example.com", authorization.params["metadata"]["email"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
+  def test_authorization_and_capture_with_destination
+    destination = fixtures(:stripe_destination)[:stripe_user_id]
+    custom_options = @options.merge(:destination => destination)
+
+    assert authorization = @gateway.authorize(@amount, @credit_card, custom_options)
+    assert_success authorization
+    refute authorization.params["captured"]
+    assert_equal destination, authorization.params["destination"]
+    assert_equal "ActiveMerchant Test Purchase", authorization.params["description"]
+    assert_equal "wow@example.com", authorization.params["metadata"]["email"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
+  def test_authorization_and_capture_with_destination_and_amount
+    destination = fixtures(:stripe_destination)[:stripe_user_id]
+    custom_options = @options.merge(:destination => destination, :destination_amount => @amount - 20)
+
+    assert authorization = @gateway.authorize(@amount, @credit_card, custom_options)
+    assert_success authorization
+    refute authorization.params["captured"]
+    assert_equal destination, authorization.params["destination"]
     assert_equal "ActiveMerchant Test Purchase", authorization.params["description"]
     assert_equal "wow@example.com", authorization.params["metadata"]["email"]
 
@@ -423,8 +485,10 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_match "Invalid API Key provided", response.message
   end
 
+  # These "track data present" tests fail with invalid expiration dates. The
+  # test track data probably needs to be updated.
   def test_card_present_purchase
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2205101130504392?'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "charge", response.params["object"]
@@ -432,7 +496,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_card_present_authorize_and_capture
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^2205101130504392?'
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
     refute authorization.params["captured"]

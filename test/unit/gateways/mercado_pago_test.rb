@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class MercadoPagoTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = MercadoPagoGateway.new(access_token: 'access_token')
     @credit_card = credit_card
@@ -145,6 +147,74 @@ class MercadoPagoTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_sends_american_express_as_amex
+    credit_card = credit_card('378282246310005', brand: 'american_express')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /"payment_method_id"/
+        assert_match(%r(amex), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_sends_diners_club_as_diners
+    credit_card = credit_card('30569309025904', brand: 'diners_club')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /"payment_method_id"/
+        assert_match(%r(diners), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_sends_mastercard_as_master
+    credit_card = credit_card('5555555555554444', brand: 'master')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /"payment_method_id"/
+        assert_match(%r(master), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_includes_deviceid_header
+    @options[:device_id] = '1a2b3c'
+    @gateway.expects(:ssl_post).with(anything, anything, headers = {'Content-Type' => 'application/json'}).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, headers = {'Content-Type' => 'application/json', 'X-Device-Session-ID' => '1a2b3c'}).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_includes_additional_data
+    @options[:additional_info] = {'foo' => 'bar', 'baz' => 'quux'}
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /payment_method_id/
+        assert_match(/"foo":"bar"/, data)
+        assert_match(/"baz":"quux"/, data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   private

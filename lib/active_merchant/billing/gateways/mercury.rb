@@ -81,6 +81,19 @@ module ActiveMerchant #:nodoc:
         commit('CardLookup', request)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r(&lt;), "<").
+          gsub(%r(&gt;), ">").
+          gsub(%r((<pw>).*(</pw>))i, '\1[FILTERED]\2').
+          gsub(%r((<AcctNo>)(\d|x)*(</AcctNo>))i, '\1[FILTERED]\3').
+          gsub(%r((<CVVData>)\d*(</CVVData>))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def build_non_authorized_request(action, money, credit_card, options)
@@ -126,7 +139,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'TranInfo' do
               xml.tag! "AuthCode", auth_code
               xml.tag! "AcqRefData", acq_ref_data
-              xml.tag! "ProcessData", process_data 
+              xml.tag! "ProcessData", process_data
             end
           end
         end

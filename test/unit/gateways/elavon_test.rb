@@ -275,7 +275,13 @@ class ElavonTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_transcript_scrubbing
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
   private
+
   def successful_purchase_response
     "ssl_card_number=42********4242
     ssl_exp_date=0910
@@ -460,5 +466,79 @@ class ElavonTest < Test::Unit::TestCase
     "errorCode=5000
     errorName=Credit Card Number Invalid
     errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
+  end
+
+  def pre_scrub
+    %q{
+opening connection to api.demo.convergepay.com:443...
+opened
+starting SSL for api.demo.convergepay.com:443...
+SSL established
+<- "POST /VirtualMerchantDemo/process.do HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.demo.convergepay.com\r\nContent-Length: 616\r\n\r\n"
+<- "ssl_merchant_id=000127&ssl_pin=IERAOBEE5V0D6Q3Q6R51TG89XAIVGEQ3LGLKMKCKCVQBGGGAU7FN627GPA54P5HR&ssl_show_form=false&ssl_result_format=ASCII&ssl_user_id=ssltest&ssl_invoice_number=&ssl_description=Test+Transaction&ssl_card_number=4124939999999990&ssl_exp_date=0919&ssl_cvv2cvc2=123&ssl_cvv2cvc2_indicator=1&ssl_first_name=Longbob&ssl_last_name=Longsen&ssl_avs_address=456+My+Street&ssl_address2=Apt+1&ssl_avs_zip=K1C2N6&ssl_city=Ottawa&ssl_state=ON&ssl_company=Widgets+Inc&ssl_phone=%28555%29555-5555&ssl_country=CA&ssl_email=paul%40domain.com&ssl_cardholder_ip=203.0.113.0&ssl_amount=1.00&ssl_transaction_type=CCSALE"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Wed, 03 Jan 2018 21:40:26 GMT\r\n"
+-> "Pragma: no-cache\r\n"
+-> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
+-> "Expires: 0\r\n"
+-> "Content-Disposition: inline; filename=response.txt\r\n"
+-> "AuthApproved: true\r\n"
+-> "AuthResponse: AA\r\n"
+-> "Set-Cookie: JSESSIONID=00007wKfJV3-JFME8QiC_RCDjuI:14j4qkv92; HTTPOnly; Path=/; Secure\r\n"
+-> "Set-Cookie: JSESSIONID=0000uW6woWZ84eAJunhFLfJz8hS:14j4qkv92; HTTPOnly; Path=/; Secure\r\n"
+-> "Connection: close\r\n"
+-> "Content-Type: text/plain\r\n"
+-> "Content-Language: en-US\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "\r\n"
+-> "1A5 \r\n"
+reading 421 bytes...
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03MR\xEFk\xDB0\x10\xFD\xDE\xBF\xC2\x1F\xB7\x81[\xC9\xB1\x1D\xBB \x98\x7FtP\xD66!+\xDBGs\xB1o\x99\xC0\x96\x84%{q\xFF\xFA\xC9R\x12f\x10\xDC\xBDw\xBEw\xEF8\xAD\xFB\xA6\x85\xB1k\xC44\x1Cqd1\xFDr\xFB\xF2<'w\xDA\x16\xE0Y5\x1D\x18d$\xA7\xB9C`\x90\x930\x8C\xDE\x13_\xA1\xA1Gm\xE0\xCC\\\xC6\xC5,y\x8B\xD7\x9E\x0E\x130\xA0\x8FV9\x1Fu\xA8`4\xD3\x88\xBE\xFB\xDD;WM\xE1;\xFBJ9\xA8\x1E\r\x97\xE2Rp\x05A,\xEC\x17\xEFNht\xF0,Z\x87\xFF\xE6\xA36^\xE6E\x8A\xD3Q\x1E\x1D\xDC\xC3\xFF\xA8F\xE1P\x98u\x03]7\xA2\xD6,N\xD2\xE0u\t~\x98\x11\xD1x\xD63\x11+\x94\t\xA8W\xE5fa;c\xE0/\xB8\xDC\x9A\xB5\x03\xED\xDEn\xDD>\xB8b\xDFi\x15\xBD\xA5\xBE~u1.\xAC*\\\xAA\xFEH\x81\xECS\x92$\x9F\xED\v\xEDK\x1C\x8E\x03\xF0\x9E)\x98\xFA\xAF\x9D\xB4\xB1\xB8\xB7\xF6\x1Cc\a\x98z\xC3\xFCz}\xD2\fv(8!+\xF6\xFB\xC3\xEEg\xF1\xE28s\x16\r\xEF\x18\xD9\x10J\xB3\x82&!\xA9\xD3:O\xF3*|\x8A\xEA2\x8C\xB34\t\xB3o\xDB$,\xD3\xA2,\xB3tC\xB7E\xE9\xFE\x04\xA5F9\xC3:l\x87,\xDEnI\x1C9\xA2\x9D\xE7h\xD5TR\xE8\xCB\xD6W\x8B7\xE4\xE2\xBAu&\x9B#\xF4 Z{\x1C\xD7cX'2\xDCn\x9C\xD0\a\xB2y\x88\b\xCD\x02\x12?\xC6\xE41\xDA\x06\xFBW/\xB1\xDE\x9CY\x14\xB2\xEA\xF0T?\xBFW\xC5\xA1\xFE\aC\x85\x1DS\x8C\x02\x00\x00"
+read 421 bytes
+reading 2 bytes...
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+}}
+  end
+
+  def post_scrub
+    %q{
+opening connection to api.demo.convergepay.com:443...
+opened
+starting SSL for api.demo.convergepay.com:443...
+SSL established
+<- "POST /VirtualMerchantDemo/process.do HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.demo.convergepay.com\r\nContent-Length: 616\r\n\r\n"
+<- "ssl_merchant_id=000127&ssl_pin=[FILTERED]&ssl_show_form=false&ssl_result_format=ASCII&ssl_user_id=ssltest&ssl_invoice_number=&ssl_description=Test+Transaction&ssl_card_number=[FILTERED]&ssl_exp_date=0919&ssl_cvv2cvc2=[FILTERED]&ssl_cvv2cvc2_indicator=1&ssl_first_name=Longbob&ssl_last_name=Longsen&ssl_avs_address=456+My+Street&ssl_address2=Apt+1&ssl_avs_zip=K1C2N6&ssl_city=Ottawa&ssl_state=ON&ssl_company=Widgets+Inc&ssl_phone=%28555%29555-5555&ssl_country=CA&ssl_email=paul%40domain.com&ssl_cardholder_ip=203.0.113.0&ssl_amount=1.00&ssl_transaction_type=CCSALE"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Wed, 03 Jan 2018 21:40:26 GMT\r\n"
+-> "Pragma: no-cache\r\n"
+-> "Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0\r\n"
+-> "Expires: 0\r\n"
+-> "Content-Disposition: inline; filename=response.txt\r\n"
+-> "AuthApproved: true\r\n"
+-> "AuthResponse: AA\r\n"
+-> "Set-Cookie: JSESSIONID=00007wKfJV3-JFME8QiC_RCDjuI:14j4qkv92; HTTPOnly; Path=/; Secure\r\n"
+-> "Set-Cookie: JSESSIONID=0000uW6woWZ84eAJunhFLfJz8hS:14j4qkv92; HTTPOnly; Path=/; Secure\r\n"
+-> "Connection: close\r\n"
+-> "Content-Type: text/plain\r\n"
+-> "Content-Language: en-US\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "\r\n"
+-> "1A5 \r\n"
+reading 421 bytes...
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03MR\xEFk\xDB0\x10\xFD\xDE\xBF\xC2\x1F\xB7\x81[\xC9\xB1\x1D\xBB \x98\x7FtP\xD66!+\xDBGs\xB1o\x99\xC0\x96\x84%{q\xFF\xFA\xC9R\x12f\x10\xDC\xBDw\xBEw\xEF8\xAD\xFB\xA6\x85\xB1k\xC44\x1Cqd1\xFDr\xFB\xF2<'w\xDA\x16\xE0Y5\x1D\x18d$\xA7\xB9C`\x90\x930\x8C\xDE\x13_\xA1\xA1Gm\xE0\xCC\\\xC6\xC5,y\x8B\xD7\x9E\x0E\x130\xA0\x8FV9\x1Fu\xA8`4\xD3\x88\xBE\xFB\xDD;WM\xE1;\xFBJ9\xA8\x1E\r\x97\xE2Rp\x05A,\xEC\x17\xEFNht\xF0,Z\x87\xFF\xE6\xA36^\xE6E\x8A\xD3Q\x1E\x1D\xDC\xC3\xFF\xA8F\xE1P\x98u\x03]7\xA2\xD6,N\xD2\xE0u\t~\x98\x11\xD1x\xD63\x11+\x94\t\xA8W\xE5fa;c\xE0/\xB8\xDC\x9A\xB5\x03\xED\xDEn\xDD>\xB8b\xDFi\x15\xBD\xA5\xBE~u1.\xAC*\\\xAA\xFEH\x81\xECS\x92$\x9F\xED\v\xEDK\x1C\x8E\x03\xF0\x9E)\x98\xFA\xAF\x9D\xB4\xB1\xB8\xB7\xF6\x1Cc\a\x98z\xC3\xFCz}\xD2\fv(8!+\xF6\xFB\xC3\xEEg\xF1\xE28s\x16\r\xEF\x18\xD9\x10J\xB3\x82&!\xA9\xD3:O\xF3*|\x8A\xEA2\x8C\xB34\t\xB3o\xDB$,\xD3\xA2,\xB3tC\xB7E\xE9\xFE\x04\xA5F9\xC3:l\x87,\xDEnI\x1C9\xA2\x9D\xE7h\xD5TR\xE8\xCB\xD6W\x8B7\xE4\xE2\xBAu&\x9B#\xF4 Z{\x1C\xD7cX'2\xDCn\x9C\xD0\a\xB2y\x88\b\xCD\x02\x12?\xC6\xE41\xDA\x06\xFBW/\xB1\xDE\x9CY\x14\xB2\xEA\xF0T?\xBFW\xC5\xA1\xFE\aC\x85\x1DS\x8C\x02\x00\x00"
+read 421 bytes
+reading 2 bytes...
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+}}
   end
 end

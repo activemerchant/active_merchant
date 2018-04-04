@@ -221,4 +221,15 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_scrubbed(@gateway.options[:password], transcript)
   end
 
+  def test_echeck_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
 end

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/v18'
       self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/v18'
 
-      self.supported_countries = ['AD','AE','AF','AG','AI','AL','AM','AO','AQ','AR','AS','AT','AU','AW','AX','AZ','BA','BB','BD','BE','BF','BG','BH','BI','BJ','BL','BM','BN','BO','BQ','BR','BS','BT','BV','BW','BY','BZ','CA','CC','CD','CF','CG','CH','CI','CK','CL','CM','CN','CO','CR','CU','CV','CW','CX','CY','CZ','DE','DJ','DK','DM','DO','DZ','EC','EE','EG','EH','ER','ES','ET','FI','FJ','FK','FM','FO','FR','GA','GB','GD','GE','GF','GG','GH','GI','GL','GM','GN','GP','GQ','GR','GS','GT','GU','GW','GY','HK','HM','HN','HR','HT','HU','ID','IE','IL','IM','IN','IO','IQ','IR','IS','IT','JE','JM','JO','JP','KE','KG','KH','KI','KM','KN','KP','KR','KW','KY','KZ','LA','LB','LC','LI','LK','LR','LS','LT','LU','LV','LY','MA','MC','MD','ME','MF','MG','MH','MK','ML','MM','MN','MO','MP','MQ','MR','MS','MT','MU','MV','MW','MX','MY','MZ','NA','NC','NE','NF','NG','NI','NL','NO','NP','NR','NU','NZ','OM','PA','PE','PF','PG','PH','PK','PL','PM','PN','PR','PS','PT','PW','PY','QA','RE','RO','RS','RU','RW','SA','SB','SC','SD','SE','SG','SH','SI','SJ','SK','SL','SM','SN','SO','SR','SS','ST','SV','SX','SY','SZ','TC','TD','TF','TG','TH','TJ','TK','TL','TM','TN','TO','TR','TT','TV','TW','TZ','UA','UG','UM','US','UY','UZ','VA','VC','VE','VG','VI','VN','VU','WF','WS','YE','YT','ZA','ZM','ZW']
+      self.supported_countries = ['AT','AU','BE','BG','BR','CH','CY','CZ','DE','DK','EE','ES','FI','FR','GB','GI','GR','HK','HU','IE','IS','IT','LI','LT','LU','LV','MC','MT','MX','NL','NO','PL','PT','RO','SE','SG','SK','SI','US']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover]
 
@@ -45,33 +45,45 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_extra_data(post, options)
+        add_shopper_interaction(post, payment, options)
         add_address(post, options)
         commit('authorise', post)
       end
 
       def capture(money, authorization, options={})
         post = init_post(options)
-        add_invoice_for_modification(post, money, authorization, options)
-        add_references(post, authorization, options)
+        add_invoice_for_modification(post, money, options)
+        add_reference(post, authorization, options)
         commit('capture', post)
       end
 
       def refund(money, authorization, options={})
         post = init_post(options)
-        add_invoice_for_modification(post, money, authorization, options)
-        add_references(post, authorization, options)
+        add_invoice_for_modification(post, money, options)
+        add_original_reference(post, authorization, options)
         commit('refund', post)
       end
 
       def void(authorization, options={})
         post = init_post(options)
-        add_references(post, authorization, options)
+        add_reference(post, authorization, options)
         commit('cancel', post)
+      end
+
+      def store(credit_card, options={})
+        requires!(options, :order_id)
+        post = init_post(options)
+        add_invoice(post, 0, options)
+        add_payment(post, credit_card)
+        add_extra_data(post, options)
+        add_recurring_contract(post, options)
+        add_address(post, options)
+        commit('authorise', post)
       end
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
+          r.process { authorize(0, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -97,17 +109,26 @@ module ActiveMerchant #:nodoc:
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
-        post[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
+      end
+
+      def add_shopper_interaction(post, payment, options={})
+        if payment.respond_to?(:verification_value) && payment.verification_value
+          shopper_interaction = "Ecommerce"
+        else
+          shopper_interaction = "ContAuth"
+        end
+
+        post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
       end
 
       def add_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
-        if address = options[:billing_address] || options[:address]
+        if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:card][:billingAddress] = {}
-          post[:card][:billingAddress][:street] = address[:address1] if address[:address1]
-          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] if address[:address2]
+          post[:card][:billingAddress][:street] = address[:address1] || 'N/A'
+          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
           post[:card][:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:card][:billingAddress][:city] = address[:city] if address[:city]
+          post[:card][:billingAddress][:city] = address[:city] || 'N/A'
           post[:card][:billingAddress][:stateOrProvince] = address[:state] if address[:state]
           post[:card][:billingAddress][:country] = address[:country] if address[:country]
         end
@@ -118,11 +139,10 @@ module ActiveMerchant #:nodoc:
           value: amount(money),
           currency: options[:currency] || currency(money)
         }
-        post[:reference] = options[:order_id]
         post[:amount] = amount
       end
 
-      def add_invoice_for_modification(post, money, authorization, options)
+      def add_invoice_for_modification(post, money, options)
         amount = {
           value: amount(money),
           currency: options[:currency] || currency(money)
@@ -131,21 +151,49 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
+        if payment.is_a?(String)
+          _, _, recurring_detail_reference = payment.split("#")
+          post[:selectedRecurringDetailReference] = recurring_detail_reference
+          add_recurring_contract(post, options)
+        else
+          add_card(post, payment)
+        end
+      end
+
+      def add_card(post, credit_card)
         card = {
-          expiryMonth: payment.month,
-          expiryYear: payment.year,
-          holderName: payment.name,
-          number: payment.number,
-          cvc: payment.verification_value
+          expiryMonth: credit_card.month,
+          expiryYear: credit_card.year,
+          holderName: credit_card.name,
+          number: credit_card.number,
+          cvc: credit_card.verification_value
         }
+
         card.delete_if{|k,v| v.blank? }
-        requires!(card, :expiryMonth, :expiryYear, :holderName, :number, :cvc)
+        requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
         post[:card] = card
       end
 
-      def add_references(post, authorization, options = {})
-        post[:originalReference] = authorization
-        post[:reference] = options[:order_id]
+      def add_reference(post, authorization, options = {})
+        _, psp_reference, _ = authorization.split("#")
+        post[:originalReference] = single_reference(authorization) || psp_reference
+      end
+
+      def add_original_reference(post, authorization, options = {})
+        original_psp_reference, _, _ = authorization.split("#")
+        post[:originalReference] = single_reference(authorization) || original_psp_reference
+      end
+
+      def single_reference(authorization)
+        authorization if !authorization.include?("#")
+      end
+
+      def add_recurring_contract(post, options = {})
+        recurring = {
+          contract: "RECURRING"
+        }
+
+        post[:recurring] = recurring
       end
 
       def parse(body)
@@ -154,8 +202,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        url = (test? ? test_url : live_url)
-
         begin
           raw_response = ssl_post("#{url}/#{action.to_s}", post_data(action, parameters), request_headers)
           response = parse(raw_response)
@@ -169,11 +215,21 @@ module ActiveMerchant #:nodoc:
           success,
           message_from(action, response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, parameters, response),
           test: test?,
           error_code: success ? nil : error_code_from(response)
         )
 
+      end
+
+      def url
+        if test?
+          test_url
+        elsif @options[:subdomain]
+          "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/Payment/v18"
+        else
+          live_url
+        end
       end
 
       def basic_auth
@@ -199,20 +255,29 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(action, response)
-        case action.to_s
-        when 'authorise'
+        return authorize_message_from(response) if action.to_s == 'authorise'
+        response['response'] || response['message']
+      end
+
+      def authorize_message_from(response)
+        if response['refusalReason'] && response['additionalData'] && response['additionalData']['refusalReasonRaw']
+          "#{response['refusalReason']} | #{response['additionalData']['refusalReasonRaw']}"
+        else
           response['refusalReason'] || response['resultCode'] || response['message']
-        when 'capture', 'refund', 'cancel'
-          response['response'] || response['message']
         end
       end
 
-      def authorization_from(response)
-        response['pspReference']
+      def authorization_from(action, parameters, response)
+        return nil if response['pspReference'].nil?
+        recurring = response['additionalData']['recurring.recurringDetailReference'] if response['additionalData']
+        "#{parameters[:originalReference]}##{response['pspReference']}##{recurring}"
       end
 
       def init_post(options = {})
-        {merchantAccount: options[:merchant_account] || @merchant_account}
+        post = {}
+        post[:merchantAccount] = options[:merchant_account] || @merchant_account
+        post[:reference] = options[:order_id] if options[:order_id]
+        post
       end
 
       def post_data(action, parameters = {})
@@ -222,7 +287,6 @@ module ActiveMerchant #:nodoc:
       def error_code_from(response)
         STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
       end
-
     end
   end
 end

@@ -6,8 +6,8 @@ rescue LoadError
   raise "Could not load the braintree gem.  Use `gem install braintree` to install it."
 end
 
-unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 4
-  raise "Need braintree gem >= 2.4.0. Run `gem install braintree --version '~>2.4'` to get the correct version."
+unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
+  raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version."
 end
 
 module ActiveMerchant #:nodoc:
@@ -158,6 +158,8 @@ module ActiveMerchant #:nodoc:
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email]),
+            :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+				      options[:billing_address][:phone]),
             :credit_card => credit_card_params
           )
           Response.new(result.success?, message_from_result(result),
@@ -228,6 +230,8 @@ module ActiveMerchant #:nodoc:
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email]),
+            :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+	            options[:billing_address][:phone]),
             :id => options[:customer],
           }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
@@ -312,7 +316,7 @@ module ActiveMerchant #:nodoc:
           :region => address[:state],
           :postal_code => scrub_zip(address[:zip]),
         }
-        if(address[:country] || address[:country_code_alpha2])
+        if (address[:country] || address[:country_code_alpha2])
           mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2])
         elsif address[:country_name]
           mapped[:country_name] = address[:country_name]
@@ -451,6 +455,7 @@ module ActiveMerchant #:nodoc:
       def customer_hash(customer, include_credit_cards=false)
         hash = {
           "email" => customer.email,
+          "phone" => customer.phone,
           "first_name" => customer.first_name,
           "last_name" => customer.last_name,
           "id" => customer.id
@@ -492,7 +497,8 @@ module ActiveMerchant #:nodoc:
 
         customer_details = {
           "id" => transaction.customer_details.id,
-          "email" => transaction.customer_details.email
+          "email" => transaction.customer_details.email,
+          "phone" => transaction.customer_details.phone,
         }
 
         billing_details = {
@@ -541,7 +547,9 @@ module ActiveMerchant #:nodoc:
           :order_id => options[:order_id],
           :customer => {
             :id => options[:store] == true ? "" : options[:store],
-            :email => scrub_email(options[:email])
+            :email => scrub_email(options[:email]),
+            :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+	            options[:billing_address][:phone])
           },
           :options => {
             :store_in_vault => options[:store] ? true : false,
@@ -582,7 +590,8 @@ module ActiveMerchant #:nodoc:
                 :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
                 :expiration_year => credit_card_or_vault_id.year.to_s,
                 :cardholder_name => credit_card_or_vault_id.name,
-                :cryptogram => credit_card_or_vault_id.payment_cryptogram
+                :cryptogram => credit_card_or_vault_id.payment_cryptogram,
+                :eci_indicator => credit_card_or_vault_id.eci
               }
           elsif credit_card_or_vault_id.source == :android_pay
               parameters[:android_pay_card] = {

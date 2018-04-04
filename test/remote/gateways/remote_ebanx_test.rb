@@ -6,7 +6,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @declined_card = credit_card('4716909774636285')
+    @declined_card = credit_card('5102026827345142')
     @options = {
       billing_address: address({
         address1: '1040 Rua E',
@@ -24,19 +24,54 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'Sandbox - Test credit card, transaction captured', response.message
+    assert_equal 'Accepted', response.message
   end
 
   def test_successful_purchase_with_more_options
     options = @options.merge({
       order_id: generate_unique_id,
       ip: "127.0.0.1",
-      email: "joe@example.com"
+      email: "joe@example.com",
+      birth_date: "10/11/1980",
+      person_type: 'personal'
     })
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal 'Sandbox - Test credit card, transaction captured', response.message
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_as_brazil_business_with_responsible_fields
+    options = @options.update(document: "32593371000110",
+                              person_type: 'business',
+                              responsible_name: 'Business Person',
+                              responsible_document: '32593371000111',
+                              responsible_birth_date: "1/11/1975")
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
+  end
+
+  def test_successful_purchase_as_colombian
+    options = @options.merge({
+      order_id: generate_unique_id,
+      ip: "127.0.0.1",
+      email: "jose@example.com.co",
+      birth_date: "10/11/1980",
+      billing_address: address({
+        address1: '1040 Rua E',
+        city: 'Medellín',
+        state: 'AN',
+        zip: '29269',
+        country: 'CO',
+        phone_number: '8522847035'
+      })
+    })
+
+    response = @gateway.purchase(500, @credit_card, options)
+    assert_success response
+    assert_equal 'Accepted', response.message
   end
 
   def test_failed_purchase
@@ -49,11 +84,11 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    assert_equal 'Sandbox - Test credit card, transaction will be approved', auth.message
+    assert_equal 'Accepted', auth.message
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Sandbox - Test credit card, transaction captured', capture.message
+    assert_equal 'Accepted', capture.message
   end
 
   def test_failed_authorize
@@ -84,7 +119,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     refund_options = @options.merge({description: "full refund"})
     assert refund = @gateway.refund(@amount, purchase.authorization, refund_options)
     assert_success refund
-    assert_equal 'Sandbox - Test credit card, transaction captured', refund.message
+    assert_equal 'Accepted', refund.message
   end
 
   def test_partial_refund
@@ -108,7 +143,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
-    assert_equal 'Sandbox - Test credit card, transaction cancelled', void.message
+    assert_equal 'Accepted', void.message
   end
 
   def test_failed_void
@@ -117,16 +152,48 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_equal 'Parameter hash not informed', response.message
   end
 
+  def test_successful_store_and_purchase
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert_equal 'Accepted', purchase.message
+  end
+
+  def test_successful_store_and_purchase_as_brazil_business
+    options = @options.update(document: "32593371000110",
+                              person_type: 'business',
+                              responsible_name: 'Business Person',
+                              responsible_document: '32593371000111',
+                              responsible_birth_date: "1/11/1975")
+
+    store = @gateway.store(@credit_card, options)
+    assert_success store
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, options)
+    assert_success purchase
+    assert_equal 'Accepted', purchase.message
+  end
+
+  def test_failed_purchase_with_stored_card
+    store = @gateway.store(@declined_card, @options)
+    assert_success store
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_failure purchase
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{Sandbox - Test credit card, transaction will be approved}, response.message
+    assert_match %r{Accepted}, response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{Sandbox - Test credit card, transaction declined reason insufficientFunds}, response.message
+    assert_match %r{Accepted}, response.message
   end
 
   def test_invalid_login

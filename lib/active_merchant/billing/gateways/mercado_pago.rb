@@ -10,6 +10,11 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Mercado Pago'
       self.money_format = :dollars
 
+      CARD_BRAND = {
+        "american_express" => "amex",
+        "diners_club" => "diners"
+      }
+
       def initialize(options={})
         requires!(options, :access_token)
         super
@@ -18,7 +23,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         MultiResponse.run do |r|
           r.process { commit("tokenize", "card_tokens", card_token_request(money, payment, options)) }
-          options.merge!(card_brand: payment.brand)
+          options.merge!(card_brand: (CARD_BRAND[payment.brand] || payment.brand))
           options.merge!(card_token: r.authorization.split("|").first)
           r.process { commit("purchase", "payments", purchase_request(money, payment, options) ) }
         end
@@ -27,7 +32,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         MultiResponse.run do |r|
           r.process { commit("tokenize", "card_tokens", card_token_request(money, payment, options)) }
-          options.merge!(card_brand: payment.brand)
+          options.merge!(card_brand: (CARD_BRAND[payment.brand] || payment.brand))
           options.merge!(card_token: r.authorization.split("|").first)
           r.process { commit("authorize", "payments", authorize_request(money, payment, options) ) }
         end
@@ -80,7 +85,13 @@ module ActiveMerchant #:nodoc:
         post[:security_code] = payment.verification_value
         post[:expiration_month] = payment.month
         post[:expiration_year] = payment.year
-        post[:cardholder] = { name: payment.name }
+        post[:cardholder] = {
+          name: payment.name,
+          identification: {
+            type: options[:cardholder_identification_type],
+            number: options[:cardholder_identification_number]
+          }
+        }
         post
       end
 
@@ -91,6 +102,7 @@ module ActiveMerchant #:nodoc:
         add_additional_data(post, options)
         add_customer_data(post, payment, options)
         add_address(post, options)
+        post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
         post
       end
 
@@ -101,12 +113,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_additional_data(post, options)
-        post[:sponsor_id] = options["sponsor_id"]
+        post[:sponsor_id] = options[:sponsor_id]
+        post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {
           ip_address: options[:ip_address]
-        }
+        }.merge(options[:additional_info] || {})
+
 
         add_address(post, options)
+        add_shipping_address(post, options)
       end
 
       def add_customer_data(post, payment, options)
@@ -119,19 +134,42 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = (options[:billing_address] || options[:address])
-          street_number = address[:address1].split(" ").first
-          street_name = address[:address1].split(" ")[1..-1].join(" ")
 
-          post[:additional_info] = {
+          post[:additional_info].merge!({
             payer: {
               address: {
                 zip_code: address[:zip],
-                street_number: street_number,
-                street_name: street_name,
+                street_name: "#{address[:address1]} #{address[:address2]}"
               }
             }
-          }
+          })
         end
+      end
+
+      def add_shipping_address(post, options)
+        if address = options[:shipping_address]
+
+          post[:additional_info].merge!({
+            shipments: {
+              receiver_address: {
+                zip_code: address[:zip],
+                street_name: "#{address[:address1]} #{address[:address2]}"
+              }
+            }
+          })
+        end
+      end
+
+      def split_street_address(address1)
+        street_number = address1.split(" ").first
+
+        if street_name = address1.split(" ")[1..-1]
+          street_name = street_name.join(" ")
+        else
+          nil
+        end
+
+        [street_number, street_name]
       end
 
       def add_invoice(post, money, options)
@@ -139,10 +177,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:installments] = options[:installments] ? options[:installments].to_i : 1
         post[:statement_descriptor] = options[:statement_descriptor] if options[:statement_descriptor]
-        post[:order] = {
-          type: options[:order_type] || "mercadopago",
-          id: options[:order_id] || generate_integer_only_order_id
-        }
+        post[:external_reference] = options[:order_id] || SecureRandom.hex(16)
       end
 
       def add_payment(post, options)
@@ -158,7 +193,7 @@ module ActiveMerchant #:nodoc:
         if ["capture", "void"].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
         else
-          response = parse(ssl_post(url(path), post_data(parameters), headers))
+          response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
         end
 
         Response.new(
@@ -175,7 +210,7 @@ module ActiveMerchant #:nodoc:
         if action == "refund"
           response["error"].nil?
         else
-          ["active", "approved", "authorized", "cancelled"].include?(response["status"])
+          ["active", "approved", "authorized", "cancelled", "in_process"].include?(response["status"])
         end
       end
 
@@ -188,7 +223,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters = {})
-        parameters.to_json
+        parameters.clone.tap { |p| p.delete(:device_id) }.to_json
       end
 
       def error_code_from(action, response)
@@ -203,13 +238,15 @@ module ActiveMerchant #:nodoc:
 
       def url(action)
         full_url = (test? ? test_url : live_url)
-        full_url + "/#{action}?access_token=#{@options[:access_token]}"
+        full_url + "/#{action}?access_token=#{CGI.escape(@options[:access_token])}"
       end
 
-      def headers
-        {
+      def headers(options = {})
+        headers = {
           "Content-Type" => "application/json"
         }
+        headers['X-Device-Session-ID'] = options[:device_id] if options[:device_id]
+        headers
       end
 
       def handle_response(response)
@@ -219,10 +256,6 @@ module ActiveMerchant #:nodoc:
         else
           raise ResponseError.new(response)
         end
-      end
-
-      def generate_integer_only_order_id
-        Time.now.to_i + rand(0..1000)
       end
     end
   end

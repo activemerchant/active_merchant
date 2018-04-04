@@ -51,6 +51,12 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal 'success', response.body
   end
 
+  def test_successful_delete_with_body_request
+    Net::HTTP.any_instance.expects(:request).at_most(3).returns(@ok)
+    response = @connection.request(:delete, 'data', {})
+    assert_equal 'success', response.body
+  end
+
   def test_get_raises_argument_error_if_passed_data
     assert_raises(ArgumentError) do
       @connection.request(:get, 'data', {})
@@ -175,6 +181,13 @@ class ConnectionTest < Test::Unit::TestCase
 
     assert_raises(ActiveMerchant::ClientCertificateError) do
       @connection.request(:post, '')
+    end
+  end
+
+  def test_wiredump_service_raises_on_frozen_object
+    transcript = ''.freeze
+    assert_raise ArgumentError, "can't wiredump to frozen object" do
+      @connection.wiredump_device = transcript
     end
   end
 

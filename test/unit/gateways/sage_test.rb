@@ -316,6 +316,7 @@ class SageGatewayTest < Test::Unit::TestCase
 
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
   end
 
   def test_supports_scrubbing?
@@ -486,6 +487,53 @@ reading 185 bytes...
 -> \"\u001F?\b\u0000\u0000\u0000\u0000\u0000\u0004\u0000??\a`\u001CI?%&/m?{\u007FJ?J??t?\b?`\u0013$?@\u0010??????\u001DiG#)?*??eVe]f\u0016@????{???{???;?N'????\\fd\u0001l??J??!???\u001F?~|\u001F?\"~??\u001D<??/_???'O???\a??v??/???}??\u0017??;???v\u001F??f{???Nv??\u007F?????{?????k??XI\u0004rQ\u0000\u0000\u0000\"
 read 185 bytes
 Conn close
+    POST_SCRUBBED
+  end
+
+  def pre_scrubbed_echeck
+    <<-PRE_SCRUBBED
+opening connection to www.sagepayments.net:443...
+opened
+starting SSL for www.sagepayments.net:443...
+SSL established
+<- "POST /cgi-bin/eftVirtualCheck.dll?transaction HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.sagepayments.net\r\nContent-Length: 562\r\n\r\n"
+<- "C_first_name=Jim&C_last_name=Smith&C_rte=244183602&C_acct=15378535&C_check_number=1&C_acct_type=DDA&C_customer_type=WEB&C_originator_id=&T_addenda=&C_ssn=&C_dl_state_code=&C_dl_number=&C_dob=&T_amt=1.00&T_ordernum=0ac6fd1f74a98de94bf9&C_address=456+My+Street&C_city=Ottawa&C_state=ON&C_zip=K1C2N6&C_country=CA&C_telephone=%28555%29555-5555&C_fax=%28555%29555-6666&C_email=longbob%40example.com&C_ship_name=Jim+Smith&C_ship_address=456+My+Street&C_ship_city=Ottawa&C_ship_state=ON&C_ship_zip=K1C2N6&C_ship_country=CA&M_id=562313162894&M_key=J6U9B3G2F6L3&T_code=01"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Cache-Control: no-cache\r\n"
+-> "Pragma: no-cache\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Content-Type: text/html; charset=us-ascii\r\n"
+-> "Content-Encoding: gzip\r\n"
+-> "Expires: -1\r\n"
+-> "Vary: Accept-Encoding\r\n"
+-> "Server: Microsoft-IIS/7.5\r\n"
+-> "X-Powered-By: ASP.NET\r\n"
+-> "Date: Thu, 02 Nov 2017 13:26:30 GMT\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+-> "ac\r\n"
+reading 172 bytes...
+-> "\x1F\x8B\b\x00\x00\x00\x00\x00\x04\x00\xED\xBD\a`\x1CI\x96%&/m\xCA{\x7FJ\xF5J\xD7\xE0t\xA1\b\x80`\x13$\xD8\x90@\x10\xEC\xC1\x88\xCD\xE6\x92\xEC\x1DiG#)\xAB*\x81\xCAeVe]f\x16@\xCC\xED\x9D\xBC\xF7\xDE{\xEF\xBD\xF7\xDE{\xEF\xBD\xF7\xBA;\x9DN'\xF7\xDF\xFF?\\fd\x01l\xF6\xCEJ\xDA\xC9\x9E!\x80\xAA\xC8\x1F?~|\x1F?\"~\xAD\xE3\x94\x9F\xE3\x93\x93\xD3\x97oN\x9F\xD2\xAF\xD1gg\xE7\xD9\x93\xBDo?\xFC\x89\xAF\x16\xF7v~\xA7\x9Dl\xFA\xE9\xF9l\xF7\xFC\xC1~\xF6\xF0`\x96?\xDC\x9F\x9C?\xFC\x9Dv~\xA7\x17_\xBE8\xA5\x1F\xBF"
+read 172 bytes
+reading 2 bytes...
+-> "\r\n"
+read 2 bytes
+-> "b\r\n"
+reading 11 bytes...
+-> "\xF6\xFF\x03\x90\xEB\x1E T\x00\x00\x00"
+read 11 bytes
+reading 2 bytes...
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed_echeck
+    <<-POST_SCRUBBED
+opening connection to www.sagepayments.net:443...\nopened\nstarting SSL for www.sagepayments.net:443...\nSSL established\n<- \"POST /cgi-bin/eftVirtualCheck.dll?transaction HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.sagepayments.net\r\nContent-Length: 562\r\n\r\n\"\n<- \"C_first_name=Jim&C_last_name=Smith&C_rte=[FILTERED]&C_acct=[FILTERED]&C_check_number=1&C_acct_type=DDA&C_customer_type=WEB&C_originator_id=&T_addenda=&C_ssn=[FILTERED]&C_dl_state_code=&C_dl_number=&C_dob=&T_amt=1.00&T_ordernum=0ac6fd1f74a98de94bf9&C_address=456+My+Street&C_city=Ottawa&C_state=ON&C_zip=K1C2N6&C_country=CA&C_telephone=%28555%29555-5555&C_fax=%28555%29555-6666&C_email=longbob%40example.com&C_ship_name=Jim+Smith&C_ship_address=456+My+Street&C_ship_city=Ottawa&C_ship_state=ON&C_ship_zip=K1C2N6&C_ship_country=CA&M_id=[FILTERED]&M_key=[FILTERED]&T_code=01\"\n-> \"HTTP/1.1 200 OK\r\n\"\n-> \"Cache-Control: no-cache\r\n\"\n-> \"Pragma: no-cache\r\n\"\n-> \"Transfer-Encoding: chunked\r\n\"\n-> \"Content-Type: text/html; charset=us-ascii\r\n\"\n-> \"Content-Encoding: gzip\r\n\"\n-> \"Expires: -1\r\n\"\n-> \"Vary: Accept-Encoding\r\n\"\n-> \"Server: Microsoft-IIS/7.5\r\n\"\n-> \"X-Powered-By: ASP.NET\r\n\"\n-> \"Date: Thu, 02 Nov 2017 13:26:30 GMT\r\n\"\n-> \"Connection: close\r\n\"\n-> \"\r\n\"\n-> \"ac\r\n\"\nreading 172 bytes...\n-> \"\u001F?\b\u0000\u0000\u0000\u0000\u0000\u0004\u0000??\a`\u001CI?%&/m?{\u007FJ?J??t?\b?`\u0013$?@\u0010??????\u001DiG#)?*??eVe]f\u0016@????{???{???;?N'????\\fd\u0001l??J??!???\u001F?~|\u001F?\"~????oN???gg???o????\u0016?v~??l???l???~??`???????v~?\u0017_?8?\u001F?\"\nread 172 bytes\nreading 2 bytes...\n-> \"\r\n\"\nread 2 bytes\n-> \"b\r\n\"\nreading 11 bytes...\n-> \"??\u0003??\u001E T\u0000\u0000\u0000\"\nread 11 bytes\nreading 2 bytes...\n-> \"\r\n\"\nread 2 bytes\n-> \"0\r\n\"\n-> \"\r\n\"\nConn close
     POST_SCRUBBED
   end
 end

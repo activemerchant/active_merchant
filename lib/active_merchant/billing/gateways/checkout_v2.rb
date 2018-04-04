@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = "https://api2.checkout.com/v2"
       self.test_url = "https://sandbox.checkout.com/api2/v2"
 
-      self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
+      self.supported_countries = ['AD', 'AE', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
       self.default_currency = "USD"
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
@@ -17,10 +17,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        MultiResponse.run do |r|
+        multi = MultiResponse.run do |r|
           r.process { authorize(amount, payment_method, options) }
           r.process { capture(amount, r.authorization, options) }
         end
+
+        merged_params = multi.responses.map { |r| r.params }.reduce({}, :merge)
+        succeeded = success_from(merged_params)
+
+        response(:purchase, succeeded, merged_params)
       end
 
       def authorize(amount, payment_method, options={})
@@ -98,8 +103,8 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address]
         if(address && post[:card])
           post[:card][:billingDetails] = {}
-          post[:card][:billingDetails][:address1] = address[:address1]
-          post[:card][:billingDetails][:address2] = address[:address2]
+          post[:card][:billingDetails][:addressLine1] = address[:address1]
+          post[:card][:billingDetails][:addressLine2] = address[:address2]
           post[:card][:billingDetails][:city] = address[:city]
           post[:card][:billingDetails][:state] = address[:state]
           post[:card][:billingDetails][:country] = address[:country]
@@ -118,6 +123,15 @@ module ActiveMerchant #:nodoc:
         end
 
         succeeded = success_from(response)
+
+        response(action, succeeded, response)
+      end
+
+      def response(action, succeeded, response)
+        successful_response = succeeded && action == :purchase || action == :authorize
+        avs_result = successful_response ? avs_result(response) : nil
+        cvv_result = successful_response ? cvv_result(response) : nil
+
         Response.new(
           succeeded,
           message_from(succeeded, response),
@@ -125,8 +139,9 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response),
           error_code: error_code_from(succeeded, response),
           test: test?,
-          avs_result: avs_result(action, response),
-          cvv_result: cvv_result(action, response))
+          avs_result: avs_result,
+          cvv_result: cvv_result
+        )
       end
 
       def headers
@@ -148,12 +163,12 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
-      def avs_result(action, response)
-        action == :purchase ? AVSResult.new(code: response["card"]["avsCheck"]) : nil
+      def avs_result(response)
+        response['card'] && response['card']['avsCheck'] ? AVSResult.new(code: response['card']['avsCheck']) : nil
       end
 
-      def cvv_result(action, response)
-        action == :purchase ? CVVResult.new(response["card"]["cvvCheck"]) : nil
+      def cvv_result(response)
+        response['card'] && response['card']['cvvCheck'] ? CVVResult.new(response['card']['cvvCheck']) : nil
       end
 
       def parse(body)
@@ -197,7 +212,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(succeeded, response)
-        succeeded ? nil : STANDARD_ERROR_CODE_MAPPING[response["responseCode"]]
+        return if succeeded
+        if response["errorCode"] && response["errorMessageCodes"]
+          "#{response["errorCode"]}: #{response["errorMessageCodes"].join(", ")}"
+        elsif response["errorCode"]
+          response["errorCode"]
+        else
+          STANDARD_ERROR_CODE_MAPPING[response["responseCode"]]
+        end
       end
     end
   end

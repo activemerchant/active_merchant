@@ -537,15 +537,17 @@ module ActiveMerchant #:nodoc:
           doc["v1"].title options[:title] if options[:title]
 
           if (billing_address = options[:billing_address])
-            doc["v1"].phone do
-              doc["v1"].type (options[:phone_number_type] || "4")
-              doc["v1"].nr billing_address[:phone].gsub(/\D/, '') if billing_address[:phone]
+            if billing_address[:phone]
+              doc["v1"].phone do
+                doc["v1"].type (options[:phone_number_type] || "4")
+                doc["v1"].nr billing_address[:phone].gsub(/\D/, '')
+              end
             end
-            doc["v1"].addrLn1 billing_address[:address1]
-            doc["v1"].addrLn2 billing_address[:address2]
-            doc["v1"].city billing_address[:city]
-            doc["v1"].state billing_address[:state]
-            doc["v1"].zipCode billing_address[:zip]
+            doc["v1"].addrLn1 billing_address[:address1] if billing_address[:address1]
+            doc["v1"].addrLn2 billing_address[:address2] if billing_address[:address2]
+            doc["v1"].city billing_address[:city] if billing_address[:city]
+            doc["v1"].state billing_address[:state] if billing_address[:state]
+            doc["v1"].zipCode billing_address[:zip] if billing_address[:zip]
             doc["v1"].ctry "US"
           end
 
@@ -556,11 +558,11 @@ module ActiveMerchant #:nodoc:
           if (shipping_address = options[:shipping_address])
             doc["v1"].ship do
               doc["v1"].fullName fullname
-              doc["v1"].addrLn1 shipping_address[:address1]
+              doc["v1"].addrLn1 shipping_address[:address1] if shipping_address[:address1]
               doc["v1"].addrLn2 shipping_address[:address2] if shipping_address[:address2]
-              doc["v1"].city shipping_address[:city]
-              doc["v1"].state shipping_address[:state]
-              doc["v1"].zipCode shipping_address[:zip]
+              doc["v1"].city shipping_address[:city] if shipping_address[:city]
+              doc["v1"].state shipping_address[:state] if shipping_address[:state]
+              doc["v1"].zipCode shipping_address[:zip] if shipping_address[:zip]
               doc["v1"].phone shipping_address[:phone].gsub(/\D/, '') if shipping_address[:phone]
               doc["v1"].email shipping_address[:email] if shipping_address[:email]
             end

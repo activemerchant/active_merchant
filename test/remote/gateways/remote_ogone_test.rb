@@ -14,7 +14,8 @@ class RemoteOgoneTest < Test::Unit::TestCase
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
       :description => 'Store Purchase',
-      :currency => fixtures(:ogone)[:currency] || 'EUR'
+      :currency => fixtures(:ogone)[:currency] || 'EUR',
+      :origin => 'STORE'
     }
   end
 
@@ -238,5 +239,16 @@ class RemoteOgoneTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

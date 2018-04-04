@@ -78,7 +78,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
       :password => ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_match %r{invalid credentials}i, response.message
+    assert_match %r{Invalid Credentials}i, response.message
     assert_failure response
   end
 
@@ -141,8 +141,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
-    assert_scrubbed(fixtures(:payment_express)[:login], clean_transcript)
-    assert_scrubbed(fixtures(:payment_express)[:password], clean_transcript)
+    assert_scrubbed(@gateway.options[:password], clean_transcript)
   end
 
 end

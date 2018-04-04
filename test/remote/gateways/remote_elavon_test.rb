@@ -60,8 +60,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_authorization
-    @credit_card.number = "1234567890123"
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @bad_credit_card, @options)
     assert_failure response
     assert_equal 'The Credit Card Number supplied in the authorization request appears to be invalid.', response.message
   end
@@ -205,4 +204,16 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_equal 'APPROVAL', response.message
     assert response.authorization
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
 end
