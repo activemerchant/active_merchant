@@ -50,6 +50,33 @@ class PayflowTest < Test::Unit::TestCase
     refute response.fraud_review?
   end
 
+  def test_successful_authorization_with_more_options
+    options = @options.merge(
+      {
+        order_id: "123",
+        description: "Description string",
+        order_desc: "OrderDesc string",
+        comment: "Comment string",
+        comment2: "Comment2 string"
+      }
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<InvNum>123</InvNum>), data
+      assert_match %r(<Description>Description string</Description>), data
+      assert_match %r(<OrderDesc>OrderDesc string</OrderDesc>), data
+      assert_match %r(<Comment>Comment string</Comment>), data
+      assert_match %r(<ExtData Name=\"COMMENT2\" Value=\"Comment2 string\"/>), data
+    end.respond_with(successful_authorization_response)
+    assert_equal "Approved", response.message
+    assert_success response
+    assert response.test?
+    assert_equal "VUJN1A6E11D9", response.authorization
+    refute response.fraud_review?
+  end
+
   def test_successful_purchase_with_fraud_review
     @gateway.stubs(:ssl_post).returns(successful_purchase_with_fraud_review_response)
 
@@ -412,7 +439,106 @@ class PayflowTest < Test::Unit::TestCase
     PayflowGateway.use_paypal_nvp = old_use_paypal_nvp
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed_check), post_scrubbed_check
+  end
+
   private
+
+  def pre_scrubbed
+    <<-EOS
+opening connection to pilot-payflowpro.paypal.com:443...
+opened
+starting SSL for pilot-payflowpro.paypal.com:443...
+SSL established
+<- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 1017\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 3b2f9831949b48b4b0b89a33a60f9b0c\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><EMail>cody@example.com</EMail><BillTo><Name>Jim Smith</Name><EMail>cody@example.com</EMail><Phone>(555)555-5555</Phone><CustCode>codyexample</CustCode><Address><Street>456 My Street</Street><City>Ottawa</City><State>ON</State><Country>CA</Country><Zip>K1C2N6</Zip></Address></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><Card><CardType>MasterCard</CardType><CardNum>5105105105105100</CardNum><ExpDate>201909</ExpDate><NameOnCard>Longbob</NameOnCard><CVNum>123</CVNum><ExtData Name=\"LASTNAME\" Value=\"Longsen\"/></Card></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>L9DjqEKjXCkU</Password></UserPass></RequestAuth></XMLPayRequest>"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Connection: close\r\n"
+-> "Server: VPS-3.033.00\r\n"
+-> "X-VPS-Request-ID: 3b2f9831949b48b4b0b89a33a60f9b0c\r\n"
+-> "Date: Thu, 01 Mar 2018 15:42:15 GMT\r\n"
+-> "Content-type: text/xml\r\n"
+-> "Content-length:    267\r\n"
+-> "\r\n"
+reading 267 bytes...
+-> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
+read 267 bytes
+Conn close
+    EOS
+  end
+
+  def post_scrubbed
+    <<-EOS
+opening connection to pilot-payflowpro.paypal.com:443...
+opened
+starting SSL for pilot-payflowpro.paypal.com:443...
+SSL established
+<- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 1017\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 3b2f9831949b48b4b0b89a33a60f9b0c\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><EMail>cody@example.com</EMail><BillTo><Name>Jim Smith</Name><EMail>cody@example.com</EMail><Phone>(555)555-5555</Phone><CustCode>codyexample</CustCode><Address><Street>456 My Street</Street><City>Ottawa</City><State>ON</State><Country>CA</Country><Zip>K1C2N6</Zip></Address></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><Card><CardType>MasterCard</CardType><CardNum>[FILTERED]</CardNum><ExpDate>201909</ExpDate><NameOnCard>Longbob</NameOnCard><CVNum>[FILTERED]</CVNum><ExtData Name=\"LASTNAME\" Value=\"Longsen\"/></Card></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>[FILTERED]</Password></UserPass></RequestAuth></XMLPayRequest>"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Connection: close\r\n"
+-> "Server: VPS-3.033.00\r\n"
+-> "X-VPS-Request-ID: 3b2f9831949b48b4b0b89a33a60f9b0c\r\n"
+-> "Date: Thu, 01 Mar 2018 15:42:15 GMT\r\n"
+-> "Content-type: text/xml\r\n"
+-> "Content-length:    267\r\n"
+-> "\r\n"
+reading 267 bytes...
+-> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
+read 267 bytes
+Conn close
+    EOS
+  end
+
+  def pre_scrubbed_check
+    <<-EOS
+opening connection to pilot-payflowpro.paypal.com:443...
+opened
+starting SSL for pilot-payflowpro.paypal.com:443...
+SSL established
+<- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 658\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 863021e6890a0660238ef22d0a21c5f2\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><BillTo><Name>Jim Smith</Name></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><ACH><AcctType>C</AcctType><AcctNum>1234567801</AcctNum><ABA>111111118</ABA></ACH></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>L9DjqEKjXCkU</Password></UserPass></RequestAuth></XMLPayRequest>"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Connection: close\r\n"
+-> "Server: VPS-3.033.00\r\n"
+-> "X-VPS-Request-ID: 863021e6890a0660238ef22d0a21c5f2\r\n"
+-> "Date: Thu, 01 Mar 2018 15:45:59 GMT\r\n"
+-> "Content-type: text/xml\r\n"
+-> "Content-length:    267\r\n"
+-> "\r\n"
+reading 267 bytes...
+-> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
+read 267 bytes
+Conn close
+    EOS
+  end
+
+  def post_scrubbed_check
+    <<-EOS
+opening connection to pilot-payflowpro.paypal.com:443...
+opened
+starting SSL for pilot-payflowpro.paypal.com:443...
+SSL established
+<- "POST / HTTP/1.1\r\nContent-Type: text/xml\r\nContent-Length: 658\r\nX-Vps-Client-Timeout: 60\r\nX-Vps-Vit-Integration-Product: ActiveMerchant\r\nX-Vps-Vit-Runtime-Version: 2.1.7\r\nX-Vps-Request-Id: 863021e6890a0660238ef22d0a21c5f2\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pilot-payflowpro.paypal.com\r\n\r\n"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMLPayRequest Timeout=\"60\" version=\"2.1\" xmlns=\"http://www.paypal.com/XMLPay\"><RequestData><Vendor>spreedlyIntegrations</Vendor><Partner>PayPal</Partner><Transactions><Transaction CustRef=\"codyexample\"><Verbosity>MEDIUM</Verbosity><Sale><PayData><Invoice><BillTo><Name>Jim Smith</Name></BillTo><TotalAmt Currency=\"USD\"/></Invoice><Tender><ACH><AcctType>C</AcctType><AcctNum>[FILTERED]</AcctNum><ABA>111111118</ABA></ACH></Tender></PayData></Sale></Transaction></Transactions></RequestData><RequestAuth><UserPass><User>spreedlyIntegrations</User><Password>[FILTERED]</Password></UserPass></RequestAuth></XMLPayRequest>"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Connection: close\r\n"
+-> "Server: VPS-3.033.00\r\n"
+-> "X-VPS-Request-ID: 863021e6890a0660238ef22d0a21c5f2\r\n"
+-> "Date: Thu, 01 Mar 2018 15:45:59 GMT\r\n"
+-> "Content-type: text/xml\r\n"
+-> "Content-length:    267\r\n"
+-> "\r\n"
+reading 267 bytes...
+-> "<XMLPayResponse  xmlns=\"http://www.paypal.com/XMLPay\"><ResponseData><Vendor></Vendor><Partner></Partner><TransactionResults><TransactionResult><Result>4</Result><Message>Invalid amount</Message></TransactionResult></TransactionResults></ResponseData></XMLPayResponse>"
+read 267 bytes
+Conn close
+    EOS
+  end
+
   def successful_recurring_response
     <<-XML
 <ResponseData>

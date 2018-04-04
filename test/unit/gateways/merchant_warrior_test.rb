@@ -90,6 +90,47 @@ class MerchantWarriorTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_address
+    @options[:address] = {
+      name: 'Bat Man',
+      address1: '123 Main',
+      city: 'Brooklyn',
+      state: 'NY',
+      country: 'US',
+      zip: '11111',
+      phone: '555-1212',
+      email: 'user@aol.com',
+      ip: '1.2.3.4'
+    }
+
+    stub_comms do
+      @gateway.purchase(@success_amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/customerName=Bat\+Man/, data)
+      assert_match(/customerCountry=US/, data)
+      assert_match(/customerState=NY/, data)
+      assert_match(/customerCity=Brooklyn/, data)
+      assert_match(/customerAddress=123\+Main/, data)
+      assert_match(/customerPostCode=11111/, data)
+      assert_match(/customerIP=1.2.3.4/, data)
+      assert_match(/customerPhone=555-1212/, data)
+      assert_match(/customerEmail=user%40aol.com/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_address_without_state
+    @options[:address] = {
+      name: 'Bat Man',
+      state: nil
+    }
+
+    stub_comms do
+      @gateway.purchase(@success_amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/customerState=N%2FA/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_orderid_truncated
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card, order_id: "ThisIsQuiteALongDescriptionWithLotsOfChars")

@@ -5,7 +5,9 @@ class RemoteWepayTest < Test::Unit::TestCase
     @gateway = WepayGateway.new(fixtures(:wepay))
 
     @amount = 2000
-    @credit_card = credit_card('5496198584584769')
+    @credit_card = credit_card('5496198584584769', verification_value: '321')
+    @credit_card_without_cvv = credit_card('5496198584584769', verification_value: nil)
+
     @declined_card = credit_card('')
 
     @options = {
@@ -27,6 +29,14 @@ class RemoteWepayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_token
     store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_recurring_and_ip
+    store = @gateway.store(@credit_card, @options.merge(recurring: true, ip: '127.0.0.1'))
     assert_success store
 
     response = @gateway.purchase(@amount, store.authorization, @options)
@@ -88,8 +98,37 @@ class RemoteWepayTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
   end
-  def test_successful_store
+
+  def test_successful_store_via_create_with_cvv
+    # POST /credit_card/create
     response = @gateway.store(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_store_via_transfer_without_cvv
+    # special permission required
+    # POST /credit_card/transfer
+    response = @gateway.store(@credit_card_without_cvv, @options.merge(recurring: true))
+    assert_success response
+  end
+
+  def test_unsuccessful_store_via_create_with_cvv
+    response = @gateway.store(@credit_card_without_cvv, @options)
+
+    assert_failure response
+    assert_equal('This app does not have permissions to create credit cards without a cvv', response.message)
+  end
+
+  # # Requires commenting out `unless options[:recurring]` when building post hash in `store` method.
+  # def test_unsuccessful_store_via_transfer_with_cvv
+  #   response = @gateway.store(@credit_card, @options.merge(recurring: true))
+  #
+  #   assert_failure response
+  #   assert_equal('cvv parameter is unexpected', response.message)
+  # end
+
+  def test_successful_store_with_defaulted_email
+    response = @gateway.store(@credit_card, {billing_address: address})
     assert_success response
   end
 
@@ -141,6 +180,13 @@ class RemoteWepayTest < Test::Unit::TestCase
 
     void = @gateway.void(authorize.authorization, cancel_reason: "Cancel")
     assert_success void
+  end
+
+  # Version sent here will need to match or be one ahead of the version set in the test account's dashboard
+  def test_successful_purchase_with_version
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(version: '2017-05-31'))
+    assert_success response
+    assert_equal 'Success', response.message
   end
 
   def test_invalid_login

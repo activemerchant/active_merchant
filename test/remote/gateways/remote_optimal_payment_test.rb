@@ -143,4 +143,16 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'invalid merchant account', response.message
   end
+
+  # Password assertion hard-coded due to the value being the same as the login, which would cause a false-positive
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed('%3CstorePwd%3Etest%3C/storePwd%3E', transcript)
+  end
 end

@@ -57,20 +57,39 @@ class SagePayTest < Test::Unit::TestCase
     assert_equal 'https://test.sagepay.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
   end
 
-  def test_avs_result
+  def test_matched_avs_result
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_equal 'Y', response.avs_result['postal_match']
+    assert_equal 'Y', response.avs_result['street_match']
+  end
+
+  def test_partially_matched_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
+
     assert_equal 'Y', response.avs_result['postal_match']
     assert_equal 'N', response.avs_result['street_match']
   end
 
-   def test_cvv_result
-     @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  def test_matched_cvv_result
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
-     response = @gateway.purchase(@amount, @credit_card, @options)
-     assert_equal 'N', response.cvv_result['code']
-   end
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_not_matched_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_equal 'N', response.cvv_result['code']
+  end
 
   def test_dont_send_fractional_amount_for_chinese_yen
     @amount = 100_00  # 100 YEN

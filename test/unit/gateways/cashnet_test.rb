@@ -141,6 +141,11 @@ class Cashnet < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
   def expected_expiration_date
     '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
@@ -168,5 +173,131 @@ class Cashnet < Test::Unit::TestCase
 
   def invalid_response
     "A String without a cngateway tag"
+  end
+
+  def pre_scrubbed
+    <<-TRANSCRIPT
+opening connection to train.cashnet.com:443...
+opened
+starting SSL for train.cashnet.com:443...
+SSL established
+<- "POST /givecorpsgateway HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: train.cashnet.com\r\nContent-Length: 364\r\n\r\n"
+<- "command=SALE&merchant=GiveCorpGW&operator=givecorp&password=14givecorps&station=WEB&custcode=ActiveMerchant%2F1.76.0&cardno=5454545454545454&cid=123&expdate=1215&card_name_g=Longbob+Longsen&fname=Longbob&lname=Longsen&order_number=c440ec8493f215d21c8a993ceae30129&itemcode=FEE&addr_g=456+My+Street%2CApt+1&city_g=Ottawa&state_g=ON&zip_g=K1C2N6&email_g=&amount=1.00"
+-> "HTTP/1.1 302 Found\r\n"
+-> "Date: Wed, 03 Jan 2018 17:03:35 GMT\r\n"
+-> "Content-Type: text/html; charset=utf-8\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Connection: close\r\n"
+-> "Set-Cookie: AWSALB=5ISjTg8Mez7jS1kEnzY4j5NkQ5bdlwDDNmfzTyEMBmILpb0Tn3k58pUQTGHBj3NUpciP0uqQs7FaAb42YZvt35ndLERGJA0dPQ03iCfrqbneQ+Wm5BhDzMGo5GUT; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
+-> "Set-Cookie: AWSALB=bVhwwfJ2D6cI5zB3eapqNStEzF5yX1pXhaJGUBUCa+DZhEgn/TZGxznxIOYB9qKqzkPF4lq/zxWg/tuMBTiY4JGLRjayyhizvHnj2smrnNvr2DLQN7ZjLSh51BzM; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
+-> "Cache-Control: private\r\n"
+-> "Location: https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&command=SALE&merchant=GiveCorpGW&operator=givecorp&password=14givecorps&station=WEB&custcode=ActiveMerchant%2f1.76.0&cardno=5454545454545454&cid=123&expdate=1215&card_name_g=Longbob+Longsen&fname=Longbob&lname=Longsen&order_number=c440ec8493f215d21c8a993ceae30129&itemcode=FEE&addr_g=456+My+Street%2cApt+1&city_g=Ottawa&state_g=ON&zip_g=K1C2N6&email_g=&amount=1.00\r\n"
+-> "Set-Cookie: ASP.NET_SessionId=; path=/; HttpOnly\r\n"
+-> "P3P: CP=\"NOI DSP COR NID NOR\"\r\n"
+-> "Set-Cookie: BNI_persistence=0000000000000000000000004d79da0a00005000; Path=/\r\n"
+-> "Strict-Transport-Security: max-age=31536000\r\n"
+-> "\r\n"
+-> "282\r\n"
+reading 642 bytes...
+-> "<html><head><title>Object moved</title></head><body>\r\n<h2>Object moved to <a href=\"https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&amp;command=SALE&amp;merchant=GiveCorpGW&amp;operator=givecorp&amp;password=14givecorps&amp;station=WEB&amp;custcode=ActiveMerchant%2f1.76.0&amp;cardno=5454545454545454&amp;cid=123&amp;expdate=1215&amp;card_name_g=Longbob+Longsen&amp;fname=Longbob&amp;lname=Longsen&amp;order_number=c440ec8493f215d21c8a993ceae30129&amp;itemcode=FEE&amp;addr_g=456+My+Street%2cApt+1&amp;city_g=Ottawa&amp;state_g=ON&amp;zip_g=K1C2N6&amp;email_g=&amp;amount=1.00\">here</a>.</h2>\r\n</body></html>\r\n"
+read 642 bytes
+reading 2 bytes...
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+opening connection to train.cashnet.com:443...
+opened
+starting SSL for train.cashnet.com:443...
+SSL established
+<- "GET /cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&command=SALE&merchant=GiveCorpGW&operator=givecorp&password=14givecorps&station=WEB&custcode=ActiveMerchant%2f1.76.0&cardno=5454545454545454&cid=123&expdate=1215&card_name_g=Longbob+Longsen&fname=Longbob&lname=Longsen&order_number=c440ec8493f215d21c8a993ceae30129&itemcode=FEE&addr_g=456+My+Street%2cApt+1&city_g=Ottawa&state_g=ON&zip_g=K1C2N6&email_g=&amount=1.00 HTTP/1.1\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: train.cashnet.com\r\n\r\n"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Wed, 03 Jan 2018 17:03:35 GMT\r\n"
+-> "Content-Type: text/html; charset=utf-8\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Connection: close\r\n"
+-> "Set-Cookie: AWSALB=lFPwFYRnXJHRNmE6NCRAIfHtQadwx4bYJoT5xeAL5AuAXPcm1vYWx5F/s5FBr3GcungifktpWlwIgAmWS29K7YRXTCjk4xmcAnhXS86fpVUVQt4ECwPH2xdv8tf2; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
+-> "Set-Cookie: AWSALB=mEfysFNBclo1/9+tTuI/XtHrmVkD89Fh6tAJ3Gl0u2EuLCYTW5VwEq+fVqYG1fEkN02dbhKSkIdM22QvyT6cRccDaUBsYAnOKjg2JlVShJlf+li5tfbrsUDk14jG; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
+-> "Cache-Control: private\r\n"
+-> "Set-Cookie: ASP.NET_SessionId=3ocslggtk4cdz54unbdnm25o; path=/; HttpOnly\r\n"
+-> "P3P: CP=\"NOI DSP COR NID NOR\"\r\n"
+-> "Set-Cookie: BNI_persistence=0000000000000000000000004d79da0a00005000; Path=/\r\n"
+-> "Strict-Transport-Security: max-age=31536000\r\n"
+-> "\r\n"
+-> "3a\r\n"
+reading 58 bytes...
+-> "<cngateway>result=0&tx=77972&busdate=7/25/2017</cngateway>"
+read 58 bytes
+reading 2 bytes...
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+TRANSCRIPT
+  end
+
+  def post_scrubbed
+    <<-SCRUBBED
+opening connection to train.cashnet.com:443...
+opened
+starting SSL for train.cashnet.com:443...
+SSL established
+<- "POST /givecorpsgateway HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: train.cashnet.com\r\nContent-Length: 364\r\n\r\n"
+<- "command=SALE&merchant=GiveCorpGW&operator=givecorp&password=[FILTERED]&station=WEB&custcode=ActiveMerchant%2F1.76.0&cardno=[FILTERED]&cid=[FILTERED]&expdate=1215&card_name_g=Longbob+Longsen&fname=Longbob&lname=Longsen&order_number=c440ec8493f215d21c8a993ceae30129&itemcode=FEE&addr_g=456+My+Street%2CApt+1&city_g=Ottawa&state_g=ON&zip_g=K1C2N6&email_g=&amount=1.00"
+-> "HTTP/1.1 302 Found\r\n"
+-> "Date: Wed, 03 Jan 2018 17:03:35 GMT\r\n"
+-> "Content-Type: text/html; charset=utf-8\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Connection: close\r\n"
+-> "Set-Cookie: AWSALB=5ISjTg8Mez7jS1kEnzY4j5NkQ5bdlwDDNmfzTyEMBmILpb0Tn3k58pUQTGHBj3NUpciP0uqQs7FaAb42YZvt35ndLERGJA0dPQ03iCfrqbneQ+Wm5BhDzMGo5GUT; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
+-> "Set-Cookie: AWSALB=bVhwwfJ2D6cI5zB3eapqNStEzF5yX1pXhaJGUBUCa+DZhEgn/TZGxznxIOYB9qKqzkPF4lq/zxWg/tuMBTiY4JGLRjayyhizvHnj2smrnNvr2DLQN7ZjLSh51BzM; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
+-> "Cache-Control: private\r\n"
+-> "Location: https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&command=SALE&merchant=GiveCorpGW&operator=givecorp&password=[FILTERED]&station=WEB&custcode=ActiveMerchant%2f1.76.0&cardno=[FILTERED]&cid=[FILTERED]&expdate=1215&card_name_g=Longbob+Longsen&fname=Longbob&lname=Longsen&order_number=c440ec8493f215d21c8a993ceae30129&itemcode=FEE&addr_g=456+My+Street%2cApt+1&city_g=Ottawa&state_g=ON&zip_g=K1C2N6&email_g=&amount=1.00\r\n"
+-> "Set-Cookie: ASP.NET_SessionId=; path=/; HttpOnly\r\n"
+-> "P3P: CP=\"NOI DSP COR NID NOR\"\r\n"
+-> "Set-Cookie: BNI_persistence=0000000000000000000000004d79da0a00005000; Path=/\r\n"
+-> "Strict-Transport-Security: max-age=31536000\r\n"
+-> "\r\n"
+-> "282\r\n"
+reading 642 bytes...
+-> "<html><head><title>Object moved</title></head><body>\r\n<h2>Object moved to <a href=\"https://train.cashnet.com/cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&amp;command=SALE&amp;merchant=GiveCorpGW&amp;operator=givecorp&amp;password=[FILTERED]&amp;station=WEB&amp;custcode=ActiveMerchant%2f1.76.0&amp;cardno=[FILTERED]&amp;cid=[FILTERED]&amp;expdate=1215&amp;card_name_g=Longbob+Longsen&amp;fname=Longbob&amp;lname=Longsen&amp;order_number=c440ec8493f215d21c8a993ceae30129&amp;itemcode=FEE&amp;addr_g=456+My+Street%2cApt+1&amp;city_g=Ottawa&amp;state_g=ON&amp;zip_g=K1C2N6&amp;email_g=&amp;amount=1.00\">here</a>.</h2>\r\n</body></html>\r\n"
+read 642 bytes
+reading 2 bytes...
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+opening connection to train.cashnet.com:443...
+opened
+starting SSL for train.cashnet.com:443...
+SSL established
+<- "GET /cashneti/Gateway/htmlgw.aspx?client=EMARKETVENDOR_DEMO&command=SALE&merchant=GiveCorpGW&operator=givecorp&password=[FILTERED]&station=WEB&custcode=ActiveMerchant%2f1.76.0&cardno=[FILTERED]&cid=[FILTERED]&expdate=1215&card_name_g=Longbob+Longsen&fname=Longbob&lname=Longsen&order_number=c440ec8493f215d21c8a993ceae30129&itemcode=FEE&addr_g=456+My+Street%2cApt+1&city_g=Ottawa&state_g=ON&zip_g=K1C2N6&email_g=&amount=1.00 HTTP/1.1\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: train.cashnet.com\r\n\r\n"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Wed, 03 Jan 2018 17:03:35 GMT\r\n"
+-> "Content-Type: text/html; charset=utf-8\r\n"
+-> "Transfer-Encoding: chunked\r\n"
+-> "Connection: close\r\n"
+-> "Set-Cookie: AWSALB=lFPwFYRnXJHRNmE6NCRAIfHtQadwx4bYJoT5xeAL5AuAXPcm1vYWx5F/s5FBr3GcungifktpWlwIgAmWS29K7YRXTCjk4xmcAnhXS86fpVUVQt4ECwPH2xdv8tf2; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
+-> "Set-Cookie: AWSALB=mEfysFNBclo1/9+tTuI/XtHrmVkD89Fh6tAJ3Gl0u2EuLCYTW5VwEq+fVqYG1fEkN02dbhKSkIdM22QvyT6cRccDaUBsYAnOKjg2JlVShJlf+li5tfbrsUDk14jG; Expires=Wed, 10 Jan 2018 17:03:35 GMT; Path=/\r\n"
+-> "Cache-Control: private\r\n"
+-> "Set-Cookie: ASP.NET_SessionId=3ocslggtk4cdz54unbdnm25o; path=/; HttpOnly\r\n"
+-> "P3P: CP=\"NOI DSP COR NID NOR\"\r\n"
+-> "Set-Cookie: BNI_persistence=0000000000000000000000004d79da0a00005000; Path=/\r\n"
+-> "Strict-Transport-Security: max-age=31536000\r\n"
+-> "\r\n"
+-> "3a\r\n"
+reading 58 bytes...
+-> "<cngateway>result=0&tx=77972&busdate=7/25/2017</cngateway>"
+read 58 bytes
+reading 2 bytes...
+-> "\r\n"
+read 2 bytes
+-> "0\r\n"
+-> "\r\n"
+Conn close
+SCRUBBED
   end
 end

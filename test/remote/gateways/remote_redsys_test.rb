@@ -9,6 +9,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
       order_id: generate_order_id,
       description: 'Test Description'
     }
+    @amount = 100
   end
 
   def test_successful_purchase

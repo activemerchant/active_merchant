@@ -162,6 +162,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer = stub(
       :credit_cards => [stub_everything],
       :email => 'email',
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith'
     )
@@ -185,6 +186,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer = stub(
       :credit_cards => [stub_everything],
       :email => 'email',
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith'
     )
@@ -201,6 +203,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer = stub(
       :credit_cards => [stub_everything],
       :email => 'email',
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith'
     )
@@ -222,6 +225,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer = stub(
       :credit_cards => [stub_everything],
       :email => "bob@example.com",
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith',
       id: "123"
@@ -240,6 +244,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer = stub(
       :credit_cards => [stub_everything],
       :email => nil,
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith',
       :id => "123"
@@ -258,6 +263,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer = stub(
       :credit_cards => [stub_everything],
       :email => 'email',
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith'
     )
@@ -278,6 +284,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer_attributes = {
       :credit_cards => [stub_everything],
       :email => 'email',
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith'
     }
@@ -306,6 +313,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
   def test_store_with_credit_card_token
     customer = stub(
       :email => 'email',
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith'
     )
@@ -329,6 +337,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
   def test_store_with_customer_id
     customer = stub(
       :email => 'email',
+      :phone => '321-654-0987',
       :first_name => 'John',
       :last_name => 'Smith',
       :credit_cards => [stub_everything]
@@ -598,7 +607,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       with(
         :amount => '1.00',
         :order_id => '1',
-        :customer => {:id => nil, :email => nil, :first_name => 'Longbob', :last_name => 'Longsen'},
+        :customer => {:id => nil, :email => nil, :phone => nil,
+                      :first_name => 'Longbob', :last_name => 'Longsen'},
         :options => {:store_in_vault => false, :submit_for_settlement => nil, :hold_in_escrow => nil},
         :custom_fields => nil,
         :apple_pay_card => {
@@ -606,7 +616,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
           :expiration_month => '09',
           :expiration_year => (Time.now.year + 1).to_s,
           :cardholder_name => 'Longbob Longsen',
-          :cryptogram => '111111111100cryptogram'
+          :cryptogram => '111111111100cryptogram',
+          :eci_indicator => '05'
         }
       ).
       returns(braintree_result(:id => "transaction_id"))
@@ -627,7 +638,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
       with(
         :amount => '1.00',
         :order_id => '1',
-        :customer => {:id => nil, :email => nil, :first_name => 'Longbob', :last_name => 'Longsen'},
+        :customer => {:id => nil, :email => nil, :phone => nil,
+                      :first_name => 'Longbob', :last_name => 'Longsen'},
         :options => {:store_in_vault => false, :submit_for_settlement => nil, :hold_in_escrow => nil},
         :custom_fields => nil,
         :android_pay_card => {

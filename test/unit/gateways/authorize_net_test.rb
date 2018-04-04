@@ -653,7 +653,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_equal "", doc.at_xpath("//billTo/address").content, data
         assert_equal "", doc.at_xpath("//billTo/city").content, data
-        assert_equal "", doc.at_xpath("//billTo/state").content, data
+        assert_equal "n/a", doc.at_xpath("//billTo/state").content, data
         assert_equal "", doc.at_xpath("//billTo/zip").content, data
         assert_equal "", doc.at_xpath("//billTo/country").content, data
       end
@@ -691,7 +691,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'DE'})
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
-        assert_equal "", doc.at_xpath("//billTo/state").content, data
+        assert_equal "n/a", doc.at_xpath("//billTo/state").content, data
         assert_equal "164 Waverley Street", doc.at_xpath("//billTo/address").content, data
         assert_equal "DE", doc.at_xpath("//billTo/country").content, data
       end
@@ -703,7 +703,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', address2: 'Apt 1234', country: 'DE'})
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
-        assert_equal "", doc.at_xpath("//billTo/state").content, data
+        assert_equal "n/a", doc.at_xpath("//billTo/state").content, data
         assert_equal "164 Waverley Street Apt 1234", doc.at_xpath("//billTo/address").content, data
         assert_equal "DE", doc.at_xpath("//billTo/country").content, data
       end
@@ -908,9 +908,31 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_dont_include_cust_id_for_non_numeric_values
+  def test_include_cust_id_for_word_character_values
+   stub_comms do
+      @gateway.purchase(@amount, @credit_card, customer: "4840_TT")
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_not_nil doc.at_xpath("//customer/id"), data
+        assert_equal "4840_TT", doc.at_xpath("//customer/id").content, data
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
+      end
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_dont_include_cust_id_for_email_addresses
    stub_comms do
       @gateway.purchase(@amount, @credit_card, customer: "bob@test.com")
+    end.check_request do |endpoint, data, headers|
+      doc = parse(data)
+      assert !doc.at_xpath("//customer/id"), data
+      assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_dont_include_cust_id_for_phone_numbers
+   stub_comms do
+      @gateway.purchase(@amount, @credit_card, customer: "111-123-1231")
     end.check_request do |endpoint, data, headers|
       doc = parse(data)
       assert !doc.at_xpath("//customer/id"), data

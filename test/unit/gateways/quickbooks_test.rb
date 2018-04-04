@@ -112,6 +112,16 @@ class QuickBooksTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_small_json), post_scrubbed_small_json
   end
 
+  def test_default_context
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      json = JSON.parse(data)
+      refute json.fetch('context').fetch('mobile')
+      assert json.fetch('context').fetch('isEcommerce')
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def pre_scrubbed_small_json

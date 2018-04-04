@@ -9,7 +9,6 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(CA PR US)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
-      self.ssl_version = :TLSv1
 
       self.homepage_url = 'https://www.globalpaymentsinc.com'
       self.display_name = 'Global Transport'
@@ -73,6 +72,17 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
 
         commit('CardVerify', post, options)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?GlobalPassword=)[^&]*)i, '\1[FILTERED]')
       end
 
       private

@@ -6,6 +6,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     @amount = 200
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2018')
+    @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -31,6 +32,36 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_includes_avs_result
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'S', response.avs_result["code"]
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+  end
+
+  def test_successful_authorize_includes_avs_result
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'S', response.avs_result["code"]
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+  end
+
+  def test_successful_purchase_includes_cvv_result
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'Y', response.cvv_result["code"]
+  end
+
+  def test_successful_authorize_includes_cvv_result
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 'Y', response.cvv_result["code"]
   end
 
   def test_successful_purchase_with_descriptors
@@ -66,6 +97,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_avs_failed_purchase
     response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(address1: 'Test_A'))
+    assert_failure response
+    assert_equal '40111 - Street Match Only', response.message
+  end
+
+  def test_avs_failed_authorize
+    response = @gateway.authorize(@amount, @credit_card, billing_address: address.update(address1: 'Test_A'))
     assert_failure response
     assert_equal '40111 - Street Match Only', response.message
   end
@@ -141,5 +178,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_failure response
     assert_match %r{Invalid Card Number}, response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_expired_card_returns_error_code
+    response = @gateway.purchase(@amount, @expired_card, @options)
+    assert_failure response
+    assert_equal 'Validation error: Expired Card', response.message
+    assert_equal '70000: 70077', response.error_code
   end
 end

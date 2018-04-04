@@ -243,6 +243,16 @@ class IatsPaymentsTest < Test::Unit::TestCase
     end
   end
 
+  def test_failed_connection
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(failed_connection_response)
+
+    assert response
+    assert_failure response
+    assert_match(/Server Error/, response.message)
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
@@ -508,6 +518,26 @@ class IatsPaymentsTest < Test::Unit::TestCase
               </IATSRESPONSE>
             </DeleteCustomerCodeV1Result>
           </DeleteCustomerCodeV1Response>
+        </soap:Body>
+      </soap:Envelope>
+    XML
+  end
+
+  def failed_connection_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <ProcessCreditCardV1Response xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessCreditCardV1Result>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Failure</STATUS>
+                <ERRORS>Server Error</ERRORS>
+                <PROCESSRESULT>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessCreditCardV1Result>
+          </ProcessCreditCardV1Response>
         </soap:Body>
       </soap:Envelope>
     XML

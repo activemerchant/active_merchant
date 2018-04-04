@@ -103,6 +103,12 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
   end
 
+  def test_successful_purchase_with_customer
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(customer: "abcd_123"))
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -561,6 +567,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.credit(@amount, @check, @options)
     assert_equal 'The transaction is currently under review', response.message
     assert response.authorization
+  end
+
+  def test_successful_echeck_refund
+    purchase = @gateway.purchase(@amount, @check, @options)
+    assert_success purchase
+
+    @options.update(transaction_id:  purchase.params['transaction_id'], test_request: true)
+    refund = @gateway.credit(@amount, @check, @options)
+    assert_failure refund
+    assert_match %r{The transaction cannot be found}, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
   end
 
   def test_failed_credit

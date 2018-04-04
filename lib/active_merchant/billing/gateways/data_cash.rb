@@ -77,6 +77,16 @@ module ActiveMerchant
         commit(build_transaction_refund_request(money, reference))
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(/(<pan>)\d+(<\/pan>)/i, '\1[FILTERED]\2').
+          gsub(/(<cv2>)\d+(<\/cv2>)/i, '\1[FILTERED]\2').
+          gsub(/(<password>).+(<\/password>)/i, '\1[FILTERED]\2')
+      end
 
       private
 
@@ -168,6 +178,7 @@ module ActiveMerchant
             unless money.nil?
               xml.tag! :TxnDetails do
                 xml.tag! :amount, amount(money)
+                xml.tag! :capturemethod, 'ecomm'
               end
             end
           end
@@ -188,6 +199,7 @@ module ActiveMerchant
             xml.tag! :TxnDetails do
               xml.tag! :merchantreference, format_reference_number(options[:order_id])
               xml.tag! :amount, amount(money)
+              xml.tag! :capturemethod, 'ecomm'
             end
           end
         end

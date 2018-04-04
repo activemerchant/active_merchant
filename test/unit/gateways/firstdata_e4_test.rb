@@ -190,6 +190,26 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_eci_numeric_padding
+    @credit_card = network_tokenization_credit_card
+    @credit_card.eci = "5"
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+    end.respond_with(successful_purchase_response)
+
+    @credit_card = network_tokenization_credit_card
+    @credit_card.eci = 5
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_eci_option_value
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(eci: "05"))
@@ -213,6 +233,25 @@ class FirstdataE4Test < Test::Unit::TestCase
       assert_match "<Ecommerce_Flag>05</Ecommerce_Flag>", data
       assert_match "<XID>mrLdtHIWq2nLXq7IrA==\n</XID>", data
       assert_match "<CAVV>whateverthecryptogramofatlc=\n</CAVV>", data
+      assert_xml_valid_to_wsdl(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_network_tokenization_requests_with_discover
+    stub_comms do
+      credit_card = network_tokenization_credit_card(
+        "6011111111111117",
+        brand: "discover",
+        transaction_id: "123",
+        eci: "05",
+        payment_cryptogram: "whatever_the_cryptogram_is",
+      )
+
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |_, data, _|
+      assert_match "<Ecommerce_Flag>04</Ecommerce_Flag>", data
+      assert_match "<XID>123</XID>", data
+      assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
       assert_xml_valid_to_wsdl(data)
     end.respond_with(successful_purchase_response)
   end
@@ -276,12 +315,9 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_supports_scrubbing?
+  def test_transcript_scrubbing
     assert @gateway.supports_scrubbing?
-  end
-
-  def test_scrub
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
 
   def test_supports_network_tokenization
@@ -297,14 +333,14 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_empty errors, "XSD validation errors in the following XML:\n#{doc}"
   end
 
-  def pre_scrubbed
+  def pre_scrub
     <<-PRE_SCRUBBED
       opening connection to api.demo.globalgatewaye4.firstdata.com:443...
       opened
       starting SSL for api.demo.globalgatewaye4.firstdata.com:443...
       SSL established
       <- "POST /transaction/v11 HTTP/1.1\r\nContent-Type: application/xml\r\nAccepts: application/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.demo.globalgatewaye4.firstdata.com\r\nContent-Length: 593\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>REDACTED</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>4242424242424242</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>123</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV/><XID/><Ecommerce_Flag/></Transaction>"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>REDACTED</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>4242424242424242</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>123</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV>lol</CAVV><XID/><Ecommerce_Flag/></Transaction>"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
       -> "Content-Type: application/xml; charset=utf-8\r\n"
@@ -320,21 +356,21 @@ class FirstdataE4Test < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 2872 bytes...
-      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TransactionResult>\n  <ExactID>AD2327-05</ExactID>\n  <Password></Password>\n  <Transaction_Type>00</Transaction_Type>\n  <DollarAmount>1.0</DollarAmount>\n  <SurchargeAmount></SurchargeAmount>\n  <Card_Number>############4242</Card_Number>\n  <Transaction_Tag>42930941</Transaction_Tag>\n  <Track1></Track1>\n  <Track2></Track2>\n  <PAN></PAN>\n  <Authorization_Num>ET151682</Authorization_Num>\n  <Expiry_Date>0916</Expiry_Date>\n  <CardHoldersName>Longbob Longsen</CardHoldersName>\n  <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>\n  <VerificationStr2>123</VerificationStr2>\n  <CVD_Presence_Ind>0</CVD_Presence_Ind>\n  <ZipCode></ZipCode>\n  <Tax1Amount></Tax1Amount>\n  <Tax1Number></Tax1Number>\n  <Tax2Amount></Tax2Amount>\n  <Tax2Number></Tax2Number>\n  <Secure_AuthRequired></Secure_AuthRequired>\n  <Secure_AuthResult></Secure_AuthResult>\n  <Ecommerce_Flag></Ecommerce_Flag>\n  <XID></XID>\n  <CAVV></CAVV>\n  <CAVV_Algorithm></CAVV_Algorithm>\n  <Reference_No>1</Reference_No>\n  <Customer_Ref></Customer_Ref>\n  <Reference_3>Store Purchase</Reference_3>\n  <Language></Language>\n  <Client_IP>216.191.105.146</Client_IP>\n  <Client_Email></Client_Email>\n  <Transaction_Error>false</Transaction_Error>\n  <Transaction_Approved>true</Transaction_Approved>\n  <EXact_Resp_Code>00</EXact_Resp_Code>\n  <EXact_Message>Transaction Normal</EXact_Message>\n  <Bank_Resp_Code>100</Bank_Resp_Code>\n  <Bank_Message>Approved</Bank_Message>\n  <Bank_Resp_Code_2></Bank_Resp_Code_2>\n  <SequenceNo>106826</SequenceNo>\n  <AVS>1</AVS>\n  <CVV2>M</CVV2>\n  <Retrieval_Ref_No>0025564</Retrieval_Ref_No>\n  <CAVV_Response></CAVV_Response>\n  <Currency>USD</Currency>\n  <AmountRequested></AmountRequested>\n  <PartialRedemption>false</PartialRedemption>\n  <MerchantName>Shopify DEMO0678</MerchantName>\n  <MerchantAddress>126 York Street</MerchantAddress>\n  <MerchantCity>Ottawa</MerchantCity>\n  <MerchantProvince>Alabama</MerchantProvince>\n  <MerchantCountry>Canada</MerchantCountry>\n  <MerchantPostal>K1N 5T5</MerchantPostal>\n  <MerchantURL>www.shopify.com</MerchantURL>\n  <TransarmorToken></TransarmorToken>\n  <CardType>Visa</CardType>\n  <CurrentBalance></CurrentBalance>\n  <PreviousBalance></PreviousBalance>\n  <EAN></EAN>\n  <CardCost></CardCost>\n  <VirtualCard>false</VirtualCard>\n  <CTR>=========== TRANSACTION RECORD ==========\nShopify DEMO0678\n126 York Street\nOttawa, AL K1N 5T5\nCanada\nwww.shopify.com\n\nTY"
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TransactionResult>\n  <ExactID>AD2327-05</ExactID>\n  <Password></Password>\n  <Transaction_Type>00</Transaction_Type>\n  <DollarAmount>1.0</DollarAmount>\n  <SurchargeAmount></SurchargeAmount>\n  <Card_Number>############4242</Card_Number>\n  <Transaction_Tag>42930941</Transaction_Tag>\n  <Track1></Track1>\n  <Track2></Track2>\n  <PAN></PAN>\n  <Authorization_Num>ET151682</Authorization_Num>\n  <Expiry_Date>0916</Expiry_Date>\n  <CardHoldersName>Longbob Longsen</CardHoldersName>\n  <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>\n  <VerificationStr2>123</VerificationStr2>\n  <CVD_Presence_Ind>0</CVD_Presence_Ind>\n  <ZipCode></ZipCode>\n  <Tax1Amount></Tax1Amount>\n  <Tax1Number></Tax1Number>\n  <Tax2Amount></Tax2Amount>\n  <Tax2Number></Tax2Number>\n  <Secure_AuthRequired></Secure_AuthRequired>\n  <Secure_AuthResult></Secure_AuthResult>\n  <Ecommerce_Flag></Ecommerce_Flag>\n  <XID></XID>\n  <CAVV>lol</CAVV>\n  <CAVV_Algorithm></CAVV_Algorithm>\n  <Reference_No>1</Reference_No>\n  <Customer_Ref></Customer_Ref>\n  <Reference_3>Store Purchase</Reference_3>\n  <Language></Language>\n  <Client_IP>216.191.105.146</Client_IP>\n  <Client_Email></Client_Email>\n  <Transaction_Error>false</Transaction_Error>\n  <Transaction_Approved>true</Transaction_Approved>\n  <EXact_Resp_Code>00</EXact_Resp_Code>\n  <EXact_Message>Transaction Normal</EXact_Message>\n  <Bank_Resp_Code>100</Bank_Resp_Code>\n  <Bank_Message>Approved</Bank_Message>\n  <Bank_Resp_Code_2></Bank_Resp_Code_2>\n  <SequenceNo>106826</SequenceNo>\n  <AVS>1</AVS>\n  <CVV2>M</CVV2>\n  <Retrieval_Ref_No>0025564</Retrieval_Ref_No>\n  <CAVV_Response></CAVV_Response>\n  <Currency>USD</Currency>\n  <AmountRequested></AmountRequested>\n  <PartialRedemption>false</PartialRedemption>\n  <MerchantName>Shopify DEMO0678</MerchantName>\n  <MerchantAddress>126 York Street</MerchantAddress>\n  <MerchantCity>Ottawa</MerchantCity>\n  <MerchantProvince>Alabama</MerchantProvince>\n  <MerchantCountry>Canada</MerchantCountry>\n  <MerchantPostal>K1N 5T5</MerchantPostal>\n  <MerchantURL>www.shopify.com</MerchantURL>\n  <TransarmorToken></TransarmorToken>\n  <CardType>Visa</CardType>\n  <CurrentBalance></CurrentBalance>\n  <PreviousBalance></PreviousBalance>\n  <EAN></EAN>\n  <CardCost></CardCost>\n  <VirtualCard>false</VirtualCard>\n  <CTR>=========== TRANSACTION RECORD ==========\nShopify DEMO0678\n126 York Street\nOttawa, AL K1N 5T5\nCanada\nwww.shopify.com\n\nTY"
       -> "PE: Purchase\n\nACCT: Visa  $ 1.00 USD\n\nCARDHOLDER NAME : Longbob Longsen\nCARD NUMBER     : ############4242\nDATE/TIME       : 26 Jan 15 12:11:44\nREFERENCE #     :  106826 M\nAUTHOR. #       : ET151682\nTRANS. REF.     : 1\n\n    Approved - Thank You 100\n\n\nPlease retain this copy for your records.\n\nCardholder will pay above amount to card\nissuer pursuant to cardholder agreement.\n=========================================</CTR>\n</TransactionResult>\n"
       read 2872 bytes
       Conn close
     PRE_SCRUBBED
   end
 
-  def post_scrubbed
+  def post_scrub
     <<-POST_SCRUBBED
       opening connection to api.demo.globalgatewaye4.firstdata.com:443...
       opened
       starting SSL for api.demo.globalgatewaye4.firstdata.com:443...
       SSL established
       <- "POST /transaction/v11 HTTP/1.1\r\nContent-Type: application/xml\r\nAccepts: application/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.demo.globalgatewaye4.firstdata.com\r\nContent-Length: 593\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>REDACTED</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>[FILTERED]</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>[FILTERED]</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV/><XID/><Ecommerce_Flag/></Transaction>"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>[FILTERED]</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>[FILTERED]</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>[FILTERED]</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV>[FILTERED]</CAVV><XID/><Ecommerce_Flag/></Transaction>"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
       -> "Content-Type: application/xml; charset=utf-8\r\n"
@@ -350,7 +386,7 @@ class FirstdataE4Test < Test::Unit::TestCase
       -> "Connection: Close\r\n"
       -> "\r\n"
       reading 2872 bytes...
-      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TransactionResult>\n  <ExactID>AD2327-05</ExactID>\n  <Password></Password>\n  <Transaction_Type>00</Transaction_Type>\n  <DollarAmount>1.0</DollarAmount>\n  <SurchargeAmount></SurchargeAmount>\n  <Card_Number>[FILTERED]</Card_Number>\n  <Transaction_Tag>42930941</Transaction_Tag>\n  <Track1></Track1>\n  <Track2></Track2>\n  <PAN></PAN>\n  <Authorization_Num>ET151682</Authorization_Num>\n  <Expiry_Date>0916</Expiry_Date>\n  <CardHoldersName>Longbob Longsen</CardHoldersName>\n  <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>\n  <VerificationStr2>[FILTERED]</VerificationStr2>\n  <CVD_Presence_Ind>0</CVD_Presence_Ind>\n  <ZipCode></ZipCode>\n  <Tax1Amount></Tax1Amount>\n  <Tax1Number></Tax1Number>\n  <Tax2Amount></Tax2Amount>\n  <Tax2Number></Tax2Number>\n  <Secure_AuthRequired></Secure_AuthRequired>\n  <Secure_AuthResult></Secure_AuthResult>\n  <Ecommerce_Flag></Ecommerce_Flag>\n  <XID></XID>\n  <CAVV></CAVV>\n  <CAVV_Algorithm></CAVV_Algorithm>\n  <Reference_No>1</Reference_No>\n  <Customer_Ref></Customer_Ref>\n  <Reference_3>Store Purchase</Reference_3>\n  <Language></Language>\n  <Client_IP>216.191.105.146</Client_IP>\n  <Client_Email></Client_Email>\n  <Transaction_Error>false</Transaction_Error>\n  <Transaction_Approved>true</Transaction_Approved>\n  <EXact_Resp_Code>00</EXact_Resp_Code>\n  <EXact_Message>Transaction Normal</EXact_Message>\n  <Bank_Resp_Code>100</Bank_Resp_Code>\n  <Bank_Message>Approved</Bank_Message>\n  <Bank_Resp_Code_2></Bank_Resp_Code_2>\n  <SequenceNo>106826</SequenceNo>\n  <AVS>1</AVS>\n  <CVV2>M</CVV2>\n  <Retrieval_Ref_No>0025564</Retrieval_Ref_No>\n  <CAVV_Response></CAVV_Response>\n  <Currency>USD</Currency>\n  <AmountRequested></AmountRequested>\n  <PartialRedemption>false</PartialRedemption>\n  <MerchantName>Shopify DEMO0678</MerchantName>\n  <MerchantAddress>126 York Street</MerchantAddress>\n  <MerchantCity>Ottawa</MerchantCity>\n  <MerchantProvince>Alabama</MerchantProvince>\n  <MerchantCountry>Canada</MerchantCountry>\n  <MerchantPostal>K1N 5T5</MerchantPostal>\n  <MerchantURL>www.shopify.com</MerchantURL>\n  <TransarmorToken></TransarmorToken>\n  <CardType>Visa</CardType>\n  <CurrentBalance></CurrentBalance>\n  <PreviousBalance></PreviousBalance>\n  <EAN></EAN>\n  <CardCost></CardCost>\n  <VirtualCard>false</VirtualCard>\n  <CTR>=========== TRANSACTION RECORD ==========\nShopify DEMO0678\n126 York Street\nOttawa, AL K1N 5T5\nCanada\nwww.shopify.com\n\nTY"
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TransactionResult>\n  <ExactID>AD2327-05</ExactID>\n  <Password></Password>\n  <Transaction_Type>00</Transaction_Type>\n  <DollarAmount>1.0</DollarAmount>\n  <SurchargeAmount></SurchargeAmount>\n  <Card_Number>[FILTERED]</Card_Number>\n  <Transaction_Tag>42930941</Transaction_Tag>\n  <Track1></Track1>\n  <Track2></Track2>\n  <PAN></PAN>\n  <Authorization_Num>ET151682</Authorization_Num>\n  <Expiry_Date>0916</Expiry_Date>\n  <CardHoldersName>Longbob Longsen</CardHoldersName>\n  <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>\n  <VerificationStr2>[FILTERED]</VerificationStr2>\n  <CVD_Presence_Ind>0</CVD_Presence_Ind>\n  <ZipCode></ZipCode>\n  <Tax1Amount></Tax1Amount>\n  <Tax1Number></Tax1Number>\n  <Tax2Amount></Tax2Amount>\n  <Tax2Number></Tax2Number>\n  <Secure_AuthRequired></Secure_AuthRequired>\n  <Secure_AuthResult></Secure_AuthResult>\n  <Ecommerce_Flag></Ecommerce_Flag>\n  <XID></XID>\n  <CAVV>[FILTERED]</CAVV>\n  <CAVV_Algorithm></CAVV_Algorithm>\n  <Reference_No>1</Reference_No>\n  <Customer_Ref></Customer_Ref>\n  <Reference_3>Store Purchase</Reference_3>\n  <Language></Language>\n  <Client_IP>216.191.105.146</Client_IP>\n  <Client_Email></Client_Email>\n  <Transaction_Error>false</Transaction_Error>\n  <Transaction_Approved>true</Transaction_Approved>\n  <EXact_Resp_Code>00</EXact_Resp_Code>\n  <EXact_Message>Transaction Normal</EXact_Message>\n  <Bank_Resp_Code>100</Bank_Resp_Code>\n  <Bank_Message>Approved</Bank_Message>\n  <Bank_Resp_Code_2></Bank_Resp_Code_2>\n  <SequenceNo>106826</SequenceNo>\n  <AVS>1</AVS>\n  <CVV2>M</CVV2>\n  <Retrieval_Ref_No>0025564</Retrieval_Ref_No>\n  <CAVV_Response></CAVV_Response>\n  <Currency>USD</Currency>\n  <AmountRequested></AmountRequested>\n  <PartialRedemption>false</PartialRedemption>\n  <MerchantName>Shopify DEMO0678</MerchantName>\n  <MerchantAddress>126 York Street</MerchantAddress>\n  <MerchantCity>Ottawa</MerchantCity>\n  <MerchantProvince>Alabama</MerchantProvince>\n  <MerchantCountry>Canada</MerchantCountry>\n  <MerchantPostal>K1N 5T5</MerchantPostal>\n  <MerchantURL>www.shopify.com</MerchantURL>\n  <TransarmorToken></TransarmorToken>\n  <CardType>Visa</CardType>\n  <CurrentBalance></CurrentBalance>\n  <PreviousBalance></PreviousBalance>\n  <EAN></EAN>\n  <CardCost></CardCost>\n  <VirtualCard>false</VirtualCard>\n  <CTR>=========== TRANSACTION RECORD ==========\nShopify DEMO0678\n126 York Street\nOttawa, AL K1N 5T5\nCanada\nwww.shopify.com\n\nTY"
       -> "PE: Purchase\n\nACCT: Visa  $ 1.00 USD\n\nCARDHOLDER NAME : Longbob Longsen\nCARD NUMBER     : ############4242\nDATE/TIME       : 26 Jan 15 12:11:44\nREFERENCE #     :  106826 M\nAUTHOR. #       : ET151682\nTRANS. REF.     : 1\n\n    Approved - Thank You 100\n\n\nPlease retain this copy for your records.\n\nCardholder will pay above amount to card\nissuer pursuant to cardholder agreement.\n=========================================</CTR>\n</TransactionResult>\n"
       read 2872 bytes
       Conn close

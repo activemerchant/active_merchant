@@ -16,7 +16,8 @@ module ActiveMerchant #:nodoc:
         :capture        => 'cc:capture',
         :refund         => 'cc:refund',
         :void           => 'cc:void',
-        :void_release   => 'cc:void:release'
+        :void_release   => 'cc:void:release',
+        :check_purchase => 'check:sale'
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
@@ -48,7 +49,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)
+        add_payment(post, credit_card)
         unless credit_card.track_data.present?
           add_address(post, credit_card, options)
           add_customer_data(post, options)
@@ -59,20 +60,20 @@ module ActiveMerchant #:nodoc:
         commit(:authorization, post)
       end
 
-      def purchase(money, credit_card, options = {})
+      def purchase(money, payment, options = {})
         post = {}
 
         add_amount(post, money)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)
-        unless credit_card.track_data.present?
-          add_address(post, credit_card, options)
+        add_payment(post, payment)
+        unless payment.respond_to?(:track_data) && payment.track_data.present?
+          add_address(post, payment, options)
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
         add_test_mode(post, options)
 
-        commit(:purchase, post)
+        payment.respond_to?(:routing_number) ? commit(:check_purchase, post) : commit(:purchase, post)
       end
 
       def capture(money, authorization, options = {})
@@ -104,6 +105,19 @@ module ActiveMerchant #:nodoc:
         post = { :refNum => authorization }
         add_test_mode(post, options)
         commit(command, post)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?UMcard=)\d*(&?))i, '\1[FILTERED]\2').
+          gsub(%r((&?UMcvv2=)\d*(&?))i, '\1[FILTERED]\2').
+          gsub(%r((&?UMmagstripe=)[^&]*)i, '\1[FILTERED]\2').
+          gsub(%r((&?UMaccount=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?UMkey=)[^&]*)i, '\1[FILTERED]')
       end
 
     private
@@ -138,19 +152,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(post, credit_card, options)
+      def add_address(post, payment, options)
         billing_address = options[:billing_address] || options[:address]
 
-        add_address_for_type(:billing, post, credit_card, billing_address) if billing_address
-        add_address_for_type(:shipping, post, credit_card, options[:shipping_address]) if options[:shipping_address]
+        add_address_for_type(:billing, post, payment, billing_address) if billing_address
+        add_address_for_type(:shipping, post, payment, options[:shipping_address]) if options[:shipping_address]
       end
 
-      def add_address_for_type(type, post, credit_card, address)
+      def add_address_for_type(type, post, payment, address)
         prefix = address_key_prefix(type)
         first_name, last_name = split_names(address[:name])
 
-        post[address_key(prefix, 'fname')]    = first_name.blank? && last_name.blank? ? credit_card.first_name : first_name
-        post[address_key(prefix, 'lname')]    = first_name.blank? && last_name.blank? ? credit_card.last_name : last_name
+        post[address_key(prefix, 'fname')]    = first_name.blank? && last_name.blank? ? payment.first_name : first_name
+        post[address_key(prefix, 'lname')]    = first_name.blank? && last_name.blank? ? payment.last_name : last_name
         post[address_key(prefix, 'company')]  = address[:company]   unless address[:company].blank?
         post[address_key(prefix, 'street')]   = address[:address1]  unless address[:address1].blank?
         post[address_key(prefix, 'street2')]  = address[:address2]  unless address[:address2].blank?
@@ -177,16 +191,20 @@ module ActiveMerchant #:nodoc:
         post[:description]  = options[:description]
       end
 
-      def add_credit_card(post, credit_card)
-        if credit_card.track_data.present?
-          post[:magstripe] = credit_card.track_data
+      def add_payment(post, payment)
+        if payment.respond_to?(:routing_number)
+          post[:account] = payment.account_number
+          post[:routing] = payment.routing_number
+          post[:name]    = payment.name unless payment.name.blank?
+        elsif payment.respond_to?(:track_data) && payment.track_data.present?
+          post[:magstripe] = payment.track_data
           post[:cardpresent] = true
         else
-          post[:card]   = credit_card.number
-          post[:cvv2]   = credit_card.verification_value if credit_card.verification_value?
-          post[:expir]  = expdate(credit_card)
-          post[:name]   = credit_card.name unless credit_card.name.blank?
-          post[:cardpresent] = true if credit_card.manual_entry
+          post[:card]   = payment.number
+          post[:cvv2]   = payment.verification_value if payment.verification_value?
+          post[:expir]  = expdate(payment)
+          post[:name]   = payment.name unless payment.name.blank?
+          post[:cardpresent] = true if payment.manual_entry
         end
       end
 
