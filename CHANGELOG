@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Remove support for Rails < 4.2, add support for Rails 5.2 and Ruby 2.5 [bdewater]
 * Litle: Add store for echecks [nfarve] #2779
 * Litle: Add Support for Echeck [nfarve] #2776
 * Orbital: Correct level 2 tax handling [deedeelavinder] #2729
