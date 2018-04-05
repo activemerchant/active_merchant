@@ -256,6 +256,14 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/username=#{@gateway.options[:login]}/, data)
+      assert_match(/password=#{@gateway.options[:password]}/, data)
+      assert_match(/customer_vault=add_customer/, data)
+      assert_match(/payment=creditcard/, data)
+      assert_match(/ccnumber=#{@credit_card.number}/, data)
+      assert_match(/cvv=#{@credit_card.verification_value}/, data)
+      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
     end.respond_with(successful_store_response)
 
     assert_success response
@@ -277,6 +285,17 @@ class NmiTest < Test::Unit::TestCase
   def test_successful_store_with_echeck
     response = stub_comms do
       @gateway.store(@check)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/username=#{@gateway.options[:login]}/, data)
+      assert_match(/password=#{@gateway.options[:password]}/, data)
+      assert_match(/customer_vault=add_customer/, data)
+      assert_match(/payment=check/, data)
+      assert_match(/checkname=#{@check.name}/, CGI.unescape(data))
+      assert_match(/checkaba=#{@check.routing_number}/, data)
+      assert_match(/checkaccount=#{@check.account_number}/, data)
+      assert_match(/account_holder_type=#{@check.account_holder_type}/, data)
+      assert_match(/account_type=#{@check.account_type}/, data)
+      assert_match(/sec_code=WEB/, data)
     end.respond_with(successful_echeck_store_response)
 
     assert_success response
