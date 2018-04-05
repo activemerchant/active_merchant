@@ -202,8 +202,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        url = (test? ? test_url : live_url)
-
         begin
           raw_response = ssl_post("#{url}/#{action.to_s}", post_data(action, parameters), request_headers)
           response = parse(raw_response)
@@ -222,6 +220,16 @@ module ActiveMerchant #:nodoc:
           error_code: success ? nil : error_code_from(response)
         )
 
+      end
+
+      def url
+        if test?
+          test_url
+        elsif @options[:subdomain]
+          "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/Payment/v18"
+        else
+          live_url
+        end
       end
 
       def basic_auth

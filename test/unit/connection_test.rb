@@ -26,6 +26,22 @@ class ConnectionTest < Test::Unit::TestCase
     end
   end
 
+  def test_connection_passes_env_proxy_by_default
+    spy = Net::HTTP.new('example.com', 443)
+    Net::HTTP.expects(:new).with('example.com', 443, :ENV, nil).returns(spy)
+    spy.expects(:get).with('/tx.php', {}).returns(@ok)
+    @connection.request(:get, nil, {})
+  end
+
+  def test_connection_does_pass_requested_proxy
+    @connection.proxy_address = "proxy.example.com"
+    @connection.proxy_port = 8080
+    spy = Net::HTTP.new('example.com', 443)
+    Net::HTTP.expects(:new).with('example.com', 443, "proxy.example.com", 8080).returns(spy)
+    spy.expects(:get).with('/tx.php', {}).returns(@ok)
+    @connection.request(:get, nil, {})
+  end
+
   def test_successful_get_request
     @connection.logger.expects(:info).twice
     Net::HTTP.any_instance.expects(:get).with('/tx.php', {}).returns(@ok)
@@ -48,6 +64,12 @@ class ConnectionTest < Test::Unit::TestCase
   def test_successful_delete_request
     Net::HTTP.any_instance.expects(:delete).with('/tx.php', {}).returns(@ok)
     response = @connection.request(:delete, nil, {})
+    assert_equal 'success', response.body
+  end
+
+  def test_successful_delete_with_body_request
+    Net::HTTP.any_instance.expects(:request).at_most(3).returns(@ok)
+    response = @connection.request(:delete, 'data', {})
     assert_equal 'success', response.body
   end
 
