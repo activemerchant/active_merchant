@@ -13,6 +13,7 @@ require 'rake'
 require 'rake/testtask'
 require 'support/gateway_support'
 require 'support/ssl_verify'
+require 'support/ssl_version'
 require 'support/outbound_hosts'
 require 'bundler/gem_tasks'
 
@@ -89,8 +90,15 @@ namespace :gateways do
     end
   end
 
-  desc 'Test that gateways allow SSL verify_peer'
-  task :ssl_verify do
-    SSLVerify.new.test_gateways
+  namespace :ssl do
+    desc 'Test that gateways allow SSL verify_peer'
+    task :verify do
+      SSLVerify.new.test_gateways
+    end
+
+    desc 'Test gateways minimal SSL version connection'
+    task :min_version do
+      SSLVersion.new.test_gateways
+    end
   end
 end
