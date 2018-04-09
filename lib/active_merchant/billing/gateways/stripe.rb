@@ -314,7 +314,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
-          post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
+          post[:receipt_email] = options[:receipt_email] || options[:email]
           add_customer(post, payment, options)
           add_flags(post, options)
         end
