@@ -254,7 +254,7 @@ module ActiveMerchant
 
         doc.country(address[:country]) if address[:country]
         doc.state(address[:state]) if address[:state]
-        doc.address1(address[:address]) if address[:address]
+        doc.address(address[:address]) if address[:address]
         doc.city(address[:city]) if address[:city]
         doc.zip(address[:zip]) if address[:zip]
       end
@@ -318,7 +318,15 @@ module ActiveMerchant
 
       def commit(action, verb = :post)
         request = build_xml_request(action) { |doc| yield(doc) }
+
+        puts '!!!!!!!!!!!! request'
+        puts request.inspect
+
         response = api_request(action, request, verb)
+
+        puts '!!!!!!!!!!!! response'
+        puts response.inspect
+        
         parsed = parse(response)
         succeeded = success_from(action, response)
         Response.new(
