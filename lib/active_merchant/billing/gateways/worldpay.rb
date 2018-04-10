@@ -101,27 +101,27 @@ module ActiveMerchant #:nodoc:
       private
 
       def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED")
+        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED", options)
       end
 
       def capture_request(money, authorization, options)
-        commit('capture', build_capture_request(money, authorization, options), :ok)
+        commit('capture', build_capture_request(money, authorization, options), :ok, options)
       end
 
       def cancel_request(authorization, options)
-        commit('cancel', build_void_request(authorization, options), :ok)
+        commit('cancel', build_void_request(authorization, options), :ok, options)
       end
 
       def inquire_request(authorization, options, *success_criteria)
-        commit('inquiry', build_order_inquiry_request(authorization, options), *success_criteria)
+        commit('inquiry', build_order_inquiry_request(authorization, options), *success_criteria, options)
       end
 
       def refund_request(money, authorization, options)
-        commit('refund', build_refund_request(money, authorization, options), :ok)
+        commit('refund', build_refund_request(money, authorization, options), :ok, options)
       end
 
       def credit_request(money, payment_method, options)
-        commit('credit', build_authorization_request(money, payment_method, options), :ok)
+        commit('credit', build_authorization_request(money, payment_method, options), :ok, options)
       end
 
       def build_request
@@ -252,9 +252,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_email(xml, options)
-        return unless options[:email]
+        return unless options[:execute_threed] || options[:email]
         xml.tag! 'shopper' do
-          xml.tag! 'shopperEmailAddress', options[:email]
+          xml.tag! 'shopperEmailAddress', options[:email] if  options[:email]
+          xml.tag! 'browser' do
+            xml.tag! 'acceptHeader', options[:accept_header]
+            xml.tag! 'userAgentHeader', options[:user_agent]
+          end
         end
       end
 
@@ -321,9 +325,24 @@ module ActiveMerchant #:nodoc:
         raw
       end
 
-      def commit(action, request, *success_criteria)
-        xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
-        raw = parse(action, xmr)
+      def headers(options)
+        headers = {
+          'Content-Type' => 'text/xml',
+          'Authorization' => encoded_credentials
+        }
+        if options[:cookie]
+          headers.merge!('Set-Cookie' => options[:cookie]) if options[:cookie]
+        end
+        headers
+      end
+
+      def commit(action, request, *success_criteria, options)
+        xml = ssl_post(url, request, headers(options))
+        raw = parse(action, xml)
+        if options[:execute_threed]
+          raw[:cookie] = @cookie
+          raw[:session_id] = options[:session_id]
+        end
         success, message = success_and_message_from(raw, success_criteria)
 
         Response.new(
@@ -344,6 +363,18 @@ module ActiveMerchant #:nodoc:
 
       def url
         test? ? self.test_url : self.live_url
+      end
+
+      # Override the regular handle response so we can access the headers
+      # Set-Cookie value is needed for 3DS transactions
+      def handle_response(response)
+        case response.code.to_i
+        when 200...300
+          @cookie = response.response['Set-Cookie']
+          response.body
+        else
+          raise ResponseError.new(response)
+        end
       end
 
       # success_criteria can be:
