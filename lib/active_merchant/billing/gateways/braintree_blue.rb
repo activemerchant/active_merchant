@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         commit do
-          result = @braintree_gateway.transaction.submit_for_settlement(authorization, amount(money).to_s)
+          result = @braintree_gateway.transaction.submit_for_settlement(authorization, localized_amount(money, options[:currency] || default_currency).to_s)
           response_from_result(result)
         end
       end
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
         # legacy signature: #refund(transaction_id, options = {})
         # new signature: #refund(money, transaction_id, options = {})
         money, transaction_id, options = extract_refund_args(args)
-        money = amount(money).to_s if money
+        money = localized_amount(money, options[:currency] || default_currency).to_s if money
 
         commit do
           response = response_from_result(@braintree_gateway.transaction.refund(transaction_id, money))
@@ -530,6 +530,7 @@ module ActiveMerchant #:nodoc:
 
         {
           "order_id"                => transaction.order_id,
+          "amount"                  => transaction.amount.to_s,
           "status"                  => transaction.status,
           "credit_card_details"     => credit_card_details,
           "customer_details"        => customer_details,
@@ -543,7 +544,7 @@ module ActiveMerchant #:nodoc:
 
       def create_transaction_parameters(money, credit_card_or_vault_id, options)
         parameters = {
-          :amount => amount(money).to_s,
+          :amount => localized_amount(money, options[:currency] || default_currency).to_s,
           :order_id => options[:order_id],
           :customer => {
             :id => options[:store] == true ? "" : options[:store],
@@ -557,7 +558,6 @@ module ActiveMerchant #:nodoc:
             :hold_in_escrow => options[:hold_in_escrow]
           }
         }
-
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
         parameters[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
