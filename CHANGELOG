@@ -7,7 +7,7 @@
 * Fix ENV based configuration of Net::Http for proxies [bbergstrom] #2800
 * ANET: Withhold cryptogram for credit [curiousepic] #2804
 * Borgun: Remove batch from request parameters [deedeelavinder] #2805
-* WorldPay: Remove Inquiry requests in verify transactions
+* WorldPay: Remove Inquiry requests in verify transactions [nfarve] #2802
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
