@@ -1,3 +1,7 @@
+require 'active_merchant/billing/avs_result'
+require 'active_merchant/billing/cvv_result'
+require 'active_merchant/errors'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class Error < ActiveMerchantError #:nodoc:
