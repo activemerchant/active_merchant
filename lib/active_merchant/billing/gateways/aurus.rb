@@ -98,8 +98,8 @@ module ActiveMerchant  #:nodoc: ALL
         }
       end
 
-      def response_error(raw_response)
-        parse(raw_response)
+      def response_error(raw_response, action)
+        parse(raw_response, action)
       rescue JSON::ParserError
         json_error(raw_response)
       end
@@ -112,7 +112,7 @@ module ActiveMerchant  #:nodoc: ALL
           response = parse(raw_response, action)
         rescue ResponseError => e
           raw_response = e.response.body
-          response = response_error(raw_response)
+          response = response_error(raw_response, action)
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
