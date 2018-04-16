@@ -153,6 +153,14 @@ class NabTransactTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_nonfractional_currencies
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(10000, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<amount>100<\/amount>/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed

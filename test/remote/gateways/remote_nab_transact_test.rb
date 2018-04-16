@@ -177,7 +177,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     authorization = response.authorization
     assert response = @gateway.refund(@amount+1, authorization)
     assert_failure response
-    assert_equal 'Only $2.0 available for refund', response.message
+    assert_equal 'Only 2.00 AUD available for refund', response.message
   end
 
   def test_invalid_login
