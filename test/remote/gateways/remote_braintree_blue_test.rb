@@ -279,6 +279,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '(555)555-5555', transaction["customer_details"]["phone"]
   end
 
+  def test_successful_purchase_with_skip_advanced_fraud_checking_option
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_advanced_fraud_checking: true))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params["braintree_transaction"]["status"]
+  end
+
   def test_purchase_with_store_using_random_customer_id
     assert response = @gateway.purchase(
       @amount, credit_card('5105105105105100'), @options.merge(:store => true)

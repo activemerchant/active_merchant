@@ -555,9 +555,14 @@ module ActiveMerchant #:nodoc:
           :options => {
             :store_in_vault => options[:store] ? true : false,
             :submit_for_settlement => options[:submit_for_settlement],
-            :hold_in_escrow => options[:hold_in_escrow]
+            :hold_in_escrow => options[:hold_in_escrow],
           }
         }
+        
+        if options[:skip_advanced_fraud_checking]
+          parameters[:options].merge!({ :skip_advanced_fraud_checking => options[:skip_advanced_fraud_checking] })
+        end
+
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
         parameters[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
