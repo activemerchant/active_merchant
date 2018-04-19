@@ -43,6 +43,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'SUCCESS', auth.message
     assert auth.authorization
+    sleep(40)
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
@@ -51,12 +52,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'SUCCESS', auth.message
+    sleep(40)
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
 
     assert reference = auth.authorization
     @options[:order_id] = generate_unique_id
     assert auth = @gateway.authorize(@amount, reference, @options)
+    sleep(40)
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
@@ -65,6 +68,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'SUCCESS', auth.message
+    sleep(40)
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
 
@@ -72,6 +76,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @options[:order_id] = generate_unique_id
     assert auth = @gateway.authorize(@amount, reference, @options)
     @options[:order_id] = generate_unique_id
+    sleep(40)
     assert capture = @gateway.purchase(@amount, auth.authorization, @options)
     assert_success capture
   end
@@ -100,6 +105,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_void
     assert_success(response = @gateway.authorize(@amount, @credit_card, @options))
+    sleep(40)
     assert_success (void = @gateway.void(response.authorization))
     assert_equal "SUCCESS", void.message
     assert void.params["cancel_received_order_code"]

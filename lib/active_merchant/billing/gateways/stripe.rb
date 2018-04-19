@@ -128,6 +128,7 @@ module ActiveMerchant #:nodoc:
         else
           add_application_fee(post, options)
           add_amount(post, money, options)
+          add_exchange_rate(post, options)
           commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
         end
       end
@@ -320,6 +321,7 @@ module ActiveMerchant #:nodoc:
 
         add_metadata(post, options)
         add_application_fee(post, options)
+        add_exchange_rate(post, options)
         add_destination(post, options)
         post
       end
@@ -332,6 +334,10 @@ module ActiveMerchant #:nodoc:
 
       def add_application_fee(post, options)
         post[:application_fee] = options[:application_fee] if options[:application_fee]
+      end
+
+      def add_exchange_rate(post, options)
+        post[:exchange_rate] = options[:exchange_rate] if options[:exchange_rate]
       end
 
       def add_destination(post, options)

@@ -154,6 +154,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'laser', CreditCard.brand?('677117111234')
   end
 
+  def test_should_detect_sodexo_card
+    assert_equal 'sodexo', CreditCard.brand?('60606944957644')
+  end
+
+  def test_should_detect_vr_card
+    assert_equal 'vr', CreditCard.brand?('63703644957644')
+  end
+
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand
     assert CreditCard.matching_brand?('4175001000000000', 'visa')
     assert_false CreditCard.matching_brand?('4175001000000000', 'master')
