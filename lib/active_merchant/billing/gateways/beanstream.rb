@@ -1,4 +1,5 @@
 require 'active_merchant/billing/gateways/beanstream/beanstream_core'
+require 'active_merchant/billing/gateways/beanstream/ipp_core'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -64,31 +65,128 @@ module ActiveMerchant #:nodoc:
     #     :tax2 => 100,
     #     :custom => 'reference one'
     #   )
+    #
+    # Modification on 2018-03-12:
+    # New feature: integrated the ipp gateway into beanstream gateway, use this class as an unified entrance for both the gateways
+    # Get the :region field from options parameter, :region: 0 - US & CA, 1 - AU
+    # Proess payment request from US & CA using beanstream service (default)
+    # Proess payment request from AU using ipp service
+    # Will remove ipp gateway file
+    #
+
     class BeanstreamGateway < Gateway
-      include BeanstreamCore
+      attr_accessor :region
+      include Empty
+
+      # Only <tt>:login</tt> is required by default,
+      # which is the merchant's merchant ID. If you'd like to perform void,
+      # capture or refund transactions then you'll also need to add a username
+      # and password to your account under administration -> account settings ->
+      # order settings -> Use username/password validation
+      def initialize(options = {})
+        #region: 0 - US & CA, 1 - AU & NZ
+        @region = empty?(options[:region]) ? 0 : options[:region]
+
+        # I want to add this logic to judge the region from shipping & billing address
+        # but don't know if it is a correct way.
+        # I think this can be decided by shopify which will integrate with.
+
+        # [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
+        #   next if empty?(address[:country])
+        #   unless ['AU', 'NZ'].include?(address[:country])
+        #     @region = 1
+        #   end
+        # end
+
+        if @region == 1
+          include_ipp
+          requires!(options, :username, :password, :login)
+        else
+          include_beanstream
+          requires!(options, :login)
+        end
+        
+        super
+      end
 
       def authorize(money, source, options = {})
-        post = {}
-        add_amount(post, money)
-        add_invoice(post, options)
-        add_source(post, source)
-        add_address(post, options)
-        add_transaction_type(post, :authorization)
-        add_customer_ip(post, options)
-        add_recurring_payment(post, options)
-        commit(post)
+        if @region == 1
+          ipp_authorize(money, source, options)
+        else
+          post = {}
+          add_amount(post, money)
+          add_invoice(post, options)
+          add_source(post, source)
+          add_address(post, options)
+          add_transaction_type(post, :authorization)
+          add_customer_ip(post, options)
+          add_recurring_payment(post, options)
+          commit(post)
+        end
       end
 
       def purchase(money, source, options = {})
-        post = {}
-        add_amount(post, money)
-        add_invoice(post, options)
-        add_source(post, source)
-        add_address(post, options)
-        add_transaction_type(post, purchase_action(source))
-        add_customer_ip(post, options)
-        add_recurring_payment(post, options)
-        commit(post)
+        if @region == 1
+          ipp_purchase(money, source, options)
+        else
+          post = {}
+          add_amount(post, money)
+          add_invoice(post, options)
+          add_source(post, source)
+          add_address(post, options)
+          add_transaction_type(post, purchase_action(source))
+          add_customer_ip(post, options)
+          add_recurring_payment(post, options)
+          commit(post)
+        end
+      end
+
+      def capture(money, authorization, options = {})
+        if @region == 1
+          ipp_capture(money, authorization, options)
+        else
+          reference, _, _ = split_auth(authorization)
+
+          post = {}
+          add_amount(post, money)
+          add_reference(post, reference)
+          add_transaction_type(post, :capture)
+          add_recurring_payment(post, options)
+          commit(post)
+        end
+      end
+
+      def refund(money, source, options = {})
+        if @region == 1
+          ipp_refund(money, source, options)
+        else
+          post = {}
+          reference, _, type = split_auth(source)
+          add_reference(post, reference)
+          add_transaction_type(post, refund_action(type))
+          add_amount(post, money)
+          commit(post)
+        end
+      end
+
+      def supports_scrubbing?
+        if @region == 1
+          ipp_supports_scrubbing?
+        else
+          true
+        end
+      end
+
+      def scrub(transcript)
+        if @region == 1
+          ipp_scrub(transcript)
+        else
+          transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
+        end
       end
 
       def void(authorization, options = {})
@@ -191,19 +289,15 @@ module ActiveMerchant #:nodoc:
         commit(post, true)
       end
 
-      def supports_scrubbing?
-        true
-      end
-
-      def scrub(transcript)
-        transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-          gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
-          gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
-          gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
-      end
-
       private
+      def include_ipp
+        BeanstreamGateway.include IPPCore
+      end
+
+      def include_beanstream
+        BeanstreamGateway.include BeanstreamCore
+      end
+      
       def build_response(*args)
         Response.new(*args)
       end

@@ -1,12 +1,14 @@
 require 'test_helper'
 
-class IppTest < Test::Unit::TestCase
+class BeansteamIppTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = IppGateway.new(
+    @gateway = BeanstreamGateway.new(
+      login: 'merchant_id',
       username: 'username',
       password: 'password',
+      region: 1
     )
 
     @amount = 100
@@ -23,6 +25,7 @@ class IppTest < Test::Unit::TestCase
       assert_match(%r{<CustRef>1<}, data)
       assert_match(%r{<Amount>100<}, data)
       assert_match(%r{<TrnType>1<}, data)
+      assert_match(%r{<AccountNumber>merchant_id<}, data)
       assert_match(%r{<CardNumber>#{@credit_card.number}<}, data)
       assert_match(%r{<ExpM>#{"%02d" % @credit_card.month}<}, data)
       assert_match(%r{<ExpY>#{@credit_card.year}<}, data)
@@ -52,6 +55,7 @@ class IppTest < Test::Unit::TestCase
       assert_match(%r{<SubmitSinglePayment }, data)
       assert_match(%r{<CustRef>1<}, data)
       assert_match(%r{<TrnType>2<}, data)
+      assert_match(%r{<AccountNumber>merchant_id<}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -66,7 +70,6 @@ class IppTest < Test::Unit::TestCase
       assert_match(%r{<Receipt>receipt<}, data)
       assert_match(%r{<Amount>100<}, data)
     end.respond_with(successful_capture_response)
-
     assert_success response
   end
 
