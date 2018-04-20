@@ -532,6 +532,10 @@ money_movers:
   login: demo
   password: password
 
+mundipagg:
+  api_key: api_key
+  gateway_id: gateway_id
+
 # Working credentials, no need to replace
 nab_transact:
   login: ABC0001

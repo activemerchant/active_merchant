@@ -1,6 +1,17 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Remove support for Rails < 4.2, add support for Rails 5.2 and Ruby 2.5 [bdewater]
+* Spreedly: Support verify and find transactions [abarrak] #2798
+* Adyen: Support merchant-specific subdomains [curiousepic] #2799
+* Fix ENV based configuration of Net::Http for proxies [bbergstrom] #2800
+* ANET: Withhold cryptogram for credit [curiousepic] #2804
+* Borgun: Remove batch from request parameters [deedeelavinder] #2805
+* WorldPay: Remove Inquiry requests in verify transactions [nfarve] #2802
+* Credorax: Update tests [curiousepic] #2809
+* Braintree: Remove decimal for non-fractional currencies [nfarve] #2806
+
+== Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
 * Litle: Add Support for Echeck [nfarve] #2776
 * Orbital: Correct level 2 tax handling [deedeelavinder] #2729

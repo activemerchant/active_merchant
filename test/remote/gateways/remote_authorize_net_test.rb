@@ -616,6 +616,34 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_refund_with_network_tokenization
+    credit_card = network_tokenization_credit_card('4000100011112224',
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      verification_value: nil
+    )
+
+    purchase = @gateway.purchase(@amount, credit_card, @options)
+    assert_success purchase
+
+    @options[:billing_address] = nil
+
+    refund = @gateway.refund(@amount, purchase.authorization, @options.merge(first_name: 'Jim', last_name: 'Smith'))
+    assert_failure refund
+    assert_match %r{does not meet the criteria for issuing a credit}, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+  end
+
+  def test_successful_credit_with_network_tokenization
+    credit_card = network_tokenization_credit_card('4000100011112224',
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      verification_value: nil
+    )
+
+    response = @gateway.credit(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
   def test_network_tokenization_transcript_scrubbing
     credit_card = network_tokenization_credit_card('4111111111111111',
       :brand              => 'visa',

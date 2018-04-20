@@ -167,7 +167,7 @@ module ActiveMerchant
             xml.transactionType('refundTransaction')
             xml.amount(amount(amount))
 
-            add_payment_source(xml, payment)
+            add_payment_source(xml, payment, :credit)
             xml.refTransId(transaction_id_from(options[:transaction_id])) if options[:transaction_id]
             add_invoice(xml, 'refundTransaction', options)
             add_customer_data(xml, payment, options)
@@ -375,7 +375,7 @@ module ActiveMerchant
         end
       end
 
-      def add_payment_source(xml, source)
+      def add_payment_source(xml, source, action = nil)
         return unless source
         if source.is_a?(String)
           add_token_payment_method(xml, source)
@@ -384,7 +384,7 @@ module ActiveMerchant
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
         else
-          add_credit_card(xml, source)
+          add_credit_card(xml, source, action)
         end
       end
 
@@ -457,7 +457,7 @@ module ActiveMerchant
         end
       end
 
-      def add_credit_card(xml, credit_card)
+      def add_credit_card(xml, credit_card, action)
         if credit_card.track_data
           add_swipe_data(xml, credit_card)
         else
@@ -468,7 +468,7 @@ module ActiveMerchant
               if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
                 xml.cardCode(credit_card.verification_value)
               end
-              if credit_card.is_a?(NetworkTokenizationCreditCard)
+              if credit_card.is_a?(NetworkTokenizationCreditCard) && action != :credit
                 xml.cryptogram(credit_card.payment_cryptogram)
               end
             end

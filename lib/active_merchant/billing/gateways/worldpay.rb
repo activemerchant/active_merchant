@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "AUTHORISED")}
+          r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
           r.process{cancel_request(authorization, options)}
         end
       end
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process(:ignore_result) { void(r.authorization, options.merge(:authorization_validated => true)) }
         end
       end
 

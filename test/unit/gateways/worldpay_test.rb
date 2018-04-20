@@ -442,7 +442,7 @@ class WorldpayTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).times(3).returns(successful_authorize_response, successful_void_response)
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
