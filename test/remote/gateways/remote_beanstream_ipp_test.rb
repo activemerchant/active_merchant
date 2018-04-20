@@ -2,9 +2,9 @@ require 'test_helper'
 
 class RemoteBeanstreamIppTest < Test::Unit::TestCase
   def setup
-    ipp_options = fixtures(:ipp)
-    ipp_options[:region] = 1
-    @gateway = BeanstreamGateway.new(ipp_options)
+    @ipp_options = fixtures(:ipp)
+    @ipp_options[:region] = 1
+    @gateway = BeanstreamGateway.new(@ipp_options)
 
     @credit_card_visa = credit_card('4005550000000001')
 
@@ -95,18 +95,26 @@ class RemoteBeanstreamIppTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = @gateway.purchase(@amount, @credit_card_visa, @options)
-    response = @gateway.refund(@amount_fail, response.authorization, @options)
+    response = @gateway.refund(300, response.authorization, @options)
     assert_failure response
-    assert_equal 'Do Not Honour', response.message
+    assert_equal 'Refund amount exceeds original purchase or capture plus any previous refund total', response.message
   end
 
   def test_invalid_login
     gateway = BeanstreamGateway.new(
+      login: '',
       username: '',
       password: '',
       region: 1
     )
-    response = gateway.purchase(@amount, @credit_card_visa, @options)
+
+    options_test = {
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase',
+    }
+
+    response = gateway.purchase(@amount, @credit_card_visa, options_test)
     assert_failure response
   end
 end

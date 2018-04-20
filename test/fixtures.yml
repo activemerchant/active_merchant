@@ -393,8 +393,9 @@ instapay:
   login: TEST0
   password:
 
-# Working credentials, no need to replace
+# login: merchant id
 ipp:
+  login: merchant id
   username: nmi.api
   password: qwerty123
 

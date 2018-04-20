@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
 
         if @region == 1
           include_ipp
-          requires!(options, :username, :password)
+          requires!(options, :username, :password, :login)
         else
           include_beanstream
           requires!(options, :login)

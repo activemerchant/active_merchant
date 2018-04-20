@@ -35,6 +35,7 @@ module ActiveMerchant #:nodoc:
             xml.CustRef options[:order_id]
             ipp_add_amount(xml, money)
             xml.TrnType "1"
+            ipp_add_account_number(xml)
             ipp_add_credit_card(xml, payment)
             ipp_add_credentials(xml)
             xml.TrnSource options[:ip]
@@ -48,6 +49,7 @@ module ActiveMerchant #:nodoc:
             xml.CustRef options[:order_id]
             ipp_add_amount(xml, money)
             xml.TrnType "2"
+            ipp_add_account_number(xml)
             ipp_add_credit_card(xml, payment)
             ipp_add_credentials(xml)
             xml.TrnSource options[:ip]
@@ -93,6 +95,10 @@ module ActiveMerchant #:nodoc:
           xml.UserName @options[:username]
           xml.Password @options[:password]
         end
+      end
+
+      def ipp_add_account_number(xml)
+        xml.AccountNumber @options[:login]
       end
 
       def ipp_add_amount(xml, money)
