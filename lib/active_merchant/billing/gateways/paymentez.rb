@@ -150,6 +150,7 @@ module ActiveMerchant #:nodoc:
         post[:order][:installments] = options[:installments] if options[:installments]
         post[:order][:installments_type] = options[:installments_type] if options[:installments_type]
         post[:order][:taxable_amount] = options[:taxable_amount] if options[:taxable_amount]
+        post[:order][:tax_percentage] = options[:tax_percentage] if options[:tax_percentage]
       end
 
       def add_payment(post, payment)

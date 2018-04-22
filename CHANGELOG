@@ -13,6 +13,7 @@
 * Credorax: Update tests [curiousepic] #2809
 * Braintree: Remove decimal for non-fractional currencies [nfarve] #2806
 * Realex: Add documented country support for US and CA [a-salty-strudel] #2810
+* Paymentez: Add `tax_percentage` optional parameter [deedeelavinder] #2814
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
