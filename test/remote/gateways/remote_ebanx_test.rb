@@ -7,6 +7,10 @@ class RemoteEbanxTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('4716909774636285')
+    @token = network_tokenization_credit_card('4111111111111111',
+      source: :ebanx,
+      payment_cryptogram: "70d4561db7ef543509d41b5f98f8418c8cd97b718962afd91bc12bebe7f0fd37cb7058a826c3c3840bee8f9333cf7194e8ce351c6607aed650afaad4503c1332"
+    )
     @options = {
       billing_address: address({
         address1: '1040 Rua E',
@@ -16,7 +20,8 @@ class RemoteEbanxTest < Test::Unit::TestCase
         country: 'BR',
         phone_number: '8522847035'
       }),
-      order_id: generate_unique_id,
+      order_id: "100001",
+      payment_unique_id: generate_unique_id,
       document: "853.513.468-93"
     }
   end
@@ -29,13 +34,20 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_more_options
     options = @options.merge({
-      order_id: generate_unique_id,
+      order_id: "100002",
+      payment_unique_id: generate_unique_id,
       ip: "127.0.0.1",
       email: "joe@example.com",
       birth_date: "10/11/1980"
     })
 
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Sandbox - Test credit card, transaction captured', response.message
+  end
+
+  def test_successful_purchase_by_token
+    response = @gateway.purchase(@amount, @token, @options)
     assert_success response
     assert_equal 'Sandbox - Test credit card, transaction captured', response.message
   end
@@ -49,6 +61,16 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Sandbox - Test credit card, transaction will be approved', auth.message
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Sandbox - Test credit card, transaction captured', capture.message
+  end
+
+  def test_successful_authorize_by_token_and_capture
+    auth = @gateway.authorize(@amount, @token, @options)
     assert_success auth
     assert_equal 'Sandbox - Test credit card, transaction will be approved', auth.message
 
@@ -147,6 +169,18 @@ class RemoteEbanxTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:integration_key], transcript)
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_store
+    response = @gateway.store(credit_card('1111111111111111'), @options)
+    assert_failure response
+    assert_equal 'Card number is invalid', response.message
+    assert_equal 'BP-DR-75', response.error_code
   end
 
 end
