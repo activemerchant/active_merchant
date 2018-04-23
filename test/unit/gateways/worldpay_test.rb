@@ -5,6 +5,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def setup
    @gateway = WorldpayGateway.new(
+      :merchant_code => 'testlogin',
       :login => 'testlogin',
       :password => 'testpassword'
     )
@@ -407,6 +408,7 @@ class WorldpayTest < Test::Unit::TestCase
     ActiveMerchant::Billing::Base.mode = :production
 
     @gateway = WorldpayGateway.new(
+      :merchant_code => 'testlogin',
       :login => 'testlogin',
       :password => 'testpassword',
       :test => true
