@@ -137,7 +137,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = WorldpayGateway.new(:login => '', :password => '')
+    gateway = WorldpayGateway.new(:login => '', :password => '', :merchant_code => '')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid credentials', response.message
