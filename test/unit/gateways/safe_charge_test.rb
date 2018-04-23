@@ -14,6 +14,11 @@ class SafeChargeTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+    @merchant_options = @options.merge(
+      merchant_descriptor: 'Test Descriptor',
+      merchant_phone_number: '(555)555-5555',
+      merchant_name: 'Test Merchant'
+    )
     @three_ds_options = @options.merge(three_d_secure: true)
   end
 
@@ -27,6 +32,50 @@ class SafeChargeTest < Test::Unit::TestCase
                  'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
                  "UAbQBYAFIAMwA=|%02d|%d|1.00|USD" % [@credit_card.month, @credit_card.year.to_s[-2..-1]], response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_with_merchant_options
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @merchant_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/sg_Descriptor/, data)
+      assert_match(/sg_MerchantPhoneNumber/, data)
+      assert_match(/sg_MerchantName/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+    assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
+                 'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
+                 "UAbQBYAFIAMwA=|%02d|%d|1.00|USD" % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
+    assert purchase.test?
+  end
+
+  def test_successful_purchase_with_truthy_stored_credential_mode
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential_mode: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/sg_StoredCredentialMode=1/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+    assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
+                 'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
+                 "UAbQBYAFIAMwA=|%02d|%d|1.00|USD" % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
+    assert purchase.test?
+  end
+
+  def test_successful_purchase_with_falsey_stored_credential_mode
+    purchase = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential_mode: false))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/sg_StoredCredentialMode=0/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success purchase
+    assert_equal '111951|101508189567|ZQBpAFAASABGAHAAVgBPAFUAMABiADMAewBtAGsAd' \
+                 'AAvAFIAQQBrAGoAYwBxACoAXABHAEEAOgA3ACsAMgA4AD0AOABDAG4AbQAzAF' \
+                 "UAbQBYAFIAMwA=|%02d|%d|1.00|USD" % [@credit_card.month, @credit_card.year.to_s[-2..-1]], purchase.authorization
+    assert purchase.test?
   end
 
   def test_failed_purchase
