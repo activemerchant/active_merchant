@@ -140,6 +140,7 @@ module ActiveMerchant
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+          add_network_tokenization_card(xml, credit_card) if credit_card.is_a?(NetworkTokenizationCreditCard)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -247,6 +248,18 @@ module ActiveMerchant
           xml.tag! 'cvn' do
             xml.tag! 'number', credit_card.verification_value
             xml.tag! 'presind', (options['presind'] || (credit_card.verification_value? ? 1 : nil))
+          end
+        end
+      end
+
+      def add_network_tokenization_card(xml, payment)
+        xml.tag! 'mpi' do
+          xml.tag! 'cavv', payment.payment_cryptogram
+          xml.tag! 'eci', payment.eci
+        end
+        xml.tag! 'supplementarydata' do
+          xml.tag! 'item', 'type' => 'mobile' do
+            xml.tag! 'field01', payment.source.to_s.gsub('_','-')
           end
         end
       end
