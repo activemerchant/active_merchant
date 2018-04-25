@@ -106,6 +106,13 @@ class PaystationTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_verify
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
   private
 
     def successful_purchase_response

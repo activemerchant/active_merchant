@@ -23,9 +23,29 @@ class AdyenTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address(),
+      shopper_reference: "John Smith",
       order_id: '345123'
     }
   end
+
+  # Subdomains are only valid for production gateways, so the test_url check must be manually bypassed for this test to pass.
+  # def test_subdomain_specification
+  #   gateway = AdyenGateway.new(
+  #     username: 'ws@adyenmerchant.com',
+  #     password: 'password',
+  #     merchant_account: 'merchantAccount',
+  #     subdomain: '123-subdomain'
+  #   )
+  #
+  #   response = stub_comms(gateway) do
+  #     gateway.authorize(@amount, @credit_card, @options)
+  #   end.check_request do |endpoint, data, headers|
+  #     assert_match("https://123-subdomain-pal-live.adyenpayments.com/pal/servlet/Payment/v18/authorise", endpoint)
+  #   end.respond_with(successful_authorize_response)
+  #
+  #   assert response
+  #   assert_success response
+  # end
 
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
@@ -33,7 +53,7 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '7914775043909934', response.authorization
+    assert_equal '#7914775043909934#', response.authorization
     assert response.test?
   end
 
@@ -48,15 +68,7 @@ class AdyenTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, '7914775043909934')
-    assert_equal '7914775043909934#8814775564188305', response.authorization
-    assert_success response
-    assert response.test?
-  end
-
-def test_successful_capture_with_compount_psp_reference
-    @gateway.expects(:ssl_post).returns(successful_capture_response)
-    response = @gateway.capture(@amount, '7914775043909934#8514775559000000')
-    assert_equal '7914775043909934#8814775564188305', response.authorization
+    assert_equal '7914775043909934#8814775564188305#', response.authorization
     assert_success response
     assert response.test?
   end
@@ -74,7 +86,7 @@ def test_successful_capture_with_compount_psp_reference
       @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
-    assert_equal '7914775043909934#8814775564188305', response.authorization
+    assert_equal '7914775043909934#8814775564188305#', response.authorization
     assert response.test?
   end
 
@@ -90,7 +102,7 @@ def test_successful_capture_with_compount_psp_reference
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     response = @gateway.refund(@amount, '7914775043909934')
-    assert_equal '7914775043909934#8514775559925128', response.authorization
+    assert_equal '7914775043909934#8514775559925128#', response.authorization
     assert_equal '[refund-received]', response.message
     assert response.test?
   end
@@ -98,7 +110,7 @@ def test_successful_capture_with_compount_psp_reference
   def test_successful_refund_with_compound_psp_reference
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     response = @gateway.refund(@amount, '7914775043909934#8514775559000000')
-    assert_equal '7914775043909934#8514775559925128', response.authorization
+    assert_equal '7914775043909934#8514775559925128#', response.authorization
     assert_equal '[refund-received]', response.message
     assert response.test?
   end
@@ -114,7 +126,7 @@ def test_successful_capture_with_compount_psp_reference
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     response = @gateway.void('7914775043909934')
-    assert_equal '7914775043909934#8614775821628806', response.authorization
+    assert_equal '7914775043909934#8614775821628806#', response.authorization
     assert_equal '[cancel-received]', response.message
     assert response.test?
   end
@@ -126,12 +138,26 @@ def test_successful_capture_with_compount_psp_reference
     assert_failure response
   end
 
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal "#8835205392522157#8315202663743702", response.authorization
+  end
+
+  def test_failed_store
+    @gateway.expects(:ssl_post).returns(failed_store_response)
+    response = @gateway.store(@credit_card, @options)
+    assert_failure response
+    assert_equal 'Refused', response.message
+  end
+
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_verify_response)
     assert_success response
-    assert_equal '7914776426645103', response.authorization
+    assert_equal '#7914776426645103#', response.authorization
     assert_equal 'Authorised', response.message
     assert response.test?
   end
@@ -141,9 +167,17 @@ def test_successful_capture_with_compount_psp_reference
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_verify_response)
     assert_failure response
-    assert_equal '7914776433387947', response.authorization
+    assert_equal '#7914776433387947#', response.authorization
     assert_equal 'Refused', response.message
     assert response.test?
+  end
+
+  def test_failed_avs_check_returns_refusal_reason_raw
+    @gateway.expects(:ssl_post).returns(failed_authorize_avs_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Refused | 05 : Do not honor', response.message
   end
 
   def test_scrub
@@ -153,15 +187,16 @@ def test_successful_capture_with_compount_psp_reference
 
   def test_add_address
     post = {:card => {:billingAddress => {}}}
+    @options[:billing_address].delete(:address1)
+    @options[:billing_address].delete(:address2)
     @gateway.send(:add_address, post, @options)
-    assert_equal @options[:billing_address][:address1], post[:card][:billingAddress][:street]
-    assert_equal @options[:billing_address][:address2], post[:card][:billingAddress][:houseNumberOrName]
+    assert_equal 'N/A', post[:card][:billingAddress][:street]
+    assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
     assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
     assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
     assert_equal @options[:billing_address][:state], post[:card][:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
   end
-
 
   private
 
@@ -338,6 +373,24 @@ def test_successful_capture_with_compount_psp_reference
       "refusalReason":"Refused",
       "resultCode":"Refused"
     }
+    RESPONSE
+  end
+
+  def failed_authorize_avs_response
+    <<-RESPONSE
+    {\"additionalData\":{\"cvcResult\":\"0 Unknown\",\"fraudResultType\":\"GREEN\",\"avsResult\":\"3 AVS unavailable\",\"fraudManualReview\":\"false\",\"avsResultRaw\":\"U\",\"refusalReasonRaw\":\"05 : Do not honor\",\"authorisationMid\":\"494619000001174\",\"acquirerCode\":\"AdyenVisa_BR_494619\",\"acquirerReference\":\"802320302458\",\"acquirerAccountCode\":\"AdyenVisa_BR_Cabify\"},\"fraudResult\":{\"accountScore\":0,\"results\":[{\"FraudCheckResult\":{\"accountScore\":0,\"checkId\":46,\"name\":\"DistinctCountryUsageByShopper\"}}]},\"pspReference\":\"1715167376763498\",\"refusalReason\":\"Refused\",\"resultCode\":\"Refused\"}
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+    {"additionalData":{"recurring.recurringDetailReference":"8315202663743702","recurring.shopperReference":"John Smith"},"pspReference":"8835205392522157","resultCode":"Authorised","authCode":"94571"}
+    RESPONSE
+  end
+
+  def failed_store_response
+    <<-RESPONSE
+    {"pspReference":"8835205393394754","refusalReason":"Refused","resultCode":"Refused"}
     RESPONSE
   end
 end

@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       def capture(amount, authorization, options={})
         post = {}
 
-        add_credentials(post, 'SUBMIT_TRANSACTION')
+        add_credentials(post, 'SUBMIT_TRANSACTION', options)
         add_transaction_elements(post, 'CAPTURE', options)
         add_reference(post, authorization)
 
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
 
-        add_credentials(post, 'SUBMIT_TRANSACTION')
+        add_credentials(post, 'SUBMIT_TRANSACTION', options)
         add_transaction_elements(post, 'VOID', options)
         add_reference(post, authorization)
 
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
       def refund(amount, authorization, options={})
         post = {}
 
-        add_credentials(post, 'SUBMIT_TRANSACTION')
+        add_credentials(post, 'SUBMIT_TRANSACTION', options)
         add_transaction_elements(post, 'REFUND', options)
         add_reference(post, authorization)
 
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         minimum = MINIMUMS[options[:currency].upcase] if options[:currency]
-        amount = minimum || 100
+        amount = options[:verify_amount] || minimum || 100
 
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(amount, credit_card, options) }
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def auth_or_sale(post, transaction_type, amount, payment_method, options)
-        add_credentials(post, 'SUBMIT_TRANSACTION')
+        add_credentials(post, 'SUBMIT_TRANSACTION', options)
         add_transaction_elements(post, transaction_type, options)
         add_order(post, options)
         add_buyer(post, payment_method, options)
@@ -126,9 +126,9 @@ module ActiveMerchant #:nodoc:
         add_extra_parameters(post, options)
       end
 
-      def add_credentials(post, command)
+      def add_credentials(post, command, options={})
         post[:test] = test? unless command == 'CREATE_TOKEN'
-        post[:language] = 'en'
+        post[:language] = options[:language] || 'en'
         post[:command] = command
         merchant = {}
         merchant[:apiLogin] = @options[:api_login]
@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
         order[:partnerId] = options[:partner_id] if options[:partner_id]
         order[:referenceCode] = options[:order_id] || generate_unique_id
         order[:description] = options[:description] || 'Compra en ' + @options[:merchant_id]
-        order[:language] = 'en'
+        order[:language] = options[:language] || 'en'
         order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
         post[:transaction][:order] = order
       end
@@ -357,7 +357,7 @@ module ActiveMerchant #:nodoc:
           response["code"] == "SUCCESS" && response["creditCardToken"] && response["creditCardToken"]["creditCardTokenId"].present?
         when 'verify_credentials'
           response["code"] == "SUCCESS"
-        when 'refund'
+        when 'refund', 'void'
         response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "PENDING" || response["transactionResponse"]["state"] == "APPROVED")
         else
           response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "APPROVED")
@@ -374,8 +374,10 @@ module ActiveMerchant #:nodoc:
           return "VERIFIED" if success
           "FAILED"
         else
-          response_message = response["transactionResponse"]["responseMessage"] if response["transactionResponse"]
-          response_code = response["transactionResponse"]["responseCode"] if response["transactionResponse"]
+          if response["transactionResponse"]
+            response_message = response["transactionResponse"]["responseMessage"]
+            response_code = response["transactionResponse"]["responseCode"] || response["transactionResponse"]["pendingReason"]
+          end
           return response_code if success
           response["error"] || response_message || response_code || "FAILED"
         end

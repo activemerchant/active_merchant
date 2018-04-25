@@ -24,6 +24,16 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal '510695343', response.authorization
   end
 
+  def test_fractional_amounts
+    response = stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      refute_match(/amount=1.00/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 

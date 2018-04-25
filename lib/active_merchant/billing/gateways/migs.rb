@@ -1,7 +1,5 @@
 require 'active_merchant/billing/gateways/migs/migs_codes'
 
-require 'digest/md5' # Used in add_secure_hash
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MigsGateway < Gateway
@@ -121,6 +119,13 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       # Checks the status of a previous transaction
       # This can be useful when a response is not received due to network issues
       #
@@ -187,7 +192,7 @@ module ActiveMerchant #:nodoc:
 
         response_hash = parse(data)
 
-        expected_secure_hash = calculate_secure_hash(response_hash.reject{|k, v| k == :SecureHash}, @options[:secure_hash])
+        expected_secure_hash = calculate_secure_hash(response_hash, @options[:secure_hash])
         unless response_hash[:SecureHash] == expected_secure_hash
           raise SecurityError, "Secure Hash mismatch, response may be tampered with"
         end
@@ -197,6 +202,18 @@ module ActiveMerchant #:nodoc:
 
       def test?
         @options[:login].start_with?('TEST')
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?CardNum=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?CardSecurityCode=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?AccessCode=)[^&]*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?Password=)[^&]*(&?)), '\1[FILTERED]\2')
       end
 
       private
@@ -245,6 +262,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(post)
+        add_secure_hash(post) if @options[:secure_hash]
         data = ssl_post self.merchant_hosted_url, post_data(post)
         response_hash = parse(data)
         response_object(response_hash)
@@ -290,12 +308,16 @@ module ActiveMerchant #:nodoc:
 
       def add_secure_hash(post)
         post[:SecureHash] = calculate_secure_hash(post, @options[:secure_hash])
+        post[:SecureHashType] = 'SHA256'
       end
 
       def calculate_secure_hash(post, secure_hash)
-        sorted_values = post.sort_by(&:to_s).map(&:last)
-        input = secure_hash + sorted_values.join
-        Digest::MD5.hexdigest(input).upcase
+        input = post
+                .reject { |k| %i[SecureHash SecureHashType].include?(k) }
+                .sort
+                .map { |(k, v)| "vpc_#{k}=#{v}" }
+                .join('&')
+        OpenSSL::HMAC.hexdigest('SHA256', [secure_hash].pack('H*'), input).upcase
       end
     end
   end

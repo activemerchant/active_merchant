@@ -176,21 +176,20 @@ module ActiveMerchant #:nodoc:
       # @return [String]
       attr_accessor :icc_data
 
-      # Returns or sets a fallback reason for a EMV transaction whereby the customer's card entered a fallback scenario.
-      # This can be an arbitrary string.
+      # Returns or sets information about the source of the card data.
       #
       # @return [String]
-      attr_accessor :fallback_reason
+      attr_accessor :read_method
 
-      # Returns or sets whether card-present EMV data has been read contactlessly.
-      #
-      # @return [true, false]
-      attr_accessor :contactless_emv
-
-      # Returns or sets whether card-present magstripe data has been read contactlessly.
-      #
-      # @return [true, false]
-      attr_accessor :contactless_magstripe
+      READ_METHOD_DESCRIPTIONS = {
+        nil => 'A card reader was not used.',
+        'fallback_no_chip' => 'Magstripe was read because the card has no chip.',
+        'fallback_chip_error' => "Magstripe was read because the card's chip failed.",
+        'contactless' => 'Data was read by a Contactless EMV kernel. Issuer script results are not available.',
+        'contactless_magstripe' => 'Contactless data was read with a non-EMV protocol.',
+        'contact' => 'Data was read using the EMV protocol. Issuer script results may follow.',
+        'contact_quickchip' => 'Data was read by the Quickchip EMV kernel. Issuer script results are not available.',
+      }
 
       # Returns the ciphertext of the card's encrypted PIN.
       #

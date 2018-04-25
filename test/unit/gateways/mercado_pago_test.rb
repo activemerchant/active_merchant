@@ -194,6 +194,29 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_equal '4141491|1.0', response.authorization
   end
 
+  def test_includes_deviceid_header
+    @options[:device_id] = '1a2b3c'
+    @gateway.expects(:ssl_post).with(anything, anything, headers = {'Content-Type' => 'application/json'}).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, headers = {'Content-Type' => 'application/json', 'X-Device-Session-ID' => '1a2b3c'}).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_includes_additional_data
+    @options[:additional_info] = {'foo' => 'bar', 'baz' => 'quux'}
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /payment_method_id/
+        assert_match(/"foo":"bar"/, data)
+        assert_match(/"baz":"quux"/, data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   private
 
   def pre_scrubbed

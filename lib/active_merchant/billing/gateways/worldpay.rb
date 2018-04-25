@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'GBP'
       self.money_format = :cents
-      self.supported_countries = %w(HK GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
+      self.supported_countries = %w(HK GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser, :switch]
       self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "AUTHORISED")}
+          r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
           r.process{cancel_request(authorization, options)}
         end
       end
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process(:ignore_result) { void(r.authorization, options.merge(:authorization_validated => true)) }
         end
       end
 

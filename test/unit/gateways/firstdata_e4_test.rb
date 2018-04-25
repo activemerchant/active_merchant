@@ -237,6 +237,25 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_network_tokenization_requests_with_discover
+    stub_comms do
+      credit_card = network_tokenization_credit_card(
+        "6011111111111117",
+        brand: "discover",
+        transaction_id: "123",
+        eci: "05",
+        payment_cryptogram: "whatever_the_cryptogram_is",
+      )
+
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |_, data, _|
+      assert_match "<Ecommerce_Flag>04</Ecommerce_Flag>", data
+      assert_match "<XID>123</XID>", data
+      assert_match "<CAVV>whatever_the_cryptogram_is</CAVV>", data
+      assert_xml_valid_to_wsdl(data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_network_tokenization_requests_with_other_brands
     %w(visa mastercard other).each do |brand|
       stub_comms do
@@ -296,12 +315,9 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_supports_scrubbing?
+  def test_transcript_scrubbing
     assert @gateway.supports_scrubbing?
-  end
-
-  def test_scrub
-    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
 
   def test_supports_network_tokenization
@@ -317,7 +333,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_empty errors, "XSD validation errors in the following XML:\n#{doc}"
   end
 
-  def pre_scrubbed
+  def pre_scrub
     <<-PRE_SCRUBBED
       opening connection to api.demo.globalgatewaye4.firstdata.com:443...
       opened
@@ -347,14 +363,14 @@ class FirstdataE4Test < Test::Unit::TestCase
     PRE_SCRUBBED
   end
 
-  def post_scrubbed
+  def post_scrub
     <<-POST_SCRUBBED
       opening connection to api.demo.globalgatewaye4.firstdata.com:443...
       opened
       starting SSL for api.demo.globalgatewaye4.firstdata.com:443...
       SSL established
       <- "POST /transaction/v11 HTTP/1.1\r\nContent-Type: application/xml\r\nAccepts: application/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.demo.globalgatewaye4.firstdata.com\r\nContent-Length: 593\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>REDACTED</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>[FILTERED]</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>[FILTERED]</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV>[FILTERED]</CAVV><XID/><Ecommerce_Flag/></Transaction>"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>[FILTERED]</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>[FILTERED]</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>[FILTERED]</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV>[FILTERED]</CAVV><XID/><Ecommerce_Flag/></Transaction>"
       -> "HTTP/1.1 201 Created\r\n"
       -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
       -> "Content-Type: application/xml; charset=utf-8\r\n"

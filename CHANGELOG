@@ -1,6 +1,106 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Allow setting min/max SSL version for a connection on Ruby 2.5 [bdewater] #2775
+* Add `gateways:ssl:min_version` rake task to test upcoming TLS 1.0 deprecation deadline [bdewater] #2775
+* Remove support for Rails < 4.2, add support for Rails 5.2 and Ruby 2.5 [bdewater]
+* Spreedly: Support verify and find transactions [abarrak] #2798
+* Adyen: Support merchant-specific subdomains [curiousepic] #2799
+* Fix ENV based configuration of Net::Http for proxies [bbergstrom] #2800
+* ANET: Withhold cryptogram for credit [curiousepic] #2804
+* Borgun: Remove batch from request parameters [deedeelavinder] #2805
+* WorldPay: Remove Inquiry requests in verify transactions [nfarve] #2802
+* Credorax: Update tests [curiousepic] #2809
+* Braintree: Remove decimal for non-fractional currencies [nfarve] #2806
+* Realex: Add documented country support for US and CA [a-salty-strudel] #2810
+* Paymentez: Add `tax_percentage` optional parameter [deedeelavinder] #2814
+* Braintree: Add `skip_advanced_fraud_checking` optional parameter [deedeelavinder] #2811
+
+== Version 1.78.0 (March 29, 2018)
+* Litle: Add store for echecks [nfarve] #2779
+* Litle: Add Support for Echeck [nfarve] #2776
+* Orbital: Correct level 2 tax handling [deedeelavinder] #2729
+* Payeezy: Change determination method of endpoint for store request [deedeelavinder] #2731
+* Adyen: Return refusal_reason_raw when present [curiousepic] #2728
+* Payeezy: Update Store method [nfarve] #2733
+* CenPOS: Remove gzip encoding header [curiousepic] #2735
+* Mercado Pago: Allow binary_mode to be changed [nfarve] #2736
+* Stripe: Accept strings for refund_fee_amount [curiousepic] #2738
+* Orbital: Complete scrub test coverage [curiousepic] #2739
+* MIGS: Scrub sensitive data [curiousepic] #2740
+* Worldpay US: Scrub sensitive data [curiousepic] #2742
+* WorldPay: Remove Israel from supported country list [dtykocki] #2746
+* Optimal Payments: Scrub sensitive data [curiousepic] #2743
+* USA Epay Transaction: Scrub sensitive data [curiousepic] #2745
+* MIGS: Add unit test for scrub [curiousepic] #2747
+* Worldpay US: Fix bank account scrub [curiousepic] #2748
+* Litle: Add support for merchantData elements [dtykocki] #2751
+* Paymentez: Add support for purchasing and authorizatin with tokens [bpollack] #2753
+* Ingenico: Remove Trinidad and Tobego from supported country list [bpollack] #2754
+* Barclaycard Smartpay: Remove Georgia from supported country list [bpollack] #2755
+* Merchant Warrior: Remove requirement for state field [joshnuss] #2638
+* Wirecard: Adding missing DigiCert Global Root G2 Cert [filipebarcos] #2759
+* Redsys: Add support for CNY, IDR, INR, KRW and TWD [chopenhauer] #2761
+* Optimal Payments: Fix scrub for double escaping [curiousepic] #2763
+* Orbital: Scrub profile transactions [curiousepic] #2762
+* BlueSnap: Fix currency passing [curiousepic] #2765
+* Stripe: Support pickup_card decline code [dtykocki] #2764
+* Improve scrub testing for five gateways [curiousepic] #2767
+* Payflow: Support scrub [curiousepic] #2768
+* SecureNet: Support scrub [curiousepic] #2769
+* Payeezy: Update transaction method when using stored cards [dtykocki] #2770
+* Citrus Pay, DIBS, 1stPayGateway, Global Transport, NETbilling, Ogone, TNS: remove TLS 1.0 requirement [bdewater] #2774
+* CardStream: Default IP and customer country [dtykocki] #2773
+* Stripe: Support destination amount [dtykocki] #2777
+* GlobalCollect: Update supported country list [dtykocki] #2783
+* Adyen: Support store action [curiousepic] #2784
+* Psigate: Update Test URL and Card [nfarve] #2785
+* USA ePay Transaction: Support ACH/eChecks [curiousepic] #2786
+* PayU Latam: Support language parameter [dtykocki] #2787
+* Payflow: Pass OrderDesc field [curiousepic] #2789
+* Global Collect: Add arbitrary fraudField params [curiousepic] #2790
+* Paystation: Support verify action [curiousepic] #2793
+* Checkout V2: Return error codes in response [curiousepic] #2791
+* CardStream: Change refund to use REFUND_SALE [dtykocki] #2795
+* Spreedly: Scrub sensitive transaction data [abarrak] #2781
+* Stripe: Add `exchange_rate` parameter [WilsonChiang] #2796
+* Mundipagg: New Gateway Implementation [nfarve] #2791
+
+== Version 1.77.0 (January 31, 2018)
+* Authorize.net: Allow Transaction Id to be passed for refuds [nfarve] #2698
+* Forte: ensure unit tests are local-only [bpollack] #2696
+* Moneris US: ensure unit tests are local-only [bpollack] #2696
+* Payflow: Change Verify Method for Amex Cards [nfarve] #2693
+* Safe Charge: fix an issue with variable shadowing in the adapter [bpollack] #2697
+* Crashnet: add scrubbing support [bpollack] #2695
+* Barclays EPDQ: add scrubbing support [bpollack] #2695
+* Fat Zebra: add remote scrubbing test [bpollack] #2695
+* Clearhaus: add remote scrubbing test [bpollack] #2695
+* Borgun: add remote scrubbing test [bpollack] #2695
+* Stripe: Added support for the quickchip entry mode option [rbalsdon]
+* Ogone: Add tests for scrubbing [bpollack] #2700
+* Global Transport: Add scrubbing support [bpollack] #2700
+* HPS: Add scrubbing support [bpollack] #2700
+* FirstData E4: Improve scrubbing and add remote scrubbing test [bpollack] #2700
+* Elavon: Add scrubbing support [bpollack] #2700
+* Data Cash: Add scrubbing support [bpollack] #2700
+* Litle: Fix testing URL [wsmoak] #2673
+* Barclays ePDQ Extra Plus: Add missing Entrust root certificates [pacso] #2614
+* Moneris US: Add scrubbing support [bpollack] #2702
+* Mercury: Add scrubbing support [bpollack] #2702
+* Fat Zebra: Tweak remote scrubbing test [bpollack] #2704
+* Card Connect: Add new gateway [nfarve] #2706
+* Payeezy: Ensure store calls are properly scrubbed [dtykocki] #2709
+* Payeezy: Add unit test for scrubbing store call [dtykocki] #2710
+* Element: Correct URL used by store transactions [dtykocki] #2711
+* Borgun: Add support for specifying TerminalID [bpollack] #2712
+* Barclaycard Smartpay: 3DS Implementation [nfarve] #2714
+* Payeezy: Surface gateway_message on failure [curiousepic] #2717
+* Payment Express: Scrub merchant password [curiousepic] #2723
+* Stripe: Fix Partial Application Fee Refunds [curiousepic] #2713
+* GooglePay: Support network tokenized cards [joshnuss] #2725
+
+== Version 1.76.0 (January 3, 2018)
 * PayU Latam: Change default text for description [nfarve] #2669
 * Checkout V2: Allows AVS and CVV result details to come through on authorizations [deedeelavinder] #2650
 * Global Collect: Adds boolean option for pre_authorization [deeedeelavinder] #2651
@@ -11,6 +111,21 @@
 * Adyen: Remove CVV as Required Field and Determines shopperInteraction [nfarve] #2665
 * SafeCharge: add support for VendorID, WebsiteID, and IP logging [bpollack] #2667
 * Safe Charge: Adds 3DS flag [deedeelavinder] #2668
+* CardProcess: Fix success? to always return true or false [bpollack] #2674
+* SagePay: Correct CVV, AVS codes for Sagepay [singhai0] #2670
+* PayU Latam: Count pending Voids as successful [curiousepic] #2677
+* Mercado Pago: Ensure acess tokens are URL escaped [bpollack] #2675
+* MiGS: Update hash format to SHA256 and restore remote tests [bpollack] #2676
+* MiGS: Support verify calls [bpollack] #2664
+* iATS: Fix Messages with Failure on iATS Server [nfarve] #2680
+* Barclaycard Smartpay: Correct repsonse for fraud rejects #2683
+* Adyen: Allow incomplete addresses in some situations [bpollack] #2684
+* Paymentez: Add new gateway [bpollack] #2685
+* PayU Latam: Provide a mechanism to override the amount in verify [dtykocki] #2688
+* Mercado Pago: Support X-Device-Session-ID Header [bpollack] #2689
+* Mercado Pago: Support arbitrary additional_info JSON [bpollack] #2691
+* FirstData E4: Override ECI value for Apple Pay transactions with Discover [jasonwebster] #2671
+* Quickbooks: Add payment context to Quickbooks charges and refunds [bdewater] #2694
 
 == Version 1.75.0 (November 9, 2017)
 * Barclaycard Smartpay: Clean up test options hashes [bpollack] #2632

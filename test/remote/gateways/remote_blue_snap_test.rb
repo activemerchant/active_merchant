@@ -6,7 +6,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4263982640269299')
-    @declined_card = credit_card('4917484589897107', month: 1, year: 2018)
+    @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
     @options = { billing_address: address }
   end
 
@@ -34,6 +34,14 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, more_options)
     assert_success response
     assert_equal "Success", response.message
+  end
+
+  def test_successful_purchase_with_currency
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
+    assert_success response
+
+    assert_equal 'Success', response.message
+    assert_equal 'CAD', response.params["currency"]
   end
 
   def test_failed_purchase
@@ -100,8 +108,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@amount-1, purchase.authorization)
-    assert_failure refund
-    assert_match /failed because the financial transaction was created less than 24 hours ago/, refund.message
+    assert_success refund
   end
 
   def test_failed_refund

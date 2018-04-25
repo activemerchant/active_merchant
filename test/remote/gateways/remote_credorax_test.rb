@@ -5,8 +5,8 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @gateway = CredoraxGateway.new(fixtures(:credorax))
 
     @amount = 100
-    @credit_card = credit_card('4176661000001015', verification_value: "281", month: "12", year: "2017")
-    @declined_card = credit_card('4176661000001015', verification_value: "000", month: "12", year: "2017")
+    @credit_card = credit_card('4176661000001015', verification_value: "281", month: "12", year: "2022")
+    @declined_card = credit_card('4176661000001111', verification_value: "681", month: "12", year: "2022")
     @options = {
       order_id: "1",
       currency: "EUR",
@@ -29,7 +29,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_extra_options
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(transaction_type: '8'))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(transaction_type: '10'))
     assert_success response
     assert_equal "1", response.params["H9"]
     assert_equal "Succeeded", response.message
@@ -38,7 +38,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Do not Honour", response.message
+    assert_equal "Transaction not allowed for cardholder", response.message
   end
 
   def test_successful_authorize_and_capture
@@ -55,7 +55,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Do not Honour", response.message
+    assert_equal "Transaction not allowed for cardholder", response.message
   end
 
   def test_failed_capture
@@ -103,7 +103,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void("")
     assert_failure response
-    assert_equal "Internal server error. Please contact Credorax support.", response.message
+    assert_equal "Referred to transaction has not been found.", response.message
   end
 
   def test_successful_refund
@@ -131,7 +131,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(nil, "123;123;123")
     assert_failure response
-    assert_equal "Internal server error. Please contact Credorax support.", response.message
+    assert_equal "Referred to transaction has not been found.", response.message
   end
 
   def test_successful_credit
@@ -155,7 +155,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal "Do not Honour", response.message
+    assert_equal "Transaction not allowed for cardholder", response.message
   end
 
   def test_transcript_scrubbing

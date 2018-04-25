@@ -12,6 +12,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @options = {
       :order_id => generate_unique_id,
       :address => address,
+      :merchant_id => 'merchant1234'
     }
 
     @cards = {
@@ -23,8 +24,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       :jcb => "3566002020140006"}
 
     @level_2_options = {
-      tax_indicator: 1,
-      tax: 10,
+      tax_indicator: "1",
+      tax: "75",
       advice_addendum_1: 'taa1 - test',
       advice_addendum_2: 'taa2 - test',
       advice_addendum_3: 'taa3 - test',
@@ -293,5 +294,20 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:merchant_id], transcript)
+  end
+
+  def test_transcript_scrubbing_profile
+    transcript = capture_transcript(@gateway) do
+      @gateway.add_customer_profile(@credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:merchant_id], transcript)
   end
 end

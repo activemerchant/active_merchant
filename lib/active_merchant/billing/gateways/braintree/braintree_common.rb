@@ -5,6 +5,7 @@ module BraintreeCommon
     base.homepage_url = 'http://www.braintreepaymentsolutions.com'
     base.display_name = 'Braintree'
     base.default_currency = 'USD'
+    base.currencies_without_fractions = %w(BIF CLP DJF GNF JPY KMF KRW LAK PYG RWF UGX VND VUV XAF XOF XPF)
   end
 
   def supports_scrubbing

@@ -77,7 +77,7 @@ class TransFirstTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, "TransID")
     assert_failure response
   end
- 
+
   def test_successful_void
     @gateway.stubs(:ssl_post).returns(successful_void_response)
 
@@ -365,6 +365,6 @@ class TransFirstTest < Test::Unit::TestCase
       <Status>Canceled</Status>
       <Message>Transaction Is Not Allowed To Void or Refund</Message>
       </BankCardRefundStatus>
-     XML
-   end
+    XML
+  end
 end

@@ -8,6 +8,7 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111', :month => 8, :year => 2018, :verification_value => 737)
     @declined_card = credit_card('4000300011112220', :month => 8, :year => 2018, :verification_value => 737)
+    @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @options = {
       order_id: '1',
@@ -150,6 +151,16 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
                                  @options_with_no_address)
     assert_success response
     assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_authorize_with_3ds
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: true))
+    assert_equal 'RedirectShopper', response.message
+    assert response.test?
+    refute response.authorization.blank?
+    refute response.params['issuerUrl'].blank?
+    refute response.params['md'].blank?
+    refute response.params['paRequest'].blank?
   end
 
   def test_successful_authorize_and_capture

@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
         add_additional_data(post, options)
         add_customer_data(post, payment, options)
         add_address(post, options)
-        post[:binary_mode] = true
+        post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
         post
       end
 
@@ -114,9 +114,11 @@ module ActiveMerchant #:nodoc:
 
       def add_additional_data(post, options)
         post[:sponsor_id] = options[:sponsor_id]
+        post[:device_id] = options[:device_id] if options[:device_id]
         post[:additional_info] = {
           ip_address: options[:ip_address]
-        }
+        }.merge(options[:additional_info] || {})
+
 
         add_address(post, options)
         add_shipping_address(post, options)
@@ -191,7 +193,7 @@ module ActiveMerchant #:nodoc:
         if ["capture", "void"].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
         else
-          response = parse(ssl_post(url(path), post_data(parameters), headers))
+          response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
         end
 
         Response.new(
@@ -208,7 +210,7 @@ module ActiveMerchant #:nodoc:
         if action == "refund"
           response["error"].nil?
         else
-          ["active", "approved", "authorized", "cancelled"].include?(response["status"])
+          ["active", "approved", "authorized", "cancelled", "in_process"].include?(response["status"])
         end
       end
 
@@ -221,7 +223,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters = {})
-        parameters.to_json
+        parameters.clone.tap { |p| p.delete(:device_id) }.to_json
       end
 
       def error_code_from(action, response)
@@ -236,13 +238,15 @@ module ActiveMerchant #:nodoc:
 
       def url(action)
         full_url = (test? ? test_url : live_url)
-        full_url + "/#{action}?access_token=#{@options[:access_token]}"
+        full_url + "/#{action}?access_token=#{CGI.escape(@options[:access_token])}"
       end
 
-      def headers
-        {
+      def headers(options = {})
+        headers = {
           "Content-Type" => "application/json"
         }
+        headers['X-Device-Session-ID'] = options[:device_id] if options[:device_id]
+        headers
       end
 
       def handle_response(response)

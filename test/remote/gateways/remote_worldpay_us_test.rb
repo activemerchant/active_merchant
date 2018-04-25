@@ -5,9 +5,9 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     @gateway = WorldpayUsGateway.new(fixtures(:worldpay_us))
 
     @amount = 100
-    @credit_card = credit_card('4446661234567892')
+    @credit_card = credit_card('4446661234567892', :verification_value => '987')
     @declined_card = credit_card('4000300011112220')
-    @check = check
+    @check = check(:number => '12345654321')
 
     @options = {
       order_id: generate_unique_id,
@@ -116,4 +116,22 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     assert response.message =~ /DECLINED/
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:merchantpin], transcript)
+
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@gateway.options[:merchantpin], transcript)
+  end
 end

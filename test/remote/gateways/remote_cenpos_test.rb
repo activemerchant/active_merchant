@@ -107,7 +107,7 @@ class RemoteCenposTest < Test::Unit::TestCase
     capture = @gateway.capture(@amount, response.authorization)
     capture = @gateway.capture(@amount, response.authorization)
     assert_failure capture
-    assert_equal "Duplicated transaction", capture.message
+    assert_equal "Duplicated force transaction.", capture.message
   end
 
   def test_successful_void

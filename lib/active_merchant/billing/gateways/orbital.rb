@@ -306,8 +306,10 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<OrbitalConnectionUsername>).+(</OrbitalConnectionUsername>)), '\1[FILTERED]\2').
           gsub(%r((<OrbitalConnectionPassword>).+(</OrbitalConnectionPassword>)), '\1[FILTERED]\2').
           gsub(%r((<AccountNum>).+(</AccountNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CCAccountNum>).+(</CCAccountNum>)), '\1[FILTERED]\2').
           gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
-          gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2')
+          gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2').
+          gsub(%r((<CustomerMerchantID>).+(</CustomerMerchantID>)), '\1[FILTERED]\2')
       end
 
       private
@@ -356,8 +358,8 @@ module ActiveMerchant #:nodoc:
 
       def add_level_2_tax(xml, options={})
         if (level_2 = options[:level_2_data])
-          xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator])
-          xml.tag! :Tax, amount(level_2[:tax]) if level_2[:tax]
+          xml.tag! :TaxInd, level_2[:tax_indicator] if [TAX_NOT_PROVIDED, TAX_INCLUDED, NON_TAXABLE_TRANSACTION].include?(level_2[:tax_indicator].to_i)
+          xml.tag! :Tax, level_2[:tax].to_i if level_2[:tax]
         end
       end
 

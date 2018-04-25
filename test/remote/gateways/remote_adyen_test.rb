@@ -128,6 +128,39 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Original pspReference required for this operation', response.message
   end
 
+  def test_successful_store
+    assert response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert !response.authorization.split("#")[2].nil?
+    assert_equal 'Authorised', response.message
+  end
+
+  def test_failed_store
+    assert response = @gateway.store(@declined_card, @options)
+
+    assert_failure response
+    assert_equal 'Refused', response.message
+  end
+
+  def test_successful_purchase_using_stored_card
+    assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_authorize_using_stored_card
+    assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.authorize(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
@@ -155,6 +188,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 
   def test_incorrect_number_for_purchase
@@ -196,22 +230,19 @@ class RemoteAdyenTest < Test::Unit::TestCase
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_missing_city_for_purchase
     @options[:billing_address].delete(:city)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_missing_house_number_or_name_for_purchase
     @options[:billing_address].delete(:address2)
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_invalid_country_for_purchase

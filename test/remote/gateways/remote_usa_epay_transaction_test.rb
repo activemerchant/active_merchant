@@ -6,6 +6,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
+    @check = check
     @options = { :billing_address => address(:zip => "27614", :state => "NC"), :shipping_address => address }
     @amount = 100
   end
@@ -18,6 +19,12 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_track_data
     assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
+  def test_successful_purchase_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert_equal 'Success', response.message
     assert_success response
   end
@@ -89,6 +96,14 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_refund_of_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert response.authorization
+    assert refund = @gateway.refund(@amount - 20, response.authorization)
+    assert_success refund
+  end
+
   def test_unsuccessful_refund
     assert refund = @gateway.refund(@amount - 20, "unknown_authorization")
     assert_failure refund
@@ -103,6 +118,14 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_successful_void_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert response.authorization
+    assert void = @gateway.void(response.authorization)
+    assert_success void
+  end
+
   def test_unsuccessful_void
     assert void = @gateway.void("unknown_authorization")
     assert_failure void
@@ -111,6 +134,14 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_void_release
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+    assert void = @gateway.void(response.authorization, void_mode: :void_release)
+    assert_success void
+  end
+
+  def test_successful_void_release_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert response.authorization
     assert void = @gateway.void(response.authorization, void_mode: :void_release)
@@ -143,4 +174,30 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_match "Card Declined (00)", response.message
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card_with_track_data, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card_with_track_data.track_data, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+  end
 end

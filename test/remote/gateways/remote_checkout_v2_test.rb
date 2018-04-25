@@ -6,6 +6,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     @amount = 200
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2018')
+    @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -177,5 +178,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_failure response
     assert_match %r{Invalid Card Number}, response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_expired_card_returns_error_code
+    response = @gateway.purchase(@amount, @expired_card, @options)
+    assert_failure response
+    assert_equal 'Validation error: Expired Card', response.message
+    assert_equal '70000: 70077', response.error_code
   end
 end

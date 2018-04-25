@@ -172,7 +172,9 @@ class RemoteDibsTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
+
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@gateway.options[:secret_key], clean_transcript)
   end
 end

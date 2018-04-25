@@ -144,7 +144,9 @@ module ActiveMerchant #:nodoc:
         transcript
           .gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2')
           .gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
+          .gsub(%r((<Password>).+(</Password>))i, '\1[FILTERED]\2')
           .gsub(%r((<CAVV>).+(</CAVV>)), '\1[FILTERED]\2')
+          .gsub(%r((Card Number : ).*\d)i, '\1[FILTERED]')
       end
 
       def supports_network_tokenization?
@@ -237,11 +239,22 @@ module ActiveMerchant #:nodoc:
           xml.tag! "CardHoldersName", credit_card.name
           xml.tag! "CardType", card_type(credit_card.brand)
 
-          eci = (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
-          xml.tag! "Ecommerce_Flag", eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
-
+          add_credit_card_eci(xml, credit_card, options)
           add_credit_card_verification_strings(xml, credit_card, options)
         end
+      end
+
+      def add_credit_card_eci(xml, credit_card, options)
+        eci = if credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.source == :apple_pay && card_brand(credit_card) == "discover"
+          # Discover requires any Apple Pay transaction, regardless of in-app
+          # or web, and regardless of the ECI contained in the PKPaymentToken,
+          # to have an ECI value explicitly of 04.
+          "04"
+        else
+          (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
+        end
+
+        xml.tag! "Ecommerce_Flag", eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)

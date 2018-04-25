@@ -9,9 +9,9 @@ class RemoteMercuryTest < Test::Unit::TestCase
 
     @amount = 100
 
-    @credit_card = credit_card("4003000123456781", :brand => "visa", :month => "12", :year => "15")
+    @credit_card = credit_card("4003000123456781", :brand => "visa", :month => "12", :year => "18")
 
-    @track_1_data = "%B4003000123456781^LONGSEN/L. ^15121200000000000000**123******?*"
+    @track_1_data = "%B4003000123456781^LONGSEN/L. ^18121200000000000000**123******?*"
     @track_2_data = ";5413330089010608=2512101097750213?"
 
     @options = {
@@ -210,7 +210,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '1.00', capture.params['authorize']
   end
-  
+
   def test_successful_authorize_and_capture_with_track_1_data
     @credit_card.track_data = @track_1_data
     response = @gateway.authorize(100, @credit_card, @options)
@@ -240,5 +240,16 @@ class RemoteMercuryTest < Test::Unit::TestCase
 
     void = @gateway.void(response.authorization)
     assert_success void
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

@@ -21,6 +21,10 @@ module ActiveMerchant
     attr_accessor :read_timeout
     attr_accessor :verify_peer
     attr_accessor :ssl_version
+    if Net::HTTP.instance_methods.include?(:min_version=)
+      attr_accessor :min_version
+      attr_accessor :max_version
+    end
     attr_accessor :ca_file
     attr_accessor :ca_path
     attr_accessor :pem
@@ -44,7 +48,11 @@ module ActiveMerchant
       @max_retries  = MAX_RETRIES
       @ignore_http_status = false
       @ssl_version = nil
-      @proxy_address = nil
+      if Net::HTTP.instance_methods.include?(:min_version=)
+        @min_version = nil
+        @max_version = nil
+      end
+      @proxy_address = :ENV
       @proxy_port = nil
     end
 
@@ -80,8 +88,14 @@ module ActiveMerchant
               # It's kind of ambiguous whether the RFC allows bodies
               # for DELETE requests. But Net::HTTP's delete method
               # very unambiguously does not.
-              raise ArgumentError, "DELETE requests do not support a request body" if body
-              http.delete(endpoint.request_uri, headers)
+              if body
+                debug body
+                req = Net::HTTP::Delete.new(endpoint.request_uri, headers)
+                req.body = body
+                http.request(req)
+              else
+                http.delete(endpoint.request_uri, headers)
+              end
             else
               raise ArgumentError, "Unsupported request method #{method.to_s.upcase}"
             end
@@ -121,6 +135,10 @@ module ActiveMerchant
 
       http.use_ssl = true
       http.ssl_version = ssl_version if ssl_version
+      if http.respond_to?(:min_version=)
+        http.min_version = min_version if min_version
+        http.max_version = max_version if max_version
+      end
 
       if verify_peer
         http.verify_mode = OpenSSL::SSL::VERIFY_PEER

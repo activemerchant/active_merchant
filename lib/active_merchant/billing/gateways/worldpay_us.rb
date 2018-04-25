@@ -72,6 +72,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?merchantpin=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?ccnum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?ckacct=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?cvv2=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def url(options)

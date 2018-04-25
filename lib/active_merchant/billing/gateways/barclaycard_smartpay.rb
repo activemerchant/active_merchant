@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
-      self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'GE', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
+      self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
       self.default_currency = 'EUR'
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.money_format = :cents
@@ -35,6 +35,7 @@ module ActiveMerchant #:nodoc:
         post[:card] = credit_card_hash(creditcard)
         post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
         post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
+        add_3ds(post, options) if options[:execute_threed]
         commit('authorise', post)
       end
 
@@ -211,8 +212,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if response.has_key?('authCode')
         return true if response['result'] == 'Success'
+        return true if response['resultCode'] == 'Authorised'
         return true if response['resultCode'] == 'Received'
         successful_responses = %w([capture-received] [cancel-received] [refund-received])
         successful_responses.include?(response['response'])
@@ -222,6 +223,8 @@ module ActiveMerchant #:nodoc:
         case action
         when 'store'
           "#{test? ? self.test_url : self.live_url}/Recurring/v12/storeToken"
+        when 'finalize3ds'
+          "#{test? ? self.test_url : self.live_url}/Payment/v12/authorise3d"
         else
           "#{test? ? self.test_url : self.live_url}/Payment/v12/#{action}"
         end
@@ -311,6 +314,11 @@ module ActiveMerchant #:nodoc:
         hash[:shopperEmail]     = options[:email] if options[:email]
         hash[:shopperReference] = options[:customer] if options[:customer]
         hash.keep_if { |_, v| v }
+      end
+
+      def add_3ds(post, options)
+        post[:additionalData] = { executeThreeD: 'true' }
+        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
       end
     end
   end

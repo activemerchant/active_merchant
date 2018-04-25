@@ -73,6 +73,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<hps:CardNbr>)[^<]*(<\/hps:CardNbr>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:CVV2>)[^<]*(<\/hps:CVV2>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def add_reference(xml, transaction_id)
@@ -218,7 +229,7 @@ module ActiveMerchant #:nodoc:
         data = build_request(action, &request)
 
         response = begin
-          parse(ssl_post((test? ? test_url : live_url), data, 'Content-type' => 'text/xml'))
+          parse(ssl_post((test? ? test_url : live_url), data, 'Content-Type' => 'text/xml'))
         rescue ResponseError => e
           parse(e.response.body)
         end

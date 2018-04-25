@@ -80,13 +80,33 @@ class CardStreamTest < Test::Unit::TestCase
     assert responseCapture.test?
   end
 
-  def test_successful_visacreditcard_refund
+  def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
     assert responseRefund = @gateway.refund(142, "authorization", @visacredit_options)
     assert_equal 'APPROVED', responseRefund.message
     assert_success responseRefund
     assert responseRefund.test?
+  end
+
+  def test_successful_refund_due_to_unsettled_payment_forces_void
+    refund = stub_comms do
+      @gateway.refund(142, 'authorization', @visacredit_options.merge(force_full_refund_if_unsettled: true))
+    end.respond_with(failed_refund_for_unsettled_payment_response, successful_void_response)
+
+    assert refund
+    assert_success refund
+    assert_equal 'APPROVED', refund.message
+    assert refund.test?
+  end
+
+  def test_failed_refund_due_to_unsettled_payment
+    @gateway.expects(:ssl_post).returns(failed_refund_for_unsettled_payment_response)
+
+    assert refund = @gateway.refund(142, "authorization", @visacredit_options)
+    assert_equal 'Can not REFUND this SALE transaction', refund.message
+    assert_failure refund
+    assert refund.test?
   end
 
   def test_successful_visacreditcard_void
@@ -114,6 +134,22 @@ class CardStreamTest < Test::Unit::TestCase
       assert_match(/statementNarrative1=merchant/, data)
       assert_match(/statementNarrative2=product/, data)
     end.respond_with(successful_purchase_response_with_descriptors)
+  end
+
+  def test_successful_visacreditcard_purchase_with_default_ip
+    stub_comms do
+      @gateway.purchase(284, @visacreditcard, @visacredit_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/remoteAddress=1\.1\.1\.1/, data)
+    end.respond_with(successful_purchase_response_with_descriptors)
+  end
+
+  def test_successful_visacreditcard_purchase_with_default_country
+    stub_comms do
+      @gateway.purchase(284, @visacreditcard, @visacredit_options.delete(:billing_address))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/customerCountryCode=GB/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_visacreditcard_purchase_via_reference
@@ -200,7 +236,7 @@ class CardStreamTest < Test::Unit::TestCase
   end
 
   def test_hmac_signature_added_to_post
-    post_params = "action=SALE&amount=10000&captureDelay=0&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
+    post_params = "action=SALE&amount=10000&captureDelay=0&cardCVV=356&cardExpiryMonth=12&cardExpiryYear=14&cardNumber=4929421234600821&countryCode=GB&currencyCode=826&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerCountryCode=GB&customerName=Longbob+Longsen&customerPostCode=NN17+8YG+&merchantID=login&orderRef=AM+test+purchase&remoteAddress=1.1.1.1&threeDSRequired=N&transactionUnique=#{@visacredit_options[:order_id]}&type=1"
     expected_signature = Digest::SHA512.hexdigest("#{post_params}#{@gateway.options[:shared_secret]}")
 
     @gateway.expects(:ssl_post).with do |url, data|
@@ -262,6 +298,10 @@ class CardStreamTest < Test::Unit::TestCase
 
   def successful_refund_response
     "merchantID=0000000&threeDSEnabled=Y&merchantDescription=General+test+account+with+AVS%2FCV2+checking&xref=13021914NT06BM21GJ15VJH&amount=142&currencyCode=826&action=REFUND&type=1&countryCode=826&merchantAlias=0000992&remoteAddress=80.229.33.63&responseCode=0&responseMessage=REFUNDACCEPTED&customerName=Longbob+Longsen&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&transactionUnique=c7981d78d217cf3cfda6559921e31c4a&orderRef=AM+test+purchase&amountReceived=142&avscv2ResponseCode=222100&avscv2ResponseMessage=ALL+MATCH&avscv2AuthEntity=merchant+host&cv2Check=matched&addressCheck=matched&postcodeCheck=matched&threeDSXID=00000000000004717488&threeDSEnrolled=U&threeDSErrorCode=-1&threeDSErrorDescription=Error+while+attempting+to+send+the+request+to%3A+https%3A%2F%2F3dstest.universalpaymentgateway.com%3A4343%2FAPI%0A%0DPlease+make+sure+that+ActiveMerchant+server+is+running+and+the+URL+is+valid.+ERROR_INTERNET_CANNOT_CONNECT%3A+The+attempt+to+connect+to+the+server+failed.&threeDSMerchantPref=PROCEED&threeDSVETimestamp=2013-02-19+14%3A05%3A58&cardTypeCode=VC&cardNumberMask=%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A0821&threeDSRequired=N&transactionID=4717490&transactionPreviousID=4717488&timestamp=2013-02-19+14%3A06%3A21&cardType=Visa+Credit&currencyExponent=2&responseStatus=0&merchantName=CARDSTREAM+TEST&merchantID2=100001"
+  end
+
+  def failed_refund_for_unsettled_payment_response
+    "responseCode=65541&responseMessage=Can+not+REFUND+this+SALE+transaction&responseStatus=2&xref=18032714RP14KM21FX11YHT&amount=142&currencyCode=826&remoteAddress=1.1.1.1&countryCode=GB&merchantID=103191&action=REFUND_SALE&requestID=5aba43ad1481e&state=finished&requestMerchantID=103191&processMerchantID=103191&transactionID=25814232&timestamp=2018-03-27+14%3A14%3A21&vcsResponseCode=0&vcsResponseMessage=Success+-+no+velocity+check+rules+applied&signature=b56640b215510a04ebfaa095b63705cda08cca318a7ccb2b2b48caec75adc187d9cae5082eb1dc71d258813ee9d879721e48af04966a489171f435bfa67b6d92"
   end
 
   def successful_void_response
