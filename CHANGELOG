@@ -16,6 +16,7 @@
 * Paymentez: Add `tax_percentage` optional parameter [deedeelavinder] #2814
 * Braintree: Add `skip_advanced_fraud_checking` optional parameter [deedeelavinder] #2811
 * SafeCharge: Additional gateway options [dtykocki] #2816
+* FirstPay: Handle missing billing addresses [dtykocki] #2822
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
