@@ -70,15 +70,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, creditcard, options)
-        address = options[:billing_address] || options[:address]
-        post[:owner_name] = address[:name]
-        post[:owner_street] = address[:address1]
-        post[:owner_street2] = address[:address2] if address[:address2]
-        post[:owner_city] = address[:city]
-        post[:owner_state] = address[:state]
-        post[:owner_zip] = address[:zip]
-        post[:owner_country] = address[:country]
-        post[:owner_phone] = address[:phone] if address[:phone]
+        if address = options[:billing_address] || options[:address]
+          post[:owner_name] = address[:name]
+          post[:owner_street] = address[:address1]
+          post[:owner_street2] = address[:address2] if address[:address2]
+          post[:owner_city] = address[:city]
+          post[:owner_state] = address[:state]
+          post[:owner_zip] = address[:zip]
+          post[:owner_country] = address[:country]
+          post[:owner_phone] = address[:phone] if address[:phone]
+        end
       end
 
       def add_invoice(post, money, options)
