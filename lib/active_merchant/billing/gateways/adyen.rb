@@ -147,6 +147,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopperName(post, options)
+        post[:shopperName] = {}
         post[:shopperName][:firstname] = options[:billing_address][:first_name]
         post[:shopperName][:lastname] = options[:billing_address][:last_name]
         post[:shopperName][:gender] = 'UNKNOWN'
