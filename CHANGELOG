@@ -18,6 +18,7 @@
 * SafeCharge: Additional gateway options [dtykocki] #2816
 * FirstPay: Handle missing billing addresses [dtykocki] #2822
 * Realex: Add ApplePay Support [nfarve] #2820
+* Checkout V2: Additional gateway options [dtykocki] #2821
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
