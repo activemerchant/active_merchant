@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         add_extra_data(post, options)
         add_shopper_interaction(post, payment, options)
         add_address(post, options)
-        add_shopperName(post, options);
+        add_shopperName(post, options)
         commit('authorise', post)
       end
 
