@@ -474,7 +474,7 @@ module ActiveMerchant #:nodoc: ALL
           test: test?,
           authorization: authorization_from(action, response),
           avs_result: { code: response['AVSResultCode'] },
-          cvv_result: response['CCVResultCode'],
+          cvv_result: response['CVVResultCode'],
           emv_authorization: nil,
           error_code: success ? nil : error_code_from(response)
         )
