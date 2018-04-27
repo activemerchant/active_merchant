@@ -1227,12 +1227,12 @@ world_net:
   secret: 'sandboxEUR'
 
 world_pay_gateway:
-  merchant_code: 'SPREEDLY'
-  login: 'SPREEDLY'
-  password: 'KZ#P2aR+'
+  merchant_code_login: 'RDECOMBRL'
+  login: 'RDECOMBRL'
+  password: 'live2018'
 
 world_pay_gateway_cft:
-  merchant_code: 'SPREEDLYCFT'
+  merchant_code_login: 'SPREEDLYCFT'
   login: 'SPREEDLYCFT'
   password: 'Xbf+6#pD'
 
