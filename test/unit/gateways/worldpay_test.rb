@@ -12,6 +12,7 @@ class WorldpayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @options = {:order_id => 1}
+    @token = network_tokenization_credit_card(source: :worldpay, payment_cryptogram: "9902019934757792074")
   end
 
   def test_successful_authorize
@@ -467,6 +468,22 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_successful_purchase_with_create_token
+    @options = @options.merge(create_token: {}, token_scope: 'merchant')
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_with_token_response, successful_capture_response)
+    assert_success response
+    assert_equal '9902019934757792074', response.responses.first.params['payment_token_id']
+  end
+
+  def test_successful_purchase_using_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @token, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
   private
 
   def successful_authorize_response
@@ -846,5 +863,39 @@ class WorldpayTest < Test::Unit::TestCase
       </submit>
     </paymentService>
     TRANSCRIPT
+  end
+
+  def successful_authorize_with_token_response
+    <<-RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
+                                      "http://dtd.bibit.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="XXXXXXXXXXXXXXX">
+        <reply>
+          <orderStatus orderCode="R50704213207145707">
+            <payment>
+              <paymentMethod>VISA-SSL</paymentMethod>
+              <amount value="15000" currencyCode="HKD" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>AUTHORISED</lastEvent>
+              <CVCResultCode description="UNKNOWN"/>
+              <AVSResultCode description="UNKNOWN"/>
+              <balance accountType="IN_PROCESS_AUTHORISED">
+                <amount value="15000" currencyCode="HKD" exponent="2" debitCreditIndicator="credit"/>
+              </balance>
+              <cardNumber>4111********1111</cardNumber>
+              <riskScore value="1"/>
+            </payment>
+            <token>
+              <tokenDetails tokenEvent="NEW">
+                <paymentTokenID>9902019934757792074</paymentTokenID>
+                <paymentTokenExpiry>
+                  <date dayOfMonth="3" month="03" year="2019" hour="02" minute="25" second="15"/>
+                </paymentTokenExpiry>
+              </tokenDetails>
+            </token>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
   end
 end
