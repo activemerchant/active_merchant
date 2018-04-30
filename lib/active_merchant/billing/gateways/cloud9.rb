@@ -441,8 +441,7 @@ module ActiveMerchant #:nodoc: ALL
       def api_request(action, endpoint, parameters = nil)
         raw_response = response = nil
         begin
-          endpoint = '/' + endpoint if endpoint&.size&.positive?
-          raw_response = ssl_post(target_url + endpoint, post_data(action, parameters), headers(parameters))
+          raw_response = ssl_post(target_url(endpoint), post_data(action, parameters), headers(parameters))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -501,8 +500,15 @@ module ActiveMerchant #:nodoc: ALL
         JSON.generate(post.merge(parameters))
       end
 
-      def target_url
-        test? ? self.test_url : self.live_url
+      def target_url(endpoint)
+        # TODO: temporary URL for batch query processing
+        url = if endpoint == 'bchApi'
+                'https://52.27.64.14:11911'
+              else
+                test? ? self.test_url : self.live_url
+              end
+        endpoint = '/' + endpoint if endpoint&.size&.positive?
+        url + endpoint
       end
     end
   end
