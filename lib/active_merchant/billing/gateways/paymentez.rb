@@ -61,18 +61,10 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_invoice(post, money, options)
+        add_payment(post, payment)
         add_customer_data(post, options)
 
-        if payment.is_a?(String)
-          post[:card] = { token: payment }
-          commit_transaction('authorize', post)
-        else
-          MultiResponse.run do |r|
-            r.process { store(payment, options) }
-            post[:card] = { token: r.authorization }
-            r.process { commit_transaction('authorize', post) }
-          end
-        end
+        commit_transaction('authorize', post)
       end
 
       def capture(_money, authorization, _options = {})
