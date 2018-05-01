@@ -295,7 +295,7 @@ module ActiveMerchant #:nodoc:
           add_check_service(xml)
         else
           add_purchase_service(xml, payment_method_or_reference, options)
-          xml.tag! 'payerAuthEnrollService', {'run' => 'true'} if options[:payer_auth_enroll_service]
+          add_threeds_services(xml, options)
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
@@ -403,7 +403,7 @@ module ActiveMerchant #:nodoc:
       def add_business_rules_data(xml, payment_method, options)
         prioritized_options = [options, @options]
 
-        unless network_tokenization?(payment_method)
+        unless network_tokenization?(payment_method) || options[:payer_auth_validate_service]
           xml.tag! 'businessRules' do
             xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs)
             xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv)
@@ -665,6 +665,15 @@ module ActiveMerchant #:nodoc:
 
       def add_validate_pinless_debit_service(xml)
         xml.tag!'pinlessDebitValidateService', {'run' => 'true'}
+      end
+
+      def add_threeds_services(xml, options)
+        xml.tag! 'payerAuthEnrollService', {'run' => 'true'} if options[:payer_auth_enroll_service]
+        if options[:payer_auth_validate_service]
+          xml.tag! 'payerAuthValidateService', {'run' => 'true'} do
+            xml.tag! 'signedPARes', options[:pares]
+          end
+        end
       end
 
       def lookup_country_code(country_field)
