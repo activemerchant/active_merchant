@@ -4,6 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.12'
+      ECHECK_TOKEN_LENGTH = 17
 
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
