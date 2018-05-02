@@ -26,6 +26,7 @@ module ActiveMerchant #:nodoc:
           add_allow_dup(xml)
           add_customer_data(xml, card_or_token, options)
           add_details(xml, options)
+          add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
         end
       end
@@ -43,6 +44,7 @@ module ActiveMerchant #:nodoc:
           add_allow_dup(xml)
           add_customer_data(xml, card_or_token,options)
           add_details(xml, options)
+          add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
         end
       end
@@ -60,6 +62,7 @@ module ActiveMerchant #:nodoc:
       def verify(card_or_token, options={})
         commit('CreditAccountVerify') do |xml|
           add_customer_data(xml, card_or_token, options)
+          add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
         end
       end
@@ -144,6 +147,10 @@ module ActiveMerchant #:nodoc:
 
       def add_allow_dup(xml)
         xml.hps :AllowDup, 'Y'
+      end
+
+      def add_descriptor_name(xml, options)
+        xml.hps :TxnDescriptor, options[:descriptor_name] if options[:descriptor_name]
       end
 
       def build_request(action)

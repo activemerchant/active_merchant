@@ -83,6 +83,16 @@ module ActiveMerchant
         commit(request)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+        gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+        gsub(%r((<number>)\d+(</number>))i, '\1[FILTERED]\2')
+      end
+
       private
       def commit(request)
         response = parse(ssl_post(self.live_url, request))

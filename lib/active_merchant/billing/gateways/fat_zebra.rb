@@ -3,7 +3,7 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FatZebraGateway < Gateway
-      self.live_url    = "https://gateway.fatzebra.com.au/v1.0"
+      self.live_url = "https://gateway.fatzebra.com.au/v1.0"
       self.test_url = "https://gateway.sandbox.fatzebra.com.au/v1.0"
 
       self.supported_countries = ['AU']
@@ -91,6 +91,17 @@ module ActiveMerchant #:nodoc:
         commit(:post, "credit_cards", post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("card_number\\":\\")[^"\\]*)i, '\1[FILTERED]').
+          gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
+      end
+
       private
 
       # Add the money details to the request
@@ -121,9 +132,12 @@ module ActiveMerchant #:nodoc:
 
       def add_extra_options(post, options)
         extra = {}
+        extra[:ecm] = "32" if options[:recurring]
+        extra[:cavv] = options[:cavv] if options[:cavv]
+        extra[:xid] = options[:cavv] if options[:xid]
+        extra[:sli] = options[:sli] if options[:sli]
         extra[:name] = options[:merchant] if options[:merchant]
         extra[:location] = options[:merchant_location] if options[:merchant_location]
-        extra[:ecm] = "32" if options[:recurring]
         post[:extra] = extra if extra.any?
       end
 

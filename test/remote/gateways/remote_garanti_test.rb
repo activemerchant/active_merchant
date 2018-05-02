@@ -11,9 +11,9 @@ class RemoteGarantiTest < Test::Unit::TestCase
 
     @gateway = GarantiGateway.new(fixtures(:garanti))
 
-    @amount = 1 # 1 cents = 0.01$
-    @declined_card = credit_card('4000100011112224')
-    @credit_card = credit_card('4000300011112220')
+    @amount = 100 # 1 cents = 0.01$
+    @declined_card = credit_card('4282209027132017')
+    @credit_card = credit_card('4282209027132016', month: 5, year: 2018, verification_value: 358)
 
     @options = {
       :order_id => generate_unique_id,
@@ -56,9 +56,8 @@ class RemoteGarantiTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = GarantiGateway.new(
-                :provision_user_id => 'PROVAUT',
-                :user_id => 'PROVAUT',
-                :terminal_id => '10000174',
+                :login => 'PROVAUT',
+                :terminal_id => '30691300',
                 :merchant_id => '',
                 :password => ''
               )

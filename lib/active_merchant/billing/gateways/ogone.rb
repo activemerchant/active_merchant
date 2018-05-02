@@ -151,12 +151,13 @@ module ActiveMerchant #:nodoc:
       # Verify and reserve the specified amount on the account, without actually doing the transaction.
       def authorize(money, payment_source, options = {})
         post = {}
+        action = (payment_source.brand == "mastercard") ? "PAU" : "RES"
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('RES', post)
+        commit(action, post)
       end
 
       # Verify and transfer the specified amount.
@@ -205,12 +206,31 @@ module ActiveMerchant #:nodoc:
         perform_reference_credit(money, reference, options)
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       # Store a credit card by creating an Ogone Alias
       def store(payment_source, options = {})
         options.merge!(:alias_operation => 'BYPSP') unless(options.has_key?(:billing_id) || options.has_key?(:store))
         response = authorize(@options[:store_amount] || 1, payment_source, options)
         void(response.authorization) if response.success?
         response
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+        gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+        gsub(%r((&?cardno=)[^&]*)i, '\1[FILTERED]').
+        gsub(%r((&?cvc=)[^&]*)i, '\1[FILTERED]').
+        gsub(%r((&?pswd=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -272,6 +292,8 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accept_url]
         add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:decline_url]
         add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exception_url]
+        add_pair post, 'CANCELURL',       options[:cancel_url]      if options[:cancel_url]
+        add_pair post, 'PARAMVAR',        options[:paramvar]       if options[:paramvar]
         add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
         add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
         add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
@@ -391,23 +413,44 @@ module ActiveMerchant #:nodoc:
            return
         end
 
-        sha_encryptor = case @options[:signature_encryptor]
-                        when 'sha256'
-                          Digest::SHA256
-                        when 'sha512'
-                          Digest::SHA512
-                        else
-                          Digest::SHA1
-                        end
+        add_pair parameters, 'SHASign', calculate_signature(parameters, @options[:signature_encryptor], @options[:signature])
+      end
 
-        string_to_digest = if @options[:signature_encryptor]
-          parameters.sort { |a, b| a[0].upcase <=> b[0].upcase }.map { |k, v| "#{k.upcase}=#{v}" }.join(@options[:signature])
+      def calculate_signature(signed_parameters, algorithm, secret)
+        return legacy_calculate_signature(signed_parameters, secret) unless algorithm
+
+        sha_encryptor = case algorithm
+        when 'sha256'
+          Digest::SHA256
+        when 'sha512'
+          Digest::SHA512
+        when 'sha1'
+          Digest::SHA1
         else
-          %w[orderID amount currency CARDNO PSPID Operation ALIAS].map { |key| parameters[key] }.join
+          raise "Unknown signature algorithm #{algorithm}"
         end
-        string_to_digest << @options[:signature]
 
-        add_pair parameters, 'SHASign', sha_encryptor.hexdigest(string_to_digest).upcase
+        filtered_params = signed_parameters.select{|k,v| !v.blank?}
+        sha_encryptor.hexdigest(
+          filtered_params.sort_by{|k,v| k.upcase}.map{|k, v| "#{k.upcase}=#{v}#{secret}"}.join("")
+        ).upcase
+      end
+
+      def legacy_calculate_signature(parameters, secret)
+        Digest::SHA1.hexdigest(
+          (
+            %w(
+              orderID
+              amount
+              currency
+              CARDNO
+              PSPID
+              Operation
+              ALIAS
+            ).map{|key| parameters[key]} +
+            [secret]
+          ).join("")
+        ).upcase
       end
 
       def add_pair(post, key, value)

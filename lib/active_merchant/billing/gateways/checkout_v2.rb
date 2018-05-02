@@ -3,10 +3,10 @@ module ActiveMerchant #:nodoc:
     class CheckoutV2Gateway < Gateway
       self.display_name = "Checkout.com V2 Gateway"
       self.homepage_url = "https://www.checkout.com/"
-      self.test_url = "https://api2.checkout.com/v2"
-      self.live_url = "http://sandbox.checkout.com/api2/v2"
+      self.live_url = "https://api2.checkout.com/v2"
+      self.test_url = "https://sandbox.checkout.com/api2/v2"
 
-      self.supported_countries = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'MU', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'US']
+      self.supported_countries = ['AD', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
       self.default_currency = "USD"
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
@@ -78,6 +78,9 @@ module ActiveMerchant #:nodoc:
         post[:value] = amount(money)
         post[:trackId] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
+        post[:descriptor] = {}
+        post[:descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
+        post[:descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
       end
 
       def add_payment_method(post, payment_method)
@@ -100,7 +103,7 @@ module ActiveMerchant #:nodoc:
           post[:card][:billingDetails][:state] = address[:state]
           post[:card][:billingDetails][:country] = address[:country]
           post[:card][:billingDetails][:postcode] = address[:zip]
-          post[:card][:billingDetails][:phone] = { number: address[:phone] }
+          post[:card][:billingDetails][:phone] = { number: address[:phone] } unless address[:phone].blank?
         end
       end
 
@@ -162,7 +165,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["responseCode"] == ("10000" || "10100")
+        response["responseCode"] == "10000" || response["responseCode"] == "10100"
       end
 
       def message_from(succeeded, response)

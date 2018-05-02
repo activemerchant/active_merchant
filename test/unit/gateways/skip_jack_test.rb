@@ -3,7 +3,7 @@ require 'test_helper'
 class SkipJackTest < Test::Unit::TestCase
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = SkipJackGateway.new(:login => 'X', :password => 'Y')
 

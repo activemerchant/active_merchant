@@ -65,6 +65,16 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.gsub(%r((&lt;PAN&gt;)[^&]*(&lt;/PAN&gt;))i, '\1[FILTERED]\2').
+          gsub(%r((&lt;CVC2&gt;)[^&]*(&lt;/CVC2&gt;))i, '\1[FILTERED]\2').
+          gsub(%r(((?:\r\n)?Authorization: Basic )[^\r\n]+(\r\n)?), '\1[FILTERED]\2')
+      end
+
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}

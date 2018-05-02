@@ -3,7 +3,7 @@ require 'test_helper'
 class PlugnpayTest < Test::Unit::TestCase
 
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = PlugnpayGateway.new(
       :login => 'X',

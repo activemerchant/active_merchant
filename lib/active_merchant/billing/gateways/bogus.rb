@@ -4,9 +4,13 @@ module ActiveMerchant #:nodoc:
     class BogusGateway < Gateway
       AUTHORIZATION = '53433'
 
+      AUTHORIZATION_EMV_SUCCESS = '8A023030'
+      AUTHORIZATION_EMV_DECLINE = '8A023035'
+
       SUCCESS_MESSAGE = "Bogus Gateway: Forced success"
       FAILURE_MESSAGE = "Bogus Gateway: Forced failure"
-      ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error"
+      NUMBER_ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error"
+      AMOUNT_ERROR_MESSAGE = "Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception"
       UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id ending in 1 for success, 2 for exception and anything else for error"
       CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success"
       VOID_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success"
@@ -19,26 +23,18 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Bogus'
 
       def authorize(money, paysource, options = {})
-        money = amount(money)
-        case normalize(paysource)
-        when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
-        when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+        if paysource.respond_to?(:emv?) && paysource.emv?
+          authorize_emv(money, paysource, options)
         else
-          raise Error, error_message(paysource)
+          authorize_swipe(money, paysource, options)
         end
       end
 
       def purchase(money, paysource, options = {})
-        money = amount(money)
-        case normalize(paysource)
-        when /1$/, AUTHORIZATION
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION)
-        when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+        if paysource.respond_to?(:emv?) && paysource.emv?
+          purchase_emv(money, paysource, options)
         else
-          raise Error, error_message(paysource)
+          purchase_swipe(money, paysource, options)
         end
       end
 
@@ -118,6 +114,54 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def authorize_emv(money, paysource, options = {})
+        money = amount(money)
+        case money
+        when /00$/
+          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION, :emv_authorization => AUTHORIZATION_EMV_SUCCESS)
+        when /05$/
+          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error], :emv_authorization => AUTHORIZATION_EMV_DECLINE)
+        else
+          raise Error, error_message(paysource)
+        end
+      end
+
+      def authorize_swipe(money, paysource, options = {})
+        money = amount(money)
+        case normalize(paysource)
+        when /1$/
+          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
+        when /2$/
+          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+        else
+          raise Error, error_message(paysource)
+        end
+      end
+
+      def purchase_emv(money, paysource, options = {})
+        money = amount(money)
+        case money
+        when /00$/
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION, :emv_authorization => AUTHORIZATION_EMV_SUCCESS)
+        when /05$/
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error], :emv_authorization => AUTHORIZATION_EMV_DECLINE)
+        else
+          raise Error, error_message(paysource)
+        end
+      end
+
+      def purchase_swipe(money, paysource, options = {})
+        money = amount(money)
+        case normalize(paysource)
+        when /1$/, AUTHORIZATION
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION)
+        when /2$/
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+        else
+          raise Error, error_message(paysource)
+        end
+      end
+
       def normalize(paysource)
         if paysource.respond_to?(:account_number) && (paysource.try(:number).blank? || paysource.number.blank?)
           paysource.account_number
@@ -129,10 +173,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_message(paysource)
-        if paysource.respond_to?(:account_number)
+        if paysource.respond_to?(:emv?) && paysource.emv?
+          AMOUNT_ERROR_MESSAGE
+        elsif paysource.respond_to?(:account_number)
           CHECK_ERROR_MESSAGE
         elsif paysource.respond_to?(:number)
-          ERROR_MESSAGE
+          NUMBER_ERROR_MESSAGE
         end
       end
     end

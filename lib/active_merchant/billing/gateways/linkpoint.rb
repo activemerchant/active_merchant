@@ -144,6 +144,8 @@ module ActiveMerchant #:nodoc:
         }.update(options)
 
         raise ArgumentError, "You need to pass in your pem file using the :pem parameter or set it globally using ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../mycert.pem' ) or similar" if @options[:pem].blank?
+
+        @options[:pem].strip!
       end
 
       # Send a purchase request with periodic options
@@ -243,6 +245,17 @@ module ActiveMerchant #:nodoc:
       def credit(money, identification, options = {})
         ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<cardnumber>)\d+(</cardnumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<cvmvalue>)\d+(</cvmvalue>))i, '\1[FILTERED]\2')
       end
 
       private
