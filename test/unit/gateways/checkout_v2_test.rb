@@ -23,6 +23,16 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_with_additional_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, {descriptor_city: "london", descriptor_name: "sherlock"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)

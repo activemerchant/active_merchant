@@ -35,6 +35,10 @@ class CheckTest < Test::Unit::TestCase
     )
   end
 
+  def test_credit_card?
+    assert !check.credit_card?
+  end
+
   def test_invalid_routing_number
     errors = assert_not_valid Check.new(:routing_number => INVALID_ABA)
     assert_equal ["is invalid"], errors[:routing_number]

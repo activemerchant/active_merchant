@@ -15,7 +15,8 @@ class RemoteWirecardTest < Test::Unit::TestCase
       order_id: 1,
       billing_address: address,
       description: 'Wirecard remote test purchase',
-      email: 'soleone@example.com'
+      email: 'soleone@example.com',
+      ip: '127.0.0.1'
     }
 
     @german_address = {
@@ -252,5 +253,15 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "Invalid Login", response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card,  @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end
 end

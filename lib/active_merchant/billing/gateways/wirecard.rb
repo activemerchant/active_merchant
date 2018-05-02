@@ -126,6 +126,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<CreditCardNumber>)\d+(</CreditCardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<CVC2>)[^<]+(</CVC2>)), '\1[FILTERED]\2')
+      end
+
       private
       def clean_description(description)
         description.to_s.slice(0,32).encode("US-ASCII", invalid: :replace, undef: :replace, replace: '?')
@@ -228,6 +239,7 @@ module ActiveMerchant #:nodoc:
             when :reversal
               xml.tag! 'GuWID', options[:preauthorization]
             end
+            add_customer_data(xml, options)
           end
         end
       end
@@ -417,4 +429,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

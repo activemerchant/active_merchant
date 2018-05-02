@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemoteEpayTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = EpayGateway.new(fixtures(:epay))
 

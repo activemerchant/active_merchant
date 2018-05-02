@@ -28,6 +28,8 @@ module ActiveMerchant #:nodoc:
     # Company will automatically be affiliated.
 
     class OrbitalGateway < Gateway
+      include Empty
+
       API_VERSION = "5.6"
 
       POST_HEADERS = {
@@ -82,7 +84,9 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_CODES = {
         "AUD" => '036',
+        "BRL" => '986',
         "CAD" => '124',
+        "CLP" => '152',
         "CZK" => '203',
         "DKK" => '208',
         "HKD" => '344',
@@ -101,7 +105,9 @@ module ActiveMerchant #:nodoc:
 
       CURRENCY_EXPONENTS = {
         "AUD" => '2',
+        "BRL" => '2',
         "CAD" => '2',
+        "CLP" => '2',
         "CZK" => '2',
         "DKK" => '2',
         "HKD" => '2',
@@ -175,7 +181,7 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
-      SENSITIVE_FIELDS = [:account_num]
+      SENSITIVE_FIELDS = [:account_num, :cc_account_num]
 
       def initialize(options = {})
         requires!(options, :merchant_id)
@@ -291,6 +297,19 @@ module ActiveMerchant #:nodoc:
         commit(order, :delete_customer_profile)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<OrbitalConnectionUsername>).+(</OrbitalConnectionUsername>)), '\1[FILTERED]\2').
+          gsub(%r((<OrbitalConnectionPassword>).+(</OrbitalConnectionPassword>)), '\1[FILTERED]\2').
+          gsub(%r((<AccountNum>).+(</AccountNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
+          gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def authorization_string(*args)
@@ -328,7 +347,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, creditcard, options)
         if(address = (options[:billing_address] || options[:address]))
-          avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
+          avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s) || empty?(address[:country])
 
           if avs_supported
             xml.tag! :AVSzip,      byte_limit(format_address_field(address[:zip]), 10)
@@ -338,9 +357,9 @@ module ActiveMerchant #:nodoc:
             xml.tag! :AVSstate,    byte_limit(format_address_field(address[:state]), 2)
             xml.tag! :AVSphoneNum, (address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil)
           end
-          # can't look in billing address?
+
           xml.tag! :AVSname, ((creditcard && creditcard.name) ? creditcard.name[0..29] : nil)
-          xml.tag! :AVScountryCode, (avs_supported ? address[:country] : '')
+          xml.tag! :AVScountryCode, (avs_supported ? (byte_limit(format_address_field(address[:country]), 2)) : '')
 
           # Needs to come after AVScountryCode
           add_destination_address(xml, address) if avs_supported
@@ -398,10 +417,12 @@ module ActiveMerchant #:nodoc:
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         unless creditcard.nil?
-          if %w( visa discover ).include?(creditcard.brand)
-            xml.tag! :CardSecValInd, (creditcard.verification_value? ? '1' : '9')
+          if creditcard.verification_value?
+            if %w( visa discover ).include?(creditcard.brand)
+              xml.tag! :CardSecValInd, '1'
+            end
+            xml.tag! :CardSecVal,  creditcard.verification_value
           end
-          xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
         end
       end
 
@@ -668,6 +689,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_customer_request_xml(creditcard, options = {})
+        ActiveMerchant.deprecated "Customer Profile support in Orbital is non-conformant to the ActiveMerchant API and will be removed in its current form in a future version. Please contact the ActiveMerchant maintainers if you have an interest in modifying it to conform to the store/unstore/update API."
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Profile do

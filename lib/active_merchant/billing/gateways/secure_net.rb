@@ -163,9 +163,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'COUNTRY', address[:country].to_s
 
             if address[:name]
-              names = address[:name].split
-              last_name = names.pop
-              first_name = names.join(" ")
+              first_name, last_name = split_names(address[:name])
               xml.tag! 'FIRSTNAME', first_name
               xml.tag! 'LASTNAME', last_name
             else
@@ -208,10 +206,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_more_required_params(xml, options)
+        test_mode = options[:test_mode].nil? ? test? : options[:test_mode]
         xml.tag! 'RETAIL_LANENUM', '0'
-        xml.tag! 'TEST', 'TRUE' if test?
+        xml.tag! 'TEST', test_mode ? 'TRUE' : 'FALSE'
         xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
         xml.tag! 'TRANSACTION_SERVICE', 0
+        xml.tag! 'DEVELOPERID', options[:developer_id] if options[:developer_id]
       end
 
       def success?(response)
@@ -219,11 +219,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response[:response_code].to_i == DECLINED
-          return CVVResult.messages[ response[:card_code_response_code] ] if CARD_CODE_ERRORS.include?(response[:card_code_response_code])
-          return AVSResult.messages[ response[:avs_result_code] ] if AVS_ERRORS.include?(response[:avs_result_code])
-        end
-
         return response[:response_reason_text].nil? ? '' : response[:response_reason_text][0..-1]
       end
 

@@ -271,6 +271,15 @@ class PayuInTest < Test::Unit::TestCase
         assert_parameter("bankcode", "DINR", data)
       end
     end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(100, credit_card("4242424242424242", brand: :maestro), @options)
+    end.check_request do |endpoint, data, _|
+      case endpoint
+      when /_payment/
+        assert_parameter("bankcode", "MAES", data)
+      end
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failed_purchase

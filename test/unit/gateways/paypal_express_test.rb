@@ -29,27 +29,27 @@ class PaypalExpressTest < Test::Unit::TestCase
                  :phone => '(555)555-5555'
                }
 
-    Base.gateway_mode = :test
+    Base.mode = :test
   end
 
   def teardown
-    Base.gateway_mode = :test
+    Base.mode = :test
   end
 
   def test_live_redirect_url
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
     assert_equal LIVE_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
   end
 
   def test_live_redirect_url_without_review
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
     assert_equal LIVE_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
   end
 
   def test_force_sandbox_redirect_url
-    Base.gateway_mode = :production
+    Base.mode = :production
 
     gateway = PaypalExpressGateway.new(
       :login => 'cody',
@@ -64,13 +64,13 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_test_redirect_url
-    assert_equal :test, Base.gateway_mode
+    assert_equal :test, Base.mode
     assert_equal TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
     assert_equal TEST_REDIRECT_URL_MOBILE, @gateway.redirect_url_for('1234567890', :mobile => true)
   end
 
   def test_test_redirect_url_without_review
-    assert_equal :test, Base.gateway_mode
+    assert_equal :test, Base.mode
     assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
     assert_equal TEST_REDIRECT_URL_MOBILE_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false, :mobile => true)
   end
@@ -457,7 +457,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       :description  => 'Description',
       :ip           => '127.0.0.1' }))
 
-    assert_equal '72', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:Version').text
+    assert_equal '124', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:Version').text
     assert_equal 'ref_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
     assert_equal 'Sale', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentAction').text
     assert_equal 'Any', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentType').text
@@ -573,6 +573,14 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '0', REXML::XPath.first(do_not_allow_optin_xml, '//n2:BuyerEmailOptInEnable').text
   end
 
+  def test_add_total_type_if_specified
+    total_type_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:total_type => 'EstimatedTotal'}))
+    no_total_type_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {}))
+
+    assert_equal 'EstimatedTotal', REXML::XPath.first(total_type_xml, '//n2:TotalType').text
+    assert_nil REXML::XPath.first(no_total_type_xml, '//n2:BuyerEmailOptInEnable')
+  end
+
   def test_structure_correct
     all_options_enabled = {
         :allow_guest_checkout => true,
@@ -591,6 +599,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         :shipping => 10,
         :handling => 0,
         :tax => 5,
+        :total_type => 'EstimatedTotal',
         :items => [{:name => 'item one',
                     :number => 'number 1',
                     :quantity => 3,

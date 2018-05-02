@@ -264,6 +264,17 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request('VOID', nil, authorization, options), options)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<CV2>)\d+(</CV2>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def build_purchase_request(type, money, creditcard, options)

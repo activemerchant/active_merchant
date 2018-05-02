@@ -114,6 +114,12 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_equal 'Declined', response.message
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match "Approved", response.message
+  end
+
   def test_successful_store
     assert response = @gateway.store(@credit_card)
     assert_success response
@@ -213,5 +219,16 @@ class MonerisRemoteTest < Test::Unit::TestCase
       'street_match' => nil,
       'postal_match' => nil
     })
+  end
+
+    def test_purchase_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

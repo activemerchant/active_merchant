@@ -72,7 +72,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
 
     # This is a dubious test. Basically testing that the refund failed b/c
-    # the original purchase hadn't yet cleared. No way to test immmediate failure
+    # the original purchase hadn't yet cleared. No way to test immediate failure
     # due to the delay in original tx processing, even for text txs.
     assert_failure refund
     assert_equal "REJECT: 3", refund.message
@@ -112,4 +112,29 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
     assert_failure response
   end
+
+  def test_purchase_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:agent_code], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_check_purchase_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@gateway.options[:agent_code], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
 end

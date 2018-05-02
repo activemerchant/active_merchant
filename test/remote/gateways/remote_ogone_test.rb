@@ -7,6 +7,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @gateway = OgoneGateway.new(fixtures(:ogone))
     @amount = 100
     @credit_card     = credit_card('4000100011112224')
+    @mastercard      = credit_card('5399999999999999', :brand => "mastercard")
     @declined_card   = credit_card('1111111111111111')
     @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
     @options = {
@@ -21,8 +22,6 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-    assert_equal '7', response.params['ECI']
-    assert_equal @options[:currency], response.params["currency"]
     assert_equal @options[:order_id], response.order_id
   end
 
@@ -38,23 +37,25 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
+  # This test is commented out since it is mutually exclusive with the other signature tests.
   # NOTE: You have to set the "Hash algorithm" to "SHA-1" in the "Technical information"->"Global security parameters"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
-  def test_successful_purchase_with_signature_encryptor_to_sha1
-    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha1'))
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-  end
+  # def test_successful_purchase_with_signature_encryptor_to_sha1
+  #   gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha1'))
+  #   assert response = gateway.purchase(@amount, @credit_card, @options)
+  #   assert_success response
+  #   assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  # end
 
+  # This test is commented out since it is mutually exclusive with the other signature tests.
   # NOTE: You have to set the "Hash algorithm" to "SHA-256" in the "Technical information"->"Global security parameters"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
-  def test_successful_purchase_with_signature_encryptor_to_sha256
-    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha256'))
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-  end
+  # def test_successful_purchase_with_signature_encryptor_to_sha256
+  #   gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha256'))
+  #   assert response = gateway.purchase(@amount, @credit_card, @options)
+  #   assert_success response
+  #   assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  # end
 
   # NOTE: You have to set the "Hash algorithm" to "SHA-512" in the "Technical information"->"Global security parameters"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
@@ -92,7 +93,6 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:eci => 4))
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-    assert_equal '4', response.params['ECI']
   end
 
   # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
@@ -102,7 +102,6 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-    assert_equal "USD", response.params["currency"]
   end
 
   # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
@@ -112,7 +111,6 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'USD'))
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-    assert_equal "USD", response.params["currency"]
   end
 
   def test_unsuccessful_purchase
@@ -121,11 +119,16 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal 'No brand', response.message
   end
 
+  def test_successful_authorize_with_mastercard
+    assert auth = @gateway.authorize(@amount, @mastercard, @options)
+    assert_success auth
+    assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, auth.message
+  end
+
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
-    assert_equal '7', auth.params['ECI']
     assert auth.authorization
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
@@ -135,7 +138,6 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(:eci => 4))
     assert_success auth
     assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
-    assert_equal '4', auth.params['ECI']
     assert auth.authorization
     assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
@@ -203,29 +205,38 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, credit.message
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "The transaction was successful", response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal "No brand", response.message
+  end
+
   def test_reference_transactions
     # Setting an alias
     assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
     assert_success response
-    assert_equal '7', response.params['ECI']
     # Updating an alias
     assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"2"))
     assert_success response
-    assert_equal '7', response.params['ECI']
     # Using an alias (i.e. don't provide the credit card)
     assert response = @gateway.purchase(@amount, "awesomeman", @options.merge(:order_id => Time.now.to_i.to_s + "3"))
     assert_success response
-    assert_equal '9', response.params['ECI']
   end
 
   def test_invalid_login
     gateway = OgoneGateway.new(
-                :login => '',
-                :user => '',
-                :password => ''
+                login: 'login',
+                user: 'user',
+                password: 'password',
+                signature: 'signature'
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Some of the data entered is incorrect. please retry.', response.message
   end
 end

@@ -212,6 +212,11 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
     assert_success store
   end
 
+  def test_successful_store_sans_description
+    assert store = @gateway.store(@visa, @options.merge(:acquirers => "nets"))
+    assert_success store
+  end
+
   def test_invalid_login
     gateway = QuickpayGateway.new(
         :login => '999999999',

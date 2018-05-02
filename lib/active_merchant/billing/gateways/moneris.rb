@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         action = if post[:cavv]
           'cavv_preauth'
-        elsif post[:data_key].blank? 
+        elsif post[:data_key].blank?
           'preauth'
         else
           'res_preauth_cc'
@@ -132,6 +132,13 @@ module ActiveMerchant #:nodoc:
         commit 'refund', crediting_params(authorization, :amount => amount(money))
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def store(credit_card, options = {})
         post = {}
         post[:pan] = credit_card.number
@@ -153,6 +160,19 @@ module ActiveMerchant #:nodoc:
         post[:data_key] = data_key
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         commit('res_update_cc', post)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<store_id>).+(</store_id>)), '\1[FILTERED]\2').
+          gsub(%r((<api_token>).+(</api_token>)), '\1[FILTERED]\2').
+          gsub(%r((<pan>).+(</pan>)), '\1[FILTERED]\2').
+          gsub(%r((<cvd_value>).+(</cvd_value>)), '\1[FILTERED]\2').
+          gsub(%r((<cavv>).+(</cavv>)), '\1[FILTERED]\2')
       end
 
       private # :nodoc: all
