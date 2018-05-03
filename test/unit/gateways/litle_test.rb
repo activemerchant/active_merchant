@@ -226,7 +226,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(@amount, "SomeAuthorization")
+      @gateway.refund(@amount, "100000000000000002;authorization;100")
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -253,7 +253,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_successful_void_of_other_things
     refund = stub_comms do
-      @gateway.refund(@amount, "SomeAuthorization")
+      @gateway.refund(@amount, "100000000000000002;authorization;100")
     end.respond_with(successful_refund_response)
 
     assert_equal "100000000000000003;credit;", refund.authorization
