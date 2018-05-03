@@ -23,6 +23,7 @@
 * Paymentez: Remove card tokenization step from authorize [dtykocki] #2825
 * WorldPay: Add 3DS [nfarve] #2819
 * EBANX: Interpolate authorization string [curiousepic] #2830
+* CyberSource: Support 3DS validation for authorize [curiousepic] #2832
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
