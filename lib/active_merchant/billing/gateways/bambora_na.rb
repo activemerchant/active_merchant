@@ -33,9 +33,16 @@ module ActiveMerchant #:nodoc:
 
       def store(credit_card, options = {})
         post = {}
-        add_payment(post, credit_card, 'store')
+        if options[:create_profile]
+          add_payment(post, credit_card, 'profile')
+          add_address(post, credit_card, options, 'profile')
 
-        commit('TokenRequest', post)
+          commit('ProfileBody', post)
+        else
+          add_payment(post, credit_card, 'store')
+
+          commit('TokenRequest', post)
+        end
       end
 
       def supports_scrubbing?
@@ -51,7 +58,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_address(post, creditcard, options)
+      def add_address(post, creditcard, options, action = nil)
         post[:billing] = {}
         if address = options[:billing_address] || options[:address]
           post[:billing][:address_line1] = address[:address1] if address[:address1]
@@ -60,6 +67,11 @@ module ActiveMerchant #:nodoc:
           post[:billing][:province] = address[:state] if address[:state]
           post[:billing][:postal_code] = address[:zip] if address[:zip]
           post[:billing][:country] = address[:country] if address[:country]
+          if action && action == 'profile'
+            post[:billing][:name] = creditcard.name
+            post[:billing][:email_address] = options[:email]
+            post[:billing][:phone_number] = address[:phone] if address[:phone]
+          end
         end
       end
 
@@ -100,7 +112,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        endpoint = action == 'TokenRequest' ? 'scripts/tokenization/tokens' : 'v1/payments'
+        endpoint = if action == 'TokenRequest'
+          'scripts/tokenization/tokens'
+        elsif action == 'ProfileBody'
+          'v1/profiles'
+        else
+          'v1/payments'
+        end
         
         "#{live_url}/#{endpoint}"
       end
@@ -142,6 +160,8 @@ module ActiveMerchant #:nodoc:
           [response['id'], response['auth_code']].join('|')
         elsif success_from(http_status) && action == 'TokenRequest'
           response['token']
+        elsif success_from(http_status) && action == 'ProfileBody'
+          response['customer_code']
         end
       end
 

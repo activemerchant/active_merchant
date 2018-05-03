@@ -53,6 +53,17 @@ class RemoteBamboraNaTest < Test::Unit::TestCase
     assert_match /[-a-f0-9]+/, response.authorization
   end
 
+  def test_successful_store_profile
+    more_options = {
+      email: "joe@example.com",
+      create_profile: true
+    }
+    options_with_profile = @options.merge(more_options)
+    response = @gateway.store(@credit_card_store, options_with_profile)
+    assert_success response
+    assert_match /[-a-f0-9]+/, response.authorization
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

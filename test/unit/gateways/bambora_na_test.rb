@@ -45,6 +45,19 @@ class BamboraNaTest < Test::Unit::TestCase
     assert_equal 'a63-155e2ad3-3b1f-41b9-ae5f-85fb6870f958', response.authorization
   end
 
+  def test_successful_store_profile
+    @gateway.expects(:ssl_post).returns(successful_store_profile_response)
+
+    more_options = @options.merge({
+      create_profile: true,
+      email: 'joe@example.com'
+    })
+    
+    response = @gateway.store(@credit_card, more_options)
+    assert_success response
+    assert_equal '7d406307bedB4C1089947752D2F5AB93', response.authorization
+  end
+
   private
 
   def pre_scrubbed
@@ -176,4 +189,11 @@ Conn close
     }'
   end
 
+  def successful_store_profile_response
+    '{
+      "code": 1,
+      "message": "Operation Successful",
+      "customer_code": "7d406307bedB4C1089947752D2F5AB93"
+    }'
+  end
 end
