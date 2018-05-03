@@ -44,7 +44,7 @@ class PaymentezTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    @gateway.stubs(:ssl_post).returns(successful_store_response, successful_authorize_response)
+    @gateway.stubs(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -62,7 +62,7 @@ class PaymentezTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    @gateway.expects(:ssl_post).returns(failed_store_response)
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
@@ -272,17 +272,29 @@ Conn close
 
   def failed_authorize_response
     %q(
-     {
+      {
+        "transaction": {
+          "status": "failure",
+          "payment_date": null,
+          "amount": 1.0,
+          "authorization_code": null,
+          "installments": 1,
+          "dev_reference": "Testing",
+          "message": null,
+          "carrier_code": "3",
+          "id": "CI-1223",
+          "status_detail": 9
+        },
         "card": {
           "bin": "424242",
-          "status": "rejected",
-          "token": "2026849624512750545",
-          "message": "Not Authorized",
-          "expiry_year": "2018",
+          "status": null,
+          "token": "6461587429110733892",
+          "expiry_year": "2019",
           "expiry_month": "9",
-          "transaction_reference": "CI-606",
+          "transaction_reference": "CI-1223",
           "type": "vi",
-          "number": "4242"
+          "number": "4242",
+          "origin": "Paymentez"
         }
       }
     )
