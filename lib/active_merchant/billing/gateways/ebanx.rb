@@ -241,7 +241,7 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(action, parameters, response)
         if action == :store
-          response.try(:[], "token") + "|" + CARD_BRAND[parameters[:payment_type_code].to_sym]
+          "#{response.try(:[], "token")}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
         else
           response.try(:[], "payment").try(:[], "hash")
         end
@@ -254,8 +254,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def url_for(hostname, action, parameters)
-        return hostname + URL_MAP[action] + "?#{convert_to_url_form_encoded(parameters)}" if requires_http_get(action)
-        hostname + URL_MAP[action]
+        return "#{hostname}#{URL_MAP[action]}?#{convert_to_url_form_encoded(parameters)}" if requires_http_get(action)
+        "#{hostname}#{URL_MAP[action]}"
       end
 
       def requires_http_get(action)
