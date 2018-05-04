@@ -501,12 +501,7 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def target_url(endpoint)
-        # TODO: temporary URL for batch query processing
-        url = if endpoint == 'bchApi'
-                'https://52.27.64.14:11911'
-              else
-                test? ? self.test_url : self.live_url
-              end
+        url = test? ? self.test_url : self.live_url
         endpoint = '/' + endpoint if endpoint&.size&.positive?
         url + endpoint
       end
