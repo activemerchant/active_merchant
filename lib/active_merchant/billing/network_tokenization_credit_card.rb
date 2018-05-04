@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       attr_accessor :payment_cryptogram, :eci, :transaction_id
       attr_writer :source
 
-      SOURCES = [:apple_pay, :android_pay, :ebanx]
+      SOURCES = [:apple_pay, :android_pay, :ebanx, :worldpay]
 
       def source
         if defined?(@source) && SOURCES.include?(@source)
