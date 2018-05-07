@@ -24,6 +24,7 @@
 * WorldPay: Add 3DS [nfarve] #2819
 * EBANX: Interpolate authorization string [curiousepic] #2830
 * CyberSource: Support 3DS validation for authorize [curiousepic] #2832
+* Redsys: Fix ISO code for PLN [chopenhauer] #2831
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
