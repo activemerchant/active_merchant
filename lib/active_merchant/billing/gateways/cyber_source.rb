@@ -258,7 +258,7 @@ module ActiveMerchant #:nodoc:
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
-        xml.tag! 'payerAuthEnrollService', {'run' => 'true'} if options[:payer_auth_enroll_service]
+        add_threeds_services(xml, options)
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
         xml.target!
@@ -403,7 +403,7 @@ module ActiveMerchant #:nodoc:
       def add_business_rules_data(xml, payment_method, options)
         prioritized_options = [options, @options]
 
-        unless network_tokenization?(payment_method) || options[:payer_auth_validate_service]
+        unless network_tokenization?(payment_method)
           xml.tag! 'businessRules' do
             xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs)
             xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv)
