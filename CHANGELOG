@@ -27,6 +27,7 @@
 * Redsys: Fix ISO code for PLN [chopenhauer] #2831
 * Merchant E Solutions: Support transcript scrubbing [curiousepic] #2836
 * Paystation: Support transcript scrubbing [curiousepic] #2837
+* Psigate: Support transcript scrubbing [curiousepic] #2835
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
