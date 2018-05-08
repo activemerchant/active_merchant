@@ -56,4 +56,15 @@ class PsigateRemoteTest < Test::Unit::TestCase
     assert void = @gateway.void(authorization.authorization)
     assert_success void
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @creditcard, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@creditcard.number, transcript)
+    assert_scrubbed(@creditcard.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end
