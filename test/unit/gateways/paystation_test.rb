@@ -113,6 +113,11 @@ class PaystationTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
 
     def successful_purchase_response
@@ -413,6 +418,14 @@ class PaystationTest < Test::Unit::TestCase
     def failed_refund_response
       %(<?xml version="1.0" standalone="yes"?>
         <FONT FACE="Arial" SIZE="2"><strong>Error 11:</strong> Not enough input parameters.</FONT>)
+    end
+
+    def pre_scrubbed
+      "pstn_pi=609035&pstn_gi=PUSHPAY&pstn_2p=t&pstn_nr=t&pstn_df=yymm&pstn_ms=a755b9c84a530aee91dc3077f57294b0&pstn_mo=Store+Purchase&pstn_mr=&pstn_am=&pstn_cu=NZD&pstn_cn=5123456789012346&pstn_ct=visa&pstn_ex=1305&pstn_cc=123&pstn_tm=T&paystation=_empty"
+    end
+
+    def post_scrubbed
+      "pstn_pi=609035&pstn_gi=PUSHPAY&pstn_2p=t&pstn_nr=t&pstn_df=yymm&pstn_ms=a755b9c84a530aee91dc3077f57294b0&pstn_mo=Store+Purchase&pstn_mr=&pstn_am=&pstn_cu=NZD&pstn_cn=[FILTERED]&pstn_ct=visa&pstn_ex=1305&pstn_cc=[FILTERED]&pstn_tm=T&paystation=_empty"
     end
 
 end
