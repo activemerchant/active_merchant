@@ -368,6 +368,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'Mexico', transaction["shipping_details"]["country_name"]
   end
 
+  def test_successful_purchase_with_three_d_secure_pass_thru
+    three_d_secure_params = { eci: "05", cavv: "cavv", xid: "xid" }
+    assert response = @gateway.purchase(@amount, @credit_card,
+                                        three_d_secure: three_d_secure_params
+                                       )
+    assert_success response
+  end
+
   def test_unsuccessful_purchase_declined
     assert response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
