@@ -88,6 +88,16 @@ module ActiveMerchant #:nodoc:
         authorize(0, credit_card, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((pstn_cn=)\d*), '\1[FILTERED]').
+          gsub(%r((pstn_cc=)\d*), '\1[FILTERED]')
+      end
+
       private
 
         def new_request
