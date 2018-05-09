@@ -30,6 +30,7 @@
 * Psigate: Support transcript scrubbing [curiousepic] #2835
 * Braintree: Adding 3D Secure pass thru capabilities [filipebarcos] #2843
 * Authorize.net: Add flexibility for 3D Secure Parameters [filipebarcos] #2844
+* Elavon: Update Country List [nfarve] #2840
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
