@@ -24,7 +24,8 @@ class AdyenTest < Test::Unit::TestCase
     @options = {
       billing_address: address(),
       shopper_reference: "John Smith",
-      order_id: '345123'
+      order_id: '345123',
+      installments: 2
     }
   end
 
@@ -88,6 +89,14 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
     assert_equal '7914775043909934#8814775564188305#', response.authorization
     assert response.test?
+  end
+
+  def test_installments_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 2, JSON.parse(data)['installments']['value']
+    end.respond_with(successful_authorize_response)
   end
 
   def test_failed_purchase
