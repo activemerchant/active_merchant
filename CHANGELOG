@@ -28,7 +28,8 @@
 * Merchant E Solutions: Support transcript scrubbing [curiousepic] #2836
 * Paystation: Support transcript scrubbing [curiousepic] #2837
 * Psigate: Support transcript scrubbing [curiousepic] #2835
-* Authorize.net: Add flexibility for 3D Secure Parameters [filipebarcos]
+* Braintree: Adding 3D Secure pass thru capabilities [filipebarcos] #2843
+* Authorize.net: Add flexibility for 3D Secure Parameters [filipebarcos] #2844
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
