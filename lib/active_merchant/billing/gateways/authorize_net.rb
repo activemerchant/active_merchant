@@ -552,8 +552,11 @@ module ActiveMerchant
         xml.customerIP(options[:ip]) unless empty?(options[:ip])
 
         xml.cardholderAuthentication do
-          xml.authenticationIndicator(options[:authentication_indicator])
-          xml.cardholderAuthenticationValue(options[:cardholder_authentication_value])
+          three_d_secure = options.fetch(:three_d_secure, {})
+          xml.authenticationIndicator(
+            options[:authentication_indicator] || three_d_secure[:eci])
+          xml.cardholderAuthenticationValue(
+            options[:cardholder_authentication_value] || three_d_secure[:cavv])
         end
       end
 

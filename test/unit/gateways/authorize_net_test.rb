@@ -741,6 +741,38 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_alternative_three_d_secure_options
+    three_d_secure_opts = { cavv: 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', eci: '2' }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, three_d_secure: three_d_secure_opts)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal "E0Mvq8AAABEiMwARIjNEVWZ3iJk=", doc.at_xpath("//cardholderAuthentication/cardholderAuthenticationValue").content
+        assert_equal "2", doc.at_xpath("//cardholderAuthentication/authenticationIndicator").content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_prioritize_authentication_value_params
+    three_d_secure_opts = { cavv: 'fake', eci: 'fake' }
+    stub_comms do
+      @gateway.purchase(
+        @amount,
+        @credit_card,
+        cardholder_authentication_value: 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=',
+        authentication_indicator: "2",
+        three_d_secure: three_d_secure_opts
+      )
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal "E0Mvq8AAABEiMwARIjNEVWZ3iJk=", doc.at_xpath("//cardholderAuthentication/cardholderAuthenticationValue").content
+        assert_equal "2", doc.at_xpath("//cardholderAuthentication/authenticationIndicator").content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_capture_passing_extra_info
     response = stub_comms do
       @gateway.capture(50, '123456789', description: "Yo", order_id: "Sweetness")
