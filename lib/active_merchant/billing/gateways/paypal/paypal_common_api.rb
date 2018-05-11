@@ -2,7 +2,9 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # This module is included in both PaypalGateway and PaypalExpressGateway
     module PaypalCommonAPI
-      API_VERSION = '72'
+      include Empty
+
+      API_VERSION = '124'
 
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
@@ -37,6 +39,20 @@ module ActiveMerchant #:nodoc:
       SUCCESS_CODES = [ 'Success', 'SuccessWithWarning' ]
 
       FRAUD_REVIEW_CODE = "11610"
+
+      STANDARD_ERROR_CODE_MAPPING = {
+        '15005' => :card_declined,
+        '10754' => :card_declined,
+        '10752' => :card_declined,
+        '10759' => :card_declined,
+        '10761' => :card_declined,
+        '15002' => :card_declined,
+        '11084' => :card_declined,
+        '15004' => :incorrect_cvc,
+        '10762' => :invalid_cvc,
+      }
+
+      STANDARD_ERROR_CODE_MAPPING.default = :processing_error
 
       def self.included(base)
         base.default_currency = 'USD'
@@ -573,7 +589,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:Custom', options[:custom] unless options[:custom].blank?
 
           xml.tag! 'n2:InvoiceID', (options[:order_id] || options[:invoice_id]) unless (options[:order_id] || options[:invoice_id]).blank?
-          xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
+          add_button_source(xml)
 
           # The notify URL applies only to DoExpressCheckoutPayment.
           # This value is ignored when set in SetExpressCheckout or GetExpressCheckoutDetails
@@ -593,11 +609,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_button_source(xml)
+        button_source = (@options[:button_source] || application_id)
+        if !empty?(button_source)
+          xml.tag! 'n2:ButtonSource', button_source.to_s.slice(0, 32)
+        end
+      end
+
       def add_express_only_payment_details(xml, options = {})
         add_optional_fields(xml,
-                            %w{n2:NoteText          n2:SoftDescriptor
-                               n2:TransactionId     n2:AllowedPaymentMethodType
-                               n2:PaymentRequestID  n2:PaymentAction},
+                            %w{n2:NoteText          n2:PaymentAction
+                               n2:TransactionId     n2:AllowedPaymentMethod
+                               n2:PaymentRequestID  n2:SoftDescriptor  },
                             options)
       end
 
@@ -628,9 +651,19 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => authorization_from(response),
           :fraud_review => fraud_review?(response),
+          :error_code => standardized_error_code(response),
           :avs_result => { :code => response[:avs_code] },
           :cvv_result => response[:cvv2_code]
         )
+      end
+
+      def standardized_error_code(response)
+        STANDARD_ERROR_CODE_MAPPING[error_codes(response).first]
+      end
+
+      def error_codes(response)
+        return [] unless response.has_key?(:error_codes)
+        response[:error_codes].split(',')
       end
 
       def fraud_review?(response)
@@ -659,7 +692,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def item_amount(amount, currency_code)
-        if amount.to_i < 0 && Gateway.non_fractional_currency?(currency_code)
+        if amount.to_i < 0 && non_fractional_currency?(currency_code)
           amount(amount).to_f.floor
         else
           localized_amount(amount, currency_code)

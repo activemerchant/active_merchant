@@ -84,6 +84,22 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_unparsable_body_of_successful_response
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.succeeded("This is not [ JSON"))
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/Invalid JSON response received/, response.message)
+  end
+
+  def test_unparsable_body_of_failed_response
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.failed("This is not [ JSON"))
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/Invalid JSON response received/, response.message)
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_request).returns(successful_store_response)
     assert response = @gateway.store(@credit_card, @options)
@@ -297,6 +313,9 @@ class PinTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, :partner_key => 'MyPartnerKey', :safe_card => '1')
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
 
   private
 
@@ -480,4 +499,49 @@ class PinTest < Test::Unit::TestCase
       }
     }'
   end
+
+  def transcript
+    '{
+      "amount":"100",
+      "currency":"AUD",
+      "email":"roland@pin.net.au",
+      "ip_address":"203.59.39.62",
+      "description":"Store Purchase 1437598192",
+      "card":{
+        "number":"5520000000000000",
+        "expiry_month":9,
+        "expiry_year":2017,
+        "cvc":"123",
+        "name":"Longbob Longsen",
+        "address_line1":"456 My Street",
+        "address_city":"Ottawa",
+        "address_postcode":"K1C2N6",
+        "address_state":"ON",
+        "address_country":"CA"
+      }
+    }'
+  end
+
+  def scrubbed_transcript
+    '{
+      "amount":"100",
+      "currency":"AUD",
+      "email":"roland@pin.net.au",
+      "ip_address":"203.59.39.62",
+      "description":"Store Purchase 1437598192",
+      "card":{
+        "number":"[FILTERED]",
+        "expiry_month":9,
+        "expiry_year":2017,
+        "cvc":"[FILTERED]",
+        "name":"Longbob Longsen",
+        "address_line1":"456 My Street",
+        "address_city":"Ottawa",
+        "address_postcode":"K1C2N6",
+        "address_state":"ON",
+        "address_country":"CA"
+      }
+    }'
+  end
+
 end

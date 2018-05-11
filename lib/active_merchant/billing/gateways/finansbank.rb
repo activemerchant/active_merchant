@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/cc5'
+require 'active_merchant/billing/gateways/cc5'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

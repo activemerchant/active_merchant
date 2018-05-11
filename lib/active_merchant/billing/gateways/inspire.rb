@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       # ==== Options
       #
       # * <tt>:login</tt> -- The Inspire Username.
-      # * <tt>:password</tt> -- The Inspire Passowrd.
+      # * <tt>:password</tt> -- The Inspire Password.
       # See the Inspire Integration Guide for details. (default: +false+)
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -60,6 +60,12 @@ module ActiveMerchant #:nodoc:
         post ={}
         post[:transactionid] = authorization
         commit('void', nil, post)
+      end
+
+      def refund(money, authorization, options = {})
+        post = {}
+        post[:transactionid] = authorization
+        commit('refund', money, post)
       end
 
       # Update the values (such as CC expiration) stored at
@@ -157,7 +163,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(/=/)
+          key,val = pair.split(%r{=})
           results[key] = val
         end
 

@@ -12,9 +12,9 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express,
-                                  :diners_club, :discover]
-      self.homepage_url = 'http://www.merchantwarrior.com/'
-      self.display_name = 'MerchantWarrior'
+                                  :diners_club, :discover, :jcb]
+      self.homepage_url = 'https://www.merchantwarrior.com/'
+      self.display_name = 'Merchant Warrior'
 
       self.money_format = :dollars
       self.default_currency = 'AUD'
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
-        add_product(post, options)
+        add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
         commit('processAuth', post)
@@ -36,13 +36,13 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         post = {}
         add_amount(post, money, options)
-        add_product(post, options)
+        add_order_id(post, options)
         add_address(post, options)
         add_payment_method(post, payment_method)
         commit('processCard', post)
       end
 
-      def capture(money, identification)
+      def capture(money, identification, options = {})
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit('processCapture', post)
       end
 
-      def refund(money, identification)
+      def refund(money, identification, options = {})
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
@@ -79,14 +79,17 @@ module ActiveMerchant #:nodoc:
 
         post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]
-        post['customerState'] = address[:state]
+        post['customerState'] = address[:state] || 'N/A'
         post['customerCity'] = address[:city]
         post['customerAddress'] = address[:address1]
         post['customerPostCode'] = address[:zip]
+        post['customerIP'] = address[:ip]
+        post['customerPhone'] = address[:phone]
+        post['customerEmail'] = address[:email]
       end
 
-      def add_product(post, options)
-        post['transactionProduct'] = options[:description]
+      def add_order_id(post, options)
+        post['transactionProduct'] = truncate(options[:order_id], 34) || SecureRandom.hex(15)
       end
 
       def add_payment_method(post, payment_method)

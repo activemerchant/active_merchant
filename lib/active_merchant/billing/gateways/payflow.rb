@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/payflow/payflow_common_api'
-require File.dirname(__FILE__) + '/payflow/payflow_response'
-require File.dirname(__FILE__) + '/payflow_express'
+require 'active_merchant/billing/gateways/payflow/payflow_common_api'
+require 'active_merchant/billing/gateways/payflow/payflow_response'
+require 'active_merchant/billing/gateways/payflow_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -44,6 +44,22 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request(:credit, money, reference, options), options)
       end
 
+      def verify(payment, options={})
+        if credit_card_type(payment) == 'Amex'
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, payment, options) }
+            r.process(:ignore_result) { void(r.authorization, options) }
+          end
+        else
+          authorize(0, payment, options)
+        end
+      end
+
+      def verify_credentials
+        response = void("0")
+        response.params["result"] != "26"
+      end
+
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
       # https://www.paypal.com/en_US/pdf/PayflowPro_RecurringBilling_Guide.pdf
       #
@@ -61,7 +77,7 @@ module ActiveMerchant #:nodoc:
 
         options[:name] = credit_card.name if options[:name].blank? && credit_card
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
-          add_credit_card(xml, credit_card) if credit_card
+          add_credit_card(xml, credit_card, options) if credit_card
         end
         commit(request, options.merge(:request_type => :recurring))
       end
@@ -84,7 +100,20 @@ module ActiveMerchant #:nodoc:
         @express ||= PayflowExpressGateway.new(@options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<CardNum>)[^<]*(</CardNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CVNum>)[^<]*(</CVNum>)), '\1[FILTERED]\2').
+          gsub(%r((<AcctNum>)[^<]*(</AcctNum>)), '\1[FILTERED]\2').
+          gsub(%r((<Password>)[^<]*(</Password>)), '\1[FILTERED]\2')
+      end
+
       private
+
       def build_sale_or_authorization_request(action, money, funding_source, options)
         if funding_source.is_a?(String)
           build_reference_sale_or_authorization_request(action, money, funding_source, options)
@@ -104,6 +133,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
@@ -135,6 +165,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
@@ -142,6 +173,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
               xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
+              xml.tag! 'EMail', options[:email] unless options[:email].nil?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -151,7 +183,7 @@ module ActiveMerchant #:nodoc:
             end
 
             xml.tag! 'Tender' do
-              add_credit_card(xml, credit_card)
+              add_credit_card(xml, credit_card, options)
             end
           end
         end
@@ -166,6 +198,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'BillTo' do
                 xml.tag! 'Name', check.name
               end
@@ -183,13 +216,26 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def add_credit_card(xml, credit_card)
+      def add_credit_card(xml, credit_card, options = {})
         xml.tag! 'Card' do
           xml.tag! 'CardType', credit_card_type(credit_card)
           xml.tag! 'CardNum', credit_card.number
           xml.tag! 'ExpDate', expdate(credit_card)
           xml.tag! 'NameOnCard', credit_card.first_name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
+
+          if options[:three_d_secure]
+            three_d_secure = options[:three_d_secure]
+            xml.tag! 'BuyerAuthResult' do
+              xml.tag! 'Status', three_d_secure[:status] unless three_d_secure[:status].blank?
+              xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
+              xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
+              xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
+              xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+              xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+              xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+            end
+          end
 
           if requires_start_date_or_issue_number?(credit_card)
             xml.tag!('ExtData', 'Name' => 'CardStart', 'Value' => startdate(credit_card)) unless credit_card.start_month.blank? || credit_card.start_year.blank?
@@ -301,4 +347,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

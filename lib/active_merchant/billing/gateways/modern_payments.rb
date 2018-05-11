@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/modern_payments_cim'
+require 'active_merchant/billing/gateways/modern_payments_cim'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

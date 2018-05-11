@@ -9,6 +9,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
       order_id: generate_order_id,
       description: 'Test Description'
     }
+    @amount = 100
   end
 
   def test_successful_purchase
@@ -19,6 +20,20 @@ class RemoteRedsysTest < Test::Unit::TestCase
 
   def test_purchase_with_invalid_order_id
     response = @gateway.purchase(100, @credit_card, order_id: "a%4#{generate_order_id}")
+    assert_success response
+    assert_equal "Transaction Approved", response.message
+  end
+
+  def test_successful_purchase_using_vault_id
+    response = @gateway.purchase(100, @credit_card, @options.merge(store: true))
+    assert_success response
+    assert_equal "Transaction Approved", response.message
+
+    credit_card_token = response.params["ds_merchant_identifier"]
+    assert_not_nil credit_card_token
+
+    @options[:order_id] = generate_order_id
+    response = @gateway.purchase(100, credit_card_token, @options)
     assert_success response
     assert_equal "Transaction Approved", response.message
   end
@@ -49,9 +64,25 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_equal "Transaction Approved", authorize.message
     assert_not_nil authorize.authorization
 
-    # capture = @gateway.capture(100, authorize.authorization)
-    # assert_success capture
-    # assert_match /Refund.*approved/, capture.message
+    capture = @gateway.capture(100, authorize.authorization)
+    assert_success capture
+    assert_match /Refund.*approved/, capture.message
+  end
+
+  def test_successful_authorise_using_vault_id
+    authorize = @gateway.authorize(100, @credit_card, @options.merge(store: true))
+    assert_success authorize
+    assert_equal "Transaction Approved", authorize.message
+    assert_not_nil authorize.authorization
+
+    credit_card_token = authorize.params["ds_merchant_identifier"]
+    assert_not_nil credit_card_token
+
+    @options[:order_id] = generate_order_id
+    authorize = @gateway.authorize(100, credit_card_token, @options)
+    assert_success authorize
+    assert_equal "Transaction Approved", authorize.message
+    assert_not_nil authorize.authorization
   end
 
   def test_failed_authorize
@@ -97,6 +128,57 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_equal "SIS0093 ERROR", response.message
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@gateway.options[:secret_key], clean_transcript)
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_transcript_scrubbing_on_failed_transactions
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @declined_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@gateway.options[:secret_key], clean_transcript)
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_nil_cvv_transcript_scrubbing
+    @credit_card.verification_value = nil
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_equal clean_transcript.include?("[BLANK]"), true
+  end
+
+  def test_empty_string_cvv_transcript_scrubbing
+    @credit_card.verification_value = ""
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_equal clean_transcript.include?("[BLANK]"), true
+  end
+
+  def test_whitespace_string_cvv_transcript_scrubbing
+    @credit_card.verification_value = "   "
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_equal clean_transcript.include?("[BLANK]"), true
+  end
   private
 
   def generate_order_id

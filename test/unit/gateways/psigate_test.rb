@@ -87,6 +87,11 @@ class PsigateTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
 
   def successful_authorization_response
@@ -185,5 +190,19 @@ class PsigateTest < Test::Unit::TestCase
 
   def xml_capture_fixture
     '<?xml version="1.0"?><Order><OrderID>1004</OrderID><CardAction>2</CardAction><StoreID>teststore</StoreID><PaymentType>CC</PaymentType><SubTotal>20.00</SubTotal><Passphrase>psigate1234</Passphrase></Order>'
+  end
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      <?xml version='1.0'?><Order><StoreID>teststore</StoreID><Passphrase>psigate1234</Passphrase><OrderID>1b7b4b36bf61e972a9e6a6be8fff15d8</OrderID><Email>jack@example.com</Email><PaymentType>CC</PaymentType><CardAction>0</CardAction><SubTotal>24.00</SubTotal><CardNumber>4242424242424242</CardNumber><CardExpMonth>09</CardExpMonth><CardExpYear>14</CardExpYear><CardIDCode>1</CardIDCode><CardIDNumber>123</CardIDNumber><Bname>Jim Smith</Bname><Baddress1>1234 My Street</Baddress1><Baddress2>Apt 1</Baddress2><Bcity>Ottawa</Bcity><Bprovince>ON</Bprovince><Bpostalcode>K1C2N6</Bpostalcode><Bcountry>CA</Bcountry><Bcompany>Widgets Inc</Bcompany></Order>
+      <CardNumber>......4242</CardNumber>
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+      <?xml version='1.0'?><Order><StoreID>teststore</StoreID><Passphrase>[FILTERED]</Passphrase><OrderID>1b7b4b36bf61e972a9e6a6be8fff15d8</OrderID><Email>jack@example.com</Email><PaymentType>CC</PaymentType><CardAction>0</CardAction><SubTotal>24.00</SubTotal><CardNumber>[FILTERED]</CardNumber><CardExpMonth>09</CardExpMonth><CardExpYear>14</CardExpYear><CardIDCode>1</CardIDCode><CardIDNumber>[FILTERED]</CardIDNumber><Bname>Jim Smith</Bname><Baddress1>1234 My Street</Baddress1><Baddress2>Apt 1</Baddress2><Bcity>Ottawa</Bcity><Bprovince>ON</Bprovince><Bpostalcode>K1C2N6</Bpostalcode><Bcountry>CA</Bcountry><Bcompany>Widgets Inc</Bcompany></Order>
+      <CardNumber>[FILTERED]</CardNumber>
+    POST_SCRUBBED
   end
 end

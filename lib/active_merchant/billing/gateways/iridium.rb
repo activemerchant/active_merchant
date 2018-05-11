@@ -264,6 +264,17 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request('VOID', nil, authorization, options), options)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<CV2>)\d+(</CV2>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def build_purchase_request(type, money, creditcard, options)
@@ -366,7 +377,7 @@ module ActiveMerchant #:nodoc:
       def commit(request, options)
         requires!(options, :action)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request,
-                              {"SOAPAction" => "https://www.thepaymentgateway.net/#{options[:action]}",
+                              {"SOAPAction" => "https://www.thepaymentgateway.net/" + options[:action],
                                "Content-Type" => "text/xml; charset=utf-8" }))
 
         success = response[:transaction_result][:status_code] == "0"

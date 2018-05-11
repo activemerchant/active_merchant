@@ -20,7 +20,8 @@ module ActiveMerchant #:nodoc:
         :void => 'VOID',
         :abort => 'ABORT',
         :store => 'TOKEN',
-        :unstore => 'REMOVETOKEN'
+        :unstore => 'REMOVETOKEN',
+        :repeat => 'REPEAT'
       }
 
       CREDIT_CARDS = {
@@ -36,13 +37,38 @@ module ActiveMerchant #:nodoc:
         :jcb => "JCB"
       }
 
-      ELECTRON = /^(424519|42496[23]|450875|48440[6-8]|4844[1-5][1-5]|4917[3-5][0-9]|491880)\d{10}(\d{3})?$/
-
-      AVS_CVV_CODE = {
+      AVS_CODE = {
         "NOTPROVIDED" => nil,
         "NOTCHECKED" => 'X',
         "MATCHED" => 'Y',
         "NOTMATCHED" => 'N'
+      }
+
+      CVV_CODE = {
+        "NOTPROVIDED" => 'S',
+        "NOTCHECKED" => 'X',
+        "MATCHED" => 'M',
+        "NOTMATCHED" => 'N'
+      }
+
+      OPTIONAL_REQUEST_FIELDS = {
+        paypal_callback_url: :PayPalCallbackURL,
+        basket: :Basket,
+        gift_aid_payment: :GiftAidPayment ,
+        apply_avscv2: :ApplyAVSCV2 ,
+        apply_3d_secure: :Apply3DSecure,
+        account_type: :AccountType,
+        billing_agreement: :BillingAgreement,
+        basket_xml: :BasketXML,
+        customer_xml: :CustomerXML,
+        surcharge_xml: :SurchargeXML,
+        vendor_data: :VendorData,
+        language: :Language,
+        website: :Website,
+        recipient_account_number: :FIRecipientAcctNumber ,
+        recipient_surname: :FIRecipientSurname ,
+        recipient_postcode: :FIRecipientPostcode ,
+        recipient_dob: :FIRecipientDoB
       }
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :switch, :solo, :maestro, :diners_club]
@@ -69,7 +95,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_optional_data(post, options)
 
-        commit(:purchase, post)
+        commit((past_purchase_reference?(payment_method) ? :repeat : :purchase), post)
       end
 
       def authorize(money, payment_method, options = {})
@@ -112,7 +138,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
 
-        add_credit_reference(post, identification)
+        add_related_reference(post, identification)
         add_amount(post, money, options)
         add_invoice(post, options)
 
@@ -138,7 +164,36 @@ module ActiveMerchant #:nodoc:
         commit(:unstore, post)
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?CardNumber=)\d+(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?CV2=)\d+(&?)), '\1[FILTERED]\2')
+      end
+
       private
+      def truncate(value, max_size)
+        return nil unless value
+        return value.to_s if CGI.escape(value.to_s).length <= max_size
+
+        if value.size > max_size
+          truncate(super(value, max_size), max_size)
+        else
+          truncate(value.to_s.chop, max_size)
+        end
+      end
+
       def add_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';')
 
@@ -148,7 +203,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :SecurityKey, security_key)
       end
 
-      def add_credit_reference(post, identification)
+      def add_related_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';')
 
         add_pair(post, :RelatedVendorTxCode, order_id)
@@ -179,20 +234,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_optional_data(post, options)
-        add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
-        add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
         add_pair(post, :CreateToken, 1) unless options[:store].blank?
-        add_pair(post, :FIRecipientAcctNumber, options[:recipient_account_number])
-        add_pair(post, :FIRecipientSurname, options[:recipient_surname])
-        add_pair(post, :FIRecipientPostcode, options[:recipient_postcode])
-        add_pair(post, :FIRecipientDoB, options[:recipient_dob])
+
+        OPTIONAL_REQUEST_FIELDS.each do |gateway_option, sagepay_field|
+          add_pair(post, sagepay_field, options[gateway_option])
+        end
       end
 
       def add_address(post, options)
         if billing_address = options[:billing_address] || options[:address]
-          first_name, last_name = parse_first_and_last_name(billing_address[:name])
-          add_pair(post, :BillingSurname, last_name)
-          add_pair(post, :BillingFirstnames, first_name)
+          first_name, last_name = split_names(billing_address[:name])
+          add_pair(post, :BillingSurname, truncate(last_name, 20))
+          add_pair(post, :BillingFirstnames, truncate(first_name, 20))
           add_pair(post, :BillingAddress1, truncate(billing_address[:address1], 100))
           add_pair(post, :BillingAddress2, truncate(billing_address[:address2], 100))
           add_pair(post, :BillingCity, truncate(billing_address[:city], 40))
@@ -203,9 +256,9 @@ module ActiveMerchant #:nodoc:
         end
 
         if shipping_address = options[:shipping_address] || billing_address
-          first_name, last_name = parse_first_and_last_name(shipping_address[:name])
-          add_pair(post, :DeliverySurname, last_name)
-          add_pair(post, :DeliveryFirstnames, first_name)
+          first_name, last_name = split_names(shipping_address[:name])
+          add_pair(post, :DeliverySurname, truncate(last_name, 20))
+          add_pair(post, :DeliveryFirstnames, truncate(first_name, 20))
           add_pair(post, :DeliveryAddress1, truncate(shipping_address[:address1], 100))
           add_pair(post, :DeliveryAddress2, truncate(shipping_address[:address2], 100))
           add_pair(post, :DeliveryCity, truncate(shipping_address[:city], 40))
@@ -222,10 +275,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment_method, options)
-        if payment_method.respond_to?(:number)
-          add_credit_card(post, payment_method)
+        if payment_method.is_a?(String)
+          if past_purchase_reference?(payment_method)
+            add_related_reference(post, payment_method)
+          else
+            add_token_details(post, payment_method, options)
+          end
         else
-          add_token_details(post, payment_method, options)
+          add_credit_card(post, payment_method)
         end
       end
 
@@ -247,6 +304,7 @@ module ActiveMerchant #:nodoc:
       def add_token_details(post, token, options)
         add_token(post, token)
         add_pair(post, :StoreToken, options[:customer])
+        add_pair(post, :CV2, options[:verification_value])
       end
 
       def add_token(post, token)
@@ -264,11 +322,6 @@ module ActiveMerchant #:nodoc:
         truncate(cleansed, 20)
       end
 
-      def truncate(value, max_size)
-        return nil unless value
-        value[0, max_size]
-      end
-
       def is_usa(country)
         truncate(country, 2) == 'US'
       end
@@ -278,8 +331,7 @@ module ActiveMerchant #:nodoc:
 
         card_type = card_brand(credit_card).to_sym
 
-        # Check if it is an electron card
-        if card_type == :visa && credit_card.number =~ ELECTRON
+        if card_type == :visa && credit_card.electron?
           CREDIT_CARDS[:electron]
         else
           CREDIT_CARDS[card_type]
@@ -303,10 +355,10 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => authorization_from(response, parameters, action),
           :avs_result => {
-            :street_match => AVS_CVV_CODE[ response["AddressResult"] ],
-            :postal_match => AVS_CVV_CODE[ response["PostCodeResult"] ],
+            :street_match => AVS_CODE[ response["AddressResult"] ],
+            :postal_match => AVS_CODE[ response["PostCodeResult"] ],
           },
-          :cvv_result => AVS_CVV_CODE[ response["CV2Result"] ]
+          :cvv_result => CVV_CODE[ response["CV2Result"] ]
         )
       end
 
@@ -316,9 +368,9 @@ module ActiveMerchant #:nodoc:
           response['Token']
         else
          [ params[:VendorTxCode],
-           response["VPSTxId"],
+           response["VPSTxId"] || params[:VPSTxId],
            response["TxAuthNo"],
-           response["SecurityKey"],
+           response["SecurityKey"] || params[:SecurityKey],
            action ].join(";")
         end
       end
@@ -354,7 +406,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :Vendor => @options[:login],
           :TxType => TRANSACTIONS[action],
-          :VPSProtocol => "3.00"
+          :VPSProtocol => @options.fetch(:protocol_version, '3.00')
         )
 
         if(application_id && (application_id != Gateway.application_id))
@@ -379,20 +431,11 @@ module ActiveMerchant #:nodoc:
         post[key] = value if !value.blank? || options[:required]
       end
 
-      def parse_first_and_last_name(value)
-        name = value.to_s.split(' ')
-
-        last_name = name.pop || ''
-        first_name = name.join(' ')
-        [ truncate(first_name, 20), truncate(last_name, 20) ]
-      end
-
-      def localized_amount(money, currency)
-        amount = amount(money)
-        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s) ? amount.split('.').first : amount
+      def past_purchase_reference?(payment_method)
+        return false unless payment_method.is_a?(String)
+        payment_method.split(';').last == 'purchase'
       end
     end
 
   end
 end
-

@@ -26,6 +26,7 @@ module ActiveMerchant #:nodoc:
           add_allow_dup(xml)
           add_customer_data(xml, card_or_token, options)
           add_details(xml, options)
+          add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
         end
       end
@@ -43,6 +44,7 @@ module ActiveMerchant #:nodoc:
           add_allow_dup(xml)
           add_customer_data(xml, card_or_token,options)
           add_details(xml, options)
+          add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
         end
       end
@@ -60,6 +62,7 @@ module ActiveMerchant #:nodoc:
       def verify(card_or_token, options={})
         commit('CreditAccountVerify') do |xml|
           add_customer_data(xml, card_or_token, options)
+          add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
         end
       end
@@ -68,6 +71,17 @@ module ActiveMerchant #:nodoc:
         commit('CreditVoid') do |xml|
           add_reference(xml, transaction_id)
         end
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<hps:CardNbr>)[^<]*(<\/hps:CardNbr>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:CVV2>)[^<]*(<\/hps:CVV2>))i, '\1[FILTERED]\2').
+          gsub(%r((<hps:SecretAPIKey>)[^<]*(<\/hps:SecretAPIKey>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -146,6 +160,10 @@ module ActiveMerchant #:nodoc:
         xml.hps :AllowDup, 'Y'
       end
 
+      def add_descriptor_name(xml, options)
+        xml.hps :TxnDescriptor, options[:descriptor_name] if options[:descriptor_name]
+      end
+
       def build_request(action)
         xml = Builder::XmlMarkup.new(encoding: 'UTF-8')
         xml.instruct!(:xml, encoding: 'UTF-8')
@@ -211,7 +229,7 @@ module ActiveMerchant #:nodoc:
         data = build_request(action, &request)
 
         response = begin
-          parse(ssl_post((test? ? test_url : live_url), data, 'Content-type' => 'text/xml'))
+          parse(ssl_post((test? ? test_url : live_url), data, 'Content-Type' => 'text/xml'))
         rescue ResponseError => e
           parse(e.response.body)
         end
@@ -265,7 +283,6 @@ module ActiveMerchant #:nodoc:
         "54" => "The card has expired.",
         "55" => "The 4-digit pin is invalid.",
         "75" => "Maximum number of pin retries exceeded.",
-        "80" => "Card expiration date is invalid.",
         "80" => "Card expiration date is invalid.",
         "86" => "Can't verify card pin number."
       }

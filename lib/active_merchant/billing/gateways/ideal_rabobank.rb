@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/ideal/ideal_base'
+require 'active_merchant/billing/gateways/ideal/ideal_base'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

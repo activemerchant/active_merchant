@@ -5,8 +5,9 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     @gateway = WorldpayUsGateway.new(fixtures(:worldpay_us))
 
     @amount = 100
-    @credit_card = credit_card('4446661234567892')
+    @credit_card = credit_card('4446661234567892', :verification_value => '987')
     @declined_card = credit_card('4000300011112220')
+    @check = check(:number => '12345654321')
 
     @options = {
       order_id: generate_unique_id,
@@ -21,10 +22,29 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_on_backup_url
+    gateway = WorldpayUsGateway.new(fixtures(:worldpay_us).merge({ use_backup_url: true}))
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'DECLINED:0500900009:PICK UP CARD:', response.message
+    assert response.message =~ /DECLINED/
+  end
+
+  def test_successful_echeck_purchase
+    response = @gateway.purchase(@amount, @check, @options)
+    assert_equal 'Succeeded', response.message
+    assert_success response
+  end
+
+  def test_failed_echeck_purchase
+    response = @gateway.purchase(@amount, check(routing_number: "23433"), @options)
+    assert_failure response
+    assert response.message =~ /DECLINED/
   end
 
   def test_successful_authorize_and_capture
@@ -41,7 +61,7 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert response.message =~ /PICK UP CARD:/
+    assert response.message =~ /DECLINED/
   end
 
   def test_successful_refund
@@ -94,5 +114,24 @@ class RemoteWorldpayUsTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.message =~ /DECLINED/
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:merchantpin], transcript)
+
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@gateway.options[:merchantpin], transcript)
   end
 end

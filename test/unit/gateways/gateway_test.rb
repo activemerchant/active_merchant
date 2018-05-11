@@ -38,10 +38,10 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_should_be_able_to_look_for_test_mode
-    Base.gateway_mode = :test
+    Base.mode = :test
     assert @gateway.test?
 
-    Base.gateway_mode = :production
+    Base.mode = :production
     assert_false @gateway.test?
   end
 
@@ -83,15 +83,65 @@ class GatewayTest < Test::Unit::TestCase
   def test_localized_amount_should_ignore_money_format_for_non_fractional_currencies
     Gateway.money_format = :dollars
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
-    assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
+    assert_equal '12', @gateway.send(:localized_amount, 1234, 'ISK')
 
     Gateway.money_format = :cents
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
-    assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
+    assert_equal '12', @gateway.send(:localized_amount, 1234, 'ISK')
   end
 
-  def test_non_fractional_currencies_accessor
-    assert Gateway.non_fractional_currency?('JPY')
-    refute Gateway.non_fractional_currency?('CAD')
+  def test_localized_amount_returns_three_decimal_places_for_three_decimal_currencies
+    @gateway.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
+
+    Gateway.money_format = :dollars
+    assert_equal '0.100', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '1.234', @gateway.send(:localized_amount, 1234, 'BHD')
+
+    Gateway.money_format = :cents
+    assert_equal '100', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '1234', @gateway.send(:localized_amount, 1234, 'BHD')
+  end
+
+  def test_split_names
+    assert_equal ["Longbob", "Longsen"], @gateway.send(:split_names, "Longbob Longsen")
+  end
+
+  def test_split_names_with_single_name
+    assert_equal ["", "Prince"], @gateway.send(:split_names, "Prince")
+  end
+
+  def test_split_names_with_empty_names
+    assert_equal [nil, nil], @gateway.send(:split_names, "")
+    assert_equal [nil, nil], @gateway.send(:split_names, nil)
+    assert_equal [nil, nil], @gateway.send(:split_names, " ")
+  end
+
+
+  def test_supports_scrubbing?
+    gateway = Gateway.new
+    refute gateway.supports_scrubbing?
+  end
+
+  def test_should_not_allow_scrubbing_if_unsupported
+    gateway = Gateway.new
+    refute gateway.supports_scrubbing?
+
+    assert_raise(RuntimeError) do
+      gateway.scrub("hi")
+    end
+  end
+
+  def test_strip_invalid_xml_chars
+    xml = <<EOF
+      <response>
+        <element>Parse the First & but not this &tilde; &x002a;</element>
+      </response>
+EOF
+    parsed_xml = @gateway.send(:strip_invalid_xml_chars, xml)
+
+    assert REXML::Document.new(parsed_xml)
+    assert_raise(REXML::ParseException) do
+      REXML::Document.new(xml)
+    end
   end
 end

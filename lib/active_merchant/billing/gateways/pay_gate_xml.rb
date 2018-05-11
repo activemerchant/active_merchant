@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
     #
     # PayGateXML Field        ActiveMerchant Use
     #
-    # pgid                    use :login value to gateway instantation
+    # pgid                    use :login value to gateway instantiation
     # pwd                     use :password value to gateway instantiation
     #
     # cname                   credit_card.name
@@ -178,6 +178,13 @@ module ActiveMerchant #:nodoc:
         action = 'settletx'
 
         options.merge!(:money => money, :authorization => authorization)
+        commit(action, build_request(action, options), authorization)
+      end
+
+      def refund(money, authorization, options={})
+        action = 'refundtx'
+
+        options.merge!(:money => money, :authorization => authorization)
         commit(action, build_request(action, options))
       end
 
@@ -192,15 +199,16 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
 
         xml.tag! 'protocol', :ver => API_VERSION, :pgid => (test? ? TEST_ID : @options[:login]), :pwd => @options[:password] do |protocol|
+          money         = options.delete(:money)
+          authorization = options.delete(:authorization)
+          creditcard    = options.delete(:creditcard)
           case action
-            when 'authtx'
-              money       = options.delete(:money)
-              creditcard  = options.delete(:creditcard)
-              build_authorization(protocol, money, creditcard, options)
-            when 'settletx'
-              money           = options.delete(:money)
-              authorization   = options.delete(:authorization)
-              build_capture(protocol, money, authorization, options)
+          when 'authtx'
+            build_authorization(protocol, money, creditcard, options)
+          when 'settletx'
+            build_capture(protocol, money, authorization, options)
+          when 'refundtx'
+            build_refund(protocol, money, authorization, options)
           else
             raise "no action specified for build_request"
           end
@@ -218,13 +226,22 @@ module ActiveMerchant #:nodoc:
           :budp  => 0,
           :amt   => amount(money),
           :cur   => (options[:currency] || currency(money)),
-          :cvv   => creditcard.verification_value
+          :cvv   => creditcard.verification_value,
+          :email => options[:email],
+          :ip    => options[:ip]
         }
       end
 
       def build_capture(xml, money, authorization, options={})
         xml.tag! 'settletx', {
           :tid => authorization
+        }
+      end
+
+      def build_refund(xml, money, authorization, options={})
+        xml.tag! 'refundtx', {
+          :tid => authorization,
+          :amt => amount(money)
         }
       end
 
@@ -244,11 +261,11 @@ module ActiveMerchant #:nodoc:
         hash
       end
 
-      def commit(action, request)
+      def commit(action, request, authorization = nil)
         response = parse(action, ssl_post(self.live_url, request))
         Response.new(successful?(response), message_from(response), response,
           :test           => test?,
-          :authorization  => response[:tid]
+          :authorization  => authorization ? authorization : response[:tid]
         )
       end
 
@@ -258,4 +275,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

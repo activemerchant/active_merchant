@@ -24,6 +24,16 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal '510695343', response.authorization
   end
 
+  def test_fractional_amounts
+    response = stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      refute_match(/amount=1.00/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
@@ -148,6 +158,10 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, {:eci => 'recurring'})
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_purchase_response
@@ -176,5 +190,13 @@ class BraintreeOrangeTest < Test::Unit::TestCase
 
   def successful_store_response
     "response=1&responsetext=Customer Added&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=&response_code=100&merchant_defined_field_6=&merchant_defined_field_7=&customer_vault_id=853162645"
+  end
+
+  def transcript
+    "username=demo&password=password&type=sale&orderid=8267b7f890aac7699f6ebc93c7c94d96&ccnumber=4111111111111111&cvv=123&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=456+My+Street&address2=Apt+1&company=Widgets+Inc&phone=%28555%29555-5555&zip=K1C2N6&city=Ottawa&country=CA&state=ON&currency=USD&tax=&amount=77.70"
+  end
+
+  def scrubbed_transcript
+    "username=demo&password=password&type=sale&orderid=8267b7f890aac7699f6ebc93c7c94d96&ccnumber=[FILTERED]&cvv=[FILTERED]&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=456+My+Street&address2=Apt+1&company=Widgets+Inc&phone=%28555%29555-5555&zip=K1C2N6&city=Ottawa&country=CA&state=ON&currency=USD&tax=&amount=77.70"
   end
 end

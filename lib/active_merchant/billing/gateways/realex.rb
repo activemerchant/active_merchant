@@ -35,7 +35,7 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'EUR'
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
-      self.supported_countries = %w(IE GB FR BE NL LU IT)
+      self.supported_countries = %w(IE GB FR BE NL LU IT US CA)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
 
@@ -83,6 +83,16 @@ module ActiveMerchant
         commit(request)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+        gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+        gsub(%r((<number>)\d+(</number>))i, '\1[FILTERED]\2')
+      end
+
       private
       def commit(request)
         response = parse(ssl_post(self.live_url, request))
@@ -93,11 +103,8 @@ module ActiveMerchant
           response,
           :test => (response[:message] =~ %r{\[ test system \]}),
           :authorization => authorization_from(response),
-          :cvv_result => response[:cvnresult],
-          :avs_result => {
-            :street_match => response[:avspostcoderesponse],
-            :postal_match => response[:avspostcoderesponse]
-          }
+          avs_result: AVSResult.new(code: response[:avspostcoderesponse]),
+          cvv_result: CVVResult.new(response[:cvnresult])
         )
       end
 
@@ -133,6 +140,7 @@ module ActiveMerchant
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+          add_network_tokenization_card(xml, credit_card) if credit_card.is_a?(NetworkTokenizationCreditCard)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -240,6 +248,18 @@ module ActiveMerchant
           xml.tag! 'cvn' do
             xml.tag! 'number', credit_card.verification_value
             xml.tag! 'presind', (options['presind'] || (credit_card.verification_value? ? 1 : nil))
+          end
+        end
+      end
+
+      def add_network_tokenization_card(xml, payment)
+        xml.tag! 'mpi' do
+          xml.tag! 'cavv', payment.payment_cryptogram
+          xml.tag! 'eci', payment.eci
+        end
+        xml.tag! 'supplementarydata' do
+          xml.tag! 'item', 'type' => 'mobile' do
+            xml.tag! 'field01', payment.source.to_s.gsub('_','-')
           end
         end
       end

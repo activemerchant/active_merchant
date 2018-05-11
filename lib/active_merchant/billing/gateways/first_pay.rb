@@ -3,7 +3,7 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FirstPayGateway < Gateway
-      self.live_url = 'https://secure.1stpaygateway.net/secure/gateway/xmlgateway.aspx'
+      self.live_url = 'https://secure.goemerchant.com/secure/gateway/xmlgateway.aspx'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -66,18 +66,20 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:owner_email] = options[:email] if options[:email]
         post[:remote_ip_address] = options[:ip] if options[:ip]
+        post[:processor_id] = options[:processor_id] if options[:processor_id]
       end
 
       def add_address(post, creditcard, options)
-        address = options[:billing_address] || options[:address]
-        post[:owner_name] = address[:name]
-        post[:owner_street] = address[:address1]
-        post[:owner_street2] = address[:address2] if address[:address2]
-        post[:owner_city] = address[:city]
-        post[:owner_state] = address[:state]
-        post[:owner_zip] = address[:zip]
-        post[:owner_country] = address[:country]
-        post[:owner_phone] = address[:phone] if address[:phone]
+        if address = options[:billing_address] || options[:address]
+          post[:owner_name] = address[:name]
+          post[:owner_street] = address[:address1]
+          post[:owner_street2] = address[:address2] if address[:address2]
+          post[:owner_city] = address[:city]
+          post[:owner_state] = address[:state]
+          post[:owner_zip] = address[:zip]
+          post[:owner_country] = address[:country]
+          post[:owner_phone] = address[:phone] if address[:phone]
+        end
       end
 
       def add_invoice(post, money, options)

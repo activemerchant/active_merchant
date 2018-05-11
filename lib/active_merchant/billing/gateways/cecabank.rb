@@ -94,6 +94,17 @@ module ActiveMerchant #:nodoc:
         commit(CECA_ACTION_REFUND, post)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?pan=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?cvv2=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_creditcard(post, creditcard)
@@ -226,4 +237,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

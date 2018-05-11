@@ -8,8 +8,8 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_periodic_url, :live_periodic_url
 
-      self.test_url = 'https://www.securepay.com.au/test/payment'
-      self.live_url = 'https://www.securepay.com.au/xmlapi/payment'
+      self.test_url = 'https://api.securepay.com.au/test/payment'
+      self.live_url = 'https://api.securepay.com.au/xmlapi/payment'
 
       self.test_periodic_url = 'https://test.securepay.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
@@ -101,6 +101,18 @@ module ActiveMerchant #:nodoc:
       def unstore(identification, options = {})
         options[:billing_id] = identification
         commit_periodic(build_periodic_item(:remove_triggered, options[:amount], nil, options))
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<merchantID>).+(</merchantID>)), '\1[FILTERED]\2').
+          gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
+          gsub(%r((<cardNumber>).+(</cardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<cvv>).+(</cvv>)), '\1[FILTERED]\2')
       end
 
       private

@@ -59,6 +59,17 @@ module ActiveMerchant #:nodoc:
         commit('ccSettlement', money, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((%3CstorePwd%3E).*(%3C(%2F|/)storePwd%3E))i, '\1[FILTERED]\2').
+          gsub(%r((%3CcardNum%3E)\d*(%3C(%2F|/)cardNum%3E))i, '\1[FILTERED]\2').
+          gsub(%r((%3Ccvd%3E)\d*(%3C(%2F|/)cvd%3E))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def parse_card_or_auth(card_or_auth, options)
@@ -259,9 +270,11 @@ module ActiveMerchant #:nodoc:
           if brand = card_type(@credit_card.brand)
             xml.tag! 'cardType'     , brand
           end
-          if @credit_card.verification_value
+          if @credit_card.verification_value?
             xml.tag! 'cvdIndicator' , '1' # Value Provided
             xml.tag! 'cvd'          , @credit_card.verification_value
+          else
+            xml.tag! 'cvdIndicator' , '0'
           end
         end
       end
@@ -269,20 +282,23 @@ module ActiveMerchant #:nodoc:
       def build_billing_details(xml, opts)
         xml.tag! 'billingDetails' do
           xml.tag! 'cardPayMethod', 'WEB'
-          build_address(xml, opts[:billing_address], opts[:email])
+          build_address(xml, opts[:billing_address]) if opts[:billing_address]
+          xml.tag! 'email', opts[:email] if opts[:email]
         end
       end
 
       def build_shipping_details(xml, opts)
         xml.tag! 'shippingDetails' do
-          build_address(xml, opts[:shipping_address], opts[:email])
+          build_address(xml, opts[:shipping_address])
+          xml.tag! 'email', opts[:email] if opts[:email]
         end if opts[:shipping_address].present?
       end
 
-      def build_address(xml, addr, email=nil)
+      def build_address(xml, addr)
         if addr[:name]
-          xml.tag! 'firstName', addr[:name].split(' ').first
-          xml.tag! 'lastName' , addr[:name].split(' ').last
+          first_name, last_name = split_names(addr[:name])
+          xml.tag! 'firstName', first_name
+          xml.tag! 'lastName' , last_name
         end
         xml.tag! 'street' , addr[:address1] if addr[:address1].present?
         xml.tag! 'street2', addr[:address2] if addr[:address2].present?
@@ -294,7 +310,6 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'country', addr[:country]  if addr[:country].present?
         xml.tag! 'zip'    , addr[:zip]      if addr[:zip].present?
         xml.tag! 'phone'  , addr[:phone]    if addr[:phone].present?
-        xml.tag! 'email', email if email
       end
 
       def card_type(key)

@@ -3,6 +3,12 @@ module ActiveMerchant #:nodoc:
   end
 
   class ConnectionError < ActiveMerchantError # :nodoc:
+    attr_reader :triggering_exception
+
+    def initialize(message, triggering_exception)
+      super(message)
+      @triggering_exception = triggering_exception
+    end
   end
 
   class RetriableConnectionError < ConnectionError # :nodoc:

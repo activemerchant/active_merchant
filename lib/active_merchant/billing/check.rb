@@ -50,6 +50,9 @@ module ActiveMerchant #:nodoc:
         'check'
       end
 
+      def credit_card?
+        false
+      end
       # Routing numbers may be validated by calculating a checksum and dividing it by 10. The
       # formula is:
       #   (3(d1 + d4 + d7) + 7(d2 + d5 + d8) + 1(d3 + d6 + d9))mod 10 = 0

@@ -12,13 +12,13 @@ module ActiveMerchant #:nodoc:
     # and +refund+ will become mandatory.
     class MercuryGateway < Gateway
       URLS = {
-        :test => 'https://w1.mercurydev.net/ws/ws.asmx',
+        :test => 'https://w1.mercurycert.net/ws/ws.asmx',
         :live => 'https://w1.mercurypay.com/ws/ws.asmx'
       }
 
       self.homepage_url = 'http://www.mercurypay.com'
       self.display_name = 'Mercury'
-      self.supported_countries = ['US']
+      self.supported_countries = ['US','CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.default_currency = 'USD'
 
@@ -72,13 +72,6 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         requires!(options, :credit_card) unless @use_tokenization
 
-        if options[:try_reversal]
-          request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options.merge(:reversal => true))
-          response = commit('VoidSale', request)
-
-          return response if response.success?
-        end
-
         request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options)
         commit('VoidSale', request)
       end
@@ -86,6 +79,19 @@ module ActiveMerchant #:nodoc:
       def store(credit_card, options={})
         request = build_card_lookup_request(credit_card, options)
         commit('CardLookup', request)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r(&lt;), "<").
+          gsub(%r(&gt;), ">").
+          gsub(%r((<pw>).*(</pw>))i, '\1[FILTERED]\2').
+          gsub(%r((<AcctNo>)(\d|x)*(</AcctNo>))i, '\1[FILTERED]\3').
+          gsub(%r((<CVVData>)\d*(</CVVData>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -97,7 +103,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! "Transaction" do
             xml.tag! 'TranType', 'Credit'
             xml.tag! 'TranCode', action
-            if action == 'PreAuth' || action == 'Sale'
+            if options[:allow_partial_auth] && (action == 'PreAuth' || action == 'Sale')
               xml.tag! "PartialAuth", "Allow"
             end
             add_invoice(xml, options[:order_id], nil, options)
@@ -115,12 +121,12 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
-        ref_no = "1" if options[:reversal] #filler value for preauth voids -- not used by mercury but will reject if missing or not numeric
+        ref_no = "1" if ref_no.blank?
 
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
             xml.tag! 'TranType', 'Credit'
-            if action == 'PreAuthCapture'
+            if options[:allow_partial_auth] && (action == 'PreAuthCapture')
               xml.tag! "PartialAuth", "Allow"
             end
             xml.tag! 'TranCode', (@use_tokenization ? (action + "ByRecordNo") : action)
@@ -132,8 +138,8 @@ module ActiveMerchant #:nodoc:
             add_address(xml, options)
             xml.tag! 'TranInfo' do
               xml.tag! "AuthCode", auth_code
-              xml.tag! "AcqRefData", acq_ref_data if options[:reversal]
-              xml.tag! "ProcessData", process_data if options[:reversal]
+              xml.tag! "AcqRefData", acq_ref_data
+              xml.tag! "ProcessData", process_data
             end
           end
         end
@@ -202,7 +208,24 @@ module ActiveMerchant #:nodoc:
       def add_credit_card(xml, credit_card, action)
         xml.tag! 'Account' do
           if credit_card.track_data.present?
-            xml.tag! 'Track1', credit_card.track_data
+            # Track 1 has a start sentinel (STX) of '%' and track 2 is ';'
+            # Track 1 and 2 have identical end sentinels (ETX) of '?'
+            # Tracks may or may not have checksum (LRC) after the ETX
+            # If the track has no STX or is corrupt, we send it as track 1, to let Mercury
+            #handle with the validation error as it sees fit.
+            # Track 2 requires having the STX and ETX stripped. Track 1 does not.
+            # Max-length track 1s require having the STX and ETX stripped. Max is 79 bytes including LRC.
+            is_track_2 = credit_card.track_data[0] == ';'
+            etx_index = credit_card.track_data.rindex('?') || credit_card.track_data.length
+            is_max_track1 = etx_index >= 77
+
+            if is_track_2
+              xml.tag! 'Track2', credit_card.track_data[1...etx_index]
+            elsif is_max_track1
+              xml.tag! 'Track1', credit_card.track_data[1...etx_index]
+            else
+              xml.tag! 'Track1', credit_card.track_data
+            end
           else
             xml.tag! 'AcctNo', credit_card.number
             xml.tag! 'ExpDate', expdate(credit_card)

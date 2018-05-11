@@ -19,6 +19,13 @@ class RemoteGlobalTransportTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_partial_purchase
+    @credit_card = credit_card('4111111111111111')
+    response = @gateway.purchase(2354, @credit_card, @options)
+    assert_success response
+    assert_equal 'Partial Approval', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(2304, @credit_card, @options)
     assert_failure response
@@ -40,11 +47,13 @@ class RemoteGlobalTransportTest < Test::Unit::TestCase
     assert_equal "Declined", response.message
   end
 
-  def test_partial_capture
-    auth = @gateway.authorize(500, @credit_card, @options)
+  def test_successful_partial_authorize_and_capture
+    @credit_card = credit_card('4111111111111111')
+    auth = @gateway.authorize(2354, @credit_card, @options)
     assert_success auth
+    assert_equal "Partial Approval", auth.message
 
-    assert capture = @gateway.capture(499, auth.authorization)
+    assert capture = @gateway.capture(2000, auth.authorization)
     assert_success capture
   end
 
@@ -117,4 +126,16 @@ class RemoteGlobalTransportTest < Test::Unit::TestCase
     assert_failure response
     assert_equal("Invalid Login Information", response.message)
   end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(500, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:global_password], transcript)
+  end
+
 end

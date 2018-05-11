@@ -22,7 +22,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
     @credit_card.track_data = "data"
 
     @gateway.expects(:ssl_post).with do |_, body|
-      assert_match "track_1=data", body
+      body.include?("track_1=data")
     end.returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -165,7 +165,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
 
   def test_currency_uses_default_when_not_provided
     @gateway.expects(:ssl_post).with do |_, body|
-      assert_match "currency=USD", body
+      body.include?("currency=USD")
     end.returns(successful_purchase_response)
 
     @gateway.purchase(@amount, @credit_card, @options)
@@ -174,7 +174,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
   def test_provided_currency_overrides_default
     @options.update(currency: 'EUR')
     @gateway.expects(:ssl_post).with do |_, body|
-      assert_match "currency=EUR", body
+      body.include?("currency=EUR")
     end.returns(successful_purchase_response)
 
     @gateway.purchase(@amount, @credit_card, @options)

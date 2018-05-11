@@ -1,0 +1,39 @@
+machine:
+  ruby:
+    version: '2.1.0'
+
+dependencies:
+  cache_directories:
+    - 'vendor/bundle_32'
+    - 'vendor/bundle_40'
+    - 'vendor/bundle_41'
+    - 'vendor/bundle_42'
+    - 'vendor/bundle_5'
+  override:
+    - bundle check --path=vendor/bundle_32 --gemfile Gemfile.rails32 || bundle install --jobs=4 --retry=3 --gemfile Gemfile.rails32 --path=vendor/bundle_32
+    - bundle check --path=vendor/bundle_40 --gemfile Gemfile.rails40 || bundle install --jobs=4 --retry=3 --gemfile Gemfile.rails40 --path=vendor/bundle_40
+    - bundle check --path=vendor/bundle_41 --gemfile Gemfile.rails41 || bundle install --jobs=4 --retry=3 --gemfile Gemfile.rails41 --path=vendor/bundle_41
+    - bundle check --path=vendor/bundle_42 --gemfile Gemfile.rails42 || bundle install --jobs=4 --retry=3 --gemfile Gemfile.rails42 --path=vendor/bundle_42
+    - bundle check --path=vendor/bundle_5 --gemfile Gemfile.rails5 || bundle install --jobs=4 --retry=3 --gemfile Gemfile.rails5 --path=vendor/bundle_5
+
+test:
+  override:
+    - bundle check --path=vendor/bundle_32 && bundle exec rake test:
+        environment:
+          BUNDLE_GEMFILE: Gemfile.rails32
+
+    - bundle check --path=vendor/bundle_40 && bundle exec rake test:
+        environment:
+          BUNDLE_GEMFILE: Gemfile.rails40
+
+    - bundle check --path=vendor/bundle_41 && bundle exec rake test:
+        environment:
+          BUNDLE_GEMFILE: Gemfile.rails41
+
+    - bundle check --path=vendor/bundle_42 && bundle exec rake test:
+        environment:
+          BUNDLE_GEMFILE: Gemfile.rails42
+
+    - bundle check --path=vendor/bundle_5 && bundle exec rake test:
+        environment:
+          BUNDLE_GEMFILE: Gemfile.rails5

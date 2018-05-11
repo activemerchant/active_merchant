@@ -80,10 +80,28 @@ class CheckoutTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_successful_void
-    @gateway.expects(:ssl_post).returns(successful_void_response)
+  def test_passes_descriptors
+    stub_comms do
+      @gateway.purchase(100, credit_card, @options.merge(
+        descriptor_name: "ZahName",
+        descriptor_city: "Oakland"
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<descriptor_name>ZahName<\/descriptor_name>/, data)
+      assert_match(/<descriptor_city>Oakland<\/descriptor_city>/, data)
+    end.respond_with(successful_purchase_response)
+  end
 
-    assert void = @gateway.void('36919371|9c38d0506da258e216fa072197faaf37|1|CAD|100', @options)
+  def test_successful_void
+    @options['orderid'] = '9c38d0506da258e216fa072197faaf37'
+    void = stub_comms(@gateway, :ssl_request) do
+      @gateway.void('36919371|9c38d0506da258e216fa072197faaf37|1|CAD|100', @options)
+    end.check_request do |method, endpoint, data, headers|
+      # Should only be one pair of track id tags.
+      assert_equal 2, data.scan(/trackid/).count
+    end.respond_with(successful_void_response)
+
+    assert void
     assert_success void
 
     assert_equal 'Successful', void.message

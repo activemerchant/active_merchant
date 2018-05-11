@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         'USUAL_DATE' => :undoc_usual_date, # Not found in the bp20rebadmin API doc.
       }
 
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url        = 'http://www.bluepay.com/'
       self.display_name        = 'BluePay'
@@ -298,6 +298,19 @@ module ActiveMerchant #:nodoc:
         commit('rebill', 'nil', post)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((&?card_num=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?CARD_CVV2=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?PAYMENT_ACCOUNT=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?TAMPER_PROOF_SEAL=)[^&"]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def commit(action, money, fields)
@@ -417,8 +430,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-          post[:EMAIL]     = options[:email]
-          post[:CUSTOM_ID] = options[:customer]
+        post[:EMAIL]     = options[:email]
+        post[:CUSTOM_ID] = options[:customer]
+        post[:CUSTOM_ID2] = options[:custom_id2]
       end
 
       def add_duplicate_override(post, options)
@@ -458,7 +472,7 @@ module ActiveMerchant #:nodoc:
         post[:encap_char]     = "$"
         post[:card_num]       = '4111111111111111'
         post[:exp_date]       = '1212'
-        post[:solution_ID]    = application_id if(application_id && application_id != "ActiveMerchant")
+        post[:solution_ID]    = application_id if application_id
         post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 

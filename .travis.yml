@@ -1,16 +1,30 @@
+language: ruby
+script: "bundle exec rake test:units"
+sudo: false
+cache: bundler
+before_install:
+  # https://github.com/travis-ci/travis-ci/issues/8978#issuecomment-354036443
+  - gem update --system
+  - gem install bundler
+
 rvm:
-  - 2.1.0
-  - 2.0.0
-  - 1.9.3
+- 2.5
+- 2.4
+- 2.3
+- 2.2
 
 gemfile:
-  - Gemfile
-  - Gemfile_rails40
+- Gemfile.rails52
+- Gemfile.rails51
+- Gemfile.rails50
+- Gemfile.rails42
 
-install: "bundle install"
-script: "bundle exec rake test:units"
+matrix:
+  include:
+    - rvm: 2.1
+      gemfile: Gemfile.rails42
 
 notifications:
   email:
-    - payments-dev@shopify.com
-    - nathaniel@talbott.ws
+    on_success: never
+    on_failure: always

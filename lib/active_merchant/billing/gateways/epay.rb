@@ -1,8 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EpayGateway < Gateway
-      API_HOST = 'ssl.ditonlinebetalingssystem.dk'
-      self.live_url = 'https://' + API_HOST + '/remote/payment'
+      self.live_url = 'https://ssl.ditonlinebetalingssystem.dk/'
 
       self.default_currency = 'DKK'
       self.money_format = :cents
@@ -110,6 +109,18 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def supports_scrubbing
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(((?:\?|&)cardno=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?cvc=)\d*(&?)), '\1[FILTERED]\2')
+      end
+
+
       private
 
       def add_amount(post, money, options)
@@ -175,19 +186,19 @@ module ActiveMerchant #:nodoc:
       def soap_post(method, params)
         data = xml_builder(params, method)
         headers = make_headers(data, method)
-        REXML::Document.new(ssl_post('https://' + API_HOST + '/remote/payment.asmx', data, headers))
+        REXML::Document.new(ssl_post(live_url + 'remote/payment.asmx', data, headers))
       end
 
       def do_authorize(params)
         headers = {}
         headers['Referer'] = (options[:password] || "activemerchant.org")
 
-        response = raw_ssl_request(:post, 'https://' + API_HOST + '/auth/default.aspx', authorize_post_data(params), headers)
+        response = raw_ssl_request(:post, live_url + 'auth/default.aspx', authorize_post_data(params), headers)
 
         # Authorize gives the response back by redirecting with the values in
         # the URL query
         if location = response['Location']
-          query = CGI::parse(URI.parse(location.gsub(' ', '%20')).query)
+          query = CGI::parse(URI.parse(location.gsub(' ', '%20').gsub('<', '%3C').gsub('>', '%3E')).query)
         else
           return {
             'accept' => '0',
@@ -233,9 +244,9 @@ module ActiveMerchant #:nodoc:
       def make_headers(data, soap_call)
         {
           'Content-Type' => 'text/xml; charset=utf-8',
-          'Host' => API_HOST,
+          'Host' => "ssl.ditonlinebetalingssystem.dk",
           'Content-Length' => data.size.to_s,
-          'SOAPAction' => self.live_url + '/' + soap_call
+          'SOAPAction' => self.live_url + 'remote/payment/' + soap_call
         }
       end
 
@@ -246,7 +257,7 @@ module ActiveMerchant #:nodoc:
                                       'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
                                       'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
             xml.tag! 'soap:Body' do
-              xml.tag! soap_call, { 'xmlns' => self.live_url } do
+              xml.tag! soap_call, { 'xmlns' => "#{self.live_url}remote/payment" } do
                 xml.tag! 'merchantnumber', @options[:login]
                 xml.tag! 'transactionid', params[:transaction]
                 xml.tag! 'amount', params[:amount].to_s if soap_call != 'delete'
@@ -259,8 +270,8 @@ module ActiveMerchant #:nodoc:
       def authorize_post_data(params = {})
         params[:language] = '2'
         params[:cms] = 'activemerchant'
-        params[:accepturl] = 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?accept=1'
-        params[:declineurl] = 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?decline=1'
+        params[:accepturl] = live_url + 'auth/default.aspx?accept=1'
+        params[:declineurl] = live_url + 'auth/default.aspx?decline=1'
         params[:merchantnumber] = @options[:login]
 
         params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")

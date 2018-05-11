@@ -1,8 +1,10 @@
 require 'test_helper'
 
 class MerchantESolutionsTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
 
     @gateway = MerchantESolutionsGateway.new(
                  :login => 'login',
@@ -33,6 +35,19 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_purchase_with_long_order_id_truncates_id
+    options = {order_id: "thisislongerthan17characters"}
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes("invoice_number=thisislongerthan1"),
+      )
+    ).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
   end
 
   def test_authorization
@@ -126,12 +141,35 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert_equal response.cvv_result['message'], "CVV does not match"
   end
 
+  def test_visa_3dsecure_params_submitted
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:xid => '1', :cavv => '2'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/xid=1/, data)
+      assert_match(/cavv=2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_mastercard_3dsecure_params_submitted
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:ucaf_collection_ind => '1', :ucaf_auth_data => '2'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/ucaf_collection_ind=1/, data)
+      assert_match(/ucaf_auth_data=2/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_supported_countries
     assert_equal ['US'], MerchantESolutionsGateway.supported_countries
   end
 
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :discover, :jcb], MerchantESolutionsGateway.supported_cardtypes
+  end
+
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
   private
@@ -166,5 +204,19 @@ class MerchantESolutionsTest < Test::Unit::TestCase
 
   def failed_purchase_response
     'transaction_id=error&error_code=101&auth_response_text=Invalid%20I%20or%20Key%20Incomplete%20Request'
+  end
+
+  def pre_scrubbed
+    <<-TRANSCRIPT
+    "profile_id=94100010518900000029&profile_key=YvKeIpxLxpJoKRKkJjMOpqmGkwUCBBEO&transaction_type=D&invoice_number=123&card_number=4111111111111111&cvv2=123&card_exp_date=0919&cardholder_street_address=123%2BState%2BStreet&cardholder_zip=55555&transaction_amount=1.00"
+    "transaction_id=3dfdc828adf032d589111ff45a7087fc&error_code=000&auth_response_text=Exact Match&avs_result=Y&cvv2_result=M&auth_code=T4797H"
+    TRANSCRIPT
+  end
+
+  def post_scrubbed
+    <<-TRANSCRIPT
+    "profile_id=94100010518900000029&profile_key=[FILTERED]&transaction_type=D&invoice_number=123&card_number=[FILTERED]&cvv2=[FILTERED]&card_exp_date=0919&cardholder_street_address=123%2BState%2BStreet&cardholder_zip=55555&transaction_amount=1.00"
+    "transaction_id=3dfdc828adf032d589111ff45a7087fc&error_code=000&auth_response_text=Exact Match&avs_result=Y&cvv2_result=M&auth_code=T4797H"
+    TRANSCRIPT
   end
 end

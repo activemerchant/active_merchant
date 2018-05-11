@@ -38,6 +38,13 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def verify(creditcard_or_datakey, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard_or_datakey, options) }
+          r.process(:ignore_result) { capture(0, r.authorization) }
+        end
+      end
+
       # Referred to as "PreAuth" in the Moneris integration guide, this action
       # verifies and locks funds on a customer's card, which then must be
       # captured at a later date.
@@ -128,6 +135,17 @@ module ActiveMerchant #:nodoc:
         post[:data_key] = data_key
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         commit('us_res_update_cc', post)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<pan>)[^<]*(</pan>))i, '\1[FILTERED]\2').
+          gsub(%r((<api_token>)[^<]*(</api_token>))i, '\1[FILTERED]\2').
+          gsub(%r((<cvd_value>)[^<]*(</cvd_value>))i, '\1[FILTERED]\2')
       end
 
       private # :nodoc: all
