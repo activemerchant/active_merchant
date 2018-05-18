@@ -219,7 +219,11 @@ module ActiveMerchant #:nodoc:
         if success_from(response)
           response['transaction'] && response['transaction']['message']
         else
-          response['error'] && response['error']['type']
+          if response['error']
+            response['error'] && response['error']['type']
+          else
+            response['transaction']['message']
+          end
         end
       end
 

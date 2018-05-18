@@ -37,6 +37,7 @@
 * Realex: Update Country List [nfarve] #2842
 * QBMS: Support transcript scrubbing [curiousepic] #2849
 * Adyen: Add support for installments [nfarve] #2839
+* Paymentez: Read messages on Failure with no error [nfarve] #2850
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779

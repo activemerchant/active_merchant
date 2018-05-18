@@ -43,6 +43,15 @@ class PaymentezTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
+  def test_expired_card
+    @gateway.expects(:ssl_post).returns(expired_card_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal 'Expired card', response.message
+  end
+
   def test_successful_authorize
     @gateway.stubs(:ssl_post).returns(successful_authorize_response)
 
@@ -370,6 +379,34 @@ Conn close
           "type": "vi",
           "number": "4242"
         }
+      }
+    )
+  end
+
+  def expired_card_response
+    %q(
+      {
+       "transaction":{
+          "status":"failure",
+          "payment_date":null,
+          "amount":1.0,
+          "authorization_code":null,
+          "installments":1,
+          "dev_reference":"ci123",
+          "message":"Expired card",
+          "carrier_code":"54",
+          "id":"PR-25",
+          "status_detail":9
+       },
+       "card":{
+          "bin":"528851",
+          "expiry_year":"2024",
+          "expiry_month":"4",
+          "transaction_reference":"PR-25",
+          "type":"mc",
+          "number":"9794",
+          "origin":"Paymentez"
+       }
       }
     )
   end
