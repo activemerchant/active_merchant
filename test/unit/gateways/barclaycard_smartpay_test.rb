@@ -157,6 +157,16 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     assert_equal '7914002629995504', response.authorization
   end
 
+  def test_successful_authorize_with_extra_options
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(shopper_interaction: 'ContAuth'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/shopperInteraction=ContAuth/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_successful_authorize
     @gateway.stubs(:ssl_post).returns(successful_authorize_response)
 
