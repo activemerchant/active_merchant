@@ -45,6 +45,7 @@
 * Mundipagg: Remove Billing Address if no Address Sent [nfarve] #2855
 * Paypal: Support more robust scrubbing [curiousepic] #2858
 * Stripe: Report internal Stripe errors as failures [bpollack] #2859
+* Authorize.net: Add ability to pass `customer_payment_profile_id` [nfarve] #2854
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779

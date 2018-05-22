@@ -392,6 +392,19 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_match %r{Address not verified}, response.avs_result["message"]
   end
 
+  def test_failed_authorize_using_wrong_token
+    response = @gateway.store(@declined_card)
+    assert_success response
+
+    responseA = @gateway.authorize(@amount, response.authorization, @options.merge(customer_payment_profile_id: 12345))
+    responseB = @gateway.authorize(@amount, response.authorization, @options.merge(customer_profile_id: 12345))
+    assert_failure responseA
+    assert_failure responseB
+
+    assert_equal 'Customer Profile ID or Customer Payment Profile ID not found', responseA.message
+    assert_equal 'Customer Profile ID or Customer Payment Profile ID not found', responseB.message
+  end
+
   def test_failed_capture_using_stored_card
     store = @gateway.store(@credit_card, @options)
     assert_success store
