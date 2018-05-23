@@ -42,6 +42,7 @@
 * Add ability to send email receipt [nfarve] #2852
 * Barclaycard Smartpay: Pass shopper_interaction [curiousepic] #2853
 * Stripe: Treat UGX as a zero-decimal currency [bpollack] #2857
+* Mundipagg: Remove Billing Address if no Address Sent [nfarve] #2855
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
