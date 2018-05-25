@@ -44,6 +44,7 @@
 * Stripe: Treat UGX as a zero-decimal currency [bpollack] #2857
 * Mundipagg: Remove Billing Address if no Address Sent [nfarve] #2855
 * Paypal: Support more robust scrubbing [curiousepic] #2858
+* Stripe: Report internal Stripe errors as failures [bpollack] #2859
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779
