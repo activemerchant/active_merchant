@@ -4,6 +4,8 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.12'
+      # litle echeck tokens are a uniform length of 17 digits
+      # see section 1.10.2 Token Formats in https://www.vantiv.com/content/dam/vantiv/developers/Vantiv_LitleXML_Reference_Guide_XML10.1_V1.1.pdf
       ECHECK_TOKEN_LENGTH = 17
 
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
@@ -203,8 +205,6 @@ module ActiveMerchant #:nodoc:
 
       def check?(payment_method)
         if payment_method.is_a?(String)
-          # litle echeck tokens are a uniform length of 17 digits
-          # see section 1.10.2 Token Formats in https://www.vantiv.com/content/dam/vantiv/developers/Vantiv_LitleXML_Reference_Guide_XML10.1_V1.1.pdf
           payment_method.size == ECHECK_TOKEN_LENGTH
         else
           card_brand(payment_method) == 'check'
