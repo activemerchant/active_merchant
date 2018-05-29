@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(JPY)
+      self.currencies_with_three_decimal_places = %w(BHD IQD JOD KWD LYD OMR TND)
 
       self.homepage_url = 'http://www.cybersource.com'
       self.display_name = 'CyberSource'
