@@ -356,7 +356,7 @@ module ActiveMerchant #:nodoc:
         add_subscription(xml, options)
         if options[:setup_fee]
           if card_brand(payment_method) == 'check'
-            add_check_service(xml, options)
+            add_check_service(xml)
           else
             add_purchase_service(xml, payment_method, options)
             add_payment_network_token(xml) if network_tokenization?(payment_method)
