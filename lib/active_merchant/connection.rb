@@ -5,6 +5,7 @@ require 'benchmark'
 
 module ActiveMerchant
   class Connection
+    using NetHttpSslConnection
     include NetworkConnectionRetries
 
     MAX_RETRIES = 3
@@ -25,6 +26,7 @@ module ActiveMerchant
       attr_accessor :min_version
       attr_accessor :max_version
     end
+    attr_reader :ssl_connection
     attr_accessor :ca_file
     attr_accessor :ca_path
     attr_accessor :pem
@@ -52,6 +54,7 @@ module ActiveMerchant
         @min_version = nil
         @max_version = nil
       end
+      @ssl_connection = {}
       @proxy_address = :ENV
       @proxy_port = nil
     end
@@ -71,6 +74,10 @@ module ActiveMerchant
           result = nil
 
           realtime = Benchmark.realtime do
+            http.start unless http.started?
+            @ssl_connection = http.ssl_connection
+            info "connection_ssl_version=#{ssl_connection[:version]} connection_ssl_cipher=#{ssl_connection[:cipher]}", tag
+
             result = case method
             when :get
               raise ArgumentError, "GET requests do not support a request body" if body
@@ -109,16 +116,20 @@ module ActiveMerchant
 
     ensure
       info "connection_request_total_time=%.4fs" % [Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start], tag
+      http.finish if http.started?
     end
 
     private
+
     def http
-      http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
-      configure_debugging(http)
-      configure_timeouts(http)
-      configure_ssl(http)
-      configure_cert(http)
-      http
+      @http ||= begin
+        http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
+        configure_debugging(http)
+        configure_timeouts(http)
+        configure_ssl(http)
+        configure_cert(http)
+        http
+      end
     end
 
     def configure_debugging(http)
