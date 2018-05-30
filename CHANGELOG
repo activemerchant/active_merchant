@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Mundipagg: allow passing holder_document for credit card purchases [bpollack] #2864
 
 == Version 1.79.0 (May 30, 2018)
 * Allow setting min/max SSL version for a connection on Ruby 2.5 [bdewater] #2775

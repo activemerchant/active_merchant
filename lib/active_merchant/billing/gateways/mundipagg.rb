@@ -176,6 +176,7 @@ module ActiveMerchant #:nodoc:
           post[:payment][:credit_card][:card][:exp_month] = payment.month
           post[:payment][:credit_card][:card][:exp_year] = payment.year
           post[:payment][:credit_card][:card][:cvv] = payment.verification_value
+          post[:payment][:credit_card][:card][:holder_document] = options[:holder_document] if options[:holder_document]
           add_billing_address(post,'credit_card', options)
         end
       end
