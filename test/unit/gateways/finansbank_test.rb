@@ -4,10 +4,6 @@ require 'test_helper'
 class FinansbankTest < Test::Unit::TestCase
   def setup
     @original_kcode = nil
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
 
     @gateway = FinansbankGateway.new(
       :login => 'login',
