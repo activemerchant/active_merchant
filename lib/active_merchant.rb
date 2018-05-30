@@ -40,6 +40,7 @@ require 'socket'
 require 'openssl'
 
 require 'active_merchant/network_connection_retries'
+require 'active_merchant/net_http_ssl_connection'
 require 'active_merchant/connection'
 require 'active_merchant/post_data'
 require 'active_merchant/posts_data'
