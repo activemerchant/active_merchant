@@ -10,7 +10,7 @@ class RemoteConektaTest < Test::Unit::TestCase
       number:             "4242424242424242",
       verification_value: "183",
       month:              "01",
-      year:               "2018",
+      year:               "2019",
       first_name:         "Mario F.",
       last_name:          "Moreno Reyes"
     )
@@ -19,7 +19,7 @@ class RemoteConektaTest < Test::Unit::TestCase
       number:             "4000000000000002",
       verification_value: "183",
       month:              "01",
-      year:               "2018",
+      year:               "2019",
       first_name:         "Mario F.",
       last_name:          "Moreno Reyes"
     )
@@ -51,6 +51,12 @@ class RemoteConektaTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal nil, response.message
+  end
+
+  def test_successful_purchase_with_installments
+    assert response = @gateway.purchase(@amount * 300, @credit_card, @options.merge({monthly_installments: 3}))
     assert_success response
     assert_equal nil, response.message
   end
