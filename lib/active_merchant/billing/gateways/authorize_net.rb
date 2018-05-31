@@ -412,10 +412,10 @@ module ActiveMerchant
             ActiveMerchant.deprecated "Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead."
             set_duplicate_window(xml, self.class.duplicate_window)
           end
-          if options[:email_customer]
+          if options.key?(:email_customer)
             xml.setting do
               xml.settingName("emailCustomer")
-              xml.settingValue("true")
+              xml.settingValue(options[:email_customer] ? "true" : "false")
             end
           end
           if options[:header_email_receipt]

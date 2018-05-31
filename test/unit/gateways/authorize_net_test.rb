@@ -307,6 +307,13 @@ class AuthorizeNetTest < Test::Unit::TestCase
       assert_match(/<settingName>emailCustomer<\/settingName>/, data)
       assert_match(/<settingValue>true<\/settingValue>/, data)
     end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, email_customer: false)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<settingName>emailCustomer<\/settingName>/, data)
+      assert_match(/<settingValue>false<\/settingValue>/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_passes_header_email_receipt
