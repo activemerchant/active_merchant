@@ -1,6 +1,9 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.79.1 (May 31, 2018)
+* Fix Net::HTTP connections defaulting to connection: keep-alive instead of close since #2862 [bpollack] #2868
 * Mundipagg: allow passing holder_document for credit card purchases [bpollack] #2864
 * Conekta: support monthly_installments [bpollack] #2866
 * Authorize.net: allow sending email_customer set to false [bpollack] #2867
