@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       base.min_version = nil
 
       base.class_attribute :max_version
-      base.min_version = nil
+      base.max_version = nil
 
       base.class_attribute :retry_safe
       base.retry_safe = false

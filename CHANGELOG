@@ -2,6 +2,9 @@
 
 == HEAD
 
+== Version 1.79.2 (June 2, 2018)
+* Fix Gateway#max_version= overwriting min_version [bdewater]
+
 == Version 1.79.1 (May 31, 2018)
 * Fix Net::HTTP connections defaulting to connection: keep-alive instead of close since #2862 [bpollack] #2868
 * Mundipagg: allow passing holder_document for credit card purchases [bpollack] #2864
