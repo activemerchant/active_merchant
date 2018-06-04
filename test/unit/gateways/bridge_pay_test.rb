@@ -45,6 +45,14 @@ class BridgePayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_purchase_with_bad_echeck
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+
+    @check.account_type = nil
+    response = @gateway.purchase(@amount, @check)
+    assert_failure response
+  end
+
   def test_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
