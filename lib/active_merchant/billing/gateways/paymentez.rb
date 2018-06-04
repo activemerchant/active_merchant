@@ -171,7 +171,12 @@ module ActiveMerchant #:nodoc:
         rescue ResponseError => e
           raw_response = e.response.body
         end
-        parse(raw_response)
+
+        begin
+          parse(raw_response)
+        rescue JSON::ParserError
+          {'status' => 'Internal server error'}
+        end
       end
 
       def commit_transaction(action, parameters)

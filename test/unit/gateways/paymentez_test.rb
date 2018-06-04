@@ -141,6 +141,14 @@ class PaymentezTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_paymentez_crashes_fail
+    @gateway.stubs(:ssl_post).returns(crash_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -408,6 +416,20 @@ Conn close
           "origin":"Paymentez"
        }
       }
+    )
+  end
+
+  def crash_response
+    %q(
+      <html>
+        <head>
+          <title>Internal Server Error</title>
+        </head>
+        <body>
+          <h1><p>Internal Server Error</p></h1>
+
+        </body>
+      </html>
     )
   end
 end
