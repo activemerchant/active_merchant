@@ -49,6 +49,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_specified_language
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(language: 'es'))
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert response.test?
+  end
+
   def test_successul_purchase_with_buyer
     gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => "512327", payment_country: "BR"))
 
@@ -210,8 +217,22 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_equal "DECLINED", response.params["transactionResponse"]["state"]
   end
 
+  def test_failed_purchase_with_specified_language
+    gateway = PayuLatamGateway.new(merchant_id: "", account_id: "", api_login: "U", api_key: "U", payment_country: "AR")
+    response = gateway.purchase(@amount, @declined_card, @options.merge(language: 'es'))
+    assert_failure response
+    assert_equal "Credenciales inválidas", response.message
+  end
+
   def test_successful_authorize
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
+  end
+
+  def test_successful_authorize_with_specified_language
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(language: 'es'))
     assert_success response
     assert_equal "APPROVED", response.message
     assert_match %r(^\d+\|(\w|-)+$), response.authorization
@@ -221,6 +242,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @pending_card, @options)
     assert_failure response
     assert_equal "DECLINED", response.params["transactionResponse"]["state"]
+  end
+
+  def test_failed_authorize_with_specified_language
+    gateway = PayuLatamGateway.new(merchant_id: "", account_id: "", api_login: "U", api_key: "U", payment_country: "AR")
+    response = gateway.authorize(@amount, @pending_card, @options.merge(language: 'es'))
+    assert_failure response
+    assert_equal "Credenciales inválidas", response.message
   end
 
   def test_well_formed_refund_fails_as_expected
@@ -237,6 +265,12 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_match (/property: parentTransactionId, message: must not be null/), response.message
   end
 
+  def test_failed_refund_with_specified_language
+    response = @gateway.refund(@amount, '', language: 'es')
+    assert_failure response
+    assert_match (/property: parentTransactionId, message: No puede ser vacio/), response.message
+  end
+
   # If this test fails, support for void may have been added to the sandbox
   def test_unsupported_test_void_fails_as_expected
     auth = @gateway.authorize(@amount, @credit_card, @options)
@@ -251,6 +285,12 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     response = @gateway.void('')
     assert_failure response
     assert_match (/property: parentTransactionId, message: must not be null/), response.message
+  end
+
+  def test_failed_void_with_specified_language
+    response = @gateway.void('', language: 'es')
+    assert_failure response
+    assert_match (/property: parentTransactionId, message: No puede ser vacio/), response.message
   end
 
   # If this test fails, support for captures may have been added to the sandbox
@@ -290,8 +330,22 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_equal "APPROVED", verify.message
   end
 
+  def test_successful_verify_with_specified_language
+    verify = @gateway.verify(@credit_card, @options.merge(language: 'es'))
+
+    assert_success verify
+    assert_equal "APPROVED", verify.message
+  end
+
   def test_failed_verify_with_specified_amount
     verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 1699))
+
+    assert_failure verify
+    assert_equal "The order value is less than minimum allowed. Minimum value allowed 17 ARS", verify.message
+  end
+
+  def test_failed_verify_with_specified_language
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 1699, language: 'es'))
 
     assert_failure verify
     assert_equal "The order value is less than minimum allowed. Minimum value allowed 17 ARS", verify.message

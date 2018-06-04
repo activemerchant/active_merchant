@@ -144,15 +144,29 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert responseCapture.test?
   end
 
-  def test_successful_visacreditcard_purchase_and_refund
+  def test_successful_visacreditcard_purchase_and_refund_with_force_refund
     assert responsePurchase = @gateway.purchase(284, @visacreditcard, @visacredit_options)
     assert_equal 'APPROVED', responsePurchase.message
     assert_success responsePurchase
     assert responsePurchase.test?
     assert !responsePurchase.authorization.blank?
-    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @visacredit_options)
+
+    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @visacredit_options.merge(force_full_refund_if_unsettled: true))
     assert_equal 'APPROVED', responseRefund.message
     assert_success responseRefund
+    assert responseRefund.test?
+  end
+
+  def test_failed_visacreditcard_purchase_and_refund
+    assert responsePurchase = @gateway.purchase(284, @visacreditcard, @visacredit_options)
+    assert_equal 'APPROVED', responsePurchase.message
+    assert_success responsePurchase
+    assert responsePurchase.test?
+    assert !responsePurchase.authorization.blank?
+
+    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @visacredit_options)
+    assert_failure responseRefund
+    assert_equal 'Can not REFUND this SALE transaction', responseRefund.message
     assert responseRefund.test?
   end
 
@@ -188,15 +202,29 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert responseCapture.test?
   end
 
-  def test_successful_visadebitcard_purchase_and_refund
+  def test_successful_visadebitcard_purchase_and_refund_with_force_refund
     assert responsePurchase = @gateway.purchase(284, @visadebitcard, @visadebit_options)
     assert_equal 'APPROVED', responsePurchase.message
     assert_success responsePurchase
     assert responsePurchase.test?
     assert !responsePurchase.authorization.blank?
-    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @visadebit_options)
+
+    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @visadebit_options.merge(force_full_refund_if_unsettled: true))
     assert_equal 'APPROVED', responseRefund.message
     assert_success responseRefund
+    assert responseRefund.test?
+  end
+
+  def test_failed_visadebitcard_purchase_and_refund
+    assert responsePurchase = @gateway.purchase(284, @visadebitcard, @visadebit_options)
+    assert_equal 'APPROVED', responsePurchase.message
+    assert_success responsePurchase
+    assert responsePurchase.test?
+    assert !responsePurchase.authorization.blank?
+
+    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @visadebit_options)
+    assert_equal 'Can not REFUND this SALE transaction', responseRefund.message
+    assert_failure responseRefund
     assert responseRefund.test?
   end
 
@@ -212,15 +240,29 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert responseCapture.test?
   end
 
-  def test_successful_amex_purchase_and_refund
+  def test_successful_amex_purchase_and_refund_with_force_refund
     assert responsePurchase = @gateway.purchase(284, @amex, @amex_options)
     assert_equal 'APPROVED', responsePurchase.message
     assert_success responsePurchase
     assert responsePurchase.test?
     assert !responsePurchase.authorization.blank?
-    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @amex_options)
+
+    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @amex_options.merge(force_full_refund_if_unsettled: true))
     assert_equal 'APPROVED', responseRefund.message
     assert_success responseRefund
+    assert responseRefund.test?
+  end
+
+  def test_failed_amex_purchase_and_refund
+    assert responsePurchase = @gateway.purchase(284, @amex, @amex_options)
+    assert_equal 'APPROVED', responsePurchase.message
+    assert_success responsePurchase
+    assert responsePurchase.test?
+    assert !responsePurchase.authorization.blank?
+
+    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @amex_options)
+    assert_equal 'Can not REFUND this SALE transaction', responseRefund.message
+    assert_failure responseRefund
     assert responseRefund.test?
   end
 
@@ -236,15 +278,29 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert responseCapture.test?
   end
 
-  def test_successful_mastercard_purchase_and_refund
+  def test_successful_mastercard_purchase_and_refund_with_force_refund
     assert responsePurchase = @gateway.purchase(284, @mastercard, @mastercard_options)
     assert_equal 'APPROVED', responsePurchase.message
     assert_success responsePurchase
     assert responsePurchase.test?
     assert !responsePurchase.authorization.blank?
-    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @mastercard_options)
+
+    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @mastercard_options.merge(force_full_refund_if_unsettled: true))
     assert_equal 'APPROVED', responseRefund.message
     assert_success responseRefund
+    assert responseRefund.test?
+  end
+
+  def test_failed_mastercard_purchase_and_refund
+    assert responsePurchase = @gateway.purchase(284, @mastercard, @mastercard_options)
+    assert_equal 'APPROVED', responsePurchase.message
+    assert_success responsePurchase
+    assert responsePurchase.test?
+    assert !responsePurchase.authorization.blank?
+
+    assert responseRefund = @gateway.refund(142, responsePurchase.authorization, @mastercard_options)
+    assert_equal 'Can not REFUND this SALE transaction', responseRefund.message
+    assert_failure responseRefund
     assert responseRefund.test?
   end
 

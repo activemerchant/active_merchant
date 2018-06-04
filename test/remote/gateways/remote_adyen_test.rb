@@ -23,7 +23,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_ip: "77.110.174.153",
       shopper_reference: "John Smith",
       billing_address: address(),
-      order_id: "123"
+      order_id: "123",
+      installments: 2
     }
   end
 
@@ -125,6 +126,39 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.void('')
     assert_failure response
     assert_equal 'Original pspReference required for this operation', response.message
+  end
+
+  def test_successful_store
+    assert response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert !response.authorization.split("#")[2].nil?
+    assert_equal 'Authorised', response.message
+  end
+
+  def test_failed_store
+    assert response = @gateway.store(@declined_card, @options)
+
+    assert_failure response
+    assert_equal 'Refused', response.message
+  end
+
+  def test_successful_purchase_using_stored_card
+    assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_authorize_using_stored_card
+    assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.authorize(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal 'Authorised', response.message
   end
 
   def test_successful_verify

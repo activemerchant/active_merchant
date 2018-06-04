@@ -6,6 +6,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
     @amount = 200
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2018')
+    @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -14,6 +15,11 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       description: 'Purchase',
       email: "longbob.longsen@example.com"
     }
+    @additional_options = @options.merge(
+      card_on_file: true,
+      transaction_indicator: 2,
+      previous_charge_id: "charge_12312"
+    )
   end
 
   def test_transcript_scrubbing
@@ -29,6 +35,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_additional_options
+    response = @gateway.purchase(@amount, @credit_card, @additional_options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -114,6 +126,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_additional_options
+    auth = @gateway.authorize(@amount, @credit_card, @additional_options)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
@@ -177,5 +197,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_failure response
     assert_match %r{Invalid Card Number}, response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_expired_card_returns_error_code
+    response = @gateway.purchase(@amount, @expired_card, @options)
+    assert_failure response
+    assert_equal 'Validation error: Expired Card', response.message
+    assert_equal '70000: 70077', response.error_code
   end
 end

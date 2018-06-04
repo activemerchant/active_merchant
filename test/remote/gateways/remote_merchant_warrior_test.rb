@@ -10,7 +10,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     @credit_card = credit_card(
       '5123456789012346',
       :month => 5,
-      :year => 17,
+      :year => Time.now.year + 2,
       :verification_value => '123',
       :brand => 'master'
     )
@@ -112,5 +112,30 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_equal 'Transaction approved', purchase.message
     assert_success purchase
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@success_amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_match(%r{paymentCardCSC\=\[FILTERED\]}, transcript)
+    assert_no_match(%r{paymentCardCSC=#{@credit_card.verification_value}}, transcript)
+    assert_scrubbed(@gateway.options[:api_passphrase], transcript)
+    assert_scrubbed(@gateway.options[:api_key], transcript)
+  end
+
+  def test_transcript_scrubbing_store
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:api_passphrase], transcript)
+    assert_scrubbed(@gateway.options[:api_key], transcript)
   end
 end

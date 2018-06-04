@@ -184,7 +184,16 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :xref, authorization)
         add_amount(post, money, options)
         add_remote_address(post, options)
-        commit('REFUND', post)
+        response = commit('REFUND_SALE', post)
+
+        return response if response.success?
+        return response unless options[:force_full_refund_if_unsettled]
+
+        if response.params["responseCode"] == "65541"
+          void(authorization, options)
+        else
+          response
+        end
       end
 
       def void(authorization, options = {})

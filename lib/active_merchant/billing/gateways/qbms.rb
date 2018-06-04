@@ -113,6 +113,17 @@ module ActiveMerchant #:nodoc:
         commit(:query, nil, {})
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<ConnectionTicket>)[^<]*(</ConnectionTicket>))i, '\1[FILTERED]\2').
+          gsub(%r((<CreditCardNumber>)[^<]*(</CreditCardNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<CardSecurityCode>)[^<]*(</CardSecurityCode>))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def hosted?

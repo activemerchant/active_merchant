@@ -531,6 +531,10 @@ money_movers:
   login: demo
   password: password
 
+mundipagg:
+  api_key: api_key
+  gateway_id: gateway_id
+
 # Working credentials, no need to replace
 nab_transact:
   login: ABC0001
@@ -974,64 +978,69 @@ realex:
   password: Y
 
 realex_mastercard:
-  number:
+  number: '5425230000004415'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 realex_mastercard_coms_error:
-  number:
+  number: '5135020000005871'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 realex_mastercard_declined:
-  number:
+  number: '5114610000004778'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 realex_mastercard_referral_a:
-  number:
+  number: '5121220000006921'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 realex_mastercard_referral_b:
-  number:
+  number: '5114630000009791'
   month: '6'
   year: '2020'
   verification_value: '123'
+  brand: 'master'
 
 # Realex doesn't provide public testing data
 # Fill in the card numbers with the Realex test
 # data.
 realex_visa:
-  number:
+  number: '4263970000005262'
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_coms_error:
-  number:
+  number: '4009830000001985'
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_declined:
-  number:
+  number: '4000120000001154'
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_referral_a:
-  number:
+  number: '4000160000004147'
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_referral_b:
-  number:
+  number: '4000130000001724'
   month: '6'
   year: '2020'
   verification_value: '123'

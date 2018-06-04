@@ -25,7 +25,8 @@ class RemotePaymentezTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
-      ip: '127.0.0.1'
+      ip: '127.0.0.1',
+      tax_percentage: 0.07
     }
 
     response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
@@ -66,7 +67,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success auth
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Operation Successful', capture.message
+    assert_equal 'Response by mock', capture.message
   end
 
   def test_successful_authorize_and_capture_with_token
@@ -77,13 +78,13 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success auth
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Operation Successful', capture.message
+    assert_equal 'Response by mock', capture.message
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Not Authorized', response.message
+    assert_equal nil, response.message
   end
 
   def test_partial_capture
