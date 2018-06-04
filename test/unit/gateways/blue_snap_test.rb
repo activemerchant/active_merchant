@@ -123,9 +123,9 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_currency_added_correctly
-    stub_comms do
+    stub_comms(@gateway, :raw_ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |method, url, data|
       assert_match(/<currency>CAD<\/currency>/, data)
     end.respond_with(successful_purchase_response)
   end
