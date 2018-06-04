@@ -3,11 +3,6 @@ require 'test_helper'
 
 class RemoteFinansbankTest < Test::Unit::TestCase
   def setup
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
-
     @gateway = FinansbankGateway.new(fixtures(:finansbank))
 
     @amount = 100

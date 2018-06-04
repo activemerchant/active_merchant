@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.homepage = 'http://activemerchant.org/'
   s.rubyforge_project = 'activemerchant'
 
-  s.required_ruby_version = '>= 2.1'
+  s.required_ruby_version = '>= 2.3'
 
   s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'

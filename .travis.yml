@@ -11,7 +11,6 @@ rvm:
 - 2.5
 - 2.4
 - 2.3
-- 2.2
 
 gemfile:
 - Gemfile.rails52
@@ -21,7 +20,7 @@ gemfile:
 
 matrix:
   include:
-    - rvm: 2.1
+    - rvm: 2.3
       gemfile: Gemfile.rails42
 
 notifications:

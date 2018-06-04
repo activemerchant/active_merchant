@@ -32,10 +32,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
   end
 
   def test_timeout_errors_raise_correctly
-    exceptions = [Timeout::Error, Errno::ETIMEDOUT]
-    if RUBY_VERSION >= '2.0.0'
-      exceptions += [Net::ReadTimeout, Net::OpenTimeout]
-    end
+    exceptions = [Timeout::Error, Errno::ETIMEDOUT, Net::ReadTimeout, Net::OpenTimeout]
 
     exceptions.each do |exception|
       raised = assert_raises(ActiveMerchant::ConnectionError) do
@@ -57,10 +54,8 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
   end
 
   def test_ssl_errors_raise_correctly
-    exceptions = [OpenSSL::SSL::SSLError]
-    if RUBY_VERSION >= '2.1.0'
-      exceptions += [OpenSSL::SSL::SSLErrorWaitWritable, OpenSSL::SSL::SSLErrorWaitReadable]
-    end
+    exceptions = [OpenSSL::SSL::SSLError, OpenSSL::SSL::SSLErrorWaitWritable,
+                  OpenSSL::SSL::SSLErrorWaitReadable]
 
     exceptions.each do |exception|
       raised = assert_raises(ActiveMerchant::ConnectionError) do
