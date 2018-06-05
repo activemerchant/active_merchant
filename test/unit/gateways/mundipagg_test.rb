@@ -126,6 +126,7 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
+    @gateway.expects(:ssl_request).returns(successful_authorize_response)
     @gateway.expects(:ssl_post).returns(successful_verify_response)
 
     response = @gateway.verify(@credit_card, @options)
