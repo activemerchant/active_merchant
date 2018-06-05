@@ -5,6 +5,7 @@
 * Drop support for Ruby versions older than 2.3 [bpollack] #2863
 * Bridge Pay: don't throw an exception when bank account type is omitted [bpollack] #2873
 * Avoid making actual connections in Blue Snap and Mundipagg unit tests [bpollack] #2875
+* Avoid making actual connections in the connection unit tests [bpollack] #2876
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
