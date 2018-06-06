@@ -7,6 +7,7 @@
 * Avoid making actual connections in Blue Snap and Mundipagg unit tests [bpollack] #2875
 * Avoid making actual connections in the connection unit tests [bpollack] #2876
 * Openpay: support payment installments [bpollack] #2865
+* First Pay: support recurring charges [bpollack] #2877
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]

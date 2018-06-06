@@ -181,6 +181,22 @@ class FirstPayTest < Test::Unit::TestCase
     assert response.message.include?('Void failed')
   end
 
+  def test_recurring_payments
+    @options[:recurring] = 'none'
+    @options[:recurring_start_date] = '01/01/1900'
+    @options[:recurring_end_date] = '02/02/1901'
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<FIELD KEY="recurring">none</FIELD>}, data)
+      assert_match(%r{<FIELD KEY="recurringStartDate">01/01/1900</FIELD>}, data)
+      assert_match(%r{<FIELD KEY="recurringEndDate">02/02/1901</FIELD>}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_success response
+  end
+
   private
 
   def successful_purchase_response
