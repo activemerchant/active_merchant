@@ -305,7 +305,6 @@ module ActiveMerchant #:nodoc:
 
       def parse(kind, xml)
         parsed = {}
-        p xml
 
         doc = Nokogiri::XML(xml).remove_namespaces!
         doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
