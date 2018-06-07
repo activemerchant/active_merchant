@@ -244,6 +244,17 @@ module ActiveMerchant
       }.update(options)
     end
 
+    def deferred(options = {})
+      defaults = {
+        first_name: 'Longbob',
+        last_name: 'Longsen',
+        brand: 'RAPIPAGO',
+        expiration_date: 1.week.from_now.to_date
+      }.update(options)
+
+      Billing::Deferred.new(defaults)
+    end
+
     def generate_unique_id
       SecureRandom.hex(16)
     end

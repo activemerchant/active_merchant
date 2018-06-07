@@ -22,11 +22,12 @@ module ActiveMerchant #:nodoc:
       }
 
       MINIMUMS = {
-        "ARS" => 1700,
-        "BRL" => 600,
-        "MXN" => 3900,
-        "PEN" => 500
-      }
+        'ARS' => 1700,
+        'BRL' => 600,
+        'MXN' => 3900,
+        'PEN' => 500,
+        'COP' => 2000000
+      }.freeze
 
       def initialize(options={})
         requires!(options, :merchant_id, :account_id, :api_login, :api_key, :payment_country)
@@ -159,6 +160,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payer(post, payment_method, options)
+        return if payment_method.try(:deferred?) # deferred payments use buyer directly
         address = options[:billing_address]
         payer = {}
         payer[:fullName] = payment_method.name.strip
@@ -194,6 +196,9 @@ module ActiveMerchant #:nodoc:
           buyer[:emailAddress] = buyer_hash[:email]
           buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
           buyer[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
+        elsif payment_method.try(:deferred?)
+          buyer[:fullName] = payment_method.name.strip
+          buyer[:emailAddress] = options[:email]
         else
           buyer[:fullName] = payment_method.name.strip
           buyer[:dniNumber] = options[:dni_number]
@@ -265,6 +270,10 @@ module ActiveMerchant #:nodoc:
           post[:transaction][:creditCard] = credit_card
           post[:transaction][:creditCardTokenId] = token
           post[:transaction][:paymentMethod] = brand.upcase
+        elsif payment_method.try(:deferred?)
+          post[:transaction][:paymentMethod] = payment_method.brand.to_s
+          post[:transaction][:expirationDate] = payment_method.expiration_date.to_s
+          post[:test] = false  # deferred gateways don't support test mode (just sandbox)
         else
           credit_card = {}
           credit_card[:number] = payment_method.number
@@ -360,7 +369,14 @@ module ActiveMerchant #:nodoc:
         when 'refund', 'void'
         response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "PENDING" || response["transactionResponse"]["state"] == "APPROVED")
         else
-          response["code"] == "SUCCESS" && response["transactionResponse"] && (response["transactionResponse"]["state"] == "APPROVED")
+          if response['code'] == 'SUCCESS' && (t_response = response['transactionResponse'])
+            t_response['state'] == 'APPROVED' || (
+              # Deferred check
+              t_response['state'] == 'PENDING' &&
+              t_response['responseCode'] == 'PENDING_TRANSACTION_CONFIRMATION' &&
+              (t_response['extraParameters'] || {})['URL_PAYMENT_RECEIPT_HTML'].present?
+            )
+          end
         end
       end
 
