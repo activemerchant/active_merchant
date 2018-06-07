@@ -338,17 +338,17 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_verify_with_specified_amount
-    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 1699))
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499))
 
     assert_failure verify
-    assert_equal "The order value is less than minimum allowed. Minimum value allowed 17 ARS", verify.message
+    assert_equal "The order value is less than minimum allowed. Minimum value allowed 5 ARS", verify.message
   end
 
   def test_failed_verify_with_specified_language
-    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 1699, language: 'es'))
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499, language: 'es'))
 
     assert_failure verify
-    assert_equal "The order value is less than minimum allowed. Minimum value allowed 17 ARS", verify.message
+    assert_equal "The order value is less than minimum allowed. Minimum value allowed 5 ARS", verify.message
   end
 
   def test_transcript_scrubbing
