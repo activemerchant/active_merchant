@@ -76,6 +76,15 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_with_processing_type
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, processing_type: 'initialCOF')
+    end.check_request do |_endpoint, data, _headers|
+      matcher = /\<processingType\>initialCOF\<\/processingType\>/
+      assert_match(matcher, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
