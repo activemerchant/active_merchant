@@ -12,6 +12,7 @@ class StripeTest < Test::Unit::TestCase
 
     @options = {
       :billing_address => address(),
+      :shipping_address => address(),
       :statement_address => statement_address(),
       :description => 'Test Purchase'
     }
@@ -981,6 +982,20 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:address2], post[:card][:address_line2]
     assert_equal @options[:billing_address][:country], post[:card][:address_country]
     assert_equal @options[:billing_address][:city], post[:card][:address_city]
+  end
+
+  def test_add_shipping_address
+    post = {}
+    @gateway.send(:add_shipping_address, post, @options)
+
+    name = "#{@options[:shipping_address][:first_name]} #{@options[:shipping_address][:last_name]}"
+    assert_equal name, post[:shipping][:name]
+    assert_equal @options[:shipping_address][:zip], post[:shipping][:address][:postal_code]
+    assert_equal @options[:shipping_address][:state], post[:shipping][:address][:state]
+    assert_equal @options[:shipping_address][:address1], post[:shipping][:address][:line1]
+    assert_equal @options[:shipping_address][:address2], post[:shipping][:address][:line2]
+    assert_equal @options[:shipping_address][:country], post[:shipping][:address][:country]
+    assert_equal @options[:shipping_address][:city], post[:shipping][:address][:city]
   end
 
   def test_add_statement_address

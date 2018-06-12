@@ -312,6 +312,7 @@ module ActiveMerchant #:nodoc:
         else
           add_amount(post, money, options, true)
           add_customer_data(post, options)
+          add_shipping_address(post, options)
           post[:description] = options[:description]
           post[:statement_descriptor] = options[:statement_description]
           post[:receipt_email] = options[:receipt_email] if options[:receipt_email]
@@ -378,6 +379,20 @@ module ActiveMerchant #:nodoc:
           post[:card][:address_state] = address[:state] if address[:state]
           post[:card][:address_city] = address[:city] if address[:city]
         end
+      end
+
+      def add_shipping_address(post, options)
+        return unless (address = options[:shipping_address] || options[:address])
+
+        post[:shipping] = { address: {} }
+
+        post[:shipping][:name] = "#{address[:first_name]} #{address[:last_name]}"
+        post[:shipping][:address][:line1] = address[:address1] if address[:address1]
+        post[:shipping][:address][:line2] = address[:address2] if address[:address2]
+        post[:shipping][:address][:country] = address[:country] if address[:country]
+        post[:shipping][:address][:postal_code] = address[:zip] if address[:zip]
+        post[:shipping][:address][:state] = address[:state] if address[:state]
+        post[:shipping][:address][:city] = address[:city] if address[:city]
       end
 
       def add_statement_address(post, options)
