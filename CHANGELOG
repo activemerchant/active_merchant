@@ -15,6 +15,7 @@
 * MiGS: scrub 3DS fields [abarrak] #2771
 * Forte: avoid crashing when location_id or account_id have spaces [bpollack] #2890
 * Adyen: Support Network Tokenization Cards via mpiData fields [curiousepic] #2891
+* Moneris US: Add ACH [nfarve] #2888
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
