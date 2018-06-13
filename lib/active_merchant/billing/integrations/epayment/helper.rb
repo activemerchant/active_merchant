@@ -10,9 +10,9 @@ module ActiveMerchant #:nodoc:
           end
 
           mapping :token, 'token'
-          mapping :partnerid, 'partner_id'
-          mapping :sign, 'sing'
-          mapping :orderid, 'order_id'
+          mapping :partnerid, 'partnerid'
+          mapping :sign, 'sign'
+          mapping :orderid, 'orderid'
           mapping :amount, 'amount'
           mapping :currency, 'currency'
           mapping :details, 'details'
