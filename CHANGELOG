@@ -9,6 +9,7 @@
 * Openpay: support payment installments [bpollack] #2865
 * First Pay: support recurring charges [bpollack] #2877
 * Bridge Pay: pass full name of account type for echeck transactions [bpollack] #2878
+* Kushki: do not send 0 for tax values if tax values are not provided [bpollack] #2886
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
