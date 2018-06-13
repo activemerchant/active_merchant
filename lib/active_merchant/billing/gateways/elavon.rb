@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.convergepay.com/VirtualMerchant/process.do'
 
       self.display_name = 'Elavon MyVirtualMerchant'
-      self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL)
+      self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL MX)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.elavon.com/'
 

@@ -71,7 +71,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
 
     response = @gateway.purchase(500, @credit_card, options)
     assert_success response
-    assert_equal 'Accepted', response.message
+    assert_equal 'Sandbox - Test credit card, transaction captured', response.message
   end
 
   def test_failed_purchase

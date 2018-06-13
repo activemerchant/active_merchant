@@ -68,6 +68,18 @@ module ActiveMerchant #:nodoc:
         commit('addCard', post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?paymentCardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((CardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?paymentCardCSC=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?apiKey=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_transaction(post, identification)

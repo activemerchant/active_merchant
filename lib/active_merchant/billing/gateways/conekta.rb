@@ -77,6 +77,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description] || "Active Merchant Purchase"
         post[:reference_id] = options[:order_id] if options[:order_id]
         post[:currency] = (options[:currency] || currency(money)).downcase
+        post[:monthly_installments] = options[:monthly_installments] if options[:monthly_installments]
         post[:amount] = amount(money)
       end
 

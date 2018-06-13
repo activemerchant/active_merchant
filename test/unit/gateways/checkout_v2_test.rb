@@ -93,6 +93,30 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_additional_options
+    response = stub_comms do
+      options = {
+        card_on_file: true,
+        transaction_indicator: 2,
+        previous_charge_id: "charge_123"
+      }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"cardOnFile":true}, data)
+      assert_match(%r{"transactionIndicator":2}, data)
+      assert_match(%r{"previousChargeId":"charge_123"}, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal "charge_test_AF1A29AD350Q748C7EA8", response.authorization
+
+    capture = stub_comms do
+      @gateway.capture(@amount, response.authorization)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)

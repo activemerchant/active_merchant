@@ -279,6 +279,13 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '(555)555-5555', transaction["customer_details"]["phone"]
   end
 
+  def test_successful_purchase_with_skip_advanced_fraud_checking_option
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_advanced_fraud_checking: true))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params["braintree_transaction"]["status"]
+  end
+
   def test_purchase_with_store_using_random_customer_id
     assert response = @gateway.purchase(
       @amount, credit_card('5105105105105100'), @options.merge(:store => true)
@@ -359,6 +366,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'Illinois', transaction["shipping_details"]["region"]
     assert_equal '60103', transaction["shipping_details"]["postal_code"]
     assert_equal 'Mexico', transaction["shipping_details"]["country_name"]
+  end
+
+  def test_successful_purchase_with_three_d_secure_pass_thru
+    three_d_secure_params = { eci: "05", cavv: "cavv", xid: "xid" }
+    assert response = @gateway.purchase(@amount, @credit_card,
+                                        three_d_secure: three_d_secure_params
+                                       )
+    assert_success response
   end
 
   def test_unsuccessful_purchase_declined

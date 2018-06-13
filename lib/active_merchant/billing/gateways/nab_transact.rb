@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_periodic_url, :live_periodic_url
 
-      self.test_url = 'https://transact.nab.com.au/test/xmlapi/payment'
+      self.test_url = 'https://demo.transact.nab.com.au/xmlapi/payment'
       self.live_url = 'https://transact.nab.com.au/live/xmlapi/payment'
       self.test_periodic_url = 'https://transact.nab.com.au/xmlapidemo/periodic'
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
 
       def build_purchase_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new
-        xml.tag! 'amount', amount(money)
+        xml.tag! 'amount', localized_amount(money, options[:currency] || currency(money))
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
 
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
 
         transaction_id, order_id, preauth_id, original_amount = reference.split('*')
 
-        xml.tag! 'amount', (money ? amount(money) : original_amount)
+        xml.tag! 'amount', (money ? localized_amount(money, options[:currency] || currency(money)) : original_amount)
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'txnID', transaction_id
         xml.tag! 'purchaseOrderNo', order_id
@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'crn', identification
         xml.tag! 'currency', options[:currency] || currency(money)
-        xml.tag! 'amount', amount(money)
+        xml.tag! 'amount', localized_amount(money, options[:currency] || currency(money))
 
         xml.target!
       end

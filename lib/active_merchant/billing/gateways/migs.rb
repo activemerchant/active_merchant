@@ -1,7 +1,5 @@
 require 'active_merchant/billing/gateways/migs/migs_codes'
 
-require 'openssl' # Used in add_secure_hash
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MigsGateway < Gateway

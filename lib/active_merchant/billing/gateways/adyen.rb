@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
         add_extra_data(post, options)
         add_shopper_interaction(post, payment, options)
         add_address(post, options)
+        add_installments(post, options) if options[:installments]
         commit('authorise', post)
       end
 
@@ -194,6 +195,12 @@ module ActiveMerchant #:nodoc:
         }
 
         post[:recurring] = recurring
+      end
+
+      def add_installments(post, options)
+        post[:installments] = {
+          value: options[:installments]
+        }
       end
 
       def parse(body)

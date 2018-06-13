@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
         "NOK" => '578',
         "NZD" => '554',
         "PEN" => '604',
-        "PLN" => '616',
+        "PLN" => '985',
         "RUB" => '643',
         "SAR" => '682',
         "SEK" => '752',

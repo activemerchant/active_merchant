@@ -41,6 +41,7 @@ class PaypalTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:signature], transcript)
   end
 
   def test_successful_purchase

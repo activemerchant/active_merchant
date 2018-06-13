@@ -153,6 +153,12 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_shopper_interaction
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(shopper_interaction: 'ContAuth'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_successful_authorize_with_3ds
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: true))
     assert_equal 'RedirectShopper', response.message

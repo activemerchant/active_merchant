@@ -140,6 +140,14 @@ class EbanxTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_error_response_with_invalid_creds
+    @gateway.expects(:ssl_request).returns(invalid_cred_response)
+
+    response = @gateway.store(@credit_card, @options)
+    assert_failure response
+    assert_equal "Invalid integration key", response.message
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -228,6 +236,12 @@ class EbanxTest < Test::Unit::TestCase
   def successful_purchase_with_stored_card_response
     %(
       {"payment":{"hash":"59d3e2955021c5e2b180e1ea9670e2d9675c15453a2ab346","pin":"252076123","merchant_payment_code":"a942f8a68836e888fa8e8af1e8ca4bf2","order_number":null,"status":"CO","status_date":"2017-10-03 19:18:45","open_date":"2017-10-03 19:18:44","confirm_date":"2017-10-03 19:18:45","transfer_date":null,"amount_br":"3.31","amount_ext":"1.00","amount_iof":"0.01","currency_rate":"3.3000","currency_ext":"USD","due_date":"2017-10-06","instalments":"1","payment_type_code":"visa","details":{"billing_descriptor":""},"transaction_status":{"acquirer":"EBANX","code":"OK","description":"Accepted"},"pre_approved":true,"capture_available":false,"customer":{"document":"85351346893","email":"unspecified@example.com","name":"NOT PROVIDED","birth_date":null}},"status":"SUCCESS"}
+    )
+  end
+
+  def invalid_cred_response
+    %(
+      {"status":"ERROR","status_code":"DA-1","status_message":"Invalid integration key"}
     )
   end
 end
