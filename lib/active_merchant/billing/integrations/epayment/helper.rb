@@ -9,17 +9,17 @@ module ActiveMerchant #:nodoc:
             super
           end
 
-          mapping :token, 'token'
-          mapping :partnerid, 'partnerid'
-          mapping :sign, 'sign'
-          mapping :orderid, 'orderid'
-          mapping :amount, 'amount'
-          mapping :currency, 'currency'
-          mapping :details, 'details'
-          mapping :nickname, 'nickname'
-          mapping :lifetime, 'lifetime'
-          mapping :successurl, 'successurl'
-          mapping :declineurl, 'declineurl'
+          mapping :token, :token
+          mapping :partnerid, :partnerid
+          mapping :sign, :sign
+          mapping :orderid, :orderid
+          mapping :amount, :amount
+          mapping :currency, :currency
+          mapping :details, :details
+          mapping :nickname, :nickname
+          mapping :lifetime, :lifetime
+          mapping :successurl, :successurl
+          mapping :declineurl, :declineurl
         end
       end
     end
