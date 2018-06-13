@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
@@ -8,7 +10,16 @@ module ActiveMerchant #:nodoc:
           end
 
           mapping :token, 'token'
-
+          mapping :partnerid, 'partner_id'
+          mapping :sign, 'sing'
+          mapping :orderid, 'order_id'
+          mapping :amount, 'amount'
+          mapping :currency, 'currency'
+          mapping :details, 'details'
+          mapping :nickname, 'nickname'
+          mapping :lifetime, 'lifetime'
+          mapping :successurl, 'successurl'
+          mapping :declineurl, 'declineurl'
         end
       end
     end
