@@ -5,7 +5,10 @@ module ActiveMerchant #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.4'
 
+      class_attribute :pre_live_url
+
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
+      self.pre_live_url = 'https://payments.vantivprelive.com/vap/communicator/online'
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
 
       self.supported_countries = ['US']
@@ -350,8 +353,18 @@ module ActiveMerchant #:nodoc:
         builder.doc.root.to_xml
       end
 
+      def has_credentials?
+        @options[:login].present? && @options[:password].present?
+      end
+
       def url
-        test? ? test_url : live_url
+        if test? && has_credentials?
+          pre_live_url
+        elsif test?
+          test_url
+        else
+          live_url
+        end
       end
 
       def headers
