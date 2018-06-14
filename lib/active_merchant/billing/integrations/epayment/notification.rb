@@ -6,9 +6,9 @@ module ActiveMerchant #:nodoc:
       module Epayment
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           %w(token 
-             partner_id
+             partnerid
              sing
-             order_id
+             orderid
              amount
              currency
              details
