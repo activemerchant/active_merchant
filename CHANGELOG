@@ -11,6 +11,7 @@
 * Bridge Pay: pass full name of account type for echeck transactions [bpollack] #2878
 * Kushki: do not send 0 for tax values if tax values are not provided [bpollack] #2886
 * Payflow: Update ACH tests [curiousepic] #2887
+* Credorax: support passing billing description [bpollack] #2889
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
