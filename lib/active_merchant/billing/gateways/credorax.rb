@@ -215,6 +215,7 @@ module ActiveMerchant #:nodoc:
         post[:a1] = generate_unique_id
         post[:a5] = currency
         post[:h9] = options[:order_id]
+        post[:i2] = options[:billing_descriptor] if options[:billing_descriptor]
       end
 
       CARD_TYPES = {
