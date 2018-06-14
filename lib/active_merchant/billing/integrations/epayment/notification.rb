@@ -19,6 +19,18 @@ module ActiveMerchant #:nodoc:
             ).each do |param_name|
               define_method(param_name.underscore){ params[param_name] }
             end
+
+            def send_request
+              headers = { 'Content-Type' => 'application/json' }
+              url = URI.parse('https://api.sandbox.epayments.com/merchant/prepare')
+              call = Net::HTTP::Post.new(url.path, headers)
+              call.add_field('Authorization: Bearer', token)
+              call.body = params.to_json
+
+              request = Net::HTTP.new(url.host, url.port)
+              request.use_ssl = true
+              response = request.start { |http| http.request(call) }
+            end
         end
       end
     end
