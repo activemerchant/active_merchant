@@ -13,6 +13,7 @@
 * Payflow: Update ACH tests [curiousepic] #2887
 * Credorax: support passing billing description [bpollack] #2889
 * MiGS: scrub 3DS fields [abarrak] #2771
+* Forte: avoid crashing when location_id or account_id have spaces [bpollack] #2890
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
