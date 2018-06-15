@@ -44,6 +44,12 @@ class ConnectionTest < Test::Unit::TestCase
     @connection.request(:get, nil, {})
   end
 
+  def test_connection_does_not_mutate_headers_argument
+    headers = { "Content-Type" => "text/xml" }.freeze
+    @connection.request(:get, nil, headers)
+    assert_equal({ "Content-Type" => "text/xml" }, headers)
+  end
+
   def test_successful_get_request
     @connection.logger.expects(:info).twice
     Net::HTTP.any_instance.expects(:get).with('/tx.php', {'connection' => 'close'}).returns(@ok)

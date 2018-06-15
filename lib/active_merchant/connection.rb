@@ -67,6 +67,7 @@ module ActiveMerchant
     def request(method, body, headers = {})
       request_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
+      headers = headers.dup
       headers['connection'] ||= 'close'
 
       retry_exceptions(:max_retries => max_retries, :logger => logger, :tag => tag) do
