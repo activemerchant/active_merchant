@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
 
             request = Net::HTTP.new(url.host, url.port)
             request.use_ssl = true
+            binding.pry
             response = request.start { |http| http.request(call) }
           end
         end

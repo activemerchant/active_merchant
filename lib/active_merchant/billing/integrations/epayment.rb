@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require File.dirname(__FILE__) + '/epayment/helper.rb'
 require File.dirname(__FILE__) + '/epayment/notification.rb'
 
@@ -5,7 +7,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Epayment
-
         mattr_accessor :service_url
         self.service_url = 'https://api.sandbox.epayments.com/merchant/prepare'
 
@@ -16,7 +17,6 @@ module ActiveMerchant #:nodoc:
         def self.notification(*args)
           Notification.new(*args)
         end
-
       end
     end
   end
