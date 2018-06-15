@@ -219,6 +219,11 @@ credorax:
   merchant_id: 'merchant_id'
   cipher_key: 'cipher_key'
 
+ct_payment:
+  api_key: SOMECREDENTIAL
+  company_number: '12345'
+  merchant_number: '12345678'
+
 # Culqi does not provide public testing data
 culqi:
   merchant_id: MERCHANT
