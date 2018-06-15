@@ -18,6 +18,7 @@
 * Moneris US: Add ACH [nfarve] #2888
 * Realex: Pass amount for captures [curiousepic] #2895
 * Card Connect: support storing cards [bpollack] #2896
+* Avoid mutating headers passed in for Active Merchant connections [grantbdev] #2892
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]
