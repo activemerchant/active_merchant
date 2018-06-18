@@ -462,6 +462,26 @@ class WorldpayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_iav_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge(:iav => 'true'))
+    end.check_request do |endpoint, data, headers|
+      assert_match( /ACCOUNTVERIFICATION/, data)
+    end.respond_with(successful_iav_verify_response)
+
+    assert_success response
+  end
+
+  def test_unsuccessful_iav_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options.merge(:iav => 'true'))
+    end.check_request do |endpoint, data, headers|
+      assert_match( /ACCOUNTVERIFICATION/, data)
+    end.respond_with(failed_iav_verify_response)
+
+    assert_failure response
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
@@ -773,6 +793,68 @@ class WorldpayTest < Test::Unit::TestCase
           </shopper>
         </order>
       </submit>
+      </paymentService>
+    REQUEST
+  end
+
+  def successful_iav_verify_response
+    <<-REQUEST
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//Worldpay//DTD Worldpay PaymentService v1//EN"
+        "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="YOUR_MERCHANT_CODE">
+        <reply>
+          <orderStatus orderCode="YOUR_ORDER_CODE">
+            <payment>
+              <paymentMethod>VISA_DEBIT-SSL</paymentMethod>
+              <amount value="0" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>AUTHORISED</lastEvent>
+              <CVCResultCode description="B"/>
+              <AVSResultCode description="B"/>
+              <AAVAddressResultCode description="B"/>
+              <AAVPostcodeResultCode description="B"/>
+              <AAVCardholderNameResultCode description="B"/>
+              <AAVTelephoneResultCode description="B"/>
+              <AAVEmailResultCode description="B"/>
+              <cardHolderName>
+                <![CDATA[Mr A Shopper]]>
+              </cardHolderName>
+              <issuerCountryCode>GB</issuerCountryCode>
+              <riskScore value="16"/> <!--If you're using RMM or RG, contact us to display this value-->
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    REQUEST
+  end
+
+  def failed_iav_verify_response
+    <<-REQUEST
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//Worldpay//DTD Worldpay PaymentService v1//EN"
+        "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="YOUR_MERCHANT_CODE">
+        <reply>
+          <orderStatus orderCode="YOUR_ORDER_CODE">
+            <payment>
+              <amount value="102" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+              <lastEvent>CANCELLED</lastEvent> <!--If <riskScore> is <100, IAV has approved-->
+              <AuthorisationId id="031483" by="ISSUER"/>
+              <CVCResultCode description="B"/>
+              <AVSResultCode description="B"/>
+              <AAVAddressResultCode description="B"/>
+              <AAVPostcodeResultCode description="B"/>
+              <AAVCardholderNameResultCode description="B"/>
+              <AAVTelephoneResultCode description="B"/>
+              <AAVEmailResultCode description="B"/>
+              <cardHolderName>
+                <![CDATA[Mr A Shopper]]>
+              </cardHolderName>
+              <issuerCountryCode>GB</issuerCountryCode>
+              <riskScore value="0"/> <!--If this is >=100, RMM or RG cancelled the authorisation-->
+            </payment>
+          </orderStatus>
+        </reply>
       </paymentService>
     REQUEST
   end

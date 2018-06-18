@@ -84,7 +84,6 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_3ds
     session_id = generate_unique_id
-    order_id = @options[:order_id]
     options = @options.merge(
               {
                 execute_threed: true,
@@ -106,7 +105,6 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_failed_authorize_with_3ds
     session_id = generate_unique_id
-    order_id = @options[:order_id]
     options = @options.merge(
               {
                 execute_threed: true,
@@ -212,6 +210,18 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match %r{REFUSED}, response.message
+  end
+
+  def test_successful_iav_verify
+    response = @gateway.verify(@credit_card, @options.merge({iav: 'true'}))
+    assert_success response
+    assert_match %r{SUCCESS}, response.message
+  end
+
+  def test_failed_iav_verify
+    response = @gateway.verify(@declined_card, @options.merge({iav: 'true'}))
     assert_failure response
     assert_match %r{REFUSED}, response.message
   end
