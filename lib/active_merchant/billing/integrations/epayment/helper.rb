@@ -10,16 +10,16 @@ module ActiveMerchant #:nodoc:
           end
 
           mapping :token, 'token'
-          mapping :partnerid, 'partnerid'
+          mapping :account, 'partnerid'
           mapping :sign, 'sign'
-          mapping :orderid, 'orderid'
+          mapping :payment_id, 'orderid'
           mapping :amount, 'amount'
           mapping :currency, 'currency'
-          mapping :details, 'details'
-          mapping :nickname, 'nickname'
+          mapping :description, 'details'
+          mapping :nickname, 'nickname,'
           mapping :lifetime, 'lifetime'
-          mapping :successurl, 'successurl'
-          mapping :declineurl, 'declineurl'
+          mapping :success_url, 'successurl'
+          mapping :decline_url, 'declineurl'
         end
       end
     end
