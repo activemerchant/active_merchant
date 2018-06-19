@@ -170,7 +170,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     result = Braintree::SuccessfulResult.new(:customer => customer)
 
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
-      'merchant_account_id' == params[:credit_card][:options][:verification_merchant_account_id]
+      params[:credit_card][:options][:verification_merchant_account_id] == 'merchant_account_id'
     end.returns(result)
 
     gateway.store(credit_card('41111111111111111111'), :verify_card => true)
@@ -193,7 +193,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer.stubs(:id).returns('123')
     result = Braintree::SuccessfulResult.new(:customer => customer)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
-      'value_from_options' == params[:credit_card][:options][:verification_merchant_account_id]
+      params[:credit_card][:options][:verification_merchant_account_id] == 'value_from_options'
     end.returns(result)
 
     gateway.store(credit_card('41111111111111111111'), :verify_card => true, :verification_merchant_account_id => 'value_from_options')

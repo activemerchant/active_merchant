@@ -181,11 +181,11 @@ module ActiveMerchant #:nodoc:
 
       def add_checksum(action, post)
         checksum_elements = case action
-        when :capture;  [post[:toid], post[:trackingid], post[:captureamount], @options[:secret_key]]
-        when :void;     [post[:toid], post[:description], post[:trackingid], @options[:secret_key]]
-        when :refund;   [post[:toid], post[:trackingid], post[:refundamount], @options[:secret_key]]
-        when :tokenize; [post[:partnerid], post[:cardnumber], post[:cvv], @options[:secret_key]]
-        when :invalidate; [post[:partnerid], post[:token], @options[:secret_key]]
+        when :capture    then  [post[:toid], post[:trackingid], post[:captureamount], @options[:secret_key]]
+        when :void       then  [post[:toid], post[:description], post[:trackingid], @options[:secret_key]]
+        when :refund     then  [post[:toid], post[:trackingid], post[:refundamount], @options[:secret_key]]
+        when :tokenize   then [post[:partnerid], post[:cardnumber], post[:cvv], @options[:secret_key]]
+        when :invalidate then [post[:partnerid], post[:token], @options[:secret_key]]
         else [post[:toid], post[:totype], post[:amount], post[:description], post[:redirecturl],
               post[:cardnumber] || post[:token], @options[:secret_key]]
         end

@@ -11,6 +11,7 @@ end
 
 require 'rake'
 require 'rake/testtask'
+require 'rubocop/rake_task'
 require 'support/gateway_support'
 require 'support/ssl_verify'
 require 'support/ssl_version'
@@ -23,8 +24,10 @@ task :tag_release do
 end
 
 desc "Run the unit test suite"
-task :default => 'test:units'
+task :default => 'test:local'
 task :test => 'test:units'
+
+RuboCop::RakeTask.new
 
 namespace :test do
   Rake::TestTask.new(:units) do |t|
@@ -32,6 +35,9 @@ namespace :test do
     t.libs << 'test'
     t.verbose = true
   end
+
+  desc 'Run all tests that do not require network access'
+  task :local => ['test:units', 'rubocop']
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'
