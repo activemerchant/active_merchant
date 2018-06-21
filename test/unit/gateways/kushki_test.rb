@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class KushkiTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = KushkiGateway.new(public_merchant_id: '_', private_merchant_id: '_')
     @amount = 100
@@ -44,6 +46,106 @@ class KushkiTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
     assert_match %r(^\d+$), response.authorization
     assert response.test?
+  end
+
+  def test_taxes_are_excluded_when_not_provided
+    options = {
+      currency: "COP",
+      amount: {
+        subtotal_iva_0: "4.95",
+        subtotal_iva: "10",
+        iva: "1.54",
+        ice: "3.50"
+      }
+    }
+
+    amount = 100 * (
+        options[:amount][:subtotal_iva_0].to_f +
+        options[:amount][:subtotal_iva].to_f +
+        options[:amount][:iva].to_f +
+        options[:amount][:ice].to_f
+    )
+
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      if /charges/ =~ endpoint
+        assert_no_match %r{extraTaxes}, data
+      end
+    end.respond_with(successful_charge_response, successful_token_response)
+
+    assert_success response
+  end
+
+  def test_partial_taxes_do_not_error
+    options = {
+      currency: "COP",
+      amount: {
+        subtotal_iva_0: "4.95",
+        subtotal_iva: "10",
+        iva: "1.54",
+        ice: "3.50",
+        extra_taxes: {
+          tasa_aeroportuaria: 0.2,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+    options[:amount][:subtotal_iva_0].to_f +
+        options[:amount][:subtotal_iva].to_f +
+        options[:amount][:iva].to_f +
+        options[:amount][:ice].to_f
+    )
+
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      if /charges/ =~ endpoint
+        assert_match %r{extraTaxes}, data
+        assert_no_match %r{propina}, data
+        assert_match %r{iac}, data
+      end
+    end.respond_with(successful_charge_response, successful_token_response)
+
+    assert_success response
+  end
+
+  def test_taxes_are_included_when_provided
+    options = {
+      currency: "COP",
+      amount: {
+        subtotal_iva_0: "4.95",
+        subtotal_iva: "10",
+        iva: "1.54",
+        ice: "3.50",
+        extra_taxes: {
+          propina: 0.1,
+          tasa_aeroportuaria: 0.2,
+          agencia_de_viaje: 0.3,
+          iac: 0.4
+        }
+      }
+    }
+
+    amount = 100 * (
+    options[:amount][:subtotal_iva_0].to_f +
+        options[:amount][:subtotal_iva].to_f +
+        options[:amount][:iva].to_f +
+        options[:amount][:ice].to_f
+    )
+
+    response = stub_comms do
+      @gateway.purchase(amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      if /charges/ =~ endpoint
+        assert_match %r{extraTaxes}, data
+        assert_match %r{propina}, data
+      end
+    end.respond_with(successful_charge_response, successful_token_response)
+
+    assert_success response
   end
 
   def test_failed_purchase

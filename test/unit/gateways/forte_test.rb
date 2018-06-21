@@ -139,6 +139,16 @@ class ForteTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_handles_improper_padding
+    @gateway = ForteGateway.new(location_id: ' improperly-padded ', account_id: '  account_id  ', api_key: 'api_key', secret: 'secret')
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |type, url, parameters, headers|
+      URI.parse(url)
+    end.respond_with(MockedResponse.new(successful_purchase_response))
+    assert_success response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed

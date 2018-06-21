@@ -27,7 +27,7 @@ class RemotePayflowTest < Test::Unit::TestCase
 
     @check = check(
       :routing_number => '111111118',
-      :account_number => '1234567801'
+      :account_number => '1111111111'
     )
   end
 
@@ -87,6 +87,16 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_equal "Approved", response.message
     assert response.test?
     assert_not_nil response.authorization
+  end
+
+  def test_ach_purchase_and_refund
+    assert response = @gateway.purchase(50, @check)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert !response.authorization.blank?
+
+    assert credit = @gateway.refund(50, response.authorization)
+    assert_success credit
   end
 
   def test_successful_authorization

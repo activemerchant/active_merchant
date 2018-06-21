@@ -214,7 +214,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def endpoint
-        "/accounts/act_#{@options[:account_id]}/locations/loc_#{@options[:location_id]}/transactions/"
+        "/accounts/act_#{@options[:account_id].strip}/locations/loc_#{@options[:location_id].strip}/transactions/"
       end
 
       def headers
