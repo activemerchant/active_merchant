@@ -261,6 +261,28 @@ class RemoteRealexTest < Test::Unit::TestCase
     )
     assert auth_response.test?
 
+    capture_response = @gateway.capture(nil, auth_response.authorization)
+
+    assert_not_nil capture_response
+    assert_success capture_response
+    assert capture_response.authorization.length > 0
+    assert_equal 'Successful', capture_response.message
+    assert_match(/Settled Successfully/, capture_response.params['message'])
+  end
+
+  def test_realex_authorize_then_capture_with_extra_amount
+    order_id = generate_unique_id
+
+    auth_response = @gateway.authorize(@amount*115, @visa,
+      :order_id => order_id,
+      :description => 'Test Realex Purchase',
+      :billing_address => {
+        :zip => '90210',
+        :country => 'US'
+      }
+    )
+    assert auth_response.test?
+
     capture_response = @gateway.capture(@amount, auth_response.authorization)
 
     assert_not_nil capture_response
