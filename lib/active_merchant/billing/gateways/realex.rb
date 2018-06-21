@@ -64,7 +64,7 @@ module ActiveMerchant
       end
 
       def capture(money, authorization, options = {})
-        request = build_capture_request(authorization, options)
+        request = build_capture_request(money, authorization, options)
         commit(request)
       end
 
@@ -147,14 +147,15 @@ module ActiveMerchant
         xml.target!
       end
 
-      def build_capture_request(authorization, options)
+      def build_capture_request(money, authorization, options)
         timestamp = new_timestamp
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'settle' do
           add_merchant_details(xml, options)
+          add_amount(xml, money, options)
           add_transaction_identifiers(xml, authorization, options)
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), nil, nil, nil)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), nil)
         end
         xml.target!
       end
