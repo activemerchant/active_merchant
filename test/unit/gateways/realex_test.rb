@@ -133,14 +133,15 @@ class RealexTest < Test::Unit::TestCase
 <request timestamp="20090824160201" type="settle">
   <merchantid>your_merchant_id</merchantid>
   <account>your_account</account>
+  <amount>100</amount>
   <orderid>1</orderid>
   <pasref>4321</pasref>
   <authcode>1234</authcode>
-  <sha1hash>4132600f1dc70333b943fc292bd0ca7d8e722f6e</sha1hash>
+  <sha1hash>ef0a6c485452f3f94aff336fa90c6c62993056ca</sha1hash>
 </request>
 SRC
 
-    assert_xml_equal valid_capture_xml, @gateway.build_capture_request('1;4321;1234', {})
+    assert_xml_equal valid_capture_xml, @gateway.build_capture_request(@amount, '1;4321;1234', {})
   end
 
   def test_purchase_xml
