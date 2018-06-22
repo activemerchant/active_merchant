@@ -81,7 +81,16 @@ class PaymentezTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, '1234', @options)
+    response = @gateway.capture(nil, '1234', @options)
+    assert_success response
+    assert_equal 'CI-635', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture_with_amount
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    response = @gateway.capture(@amount + 1, '1234', @options)
     assert_success response
     assert_equal 'CI-635', response.authorization
     assert response.test?

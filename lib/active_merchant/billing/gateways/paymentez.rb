@@ -67,8 +67,11 @@ module ActiveMerchant #:nodoc:
         commit_transaction('authorize', post)
       end
 
-      def capture(_money, authorization, _options = {})
-        post = { transaction: { id: authorization } }
+      def capture(money, authorization, _options = {})
+        post = {
+            transaction: { id: authorization }
+        }
+        post[:order] = {amount: amount(money).to_f} if money
 
         commit_transaction('capture', post)
       end
