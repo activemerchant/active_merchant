@@ -76,6 +76,13 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_equal 'Approval', response.message
   end
 
+  def test_successful_purchase_with_profile
+    store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+    purchase_response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success purchase_response
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -170,6 +177,26 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_match %r{Insufficient funds}, response.message
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert_equal 'Profile Saved', response.message
+  end
+
+  def test_successful_unstore
+    store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    unstore_response = @gateway.unstore(store_response.authorization, @options)
+    assert_success unstore_response
+  end
+
+  def test_failed_unstore
+    response = @gateway.unstore('0|abcdefghijklmnopq', @options)
+    assert_failure response
   end
 
   def test_invalid_login
