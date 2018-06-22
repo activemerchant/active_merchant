@@ -35,8 +35,8 @@ module ActiveMerchant #:nodoc:
     #   :email => 'jack@yahoo.com'
     # )
     class PsigateGateway < Gateway
-      self.test_url  = 'https://staging.psigate.com:17989/Messenger/XMLMessenger'
-      self.live_url  = 'https://secure.psigate.com:17934/Messenger/XMLMessenger'
+      self.test_url  = 'https://realtimestaging.psigate.com/xml'
+      self.live_url  = 'https://realtime.psigate.com/xml'
 
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['CA']
