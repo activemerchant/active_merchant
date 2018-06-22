@@ -81,23 +81,31 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_equal 'Response by mock', capture.message
   end
 
+  def test_successful_authorize_and_capture_with_different_amount
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert capture = @gateway.capture(@amount + 100, auth.authorization)
+    assert_success capture
+    assert_equal 'Response by mock', capture.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal nil, response.message
+    assert_equal 'Response by mock', response.message
   end
 
   def test_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert capture = @gateway.capture(@amount - 1, auth.authorization)
-    assert_success capture
+    assert_failure capture # Paymentez explicitly does not support partial capture; only GREATER than auth capture
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'The capture method is not supported by carrier', response.message
+    assert_equal 'The modification of the amount is not supported by carrier', response.message
   end
 
   def test_store
