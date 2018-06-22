@@ -145,6 +145,24 @@ class RemoteForteTest < Test::Unit::TestCase
     assert_match 'field transaction_id', response.message
   end
 
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    wait_for_authorization_to_clear
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success refund
+    assert_equal 'TEST APPROVAL', refund.message
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(@amount, '', @options)
+    assert_failure response
+    assert_match 'field authorization_code', response.message
+    assert_match 'field original_transaction_id', response.message
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
