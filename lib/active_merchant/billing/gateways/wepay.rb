@@ -222,16 +222,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options)
-        headers = {
-          "Content-Type"      => "application/json",
-          "User-Agent"        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "Authorization"     => "Bearer #{@options[:access_token]}"
-        }
-        headers["Api-Version"] = options[:version] if options[:version]
-        headers["Client-IP"] = options[:ip] if options[:ip]
-        headers["WePay-Risk-Token"] = options[:risk_token] if options[:risk_token]
-
-        headers
+        {
+          'Content-Type'     => 'application/json',
+          'User-Agent'       => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'Authorization'    => "Bearer #{@options[:access_token]}",
+          'Api-Version'      => options[:version] || @options[:version],
+          'Client-IP'        => options[:ip] || @options[:ip],
+          'WePay-Risk-Token' => options[:risk_token] || @options[:risk_token]
+        }.reject { |_, v| v.nil? }
       end
     end
   end
