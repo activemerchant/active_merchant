@@ -143,6 +143,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:pan] = credit_card.number
         post[:expdate] = expdate(credit_card)
+        post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         commit('res_add_cc', post)
       end
@@ -338,7 +339,7 @@ module ActiveMerchant #:nodoc:
           "Batchcloseall"      => [],
           "opentotals"         => [:ecr_number],
           "batchclose"         => [:ecr_number],
-          "res_add_cc"         => [:pan, :expdate, :crypt_type],
+          "res_add_cc"         => [:pan, :expdate, :crypt_type, :avs_info],
           "res_delete"         => [:data_key],
           "res_update_cc"      => [:data_key, :pan, :expdate, :crypt_type],
           "res_purchase_cc"    => [:data_key, :order_id, :cust_id, :amount, :crypt_type],
