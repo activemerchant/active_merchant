@@ -81,9 +81,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options.merge(:authorization_validated => true)) }
+        if options[:iav]&.upcase == "TRUE"
+          verify_request(credit_card, options)
+        else
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, credit_card, options) }
+            r.process(:ignore_result) { void(r.authorization, options.merge(:authorization_validated => true)) }
+          end
         end
       end
 
@@ -122,6 +126,11 @@ module ActiveMerchant #:nodoc:
 
       def credit_request(money, payment_method, options)
         commit('credit', build_authorization_request(money, payment_method, options), :ok, options)
+      end
+
+      def verify_request(payment_method, options)
+        options[:action] = 'ACCOUNTVERIFICATION'
+        commit('verify_request', build_authorization_request('0', payment_method, options), "AUTHORISED", options)
       end
 
       def build_request
@@ -205,7 +214,7 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
 
         amount_hash = {
-          :value => localized_amount(money, currency),
+          :value => money == '0' ? '0' : localized_amount(money, currency),
           'currencyCode' => currency,
           'exponent' => currency_exponent(currency)
         }
@@ -370,7 +379,7 @@ module ActiveMerchant #:nodoc:
       def handle_response(response)
         case response.code.to_i
         when 200...300
-          @cookie = response.response['Set-Cookie']
+          @cookie = response['Set-Cookie']
           response.body
         else
           raise ResponseError.new(response)
@@ -410,8 +419,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit_fund_transfer_attribute(options)
-        return unless options[:credit]
-        {'action' => "REFUND"}
+        return unless options[:credit] || options[:action]
+        {'action' => options[:credit] ? 'REFUND' : options[:action]}
       end
 
       def encoded_credentials
