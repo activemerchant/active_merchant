@@ -84,6 +84,7 @@ module ActiveMerchant #:nodoc:
           add_invoice(post, options)
           add_money(post, money)
           add_payment(post, payment)
+          add_profile(post, options)
           add_currency(post, money, options)
           add_address(post, options)
           add_customer_data(post, options)
@@ -118,6 +119,12 @@ module ActiveMerchant #:nodoc:
         add_money(post, money)
         add_reference(post, authorization)
         commit('refund', post)
+      end
+
+      def store(payment, options = {})
+        post = {}
+        add_payment(post, payment)
+        commit('profile', post)
       end
 
       def void(authorization, options = {})
@@ -159,6 +166,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_profile(post, options)
+        post[:profile] = options[:profile] if options[:profile]
+      end
 
       def add_customer_data(post, options)
         post[:email] = options[:email] if options[:email]

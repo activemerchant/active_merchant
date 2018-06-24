@@ -167,6 +167,20 @@ class RemoteCardConnectTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_store_successful
+    assert store_response = @gateway.store(@credit_card)
+
+    assert_success store_response
+    assert_equal 'Profile Saved', store_response.message
+  end
+
+  def test_store_failed
+    card = @declined_card
+    card.number = 'invalid'
+    response = @gateway.store(card)
+    assert_failure response
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
