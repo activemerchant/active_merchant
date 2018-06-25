@@ -155,6 +155,11 @@ class QbmsTest < Test::Unit::TestCase
     ActiveMerchant::Billing::Base.mode = :test
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   # helper methods start here
 
   def query_response(opts = {})
@@ -253,5 +258,67 @@ class QbmsTest < Test::Unit::TestCase
        </QBMSXMLMsgsRs>
      </QBMSXML>
      XML
+  end
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+    <?xml version="1.0" encoding="utf-8"?><?qbmsxml version="4.0"?><QBMSXML><SignonMsgsRq><SignonDesktopRq><ClientDateTime>2012-07-06T11:48:30-07:00</ClientDateTime><ApplicationLogin>subscriptions-test.spreedly.com</ApplicationLogin><ConnectionTicket>TGT-135-0exSkgC_I9tvKAxCwOE$Eg</ConnectionTicket></SignonDesktopRq></SignonMsgsRq><QBMSXMLMsgsRq><CustomerCreditCardChargeRq><TransRequestID>859e649c87f9ac698536</TransRequestID><CreditCardNumber>4111111111111111</CreditCardNumber><ExpirationMonth>9</ExpirationMonth><ExpirationYear>2013</ExpirationYear><IsECommerce>true</IsECommerce><Amount>1.00</Amount><NameOnCard>Longbob Longsen</NameOnCard><CreditCardAddress>1234 My Street</CreditCardAddress><CreditCardPostalCode>K1C2N6</CreditCardPostalCode><CardSecurityCode>123</CardSecurityCode></CustomerCreditCardChargeRq></QBMSXMLMsgsRq></QBMSXML>
+    <!DOCTYPE QBMSXML PUBLIC "-//INTUIT//DTD QBMSXML QBMS 4.0//EN" "http://webmerchantaccount.ptc.quickbooks.com/dtds/qbmsxml40.dtd">
+    <QBMSXML>
+     <SignonMsgsRs>
+      <SignonDesktopRs statusCode="0" statusSeverity="INFO">
+       <ServerDateTime>2012-07-06T18:48:31</ServerDateTime>
+       <SessionTicket>V1-110-Q31341600511142d1e4131:133159303</SessionTicket>
+      </SignonDesktopRs>
+     </SignonMsgsRs>
+     <QBMSXMLMsgsRs>
+      <CustomerCreditCardChargeRs statusCode="0" statusMessage="Status OK" statusSeverity="INFO">
+       <CreditCardTransID>YY1002519111</CreditCardTransID>
+       <AuthorizationCode>135927</AuthorizationCode>
+       <AVSStreet>Pass</AVSStreet>
+       <AVSZip>Pass</AVSZip>
+       <CardSecurityCodeMatch>Pass</CardSecurityCodeMatch>
+       <MerchantAccountNumber>5247711053184054</MerchantAccountNumber>
+       <ReconBatchID>420120706 1Q11485247711053184054AUTO04</ReconBatchID>
+       <PaymentGroupingCode>5</PaymentGroupingCode>
+       <PaymentStatus>Completed</PaymentStatus>
+       <TxnAuthorizationTime>2012-07-06T18:48:31</TxnAuthorizationTime>
+       <TxnAuthorizationStamp>1341600511</TxnAuthorizationStamp>
+       <ClientTransID>q0b539f2</ClientTransID>
+      </CustomerCreditCardChargeRs>
+     </QBMSXMLMsgsRs>
+    </QBMSXML>
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+    <?xml version="1.0" encoding="utf-8"?><?qbmsxml version="4.0"?><QBMSXML><SignonMsgsRq><SignonDesktopRq><ClientDateTime>2012-07-06T11:48:30-07:00</ClientDateTime><ApplicationLogin>subscriptions-test.spreedly.com</ApplicationLogin><ConnectionTicket>[FILTERED]</ConnectionTicket></SignonDesktopRq></SignonMsgsRq><QBMSXMLMsgsRq><CustomerCreditCardChargeRq><TransRequestID>859e649c87f9ac698536</TransRequestID><CreditCardNumber>[FILTERED]</CreditCardNumber><ExpirationMonth>9</ExpirationMonth><ExpirationYear>2013</ExpirationYear><IsECommerce>true</IsECommerce><Amount>1.00</Amount><NameOnCard>Longbob Longsen</NameOnCard><CreditCardAddress>1234 My Street</CreditCardAddress><CreditCardPostalCode>K1C2N6</CreditCardPostalCode><CardSecurityCode>[FILTERED]</CardSecurityCode></CustomerCreditCardChargeRq></QBMSXMLMsgsRq></QBMSXML>
+    <!DOCTYPE QBMSXML PUBLIC "-//INTUIT//DTD QBMSXML QBMS 4.0//EN" "http://webmerchantaccount.ptc.quickbooks.com/dtds/qbmsxml40.dtd">
+    <QBMSXML>
+     <SignonMsgsRs>
+      <SignonDesktopRs statusCode="0" statusSeverity="INFO">
+       <ServerDateTime>2012-07-06T18:48:31</ServerDateTime>
+       <SessionTicket>V1-110-Q31341600511142d1e4131:133159303</SessionTicket>
+      </SignonDesktopRs>
+     </SignonMsgsRs>
+     <QBMSXMLMsgsRs>
+      <CustomerCreditCardChargeRs statusCode="0" statusMessage="Status OK" statusSeverity="INFO">
+       <CreditCardTransID>YY1002519111</CreditCardTransID>
+       <AuthorizationCode>135927</AuthorizationCode>
+       <AVSStreet>Pass</AVSStreet>
+       <AVSZip>Pass</AVSZip>
+       <CardSecurityCodeMatch>Pass</CardSecurityCodeMatch>
+       <MerchantAccountNumber>5247711053184054</MerchantAccountNumber>
+       <ReconBatchID>420120706 1Q11485247711053184054AUTO04</ReconBatchID>
+       <PaymentGroupingCode>5</PaymentGroupingCode>
+       <PaymentStatus>Completed</PaymentStatus>
+       <TxnAuthorizationTime>2012-07-06T18:48:31</TxnAuthorizationTime>
+       <TxnAuthorizationStamp>1341600511</TxnAuthorizationStamp>
+       <ClientTransID>q0b539f2</ClientTransID>
+      </CustomerCreditCardChargeRs>
+     </QBMSXMLMsgsRs>
+    </QBMSXML>
+    POST_SCRUBBED
   end
 end

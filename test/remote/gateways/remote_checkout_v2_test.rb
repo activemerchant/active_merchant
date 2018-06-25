@@ -15,6 +15,11 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       description: 'Purchase',
       email: "longbob.longsen@example.com"
     }
+    @additional_options = @options.merge(
+      card_on_file: true,
+      transaction_indicator: 2,
+      previous_charge_id: "charge_12312"
+    )
   end
 
   def test_transcript_scrubbing
@@ -30,6 +35,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_additional_options
+    response = @gateway.purchase(@amount, @credit_card, @additional_options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -109,6 +120,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_additional_options
+    auth = @gateway.authorize(@amount, @credit_card, @additional_options)
     assert_success auth
 
     assert capture = @gateway.capture(nil, auth.authorization)

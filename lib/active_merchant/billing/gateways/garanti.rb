@@ -197,10 +197,8 @@ module ActiveMerchant #:nodoc:
 
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
           ActiveSupport::Inflector.transliterate(text,'')
-        elsif RUBY_VERSION >= '1.9'
-          text.gsub(/[^\x00-\x7F]+/, '')
         else
-          ActiveSupport::Inflector.transliterate(text).to_s
+          text.gsub(/[^\x00-\x7F]+/, '')
         end
       end
 

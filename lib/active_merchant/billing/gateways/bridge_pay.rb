@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
           post[:TransitNum] = payment_method.routing_number
           post[:AccountNum] = payment_method.account_number
           post[:NameOnCheck] = payment_method.name
-          post[:ExtData] = "<AccountType>#{payment_method.account_type.capitalize}</AccountType>"
+          post[:ExtData] = "<AccountType>#{payment_method.account_type.capitalize}</AccountType>" if payment_method.account_type
         end
       end
 

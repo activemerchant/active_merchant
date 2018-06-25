@@ -20,6 +20,13 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
   end
 
+  def test_successful_purchase_no_address
+    @options.delete(:billing_address)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+  end
+
   def test_successful_purchase_with_more_options
     options = @options.update({
       order_id: '1',

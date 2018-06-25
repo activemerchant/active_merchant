@@ -86,6 +86,17 @@ module ActiveMerchant #:nodoc:
         commit(nil, nil, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<Passphrase>)[^<]*(</Passphrase>))i, '\1[FILTERED]\2').
+          gsub(%r((<CardNumber>)[^<]*(</CardNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<CardIDNumber>)[^<]*(</CardIDNumber>))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def commit(money, creditcard, options = {})
