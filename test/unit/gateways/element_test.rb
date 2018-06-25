@@ -10,7 +10,8 @@ class ElementTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      card_present_code: 'ManualKeyed'
     }
   end
 
@@ -61,6 +62,7 @@ class ElementTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, "bad-payment-account-token-id", @options)
     assert_failure response
   end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
