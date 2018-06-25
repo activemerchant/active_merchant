@@ -4,6 +4,9 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
       SCHEMA_VERSION = '9.12'
+      # litle echeck tokens are a uniform length of 17 digits
+      # see section 1.10.2 Token Formats in https://www.vantiv.com/content/dam/vantiv/developers/Vantiv_LitleXML_Reference_Guide_XML10.1_V1.1.pdf
+      ECHECK_TOKEN_LENGTH = 17
 
       self.test_url = 'https://www.testvantivcnp.com/sandbox/communicator/online'
       self.live_url = 'https://payments.vantivcnp.com/vap/communicator/online'
@@ -201,8 +204,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def check?(payment_method)
-        return false if payment_method.is_a?(String)
-        card_brand(payment_method) == 'check'
+        if payment_method.is_a?(String)
+          payment_method.size == ECHECK_TOKEN_LENGTH
+        else
+          card_brand(payment_method) == 'check'
+        end
       end
 
       def add_authentication(doc)
@@ -259,9 +265,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
-          doc.token do
-            doc.litleToken(payment_method)
-          end
+          add_token_payment_method(doc, payment_method, options)
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
             doc.track(payment_method.track_data)
@@ -271,7 +275,7 @@ module ActiveMerchant #:nodoc:
             doc.accType(payment_method.account_type)
             doc.accNum(payment_method.account_number)
             doc.routingNum(payment_method.routing_number)
-            doc.checkNum(payment_method.number)
+            doc.checkNum(payment_method.number) if payment_method.number.present?
           end
         else
           doc.card do
@@ -289,6 +293,23 @@ module ActiveMerchant #:nodoc:
               doc.authenticationValue(options[:cavv]) if options[:cavv]
               doc.authenticationTransactionId(options[:xid]) if options[:xid]
             end
+          end
+        end
+      end
+
+      def add_token_payment_method(doc, payment_method, options)
+        if check?(payment_method)
+          doc.echeckToken do
+            doc.litleToken(payment_method)
+            doc.routingNum(options[:routing_number]) if options[:routing_number]
+            doc.accType(options[:account_type]) if options[:account_type]
+          end
+        else
+          doc.token do
+            doc.litleToken(payment_method)
+            doc.expDate(options[:expiration_date]) if options[:expiration_date].present?
+            doc.cardValidationNum(options[:card_validation_num]) if options[:card_validation_num].present?
+            doc.type(options[:type]) if options[:type].present?
           end
         end
       end

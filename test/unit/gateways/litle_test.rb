@@ -57,6 +57,17 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_token
+    response = stub_comms do
+      @gateway.purchase(@amount, '1111222233330123')
+    end.respond_with(successful_purchase_with_token_response)
+
+    assert_success response
+
+    assert_equal "82923087159870186;sale;100", response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_with_echeck
     response = stub_comms do
       @gateway.purchase(2004, @check)
@@ -65,6 +76,17 @@ class LitleTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal "621100411297330000;echeckSales;2004", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_echecktoken
+    response = stub_comms do
+      @gateway.purchase(2004, '11190000000387298')
+    end.respond_with(successful_purchase_with_echecktoken_response)
+
+    assert_success response
+
+    assert_equal "82923084236390275;echeckSales;2004", response.authorization
     assert response.test?
   end
 
@@ -226,7 +248,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(@amount, "SomeAuthorization")
+      @gateway.refund(@amount, "100000000000000002;authorization;100")
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -253,7 +275,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_successful_void_of_other_things
     refund = stub_comms do
-      @gateway.refund(@amount, "SomeAuthorization")
+      @gateway.refund(@amount, "100000000000000002;authorization;100")
     end.respond_with(successful_refund_response)
 
     assert_equal "100000000000000003;credit;", refund.authorization
@@ -418,6 +440,26 @@ class LitleTest < Test::Unit::TestCase
     )
   end
 
+  def successful_purchase_with_token_response
+    %(
+      <litleOnlineResponse version="9.12" xmlns="http://www.litle.com/schema" response="0" message="Valid Format">
+        <saleResponse id="3" reportGroup="Default Report Group">
+          <litleTxnId>82923087159870186</litleTxnId>
+          <orderId>56</orderId>
+          <response>000</response>
+          <responseTime>2018-05-04T16:08:10</responseTime>
+          <postDate>2018-05-04</postDate>
+          <message>Approved</message>
+          <authCode>123457</authCode>
+          <fraudResult>
+            <avsResult>00</avsResult>
+          </fraudResult>
+          <networkTransactionId>000000000000000</networkTransactionId>
+        </saleResponse>
+      </litleOnlineResponse>
+    )
+  end
+
   def successful_purchase_with_echeck_response
     %(
       <litleOnlineResponse version='9.12' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
@@ -429,6 +471,21 @@ class LitleTest < Test::Unit::TestCase
           <message>Approved</message>
         </echeckSalesResponse>
       </litleOnlineResponse>
+    )
+  end
+
+  def successful_purchase_with_echecktoken_response
+    %(
+      <litleOnlineResponse version="9.12" xmlns="http://www.litle.com/schema" response="0" message="Valid Format">
+        <echeckSalesResponse id="87" reportGroup="Default Report Group">
+          <litleTxnId>82923084236390275</litleTxnId>
+          <orderId>23</orderId>
+          <response>000</response>
+          <responseTime>2018-05-04T16:22:11</responseTime>
+          <message>Approved</message>
+          <postDate>2018-05-04</postDate>
+        </echeckSalesResponse>
+        </litleOnlineResponse>
     )
   end
 
