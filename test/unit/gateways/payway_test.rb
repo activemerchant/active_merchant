@@ -34,9 +34,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'VISA', response.params['card_scheme_name']
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'VISA', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_succesful_purchase_visa_from_register_user
@@ -47,10 +49,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'VISA', response.params['card_scheme_name']
-
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'VISA', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_successful_purchase_master_card
@@ -61,9 +64,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'MASTERCARD', response.params['card_scheme_name']
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'MASTERCARD', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_successful_authorize_visa
@@ -74,9 +79,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'VISA', response.params['card_scheme_name']
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'VISA', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_successful_authorize_master_card
@@ -87,9 +94,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'MASTERCARD', response.params['card_scheme_name']
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'MASTERCARD', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_successful_capture_visa
@@ -100,9 +109,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'VISA', response.params['card_scheme_name']
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'VISA', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_successful_capture_master_card
@@ -113,9 +124,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'MASTERCARD', response.params['card_scheme_name']
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'MASTERCARD', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_successful_credit_visa
@@ -126,9 +139,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'VISA', response.params['card_scheme_name']
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'VISA', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_successful_credit_master_card
@@ -139,9 +154,11 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '0', response.params['summary_code']
-    assert_match '08', response.params['response_code']
-    assert_match 'MASTERCARD', response.params['card_scheme_name']
+    assert_equal '0', response.params['summary_code']
+    assert_equal '08', response.params['response_code']
+    assert_equal 'MASTERCARD', response.params['card_scheme_name']
+    assert_nil response.error_code
+    assert_equal 'Approved - Honor with identification', response.message
   end
 
   def test_purchase_with_invalid_credit_card
@@ -154,8 +171,10 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
 
-    assert_match '1', response.params['summary_code']
-    assert_match '14', response.params['response_code']
+    assert_equal '1', response.params['summary_code']
+    assert_equal '14', response.params['response_code']
+    assert_equal 'invalid_number', response.error_code
+    assert_equal 'Declined - Invalid card number (no such number)', response.message
   end
 
   def test_purchase_with_expired_credit_card
@@ -166,8 +185,10 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
 
-    assert_match '1', response.params['summary_code']
-    assert_match '54', response.params['response_code']
+    assert_equal '1', response.params['summary_code']
+    assert_equal '54', response.params['response_code']
+    assert_equal 'expired_card', response.error_code
+    assert_equal 'Declined - Expired card', response.message
   end
 
   def test_purchase_with_invalid_month
@@ -179,8 +200,10 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
 
-    assert_match '3', response.params['summary_code']
-    assert_match 'QA', response.params['response_code']
+    assert_equal '3', response.params['summary_code']
+    assert_equal 'QA', response.params['response_code']
+    assert_equal 'processing_error', response.error_code
+    assert_equal 'Rejected - Invalid parameters', response.message
   end
 
   def test_bad_login
@@ -191,8 +214,10 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
 
-    assert_match '3', response.params['summary_code']
-    assert_match 'QH', response.params['response_code']
+    assert_equal '3', response.params['summary_code']
+    assert_equal 'QH', response.params['response_code']
+    assert_equal 'processing_error', response.error_code
+    assert_equal 'Rejected - Unknown Customer Username', response.message
   end
 
   def test_bad_merchant
@@ -203,8 +228,10 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
 
-    assert_match '3', response.params['summary_code']
-    assert_match 'QK', response.params['response_code']
+    assert_equal '3', response.params['summary_code']
+    assert_equal 'QK', response.params['response_code']
+    assert_equal 'processing_error', response.error_code
+    assert_equal 'Rejected - Unknown Customer Merchant', response.message
   end
 
   def test_store
@@ -215,7 +242,9 @@ class PaywayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_match '00', response.params['response_code']
+    assert_equal '00', response.params['response_code']
+    assert_nil response.error_code
+    assert_equal ' - Approved or completed successfully', response.message
   end
 
   private
