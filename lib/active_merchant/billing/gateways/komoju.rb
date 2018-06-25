@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.homepage_url = 'https://www.komoju.com/'
       self.display_name = 'Komoju'
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
+      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
 
       STANDARD_ERROR_CODE_MAPPING = {
         "bad_verification_value" => "incorrect_cvc",
@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options = {})
         post = {}
         post[:amount] = amount(money)
+        post[:locale] = options[:locale] if options[:locale]
         post[:description] = options[:description]
         add_payment_details(post, payment, options)
         post[:currency] = options[:currency] || default_currency
@@ -37,24 +38,40 @@ module ActiveMerchant #:nodoc:
         commit("/payments", post)
       end
 
-      def refund(money, identification, options = {})
+      def refund(amount, identification, options = {})
+        params = { :amount => amount }
+        commit("/payments/#{identification}/refund", params)
+      end
+
+      def void(identification, options = {})
         commit("/payments/#{identification}/refund", {})
+      end
+
+      def store(payment, options = {})
+        post = {}
+        add_payment_details(post, payment, options)
+
+        commit("/tokens", post)
       end
 
       private
 
       def add_payment_details(post, payment, options)
-        details = {}
+        case payment
+        when CreditCard
+          details = {}
 
-        details[:type] = 'credit_card'
-        details[:number] = payment.number
-        details[:month] = payment.month
-        details[:year] = payment.year
-        details[:verification_value] = payment.verification_value
-        details[:given_name] = payment.first_name
-        details[:family_name] = payment.last_name
-        details[:email] = options[:email] if options[:email]
-
+          details[:type] = 'credit_card'
+          details[:number] = payment.number
+          details[:month] = payment.month
+          details[:year] = payment.year
+          details[:verification_value] = payment.verification_value
+          details[:given_name] = payment.first_name
+          details[:family_name] = payment.last_name
+          details[:email] = options[:email] if options[:email]
+        else
+          details = payment
+        end
         post[:payment_details] = details
       end
 
@@ -69,10 +86,10 @@ module ActiveMerchant #:nodoc:
         post[:fraud_details] = details unless details.empty?
       end
 
-      def api_request(path, data)
+      def api_request(method, path, data)
         raw_response = nil
         begin
-          raw_response = ssl_post("#{url}#{path}", data, headers)
+          raw_response = ssl_request(method, "#{url}#{path}", data, headers)
         rescue ResponseError => e
           raw_response = e.response.body
         end
@@ -80,8 +97,8 @@ module ActiveMerchant #:nodoc:
         JSON.parse(raw_response)
       end
 
-      def commit(path, params)
-        response = api_request(path, params.to_json)
+      def commit(path, params, method = :post)
+        response = api_request(method, path, params.to_json)
         success = !response.key?("error")
         message = (success ? "Transaction succeeded" : response["error"]["message"])
         Response.new(
