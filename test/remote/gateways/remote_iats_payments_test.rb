@@ -102,6 +102,26 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert_match /Invalid credit card number/, store.message
   end
 
+  def test_successful_store_and_purchase
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert store.authorization
+    assert_equal "Success", store.message
+
+    assert response = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Success', response.message
+    assert response.authorization
+  end
+
+  def test_failed_purchase_with_bad_token
+    assert response = @gateway.purchase(200, "just-a-bad-madeup-token", @options)
+    assert_failure response
+    assert response.test?
+    assert_equal "REJECT: 3", response.message
+  end
+
   def test_invalid_login
     gateway = IatsPaymentsGateway.new(
       :agent_code => 'X',
