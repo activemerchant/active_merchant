@@ -20,9 +20,9 @@ class AdyenTest < Test::Unit::TestCase
     )
 
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
-      :payment_cryptogram => "YwAAAAAABaYcCMX/OhNRQAAAAAA=",
-      :month              => "08",
-      :year               => "2018",
+      :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      :month              => '08',
+      :year               => '2018',
       :source             => :apple_pay,
       :verification_value => nil
     )
@@ -31,7 +31,7 @@ class AdyenTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address(),
-      shopper_reference: "John Smith",
+      shopper_reference: 'John Smith',
       order_id: '345123',
       installments: 2
     }
@@ -159,7 +159,7 @@ class AdyenTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_store_response)
     response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal "#8835205392522157#8315202663743702", response.authorization
+    assert_equal '#8835205392522157#8315202663743702', response.authorization
   end
 
   def test_failed_store
@@ -224,8 +224,8 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @apple_pay_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_equal "YwAAAAAABaYcCMX/OhNRQAAAAAA=", JSON.parse(data)['mpiData']['cavv']
-      assert_equal "07", JSON.parse(data)['mpiData']['eci']
+      assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', JSON.parse(data)['mpiData']['cavv']
+      assert_equal '07', JSON.parse(data)['mpiData']['eci']
     end.respond_with(successful_authorize_response)
     assert_success response
   end

@@ -47,11 +47,11 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_valid_start_year_can_handle_strings
-    assert valid_start_year?("2009")
+    assert valid_start_year?('2009')
   end
 
   def test_valid_month_can_handle_strings
-    assert valid_month?("1")
+    assert valid_month?('1')
   end
 
   def test_valid_expiry_year_can_handle_strings
@@ -195,8 +195,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_matching_invalid_card
-    assert_nil CreditCard.brand?("XXXXXXXXXXXX0000")
-    assert_false CreditCard.valid_number?("XXXXXXXXXXXX0000")
+    assert_nil CreditCard.brand?('XXXXXXXXXXXX0000')
+    assert_false CreditCard.valid_number?('XXXXXXXXXXXX0000')
   end
 
   def test_16_digit_maestro_uk

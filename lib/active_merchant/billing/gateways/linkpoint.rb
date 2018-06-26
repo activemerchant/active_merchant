@@ -173,11 +173,11 @@ module ActiveMerchant #:nodoc:
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily], :installments, :order_id )
 
         options.update(
-          :ordertype => "SALE",
-          :action => options[:action] || "SUBMIT",
+          :ordertype => 'SALE',
+          :action => options[:action] || 'SUBMIT',
           :installments => options[:installments] || 12,
-          :startdate => options[:startdate] || "immediate",
-          :periodicity => options[:periodicity].to_s || "monthly",
+          :startdate => options[:startdate] || 'immediate',
+          :periodicity => options[:periodicity].to_s || 'monthly',
           :comments => options[:comments] || nil,
           :threshold => options[:threshold] || 3
         )
@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options={})
         requires!(options, :order_id)
         options.update(
-          :ordertype => "SALE"
+          :ordertype => 'SALE'
         )
         commit(money, creditcard, options)
       end
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
         options.update(
-          :ordertype => "PREAUTH"
+          :ordertype => 'PREAUTH'
         )
         commit(money, creditcard, options)
       end
@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         options.update(
           :order_id => authorization,
-          :ordertype => "POSTAUTH"
+          :ordertype => 'POSTAUTH'
         )
         commit(money, nil, options)
       end
@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         options.update(
           :order_id => identification,
-          :ordertype => "VOID"
+          :ordertype => 'VOID'
         )
         commit(nil, nil, options)
       end
@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
       #
       def refund(money, identification, options = {})
         options.update(
-          :ordertype => "CREDIT",
+          :ordertype => 'CREDIT',
           :order_id => identification
         )
         commit(money, nil, options)
@@ -272,7 +272,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def successful?(response)
-        response[:approved] == "APPROVED"
+        response[:approved] == 'APPROVED'
       end
 
       # Build the XML file
@@ -280,11 +280,11 @@ module ActiveMerchant #:nodoc:
         params = parameters(money, creditcard, options)
 
         xml = REXML::Document.new
-        order = xml.add_element("order")
+        order = xml.add_element('order')
 
         # Merchant Info
-        merchantinfo = order.add_element("merchantinfo")
-        merchantinfo.add_element("configfile").text = @options[:login]
+        merchantinfo = order.add_element('merchantinfo')
+        merchantinfo.add_element('configfile').text = @options[:login]
 
         # Loop over the params hash to construct the XML string
         for key, value in params
@@ -305,14 +305,14 @@ module ActiveMerchant #:nodoc:
       # adds LinkPoint's Items entity to the XML.  Called from post_data
       def build_items(element, items)
         for item in items
-          item_element = element.add_element("item")
+          item_element = element.add_element('item')
           for key, value in item
             if key == :options
-              options_element = item_element.add_element("options")
+              options_element = item_element.add_element('options')
               for option in value
-                opt_element = options_element.add_element("option")
-                opt_element.add_element("name").text =  option[:name]   unless option[:name].blank?
-                opt_element.add_element("value").text =  option[:value]   unless option[:value].blank?
+                opt_element = options_element.add_element('option')
+                opt_element.add_element('name').text =  option[:name]   unless option[:name].blank?
+                opt_element.add_element('value').text =  option[:value]   unless option[:value].blank?
               end
             else
               item_element.add_element(key.to_s).text =  item[key].to_s unless item[key].blank?
@@ -334,14 +334,14 @@ module ActiveMerchant #:nodoc:
             :chargetotal => amount(money)
           },
           :transactiondetails => {
-            :transactionorigin => options[:transactionorigin] || "ECI",
+            :transactionorigin => options[:transactionorigin] || 'ECI',
             :oid => options[:order_id],
             :ponumber => options[:ponumber],
             :taxexempt => options[:taxexempt],
             :terminaltype => options[:terminaltype],
             :ip => options[:ip],
             :reference_number => options[:reference_number],
-            :recurring => options[:recurring] || "NO",  #DO NOT USE if you are using the periodic billing option.
+            :recurring => options[:recurring] || 'NO',  #DO NOT USE if you are using the periodic billing option.
             :tdate => options[:tdate]
           },
           :orderoptions => {
@@ -433,7 +433,7 @@ module ActiveMerchant #:nodoc:
         # <r_approved>APPROVED</r_approved>
         # <r_avs></r_avs>
 
-        response = {:message => "Global Error Receipt", :complete => false}
+        response = {:message => 'Global Error Receipt', :complete => false}
 
         xml = REXML::Document.new("<response>#{xml}</response>")
         xml.root.elements.each do |node|
@@ -444,7 +444,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_creditcard_expiry_year(year)
-        sprintf("%.4i", year)[-2..-1]
+        sprintf('%.4i', year)[-2..-1]
       end
     end
   end

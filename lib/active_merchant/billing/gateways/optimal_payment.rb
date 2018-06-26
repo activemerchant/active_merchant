@@ -75,10 +75,10 @@ module ActiveMerchant #:nodoc:
       def parse_card_or_auth(card_or_auth, options)
         if card_or_auth.respond_to?(:number)
           @credit_card = card_or_auth
-          @stored_data = ""
+          @stored_data = ''
         else
           options[:confirmationNumber] = card_or_auth
-          @stored_data = "StoredData"
+          @stored_data = 'StoredData'
         end
       end
 

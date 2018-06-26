@@ -163,7 +163,7 @@ class CardConnectTest < Test::Unit::TestCase
 
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal "Insufficient funds", response.message
+    assert_equal 'Insufficient funds', response.message
   end
 
   def test_successful_store
@@ -251,75 +251,75 @@ class CardConnectTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    "{\"amount\":\"1.00\",\"resptext\":\"Approval\",\"commcard\":\" C \",\"cvvresp\":\"M\",\"batchid\":\"1900941444\",\"avsresp\":\" \",\"respcode\":\"00\",\"merchid\":\"496160873888\",\"token\":\"9405701444882224\",\"authcode\":\"PPS500\",\"respproc\":\"FNOR\",\"retref\":\"363652261392\",\"respstat\":\"A\",\"account\":\"9405701444882224\"}"
+    '{"amount":"1.00","resptext":"Approval","commcard":" C ","cvvresp":"M","batchid":"1900941444","avsresp":" ","respcode":"00","merchid":"496160873888","token":"9405701444882224","authcode":"PPS500","respproc":"FNOR","retref":"363652261392","respstat":"A","account":"9405701444882224"}'
   end
 
   def successful_echeck_purchase_response
-    "{\"amount\":\"1.00\",\"resptext\":\"Success\",\"cvvresp\":\"U\",\"batchid\":\"1900940633\",\"avsresp\":\"U\",\"respcode\":\"00\",\"merchid\":\"542041\",\"token\":\"9051769384108535\",\"authcode\":\"GF7PBR\",\"respproc\":\"PSTR\",\"retref\":\"010136262668\",\"respstat\":\"A\",\"account\":\"9051769384108535\"}"
+    '{"amount":"1.00","resptext":"Success","cvvresp":"U","batchid":"1900940633","avsresp":"U","respcode":"00","merchid":"542041","token":"9051769384108535","authcode":"GF7PBR","respproc":"PSTR","retref":"010136262668","respstat":"A","account":"9051769384108535"}'
   end
 
   def failed_echeck_purchase_response
-    "{\"respproc\":\"PPS\",\"amount\":\"0.00\",\"resptext\":\"Invalid card\",\"cardproc\":\"PSTR\",\"retref\":\"010108164081\",\"respstat\":\"C\",\"respcode\":\"11\",\"account\":\"9235405400368535\",\"merchid\":\"542041\",\"token\":\"9235405400368535\"}"
+    '{"respproc":"PPS","amount":"0.00","resptext":"Invalid card","cardproc":"PSTR","retref":"010108164081","respstat":"C","respcode":"11","account":"9235405400368535","merchid":"542041","token":"9235405400368535"}'
   end
 
   def failed_purchase_response
-    "{\"respproc\":\"FNOR\",\"amount\":\"0.00\",\"resptext\":\"Insufficient funds\",\"cardproc\":\"FNOR\",\"commcard\":\" C \",\"retref\":\"005533134378\",\"respstat\":\"C\",\"respcode\":\"NU\",\"account\":\"9435885049491053\",\"merchid\":\"496160873888\",\"token\":\"9435885049491053\"}"
+    '{"respproc":"FNOR","amount":"0.00","resptext":"Insufficient funds","cardproc":"FNOR","commcard":" C ","retref":"005533134378","respstat":"C","respcode":"NU","account":"9435885049491053","merchid":"496160873888","token":"9435885049491053"}'
   end
 
   def successful_authorize_response
-    "{\"amount\":\"1.00\",\"resptext\":\"Approval\",\"commcard\":\" C \",\"cvvresp\":\"M\",\"avsresp\":\" \",\"respcode\":\"00\",\"merchid\":\"496160873888\",\"token\":\"9405701444882224\",\"authcode\":\"PPS454\",\"respproc\":\"FNOR\",\"retref\":\"363168161558\",\"respstat\":\"A\",\"account\":\"9405701444882224\"}"
+    '{"amount":"1.00","resptext":"Approval","commcard":" C ","cvvresp":"M","avsresp":" ","respcode":"00","merchid":"496160873888","token":"9405701444882224","authcode":"PPS454","respproc":"FNOR","retref":"363168161558","respstat":"A","account":"9405701444882224"}'
   end
 
   def failed_authorize_response
-    "{\"respproc\":\"FNOR\",\"amount\":\"0.00\",\"resptext\":\"Insufficient funds\",\"cardproc\":\"FNOR\",\"commcard\":\" C \",\"retref\":\"005737235263\",\"respstat\":\"C\",\"respcode\":\"NU\",\"account\":\"9435885049491053\",\"merchid\":\"496160873888\",\"token\":\"9435885049491053\"}"
+    '{"respproc":"FNOR","amount":"0.00","resptext":"Insufficient funds","cardproc":"FNOR","commcard":" C ","retref":"005737235263","respstat":"C","respcode":"NU","account":"9435885049491053","merchid":"496160873888","token":"9435885049491053"}'
   end
 
   def successful_capture_response
-    "{\"respproc\":\"FNOR\",\"amount\":\"1.00\",\"resptext\":\"Approval\",\"setlstat\":\"Queued for Capture\",\"commcard\":\" C \",\"retref\":\"363168161558\",\"respstat\":\"A\",\"respcode\":\"00\",\"batchid\":\"1900941444\",\"account\":\"9405701444882224\",\"merchid\":\"496160873888\",\"token\":\"9405701444882224\"}"
+    '{"respproc":"FNOR","amount":"1.00","resptext":"Approval","setlstat":"Queued for Capture","commcard":" C ","retref":"363168161558","respstat":"A","respcode":"00","batchid":"1900941444","account":"9405701444882224","merchid":"496160873888","token":"9405701444882224"}'
   end
 
   def failed_capture_response
-    "{\"respproc\":\"PPS\",\"resptext\":\"Txn not found\",\"retref\":\"23221\",\"respstat\":\"C\",\"respcode\":\"29\",\"batchid\":\"-1\",\"account\":\"\"}"
+    '{"respproc":"PPS","resptext":"Txn not found","retref":"23221","respstat":"C","respcode":"29","batchid":"-1","account":""}'
   end
 
   def successful_refund_response
-    "{\"respproc\":\"PPS\",\"amount\":\"1.00\",\"resptext\":\"Approval\",\"retref\":\"363661261786\",\"respstat\":\"A\",\"respcode\":\"00\",\"merchid\":\"496160873888\"}"
+    '{"respproc":"PPS","amount":"1.00","resptext":"Approval","retref":"363661261786","respstat":"A","respcode":"00","merchid":"496160873888"}'
   end
 
   def failed_refund_response
-    "{\"respproc\":\"PPS\",\"resptext\":\"Txn not found\",\"retref\":\"23221\",\"respcode\":\"29\",\"respstat\":\"C\"}"
+    '{"respproc":"PPS","resptext":"Txn not found","retref":"23221","respcode":"29","respstat":"C"}'
   end
 
   def successful_void_response
-    "{\"authcode\":\"REVERS\",\"respproc\":\"FNOR\",\"amount\":\"0.00\",\"resptext\":\"Approval\",\"currency\":\"USD\",\"retref\":\"363664261982\",\"respstat\":\"A\",\"respcode\":\"00\",\"merchid\":\"496160873888\"}"
+    '{"authcode":"REVERS","respproc":"FNOR","amount":"0.00","resptext":"Approval","currency":"USD","retref":"363664261982","respstat":"A","respcode":"00","merchid":"496160873888"}'
   end
 
   def failed_void_response
-    "{\"respproc\":\"PPS\",\"resptext\":\"Txn not found\",\"retref\":\"23221\",\"respcode\":\"29\",\"respstat\":\"C\"}"
+    '{"respproc":"PPS","resptext":"Txn not found","retref":"23221","respcode":"29","respstat":"C"}'
   end
 
   def successful_verify_response
-    "{\"amount\":\"0.00\",\"resptext\":\"Approval\",\"commcard\":\" C \",\"cvvresp\":\"M\",\"avsresp\":\" \",\"respcode\":\"00\",\"merchid\":\"496160873888\",\"token\":\"9405701444882224\",\"authcode\":\"PPS585\",\"respproc\":\"FNOR\",\"retref\":\"363272166977\",\"respstat\":\"A\",\"account\":\"9405701444882224\"}"
+    '{"amount":"0.00","resptext":"Approval","commcard":" C ","cvvresp":"M","avsresp":" ","respcode":"00","merchid":"496160873888","token":"9405701444882224","authcode":"PPS585","respproc":"FNOR","retref":"363272166977","respstat":"A","account":"9405701444882224"}'
   end
 
   def failed_verify_response
-    "{\"respproc\":\"FNOR\",\"amount\":\"0.00\",\"resptext\":\"Insufficient funds\",\"cardproc\":\"FNOR\",\"commcard\":\" C \",\"retref\":\"005101240599\",\"respstat\":\"C\",\"respcode\":\"NU\",\"account\":\"9435885049491053\",\"merchid\":\"496160873888\",\"token\":\"9435885049491053\"}"
+    '{"respproc":"FNOR","amount":"0.00","resptext":"Insufficient funds","cardproc":"FNOR","commcard":" C ","retref":"005101240599","respstat":"C","respcode":"NU","account":"9435885049491053","merchid":"496160873888","token":"9435885049491053"}'
   end
 
   def successful_store_response
-    "{\"country\":\"CA\",\"gsacard\":\"N\",\"address\":\"456 My Street Apt 1\",\"resptext\":\"Profile Saved\",\"city\":\"Ottawa\",\"acctid\":\"1\",\"respcode\":\"09\",\"defaultacct\":\"Y\",\"accttype\":\"VISA\",\"token\":\"9477709629051443\",\"respproc\":\"PPS\",\"phone\":\"(555)555-555\",\"profileid\":\"16700875781344019340\",\"name\":\"Longbob Longsen\",\"auoptout\":\"N\",\"postal\":\"K1C2N6\",\"expiry\":\"0919\",\"region\":\"ON\",\"respstat\":\"A\"}"
+    '{"country":"CA","gsacard":"N","address":"456 My Street Apt 1","resptext":"Profile Saved","city":"Ottawa","acctid":"1","respcode":"09","defaultacct":"Y","accttype":"VISA","token":"9477709629051443","respproc":"PPS","phone":"(555)555-555","profileid":"16700875781344019340","name":"Longbob Longsen","auoptout":"N","postal":"K1C2N6","expiry":"0919","region":"ON","respstat":"A"}'
   end
 
   def successful_unstore_response
-    "{\"respproc\":\"PPS\",\"resptext\":\"Profile Deleted\",\"respstat\":\"A\",\"respcode\":\"08\"}"
+    '{"respproc":"PPS","resptext":"Profile Deleted","respstat":"A","respcode":"08"}'
   end
 
   def failed_store_response
     # Best-guess based on documentation
-    "{\"country\":\"CA\",\"gsacard\":\"N\",\"address\":\"456 My Street Apt 1\",\"resptext\":\"Profile Saved\",\"city\":\"Ottawa\",\"acctid\":\"1\",\"respcode\":\"09\",\"defaultacct\":\"Y\",\"accttype\":\"VISA\",\"token\":\"9477709629051443\",\"respproc\":\"PPS\",\"phone\":\"(555)555-555\",\"profileid\":\"16700875781344019340\",\"name\":\"Longbob Longsen\",\"auoptout\":\"N\",\"postal\":\"K1C2N6\",\"expiry\":\"0919\",\"region\":\"ON\",\"respstat\":\"C\"}"
+    '{"country":"CA","gsacard":"N","address":"456 My Street Apt 1","resptext":"Profile Saved","city":"Ottawa","acctid":"1","respcode":"09","defaultacct":"Y","accttype":"VISA","token":"9477709629051443","respproc":"PPS","phone":"(555)555-555","profileid":"16700875781344019340","name":"Longbob Longsen","auoptout":"N","postal":"K1C2N6","expiry":"0919","region":"ON","respstat":"C"}'
   end
 
   def failed_unstore_response
-    "{\"respproc\":\"PPS\",\"resptext\":\"Profile not found\",\"respstat\":\"C\",\"respcode\":\"96\"}"
+    '{"respproc":"PPS","resptext":"Profile not found","respstat":"C","respcode":"96"}'
   end
 end

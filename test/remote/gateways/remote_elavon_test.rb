@@ -8,7 +8,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     @bad_credit_card = credit_card('invalid')
 
     @options = {
-      :email => "paul@domain.com",
+      :email => 'paul@domain.com',
       :description => 'Test Transaction',
       :billing_address => address,
       :ip => '203.0.113.0'
@@ -68,8 +68,8 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "APPROVAL", response.message
-    assert_success response.responses.last, "The void should succeed"
+    assert_equal 'APPROVAL', response.message
+    assert_success response.responses.last, 'The void should succeed'
   end
 
   def test_failed_verify
@@ -160,13 +160,13 @@ class RemoteElavonTest < Test::Unit::TestCase
   def test_unsuccessful_store
     assert response = @gateway.store(@bad_credit_card, @options)
     assert_failure response
-    assert_equal "The Credit Card Number supplied in the authorization request appears to be invalid.", response.message
+    assert_equal 'The Credit Card Number supplied in the authorization request appears to be invalid.', response.message
     assert response.test?
   end
 
   def test_successful_update
     store_response = @gateway.store(@credit_card, @options)
-    token = store_response.params["token"]
+    token = store_response.params['token']
     credit_card = credit_card('4124939999999990', :month => 10)
     assert response = @gateway.update(token, credit_card, @options)
     assert_success response
@@ -182,7 +182,7 @@ class RemoteElavonTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_token
     store_response = @gateway.store(@credit_card, @options)
-    token = store_response.params["token"]
+    token = store_response.params['token']
     assert response = @gateway.purchase(@amount, token, @options)
     assert_success response
     assert response.test?
@@ -197,7 +197,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_custom_fields
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: {a_key: "a value"}))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: {a_key: 'a value'}))
 
     assert_success response
     assert response.test?

@@ -4,9 +4,9 @@ class GlobalCollectTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = GlobalCollectGateway.new(merchant_id: "1234",
-                                        api_key_id: "39u4193urng12",
-                                        secret_api_key: "109H/288H*50Y18W4/0G8571F245KA=")
+    @gateway = GlobalCollectGateway.new(merchant_id: '1234',
+                                        api_key_id: '39u4193urng12',
+                                        secret_api_key: '109H/288H*50Y18W4/0G8571F245KA=')
 
     @credit_card = credit_card('4567350000427977')
     @declined_card = credit_card('5424180279791732')
@@ -24,7 +24,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "000000142800000000920000100001", response.authorization
+    assert_equal '000000142800000000920000100001', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@accepted_amount, response.authorization)
@@ -41,7 +41,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
 
     assert_success response
-    assert_equal "CAPTURE_REQUESTED", response.params["payment"]["status"]
+    assert_equal 'CAPTURE_REQUESTED', response.params['payment']['status']
     assert_equal 1, response.responses.size
   end
 
@@ -68,12 +68,12 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_successful_authorization_with_extra_options
     options = @options.merge(
       {
-        order_id: "123",
-        ip: "127.0.0.1",
+        order_id: '123',
+        ip: '127.0.0.1',
         fraud_fields:
         {
-          "website" => "www.example.com",
-          "giftMessage" => "Happy Day!"
+          'website' => 'www.example.com',
+          'giftMessage' => 'Happy Day!'
         }
       }
     )
@@ -89,7 +89,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_trucates_first_name_to_15_chars
-    credit_card = credit_card('4567350000427977', { first_name: "thisisaverylongfirstname" })
+    credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname' })
 
     response = stub_comms do
       @gateway.authorize(@accepted_amount, credit_card, @options)
@@ -98,7 +98,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "000000142800000000920000100001", response.authorization
+    assert_equal '000000142800000000920000100001', response.authorization
   end
 
   def test_failed_authorize
@@ -107,12 +107,12 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Not authorised", response.message
+    assert_equal 'Not authorised', response.message
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "", @options)
+      @gateway.capture(100, '', @options)
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -124,7 +124,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
 
     assert_success response
-    assert_equal "000000142800000000920000100001", response.authorization
+    assert_equal '000000142800000000920000100001', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -137,7 +137,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("5d53a33d960c46d00f5dc061947d998c")
+      @gateway.void('5d53a33d960c46d00f5dc061947d998c')
     end.check_request do |endpoint, data, headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, endpoint)
     end.respond_with(failed_void_response)
@@ -149,7 +149,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_verify_response)
-    assert_equal "000000142800000000920000100001", response.authorization
+    assert_equal '000000142800000000920000100001', response.authorization
 
     assert_success response
   end
@@ -158,7 +158,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_verify_response)
-    assert_equal "cee09c50-5d9d-41b8-b740-8c7bf06d2c66", response.authorization
+    assert_equal 'cee09c50-5d9d-41b8-b740-8c7bf06d2c66', response.authorization
 
     assert_failure response
   end
@@ -168,7 +168,7 @@ class GlobalCollectTest < Test::Unit::TestCase
       @gateway.authorize(@accepted_amount, @credit_card, @options)
     end.respond_with(successful_authorize_response)
 
-    assert_equal "000000142800000000920000100001", response.authorization
+    assert_equal '000000142800000000920000100001', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@accepted_amount, response.authorization)
@@ -193,7 +193,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -205,8 +205,8 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.respond_with(rejected_refund_response)
 
     assert_failure response
-    assert_equal "1850", response.error_code
-    assert_equal "Status: REJECTED", response.message
+    assert_equal '1850', response.error_code
+    assert_equal 'Status: REJECTED', response.message
   end
 
   def test_scrub

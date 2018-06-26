@@ -80,12 +80,12 @@ class PinTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "The current resource was deemed invalid.", response.message
+    assert_equal 'The current resource was deemed invalid.', response.message
     assert response.test?
   end
 
   def test_unparsable_body_of_successful_response
-    @gateway.stubs(:raw_ssl_request).returns(MockResponse.succeeded("This is not [ JSON"))
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.succeeded('This is not [ JSON'))
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -93,7 +93,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_unparsable_body_of_failed_response
-    @gateway.stubs(:raw_ssl_request).returns(MockResponse.failed("This is not [ JSON"))
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.failed('This is not [ JSON'))
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -114,7 +114,7 @@ class PinTest < Test::Unit::TestCase
 
     assert response = @gateway.store(@credit_card, @options)
     assert_failure response
-    assert_equal "The current resource was deemed invalid.", response.message
+    assert_equal 'The current resource was deemed invalid.', response.message
     assert response.test?
   end
 
@@ -144,7 +144,7 @@ class PinTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(100, token)
     assert_failure response
-    assert_equal "The current resource was deemed invalid.", response.message
+    assert_equal 'The current resource was deemed invalid.', response.message
     assert response.test?
   end
 
@@ -299,8 +299,8 @@ class PinTest < Test::Unit::TestCase
 
   def test_headers
     expected_headers = {
-      "Content-Type" => "application/json",
-      "Authorization" => "Basic #{Base64.strict_encode64('I_THISISNOTAREALAPIKEY:').strip}"
+      'Content-Type' => 'application/json',
+      'Authorization' => "Basic #{Base64.strict_encode64('I_THISISNOTAREALAPIKEY:').strip}"
     }
 
     @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)

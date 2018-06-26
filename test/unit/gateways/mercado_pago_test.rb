@@ -21,8 +21,8 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "4141491|1.0", response.authorization
-    assert_equal "accredited", response.message
+    assert_equal '4141491|1.0', response.authorization
+    assert_equal 'accredited', response.message
     assert response.test?
   end
 
@@ -31,8 +31,8 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "rejected", response.error_code
-    assert_equal "cc_rejected_other_reason", response.message
+    assert_equal 'rejected', response.error_code
+    assert_equal 'cc_rejected_other_reason', response.message
   end
 
   def test_successful_authorize
@@ -41,8 +41,8 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "4261941|1.0", response.authorization
-    assert_equal "pending_capture", response.message
+    assert_equal '4261941|1.0', response.authorization
+    assert_equal 'pending_capture', response.message
     assert response.test?
   end
 
@@ -51,29 +51,29 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "rejected", response.error_code
-    assert_equal "cc_rejected_other_reason", response.message
+    assert_equal 'rejected', response.error_code
+    assert_equal 'cc_rejected_other_reason', response.message
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "authorization|amount")
+    response = @gateway.capture(@amount, 'authorization|amount')
     assert_success response
 
-    assert_equal "4261941|1.0", response.authorization
-    assert_equal "accredited", response.message
+    assert_equal '4261941|1.0', response.authorization
+    assert_equal 'accredited', response.message
     assert response.test?
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "")
+    response = @gateway.capture(@amount, '')
     assert_failure response
 
-    assert_equal "|1.0", response.authorization
-    assert_equal "Method not allowed", response.message
+    assert_equal '|1.0', response.authorization
+    assert_equal 'Method not allowed', response.message
     assert response.test?
   end
 
@@ -95,22 +95,22 @@ class MercadoPagoTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_void_response)
 
-    response = @gateway.void("authorization|amount")
+    response = @gateway.void('authorization|amount')
     assert_success response
 
-    assert_equal "4261966|", response.authorization
-    assert_equal "by_collector", response.message
+    assert_equal '4261966|', response.authorization
+    assert_equal 'by_collector', response.message
     assert response.test?
   end
 
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void("")
+    response = @gateway.void('')
     assert_failure response
 
-    assert_equal "|", response.authorization
-    assert_equal "Method not allowed", response.message
+    assert_equal '|', response.authorization
+    assert_equal 'Method not allowed', response.message
     assert response.test?
   end
 
@@ -120,7 +120,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
 
-    assert_equal "by_collector", response.message
+    assert_equal 'by_collector', response.message
     assert response.test?
   end
 
@@ -130,7 +130,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
 
-    assert_equal "Method not allowed", response.message
+    assert_equal 'Method not allowed', response.message
     assert response.test?
   end
 
@@ -140,7 +140,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
 
-    assert_equal "cc_rejected_other_reason", response.message
+    assert_equal 'cc_rejected_other_reason', response.message
     assert response.test?
   end
 

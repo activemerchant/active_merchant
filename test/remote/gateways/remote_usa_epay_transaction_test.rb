@@ -7,7 +7,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
     @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
     @check = check
-    @options = { :billing_address => address(:zip => "27614", :state => "NC"), :shipping_address => address }
+    @options = { :billing_address => address(:zip => '27614', :state => 'NC'), :shipping_address => address }
     @amount = 100
   end
 
@@ -44,7 +44,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
    end
 
   def test_successful_purchase_with_extra_details
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => generate_unique_id, :description => "socool"))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => generate_unique_id, :description => 'socool'))
     assert_equal 'Success', response.message
     assert_success response
   end
@@ -111,7 +111,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert refund = @gateway.refund(@amount - 20, "unknown_authorization")
+    assert refund = @gateway.refund(@amount - 20, 'unknown_authorization')
     assert_failure refund
     assert_match(/Unable to find original transaction/, refund.message)
   end
@@ -133,7 +133,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_void
-    assert void = @gateway.void("unknown_authorization")
+    assert void = @gateway.void('unknown_authorization')
     assert_failure void
     assert_match(/Unable to locate transaction/, void.message)
   end
@@ -155,7 +155,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_void_release
-    assert void = @gateway.void("unknown_authorization", void_mode: :void_release)
+    assert void = @gateway.void('unknown_authorization', void_mode: :void_release)
     assert_failure void
     assert_match(/Unable to locate transaction/, void.message)
   end
@@ -170,14 +170,14 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Success", response.message
-    assert_success response.responses.last, "The void should succeed"
+    assert_equal 'Success', response.message
+    assert_success response.responses.last, 'The void should succeed'
   end
 
   def test_failed_verify
     assert response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match "Card Declined (00)", response.message
+    assert_match 'Card Declined (00)', response.message
   end
 
   def test_transcript_scrubbing

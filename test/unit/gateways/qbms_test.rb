@@ -5,8 +5,8 @@ class QbmsTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = QbmsGateway.new(
-      :login  => "test",
-      :ticket => "abc123",
+      :login  => 'test',
+      :ticket => 'abc123',
       :pem    => 'PEM')
 
     @amount = 100
@@ -45,7 +45,7 @@ class QbmsTest < Test::Unit::TestCase
       with(anything, regexp_matches(/12345 Ridiculously Lengthy Roa\<.*445566778\</), anything).
       returns(charge_response)
 
-    options = { :billing_address => address.update(:address1 => "12345 Ridiculously Lengthy Road Name", :zip => '4455667788') }
+    options = { :billing_address => address.update(:address1 => '12345 Ridiculously Lengthy Road Name', :zip => '4455667788') }
     assert response = @gateway.purchase(@amount, @card, options)
     assert_success response
   end
@@ -61,7 +61,7 @@ class QbmsTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_post).returns(void_response)
 
-    assert response = @gateway.void("x")
+    assert response = @gateway.void('x')
     assert_instance_of Response, response
     assert_success response
   end
@@ -70,7 +70,7 @@ class QbmsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(credit_response)
 
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      assert response = @gateway.credit(@amount, "x")
+      assert response = @gateway.credit(@amount, 'x')
       assert_instance_of Response, response
       assert_success response
     end
@@ -79,7 +79,7 @@ class QbmsTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(credit_response)
 
-    assert response = @gateway.refund(@amount, "x")
+    assert response = @gateway.refund(@amount, 'x')
     assert_instance_of Response, response
     assert_success response
   end
@@ -90,17 +90,17 @@ class QbmsTest < Test::Unit::TestCase
     assert_equal 'Y', response.avs_result['street_match']
     assert_equal 'Y', response.avs_result['postal_match']
 
-    @gateway.expects(:ssl_post).returns(authorization_response(:avs_street => "Fail"))
+    @gateway.expects(:ssl_post).returns(authorization_response(:avs_street => 'Fail'))
     assert response = @gateway.authorize(@amount, @card)
     assert_equal 'N', response.avs_result['street_match']
     assert_equal 'Y', response.avs_result['postal_match']
 
-    @gateway.expects(:ssl_post).returns(authorization_response(:avs_zip => "Fail"))
+    @gateway.expects(:ssl_post).returns(authorization_response(:avs_zip => 'Fail'))
     assert response = @gateway.authorize(@amount, @card)
     assert_equal 'Y', response.avs_result['street_match']
     assert_equal 'N', response.avs_result['postal_match']
 
-    @gateway.expects(:ssl_post).returns(authorization_response(:avs_street => "Fail", :avs_zip => "Fail"))
+    @gateway.expects(:ssl_post).returns(authorization_response(:avs_street => 'Fail', :avs_zip => 'Fail'))
     assert response = @gateway.authorize(@amount, @card)
     assert_equal 'N', response.avs_result['street_match']
     assert_equal 'N', response.avs_result['postal_match']
@@ -111,11 +111,11 @@ class QbmsTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @card)
     assert_equal 'M', response.cvv_result['code']
 
-    @gateway.expects(:ssl_post).returns(authorization_response(:card_security_code_match => "Fail"))
+    @gateway.expects(:ssl_post).returns(authorization_response(:card_security_code_match => 'Fail'))
     assert response = @gateway.authorize(@amount, @card)
     assert_equal 'N', response.cvv_result['code']
 
-    @gateway.expects(:ssl_post).returns(authorization_response(:card_security_code_match => "NotAvailable"))
+    @gateway.expects(:ssl_post).returns(authorization_response(:card_security_code_match => 'NotAvailable'))
     assert response = @gateway.authorize(@amount, @card)
     assert_equal 'P', response.cvv_result['code']
   end
@@ -147,7 +147,7 @@ class QbmsTest < Test::Unit::TestCase
   def test_use_test_url_when_overwriting_with_test_option
     ActiveMerchant::Billing::Base.mode = :production
 
-    @gateway = QbmsGateway.new(:login => "test", :ticket => "abc123", :test => true)
+    @gateway = QbmsGateway.new(:login => 'test', :ticket => 'abc123', :test => true)
     @gateway.stubs(:parse).returns({})
     @gateway.expects(:ssl_post).with(QbmsGateway.test_url, anything, anything).returns(authorization_response)
     @gateway.authorize(@amount, @card)
@@ -163,7 +163,7 @@ class QbmsTest < Test::Unit::TestCase
   # helper methods start here
 
   def query_response(opts = {})
-    wrap "MerchantAccountQuery", opts, <<-"XML"
+    wrap 'MerchantAccountQuery', opts, <<-"XML"
       <ConvenienceFees>0.0</ConvenienceFees>
       <CreditCardType>Visa</CreditCardType>
       <CreditCardType>MasterCard</CreditCardType>
@@ -173,12 +173,12 @@ class QbmsTest < Test::Unit::TestCase
 
   def authorization_response(opts = {})
     opts = {
-      :avs_street               => "Pass",
-      :avs_zip                  => "Pass",
-      :card_security_code_match => "Pass",
+      :avs_street               => 'Pass',
+      :avs_zip                  => 'Pass',
+      :card_security_code_match => 'Pass',
     }.merge(opts)
 
-    wrap "CustomerCreditCardAuth", opts, <<-"XML"
+    wrap 'CustomerCreditCardAuth', opts, <<-"XML"
       <CreditCardTransID>1000</CreditCardTransID>
       <AuthorizationCode>STRTYPE</AuthorizationCode>
       <AVSStreet>#{opts[:avs_street]}</AVSStreet>
@@ -189,7 +189,7 @@ class QbmsTest < Test::Unit::TestCase
   end
 
   def capture_response(opts = {})
-    wrap "CustomerCreditCardCapture", opts, <<-"XML"
+    wrap 'CustomerCreditCardCapture', opts, <<-"XML"
       <CreditCardTransID>1000</CreditCardTransID>
       <AuthorizationCode>STRTYPE</AuthorizationCode>
       <MerchantAccountNumber>STRTYPE</MerchantAccountNumber>
@@ -200,12 +200,12 @@ class QbmsTest < Test::Unit::TestCase
 
   def charge_response(opts = {})
     opts = {
-      :avs_street               => "Pass",
-      :avs_zip                  => "Pass",
-      :card_security_code_match => "Pass",
+      :avs_street               => 'Pass',
+      :avs_zip                  => 'Pass',
+      :card_security_code_match => 'Pass',
     }.merge(opts)
 
-    wrap "CustomerCreditCardCharge", opts, <<-"XML"
+    wrap 'CustomerCreditCardCharge', opts, <<-"XML"
       <CreditCardTransID>1000</CreditCardTransID>
       <AuthorizationCode>STRTYPE</AuthorizationCode>
       <AVSStreet>#{opts[:avs_street]}</AVSStreet>
@@ -218,14 +218,14 @@ class QbmsTest < Test::Unit::TestCase
   end
 
   def void_response(opts = {})
-    wrap "CustomerCreditCardTxnVoid", opts, <<-"XML"
+    wrap 'CustomerCreditCardTxnVoid', opts, <<-"XML"
       <CreditCardTransID>1000</CreditCardTransID>
       <ClientTransID>STRTYPE</ClientTransID>
     XML
   end
 
   def credit_response(opts = {})
-    wrap "CustomerCreditCardTxnVoidOrRefund", opts, <<-"XML"
+    wrap 'CustomerCreditCardTxnVoidOrRefund', opts, <<-"XML"
       <CreditCardTransID>1000</CreditCardTransID>
       <VoidOrRefundTxnType>STRTYPE</VoidOrRefundTxnType>
       <MerchantAccountNumber>STRTYPE</MerchantAccountNumber>
@@ -237,7 +237,7 @@ class QbmsTest < Test::Unit::TestCase
   def wrap(type, opts, xml)
     opts = {
       :signon_status_code => 0,
-      :request_id         => "x",
+      :request_id         => 'x',
       :status_code        => 0,
     }.merge(opts)
 

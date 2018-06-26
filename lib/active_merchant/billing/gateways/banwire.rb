@@ -40,13 +40,13 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_response_type(post)
-        post[:response_format] = "JSON"
+        post[:response_format] = 'JSON'
       end
 
       def add_customer_data(post, options)
         post[:user] = @options[:login]
         post[:phone] = options[:billing_address][:phone]
-        post[:mail] = options[:email] || "unspecified@email.com"
+        post[:mail] = options[:email] || 'unspecified@email.com'
       end
 
       def add_order_data(post, options)
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       def card_brand(card)
         brand = super
-        ({"master" => "mastercard", "american_express" => "amex"}[brand] || brand)
+        ({'master' => 'mastercard', 'american_express' => 'amex'}[brand] || brand)
       end
 
       def parse(body)
@@ -90,25 +90,25 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(success?(response),
-                     response["message"],
+                     response['message'],
                      response,
                      :test => test?,
-                     :authorization => response["code_auth"])
+                     :authorization => response['code_auth'])
       end
 
       def success?(response)
-        (response["response"] == "ok")
+        (response['response'] == 'ok')
       end
 
       def post_data(parameters = {})
-        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def json_error(raw_response)
         msg = 'Invalid response received from the Banwire API.  Please contact Banwire support if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          "message" => msg
+          'message' => msg
         }
       end
     end

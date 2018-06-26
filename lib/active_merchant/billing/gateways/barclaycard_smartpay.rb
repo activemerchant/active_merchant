@@ -160,11 +160,11 @@ module ActiveMerchant #:nodoc:
         authorization = [parameters[:originalReference], response['pspReference']].compact
 
         return nil if authorization.empty?
-        return authorization.join("#")
+        return authorization.join('#')
       end
 
       def parse_avs_code(response)
-        AVS_MAPPING[response["avsResult"][0..1].strip] if response["avsResult"]
+        AVS_MAPPING[response['avsResult'][0..1].strip] if response['avsResult']
       end
 
       def flatten_hash(hash, prefix = nil)
@@ -249,13 +249,13 @@ module ActiveMerchant #:nodoc:
       def parse_street(address)
         address_to_parse = "#{address[:address1]} #{address[:address2]}"
         street = address[:street] || address_to_parse.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
-        street.empty? ? "Not Provided" : street
+        street.empty? ? 'Not Provided' : street
       end
 
       def parse_house_number(address)
         address_to_parse = "#{address[:address1]} #{address[:address2]}"
         house = address[:houseNumberOrName] || address_to_parse.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
-        house.empty? ? "Not Provided" : house
+        house.empty? ? 'Not Provided' : house
       end
 
       def create_address_hash(address, house, street)
@@ -295,7 +295,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def psp_reference_from(authorization)
-        authorization.nil? ? nil : authorization.split("#").first
+        authorization.nil? ? nil : authorization.split('#').first
       end
 
       def payment_request(money, options)

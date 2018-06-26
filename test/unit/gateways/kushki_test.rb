@@ -22,12 +22,12 @@ class KushkiTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_options
     options = {
-      currency: "USD",
+      currency: 'USD',
       amount: {
-        subtotal_iva_0: "4.95",
-        subtotal_iva: "10",
-        iva: "1.54",
-        ice: "3.50"
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50'
       }
     }
 
@@ -50,12 +50,12 @@ class KushkiTest < Test::Unit::TestCase
 
   def test_taxes_are_excluded_when_not_provided
     options = {
-      currency: "COP",
+      currency: 'COP',
       amount: {
-        subtotal_iva_0: "4.95",
-        subtotal_iva: "10",
-        iva: "1.54",
-        ice: "3.50"
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50'
       }
     }
 
@@ -79,12 +79,12 @@ class KushkiTest < Test::Unit::TestCase
 
   def test_partial_taxes_do_not_error
     options = {
-      currency: "COP",
+      currency: 'COP',
       amount: {
-        subtotal_iva_0: "4.95",
-        subtotal_iva: "10",
-        iva: "1.54",
-        ice: "3.50",
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
         extra_taxes: {
           tasa_aeroportuaria: 0.2,
           iac: 0.4
@@ -114,12 +114,12 @@ class KushkiTest < Test::Unit::TestCase
 
   def test_taxes_are_included_when_provided
     options = {
-      currency: "COP",
+      currency: 'COP',
       amount: {
-        subtotal_iva_0: "4.95",
-        subtotal_iva: "10",
-        iva: "1.54",
-        ice: "3.50",
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50',
         extra_taxes: {
           propina: 0.1,
           tasa_aeroportuaria: 0.2,
@@ -151,7 +151,7 @@ class KushkiTest < Test::Unit::TestCase
   def test_failed_purchase
     options = {
       amount: {
-        subtotal_iva: "200"
+        subtotal_iva: '200'
       }
     }
 
@@ -210,7 +210,7 @@ class KushkiTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void("000")
+    response = @gateway.void('000')
     assert_failure response
     assert_equal 'Tipo de moneda no válida', response.message
     assert_equal '205', response.error_code

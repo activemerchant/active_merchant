@@ -1,9 +1,9 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BorgunGateway < Gateway
-      self.display_name = "Borgun"
+      self.display_name = 'Borgun'
       self.homepage_url = 'http://www.borgun.com'
 
       self.test_url = 'https://gatewaytest.borgun.is/ws/Heimir.pub.ws:Authorization'
@@ -77,9 +77,9 @@ module ActiveMerchant #:nodoc:
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
-      CURRENCY_CODES["ISK"] = "352"
-      CURRENCY_CODES["EUR"] = "978"
-      CURRENCY_CODES["USD"] = "840"
+      CURRENCY_CODES['ISK'] = '352'
+      CURRENCY_CODES['EUR'] = '978'
+      CURRENCY_CODES['USD'] = '840'
 
       def add_invoice(post, money, options)
         post[:TrAmount] = amount(money)
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
         post[:PAN] = payment_method.number
         post[:ExpDate] = format(payment_method.year, :two_digits) + format(payment_method.month, :two_digits)
         post[:CVC2] = payment_method.verification_value
-        post[:DateAndTime] = Time.now.strftime("%y%m%d%H%M%S")
+        post[:DateAndTime] = Time.now.strftime('%y%m%d%H%M%S')
         post[:RRN] = 'AMRCNT' + six_random_digits
       end
 
@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
           response[:message] || "Error with ActionCode=#{response[:actioncode]}"
         end
@@ -167,11 +167,11 @@ module ActiveMerchant #:nodoc:
           response[:transtype],
           response[:tramount],
           response[:trcurrency]
-        ].join("|")
+        ].join('|')
       end
 
       def split_authorization(authorization)
-        dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency = authorization.split("|")
+        dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency = authorization.split('|')
         [dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency]
       end
 

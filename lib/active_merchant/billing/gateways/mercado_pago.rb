@@ -11,8 +11,8 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
 
       CARD_BRAND = {
-        "american_express" => "amex",
-        "diners_club" => "diners"
+        'american_express' => 'amex',
+        'diners_club' => 'diners'
       }
 
       def initialize(options={})
@@ -22,41 +22,41 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         MultiResponse.run do |r|
-          r.process { commit("tokenize", "card_tokens", card_token_request(money, payment, options)) }
+          r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options.merge!(card_brand: (CARD_BRAND[payment.brand] || payment.brand))
-          options.merge!(card_token: r.authorization.split("|").first)
-          r.process { commit("purchase", "payments", purchase_request(money, payment, options) ) }
+          options.merge!(card_token: r.authorization.split('|').first)
+          r.process { commit('purchase', 'payments', purchase_request(money, payment, options) ) }
         end
       end
 
       def authorize(money, payment, options={})
         MultiResponse.run do |r|
-          r.process { commit("tokenize", "card_tokens", card_token_request(money, payment, options)) }
+          r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options.merge!(card_brand: (CARD_BRAND[payment.brand] || payment.brand))
-          options.merge!(card_token: r.authorization.split("|").first)
-          r.process { commit("authorize", "payments", authorize_request(money, payment, options) ) }
+          options.merge!(card_token: r.authorization.split('|').first)
+          r.process { commit('authorize', 'payments', authorize_request(money, payment, options) ) }
         end
       end
 
       def capture(money, authorization, options={})
         post = {}
-        authorization, _ = authorization.split("|")
+        authorization, _ = authorization.split('|')
         post[:capture] = true
         post[:transaction_amount] = amount(money).to_f
-        commit("capture", "payments/#{authorization}", post)
+        commit('capture', "payments/#{authorization}", post)
       end
 
       def refund(money, authorization, options={})
         post = {}
-        authorization, original_amount = authorization.split("|")
+        authorization, original_amount = authorization.split('|')
         post[:amount] = amount(money).to_f if original_amount && original_amount.to_f > amount(money).to_f
-        commit("refund", "payments/#{authorization}/refunds", post)
+        commit('refund', "payments/#{authorization}/refunds", post)
       end
 
       def void(authorization, options={})
-        authorization, _ = authorization.split("|")
-        post = { status: "cancelled" }
-        commit("void", "payments/#{authorization}", post)
+        authorization, _ = authorization.split('|')
+        post = { status: 'cancelled' }
+        commit('void', "payments/#{authorization}", post)
       end
 
       def verify(credit_card, options={})
@@ -161,10 +161,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_street_address(address1)
-        street_number = address1.split(" ").first
+        street_number = address1.split(' ').first
 
-        if street_name = address1.split(" ")[1..-1]
-          street_name = street_name.join(" ")
+        if street_name = address1.split(' ')[1..-1]
+          street_name = street_name.join(' ')
         else
           nil
         end
@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, path, parameters)
-        if ["capture", "void"].include?(action)
+        if ['capture', 'void'].include?(action)
           response = parse(ssl_request(:put, url(path), post_data(parameters), headers))
         else
           response = parse(ssl_post(url(path), post_data(parameters), headers(parameters)))
@@ -207,19 +207,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(action, response)
-        if action == "refund"
-          response["error"].nil?
+        if action == 'refund'
+          response['error'].nil?
         else
-          ["active", "approved", "authorized", "cancelled", "in_process"].include?(response["status"])
+          ['active', 'approved', 'authorized', 'cancelled', 'in_process'].include?(response['status'])
         end
       end
 
       def message_from(response)
-        (response["status_detail"]) || (response["message"])
+        (response['status_detail']) || (response['message'])
       end
 
       def authorization_from(response, params)
-        [response["id"], params[:transaction_amount]].join("|")
+        [response['id'], params[:transaction_amount]].join('|')
       end
 
       def post_data(parameters = {})
@@ -228,10 +228,10 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(action, response)
         unless success_from(action, response)
-          if cause = response["cause"]
-            cause.empty? ? nil : cause.first["code"]
+          if cause = response['cause']
+            cause.empty? ? nil : cause.first['code']
           else
-            response["status"]
+            response['status']
           end
         end
       end
@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         headers = {
-          "Content-Type" => "application/json"
+          'Content-Type' => 'application/json'
         }
         headers['X-Device-Session-ID'] = options[:device_id] if options[:device_id]
         headers

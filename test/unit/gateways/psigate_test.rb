@@ -9,7 +9,7 @@ class PsigateTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @options = { :order_id => "1", :billing_address => address }
+    @options = { :order_id => '1', :billing_address => address }
   end
 
   def test_successful_authorization
@@ -38,23 +38,23 @@ class PsigateTest < Test::Unit::TestCase
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", @options)
+      @gateway.credit(@amount, 'transaction_id', @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.refund(@amount, "transaction_id", @options)
+    @gateway.refund(@amount, 'transaction_id', @options)
   end
 
   def test_void
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.void("transaction_id;1", @options)
+    @gateway.void('transaction_id;1', @options)
   end
 
   def test_amount_style

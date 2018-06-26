@@ -37,7 +37,7 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '123456;00000000-0000-0000-0000-00000000000', response.authorization
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
@@ -58,7 +58,7 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '123456;00000000-0000-0000-0000-00000000000', response.authorization
-    assert_equal "APPROVAL", response.message
+    assert_equal 'APPROVAL', response.message
     assert response.test?
   end
 
@@ -71,7 +71,7 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '123456;00000000-0000-0000-0000-00000000000', response.authorization
-    assert_equal "APPROVAL", response.message
+    assert_equal 'APPROVAL', response.message
     assert response.test?
   end
 
@@ -89,7 +89,7 @@ class ElavonTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '123456;00000000-0000-0000-0000-00000000000', response.authorization
-    assert_equal "APPROVAL", response.message
+    assert_equal 'APPROVAL', response.message
     assert response.test?
   end
 
@@ -176,7 +176,7 @@ class ElavonTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorization_response, failed_void_response)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
   end
 
   def test_unsuccessful_verify
@@ -184,7 +184,7 @@ class ElavonTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorization_response, successful_void_response)
     assert_failure response
-    assert_equal "The Credit Card Number supplied in the authorization request appears to be invalid.", response.message
+    assert_equal 'The Credit Card Number supplied in the authorization request appears to be invalid.', response.message
   end
 
   def test_invalid_login
@@ -218,7 +218,7 @@ class ElavonTest < Test::Unit::TestCase
 
     assert response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal '7595301425001111', response.params["token"]
+    assert_equal '7595301425001111', response.params['token']
     assert response.test?
   end
 
@@ -267,7 +267,7 @@ class ElavonTest < Test::Unit::TestCase
 
   def test_custom_fields_in_request
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:customer_number => '123', :custom_fields => {:a_key => "a value"}))
+      @gateway.purchase(@amount, @credit_card, @options.merge(:customer_number => '123', :custom_fields => {:a_key => 'a value'}))
     end.check_request do |endpoint, data, headers|
       assert_match(/customer_number=123/, data)
       assert_match(/a_key/, data)

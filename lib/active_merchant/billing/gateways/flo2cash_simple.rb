@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("ProcessPurchase", post)
+        commit('ProcessPurchase', post)
       end
 
       # Flo2Cash's "simple mode" does not support auth/capture

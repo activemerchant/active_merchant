@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
 
       def do_authorize(params)
         headers = {}
-        headers['Referer'] = (options[:password] || "activemerchant.org")
+        headers['Referer'] = (options[:password] || 'activemerchant.org')
 
         response = raw_ssl_request(:post, live_url + 'auth/default.aspx', authorize_post_data(params), headers)
 
@@ -244,7 +244,7 @@ module ActiveMerchant #:nodoc:
       def make_headers(data, soap_call)
         {
           'Content-Type' => 'text/xml; charset=utf-8',
-          'Host' => "ssl.ditonlinebetalingssystem.dk",
+          'Host' => 'ssl.ditonlinebetalingssystem.dk',
           'Content-Length' => data.size.to_s,
           'SOAPAction' => self.live_url + 'remote/payment/' + soap_call
         }
@@ -274,12 +274,12 @@ module ActiveMerchant #:nodoc:
         params[:declineurl] = live_url + 'auth/default.aspx?decline=1'
         params[:merchantnumber] = @options[:login]
 
-        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       # Limited to 20 digits max
       def format_order_number(number)
-        number.to_s.gsub(/[^\w]/, '').rjust(4, "0")[0...20]
+        number.to_s.gsub(/[^\w]/, '').rjust(4, '0')[0...20]
       end
     end
   end

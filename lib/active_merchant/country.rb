@@ -317,7 +317,7 @@ module ActiveMerchant #:nodoc:
     ]
 
     def self.find(name)
-      raise InvalidCountryCodeError, "Cannot lookup country for an empty name" if name.blank?
+      raise InvalidCountryCodeError, 'Cannot lookup country for an empty name' if name.blank?
 
       case name.length
       when 2, 3

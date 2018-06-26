@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options={})
         post = create_post_for_auth_or_purchase(money, payment, options)
-        post[:captured] = "false"
+        post[:captured] = 'false'
         commit('charges', post, options)
       end
 
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
             #create customer and save card
             r.process { create_customer_add_card(r.authorization, options) }
             #void the charge
-            r.process(:ignore_result) { void(r.params["metadata"]["chargeId"], options) }
+            r.process(:ignore_result) { void(r.params['metadata']['chargeId'], options) }
           end
         else
           verify(credit_card, options)
@@ -183,14 +183,14 @@ module ActiveMerchant #:nodoc:
 
       def commit(url, parameters = nil, options = {}, method = nil)
         response = api_request(url, parameters, options, method)
-        success = !response.key?("error")
+        success = !response.key?('error')
 
         Response.new(success,
-          (success ? "Transaction approved" : response["error"]["message"]),
+          (success ? 'Transaction approved' : response['error']['message']),
           response,
           test: test?,
-          authorization: (success ? response["id"] : response["error"]["charge"]),
-          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]])
+          authorization: (success ? response['id'] : response['error']['charge']),
+          error_code: (success ? nil : STANDARD_ERROR_CODE_MAPPING[response['error']['code']])
         )
       end
 
@@ -198,8 +198,8 @@ module ActiveMerchant #:nodoc:
         secret_key = options[:secret_key] || @options[:secret_key]
 
         headers = {
-          "Authorization" => "Basic " + Base64.encode64(secret_key.to_s + ":").strip,
-          "User-Agent" => "SecurionPay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
+          'Authorization' => 'Basic ' + Base64.encode64(secret_key.to_s + ':').strip,
+          'User-Agent' => "SecurionPay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
         headers
       end
@@ -224,11 +224,11 @@ module ActiveMerchant #:nodoc:
             end
             post_data(h)
           elsif value.is_a?(Array)
-            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&")
+            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join('&')
           else
             "#{key}=#{CGI.escape(value.to_s)}"
           end
-        end.compact.join("&")
+        end.compact.join('&')
       end
 
       def api_request(endpoint, parameters = nil, options = {}, method = nil)
@@ -253,8 +253,8 @@ module ActiveMerchant #:nodoc:
         msg = 'Invalid response received from the SecurionPay API.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          "error" => {
-            "message" => msg
+          'error' => {
+            'message' => msg
           }
         }
       end

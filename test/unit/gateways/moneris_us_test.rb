@@ -23,8 +23,8 @@ class MonerisUsTest < Test::Unit::TestCase
 
   def test_default_options
     assert_equal 7, @gateway.options[:crypt_type]
-    assert_equal "monusqa002", @gateway.options[:login]
-    assert_equal "qatoken", @gateway.options[:password]
+    assert_equal 'monusqa002', @gateway.options[:login]
+    assert_equal 'qatoken', @gateway.options[:password]
   end
 
   def test_successful_purchase
@@ -51,17 +51,17 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "123;456", @options)
+      @gateway.credit(@amount, '123;456', @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.refund(@amount, "123;456", @options)
+    @gateway.refund(@amount, '123;456', @options)
   end
 
   def test_successful_verify
@@ -69,7 +69,7 @@ class MonerisUsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
-    assert_equal "830337-0_25;d315c7a28623dec77dc136450692d2dd", response.authorization
+    assert_equal '830337-0_25;d315c7a28623dec77dc136450692d2dd', response.authorization
   end
 
   def test_successful_verify_and_failed_void
@@ -77,8 +77,8 @@ class MonerisUsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, failed_capture_response)
     assert_success response
-    assert_equal "830337-0_25;d315c7a28623dec77dc136450692d2dd", response.authorization
-    assert_equal "Approved", response.message
+    assert_equal '830337-0_25;d315c7a28623dec77dc136450692d2dd', response.authorization
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_verify
@@ -86,7 +86,7 @@ class MonerisUsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorize_response, successful_capture_response)
     assert_failure response
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
   end
 
   def test_amount_style
@@ -100,10 +100,10 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_preauth_is_valid_xml
 
    params = {
-     :order_id => "order1",
-     :amount => "1.01",
-     :pan => "4242424242424242",
-     :expdate => "0303",
+     :order_id => 'order1',
+     :amount => '1.01',
+     :pan => '4242424242424242',
+     :expdate => '0303',
      :crypt_type => 7,
    }
 
@@ -115,10 +115,10 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_purchase_is_valid_xml
 
    params = {
-     :order_id => "order1",
-     :amount => "1.01",
-     :pan => "4242424242424242",
-     :expdate => "0303",
+     :order_id => 'order1',
+     :amount => '1.01',
+     :pan => '4242424242424242',
+     :expdate => '0303',
      :crypt_type => 7,
    }
 
@@ -130,10 +130,10 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_capture_is_valid_xml
 
    params = {
-     :order_id => "order1",
-     :amount => "1.01",
-     :pan => "4242424242424242",
-     :expdate => "0303",
+     :order_id => 'order1',
+     :amount => '1.01',
+     :pan => '4242424242424242',
+     :expdate => '0303',
      :crypt_type => 7,
    }
 
@@ -160,9 +160,9 @@ class MonerisUsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_store_response)
     assert response = @gateway.store(@credit_card)
     assert_success response
-    assert_equal "Successfully registered cc details", response.message
-    assert response.params["data_key"].present?
-    @data_key = response.params["data_key"]
+    assert_equal 'Successfully registered cc details', response.message
+    assert response.params['data_key'].present?
+    @data_key = response.params['data_key']
   end
 
   def test_successful_unstore
@@ -170,8 +170,8 @@ class MonerisUsTest < Test::Unit::TestCase
     test_successful_store
     assert response = @gateway.unstore(@data_key)
     assert_success response
-    assert_equal "Successfully deleted cc details", response.message
-    assert response.params["data_key"].present?
+    assert_equal 'Successfully deleted cc details', response.message
+    assert response.params['data_key'].present?
   end
 
   def test_update
@@ -179,8 +179,8 @@ class MonerisUsTest < Test::Unit::TestCase
     test_successful_store
     assert response = @gateway.update(@data_key, @credit_card)
     assert_success response
-    assert_equal "Successfully updated cc details", response.message
-    assert response.params["data_key"].present?
+    assert_equal 'Successfully updated cc details', response.message
+    assert response.params['data_key'].present?
   end
 
   def test_successful_purchase_with_vault
@@ -188,7 +188,7 @@ class MonerisUsTest < Test::Unit::TestCase
     test_successful_store
     assert response = @gateway.purchase(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert response.authorization.present?
   end
 
@@ -197,7 +197,7 @@ class MonerisUsTest < Test::Unit::TestCase
     test_successful_store
     assert response = @gateway.authorize(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert response.authorization.present?
   end
 
@@ -211,7 +211,7 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_cvv_enabled_and_provided
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', cvv_enabled: true)
 
-    @credit_card.verification_value = "452"
+    @credit_card.verification_value = '452'
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
@@ -223,7 +223,7 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_cvv_enabled_but_not_provided
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', cvv_enabled: true)
 
-    @credit_card.verification_value = ""
+    @credit_card.verification_value = ''
     stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
@@ -233,7 +233,7 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_cvv_disabled_and_provided
-    @credit_card.verification_value = "452"
+    @credit_card.verification_value = '452'
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
@@ -243,7 +243,7 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_cvv_disabled_but_not_provided
-    @credit_card.verification_value = ""
+    @credit_card.verification_value = ''
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
@@ -255,9 +255,9 @@ class MonerisUsTest < Test::Unit::TestCase
   def test_avs_enabled_and_provided
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', avs_enabled: true)
 
-    billing_address = address(address1: "1234 Anystreet", address2: "")
+    billing_address = address(address1: '1234 Anystreet', address2: '')
     stub_comms(gateway) do
-      gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: "1")
+      gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: '1')
     end.check_request do |endpoint, data, headers|
       assert_match(%r{avs_street_number>1234<}, data)
       assert_match(%r{avs_street_name>Anystreet<}, data)
@@ -278,9 +278,9 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_avs_disabled_and_provided
-    billing_address = address(address1: "1234 Anystreet", address2: "")
+    billing_address = address(address1: '1234 Anystreet', address2: '')
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: "1")
+      @gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: '1')
     end.check_request do |endpoint, data, headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
@@ -311,7 +311,7 @@ class MonerisUsTest < Test::Unit::TestCase
 
   def test_customer_can_be_specified
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_id: "3", customer: "Joe Jones")
+      @gateway.purchase(@amount, @credit_card, order_id: '3', customer: 'Joe Jones')
     end.check_request do |endpoint, data, headers|
       assert_match(%r{cust_id>Joe Jones}, data)
     end.respond_with(successful_purchase_response)
@@ -319,7 +319,7 @@ class MonerisUsTest < Test::Unit::TestCase
 
   def test_customer_not_specified_card_name_used
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_id: "3")
+      @gateway.purchase(@amount, @credit_card, order_id: '3')
     end.check_request do |endpoint, data, headers|
       assert_match(%r{cust_id>Longbob Longsen}, data)
     end.respond_with(successful_purchase_response)

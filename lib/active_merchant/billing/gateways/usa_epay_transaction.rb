@@ -269,7 +269,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response[:status] == "Approved"
+        if response[:status] == 'Approved'
           return 'Success'
         else
           return 'Unspecified error' if response[:error].blank?
@@ -286,7 +286,7 @@ module ActiveMerchant #:nodoc:
         hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
         parameters[:hash] = "s/#{seed}/#{hash}/n"
 
-        parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

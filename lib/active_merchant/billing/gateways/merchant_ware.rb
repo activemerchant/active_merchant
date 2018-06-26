@@ -11,25 +11,25 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://merchantwarehouse.com/merchantware'
       self.display_name = 'MerchantWARE'
 
-      ENV_NAMESPACES = { "xmlns:xsi"  => "http://www.w3.org/2001/XMLSchema-instance",
-                         "xmlns:xsd"  => "http://www.w3.org/2001/XMLSchema",
-                         "xmlns:env" => "http://schemas.xmlsoap.org/soap/envelope/"
+      ENV_NAMESPACES = { 'xmlns:xsi'  => 'http://www.w3.org/2001/XMLSchema-instance',
+                         'xmlns:xsd'  => 'http://www.w3.org/2001/XMLSchema',
+                         'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/'
                        }
-      ENV_NAMESPACES_V4 = { "xmlns:xsi"  => "http://www.w3.org/2001/XMLSchema-instance",
-                            "xmlns:xsd"  => "http://www.w3.org/2001/XMLSchema",
-                            "xmlns:soap" => "http://schemas.xmlsoap.org/soap/envelope/"
+      ENV_NAMESPACES_V4 = { 'xmlns:xsi'  => 'http://www.w3.org/2001/XMLSchema-instance',
+                            'xmlns:xsd'  => 'http://www.w3.org/2001/XMLSchema',
+                            'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/'
                           }
 
-      TX_NAMESPACE = "http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail"
-      TX_NAMESPACE_V4 = "http://schemas.merchantwarehouse.com/merchantware/40/Credit/"
+      TX_NAMESPACE = 'http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail'
+      TX_NAMESPACE_V4 = 'http://schemas.merchantwarehouse.com/merchantware/40/Credit/'
 
       ACTIONS = {
-        :purchase  => "IssueKeyedSale",
-        :authorize => "IssueKeyedPreAuth",
-        :capture   => "IssuePostAuth",
-        :void      => "VoidPreAuthorization",
-        :credit    => "IssueKeyedRefund",
-        :reference_credit => "IssueRefundByReference"
+        :purchase  => 'IssueKeyedSale',
+        :authorize => 'IssueKeyedPreAuth',
+        :capture   => 'IssuePostAuth',
+        :void      => 'VoidPreAuthorization',
+        :credit    => 'IssueKeyedRefund',
+        :reference_credit => 'IssueRefundByReference'
       }
 
       # Creates a new MerchantWareGateway
@@ -121,9 +121,9 @@ module ActiveMerchant #:nodoc:
       def soap_request(action)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! "env:Envelope", ENV_NAMESPACES do
-          xml.tag! "env:Body" do
-            xml.tag! ACTIONS[action], "xmlns" => TX_NAMESPACE do
+        xml.tag! 'env:Envelope', ENV_NAMESPACES do
+          xml.tag! 'env:Body' do
+            xml.tag! ACTIONS[action], 'xmlns' => TX_NAMESPACE do
               add_credentials(xml)
               yield xml
             end
@@ -135,12 +135,12 @@ module ActiveMerchant #:nodoc:
       def v4_soap_request(action)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! "soap:Envelope", ENV_NAMESPACES_V4 do
-          xml.tag! "soap:Body" do
-            xml.tag! ACTIONS[:void], "xmlns" => TX_NAMESPACE_V4 do
-              xml.tag! "merchantName", @options[:name]
-              xml.tag! "merchantSiteId", @options[:login]
-              xml.tag! "merchantKey", @options[:password]
+        xml.tag! 'soap:Envelope', ENV_NAMESPACES_V4 do
+          xml.tag! 'soap:Body' do
+            xml.tag! ACTIONS[:void], 'xmlns' => TX_NAMESPACE_V4 do
+              xml.tag! 'merchantName', @options[:name]
+              xml.tag! 'merchantSiteId', @options[:login]
+              xml.tag! 'merchantKey', @options[:password]
               yield xml
             end
           end
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         request = soap_request(:reference_credit) do |xml|
           add_reference(xml, reference)
           add_invoice(xml, options)
-          add_amount(xml, money, "strOverrideAmount")
+          add_amount(xml, money, 'strOverrideAmount')
         end
 
         commit(:reference_credit, request)
@@ -194,47 +194,47 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credentials(xml)
-        xml.tag! "strSiteId", @options[:login]
-        xml.tag! "strKey", @options[:password]
-        xml.tag! "strName", @options[:name]
+        xml.tag! 'strSiteId', @options[:login]
+        xml.tag! 'strKey', @options[:password]
+        xml.tag! 'strName', @options[:name]
       end
 
       def add_invoice(xml, options)
-        xml.tag! "strOrderNumber", options[:order_id].to_s.gsub(/[^\w]/, '').slice(0, 25)
+        xml.tag! 'strOrderNumber', options[:order_id].to_s.gsub(/[^\w]/, '').slice(0, 25)
       end
 
-      def add_amount(xml, money, tag = "strAmount")
+      def add_amount(xml, money, tag = 'strAmount')
         xml.tag! tag, amount(money)
       end
 
       def add_reference(xml, reference)
-        xml.tag! "strReferenceCode", reference
+        xml.tag! 'strReferenceCode', reference
       end
 
       def add_reference_token(xml, reference)
-        xml.tag! "token", reference
+        xml.tag! 'token', reference
       end
 
       def add_address(xml, options)
         if address = options[:billing_address] || options[:address]
-          xml.tag! "strAVSStreetAddress", address[:address1]
-          xml.tag! "strAVSZipCode", address[:zip]
+          xml.tag! 'strAVSStreetAddress', address[:address1]
+          xml.tag! 'strAVSZipCode', address[:zip]
         end
       end
 
       def add_credit_card(xml, credit_card)
         if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
-          xml.tag! "trackData", credit_card.track_data
+          xml.tag! 'trackData', credit_card.track_data
         else
-         xml.tag! "strPAN", credit_card.number
-         xml.tag! "strExpDate", expdate(credit_card)
-         xml.tag! "strCardHolder", credit_card.name
-         xml.tag! "strCVCode", credit_card.verification_value if credit_card.verification_value?
+         xml.tag! 'strPAN', credit_card.number
+         xml.tag! 'strExpDate', expdate(credit_card)
+         xml.tag! 'strCardHolder', credit_card.name
+         xml.tag! 'strCVCode', credit_card.verification_value if credit_card.verification_value?
         end
       end
 
       def split_reference(reference)
-        reference.to_s.split(";")
+        reference.to_s.split(';')
       end
 
       def parse(action, data)
@@ -247,10 +247,10 @@ module ActiveMerchant #:nodoc:
           response[element.name] = element.text
         end
 
-        status, code, message = response["ApprovalStatus"].split(";")
+        status, code, message = response['ApprovalStatus'].split(';')
         response[:status] = status
 
-        if response[:success] = status == "APPROVED"
+        if response[:success] = status == 'APPROVED'
           response[:message] = status
         else
           response[:message] = message
@@ -268,17 +268,17 @@ module ActiveMerchant #:nodoc:
 
         document = REXML::Document.new(http_response.body)
 
-        node     = REXML::XPath.first(document, "//soap:Fault")
+        node     = REXML::XPath.first(document, '//soap:Fault')
 
         node.elements.each do |element|
           response[element.name] = element.text
         end
 
-        response[:message] = response["faultstring"].to_s.gsub("\n", " ")
+        response[:message] = response['faultstring'].to_s.gsub("\n", ' ')
         response
       rescue REXML::ParseException
         response[:http_body]        = http_response.body
-        response[:message]          = "Failed to parse the failed response"
+        response[:message]          = 'Failed to parse the failed response'
         response
       end
 
@@ -293,8 +293,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, request, v4 = false)
         begin
           data = ssl_post(url(v4), request,
-                   "Content-Type" => 'text/xml; charset=utf-8',
-                   "SOAPAction"   => soap_action(action, v4)
+                   'Content-Type' => 'text/xml; charset=utf-8',
+                   'SOAPAction'   => soap_action(action, v4)
                  )
           response = parse(action, data)
         rescue ActiveMerchant::ResponseError => e
@@ -304,14 +304,14 @@ module ActiveMerchant #:nodoc:
         Response.new(response[:success], response[:message], response,
           :test => test?,
           :authorization => authorization_from(response),
-          :avs_result => { :code => response["AVSResponse"] },
-          :cvv_result => response["CVResponse"]
+          :avs_result => { :code => response['AVSResponse'] },
+          :cvv_result => response['CVResponse']
         )
       end
 
       def authorization_from(response)
         if response[:success]
-          [ response["ReferenceID"], response["OrderNumber"] ].join(";")
+          [ response['ReferenceID'], response['OrderNumber'] ].join(';')
         end
       end
     end

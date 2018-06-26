@@ -50,24 +50,24 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_credentials(post, options)
         add_authorization(post, authorization, money)
-        post[:operation] = "Capture"
-        commit("Netaxept/process.aspx", post)
+        post[:operation] = 'Capture'
+        commit('Netaxept/process.aspx', post)
       end
 
       def refund(money, authorization, options = {})
         post = {}
         add_credentials(post, options)
         add_authorization(post, authorization, money)
-        post[:operation] = "Credit"
-        commit("Netaxept/process.aspx", post)
+        post[:operation] = 'Credit'
+        commit('Netaxept/process.aspx', post)
       end
 
       def void(authorization, options = {})
         post = {}
         add_credentials(post, options)
         add_authorization(post, authorization)
-        post[:operation] = "Annul"
-        commit("Netaxept/process.aspx", post)
+        post[:operation] = 'Annul'
+        commit('Netaxept/process.aspx', post)
       end
 
       private
@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_credentials(post, options)
         add_order(post, money, options)
-        commit("Netaxept/Register.aspx", post)
+        commit('Netaxept/Register.aspx', post)
       end
 
       def add_and_auth_credit_card(authorization, creditcard, options)
@@ -84,14 +84,14 @@ module ActiveMerchant #:nodoc:
         add_credentials(post, options, false)
         add_authorization(post, authorization)
         add_creditcard(post, creditcard)
-        commit("terminal/default.aspx", post, false)
+        commit('terminal/default.aspx', post, false)
       end
 
       def query_transaction(authorization, options)
         post = {}
         add_credentials(post, options)
         add_authorization(post, authorization)
-        commit("Netaxept/query.aspx", post)
+        commit('Netaxept/query.aspx', post)
       end
 
       def add_credentials(post, options, secure=true)
@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
         post[:orderNumber] = options[:order_id]
         post[:amount] = amount(money)
         post[:currencyCode] = (options[:currency] || currency(money))
-        post[:autoAuth] = "true"
+        post[:autoAuth] = 'true'
       end
 
       def add_creditcard(post, options)
@@ -122,13 +122,13 @@ module ActiveMerchant #:nodoc:
         raw = parse(ssl_get(build_url(path, parameters)), xml)
 
         success = false
-        authorization = (raw["TransactionId"] || parameters[:transactionId])
+        authorization = (raw['TransactionId'] || parameters[:transactionId])
         if raw[:container] =~ /Exception|Error/
-          message = (raw["Message"] || raw["Error"]["Message"])
-        elsif raw["Error"] && !raw["Error"].empty?
-          message = (raw["Error"]["ResponseText"] || raw["Error"]["ResponseCode"])
+          message = (raw['Message'] || raw['Error']['Message'])
+        elsif raw['Error'] && !raw['Error'].empty?
+          message = (raw['Error']['ResponseText'] || raw['Error']['ResponseCode'])
         else
-          message = (raw["ResponseText"] || raw["ResponseCode"] || "OK")
+          message = (raw['ResponseText'] || raw['ResponseCode'] || 'OK')
           success = true
         end
 

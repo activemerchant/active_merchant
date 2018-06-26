@@ -118,7 +118,7 @@ class PayscoutTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, '1234567890')
     assert_success refund
-    assert_equal "The transaction has been approved", refund.message
+    assert_equal 'The transaction has been approved', refund.message
   end
 
   def test_not_found_transaction_id_refund
@@ -126,7 +126,7 @@ class PayscoutTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, '1234567890')
     assert_failure refund
-    assert_match "Transaction+not+found", refund.message
+    assert_match 'Transaction+not+found', refund.message
   end
 
   def test_invalid_transaction_id_refund
@@ -134,7 +134,7 @@ class PayscoutTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, '')
     assert_failure refund
-    assert_match "Invalid+Transaction+ID", refund.message
+    assert_match 'Invalid+Transaction+ID', refund.message
   end
 
   def test_invalid_amount_refund
@@ -142,7 +142,7 @@ class PayscoutTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(200, '1234567890')
     assert_failure refund
-    assert_match "Refund+amount+may+not+exceed+the+transaction+balance", refund.message
+    assert_match 'Refund+amount+may+not+exceed+the+transaction+balance', refund.message
   end
 
   # Void
@@ -152,7 +152,7 @@ class PayscoutTest < Test::Unit::TestCase
 
     assert void = @gateway.void('1234567890')
     assert_success void
-    assert_equal "The transaction has been approved", void.message
+    assert_equal 'The transaction has been approved', void.message
   end
 
   def test_approved_void_authorization
@@ -160,7 +160,7 @@ class PayscoutTest < Test::Unit::TestCase
 
     assert void = @gateway.void('1234567890')
     assert_success void
-    assert_equal "The transaction has been approved", void.message
+    assert_equal 'The transaction has been approved', void.message
   end
 
   def test_invalid_transaction_id_void
@@ -168,7 +168,7 @@ class PayscoutTest < Test::Unit::TestCase
 
     assert void = @gateway.void('')
     assert_failure void
-    assert_match "Invalid+Transaction+ID", void.message
+    assert_match 'Invalid+Transaction+ID', void.message
   end
 
   def test_not_found_transaction_id_void
@@ -176,7 +176,7 @@ class PayscoutTest < Test::Unit::TestCase
 
     assert void = @gateway.void('1234567890')
     assert_failure void
-    assert_match "Transaction+not+found", void.message
+    assert_match 'Transaction+not+found', void.message
   end
 
   # Methods
@@ -243,7 +243,7 @@ class PayscoutTest < Test::Unit::TestCase
     @credit_card.year = 2015
     @credit_card.month = 8
 
-    assert_equal "0815", @gateway.send(:expdate, @credit_card)
+    assert_equal '0815', @gateway.send(:expdate, @credit_card)
   end
 
   def test_add_creditcard
@@ -303,11 +303,11 @@ class PayscoutTest < Test::Unit::TestCase
     parameters = {param1: 'value1', param2: 'value2'}
     result = @gateway.send(:post_data, 'auth', parameters)
 
-    assert_match "username=xxx", result
-    assert_match "password=xxx", result
-    assert_match "type=auth", result
-    assert_match "param1=value1", result
-    assert_match "param2=value2", result
+    assert_match 'username=xxx', result
+    assert_match 'password=xxx', result
+    assert_match 'type=auth', result
+    assert_match 'param1=value1', result
+    assert_match 'param2=value2', result
   end
 
   private

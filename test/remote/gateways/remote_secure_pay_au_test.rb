@@ -181,7 +181,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid merchant ID", response.message
+    assert_equal 'Invalid merchant ID', response.message
   end
 
   def test_purchase_scrubbing

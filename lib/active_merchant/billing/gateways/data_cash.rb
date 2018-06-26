@@ -1,4 +1,4 @@
-require "active_support/core_ext/string/access"
+require 'active_support/core_ext/string/access'
 
 module ActiveMerchant
   module Billing
@@ -142,7 +142,7 @@ module ActiveMerchant
 
       def build_purchase_or_authorization_request_with_continuous_authority_reference_request(type, money, authorization, options)
         parsed_authorization = parse_authorization_string(authorization)
-        raise ArgumentError, "The continuous authority reference is required for continuous authority transactions" if parsed_authorization[:ca_reference].blank?
+        raise ArgumentError, 'The continuous authority reference is required for continuous authority transactions' if parsed_authorization[:ca_reference].blank?
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
@@ -288,7 +288,7 @@ module ActiveMerchant
 
         response = {}
         xml = REXML::Document.new(body)
-        root = REXML::XPath.first(xml, "//Response")
+        root = REXML::XPath.first(xml, '//Response')
 
         root.elements.to_a.each do |node|
           parse_element(response, node)
@@ -306,7 +306,7 @@ module ActiveMerchant
       end
 
       def format_reference_number(number)
-        number.to_s.gsub(/[^A-Za-z0-9]/, '').rjust(6, "0").first(30)
+        number.to_s.gsub(/[^A-Za-z0-9]/, '').rjust(6, '0').first(30)
       end
 
       def parse_authorization_string(authorization)

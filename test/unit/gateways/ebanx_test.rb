@@ -28,7 +28,7 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "NOK", response.error_code
+    assert_equal 'NOK', response.error_code
   end
 
   def test_successful_authorize
@@ -46,13 +46,13 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "NOK", response.error_code
+    assert_equal 'NOK', response.error_code
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "authorization", @options)
+    response = @gateway.capture(@amount, 'authorization', @options)
     assert_success response
 
     assert_equal 'Sandbox - Test credit card, transaction captured', response.message
@@ -62,15 +62,15 @@ class EbanxTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "", @options)
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
-    assert_equal "BP-CAP-1", response.error_code
+    assert_equal 'BP-CAP-1', response.error_code
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, "authorization", @options)
+    response = @gateway.refund(@amount, 'authorization', @options)
     assert_success response
 
     assert_equal '59306246f2a0c5f327a15dd6492687e197aca7eda179da08', response.authorization
@@ -80,15 +80,15 @@ class EbanxTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_request).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "", @options)
+    response = @gateway.refund(@amount, '', @options)
     assert_failure response
-    assert_equal "BP-REF-CAN-2", response.error_code
+    assert_equal 'BP-REF-CAN-2', response.error_code
   end
 
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_void_response)
 
-    response = @gateway.void("authorization", @options)
+    response = @gateway.void('authorization', @options)
     assert_success response
 
     assert_equal '5930629dde0899dc53b3557ea9887aa8f3d264a91d115d40', response.authorization
@@ -98,9 +98,9 @@ class EbanxTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void("", @options)
+    response = @gateway.void('', @options)
     assert_failure response
-    assert_equal "BP-CAN-1", response.error_code
+    assert_equal 'BP-CAN-1', response.error_code
   end
 
   def test_successful_verify
@@ -124,7 +124,7 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal "NOK", response.error_code
+    assert_equal 'NOK', response.error_code
   end
 
   def test_successful_store_and_purchase
@@ -145,7 +145,7 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.store(@credit_card, @options)
     assert_failure response
-    assert_equal "Invalid integration key", response.message
+    assert_equal 'Invalid integration key', response.message
   end
 
   def test_scrub

@@ -53,18 +53,18 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
-        options[:CardAction] = "1"
+        options[:CardAction] = '1'
         commit(money, creditcard, options)
       end
 
       def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
-        options[:CardAction] = "0"
+        options[:CardAction] = '0'
         commit(money, creditcard, options)
       end
 
       def capture(money, authorization, options = {})
-        options[:CardAction] = "2"
+        options[:CardAction] = '2'
         options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
         commit(money, nil, options)
       end
@@ -75,13 +75,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        options[:CardAction] = "3"
+        options[:CardAction] = '3'
         options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
         commit(money, nil, options)
       end
 
       def void(authorization, options = {})
-        options[:CardAction] = "9"
+        options[:CardAction] = '9'
         options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
         commit(nil, nil, options)
       end
@@ -115,11 +115,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def successful?(response)
-        response[:approved] == "APPROVED"
+        response[:approved] == 'APPROVED'
       end
 
       def parse(xml)
-        response = {:message => "Global Error Receipt", :complete => false}
+        response = {:message => 'Global Error Receipt', :complete => false}
 
         xml = REXML::Document.new(xml)
         xml.elements.each('//Result/*') do |node|
@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
       def post_data(money, creditcard, options)
         xml = REXML::Document.new
         xml << REXML::XMLDecl.new
-        root = xml.add_element("Order")
+        root = xml.add_element('Order')
 
         parameters(money, creditcard, options).each do |key, value|
           root.add_element(key.to_s).text = value if value
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
           :TransRefNumber => options[:trans_ref_number],
 
           # Credit Card parameters
-          :PaymentType => "CC",
+          :PaymentType => 'CC',
           :CardAction => options[:CardAction],
 
           # Financial parameters
@@ -167,9 +167,9 @@ module ActiveMerchant #:nodoc:
         }
 
         if creditcard
-          exp_month = sprintf("%.2i", creditcard.month) unless creditcard.month.blank?
+          exp_month = sprintf('%.2i', creditcard.month) unless creditcard.month.blank?
           exp_year = creditcard.year.to_s[2,2] unless creditcard.year.blank?
-          card_id_code = (creditcard.verification_value.blank? ? nil : "1")
+          card_id_code = (creditcard.verification_value.blank? ? nil : '1')
 
           params.update(
             :CardNumber => creditcard.number,
@@ -206,11 +206,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response[:approved] == "APPROVED"
+        if response[:approved] == 'APPROVED'
           return SUCCESS_MESSAGE
         else
           return FAILURE_MESSAGE if response[:errmsg].blank?
-          return response[:errmsg].gsub(/[^\w]/, ' ').split.join(" ").capitalize
+          return response[:errmsg].gsub(/[^\w]/, ' ').split.join(' ').capitalize
         end
       end
 
@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_authorization(response)
-        [response[:orderid], response[:transrefnumber]].join(";")
+        [response[:orderid], response[:transrefnumber]].join(';')
       end
     end
   end

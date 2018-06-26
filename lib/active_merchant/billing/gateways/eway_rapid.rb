@@ -3,15 +3,15 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EwayRapidGateway < Gateway
-      self.test_url = "https://api.sandbox.ewaypayments.com/"
-      self.live_url = "https://api.ewaypayments.com/"
+      self.test_url = 'https://api.sandbox.ewaypayments.com/'
+      self.live_url = 'https://api.ewaypayments.com/'
 
       self.money_format = :cents
       self.supported_countries = ['AU', 'NZ', 'GB', 'SG', 'MY', 'HK']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
-      self.homepage_url = "http://www.eway.com.au/"
-      self.display_name = "eWAY Rapid 3.1"
-      self.default_currency = "AUD"
+      self.homepage_url = 'http://www.eway.com.au/'
+      self.display_name = 'eWAY Rapid 3.1'
+      self.default_currency = 'AUD'
 
       class_attribute :partner_id
 
@@ -72,13 +72,13 @@ module ActiveMerchant #:nodoc:
         add_metadata(params, options)
         add_invoice(params, amount, options)
         add_reference(params, identification)
-        commit(url_for("CapturePayment"), params)
+        commit(url_for('CapturePayment'), params)
       end
 
       def void(identification, options = {})
         params = {}
         add_reference(params, identification)
-        commit(url_for("CancelAuthorisation"), params)
+        commit(url_for('CancelAuthorisation'), params)
       end
 
       # Public: Refund a transaction.
@@ -109,8 +109,8 @@ module ActiveMerchant #:nodoc:
       def refund(amount, identification, options = {})
         params = {}
         add_metadata(params, options)
-        add_invoice(params, amount, options, "Refund")
-        add_reference(params["Refund"], identification)
+        add_invoice(params, amount, options, 'Refund')
+        add_reference(params['Refund'], identification)
         add_customer_data(params, options)
         commit(url_for("Transaction/#{identification}/Refund"), params)
       end
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(params, options)
         add_credit_card(params, payment_method, options)
         params['Method'] = 'CreateTokenCustomer'
-        commit(url_for("Transaction"), params)
+        commit(url_for('Transaction'), params)
       end
 
       # Public: Update a customer's data
@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(params, payment_method, options)
         add_customer_token(params, customer_token)
         params['Method'] = 'UpdateTokenCustomer'
-        commit(url_for("Transaction"), params)
+        commit(url_for('Transaction'), params)
       end
 
       def supports_scrubbing
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
         params
       end
 
-      def add_invoice(params, money, options, key = "Payment")
+      def add_invoice(params, money, options, key = 'Payment')
         currency_code = options[:currency] || currency(money)
         params[key] = {
           'TotalAmount' => localized_amount(money, currency_code),
@@ -243,8 +243,8 @@ module ActiveMerchant #:nodoc:
           card_details = params['Customer']['CardDetails'] = {}
           card_details['Name'] = truncate(credit_card.name, 50)
           card_details['Number'] = credit_card.number
-          card_details['ExpiryMonth'] = "%02d" % (credit_card.month || 0)
-          card_details['ExpiryYear'] = "%02d" % (credit_card.year || 0)
+          card_details['ExpiryMonth'] = '%02d' % (credit_card.month || 0)
+          card_details['ExpiryYear'] = '%02d' % (credit_card.year || 0)
           card_details['CVN'] = credit_card.verification_value
         else
           add_customer_token(params, credit_card)
@@ -262,8 +262,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(url, params)
         headers = {
-          "Authorization" => ("Basic " + Base64.strict_encode64(@options[:login].to_s + ":" + @options[:password].to_s).chomp),
-          "Content-Type" => "application/json"
+          'Authorization' => ('Basic ' + Base64.strict_encode64(@options[:login].to_s + ':' + @options[:password].to_s).chomp),
+          'Content-Type' => 'application/json'
         }
         request = params.to_json
         raw = parse(ssl_post(url, request, headers))
@@ -287,12 +287,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        if response['ResponseCode'] == "00"
+        if response['ResponseCode'] == '00'
           true
         elsif response['TransactionStatus']
           (response['TransactionStatus'] == true)
-        elsif response["Succeeded"]
-          (response["Succeeded"] == true)
+        elsif response['Succeeded']
+          (response['Succeeded'] == true)
         else
           false
         end
@@ -311,9 +311,9 @@ module ActiveMerchant #:nodoc:
         elsif response['ResponseCode']
           ActiveMerchant::Billing::EwayGateway::MESSAGES[response['ResponseCode']]
         elsif succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          "Failed"
+          'Failed'
         end
       end
 
@@ -326,12 +326,12 @@ module ActiveMerchant #:nodoc:
       def avs_result_from(response)
         verification = response['Verification'] || {}
         code = case verification['Address']
-        when "Valid"
-          "M"
-        when "Invalid"
-          "N"
+        when 'Valid'
+          'M'
+        when 'Invalid'
+          'N'
         else
-          "I"
+          'I'
         end
         {:code => code}
       end
@@ -339,12 +339,12 @@ module ActiveMerchant #:nodoc:
       def cvv_result_from(response)
         verification = response['Verification'] || {}
         case verification['CVN']
-        when "Valid"
-          "M"
-        when "Invalid"
-          "N"
+        when 'Valid'
+          'M'
+        when 'Invalid'
+          'N'
         else
-          "P"
+          'P'
         end
       end
 

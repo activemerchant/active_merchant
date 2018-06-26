@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
         customer_response = cim.create_customer(options)
         return customer_response unless customer_response.success?
 
-        customer_id = customer_response.params["create_customer_result"]
+        customer_id = customer_response.params['create_customer_result']
 
         card_response = cim.modify_customer_credit_card(customer_id, credit_card)
         return card_response unless card_response.success?

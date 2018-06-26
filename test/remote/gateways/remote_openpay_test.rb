@@ -200,7 +200,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_empty_string_cvv_scrubbing
-    @credit_card.verification_value = ""
+    @credit_card.verification_value = ''
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
@@ -210,7 +210,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   end
 
   def test_whitespace_string_cvv_scrubbing
-    @credit_card.verification_value = "    "
+    @credit_card.verification_value = '    '
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end

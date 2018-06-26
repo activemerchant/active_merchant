@@ -86,7 +86,7 @@ class NabTransactTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    assert_equal "Expired Card", response.message
+    assert_equal 'Expired Card', response.message
   end
 
   def test_failed_login
@@ -95,7 +95,7 @@ class NabTransactTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "Invalid merchant ID", response.message
+    assert_equal 'Invalid merchant ID', response.message
   end
 
   def test_supported_countries
@@ -108,7 +108,7 @@ class NabTransactTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).with(&check_transaction_type(:refund)).returns(successful_refund_response)
-    assert_success @gateway.refund(@amount, "009887", {:order_id => '1'})
+    assert_success @gateway.refund(@amount, '009887', {:order_id => '1'})
   end
 
   def test_successful_refund_with_merchant_descriptor
@@ -131,9 +131,9 @@ class NabTransactTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).with(&check_transaction_type(:refund)).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "009887", {:order_id => '1'})
+    response = @gateway.refund(@amount, '009887', {:order_id => '1'})
     assert_failure response
-    assert_equal "Only $1.00 available for refund", response.message
+    assert_equal 'Only $1.00 available for refund', response.message
   end
 
   def test_request_timeout_default

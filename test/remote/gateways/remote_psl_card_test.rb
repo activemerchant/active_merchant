@@ -41,7 +41,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   # Fix regression discovered in production
   def test_visa_debit_purchase_should_not_send_debit_info_if_present
-    @visa_debit.start_month = "07"
+    @visa_debit.start_month = '07'
     response = @gateway.purchase(@accept_amount, @visa_debit,
       :billing_address => @visa_debit_address
     )

@@ -68,13 +68,13 @@ class DigitzsTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "58", response.error_code
+    assert_equal '58', response.error_code
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).times(2).returns(successful_app_token_response, successful_refund_response)
 
-    response = @gateway.refund(@amount, "authorization", @options)
+    response = @gateway.refund(@amount, 'authorization', @options)
     assert_success response
 
     assert_equal 'spreedly-susanswidg-32268973-2091076-148408385-127-148606617', response.authorization
@@ -84,7 +84,7 @@ class DigitzsTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).times(2).returns(successful_app_token_response, failed_refund_response)
 
-    response = @gateway.refund(@amount, "", @options)
+    response = @gateway.refund(@amount, '', @options)
     assert_failure response
 
     assert_equal nil, response.authorization
@@ -96,16 +96,16 @@ class DigitzsTest < Test::Unit::TestCase
 
     response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal "spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226|c0302d83-a694-4bec-9086-d1886b9eefd9-148710226", response.authorization
+    assert_equal 'spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226|c0302d83-a694-4bec-9086-d1886b9eefd9-148710226', response.authorization
   end
 
   def test_successful_store_creates_new_customer
     @gateway.expects(:ssl_get).returns(customer_id_exists_response)
     @gateway.expects(:ssl_post).times(3).returns(successful_app_token_response, successful_create_customer_response, successful_token_response)
 
-    assert response = @gateway.store(@credit_card, @options.merge({customer_id: "pre_existing_customer_id"}))
+    assert response = @gateway.store(@credit_card, @options.merge({customer_id: 'pre_existing_customer_id'}))
     assert_success response
-    assert_equal "spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226|c0302d83-a694-4bec-9086-d1886b9eefd9-148710226", response.authorization
+    assert_equal 'spreedly-susanswidg-32268973-2091076-148408385-2894006614343495-148710226|c0302d83-a694-4bec-9086-d1886b9eefd9-148710226', response.authorization
   end
 
   def test_scrub

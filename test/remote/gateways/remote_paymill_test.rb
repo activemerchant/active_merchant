@@ -124,7 +124,7 @@ class RemotePaymillTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PaymillGateway.new(public_key: fixtures(:paymill)[:public_key], private_key: "SomeBogusValue")
+    gateway = PaymillGateway.new(public_key: fixtures(:paymill)[:public_key], private_key: 'SomeBogusValue')
     response = gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal 'Access Denied', response.message
@@ -168,7 +168,7 @@ class RemotePaymillTest < Test::Unit::TestCase
   def test_verify_credentials
     assert @gateway.verify_credentials
 
-    gateway = PaymillGateway.new(public_key: "unknown_key", private_key: "unknown_key")
+    gateway = PaymillGateway.new(public_key: 'unknown_key', private_key: 'unknown_key')
     assert !gateway.verify_credentials
   end
 

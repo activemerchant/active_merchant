@@ -54,14 +54,14 @@ class MaxipagoTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(nil, "authorization", @options)
+    response = @gateway.capture(nil, 'authorization', @options)
     assert_success response
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(nil, "bogus", @options)
+    response = @gateway.capture(nil, 'bogus', @options)
     assert_failure response
   end
 
@@ -73,15 +73,15 @@ class MaxipagoTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_void_response)
     void = @gateway.void(auth.authorization)
     assert_success void
-    assert_equal "VOIDED", void.params["response_message"]
+    assert_equal 'VOIDED', void.params['response_message']
 
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
-    response = @gateway.void("NOAUTH|0000000")
+    response = @gateway.void('NOAUTH|0000000')
     assert_failure response
-    assert_equal "Unable to validate, original void transaction not found", response.message
+    assert_equal 'Unable to validate, original void transaction not found', response.message
   end
 
   def test_successful_refund
@@ -92,7 +92,7 @@ class MaxipagoTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     refund = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success refund
-    assert_equal "CAPTURED", refund.message
+    assert_equal 'CAPTURED', refund.message
   end
 
   def test_failed_refund
@@ -104,21 +104,21 @@ class MaxipagoTest < Test::Unit::TestCase
     refund_amount = @amount + 10
     refund = @gateway.refund(refund_amount, purchase.authorization, @options)
     assert_failure refund
-    assert_equal "The Return amount is greater than the amount that can be returned.", refund.message
+    assert_equal 'The Return amount is greater than the amount that can be returned.', refund.message
   end
 
   def test_successful_verify
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(successful_void_response)
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "AUTHORIZED", response.message
+    assert_equal 'AUTHORIZED', response.message
   end
 
   def test_failed_verify
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal "The transaction has an expired credit card.", response.message
+    assert_equal 'The transaction has an expired credit card.', response.message
   end
 
   def test_scrub

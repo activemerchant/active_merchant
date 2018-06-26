@@ -40,7 +40,7 @@ class ForteTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(MockedResponse.new(failed_purchase_response))
     assert_failure response
-    assert_equal "INVALID TRN", response.message
+    assert_equal 'INVALID TRN', response.message
   end
 
   def test_successful_purchase_with_echeck
@@ -58,7 +58,7 @@ class ForteTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(MockedResponse.new(failed_echeck_purchase_response))
     assert_failure response
-    assert_equal "INVALID CREDIT CARD NUMBER", response.message
+    assert_equal 'INVALID CREDIT CARD NUMBER', response.message
   end
 
   def test_successful_authorize
@@ -73,19 +73,19 @@ class ForteTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.respond_with(MockedResponse.new(failed_authorize_response))
     assert_failure response
-    assert_equal "INVALID CREDIT CARD NUMBER", response.message
+    assert_equal 'INVALID CREDIT CARD NUMBER', response.message
   end
 
   def test_successful_capture
     response = stub_comms(@gateway, :raw_ssl_request) do
-      @gateway.capture(@amount, "authcode")
+      @gateway.capture(@amount, 'authcode')
     end.respond_with(MockedResponse.new(successful_capture_response))
     assert_success response
   end
 
   def test_failed_capture
     response = stub_comms(@gateway, :raw_ssl_request) do
-      @gateway.capture(@amount, "authcode")
+      @gateway.capture(@amount, 'authcode')
     end.respond_with(MockedResponse.new(failed_capture_response))
     assert_failure response
   end
@@ -106,14 +106,14 @@ class ForteTest < Test::Unit::TestCase
 
   def test_successful_void
     response = stub_comms(@gateway, :raw_ssl_request) do
-      @gateway.void("authcode")
+      @gateway.void('authcode')
     end.respond_with(MockedResponse.new(successful_credit_response))
     assert_success response
   end
 
   def test_failed_void
     response = stub_comms(@gateway, :raw_ssl_request) do
-      @gateway.void("authcode")
+      @gateway.void('authcode')
     end.respond_with(MockedResponse.new(failed_credit_response))
     assert_failure response
   end
@@ -141,14 +141,14 @@ class ForteTest < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms(@gateway, :raw_ssl_request) do
-      @gateway.refund(@amount, "authcode")
+      @gateway.refund(@amount, 'authcode')
     end.respond_with(MockedResponse.new(successful_refund_response))
     assert_success response
   end
 
   def test_failed_refund
     response = stub_comms(@gateway, :raw_ssl_request) do
-      @gateway.refund(@amount, "authcode")
+      @gateway.refund(@amount, 'authcode')
     end.respond_with(MockedResponse.new(failed_refund_response))
     assert_failure response
   end

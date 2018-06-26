@@ -20,10 +20,10 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert !response.test?
 
-    assert_equal "K1CRcdN0jK32UyrnZGPOXLRjqJl", response.authorization
-    assert_equal "Succeeded!", response.message
-    assert_equal "Non-U.S. issuing bank does not support AVS.", response.avs_result["message"]
-    assert_equal "CVV failed data validation check", response.cvv_result["message"]
+    assert_equal 'K1CRcdN0jK32UyrnZGPOXLRjqJl', response.authorization
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
+    assert_equal 'CVV failed data validation check', response.cvv_result['message']
   end
 
   def test_failed_purchase_with_payment_method_token
@@ -33,8 +33,8 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_failure response
     assert !response.test?
 
-    assert_equal "Xh0T15CfYQeUqYV9Ixm8YV283Ds", response.authorization
-    assert_equal "This transaction cannot be processed.", response.message
+    assert_equal 'Xh0T15CfYQeUqYV9Ixm8YV283Ds', response.authorization
+    assert_equal 'This transaction cannot be processed.', response.message
     assert_equal '10762', response.params['response_error_code']
     assert_nil response.avs_result['message']
     assert_nil response.cvv_result['message']
@@ -47,10 +47,10 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert !response.test?
 
-    assert_equal "K1CRcdN0jK32UyrnZGPOXLRjqJl", response.authorization
-    assert_equal "Succeeded!", response.message
-    assert_equal "Non-U.S. issuing bank does not support AVS.", response.avs_result["message"]
-    assert_equal "CVV failed data validation check", response.cvv_result["message"]
+    assert_equal 'K1CRcdN0jK32UyrnZGPOXLRjqJl', response.authorization
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
+    assert_equal 'CVV failed data validation check', response.cvv_result['message']
     assert_equal 'Purchase', response.params['transaction_type']
     assert_equal '5WxC03VQ0LmmkYvIHl7XsPKIpUb', response.params['payment_method_token']
     assert_equal '6644', response.params['payment_method_last_four_digits']
@@ -69,8 +69,8 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
 
-    assert_equal "Xh0T15CfYQeUqYV9Ixm8YV283Ds", response.authorization
-    assert_equal "This transaction cannot be processed.", response.message
+    assert_equal 'Xh0T15CfYQeUqYV9Ixm8YV283Ds', response.authorization
+    assert_equal 'This transaction cannot be processed.', response.message
     assert_equal '10762', response.params['response_error_code']
     assert_nil response.avs_result['message']
     assert_nil response.cvv_result['message']
@@ -78,12 +78,12 @@ class SpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_purchase_without_gateway_token_option
-    @gateway.expects(:commit).with("gateways/token/purchase.xml", anything)
+    @gateway.expects(:commit).with('gateways/token/purchase.xml', anything)
     @gateway.purchase(@amount, @payment_method_token)
   end
 
   def test_purchase_with_gateway_token_option
-    @gateway.expects(:commit).with("gateways/mynewtoken/purchase.xml", anything)
+    @gateway.expects(:commit).with('gateways/mynewtoken/purchase.xml', anything)
     @gateway.purchase(@amount, @payment_method_token, gateway_token: 'mynewtoken')
   end
 
@@ -94,18 +94,18 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert !response.test?
 
-    assert_equal "NKz5SO6jrsRDc0UyaujwayXJZ1a", response.authorization
-    assert_equal "Succeeded!", response.message
-    assert_equal "Non-U.S. issuing bank does not support AVS.", response.avs_result["message"]
-    assert_equal "CVV failed data validation check", response.cvv_result["message"]
+    assert_equal 'NKz5SO6jrsRDc0UyaujwayXJZ1a', response.authorization
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
+    assert_equal 'CVV failed data validation check', response.cvv_result['message']
 
     @gateway.expects(:raw_ssl_request).returns(successful_capture_response)
     response = @gateway.capture(@amount, response.authorization)
     assert_success response
     assert !response.test?
 
-    assert_equal "Bd1ZeztpPyjfXzfUa14BQGfaLmg", response.authorization
-    assert_equal "Succeeded!", response.message
+    assert_equal 'Bd1ZeztpPyjfXzfUa14BQGfaLmg', response.authorization
+    assert_equal 'Succeeded!', response.message
     assert_nil response.avs_result['message']
     assert_nil response.cvv_result['message']
   end
@@ -114,7 +114,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(failed_authorize_response)
     response = @gateway.authorize(@amount, @payment_method_token)
     assert_failure response
-    assert_equal "This transaction cannot be processed.", response.message
+    assert_equal 'This transaction cannot be processed.', response.message
     assert_equal '10762', response.params['response_error_code']
     assert_nil response.avs_result['message']
     assert_nil response.cvv_result['message']
@@ -127,10 +127,10 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert !response.test?
 
-    assert_equal "NKz5SO6jrsRDc0UyaujwayXJZ1a", response.authorization
-    assert_equal "Succeeded!", response.message
-    assert_equal "Non-U.S. issuing bank does not support AVS.", response.avs_result["message"]
-    assert_equal "CVV failed data validation check", response.cvv_result["message"]
+    assert_equal 'NKz5SO6jrsRDc0UyaujwayXJZ1a', response.authorization
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
+    assert_equal 'CVV failed data validation check', response.cvv_result['message']
     assert_equal 'Authorization', response.params['transaction_type']
     assert_equal '5WxC03VQ0LmmkYvIHl7XsPKIpUb', response.params['payment_method_token']
     assert_equal '6644', response.params['payment_method_last_four_digits']
@@ -139,15 +139,15 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(successful_capture_response)
     response = @gateway.capture(@amount, response.authorization)
     assert_success response
-    assert_equal "Bd1ZeztpPyjfXzfUa14BQGfaLmg", response.authorization
-    assert_equal "Succeeded!", response.message
+    assert_equal 'Bd1ZeztpPyjfXzfUa14BQGfaLmg', response.authorization
+    assert_equal 'Succeeded!', response.message
   end
 
   def test_failed_authorize_with_credit_card
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, failed_authorize_response)
     response = @gateway.authorize(@amount, @credit_card)
     assert_failure response
-    assert_equal "This transaction cannot be processed.", response.message
+    assert_equal 'This transaction cannot be processed.', response.message
     assert_equal '10762', response.params['response_error_code']
   end
 
@@ -166,7 +166,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(failed_capture_response)
     response = @gateway.capture(@amount + 20, response.authorization)
     assert_failure response
-    assert_equal "Amount specified exceeds allowable limit.", response.message
+    assert_equal 'Amount specified exceeds allowable limit.', response.message
   end
 
   def test_successful_refund
@@ -177,8 +177,8 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(successful_refund_response)
     response = @gateway.refund(@amount, response.authorization)
     assert_success response
-    assert_equal "Succeeded!", response.message
-    assert_equal "Credit", response.params["transaction_type"]
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Credit', response.params['transaction_type']
   end
 
   def test_failed_refund
@@ -189,7 +189,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(failed_refund_response)
     response = @gateway.refund(@amount + 20, response.authorization)
     assert_failure response
-    assert_equal "The partial refund amount must be less than or equal to the original transaction amount", response.message
+    assert_equal 'The partial refund amount must be less than or equal to the original transaction amount', response.message
     assert_equal '10009', response.params['response_error_code']
   end
 
@@ -201,7 +201,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(successful_void_response)
     response = @gateway.void(response.authorization)
     assert_success response
-    assert_equal "Succeeded!", response.message
+    assert_equal 'Succeeded!', response.message
   end
 
   def test_failed_void
@@ -212,7 +212,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(failed_void_response)
     response = @gateway.void(response.authorization)
     assert_failure response
-    assert_equal "Authorization is voided.", response.message
+    assert_equal 'Authorization is voided.', response.message
     assert_equal '10600', response.params['response_error_code']
   end
 
@@ -221,8 +221,8 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     response = @gateway.verify(@payment_method_token)
     assert_success response
 
-    assert_equal "Succeeded!", response.message
-    assert_equal "Verification", response.params["transaction_type"]
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Verification', response.params['transaction_type']
   end
 
   def test_failed_verify
@@ -230,7 +230,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     response = @gateway.verify(@payment_method_token)
     assert_failure response
 
-    assert_equal "Unable to process the verify transaction.", response.message
+    assert_equal 'Unable to process the verify transaction.', response.message
     assert_empty response.params['response_error_code']
   end
 
@@ -238,9 +238,9 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(successful_store_response)
     response = @gateway.store(@credit_card)
     assert_success response
-    assert_equal "Succeeded!", response.message
-    assert_equal "Bml92ojQgsTf7bQ7z7WlwQVIdjr", response.authorization
-    assert_equal "true", response.params["retained"]
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Bml92ojQgsTf7bQ7z7WlwQVIdjr', response.authorization
+    assert_equal 'true', response.params['retained']
   end
 
   def test_failed_store
@@ -258,7 +258,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     @gateway.expects(:raw_ssl_request).returns(successful_unstore_response)
     response = @gateway.unstore(response.authorization)
     assert_success response
-    assert_equal "Succeeded!", response.message
+    assert_equal 'Succeeded!', response.message
   end
 
   def test_successful_find
@@ -266,8 +266,8 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     response = @gateway.find(@existing_transaction)
     assert_success response
 
-    assert_equal "Succeeded!", response.message
-    assert_equal "LKA3RchoqYO0njAfhHVw60ohjrC", response.authorization
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'LKA3RchoqYO0njAfhHVw60ohjrC', response.authorization
   end
 
   def test_failed_find

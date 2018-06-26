@@ -159,8 +159,8 @@ module ActiveMerchant
       def add_echeck(params, echeck, options)
         tele_check = {}
 
-        tele_check[:check_number] = echeck.number || "001"
-        tele_check[:check_type] = "P"
+        tele_check[:check_number] = echeck.number || '001'
+        tele_check[:check_type] = 'P'
         tele_check[:routing_number] = echeck.routing_number
         tele_check[:account_number] = echeck.account_number
         tele_check[:accountholder_name] = "#{echeck.first_name} #{echeck.last_name}"
@@ -281,7 +281,7 @@ module ActiveMerchant
 
       def post_data(params)
         return nil unless params
-        params.reject { |k, v| v.blank? }.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+        params.reject { |k, v| v.blank? }.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def generate_hmac(nonce, current_timestamp, payload)
@@ -291,7 +291,7 @@ module ActiveMerchant
           current_timestamp.to_s,
           @options[:token],
           payload
-        ].join("")
+        ].join('')
         hash = Base64.strict_encode64(OpenSSL::HMAC.hexdigest('sha256', @options[:apisecret], message))
         hash
       end
@@ -379,7 +379,7 @@ module ActiveMerchant
       end
 
       def json_error(raw_response)
-        {"error" => "Unable to parse response: #{raw_response.inspect}"}
+        {'error' => "Unable to parse response: #{raw_response.inspect}"}
       end
     end
   end

@@ -44,7 +44,7 @@ class CyberSourceTest < Test::Unit::TestCase
       :credit_card => @credit_card,
       :setup_fee => 100,
       :subscription => {
-        :frequency => "weekly",
+        :frequency => 'weekly',
         :start_date => Date.today.next_week,
         :occurrences => 4,
         :automatic_renew => true,
@@ -67,14 +67,14 @@ class CyberSourceTest < Test::Unit::TestCase
     customer_ip_regexp = /<ipAddress>#{@customer_ip}<\//
     @gateway.expects(:ssl_post).
       with(anything, regexp_matches(customer_ip_regexp), anything).
-      returns("")
+      returns('')
     @gateway.expects(:parse).returns({})
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_purchase_includes_mdd_fields
     stub_comms do
-      @gateway.purchase(100, @credit_card, order_id: "1", mdd_field_2: "CustomValue2", mdd_field_3: "CustomValue3")
+      @gateway.purchase(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |endpoint, data, headers|
       assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
     end.respond_with(successful_purchase_response)
@@ -82,7 +82,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_authorize_includes_mdd_fields
     stub_comms do
-      @gateway.authorize(100, @credit_card, order_id: "1", mdd_field_2: "CustomValue2", mdd_field_3: "CustomValue3")
+      @gateway.authorize(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |endpoint, data, headers|
       assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
     end.respond_with(successful_authorization_response)
@@ -308,7 +308,7 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_void_capture_request
     @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_auth_reversal_response)
-    assert response_capture = @gateway.capture(@amount, "1846925324700976124593")
+    assert response_capture = @gateway.capture(@amount, '1846925324700976124593')
     assert response_capture.success?
     assert response_capture.test?
     assert response_auth_reversal = @gateway.void(response_capture.authorization, @options)
@@ -351,15 +351,15 @@ class CyberSourceTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(unsuccessful_authorization_response)
     assert_failure response
-    assert_equal "Invalid account number", response.message
+    assert_equal 'Invalid account number', response.message
   end
 
   def test_successful_auth_with_network_tokenization_for_visa
     credit_card = network_tokenization_credit_card('4111111111111111',
       :brand              => 'visa',
-      :transaction_id     => "123",
-      :eci                => "05",
-      :payment_cryptogram => "111111111100cryptogram"
+      :transaction_id     => '123',
+      :eci                => '05',
+      :payment_cryptogram => '111111111100cryptogram'
     )
 
     response = stub_comms do
@@ -375,9 +375,9 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_purchase_with_network_tokenization_for_visa
     credit_card = network_tokenization_credit_card('4111111111111111',
       :brand              => 'visa',
-      :transaction_id     => "123",
-      :eci                => "05",
-      :payment_cryptogram => "111111111100cryptogram"
+      :transaction_id     => '123',
+      :eci                => '05',
+      :payment_cryptogram => '111111111100cryptogram'
     )
 
     response = stub_comms do
@@ -399,9 +399,9 @@ class CyberSourceTest < Test::Unit::TestCase
 
     credit_card = network_tokenization_credit_card('5555555555554444',
       :brand              => 'mastercard',
-      :transaction_id     => "123",
-      :eci                => "05",
-      :payment_cryptogram => "111111111100cryptogram"
+      :transaction_id     => '123',
+      :eci                => '05',
+      :payment_cryptogram => '111111111100cryptogram'
     )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
@@ -417,9 +417,9 @@ class CyberSourceTest < Test::Unit::TestCase
 
     credit_card = network_tokenization_credit_card('378282246310005',
       :brand              => 'american_express',
-      :transaction_id     => "123",
-      :eci                => "05",
-      :payment_cryptogram => Base64.encode64("111111111100cryptogram")
+      :transaction_id     => '123',
+      :eci                => '05',
+      :payment_cryptogram => Base64.encode64('111111111100cryptogram')
     )
 
     assert response = @gateway.authorize(@amount, credit_card, @options)
@@ -433,7 +433,7 @@ class CyberSourceTest < Test::Unit::TestCase
       true
     end.returns(successful_nonfractional_authorization_response)
 
-    assert response = @gateway.authorize(100, @credit_card, @options.merge(currency: "JPY"))
+    assert response = @gateway.authorize(100, @credit_card, @options.merge(currency: 'JPY'))
     assert_success response
   end
 
@@ -454,9 +454,9 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(threedeesecure_purchase_response)
 
     assert_failure purchase
-    assert_equal "YTJycDdLR3RIVnpmMXNFejJyazA=", purchase.params["xid"]
-    assert_equal "eNpVUe9PwjAQ/d6/ghA/r2tBYMvRBEUFFEKQEP1Yu1Om7gfdJoy/3nZsgk2a3Lveu757B+utRhw/oyo0CphjlskPbIXBsC25TvuPD/lkc3xn2d2R6y+3LWA5WuFOwA/qLExiwRzX4UAbSEwLrbYyzgVItbuZLkS353HWA1pDAhHq6Vgw3ule9/pAT5BALCMUqnwznZJCKwRaZQiopIhzXYpB1wXaAAKF/hbbPE8zn9L9fu9cUB2VREBtAQF6FrQsbJSZOQ9hIF7Xs1KNg6dVZzXdxGk0f1nc4+eslMfREKitIBDIHAV3WZ+Z2+Ku3/F8bjRXeQIysmrEFeOOa0yoIYHUfjQ6Icbt02XGTFRojbFqRmoQATykSYymxlD+YjPDWfntxBqrcusg8wbmWGcrXNFD4w3z2IkfVkZRy6H13mi9YhP9W/0vhyyqPw==", purchase.params["paReq"]
-    assert_equal "https://0eafstag.cardinalcommerce.com/EAFService/jsp/v1/redirect", purchase.params["acsURL"]
+    assert_equal 'YTJycDdLR3RIVnpmMXNFejJyazA=', purchase.params['xid']
+    assert_equal 'eNpVUe9PwjAQ/d6/ghA/r2tBYMvRBEUFFEKQEP1Yu1Om7gfdJoy/3nZsgk2a3Lveu757B+utRhw/oyo0CphjlskPbIXBsC25TvuPD/lkc3xn2d2R6y+3LWA5WuFOwA/qLExiwRzX4UAbSEwLrbYyzgVItbuZLkS353HWA1pDAhHq6Vgw3ule9/pAT5BALCMUqnwznZJCKwRaZQiopIhzXYpB1wXaAAKF/hbbPE8zn9L9fu9cUB2VREBtAQF6FrQsbJSZOQ9hIF7Xs1KNg6dVZzXdxGk0f1nc4+eslMfREKitIBDIHAV3WZ+Z2+Ku3/F8bjRXeQIysmrEFeOOa0yoIYHUfjQ6Icbt02XGTFRojbFqRmoQATykSYymxlD+YjPDWfntxBqrcusg8wbmWGcrXNFD4w3z2IkfVkZRy6H13mi9YhP9W/0vhyyqPw==', purchase.params['paReq']
+    assert_equal 'https://0eafstag.cardinalcommerce.com/EAFService/jsp/v1/redirect', purchase.params['acsURL']
   end
 
   def test_3ds_validate_response

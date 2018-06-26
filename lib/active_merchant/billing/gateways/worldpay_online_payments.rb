@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         if authorization
-          commit(:post, "orders/#{CGI.escape(authorization)}/capture", {"captureAmount"=>money}, options, 'capture')
+          commit(:post, "orders/#{CGI.escape(authorization)}/capture", {'captureAmount'=>money}, options, 'capture')
         else
           Response.new(false,
             'FAILED',
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, orderCode, options={})
-        obj = money ? {"refundAmount" => money} : {}
+        obj = money ? {'refundAmount' => money} : {}
         commit(:post, "orders/#{CGI.escape(orderCode)}/refund", obj, options, 'refund')
       end
 
@@ -76,16 +76,16 @@ module ActiveMerchant #:nodoc:
 
       def create_token(reusable, name, exp_month, exp_year, number, cvc)
         obj = {
-          "reusable"=> reusable,
-          "paymentMethod"=> {
-            "type"=> "Card",
-            "name"=> name,
-            "expiryMonth"=> exp_month,
-            "expiryYear"=> exp_year,
-            "cardNumber"=> number,
-            "cvc"=> cvc
+          'reusable'=> reusable,
+          'paymentMethod'=> {
+            'type'=> 'Card',
+            'name'=> name,
+            'expiryMonth'=> exp_month,
+            'expiryYear'=> exp_year,
+            'cardNumber'=> number,
+            'cvc'=> cvc
           },
-          "clientKey"=> @client_key
+          'clientKey'=> @client_key
         }
         token_response = commit(:post, 'tokens', obj, {'Authorization' => @service_key}, 'token')
         token_response
@@ -93,23 +93,23 @@ module ActiveMerchant #:nodoc:
 
       def create_post_for_auth_or_purchase(token, money, options)
       {
-        "token" => token,
-        "orderDescription" => options[:description] || 'Worldpay Order',
-        "amount" => money,
-        "currencyCode" => options[:currency] || default_currency,
-        "name" => options[:billing_address]&&options[:billing_address][:name] ? options[:billing_address][:name] : '',
-        "billingAddress" => {
-          "address1"=>options[:billing_address]&&options[:billing_address][:address1] ? options[:billing_address][:address1] : '',
-          "address2"=>options[:billing_address]&&options[:billing_address][:address2] ? options[:billing_address][:address2] : '',
-          "address3"=>"",
-          "postalCode"=>options[:billing_address]&&options[:billing_address][:zip] ? options[:billing_address][:zip] : '',
-          "city"=>options[:billing_address]&&options[:billing_address][:city] ? options[:billing_address][:city] : '',
-          "state"=>options[:billing_address]&&options[:billing_address][:state] ? options[:billing_address][:state] : '',
-          "countryCode"=>options[:billing_address]&&options[:billing_address][:country] ? options[:billing_address][:country] : ''
+        'token' => token,
+        'orderDescription' => options[:description] || 'Worldpay Order',
+        'amount' => money,
+        'currencyCode' => options[:currency] || default_currency,
+        'name' => options[:billing_address]&&options[:billing_address][:name] ? options[:billing_address][:name] : '',
+        'billingAddress' => {
+          'address1'=>options[:billing_address]&&options[:billing_address][:address1] ? options[:billing_address][:address1] : '',
+          'address2'=>options[:billing_address]&&options[:billing_address][:address2] ? options[:billing_address][:address2] : '',
+          'address3'=>'',
+          'postalCode'=>options[:billing_address]&&options[:billing_address][:zip] ? options[:billing_address][:zip] : '',
+          'city'=>options[:billing_address]&&options[:billing_address][:city] ? options[:billing_address][:city] : '',
+          'state'=>options[:billing_address]&&options[:billing_address][:state] ? options[:billing_address][:state] : '',
+          'countryCode'=>options[:billing_address]&&options[:billing_address][:country] ? options[:billing_address][:country] : ''
           },
-          "customerOrderCode" => options[:order_id],
-          "orderType" => "ECOM",
-          "authorizeOnly" => options[:authorizeOnly] ? true : false
+          'customerOrderCode' => options[:order_id],
+          'orderType' => 'ECOM',
+          'authorizeOnly' => options[:authorizeOnly] ? true : false
         }
       end
 
@@ -119,11 +119,11 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         headers = {
-          "Authorization" => @service_key,
-          "Content-Type" => 'application/json',
-          "User-Agent" => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "X-Worldpay-Client-User-Agent" => user_agent,
-          "X-Worldpay-Client-User-Metadata" => {:ip => options[:ip]}.to_json
+          'Authorization' => @service_key,
+          'Content-Type' => 'application/json',
+          'User-Agent' => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'X-Worldpay-Client-User-Agent' => user_agent,
+          'X-Worldpay-Client-User-Metadata' => {:ip => options[:ip]}.to_json
         }
         if options['Authorization']
           headers['Authorization'] = options['Authorization']
@@ -168,27 +168,27 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        if response["orderCode"]
-          authorization = response["orderCode"]
-        elsif response["token"]
-          authorization = response["token"]
+        if response['orderCode']
+          authorization = response['orderCode']
+        elsif response['token']
+          authorization = response['token']
         else
-          authorization = response["message"]
+          authorization = response['message']
         end
 
         Response.new(success,
-          success ? "SUCCESS" : response["message"],
+          success ? 'SUCCESS' : response['message'],
           response,
           :test => test?,
           :authorization => authorization,
           :avs_result => {},
           :cvv_result => {},
-          :error_code => success ? nil : response["customCode"]
+          :error_code => success ? nil : response['customCode']
         )
       end
 
       def test?
-        @service_key[0]=="T" ? true : false
+        @service_key[0]=='T' ? true : false
       end
 
       def response_error(raw_response)
@@ -203,8 +203,8 @@ module ActiveMerchant #:nodoc:
         msg = 'Invalid response received from the Worldpay Online Payments API.  Please contact techsupport.online@worldpay.com if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          "error" => {
-            "message" => msg
+          'error' => {
+            'message' => msg
           }
         }
       end

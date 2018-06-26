@@ -20,8 +20,8 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_url, :live_url
 
-      self.test_url = "https://secure.metricsglobalgateway.com/gateway/transact.dll?testing=true"
-      self.live_url = "https://secure.metricsglobalgateway.com/gateway/transact.dll"
+      self.test_url = 'https://secure.metricsglobalgateway.com/gateway/transact.dll?testing=true'
+      self.live_url = 'https://secure.metricsglobalgateway.com/gateway/transact.dll'
 
       class_attribute :duplicate_window
 
@@ -213,14 +213,14 @@ module ActiveMerchant #:nodoc:
         post[:version]        = API_VERSION
         post[:login]          = @options[:login]
         post[:tran_key]       = @options[:password]
-        post[:relay_response] = "FALSE"
+        post[:relay_response] = 'FALSE'
         post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
+        post[:delim_data]     = 'TRUE'
+        post[:delim_char]     = ','
+        post[:encap_char]     = '$'
         post[:solution_ID]    = application_id if application_id
 
-        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
 

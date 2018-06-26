@@ -38,11 +38,11 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_long_order_id_truncates_id
-    options = {order_id: "thisislongerthan17characters"}
+    options = {order_id: 'thisislongerthan17characters'}
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes("invoice_number=thisislongerthan1"),
+        includes('invoice_number=thisislongerthan1'),
       )
     ).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, options)
@@ -103,42 +103,42 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   def test_successful_avs_check
     @gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=Y')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal response.avs_result['code'], "Y"
-    assert_equal response.avs_result['message'], "Street address and 5-digit postal code match."
-    assert_equal response.avs_result['street_match'], "Y"
-    assert_equal response.avs_result['postal_match'], "Y"
+    assert_equal response.avs_result['code'], 'Y'
+    assert_equal response.avs_result['message'], 'Street address and 5-digit postal code match.'
+    assert_equal response.avs_result['street_match'], 'Y'
+    assert_equal response.avs_result['postal_match'], 'Y'
   end
 
   def test_unsuccessful_avs_check_with_bad_street_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=Z')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal response.avs_result['code'], "Z"
-    assert_equal response.avs_result['message'], "Street address does not match, but 5-digit postal code matches."
-    assert_equal response.avs_result['street_match'], "N"
-    assert_equal response.avs_result['postal_match'], "Y"
+    assert_equal response.avs_result['code'], 'Z'
+    assert_equal response.avs_result['message'], 'Street address does not match, but 5-digit postal code matches.'
+    assert_equal response.avs_result['street_match'], 'N'
+    assert_equal response.avs_result['postal_match'], 'Y'
   end
 
   def test_unsuccessful_avs_check_with_bad_zip
     @gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=A')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal response.avs_result['code'], "A"
-    assert_equal response.avs_result['message'], "Street address matches, but 5-digit and 9-digit postal code do not match."
-    assert_equal response.avs_result['street_match'], "Y"
-    assert_equal response.avs_result['postal_match'], "N"
+    assert_equal response.avs_result['code'], 'A'
+    assert_equal response.avs_result['message'], 'Street address matches, but 5-digit and 9-digit postal code do not match.'
+    assert_equal response.avs_result['street_match'], 'Y'
+    assert_equal response.avs_result['postal_match'], 'N'
   end
 
   def test_successful_cvv_check
     @gateway.expects(:ssl_post).returns(successful_purchase_response + '&cvv2_result=M')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal response.cvv_result['code'], "M"
-    assert_equal response.cvv_result['message'], "CVV matches"
+    assert_equal response.cvv_result['code'], 'M'
+    assert_equal response.cvv_result['message'], 'CVV matches'
   end
 
   def test_unsuccessful_cvv_check
     @gateway.expects(:ssl_post).returns(failed_purchase_response + '&cvv2_result=N')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal response.cvv_result['code'], "N"
-    assert_equal response.cvv_result['message'], "CVV does not match"
+    assert_equal response.cvv_result['code'], 'N'
+    assert_equal response.cvv_result['message'], 'CVV does not match'
   end
 
   def test_visa_3dsecure_params_submitted

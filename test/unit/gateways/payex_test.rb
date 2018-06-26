@@ -72,7 +72,7 @@ class PayexTest < Test::Unit::TestCase
 
   def test_unsuccessful_void
     @gateway.expects(:ssl_post).returns(unsuccessful_void_response)
-    assert response = @gateway.void("1")
+    assert response = @gateway.void('1')
     assert_failure response
     assert_not_equal 'OK', response.message
     assert_match %r{1}, response.message
@@ -89,7 +89,7 @@ class PayexTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     @gateway.expects(:ssl_post).returns(unsuccessful_refund_response)
-    assert response = @gateway.refund(@amount, "1", order_id: '123')
+    assert response = @gateway.refund(@amount, '1', order_id: '123')
     assert_failure response
     assert_not_equal 'OK', response.message
     assert_match %r{1}, response.message

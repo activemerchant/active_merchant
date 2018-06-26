@@ -30,17 +30,17 @@ module ActiveMerchant #:nodoc:
         errors = []
 
         [:name, :routing_number, :account_number].each do |attr|
-          errors << [attr, "cannot be empty"] if empty?(self.send(attr))
+          errors << [attr, 'cannot be empty'] if empty?(self.send(attr))
         end
 
-        errors << [:routing_number, "is invalid"] unless valid_routing_number?
+        errors << [:routing_number, 'is invalid'] unless valid_routing_number?
 
         if(!empty?(account_holder_type) && !%w[business personal].include?(account_holder_type.to_s))
-          errors << [:account_holder_type, "must be personal or business"]
+          errors << [:account_holder_type, 'must be personal or business']
         end
 
         if(!empty?(account_type) && !%w[checking savings].include?(account_type.to_s))
-          errors << [:account_type, "must be checking or savings"]
+          errors << [:account_type, 'must be checking or savings']
         end
 
         errors_hash(errors)

@@ -4,41 +4,41 @@ class ConektaTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = ConektaGateway.new(:key => "key_eYvWV7gSDkNYXsmr")
+    @gateway = ConektaGateway.new(:key => 'key_eYvWV7gSDkNYXsmr')
 
     @amount = 300
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
-      :number             => "4242424242424242",
-      :verification_value => "183",
-      :month              => "01",
-      :year               => "2018",
-      :first_name         => "Mario F.",
-      :last_name          => "Moreno Reyes"
+      :number             => '4242424242424242',
+      :verification_value => '183',
+      :month              => '01',
+      :year               => '2018',
+      :first_name         => 'Mario F.',
+      :last_name          => 'Moreno Reyes'
     )
 
     @declined_card = ActiveMerchant::Billing::CreditCard.new(
-      :number             => "4000000000000002",
-      :verification_value => "183",
-      :month              => "01",
-      :year               => "2018",
-      :first_name         => "Mario F.",
-      :last_name          => "Moreno Reyes"
+      :number             => '4000000000000002',
+      :verification_value => '183',
+      :month              => '01',
+      :year               => '2018',
+      :first_name         => 'Mario F.',
+      :last_name          => 'Moreno Reyes'
     )
 
     @options = {
-      :device_fingerprint => "41l9l92hjco6cuekf0c7dq68v4",
+      :device_fingerprint => '41l9l92hjco6cuekf0c7dq68v4',
       :description => 'Blue clip',
-      :success_url => "https://www.example.com/success",
-      :failure_url => "https://www.example.com/failure",
-      :address1 => "Rio Missisipi #123",
-      :address2 => "Paris",
-      :city => "Guerrero",
-      :country => "Mexico",
-      :zip => "5555",
-      :customer => "Mario Reyes",
-      :phone => "12345678",
-      :carrier => "Estafeta"
+      :success_url => 'https://www.example.com/success',
+      :failure_url => 'https://www.example.com/failure',
+      :address1 => 'Rio Missisipi #123',
+      :address2 => 'Paris',
+      :city => 'Guerrero',
+      :country => 'Mexico',
+      :zip => '5555',
+      :customer => 'Mario Reyes',
+      :phone => '12345678',
+      :carrier => 'Estafeta'
     }
   end
 
@@ -80,7 +80,7 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     @gateway.expects(:ssl_request).returns(failed_refund_response)
-    assert response = @gateway.refund(@amount, "1", @options)
+    assert response = @gateway.refund(@amount, '1', @options)
     assert_failure response
     assert response.test?
   end
@@ -133,7 +133,7 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_unsuccessful_capture
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
-    assert response = @gateway.capture(@amount, "1", @options)
+    assert response = @gateway.capture(@amount, '1', @options)
     assert_failure response
     assert response.test?
   end
@@ -386,10 +386,10 @@ class ConektaTest < Test::Unit::TestCase
   end
 
   def transcript
-    "card%5Baddress%5D%5Bzip%5D=5555&card%5Bcvc%5D=183&card%5Bexp_month%5D=01&card%5Bexp_year%5D=18&card%5Bname%5D=Mario+F.+Moreno+Reyes&card%5Bnumber%5D=4242424242424242&currency=mxn&description=Blue+clip&details%5Bbilling_address%5D%5Bcity%5D=Guerrero"
+    'card%5Baddress%5D%5Bzip%5D=5555&card%5Bcvc%5D=183&card%5Bexp_month%5D=01&card%5Bexp_year%5D=18&card%5Bname%5D=Mario+F.+Moreno+Reyes&card%5Bnumber%5D=4242424242424242&currency=mxn&description=Blue+clip&details%5Bbilling_address%5D%5Bcity%5D=Guerrero'
   end
 
   def scrubbed_transcript
-    "card%5Baddress%5D%5Bzip%5D=5555&card%5Bcvc%5D=[FILTERED]&card%5Bexp_month%5D=01&card%5Bexp_year%5D=18&card%5Bname%5D=Mario+F.+Moreno+Reyes&card%5Bnumber%5D=[FILTERED]&currency=mxn&description=Blue+clip&details%5Bbilling_address%5D%5Bcity%5D=Guerrero"
+    'card%5Baddress%5D%5Bzip%5D=5555&card%5Bcvc%5D=[FILTERED]&card%5Bexp_month%5D=01&card%5Bexp_year%5D=18&card%5Bname%5D=Mario+F.+Moreno+Reyes&card%5Bnumber%5D=[FILTERED]&currency=mxn&description=Blue+clip&details%5Bbilling_address%5D%5Bcity%5D=Guerrero'
   end
 end

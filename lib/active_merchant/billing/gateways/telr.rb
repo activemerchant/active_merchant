@@ -3,13 +3,13 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class TelrGateway < Gateway
-      self.display_name = "Telr"
-      self.homepage_url = "http://www.telr.com/"
+      self.display_name = 'Telr'
+      self.homepage_url = 'http://www.telr.com/'
 
-      self.live_url = "https://secure.telr.com/gateway/remote.xml"
+      self.live_url = 'https://secure.telr.com/gateway/remote.xml'
 
-      self.supported_countries = ["AE", "IN", "SA"]
-      self.default_currency = "AED"
+      self.supported_countries = ['AE', 'IN', 'SA']
+      self.default_currency = 'AED'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :maestro, :solo, :jcb]
 
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, payment_method, options={})
         commit(:purchase, amount, options[:currency]) do |doc|
-          add_invoice(doc, "sale", amount, payment_method, options)
+          add_invoice(doc, 'sale', amount, payment_method, options)
           add_payment_method(doc, payment_method, options)
           add_customer_data(doc, payment_method, options)
         end
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(amount, payment_method, options={})
         commit(:authorize, amount, options[:currency]) do |doc|
-          add_invoice(doc, "auth", amount, payment_method, options)
+          add_invoice(doc, 'auth', amount, payment_method, options)
           add_payment_method(doc, payment_method, options)
           add_customer_data(doc, payment_method, options)
         end
@@ -51,34 +51,34 @@ module ActiveMerchant #:nodoc:
 
       def capture(amount, authorization, options={})
         commit(:capture) do |doc|
-          add_invoice(doc, "capture", amount, authorization, options)
+          add_invoice(doc, 'capture', amount, authorization, options)
         end
       end
 
       def void(authorization, options={})
         _, amount, currency = split_authorization(authorization)
         commit(:void) do |doc|
-          add_invoice(doc, "void", amount.to_i, authorization, options.merge(currency: currency))
+          add_invoice(doc, 'void', amount.to_i, authorization, options.merge(currency: currency))
         end
       end
 
       def refund(amount, authorization, options={})
         commit(:refund) do |doc|
-          add_invoice(doc, "refund", amount, authorization, options)
+          add_invoice(doc, 'refund', amount, authorization, options)
         end
       end
 
       def verify(credit_card, options={})
         commit(:verify) do |doc|
-          add_invoice(doc, "verify", 100, credit_card, options)
+          add_invoice(doc, 'verify', 100, credit_card, options)
           add_payment_method(doc, credit_card, options)
           add_customer_data(doc, credit_card, options)
         end
       end
 
       def verify_credentials
-        response = void("0")
-        !["01", "04"].include?(response.error_code)
+        response = void('0')
+        !['01', '04'].include?(response.error_code)
       end
 
       def supports_scrubbing?
@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
           doc.currency(options[:currency] || currency(money))
           doc.cartid(options[:order_id])
           doc.class_(transaction_class(action, payment_method))
-          doc.description(options[:description] || "Description")
+          doc.description(options[:description] || 'Description')
           doc.test_(test_mode)
           add_ref(doc, action, payment_method)
         end
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
             doc.first(payment_method.first_name)
             doc.last(payment_method.last_name)
           end
-          doc.email(options[:email] || "unspecified@email.com")
+          doc.email(options[:email] || 'unspecified@email.com')
           doc.ip(options[:ip]) if options[:ip]
           doc.address do
             add_address(doc, options)
@@ -136,9 +136,9 @@ module ActiveMerchant #:nodoc:
 
       def add_address(doc, options)
         address = options[:billing_address] || {}
-        doc.country(address[:country] ? lookup_country_code(address[:country]) : "NA")
-        doc.city(address[:city] || "City")
-        doc.line1(address[:address1] || "Address")
+        doc.country(address[:country] ? lookup_country_code(address[:country]) : 'NA')
+        doc.city(address[:city] || 'City')
+        doc.line1(address[:address1] || 'Address')
         return unless address
         doc.line2(address[:address2]) if address[:address2]
         doc.zip(address[:zip]) if address[:zip]
@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_ref(doc, action, payment_method)
-        if ["capture", "refund", "void"].include?(action) || payment_method.is_a?(String)
+        if ['capture', 'refund', 'void'].include?(action) || payment_method.is_a?(String)
           doc.ref(split_authorization(payment_method)[0])
         end
       end
@@ -204,10 +204,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def transaction_class(action, payment_method)
-        if payment_method.is_a?(String) && action == "sale"
-          return "cont"
+        if payment_method.is_a?(String) && action == 'sale'
+          return 'cont'
         else
-          return "moto"
+          return 'moto'
         end
       end
 
@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         doc = Nokogiri::XML(xml)
-        doc.root.xpath("*").each do |node|
+        doc.root.xpath('*').each do |node|
           if (node.elements.size == 0)
             response[node.name.downcase.to_sym] = node.text
           else
@@ -240,12 +240,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:status] == "A"
+        response[:status] == 'A'
       end
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
           response[:message]
         end
@@ -267,7 +267,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Content-Type" => "text/xml"
+          'Content-Type' => 'text/xml'
         }
       end
     end

@@ -20,10 +20,10 @@ require 'bundler/gem_tasks'
 
 task :tag_release do
   system "git tag 'v#{ActiveMerchant::VERSION}'"
-  system "git push --tags"
+  system 'git push --tags'
 end
 
-desc "Run the unit test suite"
+desc 'Run the unit test suite'
 task :default => 'test:local'
 task :test => 'test:units'
 
@@ -89,7 +89,7 @@ namespace :gateways do
 
     unless invalid_lines.empty?
       puts
-      puts "Unable to parse:"
+      puts 'Unable to parse:'
       invalid_lines.each do |line|
         puts line
       end

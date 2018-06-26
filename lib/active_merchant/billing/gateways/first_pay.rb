@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         doc = Nokogiri::XML(xml)
-        doc.root.xpath("//RESPONSE/FIELDS/FIELD").each do |field|
+        doc.root.xpath('//RESPONSE/FIELDS/FIELD').each do |field|
           response[field['KEY']] = field.text
         end unless doc.root.nil?
 

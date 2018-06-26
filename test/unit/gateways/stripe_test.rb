@@ -19,12 +19,12 @@ class StripeTest < Test::Unit::TestCase
     @apple_pay_payment_token = apple_pay_payment_token
     @emv_credit_card = credit_card_with_icc_data
     @payment_token = StripeGateway::StripePaymentToken.new(token_params)
-    @token_string = @payment_token.payment_data["id"]
+    @token_string = @payment_token.payment_data['id']
 
     @check = check({
-      bank_name: "STRIPE TEST BANK",
-      account_number: "000123456789",
-      routing_number: "110000000",
+      bank_name: 'STRIPE TEST BANK',
+      account_number: '000123456789',
+      routing_number: '110000000',
     })
   end
 
@@ -289,7 +289,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_empty_values_not_sent
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, @credit_card, referrer: "")
+      @gateway.purchase(@amount, @credit_card, referrer: '')
     end.check_request do |method, endpoint, data, headers|
       refute_match(/referrer/, data)
     end.respond_with(successful_purchase_response)
@@ -353,7 +353,7 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'ch_test_emv_charge', response.authorization
-    assert response.emv_authorization, "Response should include emv_authorization containing the EMV ARPC"
+    assert response.emv_authorization, 'Response should include emv_authorization containing the EMV ARPC'
   end
 
   def test_declined_authorization_with_emv_credit_card
@@ -364,13 +364,13 @@ class StripeTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal 'ch_declined_auth', response.authorization
-    assert response.emv_authorization, "Response should include emv_auth_data containing the EMV ARC"
+    assert response.emv_authorization, 'Response should include emv_auth_data containing the EMV ARC'
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, "ch_test_charge")
+    assert response = @gateway.capture(@amount, 'ch_test_charge')
     assert_success response
     assert response.test?
   end
@@ -378,9 +378,9 @@ class StripeTest < Test::Unit::TestCase
   def test_successful_capture_with_emv_credit_card_tc
     @gateway.expects(:ssl_request).returns(successful_capture_response_with_icc_data)
 
-    assert response = @gateway.capture(@amount, "ch_test_emv_charge")
+    assert response = @gateway.capture(@amount, 'ch_test_emv_charge')
     assert_success response
-    assert response.emv_authorization, "Response should include emv_authorization containing the EMV TC"
+    assert response.emv_authorization, 'Response should include emv_authorization containing the EMV TC'
   end
 
   def test_successful_purchase
@@ -442,18 +442,18 @@ class StripeTest < Test::Unit::TestCase
 
   def test_adds_application_to_x_stripe_client_user_agent_header
     application = {
-      name: "app",
-      version: "1.0",
-      url: "https://example.com"
+      name: 'app',
+      version: '1.0',
+      url: 'https://example.com'
     }
 
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, "cus_xxx|card_xxx", @options.merge({application: application}))
+      @gateway.purchase(@amount, 'cus_xxx|card_xxx', @options.merge({application: application}))
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/\"application\"/, headers["X-Stripe-Client-User-Agent"])
-      assert_match(/\"name\":\"app\"/, headers["X-Stripe-Client-User-Agent"])
-      assert_match(/\"version\":\"1.0\"/, headers["X-Stripe-Client-User-Agent"])
-      assert_match(/\"url\":\"https:\/\/example.com\"/, headers["X-Stripe-Client-User-Agent"])
+      assert_match(/\"application\"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/\"name\":\"app\"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/\"version\":\"1.0\"/, headers['X-Stripe-Client-User-Agent'])
+      assert_match(/\"url\":\"https:\/\/example.com\"/, headers['X-Stripe-Client-User-Agent'])
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -461,7 +461,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_token_including_customer
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, "cus_xxx|card_xxx")
+      @gateway.purchase(@amount, 'cus_xxx|card_xxx')
     end.check_request do |method, endpoint, data, headers|
       assert_match(/customer=cus_xxx/, data)
       assert_match(/card=card_xxx/, data)
@@ -472,7 +472,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_token
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, "card_xxx")
+      @gateway.purchase(@amount, 'card_xxx')
     end.check_request do |method, endpoint, data, headers|
       assert_match(/card=card_xxx/, data)
     end.respond_with(successful_purchase_response)
@@ -501,7 +501,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_void_contains_charge_expand
     @gateway.expects(:ssl_request).with do |_, _, post, _|
-      post.include?("expand[]=charge")
+      post.include?('expand[]=charge')
     end.returns(successful_purchase_response(true))
 
     assert response = @gateway.void('ch_test_charge')
@@ -521,7 +521,7 @@ class StripeTest < Test::Unit::TestCase
   def test_void_with_expand_charge_only_sends_one_charge_expand
     @gateway.expects(:ssl_request).with do |_, _, post, _|
       parsed = CGI.parse(post)
-      parsed["expand[]"] == ['charge']
+      parsed['expand[]'] == ['charge']
     end.returns(successful_purchase_response(true))
 
     assert response = @gateway.void('ch_test_charge', expand: ['charge'])
@@ -530,7 +530,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_void_with_metadata
     @gateway.expects(:ssl_request).with do |_, _, post, _|
-      post.include?("metadata[first_value]=true")
+      post.include?('metadata[first_value]=true')
     end.returns(successful_purchase_response(true))
 
     assert response = @gateway.void('ch_test_charge', {metadata: {first_value: true}})
@@ -555,7 +555,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_refund_with_refund_application_fee
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      post.include?("refund_application_fee=true")
+      post.include?('refund_application_fee=true')
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_application_fee => true)
@@ -564,7 +564,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_refund_contains_charge_expand
     @gateway.expects(:ssl_request).with do |_, _, post, _|
-      post.include?("expand[]=charge")
+      post.include?('expand[]=charge')
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
@@ -584,7 +584,7 @@ class StripeTest < Test::Unit::TestCase
   def test_refund_with_expand_charge_only_sends_one_charge_expand
     @gateway.expects(:ssl_request).with do |_, _, post, _|
       parsed = CGI.parse(post)
-      parsed["expand[]"] == ['charge']
+      parsed['expand[]'] == ['charge']
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', expand: ['charge'])
@@ -593,7 +593,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_refund_with_metadata
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      post.include?("metadata[first_value]=true")
+      post.include?('metadata[first_value]=true')
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', {metadata: {first_value: true}})
@@ -602,14 +602,14 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_refund_with_reverse_transfer
     stub_comms(@gateway, :ssl_request) do
-      @gateway.refund(@amount, "auth", reverse_transfer: true)
+      @gateway.refund(@amount, 'auth', reverse_transfer: true)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/reverse_transfer=true/, data)
     end.respond_with(successful_partially_refunded_response)
   end
 
   def test_successful_refund_with_refund_fee_amount
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(successful_fetch_application_fee_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_application_fee_response).in_sequence(s)
@@ -620,7 +620,7 @@ class StripeTest < Test::Unit::TestCase
 
   # What is the significance of this??? it's to test that the first response is used as primary. so identical to above with an extra assertion
   def test_refund_with_fee_response_gives_a_charge_authorization
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(successful_fetch_application_fee_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_application_fee_response).in_sequence(s)
@@ -631,7 +631,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund_with_refund_fee_amount_when_application_fee_id_not_found
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(unsuccessful_fetch_application_fee_response).in_sequence(s)
 
@@ -641,7 +641,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund_with_refund_fee_amount_when_refunding_application_fee
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(successful_fetch_application_fee_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(generic_error_response).in_sequence(s)
@@ -662,7 +662,7 @@ class StripeTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorization_response, failed_void_response)
     assert_success response
-    assert_equal "Transaction approved", response.message
+    assert_equal 'Transaction approved', response.message
   end
 
   def test_unsuccessful_verify
@@ -670,7 +670,7 @@ class StripeTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(declined_authorization_response, successful_void_response)
     assert_failure response
-    assert_equal "Your card was declined.", response.message
+    assert_equal 'Your card was declined.', response.message
   end
 
   def test_successful_request_always_uses_live_mode_to_determine_test_request
@@ -755,11 +755,11 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_creditcard_with_track_data
     post = {}
-    @credit_card.stubs(:track_data).returns("Swipe data")
+    @credit_card.stubs(:track_data).returns('Swipe data')
     @credit_card.stubs(:read_method).returns('contactless_magstripe')
     @gateway.send(:add_creditcard, post, @credit_card, {})
     assert_equal @credit_card.track_data, post[:card][:swipe_data]
-    assert_equal "contactless_magstripe_mode", post[:card][:read_method]
+    assert_equal 'contactless_magstripe_mode', post[:card][:read_method]
     assert_nil post[:card][:number]
     assert_nil post[:card][:exp_year]
     assert_nil post[:card][:exp_month]
@@ -769,11 +769,11 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_creditcard_with_fallback_no_chip
     post = {}
-    @credit_card.stubs(:track_data).returns("Swipe data")
+    @credit_card.stubs(:track_data).returns('Swipe data')
     @credit_card.stubs(:read_method).returns('fallback_no_chip')
     @gateway.send(:add_creditcard, post, @credit_card, {})
     assert_equal @credit_card.track_data, post[:card][:swipe_data]
-    assert_equal "no_chip", post[:card][:fallback_reason]
+    assert_equal 'no_chip', post[:card][:fallback_reason]
     assert_nil post[:card][:number]
     assert_nil post[:card][:exp_year]
     assert_nil post[:card][:exp_month]
@@ -783,11 +783,11 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_creditcard_with_fallback_chip_error
     post = {}
-    @credit_card.stubs(:track_data).returns("Swipe data")
+    @credit_card.stubs(:track_data).returns('Swipe data')
     @credit_card.stubs(:read_method).returns('fallback_chip_error')
     @gateway.send(:add_creditcard, post, @credit_card, {})
     assert_equal @credit_card.track_data, post[:card][:swipe_data]
-    assert_equal "chip_error", post[:card][:fallback_reason]
+    assert_equal 'chip_error', post[:card][:fallback_reason]
     assert_nil post[:card][:number]
     assert_nil post[:card][:exp_year]
     assert_nil post[:card][:exp_month]
@@ -797,24 +797,24 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_creditcard_with_card_token
     post = {}
-    credit_card_token = "card_2iD4AezYnNNzkW"
+    credit_card_token = 'card_2iD4AezYnNNzkW'
     @gateway.send(:add_creditcard, post, credit_card_token, {})
-    assert_equal "card_2iD4AezYnNNzkW", post[:card]
+    assert_equal 'card_2iD4AezYnNNzkW', post[:card]
   end
 
   def test_add_creditcard_with_card_token_and_customer
     post = {}
-    credit_card_token = "cus_3sgheFxeBgTQ3M|card_2iD4AezYnNNzkW"
+    credit_card_token = 'cus_3sgheFxeBgTQ3M|card_2iD4AezYnNNzkW'
     @gateway.send(:add_creditcard, post, credit_card_token, {})
-    assert_equal "cus_3sgheFxeBgTQ3M", post[:customer]
-    assert_equal "card_2iD4AezYnNNzkW", post[:card]
+    assert_equal 'cus_3sgheFxeBgTQ3M', post[:customer]
+    assert_equal 'card_2iD4AezYnNNzkW', post[:card]
   end
 
   def test_add_creditcard_with_card_token_and_track_data
     post = {}
-    credit_card_token = "card_2iD4AezYnNNzkW"
-    @gateway.send(:add_creditcard, post, credit_card_token, :track_data => "Tracking data")
-    assert_equal "Tracking data", post[:card][:swipe_data]
+    credit_card_token = 'card_2iD4AezYnNNzkW'
+    @gateway.send(:add_creditcard, post, credit_card_token, :track_data => 'Tracking data')
+    assert_equal 'Tracking data', post[:card][:swipe_data]
   end
 
   def test_add_creditcard_with_emv_credit_card
@@ -827,14 +827,14 @@ class StripeTest < Test::Unit::TestCase
   def test_add_creditcard_pads_eci_value
     post = {}
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: "111111111100cryptogram",
+      payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
-      eci: "7"
+      eci: '7'
     )
 
     @gateway.send(:add_creditcard, post, credit_card, {})
 
-    assert_equal "07", post[:card][:eci]
+    assert_equal '07', post[:card][:eci]
   end
 
   def test_application_fee_is_submitted_for_purchase
@@ -847,7 +847,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_application_fee_is_submitted_for_capture
     stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, "ch_test_charge", @options.merge({:application_fee => 144}))
+      @gateway.capture(@amount, 'ch_test_charge', @options.merge({:application_fee => 144}))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/application_fee=144/, data)
     end.respond_with(successful_capture_response)
@@ -863,7 +863,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_exchange_rate_is_submitted_for_capture
     stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, "ch_test_charge", @options.merge({:exchange_rate => 0.96251}))
+      @gateway.capture(@amount, 'ch_test_charge', @options.merge({:exchange_rate => 0.96251}))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/exchange_rate=0.96251/, data)
     end.respond_with(successful_capture_response)
@@ -887,7 +887,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :receipt_email => "receipt-receiver@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
+      updated_options = @options.merge({:description => 'a test customer',:ip => '127.127.127.127', :user_agent => 'some browser', :order_id => '42', :email => 'foo@wonderfullyfakedomain.com', :receipt_email => 'receipt-receiver@wonderfullyfakedomain.com', :referrer =>'http://www.shopify.com'})
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
@@ -904,7 +904,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase_without_email_or_order
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :referrer =>"http://www.shopify.com"})
+      updated_options = @options.merge({:description => 'a test customer',:ip => '127.127.127.127', :user_agent => 'some browser', :referrer =>'http://www.shopify.com'})
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
@@ -918,7 +918,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => "42", :email => "foo@wonderfullyfakedomain.com"})
+      updated_options = @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => '42', :email => 'foo@wonderfullyfakedomain.com'})
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
@@ -930,7 +930,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options_with_emv_credit_card_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => "42", :email => "foo@wonderfullyfakedomain.com"})
+      updated_options = @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => '42', :email => 'foo@wonderfullyfakedomain.com'})
       @gateway.purchase(@amount, @emv_credit_card, updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
@@ -943,7 +943,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_metadata_in_options_with_emv_credit_card_authorize
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => "42", :email => "foo@wonderfullyfakedomain.com"})
+      updated_options = @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => '42', :email => 'foo@wonderfullyfakedomain.com'})
       @gateway.authorize(@amount, @emv_credit_card, updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
@@ -1128,8 +1128,8 @@ class StripeTest < Test::Unit::TestCase
 
   def test_encrypted_pin_is_included_with_emv_card_data
     stub_comms(@gateway, :ssl_request) do
-      @emv_credit_card.encrypted_pin_cryptogram = "8b68af72199529b8"
-      @emv_credit_card.encrypted_pin_ksn = "ffff0102628d12000001"
+      @emv_credit_card.encrypted_pin_cryptogram = '8b68af72199529b8'
+      @emv_credit_card.encrypted_pin_ksn = 'ffff0102628d12000001'
       @gateway.purchase(@amount, @emv_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert data =~ /card\[encrypted_pin\]=8b68af72199529b8/
@@ -1143,7 +1143,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_expand_parameters
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      post.include?("expand[]=balance_transaction")
+      post.include?('expand[]=balance_transaction')
     end.returns(successful_authorization_response)
 
     @options.merge!(:expand => :balance_transaction)
@@ -1153,7 +1153,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_expand_parameters_as_array
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      post.include?("expand[]=balance_transaction&expand[]=customer")
+      post.include?('expand[]=balance_transaction&expand[]=customer')
     end.returns(successful_authorization_response)
 
     @options.merge!(:expand => [:balance_transaction, :customer])
@@ -1163,7 +1163,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_recurring_flag_not_set_by_default
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      !post.include?("recurring")
+      !post.include?('recurring')
     end.returns(successful_authorization_response)
 
     @gateway.authorize(@amount, @credit_card, @options)
@@ -1171,7 +1171,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_recurring_eci_sets_recurring_flag
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      post.include?("recurring=true")
+      post.include?('recurring=true')
     end.returns(successful_authorization_response)
 
     @options.merge!(eci: 'recurring')
@@ -1181,7 +1181,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_unknown_eci_does_not_set_recurring_flag
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      !post.include?("recurring")
+      !post.include?('recurring')
     end.returns(successful_authorization_response)
 
     @options.merge!(eci: 'installment')
@@ -1191,7 +1191,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_recurring_true_option_sets_recurring_flag
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      post.include?("recurring=true")
+      post.include?('recurring=true')
     end.returns(successful_authorization_response)
 
     @options.merge!(recurring: true)
@@ -1201,7 +1201,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_recurring_false_option_does_not_set_recurring_flag
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      !post.include?("recurring")
+      !post.include?('recurring')
     end.returns(successful_authorization_response)
 
     @options.merge!(recurring: false)
@@ -1211,10 +1211,10 @@ class StripeTest < Test::Unit::TestCase
 
   def test_new_attributes_are_included_in_update
     stub_comms(@gateway, :ssl_request) do
-      @gateway.send(:update, "cus_3sgheFxeBgTQ3M", "card_483etw4er9fg4vF3sQdrt3FG", { :name => "John Smith", :exp_year => 2021, :exp_month => 6 })
+      @gateway.send(:update, 'cus_3sgheFxeBgTQ3M', 'card_483etw4er9fg4vF3sQdrt3FG', { :name => 'John Smith', :exp_year => 2021, :exp_month => 6 })
     end.check_request do |method, endpoint, data, headers|
-      assert data == "name=John+Smith&exp_year=2021&exp_month=6"
-      assert endpoint.include? "/customers/cus_3sgheFxeBgTQ3M/cards/card_483etw4er9fg4vF3sQdrt3FG"
+      assert data == 'name=John+Smith&exp_year=2021&exp_month=6'
+      assert endpoint.include? '/customers/cus_3sgheFxeBgTQ3M/cards/card_483etw4er9fg4vF3sQdrt3FG'
     end.respond_with(successful_update_credit_card_response)
   end
 
@@ -1242,7 +1242,7 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: "111111111100cryptogram",
+      payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
       eci: '05'
     )
@@ -1263,7 +1263,7 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: "111111111100cryptogram",
+      payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
       eci: '05',
       source: :android_pay
@@ -1285,7 +1285,7 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: "111111111100cryptogram",
+      payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
       eci: '05'
     )
@@ -1306,7 +1306,7 @@ class StripeTest < Test::Unit::TestCase
     end.returns(successful_authorization_response)
 
     credit_card = network_tokenization_credit_card('4242424242424242',
-      payment_cryptogram: "111111111100cryptogram",
+      payment_cryptogram: '111111111100cryptogram',
       verification_value: nil,
       eci: '05',
       source: :android_pay
@@ -1326,9 +1326,9 @@ class StripeTest < Test::Unit::TestCase
 
   def test_emv_capture_application_fee_ignored
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, "ch_test_charge", application_fee: 100, icc_data: @emv_credit_card.icc_data)
+      @gateway.capture(@amount, 'ch_test_charge', application_fee: 100, icc_data: @emv_credit_card.icc_data)
     end.check_request do |method, endpoint, data, headers|
-      assert data !~ /application_fee/, "request should not include application_fee"
+      assert data !~ /application_fee/, 'request should not include application_fee'
     end.respond_with(successful_capture_response_with_icc_data)
 
     assert_success response
@@ -1336,9 +1336,9 @@ class StripeTest < Test::Unit::TestCase
 
   def test_authorization_with_emv_payment_application_fee_included
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, "ch_test_charge", application_fee: 100, icc_data: @emv_credit_card.icc_data)
+      @gateway.authorize(@amount, 'ch_test_charge', application_fee: 100, icc_data: @emv_credit_card.icc_data)
     end.check_request do |method, endpoint, data, headers|
-      assert data =~ /application_fee/, "request should include application_fee"
+      assert data =~ /application_fee/, 'request should include application_fee'
     end.respond_with(successful_capture_response_with_icc_data)
 
     assert_success response
@@ -1347,7 +1347,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_stripe_account_header
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      headers.include?("Stripe-Account")
+      headers.include?('Stripe-Account')
     end.returns(successful_authorization_response)
 
     @options.merge!(stripe_account: fixtures(:stripe_destination)[:stripe_user_id])
@@ -1371,7 +1371,7 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal response.message, "No error details"
+    assert_equal response.message, 'No error details'
     assert response.test?
   end
 
@@ -2324,37 +2324,37 @@ class StripeTest < Test::Unit::TestCase
 
   def token_params
     {
-      "id" => "tok_14uq3k2gKyKnHxtYUAZZZlH3",
-      "object" => "token",
-      "card" => {
-        "id" => "card_189f8n2eZvKYlo2CgvOd3Vtn",
-        "object" => "card",
-        "address_city" => nil,
-        "address_country" => nil,
-        "address_line1" => nil,
-        "address_line1_check" => nil,
-        "address_line2" => nil,
-        "address_state" => nil,
-        "address_zip" => nil,
-        "address_zip_check" => nil,
-        "brand" => "Visa",
-        "country" => "US",
-        "cvc_check" => nil,
-        "dynamic_last4" => nil,
-        "exp_month" => 8,
-        "exp_year" => 2017,
-        "funding" => "credit",
-        "last4" => "4242",
-        "metadata" => {
+      'id' => 'tok_14uq3k2gKyKnHxtYUAZZZlH3',
+      'object' => 'token',
+      'card' => {
+        'id' => 'card_189f8n2eZvKYlo2CgvOd3Vtn',
+        'object' => 'card',
+        'address_city' => nil,
+        'address_country' => nil,
+        'address_line1' => nil,
+        'address_line1_check' => nil,
+        'address_line2' => nil,
+        'address_state' => nil,
+        'address_zip' => nil,
+        'address_zip_check' => nil,
+        'brand' => 'Visa',
+        'country' => 'US',
+        'cvc_check' => nil,
+        'dynamic_last4' => nil,
+        'exp_month' => 8,
+        'exp_year' => 2017,
+        'funding' => 'credit',
+        'last4' => '4242',
+        'metadata' => {
         },
-        "name" => nil,
-        "tokenization_method" => nil
+        'name' => nil,
+        'tokenization_method' => nil
       },
-      "client_ip" => nil,
-      "created" => 1462903169,
-      "livemode" => false,
-      "type" => "card",
-      "used" => false
+      'client_ip' => nil,
+      'created' => 1462903169,
+      'livemode' => false,
+      'type' => 'card',
+      'used' => false
     }
   end
 end

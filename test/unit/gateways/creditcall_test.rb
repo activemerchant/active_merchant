@@ -49,42 +49,42 @@ class CreditcallTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "bc8e3abe-b842-e511-b302-00505692354f", @options)
+    response = @gateway.capture(@amount, 'bc8e3abe-b842-e511-b302-00505692354f', @options)
     assert_success response
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "", @options)
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, "77e55712-ba42-e511-b302-00505692354f", @options)
+    response = @gateway.refund(@amount, '77e55712-ba42-e511-b302-00505692354f', @options)
     assert_success response
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "", @options)
+    response = @gateway.refund(@amount, '', @options)
     assert_failure response
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    response = @gateway.void("e5b1b672-ba42-e511-b302-00505692354f", @options)
+    response = @gateway.void('e5b1b672-ba42-e511-b302-00505692354f', @options)
     assert_success response
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.void("", @options)
+    response = @gateway.void('', @options)
     assert_failure response
   end
 
@@ -118,7 +118,7 @@ class CreditcallTest < Test::Unit::TestCase
   end
 
   def test_verification_value_not_sent
-    @credit_card.verification_value = "  "
+    @credit_card.verification_value = '  '
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|

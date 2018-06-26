@@ -56,8 +56,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify_credentials
-        response = void("0")
-        response.params["result"] != "26"
+        response = void('0')
+        response.params['result'] != '26'
       end
 
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
@@ -252,8 +252,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year.to_s.sub(/^0+/, ''))
-        month = sprintf("%.2i", creditcard.month.to_s.sub(/^0+/, ''))
+        year  = sprintf('%.4i', creditcard.year.to_s.sub(/^0+/, ''))
+        month = sprintf('%.2i', creditcard.month.to_s.sub(/^0+/, ''))
 
         "#{year}#{month}"
       end
@@ -309,10 +309,10 @@ module ActiveMerchant #:nodoc:
                 end
               end
               if action != :add
-                xml.tag! "ProfileID", options[:profile_id]
+                xml.tag! 'ProfileID', options[:profile_id]
               end
               if action == :inquiry
-                xml.tag! "PaymentHistory", ( options[:history] ? 'Y' : 'N' )
+                xml.tag! 'PaymentHistory', ( options[:history] ? 'Y' : 'N' )
               end
             end
           end
@@ -335,7 +335,7 @@ module ActiveMerchant #:nodoc:
 
       def format_rp_date(time)
         case time
-          when Time, Date then time.strftime("%m%d%Y")
+          when Time, Date then time.strftime('%m%d%Y')
         else
           time.to_s
         end

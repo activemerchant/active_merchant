@@ -86,7 +86,7 @@ module ActiveMerchant
       errors = model.validate
 
       clean_backtrace do
-        assert_equal({}, errors, (message || "Expected to be valid"))
+        assert_equal({}, errors, (message || 'Expected to be valid'))
       end
 
       errors
@@ -96,7 +96,7 @@ module ActiveMerchant
       errors = model.validate
 
       clean_backtrace do
-        assert_not_equal({}, errors, "Expected to not be valid")
+        assert_not_equal({}, errors, 'Expected to not be valid')
       end
 
       errors
@@ -123,7 +123,7 @@ module ActiveMerchant
 
     def assert_scrubbed(unexpected_value, transcript)
       regexp = (Regexp === unexpected_value ? unexpected_value : Regexp.new(Regexp.quote(unexpected_value.to_s)))
-      refute_match regexp, transcript, "Expected the value to be scrubbed out of the transcript"
+      refute_match regexp, transcript, 'Expected the value to be scrubbed out of the transcript'
     end
 
     private
@@ -164,7 +164,7 @@ module ActiveMerchant
     end
 
     def credit_card_with_track_data(number = '4242424242424242', options = {})
-      exp_date = default_expiration_date.strftime("%y%m")
+      exp_date = default_expiration_date.strftime('%y%m')
 
       defaults = {
         :track_data => "%B#{number}^LONGSEN/L. ^#{exp_date}1200000000000000**123******?",
@@ -207,9 +207,9 @@ module ActiveMerchant
       apple_pay_json_raw = '{"version":"EC_v1","data":"","signature":""}'
       defaults = {
         payment_data: ActiveSupport::JSON.decode(apple_pay_json_raw),
-        payment_instrument_name: "Visa 2424",
-        payment_network: "Visa",
-        transaction_identifier: "uniqueidentifier123"
+        payment_instrument_name: 'Visa 2424',
+        payment_network: 'Visa',
+        transaction_identifier: 'uniqueidentifier123'
       }.update(options)
 
       ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
@@ -296,8 +296,8 @@ Test::Unit::TestCase.class_eval do
       gateway.purchase(amount, credit_card, params)
     end
 
-    File.open("transcript.log", "w") { |f| f.write(transcript) }
-    assert false, "A purchase transcript has been written to transcript.log for you to test scrubbing with."
+    File.open('transcript.log', 'w') { |f| f.write(transcript) }
+    assert false, 'A purchase transcript has been written to transcript.log for you to test scrubbing with.'
   end
 end
 
@@ -335,15 +335,15 @@ class MockResponse
   attr_reader   :code, :body, :message
   attr_accessor :headers
 
-  def self.succeeded(body, message="")
+  def self.succeeded(body, message='')
     MockResponse.new(200, body, message)
   end
 
-  def self.failed(body, http_status_code=422, message="")
+  def self.failed(body, http_status_code=422, message='')
     MockResponse.new(http_status_code, body, message)
   end
 
-  def initialize(code, body, message="", headers={})
+  def initialize(code, body, message='', headers={})
     @code, @body, @message, @headers = code, body, message, headers
   end
 

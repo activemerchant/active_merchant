@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         add_details_data(post, options)
 
         post[:capture] = false
-        commit(:post, "charges", post)
+        commit(:post, 'charges', post)
       end
 
       def capture(money, identifier, options = {})
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_order(post, money, options)
-        post[:description] = options[:description] || "Active Merchant Purchase"
+        post[:description] = options[:description] || 'Active Merchant Purchase'
         post[:reference_id] = options[:order_id] if options[:order_id]
         post[:currency] = (options[:currency] || currency(money)).downcase
         post[:monthly_installments] = options[:monthly_installments] if options[:monthly_installments]
@@ -175,13 +175,13 @@ module ActiveMerchant #:nodoc:
 
       def headers(meta)
         {
-          "Accept" => "application/vnd.conekta-v#{options[:version]}+json",
-          "Accept-Language" => "es",
-          "Authorization" => "Basic " + Base64.encode64("#{options[:key]}:"),
-          "RaiseHtmlError" => "false",
-          "Conekta-Client-User-Agent" => {"agent"=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
-          "X-Conekta-Client-User-Agent" => user_agent,
-          "X-Conekta-Client-User-Metadata" => meta.to_json
+          'Accept' => "application/vnd.conekta-v#{options[:version]}+json",
+          'Accept-Language' => 'es',
+          'Authorization' => 'Basic ' + Base64.encode64("#{options[:key]}:"),
+          'RaiseHtmlError' => 'false',
+          'Conekta-Client-User-Agent' => {'agent'=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
+          'X-Conekta-Client-User-Agent' => user_agent,
+          'X-Conekta-Client-User-Metadata' => meta.to_json
         }
       end
 
@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
         success = false
         begin
           raw_response = parse(ssl_request(method, live_url + url, (parameters ? parameters.to_query : nil), headers(options[:meta])))
-          success = (raw_response.key?("object") && (raw_response["object"] != "error"))
+          success = (raw_response.key?('object') && (raw_response['object'] != 'error'))
         rescue ResponseError => e
           raw_response = response_error(e.response.body)
         rescue JSON::ParserError
@@ -198,10 +198,10 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success,
-          raw_response["message_to_purchaser"],
+          raw_response['message_to_purchaser'],
           raw_response,
           test: test?,
-          authorization: raw_response["id"]
+          authorization: raw_response['id']
         )
       end
 
@@ -217,7 +217,7 @@ module ActiveMerchant #:nodoc:
         msg = 'Invalid response received from the Conekta API.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          "message" => msg
+          'message' => msg
         }
       end
     end

@@ -13,8 +13,8 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
       :year => Time.now.year + 1,
       :brand => 'visa',
       :verification_value => '123',
-      :first_name => "Fred",
-      :last_name => "Flintstone"
+      :first_name => 'Fred',
+      :last_name => 'Flintstone'
     )
 
     @bad_credit_card = ActiveMerchant::Billing::CreditCard.new(
@@ -23,21 +23,21 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
       :year => 14,
       :brand => 'visa',
       :verification_value => '999',
-      :first_name => "Fred",
-      :last_name => "Flintstone"
+      :first_name => 'Fred',
+      :last_name => 'Flintstone'
     )
 
     @check = ActiveMerchant::Billing::Check.new(
       :account_number => '123456789',
       :routing_number => '120450780',
       :account_type => 'checking',
-      :first_name => "Fred",
-      :last_name => "Flintstone"
+      :first_name => 'Fred',
+      :last_name => 'Flintstone'
     )
 
     cc_method = [
-      {:name => "My CC", :sort => 5, :method => @credit_card},
-      {:name => "Other CC", :sort => 12, :method => @credit_card}
+      {:name => 'My CC', :sort => 5, :method => @credit_card},
+      {:name => 'Other CC', :sort => 12, :method => @credit_card}
     ]
 
     @options = {
@@ -52,20 +52,20 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
     @customer_options = {
       :id => 123,
-      :notes => "Customer note.",
-      :data => "complex data",
-      :url => "somesite.com",
+      :notes => 'Customer note.',
+      :data => 'complex data',
+      :url => 'somesite.com',
       :payment_methods => cc_method
     }
 
     @update_customer_options = {
-      :notes => "NEW NOTE!"
+      :notes => 'NEW NOTE!'
     }
 
     @add_payment_options = {
       :make_default => true,
       :payment_method => {
-        :name => "My new card.",
+        :name => 'My new card.',
         :sort => 10,
         :method => @credit_card
       }
@@ -95,12 +95,12 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
     payment_methods = [
       {
-        :name => "My Visa", # optional
+        :name => 'My Visa', # optional
         :sort => 2, # optional
         :method => @credit_card
       },
       {
-        :name => "My Checking",
+        :name => 'My Checking',
         :method => @check
       }
     ]
@@ -241,7 +241,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     payment_method_id = response.params['add_customer_payment_method_return']
 
     update_payment_options = @add_payment_options[:payment_method].merge(:method_id => payment_method_id,
-                                                                         :name => "Updated Card.")
+                                                                         :name => 'Updated Card.')
 
     response = @gateway.update_customer_payment_method(update_payment_options)
     assert response.params['update_customer_payment_method_return']
@@ -272,7 +272,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     customer_number = response.params['add_customer_return']
 
     response = @gateway.run_customer_transaction(:customer_number => customer_number,# :method_id => 0, # optional
-                                                 :command => "Sale", :amount => 3000)
+                                                 :command => 'Sale', :amount => 3000)
     assert response.params['run_customer_transaction_return']
   end
 
@@ -365,7 +365,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     response = @gateway.run_check_sale(options)
     reference_number = response.params['run_check_sale_return']['ref_num']
 
-    response = @gateway.override_transaction(:reference_number => reference_number, :reason => "Because I said so")
+    response = @gateway.override_transaction(:reference_number => reference_number, :reason => 'Because I said so')
     assert response.params['faultstring']
   end
 

@@ -2,14 +2,14 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class VisanetPeruGateway < Gateway
       include Empty
-      self.display_name = "VisaNet Peru Gateway"
-      self.homepage_url = "http://www.visanet.com.pe"
+      self.display_name = 'VisaNet Peru Gateway'
+      self.homepage_url = 'http://www.visanet.com.pe'
 
-      self.test_url = "https://devapi.vnforapps.com/api.tokenization/api/v2/merchant"
-      self.live_url = "https://api.vnforapps.com/api.tokenization/api/v2/merchant"
+      self.test_url = 'https://devapi.vnforapps.com/api.tokenization/api/v2/merchant'
+      self.live_url = 'https://api.vnforapps.com/api.tokenization/api/v2/merchant'
 
-      self.supported_countries = ["US", "PE"]
-      self.default_currency = "PEN"
+      self.supported_countries = ['US', 'PE']
+      self.default_currency = 'PEN'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
@@ -34,27 +34,27 @@ module ActiveMerchant #:nodoc:
         params[:email] = options[:email] || 'unknown@email.com'
         params[:createAlias] = false
 
-        commit("authorize", params, options)
+        commit('authorize', params, options)
       end
 
       def capture(authorization, options={})
         params = {}
         options[:id_unico] = split_authorization(authorization)[1]
         add_auth_order_id(params, authorization, options)
-        commit("deposit", params, options)
+        commit('deposit', params, options)
       end
 
       def void(authorization, options={})
         params = {}
         add_auth_order_id(params, authorization, options)
-        commit("void", params, options)
+        commit('void', params, options)
       end
 
       def refund(amount, authorization, options={})
         params = {}
         params[:amount] = amount(amount) if amount
         add_auth_order_id(params, authorization, options)
-        response = commit("cancelDeposit", params, options)
+        response = commit('cancelDeposit', params, options)
         return response if response.success? || split_authorization(authorization).length == 1 || !options[:force_full_refund_if_unsettled]
 
         # Attempt RefundSingleTransaction if unsettled
@@ -83,8 +83,8 @@ module ActiveMerchant #:nodoc:
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["USD"] = 840
-      CURRENCY_CODES["PEN"] = 604
+      CURRENCY_CODES['USD'] = 840
+      CURRENCY_CODES['PEN'] = 604
 
       def add_invoice(params, money, options)
         # Visanet Peru expects a 9-digit numeric purchaseNumber
@@ -155,20 +155,20 @@ module ActiveMerchant #:nodoc:
             response,
             :test => test?,
             :authorization => authorization_from(params, response, options),
-            :error_code => response["errorCode"]
+            :error_code => response['errorCode']
           )
         end
       end
 
       def headers
         {
-          "Authorization" => "Basic " + Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip,
-          "Content-Type"  => "application/json"
+          'Authorization' => 'Basic ' + Base64.strict_encode64("#{@options[:access_key_id]}:#{@options[:secret_access_key]}").strip,
+          'Content-Type'  => 'application/json'
         }
       end
 
       def url(action, params, options={})
-        if (action == "authorize")
+        if (action == 'authorize')
           "#{base_url}/#{@options[:merchant_id]}"
         elsif (action == 'refund')
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{options[:transaction_id]}"
@@ -195,15 +195,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["errorCode"] == 0
+        response['errorCode'] == 0
       end
 
       def message_from(response, options, action)
-        if empty?(response["errorMessage"]) || response["errorMessage"] == "[ ]"
-          action == 'refund' ? "#{response["data"]["DSC_COD_ACCION"]}, #{options[:error_message]}" : response['data']['DSC_COD_ACCION']
+        if empty?(response['errorMessage']) || response['errorMessage'] == '[ ]'
+          action == 'refund' ? "#{response['data']['DSC_COD_ACCION']}, #{options[:error_message]}" : response['data']['DSC_COD_ACCION']
         elsif action == 'refund'
-          message = "#{response["errorMessage"]}, #{options[:error_message]}"
-          options[:error_message] = response["errorMessage"]
+          message = "#{response['errorMessage']}, #{options[:error_message]}"
+          options[:error_message] = response['errorMessage']
           message
         else
           response['errorMessage']
@@ -221,14 +221,14 @@ module ActiveMerchant #:nodoc:
             message_from(response, options, action),
             response,
             :test => test?,
-            :authorization => response["transactionUUID"],
-            :error_code => response["errorCode"]
+            :authorization => response['transactionUUID'],
+            :error_code => response['errorCode']
           )
         end
       end
 
       def unparsable_response(raw_response)
-        message = "Invalid JSON response received from VisanetPeruGateway. Please contact VisanetPeruGateway if you continue to receive this message."
+        message = 'Invalid JSON response received from VisanetPeruGateway. Please contact VisanetPeruGateway if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end

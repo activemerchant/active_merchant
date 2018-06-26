@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
+          r.process{inquire_request(authorization, options, 'AUTHORISED')} unless options[:authorization_validated]
           if r.params
             authorization_currency = r.params['amount_currency_code']
             options = options.merge(:currency => authorization_currency) if authorization_currency.present?
@@ -55,21 +55,21 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
+          r.process{inquire_request(authorization, options, 'AUTHORISED')} unless options[:authorization_validated]
           r.process{cancel_request(authorization, options)}
         end
       end
 
       def refund(money, authorization, options = {})
         response = MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, "CAPTURED", "SETTLED", "SETTLED_BY_MERCHANT") }
+          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') }
           r.process { refund_request(money, authorization, options) }
         end
 
         return response if response.success?
         return response unless options[:force_full_refund_if_unsettled]
 
-        void(authorization, options ) if response.params["last_event"] == "AUTHORISED"
+        void(authorization, options ) if response.params['last_event'] == 'AUTHORISED'
       end
 
       # Credits only function on a Merchant ID/login/profile flagged for Payouts
@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED", options)
+        commit('authorize', build_authorization_request(money, payment_method, options), 'AUTHORISED', options)
       end
 
       def capture_request(money, authorization, options)
@@ -127,8 +127,8 @@ module ActiveMerchant #:nodoc:
       def build_request
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct! :xml, :encoding => 'UTF-8'
-        xml.declare! :DOCTYPE, :paymentService, :PUBLIC, "-//WorldPay//DTD WorldPay PaymentService v1//EN", "http://dtd.worldpay.com/paymentService_v1.dtd"
-        xml.tag! 'paymentService', 'version' => "1.4", 'merchantCode' => @options[:login] do
+        xml.declare! :DOCTYPE, :paymentService, :PUBLIC, '-//WorldPay//DTD WorldPay PaymentService v1//EN', 'http://dtd.worldpay.com/paymentService_v1.dtd'
+        xml.tag! 'paymentService', 'version' => '1.4', 'merchantCode' => @options[:login] do
           yield xml
         end
         xml.target!
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
         build_request do |xml|
           xml.tag! 'submit' do
             xml.tag! 'order', order_tag_attributes(options) do
-              xml.description(options[:description].blank? ? "Purchase" : options[:description])
+              xml.description(options[:description].blank? ? 'Purchase' : options[:description])
               add_amount(xml, money, options)
               if options[:order_content]
                 xml.tag! 'orderContent' do
@@ -196,7 +196,7 @@ module ActiveMerchant #:nodoc:
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
           xml.tag! 'refund' do
-            add_amount(xml, money, options.merge(:debit_credit_indicator => "credit"))
+            add_amount(xml, money, options.merge(:debit_credit_indicator => 'credit'))
           end
         end
       end
@@ -287,7 +287,7 @@ module ActiveMerchant #:nodoc:
       def add_hcg_additional_data(xml, options)
         xml.tag! 'hcgAdditionalData' do
           options[:hcg_additional_data].each do |k, v|
-            xml.tag! "param", {name: k.to_s}, v
+            xml.tag! 'param', {name: k.to_s}, v
           end
         end
       end
@@ -354,8 +354,8 @@ module ActiveMerchant #:nodoc:
           :test => test?)
 
       rescue ActiveMerchant::ResponseError => e
-        if e.response.code.to_s == "401"
-          return Response.new(false, "Invalid credentials", {}, :test => test?)
+        if e.response.code.to_s == '401'
+          return Response.new(false, 'Invalid credentials', {}, :test => test?)
         else
           raise e
         end
@@ -384,7 +384,7 @@ module ActiveMerchant #:nodoc:
       def success_and_message_from(raw, success_criteria)
         success = (success_criteria.include?(raw[:last_event]) || raw[:ok].present?)
         if success
-          message = "SUCCESS"
+          message = 'SUCCESS'
         else
           message = (raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria))
         end
@@ -393,7 +393,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(success, raw)
-        unless success == "SUCCESS"
+        unless success == 'SUCCESS'
           raw[:iso8583_return_code_code] || raw[:error_code] || nil
         end
       end
@@ -411,7 +411,7 @@ module ActiveMerchant #:nodoc:
 
       def credit_fund_transfer_attribute(options)
         return unless options[:credit]
-        {'action' => "REFUND"}
+        {'action' => 'REFUND'}
       end
 
       def encoded_credentials

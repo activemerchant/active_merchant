@@ -253,7 +253,7 @@ module ActiveMerchant #:nodoc:
           post[:card] = {
             holder: payment.name,
             number: payment.number,
-            expiryMonth: "%02d" % payment.month,
+            expiryMonth: '%02d' % payment.month,
             expiryYear: payment.year,
             cvv: payment.verification_value,
           }
@@ -297,8 +297,8 @@ module ActiveMerchant #:nodoc:
           parse(
             ssl_post(
               url,
-              post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&"),
-              "Content-Type" => "application/x-www-form-urlencoded;charset=UTF-8"
+              post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&'),
+              'Content-Type' => 'application/x-www-form-urlencoded;charset=UTF-8'
             )
           )
         rescue ResponseError => e

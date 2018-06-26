@@ -64,12 +64,12 @@ class MetricsGlobalTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
         
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
+    assert_equal ['avs_result_code',
+                  'card_code',
+                  'response_code',
+                  'response_reason_code',
+                  'response_reason_text',
+                  'transaction_id'], response.params.keys.sort
 
     assert_match(/Authentication Failed/, response.message)
     
@@ -85,12 +85,12 @@ class MetricsGlobalTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
         
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
+    assert_equal ['avs_result_code',
+                  'card_code',
+                  'response_code',
+                  'response_reason_code',
+                  'response_reason_text',
+                  'transaction_id'], response.params.keys.sort
   
     assert_match(/Authentication Failed/, response.message)
     

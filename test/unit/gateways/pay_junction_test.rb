@@ -8,8 +8,8 @@ class PayJunctionTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = PayJunctionGateway.new(
-                 :login      => "pj-ql-01",
-                 :password   => "pj-ql-01p"
+                 :login      => 'pj-ql-01',
+                 :password   => 'pj-ql-01p'
                )
 
     @credit_card = credit_card
@@ -25,14 +25,14 @@ class PayJunctionTest < Test::Unit::TestCase
     Base.mode = :production
 
     live_gw  = PayJunctionGateway.new(
-                 :login      => "l",
-                 :password   => "p"
+                 :login      => 'l',
+                 :password   => 'p'
                )
     assert_false live_gw.test?
 
     test_gw = PayJunctionGateway.new(
-                :login      => "pj-ql-01",
-                :password   => "pj-ql-01p"
+                :login      => 'pj-ql-01',
+                :password   => 'pj-ql-01p'
               )
     assert test_gw.test?
   end
@@ -53,7 +53,7 @@ class PayJunctionTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    response = @gateway.refund(@amount, "123")
+    response = @gateway.refund(@amount, '123')
     assert_success response
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
   end
@@ -61,7 +61,7 @@ class PayJunctionTest < Test::Unit::TestCase
   def test_successful_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      response = @gateway.credit(@amount, "123")
+      response = @gateway.credit(@amount, '123')
       assert_success response
       assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     end
@@ -82,11 +82,11 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_add_creditcard_with_track_data
-    @credit_card.track_data = "Tracking data"
+    @credit_card.track_data = 'Tracking data'
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match "dc_track=Tracking+data", data
+      assert_match 'dc_track=Tracking+data', data
       assert_no_match(/dc_name=/, data)
       assert_no_match(/dc_number=/, data)
       assert_no_match(/dc_expiration_month=/, data)

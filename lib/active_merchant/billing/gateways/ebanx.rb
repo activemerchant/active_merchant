@@ -12,20 +12,20 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Ebanx'
 
       CARD_BRAND = {
-        visa: "visa",
-        master: "master_card",
-        american_express: "amex",
-        discover: "discover",
-        diners_club: "diners"
+        visa: 'visa',
+        master: 'master_card',
+        american_express: 'amex',
+        discover: 'discover',
+        diners_club: 'diners'
       }
 
       URL_MAP = {
-        purchase: "direct",
-        authorize: "direct",
-        capture: "capture",
-        refund: "refund",
-        void: "cancel",
-        store: "token"
+        purchase: 'direct',
+        authorize: 'direct',
+        capture: 'capture',
+        refund: 'refund',
+        void: 'cancel',
+        store: 'token'
       }
 
       HTTP_METHOD = {
@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_operation(post)
-        post[:operation] = "request"
+        post[:operation] = 'request'
       end
 
       def add_authorization(post, authorization)
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, payment, options)
         post[:payment][:name] = customer_name(payment, options)
-        post[:payment][:email] = options[:email] || "unspecified@example.com"
+        post[:payment][:email] = options[:email] || 'unspecified@example.com'
         post[:payment][:document] = options[:document]
         post[:payment][:birth_date] = options[:birth_date] if options[:birth_date]
       end
@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:payment][:address] = address[:address1].split[1..-1].join(" ") if address[:address1]
+          post[:payment][:address] = address[:address1].split[1..-1].join(' ') if address[:address1]
           post[:payment][:street_number] = address[:address1].split.first if address[:address1]
           post[:payment][:city] = address[:city]
           post[:payment][:state] = address[:state]
@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
 
       def add_card_or_token(post, payment)
         if payment.is_a?(String)
-          payment, brand = payment.split("|")
+          payment, brand = payment.split('|')
         end
         post[:payment][:payment_type_code] = payment.is_a?(String) ? brand : CARD_BRAND[payment.brand.to_sym]
         post[:payment][:creditcard] = payment_details(payment)
@@ -222,28 +222,28 @@ module ActiveMerchant #:nodoc:
 
       def success_from(action, response)
         if [:purchase, :capture, :refund].include?(action)
-          response.try(:[], "payment").try(:[], "status") == "CO"
+          response.try(:[], 'payment').try(:[], 'status') == 'CO'
         elsif action == :authorize
-          response.try(:[], "payment").try(:[], "status") == "PE"
+          response.try(:[], 'payment').try(:[], 'status') == 'PE'
         elsif action == :void
-          response.try(:[], "payment").try(:[], "status") == "CA"
+          response.try(:[], 'payment').try(:[], 'status') == 'CA'
         elsif action == :store
-          response.try(:[], "status") == "SUCCESS"
+          response.try(:[], 'status') == 'SUCCESS'
         else
           false
         end
       end
 
       def message_from(response)
-        return response["status_message"] if response["status"] == "ERROR"
-        response.try(:[], "payment").try(:[], "transaction_status").try(:[], "description")
+        return response['status_message'] if response['status'] == 'ERROR'
+        response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'description')
       end
 
       def authorization_from(action, parameters, response)
         if action == :store
           "#{response.try(:[], "token")}|#{CARD_BRAND[parameters[:payment_type_code].to_sym]}"
         else
-          response.try(:[], "payment").try(:[], "hash")
+          response.try(:[], 'payment').try(:[], 'hash')
         end
       end
 
@@ -267,13 +267,13 @@ module ActiveMerchant #:nodoc:
         parameters.map do |key, value|
           next if value != false && value.blank?
           "#{key}=#{value}"
-        end.compact.join("&")
+        end.compact.join('&')
       end
 
       def error_code_from(response, success)
         unless success
-          return response["status_code"] if response["status"] == "ERROR"
-          response.try(:[], "payment").try(:[], "transaction_status").try(:[], "code")
+          return response['status_code'] if response['status'] == 'ERROR'
+          response.try(:[], 'payment').try(:[], 'transaction_status').try(:[], 'code')
         end
       end
 
@@ -286,7 +286,7 @@ module ActiveMerchant #:nodoc:
       def customer_name(payment, options)
         address_name = options[:billing_address][:name] if options[:billing_address] && options[:billing_address][:name]
         if payment.is_a?(String)
-          address_name || "Not Provided"
+          address_name || 'Not Provided'
         else
           payment.name
         end

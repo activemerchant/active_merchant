@@ -43,9 +43,9 @@ module ActiveMerchant #:nodoc:
       }
 
       PERIODIC_ACTIONS = {
-        :add_triggered    => "add",
-        :remove_triggered => "delete",
-        :trigger          => "trigger"
+        :add_triggered    => 'add',
+        :remove_triggered => 'delete',
+        :trigger          => 'trigger'
       }
 
       PERIODIC_TYPES = {
@@ -167,8 +167,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Payment'
           xml.tag! 'Payment' do
-            xml.tag! 'TxnList', "count" => 1 do
-              xml.tag! 'Txn', "ID" => 1 do
+            xml.tag! 'TxnList', 'count' => 1 do
+              xml.tag! 'Txn', 'ID' => 1 do
                 xml.tag! 'txnType', TRANSACTIONS[action]
                 xml.tag! 'txnSource', 23
                 xml << body
@@ -226,8 +226,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Periodic'
           xml.tag! 'Periodic' do
-            xml.tag! 'PeriodicList', "count" => 1 do
-              xml.tag! 'PeriodicItem', "ID" => 1 do
+            xml.tag! 'PeriodicList', 'count' => 1 do
+              xml.tag! 'PeriodicItem', 'ID' => 1 do
                 xml << body
               end
             end

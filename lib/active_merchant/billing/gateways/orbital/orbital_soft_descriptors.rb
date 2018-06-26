@@ -27,16 +27,16 @@ module ActiveMerchant #:nodoc:
       def validate
         errors = []
 
-        errors << [:merchant_name, "is required"] if self.merchant_name.blank?
-        errors << [:merchant_name, "is required to be 25 bytes or less"] if self.merchant_name.bytesize > 25
+        errors << [:merchant_name, 'is required'] if self.merchant_name.blank?
+        errors << [:merchant_name, 'is required to be 25 bytes or less'] if self.merchant_name.bytesize > 25
 
         if(!empty?(self.merchant_phone) && !self.merchant_phone.match(PHONE_FORMAT_1) && !self.merchant_phone.match(PHONE_FORMAT_2))
-          errors << [:merchant_phone, "is required to follow \"NNN-NNN-NNNN\" or \"NNN-AAAAAAA\" format"]
+          errors << [:merchant_phone, 'is required to follow "NNN-NNN-NNNN" or "NNN-AAAAAAA" format']
         end
 
         [:merchant_email, :merchant_url].each do |attr|
           unless self.send(attr).blank?
-            errors << [attr, "is required to be 13 bytes or less"] if(self.send(attr).bytesize > 13)
+            errors << [attr, 'is required to be 13 bytes or less'] if(self.send(attr).bytesize > 13)
           end
         end
 

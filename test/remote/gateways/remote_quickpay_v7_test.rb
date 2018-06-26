@@ -39,10 +39,10 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
     @options[:ip] = '127.0.0.1' # will set :fraud_remote_addr
     @options[:fraud_http_referer] = 'http://www.excample.com'
     @options[:fraud_http_accept] = 'foo'
-    @options[:fraud_http_accept_language] = "DK"
-    @options[:fraud_http_accept_encoding] = "UFT8"
-    @options[:fraud_http_accept_charset] = "Latin"
-    @options[:fraud_http_user_agent] = "Safari"
+    @options[:fraud_http_accept_language] = 'DK'
+    @options[:fraud_http_accept_encoding] = 'UFT8'
+    @options[:fraud_http_accept_charset] = 'Latin'
+    @options[:fraud_http_user_agent] = 'Safari'
 
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_equal 'OK', response.message
@@ -60,13 +60,13 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_acquirers
-    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => "nets"))
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => 'nets'))
     assert_equal 'OK', response.message
     assert_success response
   end
 
   def test_unsuccessful_purchase_with_invalid_acquirers
-    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => "invalid"))
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => 'invalid'))
     assert_equal 'Error in field: acquirers', response.message
     assert_failure response
   end
@@ -201,19 +201,19 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
   end
 
   def test_successful_store_and_reference_purchase
-    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription"))
+    assert store = @gateway.store(@visa, @options.merge(:description => 'New subscription'))
     assert_success store
     assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
     assert_success purchase
   end
 
   def test_successful_store_with_acquirers
-    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription", :acquirers => "nets"))
+    assert store = @gateway.store(@visa, @options.merge(:description => 'New subscription', :acquirers => 'nets'))
     assert_success store
   end
 
   def test_successful_store_sans_description
-    assert store = @gateway.store(@visa, @options.merge(:acquirers => "nets"))
+    assert store = @gateway.store(@visa, @options.merge(:acquirers => 'nets'))
     assert_success store
   end
 

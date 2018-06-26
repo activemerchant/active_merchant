@@ -24,7 +24,7 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_authorization
-    @credit_card.number = "1234567890123"
+    @credit_card.number = '1234567890123'
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
   end
@@ -36,7 +36,7 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase
-    @credit_card.number = "1234567890123"
+    @credit_card.number = '1234567890123'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end

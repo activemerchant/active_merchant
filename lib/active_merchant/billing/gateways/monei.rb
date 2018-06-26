@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
       # Private: Build XML wrapping code yielding to code to fill the transaction information
       def build_request
         builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
-          xml.Request(:version => "1.0") do
+          xml.Request(:version => '1.0') do
             xml.Header { xml.Security(:sender => @options[:sender_id]) }
             xml.Transaction(:mode => test? ? 'CONNECTOR_TEST' : 'LIVE', :response => 'SYNC', :channel => @options[:channel_id]) do
               xml.User(:login => @options[:login], :pwd => @options[:pwd])
@@ -229,10 +229,10 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         xml = Nokogiri::XML(body)
         {
-            :unique_id => xml.xpath("//Response/Transaction/Identification/UniqueID").text,
-            :status => translate_status_code(xml.xpath("//Response/Transaction/Processing/Status/@code").text),
-            :reason => translate_status_code(xml.xpath("//Response/Transaction/Processing/Reason/@code").text),
-            :message => xml.xpath("//Response/Transaction/Processing/Return").text
+            :unique_id => xml.xpath('//Response/Transaction/Identification/UniqueID').text,
+            :status => translate_status_code(xml.xpath('//Response/Transaction/Processing/Status/@code').text),
+            :reason => translate_status_code(xml.xpath('//Response/Transaction/Processing/Reason/@code').text),
+            :message => xml.xpath('//Response/Transaction/Processing/Return').text
         }
       end
 

@@ -120,8 +120,8 @@ module ActiveMerchant #:nodoc:
         end
 
         ext_data = Nokogiri::HTML.parse(response[:extdata])
-        response[:approved_amount] = ext_data.xpath("//approvedamount").text
-        response[:balance_due] = ext_data.xpath("//balancedue").text
+        response[:approved_amount] = ext_data.xpath('//approvedamount').text
+        response[:balance_due] = ext_data.xpath('//balancedue').text
 
         response
       end
@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
         post[:TransType] = action
         post[:ExtData] = "<TermType>#{@options[:term_type]}</TermType>"
 
-        post.merge(params).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        post.merge(params).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def url
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:result] == "0" || response[:result] == "200"
+        response[:result] == '0' || response[:result] == '200'
       end
 
       def message_from(response)

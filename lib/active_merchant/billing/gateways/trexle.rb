@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:description] = options[:description] || "Active Merchant Purchase"
+        post[:description] = options[:description] || 'Active Merchant Purchase'
       end
 
       def add_creditcard(post, creditcard)
@@ -145,8 +145,8 @@ module ActiveMerchant #:nodoc:
 
       def headers(params = {})
         result = {
-          "Content-Type" => "application/json",
-          "Authorization" => "Basic #{Base64.strict_encode64(options[:api_key] + ':').strip}"
+          'Content-Type' => 'application/json',
+          'Authorization' => "Basic #{Base64.strict_encode64(options[:api_key] + ':').strip}"
         }
 
         result['X-Partner-Key'] = params[:partner_key] if params[:partner_key]
@@ -190,13 +190,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def unparsable_response(raw_response)
-        message = "Invalid JSON response received from Trexle. Please contact support@trexle.com if you continue to receive this message."
+        message = 'Invalid JSON response received from Trexle. Please contact support@trexle.com if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
       
       def invalid_response
-        message = "Invalid response."
+        message = 'Invalid response.'
         return Response.new(false, message)
       end
 

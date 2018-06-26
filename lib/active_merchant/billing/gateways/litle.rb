@@ -376,7 +376,7 @@ module ActiveMerchant #:nodoc:
 
         if parsed.empty?
           %w(response message).each do |attribute|
-            parsed[attribute.to_sym] = doc.xpath("//litleOnlineResponse").attribute(attribute).value
+            parsed[attribute.to_sym] = doc.xpath('//litleOnlineResponse').attribute(attribute).value
           end
         end
 
@@ -423,7 +423,7 @@ module ActiveMerchant #:nodoc:
         {
           merchantId: @options[:merchant_id],
           version: SCHEMA_VERSION,
-          xmlns: "http://www.litle.com/schema"
+          xmlns: 'http://www.litle.com/schema'
         }
       end
 

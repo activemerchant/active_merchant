@@ -25,7 +25,7 @@ class ExpiryDateTest < Test::Unit::TestCase
   end
   
   def test_month_and_year_coerced_to_integer
-    expiry = CreditCard::ExpiryDate.new("13", "2009")
+    expiry = CreditCard::ExpiryDate.new('13', '2009')
     assert_equal 13, expiry.month
     assert_equal 2009, expiry.year
   end

@@ -4,7 +4,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
   def setup
     Base.mode = :test
     @gateway = LitleGateway.new(fixtures(:litle))
-    @gateway.test_url = "https://payments.vantivprelive.com/vap/communicator/online"
+    @gateway.test_url = 'https://payments.vantivprelive.com/vap/communicator/online'
   end
 
   def test1
@@ -28,11 +28,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => "X", :cvv => "M")
+    auth_assertions(10100, credit_card, options, :avs => 'X', :cvv => 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => "X", :cvv => "M")
+    authorize_avs_assertions(credit_card, options, :avs => 'X', :cvv => 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => "X", :cvv => "M")
+    sale_assertions(10100, credit_card, options, :avs => 'X', :cvv => 'M')
   end
 
   def test2
@@ -53,11 +53,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => "Z", :cvv => "M")
+    auth_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => "Z", :cvv => "M")
+    authorize_avs_assertions(credit_card, options, :avs => 'Z', :cvv => 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => "Z", :cvv => "M")
+    sale_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
   end
 
   def test3
@@ -80,11 +80,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
         :country => 'US'
       }
     }
-    auth_assertions(10100, credit_card, options, :avs => "Z", :cvv => "M")
+    auth_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => "Z", :cvv => "M")
+    authorize_avs_assertions(credit_card, options, :avs => 'Z', :cvv => 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => "Z", :cvv => "M")
+    sale_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
   end
 
   def test4
@@ -107,11 +107,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => "A", :cvv => nil)
+    auth_assertions(10100, credit_card, options, :avs => 'A', :cvv => nil)
 
-    authorize_avs_assertions(credit_card, options, :avs => "A")
+    authorize_avs_assertions(credit_card, options, :avs => 'A')
 
-    sale_assertions(10100, credit_card, options, :avs => "A", :cvv => nil)
+    sale_assertions(10100, credit_card, options, :avs => 'A', :cvv => nil)
   end
 
   def test5
@@ -128,11 +128,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
       :order_id => '5'
     }
 
-    auth_assertions(10100, credit_card, options, :avs => "U", :cvv => "M")
+    auth_assertions(10100, credit_card, options, :avs => 'U', :cvv => 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => "U", :cvv => "M")
+    authorize_avs_assertions(credit_card, options, :avs => 'U', :cvv => 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => "U", :cvv => "M")
+    sale_assertions(10100, credit_card, options, :avs => 'U', :cvv => 'M')
   end
 
   def test6
@@ -157,8 +157,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '110', response.params['response']
     assert_equal 'Insufficient Funds', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "P", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 6. sale
@@ -166,8 +166,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '110', response.params['response']
     assert_equal 'Insufficient Funds', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "P", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
 
 
@@ -201,20 +201,20 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '301', response.params['response']
     assert_equal 'Invalid Account Number', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "N", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'N', response.cvv_result['code']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 7: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => "I", :cvv => "N", :message => "Invalid Account Number", :success => false)
+    authorize_avs_assertions(credit_card, options, :avs => 'I', :cvv => 'N', :message => 'Invalid Account Number', :success => false)
 
     # 7. sale
     assert response = @gateway.purchase(10100, credit_card, options)
     assert !response.success?
     assert_equal '301', response.params['response']
     assert_equal 'Invalid Account Number', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "N", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'N', response.cvv_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
   end
 
@@ -240,20 +240,20 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '123', response.params['response']
     assert_equal 'Call Discover', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "P", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 8: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => "I", :cvv => "P", :message => "Call Discover", :success => false)
+    authorize_avs_assertions(credit_card, options, :avs => 'I', :cvv => 'P', :message => 'Call Discover', :success => false)
 
     # 8: sale
     assert response = @gateway.purchase(80080, credit_card, options)
     assert !response.success?
     assert_equal '123', response.params['response']
     assert_equal 'Call Discover', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "P", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
   end
 
@@ -279,18 +279,18 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '303', response.params['response']
     assert_equal 'Pick Up Card', response.message
-    assert_equal "I", response.avs_result["code"]
+    assert_equal 'I', response.avs_result['code']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 9: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => "I", :message => "Pick Up Card", :success => false)
+    authorize_avs_assertions(credit_card, options, :avs => 'I', :message => 'Pick Up Card', :success => false)
 
     # 9: sale
     assert response = @gateway.purchase(10100, credit_card, options)
     assert !response.success?
     assert_equal '303', response.params['response']
     assert_equal 'Pick Up Card', response.message
-    assert_equal "I", response.avs_result["code"]
+    assert_equal 'I', response.avs_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
   end
 
@@ -402,7 +402,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert auth_response = @gateway.authorize(10100, credit_card, options)
     assert_success auth_response
     assert_equal '44444 ', auth_response.params['authCode']
-    assert_equal 'A', auth_response.avs_result["code"]
+    assert_equal 'A', auth_response.avs_result['code']
     puts "Test #{options[:order_id]}: #{txn_id(auth_response)}"
 
     assert capture_response = @gateway.capture(5050, auth_response.authorization, options)
@@ -1056,9 +1056,9 @@ class RemoteLitleCertification < Test::Unit::TestCase
       {
         month: '01',
         year: '2021',
-        brand: "visa",
-        number:  "4457000300000007",
-        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       })
 
     assert response = @gateway.purchase(10010, decrypted_apple_pay, options)
@@ -1075,9 +1075,9 @@ class RemoteLitleCertification < Test::Unit::TestCase
         source: :android_pay,
         month: '01',
         year: '2021',
-        brand: "visa",
-        number:  "4457000300000007",
-        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       })
 
     assert response = @gateway.purchase(10010, decrypted_android_pay, options)
@@ -1168,8 +1168,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(amount, card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"] if assertions[:avs]
-    assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'] if assertions[:avs]
+    assert_equal assertions[:cvv], response.cvv_result['code'] if assertions[:cvv]
     assert_equal auth_code(options[:order_id]), response.params['authCode']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
@@ -1193,8 +1193,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(000, credit_card, options)
     assert_equal assertions.key?(:success) ? assertions[:success] : true, response.success?
     assert_equal assertions[:message] || 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"], caller.inspect
-    assert_equal assertions[:cvv], response.cvv_result["code"], caller.inspect if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'], caller.inspect
+    assert_equal assertions[:cvv], response.cvv_result['code'], caller.inspect if assertions[:cvv]
     puts "Test #{options[:order_id]} AVS Only: #{txn_id(response)}"
   end
 
@@ -1203,8 +1203,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.purchase(amount, card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"] if assertions[:avs]
-    assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'] if assertions[:avs]
+    assert_equal assertions[:cvv], response.cvv_result['code'] if assertions[:cvv]
     assert_equal auth_code(options[:order_id]), response.params['authCode']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
 
@@ -1225,8 +1225,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(amount, card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"] if assertions[:avs]
-    assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'] if assertions[:avs]
+    assert_equal assertions[:cvv], response.cvv_result['code'] if assertions[:cvv]
     assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1A: capture
@@ -1246,8 +1246,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(000, credit_card, options)
     assert_equal assertions.key?(:success) ? assertions[:success] : true, response.success?
     assert_equal assertions[:message] || 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"], caller.inspect
-    assert_equal assertions[:cvv], response.cvv_result["code"], caller.inspect if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'], caller.inspect
+    assert_equal assertions[:cvv], response.cvv_result['code'], caller.inspect if assertions[:cvv]
   end
 
   def sale_assertions(amount, card, options, assertions={})
@@ -1255,8 +1255,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.purchase(amount, card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"] if assertions[:avs]
-    assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'] if assertions[:avs]
+    assert_equal assertions[:cvv], response.cvv_result['code'] if assertions[:cvv]
     # assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1B: credit
@@ -1302,6 +1302,6 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def txn_id(response)
-    response.authorization.split(";")[0]
+    response.authorization.split(';')[0]
   end
 end

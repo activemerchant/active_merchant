@@ -9,14 +9,14 @@ module ActiveMerchant #:nodoc:
     # largely depends on the transaction acquiring bank. Be sure to understand how
     # your account was configured prior to using this gateway.
     class CulqiGateway < Gateway
-      self.display_name = "Culqi"
-      self.homepage_url = "https://www.culqi.com"
+      self.display_name = 'Culqi'
+      self.homepage_url = 'https://www.culqi.com'
 
-      self.test_url = "https://staging.paymentz.com/transaction/"
-      self.live_url = "https://secure.culqi.com/transaction/"
+      self.test_url = 'https://staging.paymentz.com/transaction/'
+      self.live_url = 'https://secure.culqi.com/transaction/'
 
-      self.supported_countries = ["PE"]
-      self.default_currency = "PEN"
+      self.supported_countries = ['PE']
+      self.default_currency = 'PEN'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :diners_club, :american_express]
 
@@ -86,8 +86,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify_credentials
-        response = void("0", order_id: "0")
-        response.message.include? "Transaction not found"
+        response = void('0', order_id: '0')
+        response.message.include? 'Transaction not found'
       end
 
       def store(credit_card, options={})
@@ -198,13 +198,13 @@ module ActiveMerchant #:nodoc:
       end
 
       ACTIONS = {
-        authorize: "SingleCallGenericServlet",
-        capture: "SingleCallGenericCaptureServlet",
-        void: "SingleCallGenericVoid",
-        refund: "SingleCallGenericReverse",
-        tokenize: "SingleCallTokenServlet",
-        invalidate: "SingleCallInvalidateToken",
-        tokenpay: "SingleCallTokenTransaction",
+        authorize: 'SingleCallGenericServlet',
+        capture: 'SingleCallGenericCaptureServlet',
+        void: 'SingleCallGenericVoid',
+        refund: 'SingleCallGenericReverse',
+        tokenize: 'SingleCallTokenServlet',
+        invalidate: 'SingleCallInvalidateToken',
+        tokenpay: 'SingleCallTokenTransaction',
       }
 
       def commit(action, params)
@@ -229,8 +229,8 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Accept"  => "application/json",
-          "Content-Type"  => "application/x-www-form-urlencoded;charset=UTF-8"
+          'Accept'  => 'application/json',
+          'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8'
         }
       end
 
@@ -246,11 +246,11 @@ module ActiveMerchant #:nodoc:
         begin
           JSON.parse(body)
         rescue JSON::ParserError
-          message = "Invalid JSON response received from CulqiGateway. Please contact CulqiGateway if you continue to receive this message."
+          message = 'Invalid JSON response received from CulqiGateway. Please contact CulqiGateway if you continue to receive this message.'
           message += "(The raw response returned by the API was #{body.inspect})"
           {
-            "status" => "N",
-            "statusdescription" => message
+            'status' => 'N',
+            'statusdescription' => message
           }
         end
       end

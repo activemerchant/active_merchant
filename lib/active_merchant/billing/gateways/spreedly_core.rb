@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
           doc.retained(true) if retain
         end
 
-        commit("payment_methods.xml", request, :post, :payment_method_token)
+        commit('payment_methods.xml', request, :post, :payment_method_token)
       end
 
       def purchase_with_token(money, payment_method_token, options)

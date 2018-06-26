@@ -17,7 +17,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
         phone_number: '8522847035'
       }),
       order_id: generate_unique_id,
-      document: "853.513.468-93"
+      document: '853.513.468-93'
     }
   end
 
@@ -30,9 +30,9 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = @options.merge({
       order_id: generate_unique_id,
-      ip: "127.0.0.1",
-      email: "joe@example.com",
-      birth_date: "10/11/1980",
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      birth_date: '10/11/1980',
       person_type: 'personal'
     })
 
@@ -42,11 +42,11 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_as_brazil_business_with_responsible_fields
-    options = @options.update(document: "32593371000110",
+    options = @options.update(document: '32593371000110',
                               person_type: 'business',
                               responsible_name: 'Business Person',
                               responsible_document: '32593371000111',
-                              responsible_birth_date: "1/11/1975")
+                              responsible_birth_date: '1/11/1975')
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
@@ -56,9 +56,9 @@ class RemoteEbanxTest < Test::Unit::TestCase
   def test_successful_purchase_as_colombian
     options = @options.merge({
       order_id: generate_unique_id,
-      ip: "127.0.0.1",
-      email: "jose@example.com.co",
-      birth_date: "10/11/1980",
+      ip: '127.0.0.1',
+      email: 'jose@example.com.co',
+      birth_date: '10/11/1980',
       billing_address: address({
         address1: '1040 Rua E',
         city: 'Medellín',
@@ -116,7 +116,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    refund_options = @options.merge({description: "full refund"})
+    refund_options = @options.merge({description: 'full refund'})
     assert refund = @gateway.refund(@amount, purchase.authorization, refund_options)
     assert_success refund
     assert_equal 'Accepted', refund.message
@@ -126,7 +126,7 @@ class RemoteEbanxTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    refund_options = @options.merge(description: "refund due to returned item")
+    refund_options = @options.merge(description: 'refund due to returned item')
     assert refund = @gateway.refund(@amount-1, purchase.authorization, refund_options)
     assert_success refund
   end
@@ -162,11 +162,11 @@ class RemoteEbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_store_and_purchase_as_brazil_business
-    options = @options.update(document: "32593371000110",
+    options = @options.update(document: '32593371000110',
                               person_type: 'business',
                               responsible_name: 'Business Person',
                               responsible_document: '32593371000111',
-                              responsible_birth_date: "1/11/1975")
+                              responsible_birth_date: '1/11/1975')
 
     store = @gateway.store(@credit_card, options)
     assert_success store

@@ -26,40 +26,40 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
       :year => 12,
       :brand => 'visa',
       :verification_value => '123',
-      :first_name => "Fred",
-      :last_name => "Flintstone"
+      :first_name => 'Fred',
+      :last_name => 'Flintstone'
     )
 
     @check = ActiveMerchant::Billing::Check.new(
       :account_number => '123456789012',
       :routing_number => '123456789',
       :account_type => 'checking',
-      :first_name => "Fred",
-      :last_name => "Flintstone"
+      :first_name => 'Fred',
+      :last_name => 'Flintstone'
     )
 
     payment_methods = [
       {
-        :name => "My Visa", # optional
+        :name => 'My Visa', # optional
         :sort => 2, # optional
         :method => @credit_card
       },
       {
-        :name => "My Checking",
+        :name => 'My Checking',
         :method => @check
       }
     ]
 
     payment_method = {
-      :name => "My new Visa", # optional
+      :name => 'My new Visa', # optional
       :method => @credit_card
     }
 
     @customer_options = {
       :id => 1, # optional: merchant assigned id, usually db id
-      :notes =>  "Note about customer", # optional
-      :data => "Some Data", # optional
-      :url => "awesomesite.com", # optional
+      :notes =>  'Note about customer', # optional
+      :data => 'Some Data', # optional
+      :url => 'awesomesite.com', # optional
       :payment_methods => payment_methods # optional
     }
 

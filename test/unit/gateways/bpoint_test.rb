@@ -46,7 +46,7 @@ class BpointTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
   end
 
   def test_successful_authorize

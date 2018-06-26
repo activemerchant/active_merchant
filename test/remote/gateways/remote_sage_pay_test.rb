@@ -78,7 +78,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
         :name => 'Tekin Suleyman',
         :address1 => 'Flat 10 Lapwing Court',
         :address2 => 'West Didsbury',
-        :city => "Manchester",
+        :city => 'Manchester',
         :county => 'Greater Manchester',
         :country => 'GB',
         :zip => 'M20 2PS'
@@ -86,7 +86,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :shipping_address => {
         :name => 'Tekin Suleyman',
         :address1 => '120 Grosvenor St',
-        :city => "Manchester",
+        :city => 'Manchester',
         :county => 'Greater Manchester',
         :country => 'GB',
         :zip => 'M1 7QW'
@@ -189,15 +189,15 @@ class RemoteSagePayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_overly_long_fields
     options = {
-      description: "SagePay transactions fail if the description is more than 100 characters. Therefore, we truncate it to 100 characters.",
+      description: 'SagePay transactions fail if the description is more than 100 characters. Therefore, we truncate it to 100 characters.',
       order_id: "#{generate_unique_id} SagePay order_id cannot be more than 40 characters.",
       billing_address: {
         name: 'FirstNameCannotBeMoreThanTwentyChars SurnameCannotBeMoreThanTwenty',
         address1: 'The Billing Address 1 Cannot Be More Than One Hundred Characters if it is it will fail.  Therefore, we truncate it.',
         address2: 'The Billing Address 2 Cannot Be More Than One Hundred Characters if it is it will fail.  Therefore, we truncate it.',
-        phone: "111222333444555666777888999",
-        city: "TheCityCannotBeMoreThanFortyCharactersReally",
-        state: "NCStateIsTwoChars",
+        phone: '111222333444555666777888999',
+        city: 'TheCityCannotBeMoreThanFortyCharactersReally',
+        state: 'NCStateIsTwoChars',
         country: 'USMustBeTwoChars',
         zip: 'PostalCodeCannotExceedTenChars'
       },
@@ -205,16 +205,16 @@ class RemoteSagePayTest < Test::Unit::TestCase
         name: 'FirstNameCannotBeMoreThanTwentyChars SurnameCannotBeMoreThanTwenty',
         address1: 'The Shipping Address 1 Cannot Be More Than One Hundred Characters if it is it will fail.  Therefore, we truncate it.',
         address2: 'The Shipping Address 2 Cannot Be More Than One Hundred Characters if it is it will fail.  Therefore, we truncate it.',
-        phone: "111222333444555666777888999",
-        city: "TheCityCannotBeMoreThanFortyCharactersReally",
-        state: "NCStateIsTwoChars",
+        phone: '111222333444555666777888999',
+        city: 'TheCityCannotBeMoreThanFortyCharactersReally',
+        state: 'NCStateIsTwoChars',
         country: 'USMustBeTwoChars',
         zip: 'PostalCodeCannotExceedTenChars'
       }
     }
 
-    @visa.first_name = "FullNameOnACardMustBeLessThanFiftyCharacters"
-    @visa.last_name = "OtherwiseSagePayFailsIt"
+    @visa.first_name = 'FullNameOnACardMustBeLessThanFiftyCharacters'
+    @visa.last_name = 'OtherwiseSagePayFailsIt'
 
     assert response = @gateway.purchase(@amount, @visa, options)
     assert_success response
@@ -236,7 +236,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
     @options[:apply_avscv2] = 1
     response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
-    assert_equal "Y", response.cvv_result['code']
+    assert_equal 'Y', response.cvv_result['code']
   end
 
   def test_successful_purchase_with_pay_pal_callback_url
@@ -386,7 +386,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@visa, @options)
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
   end
 
   def test_failed_verify

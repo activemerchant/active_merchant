@@ -292,7 +292,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal "Refused", response.message
+    assert_equal 'Refused', response.message
   end
 
   def test_authorize_nonfractional_currency
@@ -337,7 +337,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @avs_address)
     assert_failure response
-    assert_equal "N", response.avs_result['code']
+    assert_equal 'N', response.avs_result['code']
     assert response.test?
   end
 
@@ -352,7 +352,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def successful_authorize_with_3ds_response
-    "pspReference=8815161318854998&resultCode=RedirectShopper&issuerUrl=https%3A%2F%2Ftest.adyen.com%2Fhpp%2F3d%2Fvalidate.shtml&md=WIFa2sF3CuPyN53Txjt3U%2F%2BDuCsddzywiY5NLgEAdUAXPksHUzXL5E%2BsfvdpolkGWR8b1oh%2FNA3jNaUP9UCgfjhXqRslGFy9OGqcZ1ITMz54HHm%2FlsCKN9bTftKnYA4F7GqvOgcIIrinUZjbMvW9doGifwzSqYLo6ASOm6bARL5n7cIFV8IWtA2yPlO%2FztKSTRJt1glN4s8sMcpE57z4soWKMuycbdXdpp6d4ZRSa%2F1TPF0MnJF0zNaSAAkw9JpXqGMOz5sFF2Smpc38HXJzM%2FV%2B1mmoDhhWmXXOb5YQ0QSCS7DXKIcr8ZtuGuGmFp0QOfZiO41%2B2I2N7VhONVx8xSn%2BLu4m6vaDIg5qsnd9saxaWwbJpl9okKm6pB2MJap9ScuBCcvI496BPCrjQ2LHxvDWhk6M3Exemtv942NQIGlsiPaW0KXoC2dQvBsxWh0K&paRequest=eNpVUtuOgjAQ%2FRXj%2B1KKoIWMTVgxWR%2B8RNkPaMpEycrFUlb8%2B20B190%2BnXPm0pnTQnpRiMkJZauQwxabRpxxkmfLacQYDeiczihjgR%2BGbMrhEB%2FxxuEbVZNXJaeO63hAntSUK3kRpeYg5O19s%2BPUm%2FnBHMhIoUC1SXiKjT4URSxvba5QARlkKEWB%2FFSbgbLr41QIpXFVFUB6HWTVllo9OPNMwyeBVl35Reu6iQi53%2B9OM5Y7sipMVqmF1G9tA8QmAnlNeGgtakzjLs%2F4Pjl3u3TtbdNtZzDdJV%2FBPu7PEojNgExo5J5LmUvpfELDyPcjPwDS6yAKOxFffx4nxhXXrDwIUNt74oFQG%2FgrgLFdYSkfPFwws9WTAXZ1VaLJMPb%2BYiCvoVcf1mSpjW%2B%2BN9i8YKFr0MLa3Qdsl9yYREM37NtYAsSWkvElyfjiBv37CT9ySbE1"
+    'pspReference=8815161318854998&resultCode=RedirectShopper&issuerUrl=https%3A%2F%2Ftest.adyen.com%2Fhpp%2F3d%2Fvalidate.shtml&md=WIFa2sF3CuPyN53Txjt3U%2F%2BDuCsddzywiY5NLgEAdUAXPksHUzXL5E%2BsfvdpolkGWR8b1oh%2FNA3jNaUP9UCgfjhXqRslGFy9OGqcZ1ITMz54HHm%2FlsCKN9bTftKnYA4F7GqvOgcIIrinUZjbMvW9doGifwzSqYLo6ASOm6bARL5n7cIFV8IWtA2yPlO%2FztKSTRJt1glN4s8sMcpE57z4soWKMuycbdXdpp6d4ZRSa%2F1TPF0MnJF0zNaSAAkw9JpXqGMOz5sFF2Smpc38HXJzM%2FV%2B1mmoDhhWmXXOb5YQ0QSCS7DXKIcr8ZtuGuGmFp0QOfZiO41%2B2I2N7VhONVx8xSn%2BLu4m6vaDIg5qsnd9saxaWwbJpl9okKm6pB2MJap9ScuBCcvI496BPCrjQ2LHxvDWhk6M3Exemtv942NQIGlsiPaW0KXoC2dQvBsxWh0K&paRequest=eNpVUtuOgjAQ%2FRXj%2B1KKoIWMTVgxWR%2B8RNkPaMpEycrFUlb8%2B20B190%2BnXPm0pnTQnpRiMkJZauQwxabRpxxkmfLacQYDeiczihjgR%2BGbMrhEB%2FxxuEbVZNXJaeO63hAntSUK3kRpeYg5O19s%2BPUm%2FnBHMhIoUC1SXiKjT4URSxvba5QARlkKEWB%2FFSbgbLr41QIpXFVFUB6HWTVllo9OPNMwyeBVl35Reu6iQi53%2B9OM5Y7sipMVqmF1G9tA8QmAnlNeGgtakzjLs%2F4Pjl3u3TtbdNtZzDdJV%2FBPu7PEojNgExo5J5LmUvpfELDyPcjPwDS6yAKOxFffx4nxhXXrDwIUNt74oFQG%2FgrgLFdYSkfPFwws9WTAXZ1VaLJMPb%2BYiCvoVcf1mSpjW%2B%2BN9i8YKFr0MLa3Qdsl9yYREM37NtYAsSWkvElyfjiBv37CT9ySbE1'
   end
 
   def failed_authorize_response

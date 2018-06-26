@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
     # be a rebadged Securepay Australia service, though some differences exist.
     class NabTransactGateway < Gateway
       API_VERSION = 'xml-4.2'
-      PERIODIC_API_VERSION = "spxml-4.2"
+      PERIODIC_API_VERSION = 'spxml-4.2'
 
       class_attribute :test_periodic_url, :live_periodic_url
 
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        return "" if transcript.blank?
+        return '' if transcript.blank?
         transcript.
           gsub(%r((<cardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<cvv>)[^<]+(<))i, '\1[FILTERED]\2').
@@ -156,8 +156,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Payment'
           xml.tag! 'Payment' do
-            xml.tag! 'TxnList', "count" => 1 do
-              xml.tag! 'Txn', "ID" => 1 do
+            xml.tag! 'TxnList', 'count' => 1 do
+              xml.tag! 'Txn', 'ID' => 1 do
                 xml.tag! 'txnType', TRANSACTIONS[action]
                 xml.tag! 'txnSource', 23
                 xml << body
@@ -187,8 +187,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Periodic'
           xml.tag! 'Periodic' do
-            xml.tag! 'PeriodicList', "count" => 1 do
-              xml.tag! 'PeriodicItem', "ID" => 1 do
+            xml.tag! 'PeriodicList', 'count' => 1 do
+              xml.tag! 'PeriodicItem', 'ID' => 1 do
                 xml.tag! 'actionType', action.to_s
                 xml.tag! 'periodicType', PERIODIC_TYPES[action] if PERIODIC_TYPES[action]
                 xml << body

@@ -9,7 +9,7 @@ class RemoteViaklixTest < Test::Unit::TestCase
     
     @options = {
       :order_id => '#1000.1',
-      :email => "paul@domain.com",   
+      :email => 'paul@domain.com',   
       :description => 'Test Transaction',
       :billing_address => address
     }

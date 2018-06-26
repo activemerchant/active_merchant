@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'NETPAY Gateway'
 
       CURRENCY_CODES = {
-        "MXN" => '484'
+        'MXN' => '484'
       }
 
       # The header keys that we will provide in the response params hash
@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        order_id, amount, currency = authorization.split("|")
+        order_id, amount, currency = authorization.split('|')
         [order_id, amount, currency]
       end
 
@@ -166,8 +166,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
+        year  = sprintf('%.4i', credit_card.year)
+        month = sprintf('%.2i', credit_card.month)
 
         "#{month}/#{year[-2..-1]}"
       end
@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
         add_login_data(parameters)
         add_action(parameters, action, options)
 
-        post = parameters.collect{|key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        post = parameters.collect{|key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         parse(ssl_post(url, post), parameters)
       end
 

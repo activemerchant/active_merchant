@@ -33,7 +33,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
 
   def test_ip_address_is_passed
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(ip: "1.2.3.4"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(ip: '1.2.3.4'))
     end.check_request do |endpoint, data, headers|
       assert_match %r{customerIP%3E1.2.3.4%3C}, data
     end.respond_with(successful_purchase_response)
@@ -72,7 +72,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_purchase_from_canada_includes_state_field
-    @options[:billing_address][:country] = "CA"
+    @options[:billing_address][:country] = 'CA'
     @gateway.expects(:ssl_post).with do |url, data|
       data =~ /state/ && data !~ /region/
     end.returns(successful_purchase_response)
@@ -81,7 +81,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_purchase_from_us_includes_state_field
-    @options[:billing_address][:country] = "US"
+    @options[:billing_address][:country] = 'US'
     @gateway.expects(:ssl_post).with do |url, data|
       data =~ /state/ && data !~ /region/
     end.returns(successful_purchase_response)
@@ -90,7 +90,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_purchase_from_any_other_country_includes_region_field
-    @options[:billing_address][:country] = "GB"
+    @options[:billing_address][:country] = 'GB'
     @gateway.expects(:ssl_post).with do |url, data|
       data =~ /region/ && data !~ /state/
     end.returns(successful_purchase_response)
@@ -99,11 +99,11 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_shipping_address
-    @options[:shipping_address] = {:country => "CA"}
+    @options[:shipping_address] = {:country => 'CA'}
     @gateway.expects(:ssl_post).with do |url, data|
-      xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
+      xml = data.split('&').detect{|string| string =~ /txnRequest=/}.gsub('txnRequest=','')
       doc = Nokogiri::XML.parse(CGI.unescape(xml))
-      doc.xpath('//xmlns:shippingDetails/xmlns:country').first.text == "CA" && doc.to_s.include?('<shippingDetails>')
+      doc.xpath('//xmlns:shippingDetails/xmlns:country').first.text == 'CA' && doc.to_s.include?('<shippingDetails>')
     end.returns(successful_purchase_response)
 
     assert @gateway.purchase(@amount, @credit_card, @options)
@@ -112,7 +112,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   def test_purchase_without_shipping_address
     @options[:shipping_address] = nil
     @gateway.expects(:ssl_post).with do |url, data|
-      xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
+      xml = data.split('&').detect{|string| string =~ /txnRequest=/}.gsub('txnRequest=','')
       doc = Nokogiri::XML.parse(CGI.unescape(xml))
       doc.to_s.include?('<shippingDetails>') == false
     end.returns(successful_purchase_response)
@@ -154,7 +154,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    assert response = @gateway.void("1234567", @options)
+    assert response = @gateway.void('1234567', @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -180,7 +180,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
                    :password => 'password',
                    :test => true
                  )
-      @gateway.expects(:ssl_post).with("https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1", anything).returns(successful_purchase_response)
+      @gateway.expects(:ssl_post).with('https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1', anything).returns(successful_purchase_response)
 
       assert response = @gateway.purchase(@amount, @credit_card, @options)
       assert_instance_of Response, response

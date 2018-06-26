@@ -162,22 +162,22 @@ module ActiveMerchant #:nodoc:
         response = begin
           parse( ssl_post(url, post_data(action,parameters)) )
         rescue ActiveMerchant::ResponseError => e
-          { "error_code" => "404",  "auth_response_text" => e.to_s }
+          { 'error_code' => '404',  'auth_response_text' => e.to_s }
         end
 
-        Response.new(response["error_code"] == "000", message_from(response), response,
-          :authorization => response["transaction_id"],
+        Response.new(response['error_code'] == '000', message_from(response), response,
+          :authorization => response['transaction_id'],
           :test => test?,
-          :cvv_result => response["cvv2_result"],
-          :avs_result => { :code => response["avs_result"] }
+          :cvv_result => response['cvv2_result'],
+          :avs_result => { :code => response['avs_result'] }
         )
       end
 
       def message_from(response)
-        if response["error_code"] == "000"
-          "This transaction has been approved"
+        if response['error_code'] == '000'
+          'This transaction has been approved'
         else
-          response["auth_response_text"]
+          response['auth_response_text']
         end
       end
 
@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         post[:profile_key] = @options[:password]
         post[:transaction_type] = action if action
 
-        request = post.merge(parameters).map {|key,value| "#{key}=#{CGI.escape(value.to_s)}"}.join("&")
+        request = post.merge(parameters).map {|key,value| "#{key}=#{CGI.escape(value.to_s)}"}.join('&')
         request
       end
     end

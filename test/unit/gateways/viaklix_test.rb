@@ -11,7 +11,7 @@ class ViaklixTest < Test::Unit::TestCase
     @credit_card = credit_card    
     @options = {
       :order_id => '37',
-      :email => "paul@domain.com",
+      :email => 'paul@domain.com',
       :description => 'Test Transaction',
       :billing_address => address
     }

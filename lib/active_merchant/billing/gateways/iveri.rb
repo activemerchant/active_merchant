@@ -175,18 +175,18 @@ module ActiveMerchant #:nodoc:
 
       def headers(post)
         {
-          "Content-Type" => "text/xml; charset=utf-8",
-          "Content-Length" => post.size.to_s,
-          "SOAPAction" => "http://iveri.com/Execute"
+          'Content-Type' => 'text/xml; charset=utf-8',
+          'Content-Length' => post.size.to_s,
+          'SOAPAction' => 'http://iveri.com/Execute'
         }
       end
 
       def parse(body)
         parsed = {}
 
-        vxml = Nokogiri::XML(body).remove_namespaces!.xpath("//Envelope/Body/ExecuteResponse/ExecuteResult").inner_text
+        vxml = Nokogiri::XML(body).remove_namespaces!.xpath('//Envelope/Body/ExecuteResponse/ExecuteResult').inner_text
         doc = Nokogiri::XML(vxml)
-        doc.xpath("*").each do |node|
+        doc.xpath('*').each do |node|
           if (node.elements.empty?)
             parsed[underscore(node.name)] = node.text
           else
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
       def parse_element(parsed, node)
         if !node.attributes.empty?
           node.attributes.each do |a|
-            parsed[underscore(node.name)+ "_" + underscore(a[1].name)] = a[1].value
+            parsed[underscore(node.name)+ '_' + underscore(a[1].name)] = a[1].value
           end
         end
 
@@ -218,7 +218,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response, succeeded)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
           response['result_description'] || response['result_acquirer_description']
         end
@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
         camel_cased_word.to_s.gsub(/::/, '/').
           gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
           gsub(/([a-z\d])([A-Z])/,'\1_\2').
-          tr("-", "_").
+          tr('-', '_').
           downcase
       end
     end

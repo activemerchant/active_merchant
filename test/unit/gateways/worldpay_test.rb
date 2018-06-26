@@ -97,7 +97,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
 
     assert_success response
-    assert_equal %w(authorize capture), response.responses.collect{|e| e.params["action"]}
+    assert_equal %w(authorize capture), response.responses.collect{|e| e.params['action']}
   end
 
   def test_successful_void
@@ -105,8 +105,8 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.void(@options[:order_id], @options)
     end.respond_with(successful_void_inquiry_response, successful_void_response)
     assert_success response
-    assert_equal "SUCCESS", response.message
-    assert_equal "924e810350efc21a989e0ac7727ce43b", response.params["cancel_received_order_code"]
+    assert_equal 'SUCCESS', response.message
+    assert_equal '924e810350efc21a989e0ac7727ce43b', response.params['cancel_received_order_code']
   end
 
   def test_void_fails_unless_status_is_authorized
@@ -129,7 +129,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(successful_refund_inquiry_response('SETTLED'), successful_refund_response)
     assert_success response
-    assert_equal "05d9f8c622553b1df1fe3a145ce91ccf", response.params['refund_received_order_code']
+    assert_equal '05d9f8c622553b1df1fe3a145ce91ccf', response.params['refund_received_order_code']
   end
 
   def test_successful_refund_for_settled_by_merchant_payment
@@ -137,7 +137,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(successful_refund_inquiry_response('SETTLED_BY_MERCHANT'), successful_refund_response)
     assert_success response
-    assert_equal "05d9f8c622553b1df1fe3a145ce91ccf", response.params['refund_received_order_code']
+    assert_equal '05d9f8c622553b1df1fe3a145ce91ccf', response.params['refund_received_order_code']
   end
 
   def test_refund_fails_unless_status_is_captured
@@ -153,7 +153,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options.merge(force_full_refund_if_unsettled: true))
     end.respond_with(failed_refund_inquiry_response, failed_refund_inquiry_response, successful_void_response)
     assert_success response
-    assert "cancel", response.responses.last.params["action"]
+    assert 'cancel', response.responses.last.params['action']
   end
 
   def test_capture
@@ -182,7 +182,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(description: "Something cool."))
+      @gateway.authorize(@amount, @credit_card, @options.merge(description: 'Something cool.'))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<description>Something cool.</description>), data
     end.respond_with(successful_authorize_response)
@@ -287,7 +287,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(billing_address: { phone: "555-3323" }))
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: { phone: '555-3323' }))
     end.check_request do |endpoint, data, headers|
       assert_no_match %r(firstName), data
       assert_no_match %r(lastName), data
@@ -340,7 +340,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_email
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(email: "eggcellent@example.com"))
+      @gateway.authorize(100, @credit_card, @options.merge(email: 'eggcellent@example.com'))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<shopperEmailAddress>eggcellent@example.com</shopperEmailAddress>), data
     end.respond_with(successful_authorize_response)
@@ -354,7 +354,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_ip
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(ip: "192.137.11.44"))
+      @gateway.authorize(100, @credit_card, @options.merge(ip: '192.137.11.44'))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<session shopperIPAddress="192.137.11.44"/>), data
     end.respond_with(successful_authorize_response)
@@ -368,30 +368,30 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_parsing
     response = stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(address: {address1: "123 Anystreet", country: "US"}))
+      @gateway.authorize(100, @credit_card, @options.merge(address: {address1: '123 Anystreet', country: 'US'}))
     end.respond_with(successful_authorize_response)
 
     assert_equal({
-        "action"=>"authorize",
-        "amount_currency_code"=>"HKD",
-        "amount_debit_credit_indicator"=>"credit",
-        "amount_exponent"=>"2",
-        "amount_value"=>"15000",
-        "avs_result_code_description"=>"UNKNOWN",
-        "balance"=>true,
-        "balance_account_type"=>"IN_PROCESS_AUTHORISED",
-        "card_number"=>"4111********1111",
-        "cvc_result_code_description"=>"UNKNOWN",
-        "last_event"=>"AUTHORISED",
-        "order_status"=>true,
-        "order_status_order_code"=>"R50704213207145707",
-        "payment"=>true,
-        "payment_method"=>"VISA-SSL",
-        "payment_service"=>true,
-        "payment_service_merchant_code"=>"XXXXXXXXXXXXXXX",
-        "payment_service_version"=>"1.4",
-        "reply"=>true,
-        "risk_score_value"=>"1",
+        'action'=>'authorize',
+        'amount_currency_code'=>'HKD',
+        'amount_debit_credit_indicator'=>'credit',
+        'amount_exponent'=>'2',
+        'amount_value'=>'15000',
+        'avs_result_code_description'=>'UNKNOWN',
+        'balance'=>true,
+        'balance_account_type'=>'IN_PROCESS_AUTHORISED',
+        'card_number'=>'4111********1111',
+        'cvc_result_code_description'=>'UNKNOWN',
+        'last_event'=>'AUTHORISED',
+        'order_status'=>true,
+        'order_status_order_code'=>'R50704213207145707',
+        'payment'=>true,
+        'payment_method'=>'VISA-SSL',
+        'payment_service'=>true,
+        'payment_service_merchant_code'=>'XXXXXXXXXXXXXXX',
+        'payment_service_version'=>'1.4',
+        'reply'=>true,
+        'risk_score_value'=>'1',
       }, response.params)
   end
 
@@ -399,7 +399,7 @@ class WorldpayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_equal "Basic dGVzdGxvZ2luOnRlc3RwYXNzd29yZA==", headers['Authorization']
+      assert_equal 'Basic dGVzdGxvZ2luOnRlc3RwYXNzd29yZA==', headers['Authorization']
     end.respond_with(successful_authorize_response)
   end
 
@@ -625,7 +625,7 @@ class WorldpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_refund_inquiry_response(last_event="CAPTURED")
+  def successful_refund_inquiry_response(last_event='CAPTURED')
     <<-RESPONSE
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"

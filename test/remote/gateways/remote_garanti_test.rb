@@ -58,6 +58,6 @@ class RemoteGarantiTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal '0651', response.params["reason_code"]
+    assert_equal '0651', response.params['reason_code']
   end
 end

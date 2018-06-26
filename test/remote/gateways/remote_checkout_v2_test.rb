@@ -13,12 +13,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       order_id: '1',
       billing_address: address,
       description: 'Purchase',
-      email: "longbob.longsen@example.com"
+      email: 'longbob.longsen@example.com'
     }
     @additional_options = @options.merge(
       card_on_file: true,
       transaction_indicator: 2,
-      previous_charge_id: "charge_12312"
+      previous_charge_id: 'charge_12312'
     )
   end
 
@@ -49,34 +49,34 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'S', response.avs_result["code"]
-    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+    assert_equal 'S', response.avs_result['code']
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result['message']
   end
 
   def test_successful_authorize_includes_avs_result
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'S', response.avs_result["code"]
-    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result["message"]
+    assert_equal 'S', response.avs_result['code']
+    assert_equal 'U.S.-issuing bank does not support AVS.', response.avs_result['message']
   end
 
   def test_successful_purchase_includes_cvv_result
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'Y', response.cvv_result["code"]
+    assert_equal 'Y', response.cvv_result['code']
   end
 
   def test_successful_authorize_includes_cvv_result
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
-    assert_equal 'Y', response.cvv_result["code"]
+    assert_equal 'Y', response.cvv_result['code']
   end
 
   def test_successful_purchase_with_descriptors
-    options = @options.merge(descriptor_name: "shop", descriptor_city: "london")
+    options = @options.merge(descriptor_name: 'shop', descriptor_city: 'london')
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Succeeded', response.message
@@ -95,7 +95,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_ip
-    response = @gateway.purchase(@amount, @credit_card, ip: "96.125.185.52")
+    response = @gateway.purchase(@amount, @credit_card, ip: '96.125.185.52')
     assert_success response
     assert_equal 'Succeeded', response.message
   end

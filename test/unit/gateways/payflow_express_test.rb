@@ -118,7 +118,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
 
   def test_get_express_details_with_invalid_xml
-    @gateway.expects(:ssl_post).returns(successful_get_express_details_response(:street => "Main & Magic"))
+    @gateway.expects(:ssl_post).returns(successful_get_express_details_response(:street => 'Main & Magic'))
     response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
     assert_instance_of PayflowExpressResponse, response
     assert_success response
@@ -137,7 +137,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   
   private
   
-  def successful_get_express_details_response(options={:street => "111 Main St."})
+  def successful_get_express_details_response(options={:street => '111 Main St.'})
     <<-RESPONSE
 <XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
   <ResponseData>

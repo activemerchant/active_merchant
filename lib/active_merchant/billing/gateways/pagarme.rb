@@ -132,18 +132,18 @@ module ActiveMerchant #:nodoc:
             end
             post_data(h)
           elsif value.is_a?(Array)
-            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&")
+            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join('&')
           else
             "#{key}=#{CGI.escape(value.to_s)}"
           end
-        end.compact.join("&")
+        end.compact.join('&')
       end
 
       def headers(options = {})
         {
-          "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":x").strip,
-          "User-Agent" => "Pagar.me/1 ActiveMerchant/#{ActiveMerchant::VERSION}",
-          "Accept-Encoding" => "deflate"
+          'Authorization' => 'Basic ' + Base64.encode64(@api_key.to_s + ':x').strip,
+          'User-Agent' => "Pagar.me/1 ActiveMerchant/#{ActiveMerchant::VERSION}",
+          'Accept-Encoding' => 'deflate'
         }
       end
 
@@ -186,61 +186,61 @@ module ActiveMerchant #:nodoc:
 		  msg = 'Resposta inválida retornada pela API do Pagar.me. Por favor entre em contato com suporte@pagar.me se você continuar recebendo essa mensagem.'
         msg += "  (A resposta retornada pela API foi #{raw_response.inspect})"
         {
-          "errors" => [{
-            "message" => msg
+          'errors' => [{
+            'message' => msg
           }]
         }
       end
 
       def success_from(response)
-        success_purchase = response.key?("status") && response["status"] == "paid"
-        success_authorize = response.key?("status") && response["status"] == "authorized"
-        success_refund = response.key?("status") && response["status"] == "refunded"
+        success_purchase = response.key?('status') && response['status'] == 'paid'
+        success_authorize = response.key?('status') && response['status'] == 'authorized'
+        success_refund = response.key?('status') && response['status'] == 'refunded'
 
         success_purchase || success_authorize || success_refund
       end
 
       def failure_from(response)
-        response.key?("status") && response["status"] == "refused"
+        response.key?('status') && response['status'] == 'refused'
       end
 
       def message_from(response)
         if success_from(response)
-          case response["status"]
-          when "paid"
-            "Transação aprovada"
-          when "authorized"
-            "Transação autorizada"
-          when "refunded"
-            "Transação estornada"
+          case response['status']
+          when 'paid'
+            'Transação aprovada'
+          when 'authorized'
+            'Transação autorizada'
+          when 'refunded'
+            'Transação estornada'
           else
             "Transação com status '#{response["status"]}'"
           end
         elsif failure_from(response)
-          "Transação recusada"
-        elsif response.key?("errors")
-          response["errors"][0]["message"]
+          'Transação recusada'
+        elsif response.key?('errors')
+          response['errors'][0]['message']
         else
           msg = json_error(response)
-          msg["errors"][0]["message"]
+          msg['errors'][0]['message']
         end
       end
 
       def authorization_from(response)
         if success_from(response)
-          response["id"]
+          response['id']
         end
       end
 
       def test?()
-        @api_key.start_with?("ak_test")
+        @api_key.start_with?('ak_test')
       end
 
       def error_code_from(response)
         if failure_from(response)
-          STANDARD_ERROR_CODE_MAPPING["refused"]
-        elsif response.key?("errors")
-          STANDARD_ERROR_CODE_MAPPING["processing_error"]
+          STANDARD_ERROR_CODE_MAPPING['refused']
+        elsif response.key?('errors')
+          STANDARD_ERROR_CODE_MAPPING['processing_error']
         end
       end
     end

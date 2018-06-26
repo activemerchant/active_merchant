@@ -5,7 +5,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
   def setup
     Base.mode = :test
-    @gateway = GlobalTransportGateway.new(global_user_name: 'login', global_password: 'password', term_type: "ABC")
+    @gateway = GlobalTransportGateway.new(global_user_name: 'login', global_password: 'password', term_type: 'ABC')
 
     @options = {
       order_id: '1',
@@ -20,8 +20,8 @@ class GlobalTransportTest < Test::Unit::TestCase
     assert_success response
     assert_equal '3648838', response.authorization
     assert response.test?
-    assert_equal "CVV matches", response.cvv_result["message"]
-    assert_equal "Street address and postal code do not match.", response.avs_result["message"]
+    assert_equal 'CVV matches', response.cvv_result['message']
+    assert_equal 'Street address and postal code do not match.', response.avs_result['message']
   end
 
   def test_failed_purchase
@@ -38,8 +38,8 @@ class GlobalTransportTest < Test::Unit::TestCase
     assert_success response
     assert_equal '8869188', response.authorization
     assert_equal 'Partial Approval', response.message
-    assert_equal '3.54', response.params["balance_due"]
-    assert_equal '20.00', response.params["approved_amount"]
+    assert_equal '3.54', response.params['balance_due']
+    assert_equal '20.00', response.params['approved_amount']
   end
 
   def test_successful_authorize_and_capture
@@ -48,7 +48,7 @@ class GlobalTransportTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "3648890", response.authorization
+    assert_equal '3648890', response.authorization
 
     capture = stub_comms do
       @gateway.capture(100, response.authorization)
@@ -65,8 +65,8 @@ class GlobalTransportTest < Test::Unit::TestCase
     end.respond_with(successful_partial_authorize_response)
 
     assert_success response
-    assert_equal "8869269", response.authorization
-    assert_equal "Partial Approval", response.message
+    assert_equal '8869269', response.authorization
+    assert_equal 'Partial Approval', response.message
 
     capture = stub_comms do
       @gateway.capture(150, response.authorization)
@@ -86,7 +86,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
   def test_failed_capture
     capture = stub_comms do
-      @gateway.capture(100, "Authorization")
+      @gateway.capture(100, 'Authorization')
     end.respond_with(failed_capture_response)
 
     assert_failure capture
@@ -99,7 +99,7 @@ class GlobalTransportTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "3648838", response.authorization
+    assert_equal '3648838', response.authorization
 
     refund = stub_comms do
       @gateway.refund(100, response.authorization)
@@ -112,7 +112,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
   def test_failed_refund
     refund = stub_comms do
-      @gateway.refund(100, "PurchaseAuth")
+      @gateway.refund(100, 'PurchaseAuth')
     end.respond_with(failed_refund_response)
 
     assert_failure refund
@@ -136,11 +136,11 @@ class GlobalTransportTest < Test::Unit::TestCase
 
   def test_failed_void
     void = stub_comms do
-      @gateway.void("PurchaseAuth")
+      @gateway.void('PurchaseAuth')
     end.respond_with(failed_void_response)
 
     assert_failure void
-    assert_equal "Invalid PNRef", void.message
+    assert_equal 'Invalid PNRef', void.message
   end
 
   def test_successful_verify
@@ -161,7 +161,7 @@ class GlobalTransportTest < Test::Unit::TestCase
 
   def test_truncation
     stub_comms do
-      @gateway.purchase(100, credit_card, order_id: "a" * 17)
+      @gateway.purchase(100, credit_card, order_id: 'a' * 17)
     end.check_request do |endpoint, data, headers|
       assert_match(/&InvNum=a{16}&/, data)
     end.respond_with(successful_purchase_response)

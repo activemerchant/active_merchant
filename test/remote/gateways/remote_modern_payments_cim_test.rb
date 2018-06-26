@@ -19,25 +19,25 @@ class RemoteModernPaymentsCimTest < Test::Unit::TestCase
   def test_successful_create_customer
     response = @gateway.create_customer(@options)
     assert_success response
-    assert !response.params["create_customer_result"].blank?
+    assert !response.params['create_customer_result'].blank?
   end
   
   def test_successful_modify_customer_credit_card
     customer = @gateway.create_customer(@options)
     assert_success customer
     
-    customer_id = customer.params["create_customer_result"]
+    customer_id = customer.params['create_customer_result']
     
     credit_card = @gateway.modify_customer_credit_card(customer_id, @credit_card)
     assert_success credit_card
-    assert !credit_card.params["modify_customer_credit_card_result"].blank?
+    assert !credit_card.params['modify_customer_credit_card_result'].blank?
   end
   
   def test_succsessful_authorize_credit_card_payment
     customer = @gateway.create_customer(@options)
     assert_success customer
     
-    customer_id = customer.params["create_customer_result"]
+    customer_id = customer.params['create_customer_result']
     
     credit_card = @gateway.modify_customer_credit_card(customer_id, @credit_card)
     assert_success credit_card

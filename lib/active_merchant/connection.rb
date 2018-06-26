@@ -15,7 +15,7 @@ module ActiveMerchant
     CA_FILE = File.expand_path('../certs/cacert.pem', File.dirname(__FILE__))
     CA_PATH = nil
     RETRY_SAFE = false
-    RUBY_184_POST_HEADERS = { "Content-Type" => "application/x-www-form-urlencoded" }
+    RUBY_184_POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
 
     attr_accessor :endpoint
     attr_accessor :open_timeout
@@ -83,7 +83,7 @@ module ActiveMerchant
 
             result = case method
             when :get
-              raise ArgumentError, "GET requests do not support a request body" if body
+              raise ArgumentError, 'GET requests do not support a request body' if body
               http.get(endpoint.request_uri, headers)
             when :post
               debug body
@@ -111,14 +111,14 @@ module ActiveMerchant
             end
           end
 
-          info "--> %d %s (%d %.4fs)" % [result.code, result.message, result.body ? result.body.length : 0, realtime], tag
+          info '--> %d %s (%d %.4fs)' % [result.code, result.message, result.body ? result.body.length : 0, realtime], tag
           debug result.body
           result
         end
       end
 
     ensure
-      info "connection_request_total_time=%.4fs" % [Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start], tag
+      info 'connection_request_total_time=%.4fs' % [Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start], tag
       http.finish if http.started?
     end
 
@@ -145,7 +145,7 @@ module ActiveMerchant
     end
 
     def configure_ssl(http)
-      return unless endpoint.scheme == "https"
+      return unless endpoint.scheme == 'https'
 
       http.use_ssl = true
       http.ssl_version = ssl_version if ssl_version

@@ -50,20 +50,20 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
 
   def test_setup_authorization_discount_taxes_included_free_shipping
     amount = 2518
-    options = {:ip=>"127.0.0.1",
-      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
-      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
-      :customer=>"test6@test.com",
-      :email=>"test6@test.com",
-      :order_id=>"#1092",
-      :currency=>"USD",
+    options = {:ip=>'127.0.0.1',
+      :return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1',
+      :cancel_return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1',
+      :customer=>'test6@test.com',
+      :email=>'test6@test.com',
+      :order_id=>'#1092',
+      :currency=>'USD',
       :subtotal=>2798,
       :items => [
-        {:name => "test4",
-          :description => "test4",
+        {:name => 'test4',
+          :description => 'test4',
           :quantity=>2 ,
           :amount=> 1399 ,
-          :url=>"http://localhost:3000/products/test4"}],
+          :url=>'http://localhost:3000/products/test4'}],
       :discount=>280,
       :no_shipping=>true}
     response = @gateway.setup_authorization(amount, options)
@@ -72,20 +72,20 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
 
   def test_setup_authorization_with_discount_taxes_additional
     amount = 2518
-    options = {:ip=>"127.0.0.1",
-      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
-      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
-      :customer=>"test6@test.com",
-      :email=>"test6@test.com",
-      :order_id=>"#1092",
-      :currency=>"USD",
+    options = {:ip=>'127.0.0.1',
+      :return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1',
+      :cancel_return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1',
+      :customer=>'test6@test.com',
+      :email=>'test6@test.com',
+      :order_id=>'#1092',
+      :currency=>'USD',
       :subtotal=>2798,
       :items => [
-        {:name => "test4",
-          :description => "test4",
+        {:name => 'test4',
+          :description => 'test4',
           :quantity=>2 ,
           :amount=> 1399 ,
-          :url=>"http://localhost:3000/products/test4"}],
+          :url=>'http://localhost:3000/products/test4'}],
       :discount=>280,
       :no_shipping=>true}
     response = @gateway.setup_authorization(amount, options)
@@ -94,20 +94,20 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
 
   def test_setup_authorization_with_discount_taxes_and_shipping_addtiional
     amount = 2518
-    options = {:ip=>"127.0.0.1",
-      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
-      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
-      :customer=>"test6@test.com",
-      :email=>"test6@test.com",
-      :order_id=>"#1092",
-      :currency=>"USD",
+    options = {:ip=>'127.0.0.1',
+      :return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1',
+      :cancel_return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1',
+      :customer=>'test6@test.com',
+      :email=>'test6@test.com',
+      :order_id=>'#1092',
+      :currency=>'USD',
       :subtotal=>2798,
       :items => [
-        {:name => "test4",
-          :description => "test4",
+        {:name => 'test4',
+          :description => 'test4',
           :quantity=>2 ,
           :amount=> 1399 ,
-          :url=>"http://localhost:3000/products/test4"}],
+          :url=>'http://localhost:3000/products/test4'}],
       :discount=>280,
       :no_shipping=>false}
     response = @gateway.setup_authorization(amount, options)
@@ -123,20 +123,20 @@ class RemotePayflowExpressUkTest < Test::Unit::TestCase
 
   def test_setup_authorization_discount_taxes_included_free_shipping
     amount = 2518
-    options = {:ip=>"127.0.0.1",
-      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
-      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
-      :customer=>"test6@test.com",
-      :email=>"test6@test.com",
-      :order_id=>"#1092",
-      :currency=>"GBP",
+    options = {:ip=>'127.0.0.1',
+      :return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1',
+      :cancel_return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1',
+      :customer=>'test6@test.com',
+      :email=>'test6@test.com',
+      :order_id=>'#1092',
+      :currency=>'GBP',
       :subtotal=>2798,
       :items=> [
-        {:name=>"test4",
-          :description=>"test4",
+        {:name=>'test4',
+          :description=>'test4',
           :quantity=>2,
           :amount=>1399,
-          :url=>"http://localhost:3000/products/test4"},
+          :url=>'http://localhost:3000/products/test4'},
         ],
       :discount=>280,
       :no_shipping=>true}
@@ -146,20 +146,20 @@ class RemotePayflowExpressUkTest < Test::Unit::TestCase
 
   def test_setup_authorization_with_discount_taxes_additional
     amount = 2518
-    options = {:ip=>"127.0.0.1",
-      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
-      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
-      :customer=>"test6@test.com",
-      :email=>"test6@test.com",
-      :order_id=>"#1092",
-      :currency=>"GBP",
+    options = {:ip=>'127.0.0.1',
+      :return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1',
+      :cancel_return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1',
+      :customer=>'test6@test.com',
+      :email=>'test6@test.com',
+      :order_id=>'#1092',
+      :currency=>'GBP',
       :subtotal=>2798,
       :items=> [
-        {:name=>"test4",
-          :description=>"test4",
+        {:name=>'test4',
+          :description=>'test4',
           :quantity=>2,
           :amount=>1399,
-          :url=>"http://localhost:3000/products/test4"},
+          :url=>'http://localhost:3000/products/test4'},
         ],
       :discount=>280,
       :no_shipping=>true}
@@ -169,20 +169,20 @@ class RemotePayflowExpressUkTest < Test::Unit::TestCase
 
   def test_setup_authorization_with_discount_taxes_and_shipping_addtiional
     amount = 2518
-    options = {:ip=>"127.0.0.1",
-      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
-      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
-      :customer=>"test6@test.com",
-      :email=>"test6@test.com",
-      :order_id=>"#1092",
-      :currency=>"GBP",
+    options = {:ip=>'127.0.0.1',
+      :return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1',
+      :cancel_return_url=>'http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1',
+      :customer=>'test6@test.com',
+      :email=>'test6@test.com',
+      :order_id=>'#1092',
+      :currency=>'GBP',
       :subtotal=>2798,
       :items=> [
-        {:name=>"test4",
-          :description=>"test4",
+        {:name=>'test4',
+          :description=>'test4',
           :quantity=>2,
           :amount=>1399,
-          :url=>"http://localhost:3000/products/test4"},
+          :url=>'http://localhost:3000/products/test4'},
         ],
       :discount=>280,
       :no_shipping=>false}

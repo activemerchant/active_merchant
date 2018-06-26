@@ -212,7 +212,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(success, response)
-        success ? 'OK' : (response['error']['message'] || "Unknown error - please contact Netbanx-Paysafe")
+        success ? 'OK' : (response['error']['message'] || 'Unknown error - please contact Netbanx-Paysafe')
       end
 
       def authorization_from(success, url, method, response)
@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
           #
           # both id's are used to unstore, the payment token is only used for
           # purchase transactions
-          [response['id'], response['cards'].first['id'], response['cards'].first['paymentToken']].join("|")
+          [response['id'], response['cards'].first['id'], response['cards'].first['paymentToken']].join('|')
         end
       end
 

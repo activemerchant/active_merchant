@@ -13,7 +13,7 @@ class InstapayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_instance_of  Response, response
     assert_success response
-    assert_equal "118583850", response.authorization
+    assert_equal '118583850', response.authorization
   end
 
   def test_unsuccessful_purchase
@@ -31,7 +31,7 @@ class InstapayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_instance_of  Response, response
     assert_success response
-    assert_equal "118583850", response.authorization
+    assert_equal '118583850', response.authorization
   end
 
   def test_unsuccessful_auth
@@ -60,15 +60,15 @@ class InstapayTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     
-    response = @gateway.capture(100, "123456")
+    response = @gateway.capture(100, '123456')
     assert_equal InstapayGateway::SUCCESS_MESSAGE, response.message
   end
   
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
     
-    response = @gateway.capture(100, "123456")
-    assert_equal "Post amount exceeds Auth amount", response.message
+    response = @gateway.capture(100, '123456')
+    assert_equal 'Post amount exceeds Auth amount', response.message
   end
 
   private

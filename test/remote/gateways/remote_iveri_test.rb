@@ -26,8 +26,8 @@ class RemoteIveriTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_more_options
     options = {
-      ip: "127.0.0.1",
-      email: "joe@example.com",
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
       currency: 'ZAR'
     }
 
@@ -38,7 +38,7 @@ class RemoteIveriTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_3ds_params
     options = {
-      eci: "ThreeDSecure",
+      eci: 'ThreeDSecure',
       xid: SecureRandom.hex(14),
       cavv: SecureRandom.hex(14)
     }

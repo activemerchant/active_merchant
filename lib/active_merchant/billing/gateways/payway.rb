@@ -179,28 +179,28 @@ module ActiveMerchant
         add_auth(post)
         post.merge!('order.type' => TRANSACTIONS[action])
 
-        request = post.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+        request = post.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
         response = ssl_post(self.live_url, request)
 
         params = {}
         CGI.parse(response).each_pair do |key, value|
-          actual_key = key.split(".").last
+          actual_key = key.split('.').last
           params[actual_key.underscore.to_sym] = value[0]
         end
 
         message = "#{SUMMARY_CODES[params[:summary_code]]} - #{RESPONSE_CODES[params[:response_code]]}"
 
-        success = (params[:summary_code] ? (params[:summary_code] == "0") : (params[:response_code] == "00"))
+        success = (params[:summary_code] ? (params[:summary_code] == '0') : (params[:response_code] == '00'))
 
         Response.new(success, message, params,
-          :test => (@options[:merchant].to_s == "TEST"),
+          :test => (@options[:merchant].to_s == 'TEST'),
           :authorization => post[:order_number]
         )
       rescue ActiveMerchant::ResponseError => e
         raise unless e.response.code == '403'
-        return Response.new(false, "Invalid credentials", {}, :test => test?)
+        return Response.new(false, 'Invalid credentials', {}, :test => test?)
       rescue ActiveMerchant::ClientCertificateError
-        return Response.new(false, "Invalid certificate", {}, :test => test?)
+        return Response.new(false, 'Invalid certificate', {}, :test => test?)
       end
     end
   end

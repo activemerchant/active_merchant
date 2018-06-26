@@ -3,13 +3,13 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantPartnersGateway < Gateway
-      self.display_name = "Merchant Partners"
-      self.homepage_url = "http://www.merchantpartners.com/"
+      self.display_name = 'Merchant Partners'
+      self.homepage_url = 'http://www.merchantpartners.com/'
 
-      self.live_url = "https://trans.merchantpartners.com/cgi-bin/ProcessXML.cgi"
+      self.live_url = 'https://trans.merchantpartners.com/cgi-bin/ProcessXML.cgi'
 
-      self.supported_countries = ["US"]
-      self.default_currency = "USD"
+      self.supported_countries = ['US']
+      self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
@@ -143,19 +143,19 @@ module ActiveMerchant #:nodoc:
       end
 
       ACTIONS = {
-        purchase: "2",
-        authorize: "1",
-        capture: "3",
-        void: "5",
-        refund: "4",
-        credit: "6",
-        store: "7",
-        stored_purchase: "8",
-        stored_credit: "13"
+        purchase: '2',
+        authorize: '1',
+        capture: '3',
+        void: '5',
+        refund: '4',
+        credit: '6',
+        store: '7',
+        stored_purchase: '8',
+        stored_credit: '13'
       }
 
       STORE_TX_TYPES = {
-        store_only: "3"
+        store_only: '3'
       }
 
       def commit(action, post)
@@ -172,15 +172,15 @@ module ActiveMerchant #:nodoc:
           message_from(succeeded, response_data),
           response_data,
           authorization: authorization_from(post, response_data),
-          :avs_result => AVSResult.new(code: response_data["avs_response"]),
-          :cvv_result => CVVResult.new(response_data["cvv2_response"]),
+          :avs_result => AVSResult.new(code: response_data['avs_response']),
+          :cvv_result => CVVResult.new(response_data['cvv2_response']),
           test: test?
         )
       end
 
       def headers
         {
-          "Content-Type"  => "application/xml"
+          'Content-Type'  => 'application/xml'
         }
       end
 
@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
         Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
           xml.interface_driver {
             xml.trans_catalog {
-              xml.transaction(name: "creditcard") {
+              xml.transaction(name: 'creditcard') {
                 xml.inputs {
                   post.each do |field, value|
                     xml.send(field, value)
@@ -202,7 +202,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         response = {}
-        Nokogiri::XML(CGI.unescapeHTML(body)).xpath("//trans_catalog/transaction/outputs").children.each do |node|
+        Nokogiri::XML(CGI.unescapeHTML(body)).xpath('//trans_catalog/transaction/outputs').children.each do |node|
           parse_element(response, node)
         end
         response
@@ -217,11 +217,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:status] == "Approved"
+        response[:status] == 'Approved'
       end
 
       def message_from(succeeded, response)
-        succeeded ? "Succeeded" : error_message_from(response)
+        succeeded ? 'Succeeded' : error_message_from(response)
       end
 
       def authorization_from(request, response)
@@ -231,11 +231,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
 
       def error_message_from(response)
-        if(response[:status] == "Declined")
+        if(response[:status] == 'Declined')
           match = response[:result].match(/DECLINED:\d{10}:(.+):/)
           match[1] if match
         end

@@ -25,10 +25,10 @@ class RemoteWorldNetTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: generate_order_id,
-      email: "joe@example.com",
+      email: 'joe@example.com',
       billing_address: address,
       description: 'Store Purchase',
-      ip: "127.0.0.1",
+      ip: '127.0.0.1',
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)

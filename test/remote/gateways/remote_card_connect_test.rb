@@ -24,8 +24,8 @@ class RemoteCardConnectTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com",
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
       po_number: '5FSD4',
       tax_amount: '50',
       freight_amount: '29',

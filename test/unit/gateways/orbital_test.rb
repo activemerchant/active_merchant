@@ -12,11 +12,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       :password => 'password',
       :merchant_id => 'merchant_id'
     )
-    @customer_ref_num = "ABC"
+    @customer_ref_num = 'ABC'
 
     @level_2 = {
-      tax_indicator: "1",
-      tax: "10",
+      tax_indicator: '1',
+      tax: '10',
       advice_addendum_1: 'taa1 - test',
       advice_addendum_2: 'taa2 - test',
       advice_addendum_3: 'taa3 - test',
@@ -99,13 +99,13 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(101, credit_card, :order_id => '1')
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "AUTH DECLINED                   12001", response.message
+    assert_equal 'AUTH DECLINED                   12001', response.message
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    assert response = @gateway.void("identifier")
+    assert response = @gateway.void('identifier')
     assert_instance_of Response, response
     assert_success response
     assert_nil response.message
@@ -114,8 +114,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_deprecated_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    assert_deprecation_warning("Calling the void method with an amount parameter is deprecated and will be removed in a future version.") do
-      assert response = @gateway.void(50, "identifier")
+    assert_deprecation_warning('Calling the void method with an amount parameter is deprecated and will be removed in a future version.') do
+      assert response = @gateway.void(50, 'identifier')
       assert_instance_of Response, response
       assert_success response
       assert_nil response.message
@@ -137,7 +137,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_order_id_format
     response = stub_comms do
-      @gateway.purchase(101, credit_card, :order_id => " #101.23,56 $Hi &thére@Friends")
+      @gateway.purchase(101, credit_card, :order_id => ' #101.23,56 $Hi &thére@Friends')
     end.check_request do |endpoint, data, headers|
       assert_match(/<OrderID>101-23,56 \$Hi &amp;thre@Fr<\/OrderID>/, data)
     end.respond_with(successful_purchase_response)
@@ -146,7 +146,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_order_id_format_for_capture
     response = stub_comms do
-      @gateway.capture(101, "4A5398CF9B87744GG84A1D30F2F2321C66249416;1001.1", :order_id => "#1001.1")
+      @gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1001.1', :order_id => '#1001.1')
     end.check_request do |endpoint, data, headers|
       assert_match(/<OrderID>1001-1<\/OrderID>/, data)
     end.respond_with(successful_purchase_response)
@@ -154,7 +154,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_expiry_date
-    year = (DateTime.now + 1.year).strftime("%y")
+    year = (DateTime.now + 1.year).strftime('%y')
     assert_equal "09#{year}", @gateway.send(:expiry_date, credit_card)
   end
 
@@ -377,7 +377,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         assert_deprecation_warning do
-          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014" })
+          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => '10-10-2014' })
         end
       end
     end.check_request do |endpoint, data, headers|
@@ -393,8 +393,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         assert_deprecation_warning do
-          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014",
-                  :end_date => "10-10-2015",
+          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => '10-10-2014',
+                  :end_date => '10-10-2015',
                   :max_dollar_value => 1500,
                   :max_transactions => 12})
         end
@@ -553,7 +553,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI54.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
-      assert xsd.valid?(doc), "Request does not adhere to DTD"
+      assert xsd.valid?(doc), 'Request does not adhere to DTD'
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -565,7 +565,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI54.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
-      assert xsd.valid?(doc), "Request does not adhere to DTD"
+      assert xsd.valid?(doc), 'Request does not adhere to DTD'
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -633,7 +633,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_attempts_seconday_url
-    @gateway.expects(:ssl_post).with(OrbitalGateway.test_url, anything, anything).raises(ActiveMerchant::ConnectionError.new("message", nil))
+    @gateway.expects(:ssl_post).with(OrbitalGateway.test_url, anything, anything).raises(ActiveMerchant::ConnectionError.new('message', nil))
     @gateway.expects(:ssl_post).with(OrbitalGateway.secondary_test_url, anything, anything).returns(successful_purchase_response)
 
     response = @gateway.purchase(50, credit_card, :order_id => '1')
@@ -703,7 +703,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response, successful_purchase_response)
     assert_success response
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_verify_and_failed_void
@@ -712,7 +712,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response, failed_purchase_response)
     assert_success response
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_verify
@@ -720,7 +720,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       @gateway.verify(credit_card, @options)
     end.respond_with(failed_purchase_response, failed_purchase_response)
     assert_failure response
-    assert_equal "AUTH DECLINED                   12001", response.message
+    assert_equal 'AUTH DECLINED                   12001', response.message
   end
 
   def test_cvv_indicator_present_for_visas_with_cvvs

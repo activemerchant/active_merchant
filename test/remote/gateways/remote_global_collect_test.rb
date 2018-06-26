@@ -25,8 +25,8 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     options = @options.merge(
       fraud_fields:
       {
-        "website" => "www.example.com",
-        "giftMessage" => "Happy Day!"
+        'website' => 'www.example.com',
+        'giftMessage' => 'Happy Day!'
       }
     )
 
@@ -38,8 +38,8 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = @options.merge(
       order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com",
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
       sdk_identifier: 'Channel',
       sdk_creator: 'Bob',
       integrator: 'Bill',
@@ -55,7 +55,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_very_long_name
-    credit_card = credit_card('4567350000427977', { first_name: "thisisaverylongfirstname"})
+    credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname'})
 
     response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response

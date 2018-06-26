@@ -1,19 +1,19 @@
-require "test_helper"
-require "nokogiri"
+require 'test_helper'
+require 'nokogiri'
 
 class MerchantPartnersTest < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = MerchantPartnersGateway.new(
-      account_id: "TEST0",
-      merchant_pin: "1234567890"
+      account_id: 'TEST0',
+      merchant_pin: '1234567890'
     )
 
     @credit_card = credit_card
     @amount = 100
 
-    @request_root = "/interface_driver/trans_catalog/transaction/inputs"
+    @request_root = '/interface_driver/trans_catalog/transaction/inputs'
   end
 
   def test_successful_purchase
@@ -22,19 +22,19 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal @credit_card.name, root.at_xpath("//ccname").content
-        assert_equal @credit_card.number, root.at_xpath("//ccnum").content
-        assert_equal @credit_card.verification_value, root.at_xpath("//cvv2").content
-        assert_equal "2", root.at_xpath("//service").content
-        assert_equal "1.00", root.at_xpath("//amount").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal @credit_card.name, root.at_xpath('//ccname').content
+        assert_equal @credit_card.number, root.at_xpath('//ccnum').content
+        assert_equal @credit_card.verification_value, root.at_xpath('//cvv2').content
+        assert_equal '2', root.at_xpath('//service').content
+        assert_equal '1.00', root.at_xpath('//amount').content
       end
     end.respond_with(successful_purchase_response)
 
     assert_success response
     assert response.test?
-    assert_equal "398182213", response.authorization
+    assert_equal '398182213', response.authorization
   end
 
   def test_failed_purchase
@@ -43,8 +43,8 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Invalid account number", response.message
-    assert response.params["result"].start_with?("DECLINED")
+    assert_equal 'Invalid account number', response.message
+    assert response.params['result'].start_with?('DECLINED')
     assert response.test?
   end
 
@@ -54,36 +54,36 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal @credit_card.name, root.at_xpath("//ccname").content
-        assert_equal @credit_card.number, root.at_xpath("//ccnum").content
-        assert_equal @credit_card.verification_value, root.at_xpath("//cvv2").content
-        assert_equal "1", root.at_xpath("//service").content
-        assert_equal "1.00", root.at_xpath("//amount").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal @credit_card.name, root.at_xpath('//ccname').content
+        assert_equal @credit_card.number, root.at_xpath('//ccnum').content
+        assert_equal @credit_card.verification_value, root.at_xpath('//cvv2').content
+        assert_equal '1', root.at_xpath('//service').content
+        assert_equal '1.00', root.at_xpath('//amount').content
       end
     end.respond_with(successful_authorize_response)
 
     assert_success response
     assert response.test?
-    assert_equal "398047747", response.authorization
+    assert_equal '398047747', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal response.authorization, root.at_xpath("//historykeyid").content
-        assert_equal "3", root.at_xpath("//service").content
-        assert_equal "1.00", root.at_xpath("//amount").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal response.authorization, root.at_xpath('//historykeyid').content
+        assert_equal '3', root.at_xpath('//service').content
+        assert_equal '1.00', root.at_xpath('//amount').content
       end
     end.respond_with(successful_capture_response)
 
     assert_success capture
     assert capture.test?
-    assert_equal "398044113", capture.authorization
+    assert_equal '398044113', capture.authorization
   end
 
   def test_failed_authorize
@@ -92,14 +92,14 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Invalid account number", response.message
-    assert response.params["result"].start_with?("DECLINED")
+    assert_equal 'Invalid account number', response.message
+    assert response.params['result'].start_with?('DECLINED')
     assert response.test?
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "")
+      @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -111,17 +111,17 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "398047747", response.authorization
+    assert_equal '398047747', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal response.authorization, root.at_xpath("//historykeyid").content
-        assert_equal "5", root.at_xpath("//service").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal response.authorization, root.at_xpath('//historykeyid').content
+        assert_equal '5', root.at_xpath('//service').content
       end
     end.respond_with(successful_void_response)
 
@@ -130,7 +130,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("5d53a33d960c46d00f5dc061947d998c")
+      @gateway.void('5d53a33d960c46d00f5dc061947d998c')
     end.respond_with(failed_void_response)
 
     assert_failure response
@@ -148,11 +148,11 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal response.authorization, root.at_xpath("//historykeyid").content
-        assert_equal "4", root.at_xpath("//service").content
-        assert_equal "1.00", root.at_xpath("//amount").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal response.authorization, root.at_xpath('//historykeyid').content
+        assert_equal '4', root.at_xpath('//service').content
+        assert_equal '1.00', root.at_xpath('//amount').content
       end
     end.respond_with(successful_refund_response)
 
@@ -161,7 +161,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -173,13 +173,13 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal @credit_card.name, root.at_xpath("//ccname").content
-        assert_equal @credit_card.number, root.at_xpath("//ccnum").content
-        assert_equal @credit_card.verification_value, root.at_xpath("//cvv2").content
-        assert_equal "6", root.at_xpath("//service").content
-        assert_equal "1.00", root.at_xpath("//amount").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal @credit_card.name, root.at_xpath('//ccname').content
+        assert_equal @credit_card.number, root.at_xpath('//ccnum').content
+        assert_equal @credit_card.verification_value, root.at_xpath('//cvv2').content
+        assert_equal '6', root.at_xpath('//service').content
+        assert_equal '1.00', root.at_xpath('//amount').content
       end
     end.respond_with(successful_credit_response)
 
@@ -193,8 +193,8 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.respond_with(failed_credit_response)
 
     assert_failure response
-    assert_equal "Invalid account number", response.message
-    assert response.params["result"].start_with?("DECLINED")
+    assert_equal 'Invalid account number', response.message
+    assert response.params['result'].start_with?('DECLINED')
     assert response.test?
   end
 
@@ -203,7 +203,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
@@ -211,7 +211,7 @@ class MerchantPartnersTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "Invalid account number", response.message
+    assert_equal 'Invalid account number', response.message
   end
 
   def test_successful_store
@@ -220,18 +220,18 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal @credit_card.name, root.at_xpath("//ccname").content
-        assert_equal @credit_card.number, root.at_xpath("//ccnum").content
-        assert_equal @credit_card.verification_value, root.at_xpath("//cvv2").content
-        assert_equal "7", root.at_xpath("//service").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal @credit_card.name, root.at_xpath('//ccname').content
+        assert_equal @credit_card.number, root.at_xpath('//ccnum').content
+        assert_equal @credit_card.verification_value, root.at_xpath('//cvv2').content
+        assert_equal '7', root.at_xpath('//service').content
       end
     end.respond_with(successful_store_response)
 
     assert_success response
-    assert_equal "Succeeded", response.message
-    assert_equal "17522090|6781", response.authorization
+    assert_equal 'Succeeded', response.message
+    assert_equal '17522090|6781', response.authorization
     assert response.test?
   end
 
@@ -241,8 +241,8 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.respond_with(successful_store_response)
 
     assert_success response
-    assert_equal "Succeeded", response.message
-    assert_equal "17522090|6781", response.authorization
+    assert_equal 'Succeeded', response.message
+    assert_equal '17522090|6781', response.authorization
     assert response.test?
 
     purchase = stub_comms do
@@ -250,12 +250,12 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal response.params["userprofileid"], root.at_xpath("//userprofileid").content
-        assert_equal response.params["last4digits"], root.at_xpath("//last4digits").content
-        assert_equal "8", root.at_xpath("//service").content
-        assert_equal "1.00", root.at_xpath("//amount").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal response.params['userprofileid'], root.at_xpath('//userprofileid').content
+        assert_equal response.params['last4digits'], root.at_xpath('//last4digits').content
+        assert_equal '8', root.at_xpath('//service').content
+        assert_equal '1.00', root.at_xpath('//amount').content
       end
     end.respond_with(successful_purchase_response)
 
@@ -269,8 +269,8 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.respond_with(successful_store_response)
 
     assert_success response
-    assert_equal "Succeeded", response.message
-    assert_equal "17522090|6781", response.authorization
+    assert_equal 'Succeeded', response.message
+    assert_equal '17522090|6781', response.authorization
     assert response.test?
 
     credit = stub_comms do
@@ -278,12 +278,12 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_not_nil root = doc.at_xpath(@request_root)
-        assert_equal @gateway.options[:account_id], root.at_xpath("//acctid").content
-        assert_equal @gateway.options[:merchant_pin], root.at_xpath("//merchantpin").content
-        assert_equal response.params["userprofileid"], root.at_xpath("//userprofileid").content
-        assert_equal response.params["last4digits"], root.at_xpath("//last4digits").content
-        assert_equal "13", root.at_xpath("//service").content
-        assert_equal "1.00", root.at_xpath("//amount").content
+        assert_equal @gateway.options[:account_id], root.at_xpath('//acctid').content
+        assert_equal @gateway.options[:merchant_pin], root.at_xpath('//merchantpin').content
+        assert_equal response.params['userprofileid'], root.at_xpath('//userprofileid').content
+        assert_equal response.params['last4digits'], root.at_xpath('//last4digits').content
+        assert_equal '13', root.at_xpath('//service').content
+        assert_equal '1.00', root.at_xpath('//amount').content
       end
     end.respond_with(successful_purchase_response)
 
@@ -297,8 +297,8 @@ class MerchantPartnersTest < Test::Unit::TestCase
     end.respond_with(failed_store_response)
 
     assert_failure response
-    assert_equal "Live Transactions Not Allowed", response.message
-    assert response.params["result"].start_with?("DECLINED")
+    assert_equal 'Live Transactions Not Allowed', response.message
+    assert response.params['result'].start_with?('DECLINED')
     assert response.test?
   end
 

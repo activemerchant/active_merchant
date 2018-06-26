@@ -28,7 +28,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
   def test_successful_purchase_with_extra_options
     options = {
       order_id: '1',
-      email: "test@email.com",
+      email: 'test@email.com',
       billing_address: address,
       description: 'Store Purchase'
     }

@@ -104,9 +104,9 @@ module ActiveMerchant #:nodoc:
       private
 
       NETWORK_TOKENIZATION_CARD_SOURCE = {
-        "apple_pay" => "applepay",
-        "android_pay" => "androidpay",
-        "google_pay" => "paywithgoogle"
+        'apple_pay' => 'applepay',
+        'android_pay' => 'androidpay',
+        'google_pay' => 'paywithgoogle'
       }
 
       def add_extra_data(post, payment, options)
@@ -121,9 +121,9 @@ module ActiveMerchant #:nodoc:
 
       def add_shopper_interaction(post, payment, options={})
         if (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
-          shopper_interaction = "Ecommerce"
+          shopper_interaction = 'Ecommerce'
         else
-          shopper_interaction = "ContAuth"
+          shopper_interaction = 'ContAuth'
         end
 
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
@@ -160,7 +160,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         if payment.is_a?(String)
-          _, _, recurring_detail_reference = payment.split("#")
+          _, _, recurring_detail_reference = payment.split('#')
           post[:selectedRecurringDetailReference] = recurring_detail_reference
           add_recurring_contract(post, options)
         else
@@ -184,30 +184,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization, options = {})
-        _, psp_reference, _ = authorization.split("#")
+        _, psp_reference, _ = authorization.split('#')
         post[:originalReference] = single_reference(authorization) || psp_reference
       end
 
       def add_original_reference(post, authorization, options = {})
-        original_psp_reference, _, _ = authorization.split("#")
+        original_psp_reference, _, _ = authorization.split('#')
         post[:originalReference] = single_reference(authorization) || original_psp_reference
       end
 
       def add_mpi_data_for_network_tokenization_card(post, payment)
         post[:mpiData] = {}
-        post[:mpiData][:authenticationResponse] = "Y"
+        post[:mpiData][:authenticationResponse] = 'Y'
         post[:mpiData][:cavv] = payment.payment_cryptogram
-        post[:mpiData][:directoryResponse] = "Y"
-        post[:mpiData][:eci] = payment.eci || "07"
+        post[:mpiData][:directoryResponse] = 'Y'
+        post[:mpiData][:eci] = payment.eci || '07'
       end
 
       def single_reference(authorization)
-        authorization if !authorization.include?("#")
+        authorization if !authorization.include?('#')
       end
 
       def add_recurring_contract(post, options = {})
         recurring = {
-          contract: "RECURRING"
+          contract: 'RECURRING'
         }
 
         post[:recurring] = recurring
@@ -261,8 +261,8 @@ module ActiveMerchant #:nodoc:
 
       def request_headers
         {
-          "Content-Type" => "application/json",
-          "Authorization" => "Basic #{basic_auth}"
+          'Content-Type' => 'application/json',
+          'Authorization' => "Basic #{basic_auth}"
         }
       end
 

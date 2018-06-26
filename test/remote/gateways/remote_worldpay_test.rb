@@ -11,7 +11,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
     @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
 
-    @options = {order_id: generate_unique_id, email: "wow@example.com"}
+    @options = {order_id: generate_unique_id, email: 'wow@example.com'}
   end
 
   def test_successful_purchase
@@ -22,9 +22,9 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_hcg_additional_data
     @options.merge!(hcg_additional_data: {
-      key1: "value1",
-      key2: "value2",
-      key3: "value3"
+      key1: 'value1',
+      key2: 'value2',
+      key3: 'value3'
     })
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -141,41 +141,41 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_ip_address
-    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(ip: "192.18.123.12"))
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(ip: '192.18.123.12'))
   end
 
   def test_void
     assert_success(response = @gateway.authorize(@amount, @credit_card, @options))
     sleep(40)
     assert_success (void = @gateway.void(response.authorization))
-    assert_equal "SUCCESS", void.message
-    assert void.params["cancel_received_order_code"]
+    assert_equal 'SUCCESS', void.message
+    assert void.params['cancel_received_order_code']
   end
 
   def test_void_nonexistent_transaction
     assert_failure response = @gateway.void('non_existent_authorization')
-    assert_equal "Could not find payment for order", response.message
+    assert_equal 'Could not find payment for order', response.message
   end
 
   def test_authorize_fractional_currency
     assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'USD')))
-    assert_equal "USD", result.params['amount_currency_code']
-    assert_equal "1234", result.params['amount_value']
-    assert_equal "2", result.params['amount_exponent']
+    assert_equal 'USD', result.params['amount_currency_code']
+    assert_equal '1234', result.params['amount_value']
+    assert_equal '2', result.params['amount_exponent']
   end
 
   def test_authorize_nonfractional_currency
     assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'IDR')))
-    assert_equal "IDR", result.params['amount_currency_code']
-    assert_equal "12", result.params['amount_value']
-    assert_equal "0", result.params['amount_exponent']
+    assert_equal 'IDR', result.params['amount_currency_code']
+    assert_equal '12', result.params['amount_value']
+    assert_equal '0', result.params['amount_exponent']
   end
 
   def test_authorize_three_decimal_currency
     assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'OMR')))
-    assert_equal "OMR", result.params['amount_currency_code']
-    assert_equal "1234", result.params['amount_value']
-    assert_equal "3", result.params['amount_exponent']
+    assert_equal 'OMR', result.params['amount_currency_code']
+    assert_equal '1234', result.params['amount_value']
+    assert_equal '3', result.params['amount_exponent']
   end
 
   def test_reference_transaction
@@ -200,8 +200,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_refund_nonexistent_transaction
-    assert_failure response = @gateway.refund(@amount, "non_existent_authorization")
-    assert_equal "Could not find payment for order", response.message
+    assert_failure response = @gateway.refund(@amount, 'non_existent_authorization')
+    assert_equal 'Could not find payment for order', response.message
   end
 
   def test_successful_verify
@@ -219,7 +219,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_successful_credit_on_cft_gateway
     credit = @cftgateway.credit(@amount, @credit_card, @options)
     assert_success credit
-    assert_equal "SUCCESS", credit.message
+    assert_equal 'SUCCESS', credit.message
   end
 
   def test_transcript_scrubbing

@@ -356,7 +356,7 @@ Conn close
   end
 
   def failed_capture_response
-    "{\"error\": {\"type\": \"Carrier not supported\", \"help\": \"\", \"description\": \"{}\"}}"
+    '{"error": {"type": "Carrier not supported", "help": "", "description": "{}"}}'
   end
 
   def successful_void_response

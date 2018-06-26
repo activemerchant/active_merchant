@@ -103,10 +103,10 @@ class RemoteBridgePayTest < Test::Unit::TestCase
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
 
-    assert_success response.responses.last, "The void should succeed"
-    assert_equal "Approved", response.responses.last.params["respmsg"]
+    assert_success response.responses.last, 'The void should succeed'
+    assert_equal 'Approved', response.responses.last.params['respmsg']
   end
 
   def test_unsuccessful_verify

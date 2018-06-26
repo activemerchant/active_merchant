@@ -1,4 +1,4 @@
-require "test_helper"
+require 'test_helper'
 
 class RemoteCulqiTest < Test::Unit::TestCase
   def setup
@@ -6,8 +6,8 @@ class RemoteCulqiTest < Test::Unit::TestCase
     @gateway = CulqiGateway.new(fixtures(:culqi))
 
     @amount = 1000
-    @credit_card = credit_card("4111111111111111")
-    @declined_card = credit_card("4000300011112220", month: 06, year: 2016)
+    @credit_card = credit_card('4111111111111111')
+    @declined_card = credit_card('4000300011112220', month: 06, year: 2016)
 
     @options = {
       order_id: generate_unique_id,
@@ -20,7 +20,7 @@ class RemoteCulqiTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = CulqiGateway.new(merchant_id: "", terminal_id: "", secret_key: "")
+    gateway = CulqiGateway.new(merchant_id: '', terminal_id: '', secret_key: '')
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
@@ -64,7 +64,7 @@ class RemoteCulqiTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, "0")
+    response = @gateway.capture(@amount, '0')
     assert_failure response
     assert_match %r{Transaction not found}, response.message
   end
@@ -79,7 +79,7 @@ class RemoteCulqiTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = @gateway.void("0", @options)
+    response = @gateway.void('0', @options)
     assert_failure response
     assert_match %r{Transaction not found}, response.message
   end
@@ -103,7 +103,7 @@ class RemoteCulqiTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, "0")
+    response = @gateway.refund(@amount, '0')
     assert_failure response
     assert_match %r{Transaction not found}, response.message
   end
@@ -130,7 +130,7 @@ class RemoteCulqiTest < Test::Unit::TestCase
   end
 
   def test_successful_store_and_purchase
-    credit_card = credit_card("4929927409600297")
+    credit_card = credit_card('4929927409600297')
 
     response = @gateway.store(credit_card, @options.merge(partner_id: fixtures(:culqi)[:partner_id]))
     assert_success response
@@ -146,7 +146,7 @@ class RemoteCulqiTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    credit_card = credit_card("4929927409600297")
+    credit_card = credit_card('4929927409600297')
 
     store = @gateway.store(credit_card, @options.merge(partner_id: fixtures(:culqi)[:partner_id]))
     assert_success store

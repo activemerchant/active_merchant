@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         get = {}
         get[:transactionId] = identifier
         get[:tranType]     = 'REFUNDREQUEST'
-        commit("/transaction/refundrequest?" + encode(get))
+        commit('/transaction/refundrequest?' + encode(get))
       end
 
       private
@@ -39,13 +39,13 @@ module ActiveMerchant #:nodoc:
       def add_donation_data(post, money, options)
         post[:amount] = amount(money)
         post[:charityId] = @options[:charity_id]
-        post[:description] = (options[:description] || "Purchase")
+        post[:description] = (options[:description] || 'Purchase')
         post[:currencyCode] = (options[:currency] || currency(money))
       end
 
       def add_customer_data(post, options)
-        post[:billToEmail] = (options[:email] || "activemerchant@example.com")
-        post[:remoteAddr]  = (options[:ip] || "127.0.0.1")
+        post[:billToEmail] = (options[:email] || 'activemerchant@example.com')
+        post[:remoteAddr]  = (options[:ip] || '127.0.0.1')
       end
 
       def add_address(post, options)
@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         xml = Nokogiri::XML(body)
-        element = xml.xpath("//firstGivingDonationApi/firstGivingResponse").first
+        element = xml.xpath('//firstGivingDonationApi/firstGivingResponse').first
 
         element.attributes.each do |name, attribute|
           response[name] = attribute.content
@@ -103,16 +103,16 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(
-          (response["acknowledgement"] == "Success"),
-          (response["friendlyErrorMessage"] || response["verboseErrorMessage"] || response["acknowledgement"]),
+          (response['acknowledgement'] == 'Success'),
+          (response['friendlyErrorMessage'] || response['verboseErrorMessage'] || response['acknowledgement']),
           response,
-          authorization: response["transactionId"],
+          authorization: response['transactionId'],
           test: test?,
         )
       end
 
       def post_data(post)
-        post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        post.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def encode(hash)
@@ -121,10 +121,10 @@ module ActiveMerchant #:nodoc:
 
       def creditcard_brand(brand)
         case brand
-        when "visa" then "VI"
-        when "master" then "MC"
-        when "discover" then "DI"
-        when "american_express" then "AX"
+        when 'visa' then 'VI'
+        when 'master' then 'MC'
+        when 'discover' then 'DI'
+        when 'american_express' then 'AX'
         else
           raise "Unhandled credit card brand #{brand}"
         end
@@ -132,9 +132,9 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "User-Agent"        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "JG_APPLICATIONKEY" => "#{@options[:application_key]}",
-          "JG_SECURITYTOKEN"  => "#{@options[:security_token]}"
+          'User-Agent'        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'JG_APPLICATIONKEY' => "#{@options[:application_key]}",
+          'JG_SECURITYTOKEN'  => "#{@options[:security_token]}"
         }
       end
     end

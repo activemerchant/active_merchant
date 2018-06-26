@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class NmiGateway < Gateway
       include Empty
 
-      DUP_WINDOW_DEPRECATION_MESSAGE = "The class-level duplicate_window variable is deprecated. Please use the :dup_seconds transaction option instead."
+      DUP_WINDOW_DEPRECATION_MESSAGE = 'The class-level duplicate_window variable is deprecated. Please use the :dup_seconds transaction option instead.'
 
       self.test_url = self.live_url = 'https://secure.nmi.com/api/transact.php'
       self.default_currency = 'USD'
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
-        commit("sale", post)
+        commit('sale', post)
       end
 
       def authorize(amount, payment_method, options={})
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
-        commit("auth", post)
+        commit('auth', post)
       end
 
       def capture(amount, authorization, options={})
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_merchant_defined_fields(post, options)
 
-        commit("capture", post)
+        commit('capture', post)
       end
 
       def void(authorization, options={})
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_payment_type(post, authorization)
 
-        commit("void", post)
+        commit('void', post)
       end
 
       def refund(amount, authorization, options={})
@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_payment_type(post, authorization)
 
-        commit("refund", post)
+        commit('refund', post)
       end
 
       def credit(amount, payment_method, options={})
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
 
-        commit("credit", post)
+        commit('credit', post)
       end
 
       def verify(payment_method, options={})
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
-        commit("validate", post)
+        commit('validate', post)
       end
 
       def store(payment_method, options = {})
@@ -98,12 +98,12 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
 
-        commit("add_customer", post)
+        commit('add_customer', post)
       end
 
       def verify_credentials
-        response = void("0")
-        response.message != "Authentication Failed"
+        response = void('0')
+        response.message != 'Authentication Failed'
       end
 
       def supports_scrubbing?
@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
         post[:orderid] = options[:order_id]
         post[:orderdescription] = options[:description]
         post[:currency] = options[:currency] || currency(money)
-        post[:billing_method] = "recurring" if options[:recurring]
+        post[:billing_method] = 'recurring' if options[:recurring]
         if (dup_seconds = (options[:dup_seconds] || self.class.duplicate_window))
           post[:dup_seconds] = dup_seconds
         end
@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
 
-        params[action == "add_customer" ? :customer_vault : :type] = action
+        params[action == 'add_customer' ? :customer_vault : :type] = action
         params[:username] = @options[:login]
         params[:password] = @options[:password]
 
@@ -235,15 +235,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, payment_type)
-        [ response[:transactionid], payment_type ].join("#")
+        [ response[:transactionid], payment_type ].join('#')
       end
 
       def split_authorization(authorization)
-        authorization.split("#")
+        authorization.split('#')
       end
 
       def headers
-        { "Content-Type"  => "application/x-www-form-urlencoded;charset=UTF-8" }
+        { 'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8' }
       end
 
       def post_data(action, params)
@@ -259,12 +259,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:response] == "1"
+        response[:response] == '1'
       end
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
           response[:responsetext]
         end

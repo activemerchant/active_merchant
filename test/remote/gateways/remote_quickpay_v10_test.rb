@@ -68,13 +68,13 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_acquirers
-    assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => "nets"))
+    assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => 'nets'))
     assert_equal 'OK', response.message
     assert_success response
   end
 
   def test_unsuccessful_purchase_with_invalid_acquirers
-    assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => "invalid"))
+    assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => 'invalid'))
     assert_failure response
     assert_equal 'Validation error', response.message
   end
@@ -165,7 +165,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@invalid_card, @options)
     assert_failure response
-    assert_equal "Rejected test operation", response.message
+    assert_equal 'Rejected test operation', response.message
   end
 
   def test_successful_store

@@ -3,9 +3,9 @@ require 'test_helper'
 class FirstGivingTest < Test::Unit::TestCase
   def setup
     @gateway = FirstGivingGateway.new(
-      application_key: "application_key",
-      security_token: "security_token",
-      charity_id: "charity_id"
+      application_key: 'application_key',
+      security_token: 'security_token',
+      charity_id: 'charity_id'
     )
 
     @credit_card = credit_card
@@ -20,8 +20,8 @@ class FirstGivingTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "a-c71f5e0a25f96e48a3dc54", response.authorization
-    assert_equal "Success", response.message
+    assert_equal 'a-c71f5e0a25f96e48a3dc54', response.authorization
+    assert_equal 'Success', response.message
   end
 
   def test_unsuccessful_purchase
@@ -29,7 +29,7 @@ class FirstGivingTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Unfortunately, we were unable to perform credit card number validation. The credit card number validator responded with the following message  ccNumber failed data validation for the following reasons :  creditcardChecksum: 4457010000000000 seems to contain an invalid checksum.", response.message
+    assert_equal 'Unfortunately, we were unable to perform credit card number validation. The credit card number validator responded with the following message  ccNumber failed data validation for the following reasons :  creditcardChecksum: 4457010000000000 seems to contain an invalid checksum.', response.message
   end
 
   def test_successful_refund
@@ -37,7 +37,7 @@ class FirstGivingTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, @options)
     assert_success response
-    assert_equal "a-a09bf64559e5824eb925f5", response.authorization
+    assert_equal 'a-a09bf64559e5824eb925f5', response.authorization
   end
 
   def test_unsuccessful_refund
@@ -45,7 +45,7 @@ class FirstGivingTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, @options)
     assert_failure response
-    assert_equal "Bad JG_APPLICATIONKEY and JG_SECURITYTOKEN.", response.message
+    assert_equal 'Bad JG_APPLICATIONKEY and JG_SECURITYTOKEN.', response.message
   end
 
   private

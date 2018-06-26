@@ -25,7 +25,7 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_holder_document
-    @options.merge!(holder_document: "a1b2c3d4")
+    @options.merge!(holder_document: 'a1b2c3d4')
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
@@ -41,7 +41,7 @@ class MundipaggTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      refute data["billing_address"]
+      refute data['billing_address']
     end.respond_with(successful_purchase_response)
   end
 

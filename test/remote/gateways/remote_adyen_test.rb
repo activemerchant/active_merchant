@@ -18,20 +18,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
-      :payment_cryptogram => "YwAAAAAABaYcCMX/OhNRQAAAAAA=",
-      :month              => "08",
-      :year               => "2018",
+      :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      :month              => '08',
+      :year               => '2018',
       :source             => :apple_pay,
       :verification_value => nil
     )
 
     @options = {
       reference: '345123',
-      shopper_email: "john.smith@test.com",
-      shopper_ip: "77.110.174.153",
-      shopper_reference: "John Smith",
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
       billing_address: address(),
-      order_id: "123"
+      order_id: '123'
     }
   end
 
@@ -145,7 +145,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @options)
 
     assert_success response
-    assert !response.authorization.split("#")[2].nil?
+    assert !response.authorization.split('#')[2].nil?
     assert_equal 'Authorised', response.message
   end
 

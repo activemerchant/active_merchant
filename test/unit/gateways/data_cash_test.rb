@@ -48,14 +48,14 @@ class DataCashTest < Test::Unit::TestCase
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", @options)
+      @gateway.credit(@amount, 'transaction_id', @options)
     end
   end
 
   def test_refund
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
 
-    @gateway.refund(@amount, "transaction_id", @options)
+    @gateway.refund(@amount, 'transaction_id', @options)
   end
 
   def test_unsuccessful_purchase
@@ -101,7 +101,7 @@ class DataCashTest < Test::Unit::TestCase
 
   def test_continuous_authority_purchase_with_missing_continuous_authority_reference
     assert_raise(ArgumentError) do
-      @gateway.authorize(100, "a;b;", @options)
+      @gateway.authorize(100, 'a;b;', @options)
     end
   end
 

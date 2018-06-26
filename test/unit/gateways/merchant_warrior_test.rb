@@ -28,7 +28,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Transaction approved', response.message
     assert response.test?
-    assert_equal "30-98a79008-dae8-11df-9322-0022198101cd", response.authorization
+    assert_equal '30-98a79008-dae8-11df-9322-0022198101cd', response.authorization
   end
 
   def test_failed_purchase
@@ -38,7 +38,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Card has expired', response.message
     assert response.test?
-    assert_equal "30-69433444-af1-11df-9322-0022198101cd", response.authorization
+    assert_equal '30-69433444-af1-11df-9322-0022198101cd', response.authorization
   end
 
   def test_successful_refund
@@ -48,7 +48,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Transaction approved', response.message
     assert response.test?
-    assert_equal "30-d4d19f4-db17-11df-9322-0022198101cd", response.authorization
+    assert_equal '30-d4d19f4-db17-11df-9322-0022198101cd', response.authorization
   end
 
   def test_failed_refund
@@ -62,8 +62,8 @@ class MerchantWarriorTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @credit_card.month = "2"
-    @credit_card.year = "2005"
+    @credit_card.month = '2'
+    @credit_card.year = '2005'
 
     store = stub_comms do
       @gateway.store(@credit_card, @options)
@@ -73,14 +73,14 @@ class MerchantWarriorTest < Test::Unit::TestCase
     end.respond_with(successful_store_response)
 
     assert_success store
-    assert_equal "Operation successful", store.message
-    assert_match "KOCI10023982", store.authorization
+    assert_equal 'Operation successful', store.message
+    assert_match 'KOCI10023982', store.authorization
   end
 
   def test_scrub_name
     @credit_card.first_name = "Chars; Merchant-Warrior Don't Like"
-    @credit_card.last_name = "& More. # Here"
-    @options[:address][:name] = "Ren & Stimpy"
+    @credit_card.last_name = '& More. # Here'
+    @options[:address][:name] = 'Ren & Stimpy'
 
     stub_comms do
       @gateway.purchase(@success_amount, @credit_card, @options)
@@ -133,7 +133,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
   def test_orderid_truncated
     stub_comms do
-      @gateway.purchase(@success_amount, @credit_card, order_id: "ThisIsQuiteALongDescriptionWithLotsOfChars")
+      @gateway.purchase(@success_amount, @credit_card, order_id: 'ThisIsQuiteALongDescriptionWithLotsOfChars')
     end.check_request do |endpoint, data, headers|
       assert_match(/transactionProduct=ThisIsQuiteALongDescriptionWithLot&/, data)
     end.respond_with(successful_purchase_response)

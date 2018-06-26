@@ -164,8 +164,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, amount=nil, options={}, &builder)
         response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
         Response.new(
-          (response[:responsecode] == "0"),
-          (response[:result] || response[:error_text] || "Unknown Response"),
+          (response[:responsecode] == '0'),
+          (response[:result] || response[:error_text] || 'Unknown Response'),
           response,
           authorization: authorization_from(response, action, amount, options),
           test: test?
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
       def parse_xml(xml)
         response = {}
 
-        Nokogiri::XML(CGI.unescapeHTML(xml)).xpath("//response").children.each do |node|
+        Nokogiri::XML(CGI.unescapeHTML(xml)).xpath('//response').children.each do |node|
           if node.text?
             next
           elsif (node.elements.size == 0)
@@ -202,11 +202,11 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, action,  amount, options)
         currency = options[:currency] || currency(amount)
-        [response[:tranid], response[:trackid], action, amount, currency].join("|")
+        [response[:tranid], response[:trackid], action, amount, currency].join('|')
       end
 
       def split_authorization(authorization)
-        transid, trackid, action, amount, currency = authorization.split("|")
+        transid, trackid, action, amount, currency = authorization.split('|')
         [transid, trackid, action, amount, currency]
       end
     end

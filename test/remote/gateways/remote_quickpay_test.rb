@@ -174,16 +174,16 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   end
 
   def test_successful_store_and_reference_purchase
-    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription"))
+    assert store = @gateway.store(@visa, @options.merge(:description => 'New subscription'))
     assert_success store
     assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
     assert_success purchase
   end
 
   def test_failed_store
-    assert store = @gateway.store(credit_card('4'), @options.merge(:description => "New subscription"))
+    assert store = @gateway.store(credit_card('4'), @options.merge(:description => 'New subscription'))
     assert_failure store
-    assert_equal "Error in field: cardnumber", store.message
+    assert_equal 'Error in field: cardnumber', store.message
   end
 
   def test_invalid_login

@@ -176,66 +176,66 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credentials(xml)
-        xml.add_element("PostUsername").text = @options[:login]
-        xml.add_element("PostPassword").text = @options[:password]
+        xml.add_element('PostUsername').text = @options[:login]
+        xml.add_element('PostPassword').text = @options[:password]
       end
 
       def add_reference(xml, identification)
-        xml.add_element("DpsTxnRef").text = identification
+        xml.add_element('DpsTxnRef').text = identification
       end
 
       def add_credit_card(xml, credit_card)
-        xml.add_element("CardHolderName").text = credit_card.name
-        xml.add_element("CardNumber").text = credit_card.number
-        xml.add_element("DateExpiry").text = format_date(credit_card.month, credit_card.year)
+        xml.add_element('CardHolderName').text = credit_card.name
+        xml.add_element('CardNumber').text = credit_card.number
+        xml.add_element('DateExpiry').text = format_date(credit_card.month, credit_card.year)
 
         if credit_card.verification_value?
-          xml.add_element("Cvc2").text = credit_card.verification_value
-          xml.add_element("Cvc2Presence").text = "1"
+          xml.add_element('Cvc2').text = credit_card.verification_value
+          xml.add_element('Cvc2Presence').text = '1'
         end
 
         if requires_start_date_or_issue_number?(credit_card)
-          xml.add_element("DateStart").text = format_date(credit_card.start_month, credit_card.start_year) unless credit_card.start_month.blank? || credit_card.start_year.blank?
-          xml.add_element("IssueNumber").text = credit_card.issue_number unless credit_card.issue_number.blank?
+          xml.add_element('DateStart').text = format_date(credit_card.start_month, credit_card.start_year) unless credit_card.start_month.blank? || credit_card.start_year.blank?
+          xml.add_element('IssueNumber').text = credit_card.issue_number unless credit_card.issue_number.blank?
         end
       end
 
       def add_billing_token(xml, token)
         if use_custom_payment_token?
-          xml.add_element("BillingId").text = token
+          xml.add_element('BillingId').text = token
         else
-          xml.add_element("DpsBillingId").text = token
+          xml.add_element('DpsBillingId').text = token
         end
       end
 
       def add_token_request(xml, options)
-        xml.add_element("BillingId").text = options[:billing_id] if options[:billing_id]
-        xml.add_element("EnableAddBillCard").text = 1
+        xml.add_element('BillingId').text = options[:billing_id] if options[:billing_id]
+        xml.add_element('EnableAddBillCard').text = 1
       end
 
       def add_amount(xml, money, options)
-        xml.add_element("Amount").text = amount(money)
-        xml.add_element("InputCurrency").text = options[:currency] || currency(money)
+        xml.add_element('Amount').text = amount(money)
+        xml.add_element('InputCurrency').text = options[:currency] || currency(money)
       end
 
       def add_transaction_type(xml, action)
-        xml.add_element("TxnType").text = TRANSACTIONS[action]
+        xml.add_element('TxnType').text = TRANSACTIONS[action]
       end
 
       def add_invoice(xml, options)
-        xml.add_element("TxnId").text = options[:order_id].to_s.slice(0, 16) unless options[:order_id].blank?
-        xml.add_element("MerchantReference").text = options[:description].to_s.slice(0, 50) unless options[:description].blank?
+        xml.add_element('TxnId').text = options[:order_id].to_s.slice(0, 16) unless options[:order_id].blank?
+        xml.add_element('MerchantReference').text = options[:description].to_s.slice(0, 50) unless options[:description].blank?
       end
 
       def add_address_verification_data(xml, options)
         address = options[:billing_address] || options[:address]
         return if address.nil?
 
-        xml.add_element("EnableAvsData").text = 1
-        xml.add_element("AvsAction").text = 1
+        xml.add_element('EnableAvsData').text = 1
+        xml.add_element('AvsAction').text = 1
 
-        xml.add_element("AvsStreetAddress").text = address[:address1]
-        xml.add_element("AvsPostCode").text = address[:zip]
+        xml.add_element('AvsStreetAddress').text = address[:address1]
+        xml.add_element('AvsPostCode').text = address[:zip]
       end
 
       # The options hash may contain optional data which will be passed
@@ -276,16 +276,16 @@ module ActiveMerchant #:nodoc:
       # +purchase+, +authorize+, +capture+, +refund+, +store+
       def add_optional_elements(xml, options)
         if client_type = normalized_client_type(options[:client_type])
-          xml.add_element("ClientType").text = client_type
+          xml.add_element('ClientType').text = client_type
         end
 
-        xml.add_element("TxnData1").text = options[:txn_data1].to_s.slice(0,255) unless options[:txn_data1].blank?
-        xml.add_element("TxnData2").text = options[:txn_data2].to_s.slice(0,255) unless options[:txn_data2].blank?
-        xml.add_element("TxnData3").text = options[:txn_data3].to_s.slice(0,255) unless options[:txn_data3].blank?
+        xml.add_element('TxnData1').text = options[:txn_data1].to_s.slice(0,255) unless options[:txn_data1].blank?
+        xml.add_element('TxnData2').text = options[:txn_data2].to_s.slice(0,255) unless options[:txn_data2].blank?
+        xml.add_element('TxnData3').text = options[:txn_data3].to_s.slice(0,255) unless options[:txn_data3].blank?
       end
 
       def new_transaction
-        REXML::Document.new.add_element("Txn")
+        REXML::Document.new.add_element('Txn')
       end
 
       # Take in the request and post it to DPS
@@ -343,12 +343,12 @@ module ActiveMerchant #:nodoc:
 
       def normalized_client_type(client_type_from_options)
         case client_type_from_options.to_s.downcase
-          when 'web'        then "Web"
-          when 'ivr'        then "IVR"
-          when 'moto'       then "MOTO"
-          when 'unattended' then "Unattended"
-          when 'internet'   then "Internet"
-          when 'recurring'  then "Recurring"
+          when 'web'        then 'Web'
+          when 'ivr'        then 'IVR'
+          when 'moto'       then 'MOTO'
+          when 'unattended' then 'Unattended'
+          when 'internet'   then 'Internet'
+          when 'recurring'  then 'Recurring'
           else nil
         end
       end
@@ -358,7 +358,7 @@ module ActiveMerchant #:nodoc:
       # add a method to response so we can easily get the token
       # for Validate transactions
       def token
-        @params["billing_id"] || @params["dps_billing_id"]
+        @params['billing_id'] || @params['dps_billing_id']
       end
     end
   end

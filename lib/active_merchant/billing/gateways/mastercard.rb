@@ -59,7 +59,7 @@ module ActiveMerchant
       end
 
       def verify_credentials
-        url = build_url(SecureRandom.uuid, "nonexistent")
+        url = build_url(SecureRandom.uuid, 'nonexistent')
         begin
           ssl_get(url, headers)
         rescue ResponseError => e
@@ -164,7 +164,7 @@ module ActiveMerchant
 
       def add_3dsecure_id(post, options)
         return unless options[:threed_secure_id]
-        post.merge!({"3DSecureId" => options[:threed_secure_id]})
+        post.merge!({'3DSecureId' => options[:threed_secure_id]})
       end
 
       def country_code(country)
@@ -221,7 +221,7 @@ module ActiveMerchant
       end
 
       def success_from(response)
-        response['result'] == "SUCCESS"
+        response['result'] == 'SUCCESS'
       end
 
       def message_from(succeeded, response)

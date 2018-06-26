@@ -16,8 +16,8 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'InstaPay'
 
-      SUCCESS         = "Accepted"
-      SUCCESS_MESSAGE = "The transaction has been approved"
+      SUCCESS         = 'Accepted'
+      SUCCESS_MESSAGE = 'The transaction has been approved'
 
       def initialize(options = {})
         requires!(options, :login)
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:ci_email]       = options[:email]
-        post["ci_IP Address"] = options[:ip]
+        post['ci_IP Address'] = options[:ip]
       end
 
       def add_address(post, options)
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
           post[:merchantpin] = @options[:password]
         end
         post[:action] = action
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
     end

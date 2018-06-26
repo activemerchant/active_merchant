@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         requires!(options, :order_id)
-        original_transaction_id, _ = identification.split(";")
+        original_transaction_id, _ = identification.split(';')
         commit(:void_transaction, {:reference_number => format_reference_number(options[:order_id]), :transaction_id => original_transaction_id})
       end
 
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_refund_or_settle_request(money, identification, options = {})
-        original_transaction_id, original_transaction_amount = identification.split(";")
+        original_transaction_id, original_transaction_amount = identification.split(';')
 
         requires!(options, :order_id)
 
@@ -139,8 +139,8 @@ module ActiveMerchant #:nodoc:
         post[:billing_name]  = creditcard.name if creditcard.name
         post[:account_number]  = creditcard.number
         post[:card_verification_value] = creditcard.verification_value if creditcard.verification_value?
-        post[:expiration_month]  = sprintf("%.2i", creditcard.month)
-        post[:expiration_year]  = sprintf("%.4i", creditcard.year)[-2..-1]
+        post[:expiration_month]  = sprintf('%.2i', creditcard.month)
+        post[:expiration_year]  = sprintf('%.4i', creditcard.year)[-2..-1]
       end
 
 
@@ -179,10 +179,10 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         xml   = REXML::Document.new("<?xml version='1.0' encoding='UTF-8'?>")
-        root  = xml.add_element("Request")
-        root.attributes["StoreID"] = options[:login]
-        root.attributes["StoreKey"] = options[:password]
-        root.attributes["ApplicationID"] = 'ot 1.0'
+        root  = xml.add_element('Request')
+        root.attributes['StoreID'] = options[:login]
+        root.attributes['StoreKey'] = options[:password]
+        root.attributes['ApplicationID'] = 'ot 1.0'
         transaction = root.add_element(action.to_s.camelize)
 
         actions[action].each do |key|
@@ -194,7 +194,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return 'Unspecified error' if message.blank?
-        message.gsub(/[^\w]/, ' ').split.join(" ").capitalize
+        message.gsub(/[^\w]/, ' ').split.join(' ').capitalize
       end
 
       def actions
@@ -208,7 +208,7 @@ module ActiveMerchant #:nodoc:
            :credit_card_charge			=> CREDIT_CARD_FIELDS,
            :credit_card_voice_authorize		=> CREDIT_CARD_FIELDS,
            :credit_card_capture			=> CREDIT_CARD_FIELDS,
-           :credit_card_credit			=> CREDIT_CARD_FIELDS + ["OriginalTransactionAmount"],
+           :credit_card_credit			=> CREDIT_CARD_FIELDS + ['OriginalTransactionAmount'],
            :credit_card_refund			=> %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
            :void_transaction			=> %w(ReferenceNumber TransactionID),
            :credit_card_settle			=> %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),

@@ -63,21 +63,21 @@ module ActiveMerchant
       NOMINAL_AMOUNT = 101
 
       AVS_CODE = {
-        "ALL MATCH"	=> 'Y',
-        "SECURITY CODE MATCH ONLY" => 'N',
-        "ADDRESS MATCH ONLY" => 'Y',
-        "NO DATA MATCHES"	=> 'N',
-        "DATA NOT CHECKED"	=> 'R',
-        "SECURITY CHECKS NOT SUPPORTED"	=> 'X'
+        'ALL MATCH'	=> 'Y',
+        'SECURITY CODE MATCH ONLY' => 'N',
+        'ADDRESS MATCH ONLY' => 'Y',
+        'NO DATA MATCHES'	=> 'N',
+        'DATA NOT CHECKED'	=> 'R',
+        'SECURITY CHECKS NOT SUPPORTED'	=> 'X'
       }
 
       CVV_CODE = {
-        "ALL MATCH"	=> 'M',
-        "SECURITY CODE MATCH ONLY" => 'M',
-        "ADDRESS MATCH ONLY" => 'N',
-        "NO DATA MATCHES"	=> 'N',
-        "DATA NOT CHECKED"	=> 'P',
-        "SECURITY CHECKS NOT SUPPORTED"	=> 'X'
+        'ALL MATCH'	=> 'M',
+        'SECURITY CODE MATCH ONLY' => 'M',
+        'ADDRESS MATCH ONLY' => 'N',
+        'NO DATA MATCHES'	=> 'N',
+        'DATA NOT CHECKED'	=> 'P',
+        'SECURITY CHECKS NOT SUPPORTED'	=> 'X'
       }
 
       # Create a new PslCardGateway
@@ -296,7 +296,7 @@ module ActiveMerchant
 
         post.collect { |key, value|
           "#{key}=#{CGI.escape(value.to_s.tr('&=', ' '))}"
-        }.join("&")
+        }.join('&')
       end
     end
   end

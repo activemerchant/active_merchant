@@ -22,7 +22,7 @@ class HdfcTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "849768440022761|Longbob Longsen", response.authorization
+    assert_equal '849768440022761|Longbob Longsen', response.authorization
     assert response.test?
   end
 
@@ -32,8 +32,8 @@ class HdfcTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Invalid Brand.", response.message
-    assert_equal "GW00160", response.params["error_code_tag"]
+    assert_equal 'Invalid Brand.', response.message
+    assert_equal 'GW00160', response.params['error_code_tag']
     assert response.test?
   end
 
@@ -43,7 +43,7 @@ class HdfcTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "2441955352022771|Longbob Longsen", response.authorization
+    assert_equal '2441955352022771|Longbob Longsen', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -60,7 +60,7 @@ class HdfcTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "849768440022761|Longbob Longsen", response.authorization
+    assert_equal '849768440022761|Longbob Longsen', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -81,7 +81,7 @@ class HdfcTest < Test::Unit::TestCase
 
   def test_passing_currency
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :currency => "INR")
+      @gateway.purchase(@amount, @credit_card, :currency => 'INR')
     end.check_request do |endpoint, data, headers|
       assert_match(/currencycode>356</, data)
     end.respond_with(successful_purchase_response)
@@ -89,13 +89,13 @@ class HdfcTest < Test::Unit::TestCase
 
   def test_passing_invalid_currency
     assert_raise(ArgumentError, 'Unsupported currency for HDFC: AOA') do
-      @gateway.purchase(@amount, @credit_card, :currency => "AOA")
+      @gateway.purchase(@amount, @credit_card, :currency => 'AOA')
     end
   end
 
   def test_passing_order_id
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :order_id => "932823723")
+      @gateway.purchase(@amount, @credit_card, :order_id => '932823723')
     end.check_request do |endpoint, data, headers|
       assert_match(/932823723/, data)
     end.respond_with(successful_purchase_response)
@@ -103,7 +103,7 @@ class HdfcTest < Test::Unit::TestCase
 
   def test_passing_description
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :description => "Awesome Services By Us")
+      @gateway.purchase(@amount, @credit_card, :description => 'Awesome Services By Us')
     end.check_request do |endpoint, data, headers|
       assert_match(/Awesome Services By Us/, data)
     end.respond_with(successful_purchase_response)
@@ -111,7 +111,7 @@ class HdfcTest < Test::Unit::TestCase
 
   def test_escaping
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, :order_id => "a" * 41, :description => "This has 'Hack Characters' ~`!\#$%^=+|\\:'\",;<>{}[]() and non-Hack Characters -_@.")
+      @gateway.purchase(@amount, @credit_card, :order_id => 'a' * 41, :description => "This has 'Hack Characters' ~`!\#$%^=+|\\:'\",;<>{}[]() and non-Hack Characters -_@.")
     end.check_request do |endpoint, data, headers|
       assert_match(/>This has Hack Characters  and non-Hack Characters -_@.</, data)
       assert_match(/>#{"a" * 40}</, data)
@@ -156,7 +156,7 @@ class HdfcTest < Test::Unit::TestCase
     end.respond_with(empty_purchase_response)
 
     assert_failure response
-    assert_equal "Unable to read error message", response.message
+    assert_equal 'Unable to read error message', response.message
   end
 
   def test_handling_bad_xml
@@ -178,8 +178,8 @@ class HdfcTest < Test::Unit::TestCase
     ))
 
     assert_success response
-    assert_equal "&", response.params["unescaped"]
-    assert_equal "&\"'<>", response.params["escaped"]
+    assert_equal '&', response.params['unescaped']
+    assert_equal "&\"'<>", response.params['escaped']
   end
 
   private

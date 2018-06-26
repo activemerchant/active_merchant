@@ -31,12 +31,12 @@ class RemoteBeanstreamInteracTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @options)
     assert_success response
-    assert_equal "R", response.params["responseType"]
+    assert_equal 'R', response.params['responseType']
     assert_false response.redirect.blank?
   end
   
   def test_failed_confirmation
-    assert response = @gateway.confirm("")
+    assert response = @gateway.confirm('')
     assert_failure response
   end
   

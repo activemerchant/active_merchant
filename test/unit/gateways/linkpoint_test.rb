@@ -39,7 +39,7 @@ class LinkpointTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, "token", @options)
+    assert response = @gateway.capture(@amount, 'token', @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal '1000', response.authorization
@@ -65,7 +65,7 @@ class LinkpointTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(2400, @credit_card, :order_id => 1003, :installments => 12, :startdate => "immediate", :periodicity => :monthly)
+      @gateway.recurring(2400, @credit_card, :order_id => 1003, :installments => 12, :startdate => 'immediate', :periodicity => :monthly)
     end
     assert_success response
   end
@@ -79,7 +79,7 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_purchase_is_valid_xml
-    @gateway.send(:parameters, 1000, @credit_card, :ordertype => "SALE", :order_id => 1004,
+    @gateway.send(:parameters, 1000, @credit_card, :ordertype => 'SALE', :order_id => 1004,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
@@ -93,7 +93,7 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_recurring_is_valid_xml
-    @gateway.send(:parameters, 1000, @credit_card, :ordertype => "SALE", :action => "SUBMIT", :installments => 12, :startdate => "immediate", :periodicity => "monthly", :order_id => 1006,
+    @gateway.send(:parameters, 1000, @credit_card, :ordertype => 'SALE', :action => 'SUBMIT', :installments => 12, :startdate => 'immediate', :periodicity => 'monthly', :order_id => 1006,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
@@ -106,16 +106,16 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_line_items_are_valid_xml
-    options = {:ordertype => "SALE", :action => "SUBMIT", :installments => 12, :startdate => "immediate", :periodicity => "monthly", :order_id => 1006,
+    options = {:ordertype => 'SALE', :action => 'SUBMIT', :installments => 12, :startdate => 'immediate', :periodicity => 'monthly', :order_id => 1006,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
         :state => 'CA',
         :zip => '90210'
       },
-      :line_items => [{:id => '123456', :description => "Logo T-Shirt", :price =>
-            "12.00", :quantity => '1', :options => [{:name => "Color", :value =>
-                "Red"}, {:name => "Size", :value => "XL"}]},{:id => '111', :description => "keychain", :price => "3.00", :quantity => '1'}]}
+      :line_items => [{:id => '123456', :description => 'Logo T-Shirt', :price =>
+            '12.00', :quantity => '1', :options => [{:name => 'Color', :value =>
+                'Red'}, {:name => 'Size', :value => 'XL'}]},{:id => '111', :description => 'keychain', :price => '3.00', :quantity => '1'}]}
 
 
     assert data = @gateway.send(:post_data, @amount, @credit_card, options)
@@ -125,7 +125,7 @@ class LinkpointTest < Test::Unit::TestCase
   def test_declined_purchase_is_valid_xml
     @gateway = LinkpointGateway.new(:login => 123123, :pem => 'PEM')
 
-    @gateway.send(:parameters, 1000, @credit_card, :ordertype => "SALE", :order_id => 1005,
+    @gateway.send(:parameters, 1000, @credit_card, :ordertype => 'SALE', :order_id => 1005,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',

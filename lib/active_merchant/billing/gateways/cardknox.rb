@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def split_authorization(authorization)
-        authorization.split(";")
+        authorization.split(';')
       end
 
       def add_reference(post, reference)
@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
 
       def source_type_from(authorization)
         _, _, source_type = split_authorization(authorization)
-        (source_type || "credit_card").to_sym
+        (source_type || 'credit_card').to_sym
       end
 
       def add_source(post, source)
@@ -294,10 +294,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response[:status] == "Approved"
-          "Success"
+        if response[:status] == 'Approved'
+          'Success'
         elsif response[:error].blank?
-          "Unspecified error"
+          'Unspecified error'
         else
           response[:error]
         end
@@ -310,7 +310,7 @@ module ActiveMerchant #:nodoc:
       def post_data(command, parameters = {})
         initial_parameters = {
           Key: @options[:api_key],
-          Version: "4.5.4",
+          Version: '4.5.4',
           SoftwareName: 'Active Merchant',
           SoftwareVersion: "#{ActiveMerchant::VERSION}",
           Command: command,
@@ -321,7 +321,7 @@ module ActiveMerchant #:nodoc:
         initial_parameters[:Hash] = "s/#{seed}/#{hash}/n" unless @options[:pin].blank?
         parameters = initial_parameters.merge(parameters)
 
-        parameters.reject{|k, v| v.blank?}.collect{ |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.reject{|k, v| v.blank?}.collect{ |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

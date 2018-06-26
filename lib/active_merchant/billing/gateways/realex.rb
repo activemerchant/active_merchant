@@ -39,9 +39,9 @@ module ActiveMerchant
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
 
-      SUCCESS, DECLINED          = "Successful", "Declined"
-      BANK_ERROR = REALEX_ERROR  = "Gateway is in maintenance. Please try again later."
-      ERROR = CLIENT_DEACTIVATED = "Gateway Error"
+      SUCCESS, DECLINED          = 'Successful', 'Declined'
+      BANK_ERROR = REALEX_ERROR  = 'Gateway is in maintenance. Please try again later.'
+      ERROR = CLIENT_DEACTIVATED = 'Gateway Error'
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -98,7 +98,7 @@ module ActiveMerchant
         response = parse(ssl_post(self.live_url, request))
 
         Response.new(
-          (response[:result] == "00"),
+          (response[:result] == '00'),
           message_from(response),
           response,
           :test => (response[:message] =~ %r{\[ test system \]}),
@@ -267,7 +267,7 @@ module ActiveMerchant
 
       def format_address_code(address)
         code = [address[:zip].to_s, address[:address1].to_s + address[:address2].to_s]
-        code.collect{|e| e.gsub(/\D/, "")}.reject{|e| e.empty?}.join("|")
+        code.collect{|e| e.gsub(/\D/, '')}.reject{|e| e.empty?}.join('|')
       end
 
       def new_timestamp
@@ -275,8 +275,8 @@ module ActiveMerchant
       end
 
       def add_signed_digest(xml, *values)
-        string = Digest::SHA1.hexdigest(values.join("."))
-        xml.tag! 'sha1hash', Digest::SHA1.hexdigest([string, @options[:password]].join("."))
+        string = Digest::SHA1.hexdigest(values.join('.'))
+        xml.tag! 'sha1hash', Digest::SHA1.hexdigest([string, @options[:password]].join('.'))
       end
 
       def auto_settle_flag(action)
@@ -290,11 +290,11 @@ module ActiveMerchant
       def message_from(response)
         message = nil
         case response[:result]
-        when "00"
+        when '00'
           message = SUCCESS
-        when "101"
+        when '101'
           message = response[:message]
-        when "102", "103"
+        when '102', '103'
           message = DECLINED
         when /^2[0-9][0-9]/
           message = BANK_ERROR
@@ -302,9 +302,9 @@ module ActiveMerchant
           message = REALEX_ERROR
         when /^5[0-9][0-9]/
           message = response[:message]
-        when "600", "601", "603"
+        when '600', '601', '603'
           message = ERROR
-        when "666"
+        when '666'
           message = CLIENT_DEACTIVATED
         else
           message = DECLINED

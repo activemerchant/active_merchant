@@ -28,10 +28,10 @@ class RemoteForteTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = ForteGateway.new(api_key: "InvalidKey", secret: "InvalidSecret", location_id: "11", account_id: "323")
+    gateway = ForteGateway.new(api_key: 'InvalidKey', secret: 'InvalidSecret', location_id: '11', account_id: '323')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match "combination not found.", response.message
+    assert_match 'combination not found.', response.message
   end
 
   def test_successful_purchase
@@ -55,14 +55,14 @@ class RemoteForteTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com",
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
       address: address
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal "1", response.params["order_number"]
+    assert_equal '1', response.params['order_number']
     assert_equal 'TEST APPROVAL', response.message
   end
 

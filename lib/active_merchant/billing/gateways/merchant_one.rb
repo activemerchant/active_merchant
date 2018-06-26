@@ -1,4 +1,4 @@
-require "cgi"
+require 'cgi'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -88,11 +88,11 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters.merge!({:type => action})
-        ret = ""
+        ret = ''
         for key in parameters.keys
           ret += "#{key}=#{CGI.escape(parameters[key].to_s)}"
           if key != parameters.keys.last
-            ret += "&"
+            ret += '&'
           end
         end
         ret.to_s
@@ -101,11 +101,11 @@ module ActiveMerchant #:nodoc:
       def parse(data)
         responses =  CGI.parse(data).inject({}){|h,(k, v)| h[k] = v.first; h}
         Response.new(
-          (responses["response"].to_i == 1),
-          responses["responsetext"],
+          (responses['response'].to_i == 1),
+          responses['responsetext'],
           responses,
           :test => test?,
-          :authorization => responses["transactionid"]
+          :authorization => responses['transactionid']
         )
       end
     end

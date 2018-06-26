@@ -10,7 +10,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
     @options = {
       :order_id => rand(100000).to_s,
-      :ip => "1.2.3.4"
+      :ip => '1.2.3.4'
     }
   end
 

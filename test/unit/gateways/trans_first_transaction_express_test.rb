@@ -1,12 +1,12 @@
-require "test_helper"
+require 'test_helper'
 
 class TransFirstTransactionExpressTest < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = TransFirstTransactionExpressGateway.new(
-      gateway_id: "gateway_id",
-      reg_key: "reg_key"
+      gateway_id: 'gateway_id',
+      reg_key: 'reg_key'
     )
 
     @credit_card = credit_card
@@ -22,7 +22,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "purchase|000015212561", response.authorization
+    assert_equal 'purchase|000015212561', response.authorization
     assert response.test?
   end
 
@@ -32,8 +32,8 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
-    assert_equal "51", response.error_code
+    assert_equal 'Not sufficient funds', response.message
+    assert_equal '51', response.error_code
     assert response.test?
   end
 
@@ -42,7 +42,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check)
 
     assert_success response
-    assert_equal "purchase_echeck|000028705491", response.authorization
+    assert_equal 'purchase_echeck|000028705491', response.authorization
   end
 
   def test_failed_purchase_with_echeck
@@ -50,7 +50,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check)
 
     assert_failure response
-    assert_equal "Error. Bank routing number validation negative (ABA).", response.message
+    assert_equal 'Error. Bank routing number validation negative (ABA).', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -59,7 +59,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "authorize|000015377801", response.authorization
+    assert_equal 'authorize|000015377801', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -76,14 +76,14 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
-    assert_equal "51", response.error_code
+    assert_equal 'Not sufficient funds', response.message
+    assert_equal '51', response.error_code
     assert response.test?
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "")
+      @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -95,7 +95,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "purchase|000015212561", response.authorization
+    assert_equal 'purchase|000015212561', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -108,13 +108,13 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("purchase|5d53a33d960c46d00f5dc061947d998c")
+      @gateway.void('purchase|5d53a33d960c46d00f5dc061947d998c')
     end.check_request do |endpoint, data, headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
 
     assert_failure response
-    assert_equal "50011", response.error_code
+    assert_equal '50011', response.error_code
   end
 
   def test_successful_refund
@@ -123,7 +123,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "purchase|000015212561", response.authorization
+    assert_equal 'purchase|000015212561', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -136,11 +136,11 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
-    assert_equal "50011", response.error_code
+    assert_equal '50011', response.error_code
   end
 
   def test_successful_refund_with_echeck
@@ -149,7 +149,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_echeck_response)
 
     assert_success response
-    assert_equal "purchase_echeck|000028705491", response.authorization
+    assert_equal 'purchase_echeck|000028705491', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -166,7 +166,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_refund_response)
 
     assert_failure response
-    assert_equal "50011", response.error_code
+    assert_equal '50011', response.error_code
   end
 
   def test_successful_credit
@@ -176,7 +176,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "credit|000001677461", response.authorization
+    assert_equal 'credit|000001677461', response.authorization
     assert response.test?
   end
 
@@ -186,8 +186,8 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_credit_response)
 
     assert_failure response
-    assert_equal "Validation Error", response.message
-    assert_equal "51334", response.error_code
+    assert_equal 'Validation Error', response.message
+    assert_equal '51334', response.error_code
     assert response.test?
   end
 
@@ -196,7 +196,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
@@ -204,7 +204,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
+    assert_equal 'Not sufficient funds', response.message
   end
 
   def test_successful_store
@@ -214,8 +214,8 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "Succeeded", response.message
-    assert_equal "store|1453495229881170023", response.authorization
+    assert_equal 'Succeeded', response.message
+    assert_equal 'store|1453495229881170023', response.authorization
     assert response.test?
   end
 
@@ -225,7 +225,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_store_response)
 
     assert_failure response
-    assert_equal "Validation Failure", response.message
+    assert_equal 'Validation Failure', response.message
     assert response.test?
   end
 

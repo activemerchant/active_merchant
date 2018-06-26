@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def type
-        "network_tokenization"
+        'network_tokenization'
       end
     end
   end

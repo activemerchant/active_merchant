@@ -20,11 +20,11 @@ class BraintreeTest < Test::Unit::TestCase
   end
 
   def test_should_have_display_name_of_just_braintree
-    assert_equal "Braintree", BraintreeGateway.display_name
+    assert_equal 'Braintree', BraintreeGateway.display_name
   end
 
   def test_should_have_homepage_url
-    assert_equal "http://www.braintreepaymentsolutions.com", BraintreeGateway.homepage_url
+    assert_equal 'http://www.braintreepaymentsolutions.com', BraintreeGateway.homepage_url
   end
 
   def test_should_have_supported_credit_card_types
@@ -32,6 +32,6 @@ class BraintreeTest < Test::Unit::TestCase
   end
 
   def test_should_have_default_currency
-    assert_equal "USD", BraintreeGateway.default_currency
+    assert_equal 'USD', BraintreeGateway.default_currency
   end
 end

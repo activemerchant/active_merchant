@@ -1,13 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AlliedWalletGateway < Gateway
-      self.display_name = "Allied Wallet"
-      self.homepage_url = "https://www.alliedwallet.com"
+      self.display_name = 'Allied Wallet'
+      self.homepage_url = 'https://www.alliedwallet.com'
 
-      self.live_url = "https://api.alliedwallet.com/merchants/"
+      self.live_url = 'https://api.alliedwallet.com/merchants/'
 
-      self.supported_countries = ["US"]
-      self.default_currency = "USD"
+      self.supported_countries = ['US']
+      self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover,
                                   :diners_club, :jcb, :maestro]
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:email] = options[:email] || "unspecified@example.com"
+        post[:email] = options[:email] || 'unspecified@example.com'
         post[:iPAddress] = options[:ip]
         if (billing_address = options[:billing_address])
           post[:firstName], post[:lastName] = split_names(billing_address[:name])
@@ -130,11 +130,11 @@ module ActiveMerchant #:nodoc:
 
 
       ACTIONS = {
-        purchase: "SALE",
-        authorize: "AUTHORIZE",
-        capture: "CAPTURE",
-        void: "VOID",
-        refund: "REFUND"
+        purchase: 'SALE',
+        authorize: 'AUTHORIZE',
+        capture: 'CAPTURE',
+        void: 'VOID',
+        refund: 'REFUND'
       }
 
       def commit(action, post)
@@ -146,14 +146,14 @@ module ActiveMerchant #:nodoc:
           response = parse(e.response.body)
         end
 
-        succeeded = success_from(response["status"])
+        succeeded = success_from(response['status'])
         Response.new(
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: response["id"],
-          :avs_result => AVSResult.new(code: response["avs_response"]),
-          :cvv_result => CVVResult.new(response["cvv2_response"]),
+          authorization: response['id'],
+          :avs_result => AVSResult.new(code: response['avs_response']),
+          :cvv_result => CVVResult.new(response['cvv2_response']),
           test: test?
         )
       rescue JSON::ParserError
@@ -161,20 +161,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def unparsable_response(raw_response)
-        message = "Unparsable response received from Allied Wallet. Please contact Allied Wallet if you continue to receive this message."
+        message = 'Unparsable response received from Allied Wallet. Please contact Allied Wallet if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
 
       def headers
         {
-          "Content-type"  => "application/json",
-          "Authorization" => "Bearer " + @options[:token]
+          'Content-type'  => 'application/json',
+          'Authorization' => 'Bearer ' + @options[:token]
         }
       end
 
       def url(action)
-        live_url + CGI.escape(@options[:merchant_id]) + "/" + ACTIONS[action] + "transactions"
+        live_url + CGI.escape(@options[:merchant_id]) + '/' + ACTIONS[action] + 'transactions'
       end
 
       def parse(body)
@@ -190,14 +190,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response == "Successful"
+        response == 'Successful'
       end
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          response["message"] || "Unable to read error message"
+          response['message'] || 'Unable to read error message'
         end
       end
 

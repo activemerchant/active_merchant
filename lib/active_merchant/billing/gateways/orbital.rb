@@ -1,5 +1,5 @@
 require 'active_merchant/billing/gateways/orbital/orbital_soft_descriptors'
-require "rexml/document"
+require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -30,15 +30,15 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = "7.1"
+      API_VERSION = '7.1'
 
       POST_HEADERS = {
-        "MIME-Version" => "1.1",
-        "Content-Type" => "application/PTI#{API_VERSION.gsub(/\./, '')}",
-        "Content-transfer-encoding" => "text",
-        "Request-number" => '1',
-        "Document-type" => "Request",
-        "Interface-Version" => "Ruby|ActiveMerchant|Proprietary Gateway"
+        'MIME-Version' => '1.1',
+        'Content-Type' => "application/PTI#{API_VERSION.gsub(/\./, '')}",
+        'Content-transfer-encoding' => 'text',
+        'Request-number' => '1',
+        'Document-type' => 'Request',
+        'Interface-Version' => 'Ruby|ActiveMerchant|Proprietary Gateway'
       }
 
       SUCCESS = '0'
@@ -65,14 +65,14 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :secondary_test_url, :secondary_live_url
 
-      self.test_url = "https://orbitalvar1.chasepaymentech.com/authorize"
-      self.secondary_test_url = "https://orbitalvar2.chasepaymentech.com/authorize"
+      self.test_url = 'https://orbitalvar1.chasepaymentech.com/authorize'
+      self.secondary_test_url = 'https://orbitalvar2.chasepaymentech.com/authorize'
 
-      self.live_url = "https://orbital1.chasepaymentech.com/authorize"
-      self.secondary_live_url = "https://orbital2.chasepaymentech.com/authorize"
+      self.live_url = 'https://orbital1.chasepaymentech.com/authorize'
+      self.secondary_live_url = 'https://orbital2.chasepaymentech.com/authorize'
 
-      self.supported_countries = ["US", "CA"]
-      self.default_currency = "CAD"
+      self.supported_countries = ['US', 'CA']
+      self.default_currency = 'CAD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
       self.display_name = 'Orbital Paymentech'
@@ -83,45 +83,45 @@ module ActiveMerchant #:nodoc:
       AVS_SUPPORTED_COUNTRIES = ['US', 'CA', 'UK', 'GB']
 
       CURRENCY_CODES = {
-        "AUD" => '036',
-        "BRL" => '986',
-        "CAD" => '124',
-        "CLP" => '152',
-        "CZK" => '203',
-        "DKK" => '208',
-        "HKD" => '344',
-        "ICK" => '352',
-        "JPY" => '392',
-        "MXN" => '484',
-        "NZD" => '554',
-        "NOK" => '578',
-        "SGD" => '702',
-        "SEK" => '752',
-        "CHF" => '756',
-        "GBP" => '826',
-        "USD" => '840',
-        "EUR" => '978'
+        'AUD' => '036',
+        'BRL' => '986',
+        'CAD' => '124',
+        'CLP' => '152',
+        'CZK' => '203',
+        'DKK' => '208',
+        'HKD' => '344',
+        'ICK' => '352',
+        'JPY' => '392',
+        'MXN' => '484',
+        'NZD' => '554',
+        'NOK' => '578',
+        'SGD' => '702',
+        'SEK' => '752',
+        'CHF' => '756',
+        'GBP' => '826',
+        'USD' => '840',
+        'EUR' => '978'
       }
 
       CURRENCY_EXPONENTS = {
-        "AUD" => '2',
-        "BRL" => '2',
-        "CAD" => '2',
-        "CLP" => '2',
-        "CZK" => '2',
-        "DKK" => '2',
-        "HKD" => '2',
-        "ICK" => '2',
-        "JPY" => '0',
-        "MXN" => '2',
-        "NZD" => '2',
-        "NOK" => '2',
-        "SGD" => '2',
-        "SEK" => '2',
-        "CHF" => '2',
-        "GBP" => '2',
-        "USD" => '2',
-        "EUR" => '2'
+        'AUD' => '2',
+        'BRL' => '2',
+        'CAD' => '2',
+        'CLP' => '2',
+        'CZK' => '2',
+        'DKK' => '2',
+        'HKD' => '2',
+        'ICK' => '2',
+        'JPY' => '0',
+        'MXN' => '2',
+        'NZD' => '2',
+        'NOK' => '2',
+        'SGD' => '2',
+        'SEK' => '2',
+        'CHF' => '2',
+        'GBP' => '2',
+        'USD' => '2',
+        'EUR' => '2'
       }
 
       # INDUSTRY TYPES
@@ -243,7 +243,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {}, deprecated = {})
         if(!options.kind_of?(Hash))
-          ActiveMerchant.deprecated("Calling the void method with an amount parameter is deprecated and will be removed in a future version.")
+          ActiveMerchant.deprecated('Calling the void method with an amount parameter is deprecated and will be removed in a future version.')
           return void(options, deprecated.merge(:amount => authorization))
         end
 
@@ -315,7 +315,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def authorization_string(*args)
-        args.compact.join(";")
+        args.compact.join(';')
       end
 
       def split_authorization(authorization)
@@ -509,8 +509,8 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         response = {}
         xml = REXML::Document.new(body)
-        root = REXML::XPath.first(xml, "//Response") ||
-               REXML::XPath.first(xml, "//ErrorResponse")
+        root = REXML::XPath.first(xml, '//Response') ||
+               REXML::XPath.first(xml, '//ErrorResponse')
         if root
           root.elements.to_a.each do |node|
             recurring_parse_element(response, node)
@@ -529,9 +529,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(order, message_type, trace_number=nil)
-        headers = POST_HEADERS.merge("Content-length" => order.size.to_s)
-        headers.merge!( "Trace-number" => trace_number.to_s,
-                        "Merchant-Id" => @options[:merchant_id] ) if @options[:retry_logic] && trace_number
+        headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
+        headers.merge!( 'Trace-number' => trace_number.to_s,
+                        'Merchant-Id' => @options[:merchant_id] ) if @options[:retry_logic] && trace_number
         request = lambda{|url| parse(ssl_post(url, order, headers))}
 
         # Failover URL will be attempted in the event of a connection error
@@ -643,7 +643,7 @@ module ActiveMerchant #:nodoc:
       # RS - Subsequent Recurring Transactions
       def set_recurring_ind(xml, parameters)
         if parameters[:recurring_ind]
-          raise "RecurringInd must be set to either \"RF\" or \"RS\"" unless %w(RF RS).include?(parameters[:recurring_ind])
+          raise 'RecurringInd must be set to either "RF" or "RS"' unless %w(RF RS).include?(parameters[:recurring_ind])
           xml.tag! :RecurringInd, parameters[:recurring_ind]
         end
       end
@@ -745,7 +745,7 @@ module ActiveMerchant #:nodoc:
       # Field lengths should be limited by byte count instead of character count
       # Returns the truncated value or nil
       def byte_limit(value, byte_length)
-        limited_value = ""
+        limited_value = ''
 
         value.to_s.each_char do |c|
           break if((limited_value.bytesize + c.bytesize) > byte_length)
@@ -756,7 +756,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_customer_request_xml(creditcard, options = {})
-        ActiveMerchant.deprecated "Customer Profile support in Orbital is non-conformant to the ActiveMerchant API and will be removed in its current form in a future version. Please contact the ActiveMerchant maintainers if you have an interest in modifying it to conform to the store/unstore/update API."
+        ActiveMerchant.deprecated 'Customer Profile support in Orbital is non-conformant to the ActiveMerchant API and will be removed in its current form in a future version. Please contact the ActiveMerchant maintainers if you have an interest in modifying it to conform to the store/unstore/update API.'
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Profile do
@@ -793,7 +793,7 @@ module ActiveMerchant #:nodoc:
             end
 
             xml.tag! :CCAccountNum, creditcard.number if creditcard
-            xml.tag! :CCExpireDate, creditcard.expiry_date.expiration.strftime("%m%y") if creditcard
+            xml.tag! :CCExpireDate, creditcard.expiry_date.expiration.strftime('%m%y') if creditcard
 
             # This has to come after CCExpireDate.
             add_managed_billing(xml, options)

@@ -8,42 +8,42 @@ class PaywayTest < Test::Unit::TestCase
 
     @gateway = ActiveMerchant::Billing::PaywayGateway.new(fixtures(:payway))
 
-    @visa = credit_card("4564710000000004",
+    @visa = credit_card('4564710000000004',
       :month              => 2,
       :year               => 2019,
-      :verification_value => "847"
+      :verification_value => '847'
     )
 
-    @mastercard = credit_card("5163200000000008",
+    @mastercard = credit_card('5163200000000008',
       :month              => 8,
       :year               => 2020,
-      :verification_value => "070",
-      :brand              => "master"
+      :verification_value => '070',
+      :brand              => 'master'
     )
 
-    @expired = credit_card("4564710000000012",
+    @expired = credit_card('4564710000000012',
       :month              => 2,
       :year               => 2005,
-      :verification_value => "963"
+      :verification_value => '963'
     )
 
-    @low = credit_card("4564710000000020",
+    @low = credit_card('4564710000000020',
       :month              => 5,
       :year               => 2020,
-      :verification_value => "234"
+      :verification_value => '234'
     )
 
-    @stolen_mastercard = credit_card("5163200000000016",
+    @stolen_mastercard = credit_card('5163200000000016',
       :month              => 12,
       :year               => 2019,
-      :verification_value => "728",
-      :brand              => "master"
+      :verification_value => '728',
+      :brand              => 'master'
     )
 
-    @invalid = credit_card("4564720000000037",
+    @invalid = credit_card('4564720000000037',
       :month              => 9,
       :year               => 2019,
-      :verification_value => "030"
+      :verification_value => '030'
     )
   end
 

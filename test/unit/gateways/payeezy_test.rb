@@ -15,7 +15,7 @@ class PayeezyGateway < Test::Unit::TestCase
       :billing_address => address,
       :ta_token => '123'
     }
-    @authorization = "ET1700|106625152|credit_card|4738"
+    @authorization = 'ET1700|106625152|credit_card|4738'
   end
 
   def test_invalid_credentials
@@ -120,7 +120,7 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal response.error_code, "card_expired"
+    assert_equal response.error_code, 'card_expired'
   end
 
   def test_successful_authorize
@@ -141,7 +141,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
-    assert response = @gateway.capture(@amount, "ET156862|69601979|credit_card|100")
+    assert response = @gateway.capture(@amount, 'ET156862|69601979|credit_card|100')
     assert_success response
     assert_equal 'ET176427|69601874|credit_card|100', response.authorization
     assert response.test?
@@ -150,7 +150,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def test_failed_capture
     @gateway.expects(:ssl_post).raises(failed_capture_response)
-    assert response = @gateway.capture(@amount, "")
+    assert response = @gateway.capture(@amount, '')
     assert_instance_of Response, response
     assert_failure response
   end
@@ -205,8 +205,8 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, @authorization)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal response.error_code, "server_error"
-    assert_equal response.message, "ProcessedBad Request (69) - Invalid Transaction Tag"
+    assert_equal response.error_code, 'server_error'
+    assert_equal response.message, 'ProcessedBad Request (69) - Invalid Transaction Tag'
   end
 
   def test_supported_countries

@@ -1,15 +1,15 @@
-require "test_helper"
+require 'test_helper'
 
 class QvalentTest < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = QvalentGateway.new(
-      username: "username",
-      password: "password",
-      merchant: "merchant",
-      pem: "pem",
-      pem_password: "pempassword"
+      username: 'username',
+      password: 'password',
+      merchant: 'merchant',
+      pem: 'pem',
+      pem_password: 'pempassword'
     )
 
     @credit_card = credit_card
@@ -23,7 +23,7 @@ class QvalentTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "5d53a33d960c46d00f5dc061947d998c", response.authorization
+    assert_equal '5d53a33d960c46d00f5dc061947d998c', response.authorization
     assert response.test?
   end
 
@@ -33,7 +33,7 @@ class QvalentTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Invalid card number (no such number)", response.message
+    assert_equal 'Invalid card number (no such number)', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
     assert response.test?
   end
@@ -45,7 +45,7 @@ class QvalentTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "21c74c8f08bca415b5373022e6194f74", response.authorization
+    assert_equal '21c74c8f08bca415b5373022e6194f74', response.authorization
     assert response.test?
   end
 
@@ -55,28 +55,28 @@ class QvalentTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Expired card",response.message
+    assert_equal 'Expired card',response.message
     assert response.test?
   end
 
   def test_successful_capture
     response = stub_comms do
-      @gateway.capture(@amount, "auth")
+      @gateway.capture(@amount, 'auth')
     end.respond_with(successful_capture_response)
 
     assert_success response
 
-    assert_equal "fedf9ea13afa46872592d62e8cdcb0a3", response.authorization
+    assert_equal 'fedf9ea13afa46872592d62e8cdcb0a3', response.authorization
     assert response.test?
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(@amount, "")
+      @gateway.capture(@amount, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
-    assert_equal "Invalid Parameters - order.authId: Required field", response.message
+    assert_equal 'Invalid Parameters - order.authId: Required field', response.message
     assert response.test?
   end
 
@@ -86,7 +86,7 @@ class QvalentTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "5d53a33d960c46d00f5dc061947d998c", response.authorization
+    assert_equal '5d53a33d960c46d00f5dc061947d998c', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -99,7 +99,7 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -123,22 +123,22 @@ class QvalentTest < Test::Unit::TestCase
 
   def test_successful_void
     response = stub_comms do
-      @gateway.void("auth")
+      @gateway.void('auth')
     end.respond_with(successful_void_response)
 
     assert_success response
 
-    assert_equal "67686b64b544335815002fd85704c8a1", response.authorization
+    assert_equal '67686b64b544335815002fd85704c8a1', response.authorization
     assert response.test?
   end
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("")
+      @gateway.void('')
     end.respond_with(failed_void_response)
 
     assert_failure response
-    assert_equal "Invalid Parameters - customer.originalOrderNumber: Required field", response.message
+    assert_equal 'Invalid Parameters - customer.originalOrderNumber: Required field', response.message
     assert response.test?
   end
 
@@ -149,8 +149,8 @@ class QvalentTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "RSL-20887450", response.authorization
-    assert_equal "Succeeded", response.message
+    assert_equal 'RSL-20887450', response.authorization
+    assert_equal 'Succeeded', response.message
     assert response.test?
   end
 
@@ -160,7 +160,7 @@ class QvalentTest < Test::Unit::TestCase
     end.respond_with(failed_store_response)
 
     assert_failure response
-    assert_equal "Invalid card number (no such number)", response.message
+    assert_equal 'Invalid card number (no such number)', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
     assert response.test?
   end
@@ -171,7 +171,7 @@ class QvalentTest < Test::Unit::TestCase
     end.respond_with(empty_purchase_response)
 
     assert_failure response
-    assert_equal "Unable to read error message", response.message
+    assert_equal 'Unable to read error message', response.message
   end
 
   def test_3d_secure_fields

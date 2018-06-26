@@ -83,11 +83,11 @@ class TrexleTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid response.", response.message
+    assert_equal 'Invalid response.', response.message
   end
 
   def test_unparsable_body_of_successful_response
-    @gateway.stubs(:raw_ssl_request).returns(MockResponse.succeeded("not-json"))
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.succeeded('not-json'))
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -108,7 +108,7 @@ class TrexleTest < Test::Unit::TestCase
 
     assert response = @gateway.store(@credit_card, @options)
     assert_failure response
-    assert_equal "Invalid response.", response.message
+    assert_equal 'Invalid response.', response.message
   end
 
   def test_successful_update
@@ -137,7 +137,7 @@ class TrexleTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(100, token)
     assert_failure response
-    assert_equal "Invalid response.", response.message
+    assert_equal 'Invalid response.', response.message
   end
 
   def test_successful_authorize
@@ -281,8 +281,8 @@ class TrexleTest < Test::Unit::TestCase
 
   def test_headers
     expected_headers = {
-      "Content-Type" => "application/json",
-      "Authorization" => "Basic #{Base64.strict_encode64('THIS_IS_NOT_A_REAL_API_KEY:').strip}"
+      'Content-Type' => 'application/json',
+      'Authorization' => "Basic #{Base64.strict_encode64('THIS_IS_NOT_A_REAL_API_KEY:').strip}"
     }
 
     @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)

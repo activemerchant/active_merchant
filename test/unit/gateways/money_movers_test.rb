@@ -44,8 +44,8 @@ class MoneyMoversTest < Test::Unit::TestCase
 
   def test_add_address
     result = {}
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '1 Main St.', :address2 => "apt 13", :country => 'US', :state => 'MI', :phone => '1234567890'} )
-    assert_equal ["address1", "address2", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
+    @gateway.send(:add_address, result, :billing_address => {:address1 => '1 Main St.', :address2 => 'apt 13', :country => 'US', :state => 'MI', :phone => '1234567890'} )
+    assert_equal ['address1', 'address2', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
     assert_equal 'MI', result[:state]
     assert_equal '1 Main St.', result[:address1]
     assert_equal 'apt 13', result[:address2]
@@ -54,7 +54,7 @@ class MoneyMoversTest < Test::Unit::TestCase
 
   def test_add_invoice
     result = {}
-    @gateway.send(:add_invoice, result, :order_id => '#1001', :description => "This is a great order")
+    @gateway.send(:add_invoice, result, :order_id => '#1001', :description => 'This is a great order')
     assert_equal '#1001', result[:orderid]
     assert_equal 'This is a great order', result[:orderdescription]
   end
@@ -77,8 +77,8 @@ class MoneyMoversTest < Test::Unit::TestCase
   end
 
   def test_expdate_formatting
-    assert_equal '0909', @gateway.send(:expdate, credit_card('4111111111111111', :month => "9", :year => "2009"))
-    assert_equal '0711', @gateway.send(:expdate, credit_card('4111111111111111', :month => "7", :year => "2011"))
+    assert_equal '0909', @gateway.send(:expdate, credit_card('4111111111111111', :month => '9', :year => '2009'))
+    assert_equal '0711', @gateway.send(:expdate, credit_card('4111111111111111', :month => '7', :year => '2011'))
   end
 
   def test_supported_countries
@@ -112,7 +112,7 @@ class MoneyMoversTest < Test::Unit::TestCase
   private
 
   def post_data_fixture
-    "password=password&type=auth&ccnumber=4111111111111111&username=demo&ccexp=1111&amount=100&cvv=999"
+    'password=password&type=auth&ccnumber=4111111111111111&username=demo&ccexp=1111&amount=100&cvv=999'
   end
 
   def minimum_requirements
@@ -120,14 +120,14 @@ class MoneyMoversTest < Test::Unit::TestCase
   end
 
   def successful_authorization_response
-    "response=1&responsetext=SUCCESS&authcode=123456&transactionid=1355694937&avsresponse=Y&cvvresponse=M&orderid=&type=auth&response_code=100"
+    'response=1&responsetext=SUCCESS&authcode=123456&transactionid=1355694937&avsresponse=Y&cvvresponse=M&orderid=&type=auth&response_code=100'
   end
 
   def successful_purchase_response
-    "response=1&responsetext=SUCCESS&authcode=123456&transactionid=1346648416&avsresponse=N&cvvresponse=N&orderid=&type=sale&response_code=100"
+    'response=1&responsetext=SUCCESS&authcode=123456&transactionid=1346648416&avsresponse=N&cvvresponse=N&orderid=&type=sale&response_code=100'
   end
 
   def failed_purchase_response
-    "response=2&responsetext=DECLINE&authcode=&transactionid=1346648595&avsresponse=N&cvvresponse=N&orderid=&type=sale&response_code=200"
+    'response=2&responsetext=DECLINE&authcode=&transactionid=1346648595&avsresponse=N&cvvresponse=N&orderid=&type=sale&response_code=200'
   end
 end

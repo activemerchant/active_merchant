@@ -8,15 +8,15 @@ module ActiveMerchant #:nodoc:
       self.live_url = self.test_url = 'https://tx.securepaytech.com/web/HttpPostPurchase'
 
       PAYMENT_GATEWAY_RESPONSES = {
-        1 => "Transaction OK",
-        2 => "Insufficient funds",
-        3 => "Card expired",
-        4 => "Card declined",
-        5 => "Server error",
-        6 => "Communications error",
-        7 => "Unsupported transaction type",
-        8 => "Bad or malformed request",
-        9 => "Invalid card number"
+        1 => 'Transaction OK',
+        2 => 'Insufficient funds',
+        3 => 'Card expired',
+        4 => 'Card declined',
+        5 => 'Server error',
+        6 => 'Communications error',
+        7 => 'Unsupported transaction type',
+        8 => 'Bad or malformed request',
+        9 => 'Invalid card number'
       }
 
       self.default_currency = 'NZD'

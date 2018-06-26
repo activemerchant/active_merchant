@@ -36,35 +36,35 @@ class PlugnpayTest < Test::Unit::TestCase
   end
 
   def test_capture_partial_amount
-    @gateway.expects(:ssl_post).with(anything, all_of(regexp_matches(/mode=mark/), regexp_matches(/card_amount=0.99/)), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, all_of(regexp_matches(/mode=mark/), regexp_matches(/card_amount=0.99/)), anything).returns('')
     @gateway.expects(:parse).returns({})
     @gateway.capture(@amount - 1, @credit_card, @options)
   end
 
   def test_capture_full_amount
-    @gateway.expects(:ssl_post).with(anything, all_of(regexp_matches(/mode=mark/), regexp_matches(/card_amount=1.00/)), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, all_of(regexp_matches(/mode=mark/), regexp_matches(/card_amount=1.00/)), anything).returns('')
     @gateway.expects(:parse).returns({'auth_msg' => 'Blah blah blah Transaction may not be reauthorized'}, {})
     @gateway.capture(@amount, @credit_card, @options)
   end
 
   def test_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/card_number=#{@credit_card.number}/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/card_number=#{@credit_card.number}/), anything).returns('')
     @gateway.expects(:parse).returns({})
     @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/orderID=transaction_id/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/orderID=transaction_id/), anything).returns('')
     @gateway.expects(:parse).returns({})
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", @options)
+      @gateway.credit(@amount, 'transaction_id', @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/orderID=transaction_id/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/orderID=transaction_id/), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.refund(@amount, "transaction_id", @options)
+    @gateway.refund(@amount, 'transaction_id', @options)
   end
 
   def test_add_address_outsite_north_america
