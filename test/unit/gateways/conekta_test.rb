@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class ConektaTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = ConektaGateway.new(:key => "key_eYvWV7gSDkNYXsmr")
 
@@ -62,6 +64,17 @@ class ConektaTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_installments
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({monthly_installments: '3'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match %r{monthly_installments=3}, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
     assert response.test?
   end
 

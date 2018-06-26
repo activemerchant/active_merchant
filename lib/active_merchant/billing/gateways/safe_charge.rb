@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
         post[:sg_APIType] = 1 if options[:three_d_secure]
         trans_type = options[:three_d_secure] ? "Sale3D" : "Sale"
         add_transaction_data(trans_type, post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_customer_details(post, payment, options)
 
         commit(post)
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = {}
         add_transaction_data("Auth", post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_customer_details(post, payment, options)
 
         commit(post)
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, payment, options={})
         post = {}
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_transaction_data("Credit", post, money, options)
         post[:sg_CreditType] = 1
 
@@ -125,14 +125,18 @@ module ActiveMerchant #:nodoc:
         post[:sg_WebsiteID] = options[:website_id] if options[:website_id]
         post[:sg_IPAddress] = options[:ip] if options[:ip]
         post[:sg_VendorID] = options[:vendor_id] if options[:vendor_id]
+        post[:sg_Descriptor] = options[:merchant_descriptor] if options[:merchant_descriptor]
+        post[:sg_MerchantPhoneNumber] = options[:merchant_phone_number] if options[:merchant_phone_number]
+        post[:sg_MerchantName] = options[:merchant_name] if options[:merchant_name]
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options={})
         post[:sg_NameOnCard] = payment.name
         post[:sg_CardNumber] = payment.number
         post[:sg_ExpMonth] = format(payment.month, :two_digits)
         post[:sg_ExpYear] = format(payment.year, :two_digits)
         post[:sg_CVV2] = payment.verification_value
+        post[:sg_StoredCredentialMode] = (options[:stored_credential_mode] == true ? 1 : 0)
       end
 
       def add_customer_details(post, payment, options)

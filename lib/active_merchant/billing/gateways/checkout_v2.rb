@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
+        add_transaction_data(post, options)
 
         commit(:authorize, post)
       end
@@ -111,6 +112,12 @@ module ActiveMerchant #:nodoc:
           post[:card][:billingDetails][:postcode] = address[:zip]
           post[:card][:billingDetails][:phone] = { number: address[:phone] } unless address[:phone].blank?
         end
+      end
+
+      def add_transaction_data(post, options={})
+        post[:cardOnFile] = true if options[:card_on_file] == true
+        post[:transactionIndicator] = options[:transaction_indicator] || 1
+        post[:previousChargeId] = options[:previous_charge_id] if options[:previous_charge_id]
       end
 
       def commit(action, post, authorization = nil)

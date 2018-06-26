@@ -167,7 +167,7 @@ module ActiveMerchant
             xml.transactionType('refundTransaction')
             xml.amount(amount(amount))
 
-            add_payment_source(xml, payment, :credit)
+            add_payment_source(xml, payment, options, :credit)
             xml.refTransId(transaction_id_from(options[:transaction_id])) if options[:transaction_id]
             add_invoice(xml, 'refundTransaction', options)
             add_customer_data(xml, payment, options)
@@ -246,7 +246,7 @@ module ActiveMerchant
         xml.transactionRequest do
           xml.transactionType(transaction_type)
           xml.amount(amount(amount))
-          add_payment_source(xml, payment)
+          add_payment_source(xml, payment, options)
           add_invoice(xml, transaction_type, options)
           add_tax_fields(xml, options)
           add_duty_fields(xml, options)
@@ -268,7 +268,7 @@ module ActiveMerchant
             add_tax_fields(xml, options)
             add_shipping_fields(xml, options)
             add_duty_fields(xml, options)
-            add_payment_source(xml, payment)
+            add_payment_source(xml, payment, options)
             add_invoice(xml, transaction_type, options)
             add_tax_exempt_status(xml, options)
           end
@@ -375,10 +375,10 @@ module ActiveMerchant
         end
       end
 
-      def add_payment_source(xml, source, action = nil)
+      def add_payment_source(xml, source, options, action = nil)
         return unless source
         if source.is_a?(String)
-          add_token_payment_method(xml, source)
+          add_token_payment_method(xml, source, options)
         elsif card_brand(source) == 'check'
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
@@ -412,10 +412,10 @@ module ActiveMerchant
             ActiveMerchant.deprecated "Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead."
             set_duplicate_window(xml, self.class.duplicate_window)
           end
-          if options[:email_customer]
+          if options.key?(:email_customer)
             xml.setting do
               xml.settingName("emailCustomer")
-              xml.settingValue("true")
+              xml.settingValue(options[:email_customer] ? "true" : "false")
             end
           end
           if options[:header_email_receipt]
@@ -489,8 +489,10 @@ module ActiveMerchant
         end
       end
 
-      def add_token_payment_method(xml, token)
+      def add_token_payment_method(xml, token, options)
         customer_profile_id, customer_payment_profile_id, _ = split_authorization(token)
+        customer_profile_id = options[:customer_profile_id] if options[:customer_profile_id]
+        customer_payment_profile_id = options[:customer_payment_profile_id] if options[:customer_payment_profile_id]
         xml.customerProfileId(customer_profile_id)
         xml.customerPaymentProfileId(customer_payment_profile_id)
       end
@@ -552,8 +554,11 @@ module ActiveMerchant
         xml.customerIP(options[:ip]) unless empty?(options[:ip])
 
         xml.cardholderAuthentication do
-          xml.authenticationIndicator(options[:authentication_indicator])
-          xml.cardholderAuthenticationValue(options[:cardholder_authentication_value])
+          three_d_secure = options.fetch(:three_d_secure, {})
+          xml.authenticationIndicator(
+            options[:authentication_indicator] || three_d_secure[:eci])
+          xml.cardholderAuthenticationValue(
+            options[:cardholder_authentication_value] || three_d_secure[:cavv])
         end
       end
 

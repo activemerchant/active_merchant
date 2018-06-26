@@ -35,7 +35,7 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'EUR'
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
-      self.supported_countries = %w(IE GB FR BE NL LU IT US CA)
+      self.supported_countries = %w(IE GB FR BE NL LU IT US CA ES)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
 
@@ -64,7 +64,7 @@ module ActiveMerchant
       end
 
       def capture(money, authorization, options = {})
-        request = build_capture_request(authorization, options)
+        request = build_capture_request(money, authorization, options)
         commit(request)
       end
 
@@ -140,20 +140,22 @@ module ActiveMerchant
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+          add_network_tokenization_card(xml, credit_card) if credit_card.is_a?(NetworkTokenizationCreditCard)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
         xml.target!
       end
 
-      def build_capture_request(authorization, options)
+      def build_capture_request(money, authorization, options)
         timestamp = new_timestamp
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'settle' do
           add_merchant_details(xml, options)
+          add_amount(xml, money, options)
           add_transaction_identifiers(xml, authorization, options)
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), nil, nil, nil)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), nil)
         end
         xml.target!
       end
@@ -247,6 +249,18 @@ module ActiveMerchant
           xml.tag! 'cvn' do
             xml.tag! 'number', credit_card.verification_value
             xml.tag! 'presind', (options['presind'] || (credit_card.verification_value? ? 1 : nil))
+          end
+        end
+      end
+
+      def add_network_tokenization_card(xml, payment)
+        xml.tag! 'mpi' do
+          xml.tag! 'cavv', payment.payment_cryptogram
+          xml.tag! 'eci', payment.eci
+        end
+        xml.tag! 'supplementarydata' do
+          xml.tag! 'item', 'type' => 'mobile' do
+            xml.tag! 'field01', payment.source.to_s.gsub('_','-')
           end
         end
       end

@@ -305,6 +305,7 @@ module ActiveMerchant #:nodoc:
         hash[:shopperEmail]     = options[:email] if options[:email]
         hash[:shopperIP]        = options[:ip] if options[:ip]
         hash[:shopperReference] = options[:customer] if options[:customer]
+        hash[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
         hash.keep_if { |_, v| v }
       end
 

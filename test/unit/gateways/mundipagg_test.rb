@@ -24,6 +24,27 @@ class MundipaggTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_holder_document
+    @options.merge!(holder_document: "a1b2c3d4")
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a1b2c3d4/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+  end
+
+  def test_billing_not_sent
+    @options.delete(:billing_address)
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      refute data["billing_address"]
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -105,6 +126,7 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
+    @gateway.expects(:ssl_request).returns(successful_authorize_response)
     @gateway.expects(:ssl_post).returns(successful_verify_response)
 
     response = @gateway.verify(@credit_card, @options)

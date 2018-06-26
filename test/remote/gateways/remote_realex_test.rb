@@ -18,6 +18,19 @@ class RemoteRealexTest < Test::Unit::TestCase
     @mastercard_referral_a = card_fixtures(:realex_mastercard_referral_a)
     @mastercard_coms_error = card_fixtures(:realex_mastercard_coms_error)
 
+    @apple_pay = credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
+
+    @declined_apple_pay = credit_card = network_tokenization_credit_card('4000120000001154',
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      verification_value: nil,
+      eci: '05',
+      source: :apple_pay
+    )
     @amount = 10000
   end
 
@@ -70,8 +83,15 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_not_nil response
     assert_failure response
 
-    assert_equal '506', response.params['result']
+    assert_equal '504', response.params['result']
     assert_match %r{no such}i, response.message
+  end
+
+  def test_realex_purchase_with_apple_pay
+    response = @gateway.purchase(1000, @apple_pay, :order_id => generate_unique_id, :description => 'Test Realex with ApplePay')
+    assert_success response
+    assert response.test?
+    assert_equal 'Successful', response.message
   end
 
   def test_realex_purchase_declined
@@ -88,6 +108,14 @@ class RemoteRealexTest < Test::Unit::TestCase
       assert_equal response.params['message'], response.message
     end
 
+  end
+
+  def test_realex_purchase_with_apple_pay_declined
+    response = @gateway.purchase(1101, @declined_apple_pay, :order_id => generate_unique_id, :description => 'Test Realex with ApplePay')
+    assert_failure response
+    assert response.test?
+    assert_equal '101', response.params['result']
+    assert_match %r{DECLINED}i, response.message
   end
 
   def test_realex_purchase_referral_b
@@ -233,6 +261,28 @@ class RemoteRealexTest < Test::Unit::TestCase
     )
     assert auth_response.test?
 
+    capture_response = @gateway.capture(nil, auth_response.authorization)
+
+    assert_not_nil capture_response
+    assert_success capture_response
+    assert capture_response.authorization.length > 0
+    assert_equal 'Successful', capture_response.message
+    assert_match(/Settled Successfully/, capture_response.params['message'])
+  end
+
+  def test_realex_authorize_then_capture_with_extra_amount
+    order_id = generate_unique_id
+
+    auth_response = @gateway.authorize(@amount*115, @visa,
+      :order_id => order_id,
+      :description => 'Test Realex Purchase',
+      :billing_address => {
+        :zip => '90210',
+        :country => 'US'
+      }
+    )
+    assert auth_response.test?
+
     capture_response = @gateway.capture(@amount, auth_response.authorization)
 
     assert_not_nil capture_response
@@ -282,7 +332,6 @@ class RemoteRealexTest < Test::Unit::TestCase
 
     assert_not_nil rebate_response
     assert_success rebate_response
-    assert rebate_response.test?
     assert rebate_response.authorization.length > 0
     assert_equal 'Successful', rebate_response.message
   end

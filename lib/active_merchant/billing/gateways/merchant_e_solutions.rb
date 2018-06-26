@@ -94,6 +94,17 @@ module ActiveMerchant #:nodoc:
         commit('V', nil, options.merge(post))
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?profile_key=)\w*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?card_number=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?cvv2=)\d*(&?)), '\1[FILTERED]\2')
+      end
+
       private
 
       def add_address(post, options)

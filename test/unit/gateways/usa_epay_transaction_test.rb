@@ -82,6 +82,17 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_email_receipt
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'bobby@hill.com', :cust_receipt => 'Yes', :cust_receipt_name => "socool"))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMcustreceipt=Yes/, data)
+      assert_match(/UMcustreceiptname=socool/, data)
+      assert_match(/UMtestmode=0/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_successful_purchase_split_payment
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(

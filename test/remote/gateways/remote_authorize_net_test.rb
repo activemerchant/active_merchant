@@ -62,6 +62,14 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_false_email_customer
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, email_customer: false, email: 'anet@example.com', billing_address: address)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
   def test_successful_purchase_with_header_email_receipt
     response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0, header_email_receipt: "subject line", email: 'anet@example.com', billing_address: address)
     assert_success response
@@ -390,6 +398,19 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal "27", response.params["message_code"]
     assert_equal "6", response.params["response_reason_code"]
     assert_match %r{Address not verified}, response.avs_result["message"]
+  end
+
+  def test_failed_authorize_using_wrong_token
+    response = @gateway.store(@declined_card)
+    assert_success response
+
+    responseA = @gateway.authorize(@amount, response.authorization, @options.merge(customer_payment_profile_id: 12345))
+    responseB = @gateway.authorize(@amount, response.authorization, @options.merge(customer_profile_id: 12345))
+    assert_failure responseA
+    assert_failure responseB
+
+    assert_equal 'Customer Profile ID or Customer Payment Profile ID not found', responseA.message
+    assert_equal 'Customer Profile ID or Customer Payment Profile ID not found', responseB.message
   end
 
   def test_failed_capture_using_stored_card

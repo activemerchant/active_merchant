@@ -140,7 +140,12 @@ module ActiveMerchant #:nodoc:
 
         if options.has_key? :email
           post[:custemail] = options[:email]
-          post[:custreceipt] = 'No'
+          if options[:cust_receipt]
+            post[:custreceipt] = options[:cust_receipt]
+            post[:custreceiptname] = options[:cust_receipt_name] if options[:cust_receipt_name]
+          else
+            post[:custreceipt] = 'No'
+          end
         end
 
         if options.has_key? :customer

@@ -166,6 +166,35 @@ class CardConnectTest < Test::Unit::TestCase
     assert_equal "Insufficient funds", response.message
   end
 
+  def test_successful_store
+    @gateway.expects(:ssl_request).returns(successful_store_response)
+    response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert_equal 'Profile Saved', response.message
+    assert_equal '1|16700875781344019340', response.authorization
+  end
+
+  def test_failed_store
+    @gateway.expects(:ssl_request).returns(failed_store_response)
+    response = @gateway.store(@credit_card, @options)
+
+    assert_failure response
+  end
+
+  def test_successful_unstore
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.unstore('1|16700875781344019340')
+    end.check_request do |verb, url, data, headers|
+      assert_equal :delete, verb
+      assert_match %r{16700875781344019340/1}, url
+    end.respond_with(successful_unstore_response)
+  end
+
+  def test_failed_unstore
+
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -275,5 +304,22 @@ class CardConnectTest < Test::Unit::TestCase
 
   def failed_verify_response
     "{\"respproc\":\"FNOR\",\"amount\":\"0.00\",\"resptext\":\"Insufficient funds\",\"cardproc\":\"FNOR\",\"commcard\":\" C \",\"retref\":\"005101240599\",\"respstat\":\"C\",\"respcode\":\"NU\",\"account\":\"9435885049491053\",\"merchid\":\"496160873888\",\"token\":\"9435885049491053\"}"
+  end
+
+  def successful_store_response
+    "{\"country\":\"CA\",\"gsacard\":\"N\",\"address\":\"456 My Street Apt 1\",\"resptext\":\"Profile Saved\",\"city\":\"Ottawa\",\"acctid\":\"1\",\"respcode\":\"09\",\"defaultacct\":\"Y\",\"accttype\":\"VISA\",\"token\":\"9477709629051443\",\"respproc\":\"PPS\",\"phone\":\"(555)555-555\",\"profileid\":\"16700875781344019340\",\"name\":\"Longbob Longsen\",\"auoptout\":\"N\",\"postal\":\"K1C2N6\",\"expiry\":\"0919\",\"region\":\"ON\",\"respstat\":\"A\"}"
+  end
+
+  def successful_unstore_response
+    "{\"respproc\":\"PPS\",\"resptext\":\"Profile Deleted\",\"respstat\":\"A\",\"respcode\":\"08\"}"
+  end
+
+  def failed_store_response
+    # Best-guess based on documentation
+    "{\"country\":\"CA\",\"gsacard\":\"N\",\"address\":\"456 My Street Apt 1\",\"resptext\":\"Profile Saved\",\"city\":\"Ottawa\",\"acctid\":\"1\",\"respcode\":\"09\",\"defaultacct\":\"Y\",\"accttype\":\"VISA\",\"token\":\"9477709629051443\",\"respproc\":\"PPS\",\"phone\":\"(555)555-555\",\"profileid\":\"16700875781344019340\",\"name\":\"Longbob Longsen\",\"auoptout\":\"N\",\"postal\":\"K1C2N6\",\"expiry\":\"0919\",\"region\":\"ON\",\"respstat\":\"C\"}"
+  end
+
+  def failed_unstore_response
+    "{\"respproc\":\"PPS\",\"resptext\":\"Profile not found\",\"respstat\":\"C\",\"respcode\":\"96\"}"
   end
 end

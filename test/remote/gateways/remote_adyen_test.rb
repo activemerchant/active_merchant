@@ -17,6 +17,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @declined_card = credit_card('4000300011112220')
 
+    @apple_pay_card = network_tokenization_credit_card('4111111111111111',
+      :payment_cryptogram => "YwAAAAAABaYcCMX/OhNRQAAAAAA=",
+      :month              => "08",
+      :year               => "2018",
+      :source             => :apple_pay,
+      :verification_value => nil
+    )
+
     @options = {
       reference: '345123',
       shopper_email: "john.smith@test.com",
@@ -55,8 +63,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    options = @options.merge!(fraudOffset: '1')
+    options = @options.merge!(fraudOffset: '1', installments: 2)
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = @gateway.purchase(@amount, @apple_pay_card, @options)
     assert_success response
     assert_equal '[capture-received]', response.message
   end
@@ -188,6 +202,17 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_transcript_scrubbing_network_tokenization_card
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @apple_pay_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@apple_pay_card.number, transcript)
+    assert_scrubbed(@apple_pay_card.payment_cryptogram, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
   end
 

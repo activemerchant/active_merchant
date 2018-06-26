@@ -12,6 +12,11 @@ class MonerisUsRemoteTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+    @check = check({
+      routing_number: '011000015',
+      account_number: '1234455',
+      number: 123
+    })
   end
 
   def test_successful_purchase
@@ -19,6 +24,21 @@ class MonerisUsRemoteTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
+  end
+
+  def test_successful_echeck_purchase
+    response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Registered', response.message
+    assert response.authorization
+  end
+
+  def test_failed_echeck_purchase
+    response = @gateway.purchase(105, check(routing_number: 5), @options)
+    assert_failure response
+    assert response.test?
+    assert_equal 'Unspecified error', response.message
   end
 
   def test_successful_authorization
@@ -103,6 +123,14 @@ class MonerisUsRemoteTest < Test::Unit::TestCase
     @data_key = response.params["data_key"]
   end
 
+  def test_successful_echeck_store
+    assert response = @gateway.store(@check)
+    assert_success response
+    assert_equal "Successfully registered ach details", response.message
+    assert response.params["data_key"].present?
+    @data_key_echeck = response.params["data_key"]
+  end
+
   def test_successful_unstore
     test_successful_store
     assert response = @gateway.unstore(@data_key)
@@ -111,11 +139,27 @@ class MonerisUsRemoteTest < Test::Unit::TestCase
     assert response.params["data_key"].present?
   end
 
+  def test_successful_echeck_unstore
+    test_successful_echeck_store
+    assert response = @gateway.unstore(@data_key_echeck)
+    assert_success response
+    assert_equal "Successfully deleted ach details", response.message
+    assert response.params["data_key"].present?
+  end
+
   def test_update
     test_successful_store
     assert response = @gateway.update(@data_key, @credit_card)
     assert_success response
     assert_equal "Successfully updated cc details", response.message
+    assert response.params["data_key"].present?
+  end
+
+  def test_echeck_update
+    test_successful_echeck_store
+    assert response = @gateway.update(@data_key_echeck, @check)
+    assert_success response
+    assert_equal "Successfully updated ach details", response.message
     assert response.params["data_key"].present?
   end
 

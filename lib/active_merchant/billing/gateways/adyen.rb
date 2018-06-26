@@ -44,10 +44,11 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice(post, money, options)
         add_payment(post, payment)
-        add_extra_data(post, options)
+        add_extra_data(post, payment, options)
         add_shopper_interaction(post, payment, options)
         add_address(post, options)
         add_shopperName(post, options)
+        add_installments(post, options) if options[:installments]
         commit('authorise', post)
       end
 
@@ -76,7 +77,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice(post, 0, options)
         add_payment(post, credit_card)
-        add_extra_data(post, options)
+        add_extra_data(post, credit_card, options)
         add_recurring_contract(post, options)
         add_address(post, options)
         commit('authorise', post)
@@ -97,17 +98,24 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r(("number\\?":\\?")[^"]*)i, '\1[FILTERED]').
-          gsub(%r(("cvc\\?":\\?")[^"]*)i, '\1[FILTERED]')
+          gsub(%r(("cvc\\?":\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cavv\\?":\\?")[^"]*)i, '\1[FILTERED]')
       end
 
       private
 
-      def add_extra_data(post, options)
+      NETWORK_TOKENIZATION_CARD_SOURCE = {
+        "apple_pay" => "applepay",
+        "android_pay" => "androidpay",
+        "google_pay" => "paywithgoogle"
+      }
+
+      def add_extra_data(post, payment, options)
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
         post[:shopperIP] = options[:ip] if options[:ip]
         post[:shopperReference] = options[:customer_id] || options[:customer]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
-        post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
+        post[:selectedBrand] = options[:selected_brand] || NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
         post[:telephoneNumber] =  options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
@@ -115,7 +123,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_interaction(post, payment, options={})
-        if payment.respond_to?(:verification_value) && payment.verification_value
+        if (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
           shopper_interaction = "Ecommerce"
         else
           shopper_interaction = "ContAuth"
@@ -175,6 +183,7 @@ module ActiveMerchant #:nodoc:
           post[:selectedRecurringDetailReference] = recurring_detail_reference
           add_recurring_contract(post, options)
         else
+          add_mpi_data_for_network_tokenization_card(post, payment) if payment.is_a?(NetworkTokenizationCreditCard)
           add_card(post, payment)
         end
       end
@@ -203,6 +212,14 @@ module ActiveMerchant #:nodoc:
         post[:originalReference] = single_reference(authorization) || original_psp_reference
       end
 
+      def add_mpi_data_for_network_tokenization_card(post, payment)
+        post[:mpiData] = {}
+        post[:mpiData][:authenticationResponse] = "Y"
+        post[:mpiData][:cavv] = payment.payment_cryptogram
+        post[:mpiData][:directoryResponse] = "Y"
+        post[:mpiData][:eci] = payment.eci || "07"
+      end
+
       def single_reference(authorization)
         authorization if !authorization.include?("#")
       end
@@ -213,6 +230,12 @@ module ActiveMerchant #:nodoc:
         }
 
         post[:recurring] = recurring
+      end
+
+      def add_installments(post, options)
+        post[:installments] = {
+          value: options[:installments]
+        }
       end
 
       def parse(body)

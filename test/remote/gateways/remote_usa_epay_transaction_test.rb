@@ -55,6 +55,12 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_email_receipt
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'hank@hill.com',:cust_receipt => 'Yes'))
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
     # For some reason this will fail with "You have tried this card too
     # many times, please contact merchant" unless a unique order id is

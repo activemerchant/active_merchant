@@ -72,9 +72,15 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, creditcard_or_datakey, options)
         post[:amount]     = amount(money)
         post[:order_id]   = options[:order_id]
-        post[:address]    = options[:billing_address] || options[:address]
+        add_address(post, creditcard_or_datakey, options)
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        action = (post[:data_key].blank?) ? 'us_purchase' : 'us_res_purchase_cc'
+        action = if creditcard_or_datakey.is_a?(String)
+          'us_res_purchase_cc'
+        elsif card_brand(creditcard_or_datakey) == 'check'
+          'us_ach_debit'
+        elsif post[:data_key].blank?
+          'us_purchase'
+        end
         commit(action, post)
       end
 
@@ -114,12 +120,11 @@ module ActiveMerchant #:nodoc:
         commit 'us_refund', crediting_params(authorization, :amount => amount(money))
       end
 
-      def store(credit_card, options = {})
+      def store(payment_source, options = {})
         post = {}
-        post[:pan] = credit_card.number
-        post[:expdate] = expdate(credit_card)
+        add_payment_source(post, payment_source, options)
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        commit('us_res_add_cc', post)
+        card_brand(payment_source) == 'check' ? commit('us_res_add_ach', post) : commit('us_res_add_cc', post)
       end
 
       def unstore(data_key, options = {})
@@ -128,13 +133,11 @@ module ActiveMerchant #:nodoc:
         commit('us_res_delete', post)
       end
 
-      def update(data_key, credit_card, options = {})
+      def update(data_key, payment_source, options = {})
         post = {}
-        post[:pan] = credit_card.number
-        post[:expdate] = expdate(credit_card)
+        add_payment_source(post, payment_source, options)
         post[:data_key] = data_key
-        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        commit('us_res_update_cc', post)
+        card_brand(payment_source) == 'check' ? commit('us_res_update_ach', post) : commit('us_res_update_cc', post)
       end
 
       def supports_scrubbing?
@@ -154,14 +157,41 @@ module ActiveMerchant #:nodoc:
         sprintf("%.4i", creditcard.year)[-2..-1] + sprintf("%.2i", creditcard.month)
       end
 
+      def add_address(post, payment_method, options)
+        if !payment_method.is_a?(String) && card_brand(payment_method) == 'check'
+          post[:ach_info][:cust_first_name] = payment_method.first_name if payment_method.first_name
+          post[:ach_info][:cust_last_name] = payment_method.last_name if payment_method.last_name
+          if address = options[:billing_address] || options[:address]
+            post[:ach_info][:cust_address1] = address[:address1] if address[:address1]
+            post[:ach_info][:cust_address2] = address[:address2] if address[:address2]
+            post[:ach_info][:city] = address[:city] if address[:city]
+            post[:ach_info][:state] = address[:state] if address[:state]
+            post[:ach_info][:zip] = address[:zip] if address[:zip]
+          end
+        else
+          post[:address] = options[:billing_address] || options[:address]
+        end
+      end
+
       def add_payment_source(post, source, options)
         if source.is_a?(String)
           post[:data_key]   = source
           post[:cust_id]    = options[:customer]
+        elsif card_brand(source) == 'check'
+          ach_info = {}
+          ach_info[:sec] = 'web'
+          ach_info[:routing_num] = source.routing_number
+          ach_info[:account_num] = source.account_number
+          ach_info[:account_type] = source.account_type
+          ach_info[:check_num] = source.number if source.number
+          post[:ach_info] = ach_info
         else
           post[:pan]        = source.number
           post[:expdate]    = expdate(source)
           post[:cvd_value]  = source.verification_value if source.verification_value?
+          if crypt_type = options[:crypt_type] || @options[:crypt_type]
+            post[:crypt_type] = crypt_type
+          end
           post[:cust_id]    = options[:customer] || source.name
         end
       end
@@ -247,6 +277,8 @@ module ActiveMerchant #:nodoc:
             transaction.add_element(avs_element(parameters[:address])) if @avs_enabled && parameters[:address]
           when :cvd_info
             transaction.add_element(cvd_element(parameters[:cvd_value])) if @cvv_enabled
+          when :ach_info
+            transaction.add_element(ach_element(parameters[:ach_info]))
           else
             transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
           end
@@ -277,6 +309,14 @@ module ActiveMerchant #:nodoc:
         element
       end
 
+      def ach_element(ach_info)
+        element = REXML::Element.new('ach_info')
+        actions['ach_info'].each do |key|
+          element.add_element(key.to_s).text = ach_info[key] unless ach_info[key].blank?
+        end
+        element
+      end
+
       def message_from(message)
         return 'Unspecified error' if message.blank?
         message.gsub(/[^\w]/, ' ').split.join(" ").capitalize
@@ -301,7 +341,11 @@ module ActiveMerchant #:nodoc:
           "us_res_delete"         => [:data_key],
           "us_res_update_cc"      => [:data_key, :pan, :expdate, :crypt_type],
           "us_res_purchase_cc"    => [:data_key, :order_id, :cust_id, :amount, :crypt_type],
-          "us_res_preauth_cc"     => [:data_key, :order_id, :cust_id, :amount, :crypt_type]
+          "us_res_preauth_cc"     => [:data_key, :order_id, :cust_id, :amount, :crypt_type],
+          "us_ach_debit"          => [:order_id, :cust_id, :amount, :ach_info],
+          "us_res_add_ach"        => [:order_id, :cust_id, :amount, :ach_info],
+          "us_res_update_ach"     => [:order_id, :data_key, :cust_id, :amount, :ach_info],
+          "ach_info"              => [:sec, :cust_first_name, :cust_last_name, :cust_address1, :cust_address2, :cust_city, :cust_state, :cust_zip, :routing_num, :account_num, :check_num, :account_type]
         }
       end
     end

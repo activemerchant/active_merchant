@@ -9,6 +9,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
+    @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
 
     @options = {order_id: generate_unique_id, email: "wow@example.com"}
   end
@@ -79,6 +80,46 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     sleep(40)
     assert capture = @gateway.purchase(@amount, auth.authorization, @options)
     assert_success capture
+  end
+
+  def test_successful_authorize_with_3ds
+    session_id = generate_unique_id
+    order_id = @options[:order_id]
+    options = @options.merge(
+              {
+                execute_threed: true,
+                accept_header: 'text/html',
+                user_agent: 'Mozilla/5.0',
+                session_id: session_id,
+                ip: '127.0.0.1',
+                cookie: 'machine=32423423'
+              })
+    assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
+    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert first_message.test?
+    refute first_message.authorization.blank?
+    refute first_message.params['issuer_url'].blank?
+    refute first_message.params['pa_request'].blank?
+    refute first_message.params['cookie'].blank?
+    refute first_message.params['session_id'].blank?
+  end
+
+  def test_failed_authorize_with_3ds
+    session_id = generate_unique_id
+    order_id = @options[:order_id]
+    options = @options.merge(
+              {
+                execute_threed: true,
+                accept_header: 'text/html',
+                session_id: session_id,
+                ip: '127.0.0.1',
+                cookie: 'machine=32423423'
+              })
+    assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
+    assert_match %r{missing info for 3D-secure transaction}i, first_message.message
+    assert first_message.test?
+    assert first_message.params['issuer_url'].blank?
+    assert first_message.params['pa_request'].blank?
   end
 
   def test_failed_capture

@@ -31,11 +31,15 @@ You can check out the latest source from git:
 
 Installation from RubyGems:
 
-    gem install activemerchant
+```console
+gem install activemerchant
+```
 
 Or, if you're using Bundler, just add the following to your Gemfile:
 
-    gem 'activemerchant'
+```ruby
+gem 'activemerchant'
+```
 
 ## Usage
 
@@ -232,3 +236,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 ## API stability policy
 
 Functionality or APIs that are deprecated will be marked as such. Deprecated functionality is removed on major version changes - for example, deprecations from 2.x are removed in 3.x.
+
+## Ruby and Rails compatibility policies
+
+Because Active Merchant is a payment library, it needs to take security seriously. For this reason, Active Merchant guarantees compatibility only with actively supported versions of Ruby and Rails. At the time of this writing, that means that Ruby 2.3+ and Rails 4.2+ are supported.

@@ -64,6 +64,16 @@ module ActiveMerchant #:nodoc:
         commit(:post, post)
       end
 
+      def refund(money, authorization, options={})
+        post = {}
+        add_amount(post, money, options)
+        post[:original_transaction_id] = transaction_id_from(authorization)
+        post[:authorization_code] = authorization_code_from(authorization)
+        post[:action] = 'reverse'
+
+        commit(:post, post)
+      end
+
       def void(authorization, options={})
         post = {}
         post[:transaction_id] = transaction_id_from(authorization)
@@ -120,11 +130,11 @@ module ActiveMerchant #:nodoc:
           post[:billing_address][:physical_address][:locality] = address[:city] if address[:city]
         end
 
-        if empty?(post[:billing_address][:first_name] && payment.first_name)
+        if empty?(post[:billing_address][:first_name]) && payment.first_name
           post[:billing_address][:first_name] = payment.first_name
         end
 
-        if empty?(post[:billing_address][:last_name] && payment.last_name)
+        if empty?(post[:billing_address][:last_name]) && payment.last_name
           post[:billing_address][:last_name] = payment.last_name
         end
       end
@@ -214,7 +224,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def endpoint
-        "/accounts/act_#{@options[:account_id]}/locations/loc_#{@options[:location_id]}/transactions/"
+        "/accounts/act_#{@options[:account_id].strip}/locations/loc_#{@options[:location_id].strip}/transactions/"
       end
 
       def headers
