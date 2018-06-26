@@ -13,5 +13,6 @@ AllCops:
     - "generators/**/*"
     - "lib/active_merchant/billing/gateways/paypal/**/*"
     - "lib/active_merchant/billing/gateways/paypal_express.rb"
+    - "vendor/**/*"
   ExtraDetails: false
   TargetRubyVersion: 2.3
