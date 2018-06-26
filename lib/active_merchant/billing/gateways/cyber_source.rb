@@ -307,7 +307,7 @@ module ActiveMerchant #:nodoc:
         options[:order_id] = order_id
 
         xml = Builder::XmlMarkup.new :indent => 2
-        if action == "capture"
+        if action == "capture" || action == "purchase"
           add_void_service(xml, request_id, request_token)
         else
           add_purchase_data(xml, money, true, options.merge(:currency => currency || default_currency))

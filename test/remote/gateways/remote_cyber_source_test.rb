@@ -128,6 +128,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert void.test?
   end
 
+  def test_purchase_and_void
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert void = @gateway.void(purchase.authorization, @options)
+    assert_equal 'Successful transaction', void.message
+    assert_success void
+    assert void.test?
+  end
+
   def test_successful_tax_calculation
     assert response = @gateway.calculate_tax(@credit_card, @options)
     assert_equal 'Successful transaction', response.message
