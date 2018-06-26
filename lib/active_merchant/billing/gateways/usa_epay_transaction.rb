@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((&?UMkey=)[^&]*)i, '\1[FILTERED]')
       end
 
-    private
+      private
 
       def add_amount(post, money)
         post[:amount] = amount(money)

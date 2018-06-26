@@ -165,9 +165,9 @@ module ActiveMerchant #:nodoc:
       def parse(msg)
         resp = {}
         msg.split(self.delimiter).collect{|li|
-            key, value = li.split("=")
-            resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
-          }
+          key, value = li.split("=")
+          resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
+        }
         resp
       end
     end

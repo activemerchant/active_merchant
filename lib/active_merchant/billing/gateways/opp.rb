@@ -365,7 +365,7 @@ module ActiveMerchant #:nodoc:
           else
             h[k] = v
           end
-         end
+        end
       end
     end
   end

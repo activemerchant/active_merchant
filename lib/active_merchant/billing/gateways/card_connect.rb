@@ -262,7 +262,7 @@ module ActiveMerchant #:nodoc:
         if test?
           test_url + action + path
         else
-          (@options[:domain] ? @options[:domain] : live_url) + action + path
+          (@options[:domain] || live_url) + action + path
         end
       end
 

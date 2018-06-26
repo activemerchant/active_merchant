@@ -204,18 +204,12 @@ class OppTest < Test::Unit::TestCase
   end
 
   class OppMockResponse
-      def initialize(code, body)
-        @code = code
-        @body = body
-      end
+    attr_reader :code, :body
 
-      def code
-        @code
-      end
-
-      def body
-        @body
-      end
+    def initialize(code, body)
+      @code = code
+      @body = body
+    end
   end
 
 end

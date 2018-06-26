@@ -936,7 +936,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_include_cust_id_for_numeric_values
-   stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, customer: "123")
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
@@ -948,7 +948,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_include_cust_id_for_word_character_values
-   stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, customer: "4840_TT")
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
@@ -960,7 +960,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_dont_include_cust_id_for_email_addresses
-   stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, customer: "bob@test.com")
     end.check_request do |endpoint, data, headers|
       doc = parse(data)
@@ -970,7 +970,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_dont_include_cust_id_for_phone_numbers
-   stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, customer: "111-123-1231")
     end.check_request do |endpoint, data, headers|
       doc = parse(data)

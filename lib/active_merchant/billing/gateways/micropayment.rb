@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, request_params)
-        session_id = response["sessionId"] ? response["sessionId"] : request_params[:sessionId]
+        session_id = response["sessionId"] || request_params[:sessionId]
         "#{session_id}|#{response["transactionId"]}"
       end
     end

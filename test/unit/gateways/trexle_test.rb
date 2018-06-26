@@ -39,9 +39,9 @@ class TrexleTest < Test::Unit::TestCase
 
   def test_supported_countries
     expected_supported_countries = %w(AD AE AT AU BD BE BG BN CA CH CY CZ DE DK EE EG ES FI FR GB
-                                    GI GR HK HU ID IE IL IM IN IS IT JO KW LB LI LK LT LU LV MC
-                                    MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM
-                                    TR TT UM US VA VN ZA)
+                                      GI GR HK HU ID IE IL IM IN IS IT JO KW LB LI LK LT LU LV MC
+                                      MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM
+                                      TR TT UM US VA VN ZA)
     assert_equal expected_supported_countries, TrexleGateway.supported_countries 
   end
 

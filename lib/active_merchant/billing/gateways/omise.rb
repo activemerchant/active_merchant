@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
         if successful?(response)
           'Success'
         else
-          (response['message'] ? response['message'] : response['failure_message'])
+          response['message'] || response['failure_message']
         end
       end
 

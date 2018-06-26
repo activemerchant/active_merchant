@@ -3,8 +3,8 @@ module ActiveMerchant
     class PlugnpayGateway < Gateway
       class PlugnpayPostData < PostData
         # Fields that will be sent even if they are blank
-        self.required_fields = [ :publisher_name, :publisher_password,
-          :card_amount, :card_name, :card_number, :card_exp, :orderID ]
+        self.required_fields = [:publisher_name, :publisher_password,
+                                :card_amount, :card_name, :card_number, :card_exp, :orderID]
       end
       self.live_url = self.test_url = 'https://pay1.plugnpay.com/payment/pnpremote.cgi'
 

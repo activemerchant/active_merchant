@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post["order.amount"] = amount(money)
         post["card.currency"] = CURRENCY_CODES[options[:currency] || currency(money)]
-        post["order.ECI"] = options[:eci] ? options[:eci] : "SSL"
+        post["order.ECI"] = options[:eci] || "SSL"
       end
 
       def add_payment_method(post, payment_method)

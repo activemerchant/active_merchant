@@ -103,7 +103,7 @@ module ActiveMerchant
     end
 
     def assert_deprecation_warning(message=nil)
-      ActiveMerchant.expects(:deprecated).with(message ? message : anything)
+      ActiveMerchant.expects(:deprecated).with(message || anything)
       yield
     end
 

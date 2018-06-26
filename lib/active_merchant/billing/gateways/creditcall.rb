@@ -265,7 +265,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def manual_type(options)
-        options[:manual_type] ? options[:manual_type] : "ecommerce"
+        options[:manual_type] || "ecommerce"
       end
     end
   end

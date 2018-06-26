@@ -420,7 +420,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
   end
 
-private
+  private
 
   def assert_address(type, post, expected_first_name = nil, expected_last_name = nil)
     prefix = key_prefix(type)
