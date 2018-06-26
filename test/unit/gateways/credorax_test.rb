@@ -219,7 +219,7 @@ class CredoraxTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match /i2=abcdefghijkl/, data
+      assert_match(/i2=abcdefghijkl/, data)
     end.respond_with(successful_purchase_response)
   end
 

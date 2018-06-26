@@ -183,7 +183,7 @@ class CardConnectTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    response = stub_comms(@gateway, :ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.unstore('1|16700875781344019340')
     end.check_request do |verb, url, data, headers|
       assert_equal :delete, verb

@@ -216,7 +216,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(error_code_response)
 
     assert_failure response
-    assert_match /70000: 70077/, response.error_code
+    assert_match(/70000: 70077/, response.error_code)
   end
 
   def test_supported_countries

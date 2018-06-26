@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(authorization, options={})
-        commit('void', post=nil, authorization)
+        commit('void', nil, authorization)
       end
 
       def store(payment, options={})
