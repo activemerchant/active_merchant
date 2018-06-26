@@ -46,7 +46,8 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_extra_data(post, payment, options)
         add_shopper_interaction(post, payment, options)
-        add_address(post, options)
+        add_billing_address(post, options)
+        add_delivery_address(post, options)
         add_shopperName(post, options)
         add_installments(post, options) if options[:installments]
         commit('authorise', post)
@@ -79,7 +80,8 @@ module ActiveMerchant #:nodoc:
         add_payment(post, credit_card)
         add_extra_data(post, credit_card, options)
         add_recurring_contract(post, options)
-        add_address(post, options)
+        add_billing_address(post, options)
+        add_delivery_address(post, options)
         commit('authorise', post)
       end
 
@@ -132,26 +134,30 @@ module ActiveMerchant #:nodoc:
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
       end
 
-      def add_address(post, options)
+      def add_billing_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
-        if (address = options[:billing_address] || options[:address]) && address[:country]
-          post[:billingAddress] = {}
-          post[:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
-          post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:billingAddress][:city] = address[:city] || 'N/A'
-          post[:billingAddress][:stateOrProvince] = address[:state] if address[:state]
-          post[:billingAddress][:country] = address[:country] if address[:country]
-        end
-        if shipping_address = options[:shipping_address] || address
-          post[:deliveryAddress] = {}
-          post[:deliveryAddress][:street] = shipping_address[:address1] if shipping_address[:address1]
-          post[:deliveryAddress][:houseNumberOrName] = shipping_address[:address2] if shipping_address[:address2]
-          post[:deliveryAddress][:postalCode] = shipping_address[:zip] if shipping_address[:zip]
-          post[:deliveryAddress][:city] = shipping_address[:city] if shipping_address[:city]
-          post[:deliveryAddress][:stateOrProvince] = shipping_address[:state] if shipping_address[:state]
-          post[:deliveryAddress][:country] = shipping_address[:country] if shipping_address[:country]
-        end
+        address = options[:billing_address] || options[:address]
+        billing_address = construct_address(address)
+        post[:billingAddress] = billing_address
+
+      end
+
+      def add_delivery_address(post, options)
+        return unless post[:card] && post[:card].kind_of?(Hash)
+        address = options[:shipping_address] || options[:address]
+        delivery_address = construct_address(address)
+        post[:deliveryAddress] = delivery_address
+      end
+
+      def construct_address(address)
+        return {
+            street: address[:address1] || 'N/A',
+            houseNumberOrName: address[:address2] || 'N/A',
+            postalCode: address[:zip],
+            city: address[:city] || 'N/A',
+            stateOrProvince: address[:state],
+            country: address[:country]
+        }
       end
 
       def add_shopperName(post, options)
