@@ -137,16 +137,19 @@ module ActiveMerchant #:nodoc:
       def add_billing_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
         address = options[:billing_address] || options[:address]
-        billing_address = construct_address(address)
-        post[:billingAddress] = billing_address
-
+        if (address && address[:country])
+          billing_address = construct_address(address)
+          post[:billingAddress] = billing_address
+        end
       end
 
       def add_delivery_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
         address = options[:shipping_address] || options[:address]
-        delivery_address = construct_address(address)
-        post[:deliveryAddress] = delivery_address
+        if (address && address[:country])
+          delivery_address = construct_address(address)
+          post[:deliveryAddress] = delivery_address
+        end
       end
 
       def construct_address(address)
