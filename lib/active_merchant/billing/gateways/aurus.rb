@@ -256,7 +256,7 @@ module ActiveMerchant  #:nodoc: ALL
       def authorization_from(action, response)
         case action
         when TRANSACTION_REQ
-          response['AurusPayTicketNum'] + '|' + response['AuruspayTransactionId']
+          response['AurusPayTicketNum'] + '|' + response['AuruspayTransactionId'] if response['ResponseCode'].blank?
         else
           'OK' # TODO: flesh out for other calls
         end
