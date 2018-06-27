@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       }
 
       MINIMUMS = {
-        "ARS" => 1700,
+        "ARS" => 500,
         "BRL" => 600,
         "MXN" => 3900,
         "PEN" => 500
