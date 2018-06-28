@@ -146,6 +146,26 @@ class ConektaTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_adds_application_and_meta_headers
+    application = {
+      name: 'app',
+      version: '1.0',
+      url: 'https://example.com'
+    }
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, 'tok_xxxxxxxxxxxxxxxx', @options.merge(application: application, meta: {its_so_meta: 'even this acronym'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/\"application\"/, headers['X-Conekta-Client-User-Agent'])
+      assert_match(/\"name\":\"app\"/, headers['X-Conekta-Client-User-Agent'])
+      assert_match(/\"version\":\"1.0\"/, headers['X-Conekta-Client-User-Agent'])
+      assert_match(/\"url\":\"https:\/\/example.com\"/, headers['X-Conekta-Client-User-Agent'])
+      assert_match(/\"its_so_meta\":\"even this acronym\"/, headers['X-Conekta-Client-User-Metadata'])
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end

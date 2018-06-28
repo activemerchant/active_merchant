@@ -26,6 +26,7 @@
 * Braintree: add support for Maestro cards [matthewheath] #2571
 * Visanet Peru: Refund on unsettled transactions [nfarve] #2772
 * Remove iDeal offsite gateway references [bdewater] #2807
+* Conekta: Allow customer application in headers [curiousepic] #2908
 
 == Version 1.79.2 (June 2, 2018)
 * Fix Gateway#max_version= overwriting min_version [bdewater]

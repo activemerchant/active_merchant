@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, payment_source, options)
         add_details_data(post, options)
 
-        commit(:post, 'charges', post)
+        commit(:post, 'charges', post, options)
       end
 
       def authorize(money, payment_source, options = {})
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         add_details_data(post, options)
 
         post[:capture] = false
-        commit(:post, 'charges', post)
+        commit(:post, 'charges', post, options)
       end
 
       def capture(money, identifier, options = {})
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = identifier
         add_order(post, money, options)
 
-        commit(:post, "charges/#{identifier}/capture", post)
+        commit(:post, "charges/#{identifier}/capture", post, options)
       end
 
       def refund(money, identifier, options)
@@ -52,12 +52,12 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = identifier
         add_order(post, money, options)
 
-        commit(:post, "charges/#{identifier}/refund", post)
+        commit(:post, "charges/#{identifier}/refund", post, options)
       end
 
       def void(identifier, options = {})
         post = {}
-        commit(:post, "charges/#{identifier}/void", post)
+        commit(:post, "charges/#{identifier}/void", post, options)
       end
 
       def supports_scrubbing
@@ -173,22 +173,27 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def headers(meta)
+      def headers(options)
         {
-          'Accept' => "application/vnd.conekta-v#{options[:version]}+json",
+          'Accept' => "application/vnd.conekta-v#{@options[:version]}+json",
           'Accept-Language' => 'es',
-          'Authorization' => 'Basic ' + Base64.encode64("#{options[:key]}:"),
+          'Authorization' => 'Basic ' + Base64.encode64("#{@options[:key]}:"),
           'RaiseHtmlError' => 'false',
           'Conekta-Client-User-Agent' => {'agent'=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
-          'X-Conekta-Client-User-Agent' => user_agent,
-          'X-Conekta-Client-User-Metadata' => meta.to_json
+          'X-Conekta-Client-User-Agent' => conekta_client_user_agent(options),
+          'X-Conekta-Client-User-Metadata' => options[:meta].to_json
         }
+      end
+
+      def conekta_client_user_agent(options)
+        return user_agent unless options[:application]
+        JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
       end
 
       def commit(method, url, parameters, options = {})
         success = false
         begin
-          raw_response = parse(ssl_request(method, live_url + url, (parameters ? parameters.to_query : nil), headers(options[:meta])))
+          raw_response = parse(ssl_request(method, live_url + url, (parameters ? parameters.to_query : nil), headers(options)))
           success = (raw_response.key?('object') && (raw_response['object'] != 'error'))
         rescue ResponseError => e
           raw_response = response_error(e.response.body)
