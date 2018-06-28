@@ -211,13 +211,14 @@ class AdyenTest < Test::Unit::TestCase
     post = {:card => {:billingAddress => {}}}
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
-    @gateway.send(:add_address, post, @options)
-    assert_equal 'N/A', post[:card][:billingAddress][:street]
-    assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
-    assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
-    assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
-    assert_equal @options[:billing_address][:state], post[:card][:billingAddress][:stateOrProvince]
-    assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
+    @gateway.send(:add_billing_address, post, @options)
+    @gateway.send(:add_delivery_address, post, @options)
+    assert_equal 'N/A', post[:billingAddress][:street]
+    assert_equal 'N/A', post[:billingAddress][:houseNumberOrName]
+    assert_equal @options[:billing_address][:zip], post[:billingAddress][:postalCode]
+    assert_equal @options[:billing_address][:city], post[:billingAddress][:city]
+    assert_equal @options[:billing_address][:state], post[:billingAddress][:stateOrProvince]
+    assert_equal @options[:billing_address][:country], post[:billingAddress][:country]
   end
 
   def test_authorize_with_network_tokenization_credit_card
@@ -238,7 +239,7 @@ class AdyenTest < Test::Unit::TestCase
       opened
       starting SSL for pal-test.adyen.com:443...
       SSL established
-      <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic d3NfMTYzMjQ1QENvbXBhbnkuRGFuaWVsYmFra2Vybmw6eXU0aD50ZlxIVEdydSU1PDhxYTVMTkxVUw==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
+      <- "POST /pal/servlet/Payment/v30/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic d3NfMTYzMjQ1QENvbXBhbnkuRGFuaWVsYmFra2Vybmw6eXU0aD50ZlxIVEdydSU1PDhxYTVMTkxVUw==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
       <- "{\"merchantAccount\":\"DanielbakkernlNL\",\"reference\":\"345123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"card\":{\"expiryMonth\":8,\"expiryYear\":2018,\"holderName\":\"John Smith\",\"number\":\"4111111111111111\",\"cvc\":\"737\"},\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 27 Oct 2016 11:37:13 GMT\r\n"
@@ -270,7 +271,7 @@ class AdyenTest < Test::Unit::TestCase
       opened
       starting SSL for pal-test.adyen.com:443...
       SSL established
-      <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
+      <- "POST /pal/servlet/Payment/v30/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: pal-test.adyen.com\r\nContent-Length: 308\r\n\r\n"
       <- "{\"merchantAccount\":\"DanielbakkernlNL\",\"reference\":\"345123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"card\":{\"expiryMonth\":8,\"expiryYear\":2018,\"holderName\":\"John Smith\",\"number\":\"[FILTERED]\",\"cvc\":\"[FILTERED]\"},\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\"}"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Thu, 27 Oct 2016 11:37:13 GMT\r\n"

@@ -4,8 +4,8 @@ module ActiveMerchant #:nodoc:
 
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
-      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/v18'
-      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/v18'
+      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/v30'
+      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/v30'
 
       self.supported_countries = ['AT','AU','BE','BG','BR','CH','CY','CZ','DE','DK','EE','ES','FI','FR','GB','GI','GR','HK','HU','IE','IS','IT','LI','LT','LU','LV','MC','MT','MX','NL','NO','PL','PT','RO','SE','SG','SK','SI','US']
       self.default_currency = 'USD'
@@ -46,7 +46,9 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_extra_data(post, payment, options)
         add_shopper_interaction(post, payment, options)
-        add_address(post, options)
+        add_billing_address(post, options)
+        add_delivery_address(post, options)
+        add_shopperName(post, options)
         add_installments(post, options) if options[:installments]
         commit('authorise', post)
       end
@@ -78,7 +80,8 @@ module ActiveMerchant #:nodoc:
         add_payment(post, credit_card)
         add_extra_data(post, credit_card, options)
         add_recurring_contract(post, options)
-        add_address(post, options)
+        add_billing_address(post, options)
+        add_delivery_address(post, options)
         commit('authorise', post)
       end
 
@@ -111,12 +114,14 @@ module ActiveMerchant #:nodoc:
 
       def add_extra_data(post, payment, options)
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
-        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
-        post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
+        post[:shopperIP] = options[:ip] if options[:ip]
+        post[:shopperReference] = options[:customer_id] || options[:customer]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] || NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
+        post[:telephoneNumber] =  options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+            options[:billing_address][:phone])
       end
 
       def add_shopper_interaction(post, payment, options={})
@@ -129,17 +134,40 @@ module ActiveMerchant #:nodoc:
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
       end
 
-      def add_address(post, options)
+      def add_billing_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
-        if (address = options[:billing_address] || options[:address]) && address[:country]
-          post[:card][:billingAddress] = {}
-          post[:card][:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
-          post[:card][:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:card][:billingAddress][:city] = address[:city] || 'N/A'
-          post[:card][:billingAddress][:stateOrProvince] = address[:state] if address[:state]
-          post[:card][:billingAddress][:country] = address[:country] if address[:country]
+        address = options[:billing_address] || options[:address]
+        if (address && address[:country])
+          billing_address = construct_address(address)
+          post[:billingAddress] = billing_address
         end
+      end
+
+      def add_delivery_address(post, options)
+        return unless post[:card] && post[:card].kind_of?(Hash)
+        address = options[:shipping_address] || options[:address]
+        if (address && address[:country])
+          delivery_address = construct_address(address)
+          post[:deliveryAddress] = delivery_address
+        end
+      end
+
+      def construct_address(address)
+        return {
+            street: address[:address1] || 'N/A',
+            houseNumberOrName: address[:address2] || 'N/A',
+            postalCode: address[:zip],
+            city: address[:city] || 'N/A',
+            stateOrProvince: address[:state],
+            country: address[:country]
+        }
+      end
+
+      def add_shopperName(post, options)
+        post[:shopperName] = {}
+        post[:shopperName][:firstname] = options[:billing_address][:first_name]
+        post[:shopperName][:lastname] = options[:billing_address][:last_name]
+        post[:shopperName][:gender] = 'UNKNOWN'
       end
 
       def add_invoice(post, money, options)
