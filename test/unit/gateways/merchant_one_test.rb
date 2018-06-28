@@ -57,6 +57,44 @@ class MerchantOneTest < Test::Unit::TestCase
     assert response.test?, response.test.to_s
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    assert response = @gateway.void('281719471', @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '3533347610', response.authorization
+    assert response.test?, response.test.to_s
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.refund(@amount, '281719471', @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '3533343128', response.authorization
+    assert response.test?, response.test.to_s
+  end
+
+  def test_successful_store_profile
+    @gateway.expects(:ssl_post).returns(successful_store_profile_response)
+
+    assert response = @gateway.store(@credit_card, @options)
+    assert_instance_of Response, response
+    assert_equal "337907840", response.params['customer_vault_id']
+    assert response.test?, response.test.to_s
+  end
+
+  def test_successful_unstore_profile
+    @gateway.expects(:ssl_post).returns(successful_unstore_profile_response)
+
+    assert response = @gateway.unstore("337907840", @options)
+    assert_instance_of Response, response
+    assert_equal "Customer Deleted", response.params['responsetext']
+    assert response.test?, response.test.to_s
+  end
+
   private
 
   def successful_purchase_response
@@ -65,5 +103,21 @@ class MerchantOneTest < Test::Unit::TestCase
 
   def failed_purchase_response
     "response=3&responsetext=DECLINE&authcode=123456&transactionid=281719471&avsresponse=&cvvresponse=M&orderid=&type=sale&response_code=300"
+  end
+
+  def successful_void_response
+    "response=1&responsetext=Transaction Void Successful&authcode=123456&transactionid=3533347610&avsresponse=&cvvresponse=&orderid=&type=void&response_code=100"
+  end
+
+  def successful_refund_response
+    "response=1&responsetext=SUCCESS&authcode=&transactionid=3533343128&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=100&customer_vault_id=286214357"
+  end
+
+  def successful_store_profile_response
+    "response=1&responsetext=Customer Added&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=&response_code=100&customer_vault_id=337907840"
+  end
+
+  def successful_unstore_profile_response
+    "response=1&responsetext=Customer Deleted&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=&response_code=100"
   end
 end
