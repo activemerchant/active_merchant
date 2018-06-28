@@ -15,7 +15,8 @@ class MerchantWareTest < Test::Unit::TestCase
 
     @options = {
       :order_id => '1',
-      :billing_address => address
+      :billing_address => address(country: "US",
+                                  zip: "12345")
     }
   end
 
@@ -29,6 +30,20 @@ class MerchantWareTest < Test::Unit::TestCase
     assert_equal '4706382;1', response.authorization
     assert_equal "APPROVED", response.message
     assert response.test?
+  end
+
+  def test_skip_zip_for_international
+    options = {
+      order_id: '1',
+      billing_address: address(country: "UK")
+    }
+
+    @gateway
+      .expects(:ssl_post)
+      .with(anything, Not(regexp_matches(/<strAVSZipCode>/)), anything)
+      .returns(successful_authorization_response)
+
+    @gateway.authorize(@amount, @credit_card, options)
   end
 
   def test_soap_fault_during_authorization
