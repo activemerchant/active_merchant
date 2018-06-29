@@ -115,9 +115,9 @@ class ConnectionTest < Test::Unit::TestCase
   def test_override_min_version
     omit_if Net::HTTP.instance_methods.exclude?(:min_version=)
 
-    refute_equal :TLS1_1, @connection.min_version
-    @connection.min_version = :TLS1_1
-    assert_equal :TLS1_1, @connection.min_version
+    refute_equal :TLS1_2, @connection.min_version
+    @connection.min_version = :TLS1_2
+    assert_equal :TLS1_2, @connection.min_version
   end
 
   def test_override_max_version
