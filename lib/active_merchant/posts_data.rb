@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       base.ssl_version = nil
 
       base.class_attribute :min_version
-      base.min_version = nil
+      base.min_version = Connection::MIN_VERSION
 
       base.class_attribute :max_version
       base.max_version = nil

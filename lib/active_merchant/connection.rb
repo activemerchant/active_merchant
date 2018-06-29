@@ -14,6 +14,7 @@ module ActiveMerchant
     VERIFY_PEER = true
     CA_FILE = File.expand_path('../certs/cacert.pem', File.dirname(__FILE__))
     CA_PATH = nil
+    MIN_VERSION = :TLS1_1
     RETRY_SAFE = false
     RUBY_184_POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
 
@@ -51,7 +52,7 @@ module ActiveMerchant
       @ignore_http_status = false
       @ssl_version = nil
       if Net::HTTP.instance_methods.include?(:min_version=)
-        @min_version = nil
+        @min_version = MIN_VERSION
         @max_version = nil
       end
       @ssl_connection = {}
