@@ -221,6 +221,24 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal response.params['customer_vault_id'], response.authorization
   end
 
+  def test_store_with_device_data
+    customer = stub(
+      :credit_cards => [stub_everything],
+      :email => 'email',
+      :first_name => 'John',
+      :last_name => 'Smith'
+    )
+    expected_device_data = '{\"device_session_id\":\"fake89a16027c85bfbe0896d86d7d785\",\"fraud_merchant_id\":\"000000\"}'
+    customer.stubs(:id).returns('123')
+    result = Braintree::SuccessfulResult.new(:customer => customer)
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
+      assert_equal expected_device_data, params[:device_data]
+      params
+    end.returns(result)
+
+    @gateway.store(credit_card("41111111111111111111"), :device_data => expected_device_data)
+  end
+
   def test_passes_email
     customer = stub(
       :credit_cards => [stub_everything],

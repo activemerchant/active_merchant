@@ -234,6 +234,7 @@ module ActiveMerchant #:nodoc:
 	            options[:billing_address][:phone]),
             :id => options[:customer],
           }.merge credit_card_params
+          parameters[:device_data] = options[:device_data] if options[:device_data]
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
