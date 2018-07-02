@@ -533,7 +533,11 @@ module ActiveMerchant #:nodoc:
           :order_id => options[:order_id],
           :customer => {
             :id => options[:store] == true ? "" : options[:store],
-            :email => scrub_email(options[:email])
+            :email => scrub_email(options[:email]),
+            :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+              options[:billing_address][:phone]),
+            :first_name => options[:billing_address][:name].split(' ')[0], # getting first name
+            :last_name => options[:billing_address][:name][options[:billing_address][:name].split(' ')[0].length + 1...options[:billing_address][:name].length] # getting all names after first
           },
           :options => {
             :store_in_vault => options[:store] ? true : false,
