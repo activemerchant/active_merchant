@@ -140,7 +140,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2').
           gsub(%r((<verification_value>).+(</verification_value>)), '\1[FILTERED]\2').
-          gsub(%r((<payment_method_token>).+(</payment_method_token>)), '\1[FILTERED]\2')
+          gsub(%r((<payment_method_token>).+(</payment_method_token>)), '\1[FILTERED]\2').
+          gsub(%r((<payment_method>[\S\s]+<token>).+(<\/token>)), '\1[FILTERED]\2')
       end
 
       private
@@ -285,7 +286,8 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp),
-          'Content-Type' => 'text/xml'
+          'Content-Type' => 'text/xml',
+          'Accept-Encoding' => 'identity'
         }
       end
     end

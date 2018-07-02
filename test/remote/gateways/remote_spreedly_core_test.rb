@@ -298,6 +298,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+    refute_match(/\\x00/, transcript)
   end
 
   def test_scrubbing_purchase_with_token
