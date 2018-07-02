@@ -20,15 +20,6 @@ class RemoteMigsTest < Test::Unit::TestCase
       :order_id => '1',
       :currency => 'SAR'
     }
-
-    @three_ds_options = {
-      :VerType => '3DS',
-      :VerToken => 'AAACAFBEUBgoAhEAIURQAAAAAAA=',
-      '3DSXID' => 'NWJlZDJmYzkyMTU1NGEwNzk1YjA=',
-      '3DSECI' => '02',
-      '3DSenrolled' => 'Y',
-      '3DSstatus' => 'A'
-    }
   end
 
   def test_server_purchase_url
@@ -45,7 +36,7 @@ class RemoteMigsTest < Test::Unit::TestCase
 
     responses = {
       'visa'             => /You have chosen .*VISA.*/,
-      'master'           => /You have chosen .*MasterCard.*/
+      'master'           => /You have chosen .*MasterCard.*/,
     }
 
     responses.each_pair do |card_type, response_text|
@@ -141,20 +132,6 @@ class RemoteMigsTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:advanced_password], transcript)
-  end
-
-  def test_transcript_scrubbing_of_3ds_cavv_and_xid_values
-    opts = @options.merge(@three_ds_options)
-
-    transcript = capture_transcript(@gateway) do
-      @gateway.purchase(@amount, @credit_card, opts)
-    end
-    transcript = @gateway.scrub(transcript)
-
-    assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(opts[:VerToken], transcript)
-    assert_scrubbed(opts['3DSXID'], transcript)
   end
 
   private

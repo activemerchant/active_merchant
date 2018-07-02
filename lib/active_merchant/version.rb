@@ -1,3 +1,3 @@
 module ActiveMerchant
-  VERSION = "1.79.2"
+  VERSION = "1.78.0"
 end

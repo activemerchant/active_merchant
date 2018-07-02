@@ -8,12 +8,6 @@ module ActiveMerchant #:nodoc:
       base.class_attribute :ssl_version
       base.ssl_version = nil
 
-      base.class_attribute :min_version
-      base.min_version = nil
-
-      base.class_attribute :max_version
-      base.max_version = nil
-
       base.class_attribute :retry_safe
       base.retry_safe = false
 
@@ -59,10 +53,6 @@ module ActiveMerchant #:nodoc:
       connection.max_retries  = max_retries
       connection.tag          = self.class.name
       connection.wiredump_device = wiredump_device
-      if connection.respond_to?(:min_version=)
-        connection.min_version = min_version
-        connection.max_version = max_version
-      end
 
       connection.pem          = @options[:pem] if @options
       connection.pem_password = @options[:pem_password] if @options

@@ -13,11 +13,6 @@ class MonerisUsTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @check = check({
-      routing_number: '011000015',
-      account_number: '1234455',
-      number: 123
-    })
     @options = { :order_id => '1', :billing_address => address }
   end
 
@@ -40,14 +35,6 @@ class MonerisUsTest < Test::Unit::TestCase
 
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_failure response
-  end
-
-  def test_successful_echeck_purchase
-    @gateway.expects(:ssl_post).returns(successful_echeck_purchase_response)
-
-    assert response = @gateway.authorize(100, @check, @options)
-    assert_success response
-    assert_equal '1522-0_25;cb80f38f44af2168fd9033cdf2d0d4c0', response.authorization
   end
 
   def test_deprecated_credit
@@ -562,35 +549,6 @@ class MonerisUsTest < Test::Unit::TestCase
         </receipt>
       </response>
     RESPONSE
-  end
-
-  def successful_echeck_purchase_response
-    <<-RESPONSE
-     <?xml version="1.0"?>
-     <response>
-      <receipt>
-        <ReceiptId>cb80f38f44af2168fd9033cdf2d0d4c0</ReceiptId>
-        <ReferenceNum>001000040010015220</ReferenceNum>
-        <ResponseCode>005</ResponseCode>
-        <ISO>01</ISO>
-        <AuthCode></AuthCode>
-        <TransTime>08:23:37</TransTime>
-        <TransDate>2018-06-18</TransDate>
-        <TransType>00</TransType>
-        <Complete>true</Complete>
-        <Message>REGISTERED           *                    =</Message>
-        <TransAmount>1.0</TransAmount>
-        <CardType>CQ</CardType>
-        <TransID>1522-0_25</TransID>
-        <TimedOut>false</TimedOut>
-        <BankTotals>null</BankTotals>
-        <Ticket>null</Ticket>
-        <CorporateCard>false</CorporateCard>
-        <MessageId>null</MessageId>
-        <RecurSuccess>true</RecurSuccess>
-       </receipt>
-     </response>
-   RESPONSE
   end
 
   def xml_purchase_fixture

@@ -4,6 +4,11 @@ require 'test_helper'
 class RemoteGarantiTest < Test::Unit::TestCase
 
   def setup
+    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      @original_kcode = $KCODE
+      $KCODE = 'u'
+    end
+
     @gateway = GarantiGateway.new(fixtures(:garanti))
 
     @amount = 100 # 1 cents = 0.01$

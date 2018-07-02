@@ -1,5 +1,3 @@
-require 'openssl'
-
 module ActiveMerchant
   module NetworkConnectionRetries
     DEFAULT_RETRIES = 3

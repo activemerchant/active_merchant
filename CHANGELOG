@@ -1,78 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Paymentez: return a Result object even when the upstream server 500s [bpollack] #2871
-* Drop support for Ruby versions older than 2.3 [bpollack] #2863
-* Bridge Pay: don't throw an exception when bank account type is omitted [bpollack] #2873
-* Avoid making actual connections in Blue Snap and Mundipagg unit tests [bpollack] #2875
-* Avoid making actual connections in the connection unit tests [bpollack] #2876
-* Openpay: support payment installments [bpollack] #2865
-* First Pay: support recurring charges [bpollack] #2877
-* Bridge Pay: pass full name of account type for echeck transactions [bpollack] #2878
-* Kushki: do not send 0 for tax values if tax values are not provided [bpollack] #2886
-* Payflow: Update ACH tests [curiousepic] #2887
-* Credorax: support passing billing description [bpollack] #2889
-* MiGS: scrub 3DS fields [abarrak] #2771
-* Forte: avoid crashing when location_id or account_id have spaces [bpollack] #2890
-* Adyen: Support Network Tokenization Cards via mpiData fields [curiousepic] #2891
-* Moneris US: Add ACH [nfarve] #2888
-
-== Version 1.79.2 (June 2, 2018)
-* Fix Gateway#max_version= overwriting min_version [bdewater]
-
-== Version 1.79.1 (May 31, 2018)
-* Fix Net::HTTP connections defaulting to connection: keep-alive instead of close since #2862 [bpollack] #2868
-* Mundipagg: allow passing holder_document for credit card purchases [bpollack] #2864
-* Conekta: support monthly_installments [bpollack] #2866
-* Authorize.net: allow sending email_customer set to false [bpollack] #2867
-
-== Version 1.79.0 (May 30, 2018)
-* Allow setting min/max SSL version for a connection on Ruby 2.5 [bdewater] #2775
-* Add `gateways:ssl:min_version` rake task to test upcoming TLS 1.0 deprecation deadline [bdewater] #2775
-* Log negotiated SSL version and cipher [bdewater + methodmissing] #2862
-* Remove support for Rails < 4.2, add support for Rails 5.2 and Ruby 2.5 [bdewater]
 * Spreedly: Support verify and find transactions [abarrak] #2798
 * Adyen: Support merchant-specific subdomains [curiousepic] #2799
-* Fix ENV based configuration of Net::Http for proxies [bbergstrom] #2800
-* ANET: Withhold cryptogram for credit [curiousepic] #2804
-* Borgun: Remove batch from request parameters [deedeelavinder] #2805
-* WorldPay: Remove Inquiry requests in verify transactions [nfarve] #2802
-* Credorax: Update tests [curiousepic] #2809
-* Braintree: Remove decimal for non-fractional currencies [nfarve] #2806
-* Realex: Add documented country support for US and CA [a-salty-strudel] #2810
-* Paymentez: Add `tax_percentage` optional parameter [deedeelavinder] #2814
-* Braintree: Add `skip_advanced_fraud_checking` optional parameter [deedeelavinder] #2811
-* SafeCharge: Additional gateway options [dtykocki] #2816
-* FirstPay: Handle missing billing addresses [dtykocki] #2822
-* Realex: Add ApplePay Support [nfarve] #2820
-* Checkout V2: Additional gateway options [dtykocki] #2821
-* CyberSource: Support 3ds validate request [curiousepic] #2823
-* Paymentez: Remove card tokenization step from authorize [dtykocki] #2825
-* WorldPay: Add 3DS [nfarve] #2819
-* EBANX: Interpolate authorization string [curiousepic] #2830
-* CyberSource: Support 3DS validation for authorize [curiousepic] #2832
-* Redsys: Fix ISO code for PLN [chopenhauer] #2831
-* Merchant E Solutions: Support transcript scrubbing [curiousepic] #2836
-* Paystation: Support transcript scrubbing [curiousepic] #2837
-* Psigate: Support transcript scrubbing [curiousepic] #2835
-* Braintree: Adding 3D Secure pass thru capabilities [filipebarcos] #2843
-* Authorize.net: Add flexibility for 3D Secure Parameters [filipebarcos] #2844
-* Elavon: Update Country List [nfarve] #2840
-* WorldPay: Update Country List [nfarve] #2841
-* Merchant Warrior: Support transcript scrubbing [curiousepic] #2845
-* NAB Transact: Pass nonfractional amounts correctly [curiousepic] #2843
-* Realex: Update Country List [nfarve] #2842
-* QBMS: Support transcript scrubbing [curiousepic] #2849
-* Adyen: Add support for installments [nfarve] #2839
-* Paymentez: Read messages on Failure with no error [nfarve] #2850
-* Paymentez: Fix response message conditional [curiousepic] #2851
-* Add ability to send email receipt [nfarve] #2852
-* Barclaycard Smartpay: Pass shopper_interaction [curiousepic] #2853
-* Stripe: Treat UGX as a zero-decimal currency [bpollack] #2857
-* Mundipagg: Remove Billing Address if no Address Sent [nfarve] #2855
-* Paypal: Support more robust scrubbing [curiousepic] #2858
-* Stripe: Report internal Stripe errors as failures [bpollack] #2859
-* Authorize.net: Add ability to pass `customer_payment_profile_id` [nfarve] #2854
 
 == Version 1.78.0 (March 29, 2018)
 * Litle: Add store for echecks [nfarve] #2779

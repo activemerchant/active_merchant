@@ -109,20 +109,18 @@ module ActiveMerchant #:nodoc:
         post[:customer][:email] = options[:email]
       end
 
-      def add_billing_address(post, type, options)
-        if address = (options[:billing_address] || options[:address])
-          billing = {}
-          address = options[:billing_address] || options[:address]
-          billing[:street] = address[:address1].match(/\D+/)[0].strip if address[:address1]
-          billing[:number] = address[:address1].match(/\d+/)[0] if address[:address1]
-          billing[:compliment] = address[:address2] if address[:address2]
-          billing[:city] = address[:city] if address[:city]
-          billing[:state] = address[:state] if address[:state]
-          billing[:country] = address[:country] if address[:country]
-          billing[:zip_code] = address[:zip] if address[:zip]
-          billing[:neighborhood] = address[:neighborhood]
-          post[:payment][type.to_sym][:card][:billing_address] = billing
-        end
+      def add_billing_address(options)
+        billing = {}
+        address = options[:billing_address] || options[:address]
+        billing[:street] = address[:address1].match(/\D+/)[0].strip if address[:address1]
+        billing[:number] = address[:address1].match(/\d+/)[0] if address[:address1]
+        billing[:compliment] = address[:address2] if address[:address2]
+        billing[:city] = address[:city] if address[:city]
+        billing[:state] = address[:state] if address[:state]
+        billing[:country] = address[:country] if address[:country]
+        billing[:zip_code] = address[:zip] if address[:zip]
+        billing[:neighborhood] = address[:neighborhood]
+        billing
       end
 
       def add_shipping_address(post, options)
@@ -155,7 +153,7 @@ module ActiveMerchant #:nodoc:
         post[:customer][:name] = payment.name if post[:customer]
         post[:customer_id] = parse_auth(payment)[0] if payment.is_a?(String)
         post[:payment] = {}
-        post[:payment][:gateway_affiliation_id] = @options[:gateway_id] if @options[:gateway_id]
+        post[:payment][:gateway_affiliation_id] = @options[:gateway_id]
         post[:payment][:metadata] = { mundipagg_payment_method_code: '1' } if test?
         if voucher?(payment)
           add_voucher(post, payment, options)
@@ -176,8 +174,7 @@ module ActiveMerchant #:nodoc:
           post[:payment][:credit_card][:card][:exp_month] = payment.month
           post[:payment][:credit_card][:card][:exp_year] = payment.year
           post[:payment][:credit_card][:card][:cvv] = payment.verification_value
-          post[:payment][:credit_card][:card][:holder_document] = options[:holder_document] if options[:holder_document]
-          add_billing_address(post,'credit_card', options)
+          post[:payment][:credit_card][:card][:billing_address] = add_billing_address(options)
         end
       end
 
@@ -192,7 +189,7 @@ module ActiveMerchant #:nodoc:
         post[:payment][:voucher][:card][:exp_month] = payment.month
         post[:payment][:voucher][:card][:exp_year] = payment.year
         post[:payment][:voucher][:card][:cvv] = payment.verification_value
-        add_billing_address(post, 'voucher', options)
+        post[:payment][:voucher][:card][:billing_address] = add_billing_address(options)
       end
 
       def voucher?(payment)

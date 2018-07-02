@@ -61,10 +61,18 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_invoice(post, money, options)
-        add_payment(post, payment)
         add_customer_data(post, options)
 
-        commit_transaction('authorize', post)
+        if payment.is_a?(String)
+          post[:card] = { token: payment }
+          commit_transaction('authorize', post)
+        else
+          MultiResponse.run do |r|
+            r.process { store(payment, options) }
+            post[:card] = { token: r.authorization }
+            r.process { commit_transaction('authorize', post) }
+          end
+        end
       end
 
       def capture(_money, authorization, _options = {})
@@ -142,7 +150,6 @@ module ActiveMerchant #:nodoc:
         post[:order][:installments] = options[:installments] if options[:installments]
         post[:order][:installments_type] = options[:installments_type] if options[:installments_type]
         post[:order][:taxable_amount] = options[:taxable_amount] if options[:taxable_amount]
-        post[:order][:tax_percentage] = options[:tax_percentage] if options[:tax_percentage]
       end
 
       def add_payment(post, payment)
@@ -171,12 +178,7 @@ module ActiveMerchant #:nodoc:
         rescue ResponseError => e
           raw_response = e.response.body
         end
-
-        begin
-          parse(raw_response)
-        rescue JSON::ParserError
-          {'status' => 'Internal server error'}
-        end
+        parse(raw_response)
       end
 
       def commit_transaction(action, parameters)
@@ -221,10 +223,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if !success_from(response) && response['error']
-          response['error'] && response['error']['type']
-        else
+        if success_from(response)
           response['transaction'] && response['transaction']['message']
+        else
+          response['error'] && response['error']['type']
         end
       end
 

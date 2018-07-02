@@ -43,17 +43,8 @@ class PaymentezTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
-  def test_expired_card
-    @gateway.expects(:ssl_post).returns(expired_card_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-    assert_equal 'Expired card', response.message
-  end
-
   def test_successful_authorize
-    @gateway.stubs(:ssl_post).returns(successful_authorize_response)
+    @gateway.stubs(:ssl_post).returns(successful_store_response, successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -71,7 +62,7 @@ class PaymentezTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+    @gateway.expects(:ssl_post).returns(failed_store_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
@@ -139,14 +130,6 @@ class PaymentezTest < Test::Unit::TestCase
 
     response = @gateway.store(@credit_card, @options)
     assert_success response
-  end
-
-  def test_paymentez_crashes_fail
-    @gateway.stubs(:ssl_post).returns(crash_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 
   def test_scrub
@@ -289,29 +272,17 @@ Conn close
 
   def failed_authorize_response
     %q(
-      {
-        "transaction": {
-          "status": "failure",
-          "payment_date": null,
-          "amount": 1.0,
-          "authorization_code": null,
-          "installments": 1,
-          "dev_reference": "Testing",
-          "message": null,
-          "carrier_code": "3",
-          "id": "CI-1223",
-          "status_detail": 9
-        },
+     {
         "card": {
           "bin": "424242",
-          "status": null,
-          "token": "6461587429110733892",
-          "expiry_year": "2019",
+          "status": "rejected",
+          "token": "2026849624512750545",
+          "message": "Not Authorized",
+          "expiry_year": "2018",
           "expiry_month": "9",
-          "transaction_reference": "CI-1223",
+          "transaction_reference": "CI-606",
           "type": "vi",
-          "number": "4242",
-          "origin": "Paymentez"
+          "number": "4242"
         }
       }
     )
@@ -388,48 +359,6 @@ Conn close
           "number": "4242"
         }
       }
-    )
-  end
-
-  def expired_card_response
-    %q(
-      {
-       "transaction":{
-          "status":"failure",
-          "payment_date":null,
-          "amount":1.0,
-          "authorization_code":null,
-          "installments":1,
-          "dev_reference":"ci123",
-          "message":"Expired card",
-          "carrier_code":"54",
-          "id":"PR-25",
-          "status_detail":9
-       },
-       "card":{
-          "bin":"528851",
-          "expiry_year":"2024",
-          "expiry_month":"4",
-          "transaction_reference":"PR-25",
-          "type":"mc",
-          "number":"9794",
-          "origin":"Paymentez"
-       }
-      }
-    )
-  end
-
-  def crash_response
-    %q(
-      <html>
-        <head>
-          <title>Internal Server Error</title>
-        </head>
-        <body>
-          <h1><p>Internal Server Error</p></h1>
-
-        </body>
-      </html>
     )
   end
 end

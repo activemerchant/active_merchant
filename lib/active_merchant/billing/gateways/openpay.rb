@@ -61,7 +61,6 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
         post[:amount] = amount(money) if money
-        post[:payments] = options[:payments] if options[:payments]
         commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
       end
 
@@ -138,7 +137,6 @@ module ActiveMerchant #:nodoc:
         post[:device_session_id] = options[:device_session_id]
         post[:currency] = (options[:currency] || currency(money)).upcase
         post[:use_card_points] = options[:use_card_points] if options[:use_card_points]
-        post[:payment_plan] = {payments: options[:payments]} if options[:payments]
         add_creditcard(post, creditcard, options)
         add_customer(post, options) if options[:customer].present?
         post

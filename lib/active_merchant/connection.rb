@@ -5,7 +5,6 @@ require 'benchmark'
 
 module ActiveMerchant
   class Connection
-    using NetHttpSslConnection
     include NetworkConnectionRetries
 
     MAX_RETRIES = 3
@@ -22,11 +21,6 @@ module ActiveMerchant
     attr_accessor :read_timeout
     attr_accessor :verify_peer
     attr_accessor :ssl_version
-    if Net::HTTP.instance_methods.include?(:min_version=)
-      attr_accessor :min_version
-      attr_accessor :max_version
-    end
-    attr_reader :ssl_connection
     attr_accessor :ca_file
     attr_accessor :ca_path
     attr_accessor :pem
@@ -50,12 +44,7 @@ module ActiveMerchant
       @max_retries  = MAX_RETRIES
       @ignore_http_status = false
       @ssl_version = nil
-      if Net::HTTP.instance_methods.include?(:min_version=)
-        @min_version = nil
-        @max_version = nil
-      end
-      @ssl_connection = {}
-      @proxy_address = :ENV
+      @proxy_address = nil
       @proxy_port = nil
     end
 
@@ -65,8 +54,6 @@ module ActiveMerchant
     end
 
     def request(method, body, headers = {})
-      headers['connection'] ||= 'close'
-
       request_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       retry_exceptions(:max_retries => max_retries, :logger => logger, :tag => tag) do
@@ -76,10 +63,6 @@ module ActiveMerchant
           result = nil
 
           realtime = Benchmark.realtime do
-            http.start unless http.started?
-            @ssl_connection = http.ssl_connection
-            info "connection_ssl_version=#{ssl_connection[:version]} connection_ssl_cipher=#{ssl_connection[:cipher]}", tag
-
             result = case method
             when :get
               raise ArgumentError, "GET requests do not support a request body" if body
@@ -118,20 +101,16 @@ module ActiveMerchant
 
     ensure
       info "connection_request_total_time=%.4fs" % [Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start], tag
-      http.finish if http.started?
     end
 
     private
-
     def http
-      @http ||= begin
-        http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
-        configure_debugging(http)
-        configure_timeouts(http)
-        configure_ssl(http)
-        configure_cert(http)
-        http
-      end
+      http = Net::HTTP.new(endpoint.host, endpoint.port, proxy_address, proxy_port)
+      configure_debugging(http)
+      configure_timeouts(http)
+      configure_ssl(http)
+      configure_cert(http)
+      http
     end
 
     def configure_debugging(http)
@@ -148,10 +127,6 @@ module ActiveMerchant
 
       http.use_ssl = true
       http.ssl_version = ssl_version if ssl_version
-      if http.respond_to?(:min_version=)
-        http.min_version = min_version if min_version
-        http.max_version = max_version if max_version
-      end
 
       if verify_peer
         http.verify_mode = OpenSSL::SSL::VERIFY_PEER

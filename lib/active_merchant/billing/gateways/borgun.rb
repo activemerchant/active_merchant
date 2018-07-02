@@ -98,6 +98,7 @@ module ActiveMerchant #:nodoc:
       def add_reference(post, authorization)
         dateandtime, batch, transaction, rrn, authcode, _, _, _ = split_authorization(authorization)
         post[:DateAndTime] = dateandtime
+        post[:Batch] = batch
         post[:Transaction] = transaction
         post[:RRN] = rrn
         post[:AuthCode] = authcode
