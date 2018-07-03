@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
         add_signature(post)
         add_payment_method(post, payment_method, options)
         add_payer(post, payment_method, options)
-        add_extra_parameters(post, options)
+        add_extra_parameters(post, options) unless payment_method.try(:deferred?)
       end
 
       def add_credentials(post, command, options={})
@@ -156,6 +156,7 @@ module ActiveMerchant #:nodoc:
         order[:description] = options[:description] || 'Compra en ' + @options[:merchant_id]
         order[:language] = options[:language] || 'en'
         order[:shippingAddress] = shipping_address_fields(options) if options[:shipping_address]
+        order[:notifyUrl] = options[:notify_url] if options[:notify_url].present?
         post[:transaction][:order] = order
       end
 

@@ -361,46 +361,4 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:api_key], clean_transcript)
   end
-
-  def test_deferred_colombia_payment
-    gateway = PayuLatamGateway.new(
-      fixtures(:payu_latam).update(account_id: '512321', payment_country: 'CO')
-    )
-
-    deferred_payment = deferred(brand: 'EFECTY', first_name: 'Test', last_name: 'Colombia')
-
-    options_colombia = {
-      payment_country: 'CO',
-      currency: 'COP',
-      email: 'buyer@colombia.com'
-    }
-
-    response = gateway.purchase(2000000, deferred_payment, options_colombia)
-    assert response.success?
-    assert_equal 'PENDING_TRANSACTION_CONFIRMATION', response.message
-    assert response.test?
-  end
-
-  def test_deferred_colombia_payment_with_invalid_amount
-    gateway = PayuLatamGateway.new(
-      fixtures(:payu_latam).update(account_id: '512321', payment_country: 'CO')
-    )
-
-    deferred_payment = deferred(
-      brand: 'EFECTY', first_name: 'Test', last_name: 'Colombia'
-    )
-
-    options_colombia = {
-      payment_country: 'CO',
-      currency: 'COP',
-      email: 'buyer@colombia.com'
-    }
-
-    response = gateway.purchase(1999999, deferred_payment, options_colombia)
-    refute response.success?
-    assert_equal(
-      'The value of the transaction is less than the minimum allowed by the payment method.',
-      response.message
-    )
-  end
 end

@@ -66,21 +66,26 @@ module ActiveMerchant #:nodoc:
       # @return (String) the diferred provider brand
       attr_accessor :brand
 
-      # Returns or sets the first name of the card holder.
+      # Returns or sets the first name of the payer.
       #
       # @return [String]
       attr_accessor :first_name
 
-      # Returns or sets the last name of the card holder.
+      # Returns or sets the last name of the payer.
       #
       # @return [String]
       attr_accessor :last_name
 
-      # Returns the full name of the card holder.
+      # Returns or sets the full name of the payer.
       #
-      # @return [String] the full name of the card holder
+      # @return [String]
+      attr_accessor :full_name
+
+      # Returns the full name of the payer.
+      #
+      # @return [String] the full name of the payer
       def name
-        "#{first_name} #{last_name}".strip
+        full_name? ? full_name : "#{first_name} #{last_name}".strip
       end
 
       # Returns the brand method deferred.
@@ -99,12 +104,19 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def full_name?
+        full_name.present?
+      end
+
       def validate_essential_attributes #:nodoc:
         errors = []
 
-        errors << [:first_name, 'is required'] if first_name.blank?
-        errors << [:last_name, 'is required']  if last_name.blank?
-        errors << [:brand, 'is required']      if brand.blank?
+        unless full_name?
+          errors << [:first_name, 'is required'] if first_name.blank?
+          errors << [:last_name, 'is required']  if last_name.blank?
+        end
+
+        errors << [:brand, 'is required'] if brand.blank?
 
         if expiration_date.blank?
           errors << [:expiration_date, 'is required']
