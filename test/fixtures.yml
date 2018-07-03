@@ -331,6 +331,12 @@ firstdata_e4:
   login: SD8821-67
   password: T6bxSywbcccbJ19eDXNIGaCDOBg1W7T8
 
+firstdata_e4_v27:
+  login: ALOGIN
+  password: APASSWORD
+  key_id: ANINTEGER
+  hmac_key: AMAGICALKEY
+
 flo2cash:
   username: SOMECREDENTIAL
   password: ANOTHERCREDENTIAL
