@@ -511,7 +511,7 @@ response: !ruby/object:Net::HTTPBadRequest
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_authorize_response
@@ -586,7 +586,7 @@ response: !ruby/object:Net::HTTPBadRequest
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response
@@ -631,7 +631,7 @@ response: !ruby/object:Net::HTTPBadRequest
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def failed_capture_response
@@ -671,7 +671,7 @@ response: !ruby/object:Net::HTTPBadRequest
   body_exist: true
 message:
   RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def invalid_token_response
@@ -710,7 +710,7 @@ response: !ruby/object:Net::HTTPUnauthorized
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def invalid_token_response_integration
@@ -735,7 +735,7 @@ response: !ruby/object:Net::HTTPUnauthorized
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
@@ -760,6 +760,6 @@ response: !ruby/object:Net::HTTPForbidden
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPForbidden', 'ActiveMerchant::ResponseError'])
   end
 end

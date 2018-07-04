@@ -860,15 +860,6 @@ Performance/StringReplacement:
     - 'lib/active_merchant/billing/gateways/realex.rb'
     - 'test/unit/gateways/nab_transact_test.rb'
 
-# Offense count: 11
-# Cop supports --auto-correct.
-Security/YAMLLoad:
-  Exclude:
-    - 'test/test_helper.rb'
-    - 'test/unit/fixtures_test.rb'
-    - 'test/unit/gateways/firstdata_e4_test.rb'
-    - 'test/unit/gateways/payeezy_test.rb'
-
 # Offense count: 2
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: inline, group

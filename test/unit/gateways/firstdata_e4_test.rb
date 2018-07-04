@@ -1037,7 +1037,7 @@ response: !ruby/object:Net::HTTPBadRequest
   read: true
   socket:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
@@ -1074,7 +1074,7 @@ response: !ruby/object:Net::HTTPUnauthorized
   http_version: '1.1'
   socket:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response
