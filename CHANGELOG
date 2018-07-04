@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909
 * Paymentez: return a Result object even when the upstream server 500s [bpollack] #2871
 * Drop support for Ruby versions older than 2.3 [bpollack] #2863
