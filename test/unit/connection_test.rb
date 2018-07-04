@@ -46,7 +46,9 @@ class ConnectionTest < Test::Unit::TestCase
 
   def test_connection_does_not_mutate_headers_argument
     headers = { 'Content-Type' => 'text/xml' }.freeze
-    @connection.request(:get, nil, headers)
+    Net::HTTP.any_instance.expects(:get).with('/tx.php', headers.merge({'connection' => 'close'})).returns(@ok)
+    Net::HTTP.any_instance.expects(:start).returns(true)
+    response = @connection.request(:get, nil, headers)
     assert_equal({ 'Content-Type' => 'text/xml' }, headers)
   end
 
