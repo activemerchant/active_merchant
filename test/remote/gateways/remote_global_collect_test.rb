@@ -10,6 +10,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     @accepted_amount = 4005
     @rejected_amount = 2997
     @options = {
+      email: 'example@example.com',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -153,7 +154,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{MISSING_OR_INVALID_AUTHORIZATION}, response.message
+    assert_match %r{UNKNOWN_SERVER_ERROR}, response.message
   end
 
   def test_transcript_scrubbing

@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915
 
 == Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909
