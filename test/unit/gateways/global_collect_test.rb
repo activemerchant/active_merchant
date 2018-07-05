@@ -68,6 +68,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_successful_authorization_with_extra_options
     options = @options.merge(
       {
+        email: 'example@example.com',
         order_id: '123',
         ip: '127.0.0.1',
         fraud_fields:
@@ -83,6 +84,8 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match %r("fraudFields":{"website":"www.example.com","giftMessage":"Happy Day!","customerIpAddress":"127.0.0.1"}), data
       assert_match %r("merchantReference":"123"), data
+      assert_match %r("emailAddress":"example@example.com"), data
+      assert_match %r("phoneNumber":"\(555\)555-5555"), data
     end.respond_with(successful_authorize_response)
 
     assert_success response
