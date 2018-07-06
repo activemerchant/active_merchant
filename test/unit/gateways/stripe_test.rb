@@ -1105,7 +1105,7 @@ class StripeTest < Test::Unit::TestCase
       @emv_credit_card.read_method = 'contactless'
       @gateway.purchase(@amount, @emv_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      data =~ /card\[read_method\]=contactless/
+      assert data =~ /card\[read_method\]=contactless/
     end.respond_with(successful_purchase_response)
   end
 
@@ -1114,7 +1114,7 @@ class StripeTest < Test::Unit::TestCase
       @emv_credit_card.read_method = 'contactless_magstripe'
       @gateway.purchase(@amount, @emv_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      data =~ /card\[read_method\]=contactless_magstripe_mode/
+      assert data =~ /card\[read_method\]=contactless_magstripe_mode/
     end.respond_with(successful_purchase_response)
   end
 
@@ -1122,7 +1122,7 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @emv_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      data !~ /card\[read_method\]=contactless/ && data !~ /card\[read_method\]=contactless_magstripe_mode/
+      assert data !~ /card\[read_method\]=contactless/ && data !~ /card\[read_method\]=contactless_magstripe_mode/
     end.respond_with(successful_purchase_response)
   end
 
