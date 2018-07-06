@@ -230,18 +230,20 @@ module ActiveMerchant #:nodoc:
         tx_value[:value] = amount(money)
         tx_value[:currency] = options[:currency] || currency(money)
 
-        tx_tax = {}
-        tx_tax[:value] = options[:tax] || '0'
-        tx_tax[:currency] = options[:currency] || currency(money)
-
-        tx_tax_return_base = {}
-        tx_tax_return_base[:value] = options[:tax_return_base] || '0'
-        tx_tax_return_base[:currency] = options[:currency] || currency(money)
-
         additional_values = {}
         additional_values[:TX_VALUE] = tx_value
-        additional_values[:TX_TAX] = tx_tax if @options[:payment_country] == 'CO'
-        additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base if @options[:payment_country] == 'CO'
+        if @options[:payment_country] == 'CO'
+          tx_tax = {}
+          tx_tax[:value] = amount(options[:tax] || 0)
+          tx_tax[:currency] = options[:currency] || currency(money)
+
+          tx_tax_return_base = {}
+          tx_tax_return_base[:value] = amount(options[:tax_return_base] || 0)
+          tx_tax_return_base[:currency] = options[:currency] || currency(money)
+
+          additional_values[:TX_TAX] = tx_tax
+          additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base
+        end
 
         post[:transaction][:order][:additionalValues] = additional_values
       end
@@ -273,7 +275,7 @@ module ActiveMerchant #:nodoc:
           post[:transaction][:paymentMethod] = brand.upcase
         elsif payment_method.try(:deferred?)
           post[:transaction][:paymentMethod] = payment_method.brand.to_s
-          post[:transaction][:expirationDate] = payment_method.expiration_date.to_s
+          post[:transaction][:expirationDate] = format_date(payment_method.expiration_date)
           post[:test] = false  # deferred gateways don't support test mode (just sandbox)
         else
           credit_card = {}
@@ -451,6 +453,10 @@ module ActiveMerchant #:nodoc:
         message = "Invalid JSON response received from PayuLatamGateway. Please contact PayuLatamGateway if you continue to receive this message."
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
+      end
+
+      def format_date(date)
+        date.respond_to?(:strftime) ? date.strftime('%Y-%m-%dT%H:%M:%S') : ''
       end
     end
   end
