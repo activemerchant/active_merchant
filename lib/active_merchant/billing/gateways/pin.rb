@@ -114,6 +114,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:description] = options[:description] || 'Active Merchant Purchase'
+        post[:reference] = options[:reference] if options[:reference]
       end
 
       def add_capture(post, options)
