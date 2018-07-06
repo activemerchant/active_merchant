@@ -38,6 +38,11 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal options_with_metadata[:metadata][:purchase_number], response.params['response']['metadata']['purchase_number']
   end
 
+  def test_successful_purchase_with_reference
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(reference: 'statement descriptor'))
+    assert_success response
+  end
+
   def test_successful_authorize_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
