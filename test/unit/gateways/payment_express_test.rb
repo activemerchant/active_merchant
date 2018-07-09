@@ -429,10 +429,10 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def transcript
-    %(<Txn><CardHolderName>Longbob Longsen</CardHolderName><CardNumber>4111111111111111</CardNumber><DateExpiry>0916</DateExpiry><Cvc2>123</Cvc2><Cvc2Presence>1</Cvc2Presence><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>59956b468905bde7</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>456 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PostUsername>WaysactDev</PostUsername><PostPassword>kvr52dw9</PostPassword><TxnType>Purchase</TxnType></Txn>)
+    %(<Txn><CardHolderName>Longbob Longsen</CardHolderName><CardNumber>4111111111111111</CardNumber><DateExpiry>0916</DateExpiry><Cvc2>123</Cvc2><Cvc2Presence>1</Cvc2Presence><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>59956b468905bde7</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>456 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PxPayUserId>WaysactDev</PxPayUserId><PxPayKey>kvr52dw9</PxPayKey><TxnType>Purchase</TxnType></Txn>)
   end
 
   def scrubbed_transcript
-    %(<Txn><CardHolderName>Longbob Longsen</CardHolderName><CardNumber>[FILTERED]</CardNumber><DateExpiry>0916</DateExpiry><Cvc2>[FILTERED]</Cvc2><Cvc2Presence>1</Cvc2Presence><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>59956b468905bde7</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>456 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PostUsername>WaysactDev</PostUsername><PostPassword>[FILTERED]</PostPassword><TxnType>Purchase</TxnType></Txn>)
+    %(<Txn><CardHolderName>Longbob Longsen</CardHolderName><CardNumber>[FILTERED]</CardNumber><DateExpiry>0916</DateExpiry><Cvc2>[FILTERED]</Cvc2><Cvc2Presence>1</Cvc2Presence><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>59956b468905bde7</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>456 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PxPayUserId>WaysactDev</PxPayUserId><PxPayKey>[FILTERED]</PxPayKey><TxnType>Purchase</TxnType></Txn>)
   end
 end
