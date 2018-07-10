@@ -128,7 +128,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct! :xml, :encoding => 'UTF-8'
         xml.declare! :DOCTYPE, :paymentService, :PUBLIC, "-//WorldPay//DTD WorldPay PaymentService v1//EN", "http://dtd.worldpay.com/paymentService_v1.dtd"
-        xml.tag! 'paymentService', 'version' => "1.4", 'merchantCode' => @options[:login] do
+        xml.tag! 'paymentService', 'version' => "1.4", 'merchantCode' => (@options[:merchant_code] ? @options[:merchant_code] : @options[:login]) do
           yield xml
         end
         xml.target!
