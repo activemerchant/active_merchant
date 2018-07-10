@@ -156,10 +156,12 @@ module ActiveMerchant #:nodoc:
       def build_purchase_or_authorization_request(money, payment_source, options)
         result = new_transaction
 
-        if payment_source.is_a?(String)
-          add_billing_token(result, payment_source)
-        else
-          add_credit_card(result, payment_source)
+        if payment_source
+          if payment_source.is_a?(String)
+            add_billing_token(result, payment_source)
+          else
+            add_credit_card(result, payment_source)
+          end
         end
 
         add_amount(result, money, options)
