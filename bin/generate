@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 require 'thor'
 
-require File.expand_path('../../generators/active_merchant_generator', __FILE__)
+require File.expand_path('../generators/active_merchant_generator', __dir__)
 
-Dir[File.expand_path('../..', __FILE__) + '/generators/*/*.rb'].each do |generator|
+Dir[File.expand_path('..', __dir__) + '/generators/*/*.rb'].each do |generator|
   require generator
 end
 
