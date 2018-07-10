@@ -967,6 +967,11 @@ raven_pac_net:
   secret: "all good men die young"
   prn: 987743
 
+# Working credentials, no need to replace
+razorpay:
+  key_id:
+  key_secret:
+
 realex:
   login: X
   password: Y
