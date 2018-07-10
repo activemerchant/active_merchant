@@ -863,6 +863,10 @@ module ActiveMerchant
           (empty?(element.content) ? nil : element.content)
         end
 
+        response[:full_response_code] = if(element = doc.at_xpath('//messages/message/code'))
+          (empty?(element.content) ? nil : element.content)
+        end
+
         response
       end
 
