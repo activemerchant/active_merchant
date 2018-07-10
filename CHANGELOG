@@ -5,6 +5,7 @@
 * Pin Payments: Pass reference for statement desc [curiousepic] #2919
 * FirstData: introduce v27 gateway [shasum] #2912
 * Stripe: Fix contactless magstripe support [abhiin1947] #2917
+* ANET: Expose full response code [curiousepic] #2924
 
 == Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909
