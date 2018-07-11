@@ -262,6 +262,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     assert_equal 'M', response.cvv_result['code']
     assert_equal 'CVV matches', response.cvv_result['message']
+    assert_equal 'I00001', response.params['full_response_code']
 
     assert_equal '508141794', response.authorization.split('#')[0]
     assert response.test?
