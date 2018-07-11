@@ -65,6 +65,17 @@ class CountryTest < Test::Unit::TestCase
     end
   end
 
+  def test_find_mexico
+    country = ActiveMerchant::Country.find('MX')
+    assert_equal 'MX', country.code(:alpha2).value
+
+    country = ActiveMerchant::Country.find('Mexico')
+    assert_equal 'MX', country.code(:alpha2).value
+
+    country = ActiveMerchant::Country.find('MX')
+    assert_equal 'Mexico', country.to_s
+  end
+
   def test_country_names_are_alphabetized
     country_names = ActiveMerchant::Country::COUNTRIES.map { | each | each[:name] }
     assert_equal(country_names.sort, country_names)

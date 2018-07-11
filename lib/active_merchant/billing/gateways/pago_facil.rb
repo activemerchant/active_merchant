@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         post[:colonia] = address[:address2]
         post[:municipio] = address[:city]
         post[:estado] = address[:state]
-        post[:pais] = address[:country]
+        post[:pais] = country_code(address[:country])
         post[:telefono] = address[:phone]
         post[:cp] = address[:zip]
       end
@@ -116,6 +116,14 @@ module ActiveMerchant #:nodoc:
           'texto' => 'Invalid response received from the PagoFacil API.',
           'raw_response' => response
         }
+      end
+
+      def country_code(country)
+        if country
+          country = ActiveMerchant::Country.find(country)
+          country.to_s
+        end
+      rescue InvalidCountryCodeError
       end
     end
   end
