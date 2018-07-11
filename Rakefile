@@ -24,7 +24,7 @@ task :tag_release do
 end
 
 desc 'Run the unit test suite'
-task :default => 'test:local'
+task :default => 'test:units'
 task :test => 'test:units'
 
 RuboCop::RakeTask.new
