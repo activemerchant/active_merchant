@@ -369,56 +369,56 @@ class PaymentExpressTest < Test::Unit::TestCase
       </Request>
     RESPONSE
 
-# <Request>
-#   <Transaction valid="1" reco="00" responsetext="APPROVED">
-#     <Authorized>1</Authorized>
-#     <MerchantReference>Test Transaction</MerchantReference>
-#     <Cvc2>M</Cvc2>
-#     <CardName>Visa</CardName>
-#     <Retry>0</Retry>
-#     <StatusRequired>0</StatusRequired>
-#     <AuthCode>015921</AuthCode>
-#     <AmountInput>1.23</AmountInput>
-#     <InputCurrencyId>1</InputCurrencyId>
-#     <InputCurrencyName>NZD</InputCurrencyName>
-#     <Acquirer>WestpacTrust</Acquirer>
-#     <CurrencyId>1</CurrencyId>
-#     <CurrencyName>NZD</CurrencyName>
-#     <CurrencyRate>1.00</CurrencyRate>
-#     <Acquirer>WestpacTrust</Acquirer>
-#     <AcquirerDate>30102000</AcquirerDate>
-#     <AcquirerId>1</AcquirerId>
-#     <CardHolderName>DPS</CardHolderName>
-#     <DateSettlement>20050811</DateSettlement>
-#     <TxnType>Purchase</TxnType>
-#     <CardNumber>411111</CardNumber>
-#     <DateExpiry>0807</DateExpiry>
-#     <ProductId></ProductId>
-#     <AcquirerDate>20050811</AcquirerDate>
-#     <AcquirerTime>060039</AcquirerTime>
-#     <AcquirerId>9000</AcquirerId>
-#     <Acquirer>Test</Acquirer>
-#     <TestMode>1</TestMode>
-#     <CardId>2</CardId>
-#     <CardHolderResponseText>APPROVED</CardHolderResponseText>
-#     <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
-#     <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
-#     <MerchantResponseText>APPROVED</MerchantResponseText>
-#     <MerchantHelpText>The Transaction was approved</MerchantHelpText>
-#     <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
-#     <GroupAccount>9997</GroupAccount>
-#     <DpsTxnRef>00000004011a2478</DpsTxnRef>
-#     <AllowRetry>0</AllowRetry>
-#     <DpsBillingId></DpsBillingId>
-#     <BillingId></BillingId>
-#     <TransactionId>011a2478</TransactionId>
-#   </Transaction>
-#   <ReCo>00</ReCo>
-#   <ResponseText>APPROVED</ResponseText>
-#   <HelpText>The Transaction was approved</HelpText>
-#   <Success>1</Success>
-#   <TxnRef>00000004011a2478</TxnRef>
-# </Request>
+    # <Request>
+    #   <Transaction valid="1" reco="00" responsetext="APPROVED">
+    #     <Authorized>1</Authorized>
+    #     <MerchantReference>Test Transaction</MerchantReference>
+    #     <Cvc2>M</Cvc2>
+    #     <CardName>Visa</CardName>
+    #     <Retry>0</Retry>
+    #     <StatusRequired>0</StatusRequired>
+    #     <AuthCode>015921</AuthCode>
+    #     <AmountInput>1.23</AmountInput>
+    #     <InputCurrencyId>1</InputCurrencyId>
+    #     <InputCurrencyName>NZD</InputCurrencyName>
+    #     <Acquirer>WestpacTrust</Acquirer>
+    #     <CurrencyId>1</CurrencyId>
+    #     <CurrencyName>NZD</CurrencyName>
+    #     <CurrencyRate>1.00</CurrencyRate>
+    #     <Acquirer>WestpacTrust</Acquirer>
+    #     <AcquirerDate>30102000</AcquirerDate>
+    #     <AcquirerId>1</AcquirerId>
+    #     <CardHolderName>DPS</CardHolderName>
+    #     <DateSettlement>20050811</DateSettlement>
+    #     <TxnType>Purchase</TxnType>
+    #     <CardNumber>411111</CardNumber>
+    #     <DateExpiry>0807</DateExpiry>
+    #     <ProductId></ProductId>
+    #     <AcquirerDate>20050811</AcquirerDate>
+    #     <AcquirerTime>060039</AcquirerTime>
+    #     <AcquirerId>9000</AcquirerId>
+    #     <Acquirer>Test</Acquirer>
+    #     <TestMode>1</TestMode>
+    #     <CardId>2</CardId>
+    #     <CardHolderResponseText>APPROVED</CardHolderResponseText>
+    #     <CardHolderHelpText>The Transaction was approved</CardHolderHelpText>
+    #     <CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription>
+    #     <MerchantResponseText>APPROVED</MerchantResponseText>
+    #     <MerchantHelpText>The Transaction was approved</MerchantHelpText>
+    #     <MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription>
+    #     <GroupAccount>9997</GroupAccount>
+    #     <DpsTxnRef>00000004011a2478</DpsTxnRef>
+    #     <AllowRetry>0</AllowRetry>
+    #     <DpsBillingId></DpsBillingId>
+    #     <BillingId></BillingId>
+    #     <TransactionId>011a2478</TransactionId>
+    #   </Transaction>
+    #   <ReCo>00</ReCo>
+    #   <ResponseText>APPROVED</ResponseText>
+    #   <HelpText>The Transaction was approved</HelpText>
+    #   <Success>1</Success>
+    #   <TxnRef>00000004011a2478</TxnRef>
+    # </Request>
   end
 
   def successful_store_response(options = {})
