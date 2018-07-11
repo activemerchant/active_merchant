@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Transaction' do
             xml.tag! 'TranType', 'Credit'
             xml.tag! 'TranCode', action
-            if options[:allow_partial_auth] && (action == 'PreAuth' || action == 'Sale')
+            if options[:allow_partial_auth] && ['PreAuth', 'Sale'].include?(action)
               xml.tag! 'PartialAuth', 'Allow'
             end
             add_invoice(xml, options[:order_id], nil, options)
