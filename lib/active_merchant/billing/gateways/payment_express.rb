@@ -322,9 +322,7 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, request.to_s))
 
         # Return a response
-        PaymentExpressResponse.new(response[:valid] == APPROVED, message_from(response), response,
-          url: response[:uri]
-        )
+        PaymentExpressResponse.new(response[:valid], message_from(response), response)
       end
 
       # Response XML documentation:
@@ -336,8 +334,16 @@ module ActiveMerchant #:nodoc:
 
         request_node = xml.elements.find { |e| e.expanded_name == 'Request' }
 
-        response[:valid] = request_node.attributes['valid']
-        response[:uri] = request_node.get_elements('URI').first.text
+        if request_node
+          response[:uri] = request_node.get_elements('URI').first&.text
+
+          response[:valid] = request_node.attributes['valid'] == APPROVED && response[:uri].present?
+
+          unless response[:valid]
+            response_text_node = request_node.elements.find { |e| e.expanded_name == 'ResponseText' }
+            response[:response_text] = response_text_node&.text
+          end
+        end
 
         response
       end
