@@ -16,3 +16,12 @@ AllCops:
     - "vendor/**/*"
   ExtraDetails: false
   TargetRubyVersion: 2.3
+
+# Limiting module/class lengths in specs is counterproductive
+Metrics/ClassLength:
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ModuleLength:
+  Exclude:
+    - 'test/**/*'
