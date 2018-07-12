@@ -279,35 +279,35 @@ class PaymentExpressTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
-  def test_purchase_truncates_description_to_50_chars
+  def test_purchase_truncates_description_to_64_chars
     stub_comms do
-      @gateway.purchase(@amount, @visa, {:description => '50chars-------------------------------------------EXTRA'})
+      @gateway.purchase(@amount, @visa, {:description => '64chars---------------------------------------------------------EXTRA'})
     end.check_request do |endpoint, data, headers|
-      assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
+      assert_match(/<MerchantReference>64chars---------------------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
-  def test_authorize_truncates_description_to_50_chars
+  def test_authorize_truncates_description_to_64_chars
     stub_comms do
-      @gateway.authorize(@amount, @visa, {:description => '50chars-------------------------------------------EXTRA'})
+      @gateway.authorize(@amount, @visa, {:description => '64chars---------------------------------------------------------EXTRA'})
     end.check_request do |endpoint, data, headers|
-      assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
+      assert_match(/<MerchantReference>64chars---------------------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
-  def test_capture_truncates_description_to_50_chars
+  def test_capture_truncates_description_to_64_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:description => '50chars-------------------------------------------EXTRA'})
+      @gateway.capture(@amount, 'identification', {:description => '64chars---------------------------------------------------------EXTRA'})
     end.check_request do |endpoint, data, headers|
-      assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
+      assert_match(/<MerchantReference>64chars---------------------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
-  def test_refund_truncates_description_to_50_chars
+  def test_refund_truncates_description_to_64_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:description => '50chars-------------------------------------------EXTRA'})
+      @gateway.capture(@amount, 'identification', {:description => '64chars---------------------------------------------------------EXTRA'})
     end.check_request do |endpoint, data, headers|
-      assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
+      assert_match(/<MerchantReference>64chars---------------------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
   end
 
