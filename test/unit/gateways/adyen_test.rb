@@ -220,6 +220,17 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
   end
 
+  def test_authorize_with_network_tokenization_credit_card_no_name
+    @apple_pay_card.first_name = nil
+    @apple_pay_card.last_name = nil
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_pay_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'Not Provided', JSON.parse(data)['card']['holderName']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_authorize_with_network_tokenization_credit_card
     response = stub_comms do
       @gateway.authorize(@amount, @apple_pay_card, @options)
