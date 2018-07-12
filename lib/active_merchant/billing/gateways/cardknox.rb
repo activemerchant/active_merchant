@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(post, credit_card)
-        if credit_card.track_data.present?
+        if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
           post[:Magstripe] = credit_card.track_data
           post[:Cardpresent] = true
         else
@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
           post[:CVV] = credit_card.verification_value
           post[:Exp] = expdate(credit_card)
           post[:Name] = credit_card.name
-          post[:CardPresent] = true if credit_card.manual_entry
+          post[:CardPresent] = true if credit_card.respond_to?(:manual_entry) && credit_card.manual_entry
         end
       end
 
