@@ -8,10 +8,10 @@ rvm:
 - 2.3
 
 gemfile:
-- Gemfile.rails52
-- Gemfile.rails51
-- Gemfile.rails50
-- Gemfile.rails42
+- gemfiles/Gemfile.rails52
+- gemfiles/Gemfile.rails51
+- gemfiles/Gemfile.rails50
+- gemfiles/Gemfile.rails42
 
 jobs:
   include:
