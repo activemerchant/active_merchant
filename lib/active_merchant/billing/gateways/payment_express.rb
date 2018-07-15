@@ -21,8 +21,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
 
-      self.live_url = 'https://sec.paymentexpress.com/pxpost.aspx'
-      self.test_url = 'https://uat.paymentexpress.com/pxpost.aspx'
+      self.live_url = 'https://sec.paymentexpress.com/pxaccess/pxpay.aspx'
+      self.test_url = 'https://uat.paymentexpress.com/pxaccess/pxpay.aspx'
 
       APPROVED = '1'
 
@@ -37,9 +37,9 @@ module ActiveMerchant #:nodoc:
       # We require the DPS gateway username and password when the object is created.
       #
       # The PaymentExpress gateway also supports a :use_custom_payment_token boolean option.
-      # If set to true the gateway will use BillingId for the Token type.  If set to false,
-      # then the token will be sent as the DPS specified "DpsBillingId".  This is per the documentation at
-      # http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
+      # If set to true the gateway will use BillingId for the Token type. If set to false,
+      # then the token will be sent as the DPS specified "DpsBillingId". This is per the documentation at
+      # https://www.paymentexpress.com/Document/PXECOM_PXPay_2_0_IntegrationGuide.pdf (page 27)
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -87,6 +87,14 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def get_transaction_result(result_code)
+        request = build_transaction_result_request(result_code)
+
+        response = ssl_post(url, request.to_s)
+
+        Hash.from_xml(response)
+      end
+
       # Token Based Billing
       #
       # Instead of storing the credit card details locally, you can store them inside the
@@ -115,9 +123,9 @@ module ActiveMerchant #:nodoc:
       #       :use_custom_payment_token => true
       #     )
       #
-      # see: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
+      # https://www.paymentexpress.com/Document/PXECOM_PXPay_2_0_IntegrationGuide.pdf (page 27)
       #
-      # Note, once stored, PaymentExpress does not support unstoring a stored card.
+      # NOTE: Once stored, PaymentExpress does not support unstoring a stored card.
       def store(credit_card, options = {})
         request  = build_token_request(credit_card, options)
         commit(:validate, request)
@@ -129,13 +137,17 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((<PostPassword>).+(</PostPassword>)), '\1[FILTERED]\2').
+          gsub(%r((<PxPayKey>).+(</PxPayKey>)), '\1[FILTERED]\2').
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]\2').
           gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
           gsub(%r((<Cvc2>)\d+(</Cvc2>)), '\1[FILTERED]\2')
       end
 
       private
+
+      def url
+        test? ? self.test_url : self.live_url
+      end
 
       def use_custom_payment_token?
         @options[:use_custom_payment_token]
@@ -144,10 +156,12 @@ module ActiveMerchant #:nodoc:
       def build_purchase_or_authorization_request(money, payment_source, options)
         result = new_transaction
 
-        if payment_source.is_a?(String)
-          add_billing_token(result, payment_source)
-        else
-          add_credit_card(result, payment_source)
+        if payment_source
+          if payment_source.is_a?(String)
+            add_billing_token(result, payment_source)
+          else
+            add_credit_card(result, payment_source)
+          end
         end
 
         add_amount(result, money, options)
@@ -176,9 +190,16 @@ module ActiveMerchant #:nodoc:
         result
       end
 
+      def build_transaction_result_request(result_code)
+        xml = REXML::Document.new.add_element('ProcessResponse')
+        add_credentials(xml)
+        xml.add_element('Response').text = result_code
+        xml
+      end
+
       def add_credentials(xml)
-        xml.add_element('PostUsername').text = @options[:login]
-        xml.add_element('PostPassword').text = @options[:password]
+        xml.add_element('PxPayUserId').text = @options[:login]
+        xml.add_element('PxPayKey').text = @options[:password]
       end
 
       def add_reference(xml, identification)
@@ -215,8 +236,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(xml, money, options)
-        xml.add_element('Amount').text = amount(money)
-        xml.add_element('InputCurrency').text = options[:currency] || currency(money)
+        xml.add_element('AmountInput').text = amount(money)
+        xml.add_element('CurrencyInput').text = options[:currency] || currency(money)
       end
 
       def add_transaction_type(xml, action)
@@ -225,7 +246,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(xml, options)
         xml.add_element('TxnId').text = options[:order_id].to_s.slice(0, 16) unless options[:order_id].blank?
-        xml.add_element('MerchantReference').text = options[:description].to_s.slice(0, 50) unless options[:description].blank?
+        xml.add_element('MerchantReference').text = options[:description].to_s.slice(0, 64) unless options[:description].blank?
       end
 
       def add_address_verification_data(xml, options)
@@ -283,10 +304,13 @@ module ActiveMerchant #:nodoc:
         xml.add_element('TxnData1').text = options[:txn_data1].to_s.slice(0,255) unless options[:txn_data1].blank?
         xml.add_element('TxnData2').text = options[:txn_data2].to_s.slice(0,255) unless options[:txn_data2].blank?
         xml.add_element('TxnData3').text = options[:txn_data3].to_s.slice(0,255) unless options[:txn_data3].blank?
+
+        xml.add_element('UrlSuccess').text = options[:url_success].to_s.slice(0,255) unless options[:url_success].blank?
+        xml.add_element('UrlFail').text    = options[:url_fail].to_s.slice(0,255)    unless options[:url_fail].blank?
       end
 
       def new_transaction
-        REXML::Document.new.add_element('Txn')
+        REXML::Document.new.add_element('GenerateRequest')
       end
 
       # Take in the request and post it to DPS
@@ -294,34 +318,31 @@ module ActiveMerchant #:nodoc:
         add_credentials(request)
         add_transaction_type(request, action)
 
-        url = test? ? self.test_url : self.live_url
-
         # Parse the XML response
         response = parse(ssl_post(url, request.to_s))
 
         # Return a response
-        PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
-          :test => response[:test_mode] == '1',
-          :authorization => authorization_from(action, response)
-        )
+        PaymentExpressResponse.new(response[:valid], message_from(response), response)
       end
 
-      # Response XML documentation: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#XMLTxnOutput
+      # Response XML documentation:
+      # https://www.paymentexpress.com/Document/PXECOM_PXPay_2_0_IntegrationGuide.pdf (page 12)
       def parse(xml_string)
         response = {}
 
         xml = REXML::Document.new(xml_string)
 
-        # Gather all root elements such as HelpText
-        xml.elements.each('Txn/*') do |element|
-          response[element.name.underscore.to_sym] = element.text unless element.name == 'Transaction'
-        end
+        request_node = xml.elements.find { |e| e.expanded_name == 'Request' }
 
-        # Gather all transaction elements and prefix with "account_"
-        # So we could access the MerchantResponseText by going
-        # response[account_merchant_response_text]
-        xml.elements.each('Txn/Transaction/*') do |element|
-          response[element.name.underscore.to_sym] = element.text
+        if request_node
+          response[:uri] = request_node.get_elements('URI').first&.text
+
+          response[:valid] = request_node.attributes['valid'] == APPROVED && response[:uri].present?
+
+          unless response[:valid]
+            response_text_node = request_node.elements.find { |e| e.expanded_name == 'ResponseText' }
+            response[:response_text] = response_text_node&.text
+          end
         end
 
         response
