@@ -269,6 +269,7 @@ module ActiveMerchant #:nodoc:
         return unless options[:email]
         xml.tag! 'shopper' do
           xml.tag! 'shopperEmailAddress', options[:email]
+          xml.tag! 'authenticatedShopperID', options[:shopper_id] if options[:shopper_id]
         end
       end
 

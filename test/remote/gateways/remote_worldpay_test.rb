@@ -31,6 +31,20 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_create_shopper_token
+    @options.merge!(create_token: {}, token_scope: 'shopper', shopper_id: '10-1')
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_create_merchant_token
+    @options.merge!(create_token: {}, token_scope: 'merchant')
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

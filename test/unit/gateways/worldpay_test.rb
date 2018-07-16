@@ -468,7 +468,16 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
-  def test_successful_purchase_with_create_token
+  def test_successful_purchase_with_create_shopper_token
+    @options = @options.merge(create_token: {}, token_scope: 'shopper', shopper_id: '10-1')
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_with_token_response, successful_capture_response)
+    assert_success response
+    assert_equal '9902019934757792074', response.responses.first.params['payment_token_id']
+  end
+
+  def test_successful_purchase_with_create_merchant_token
     @options = @options.merge(create_token: {}, token_scope: 'merchant')
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
