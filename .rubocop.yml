@@ -17,11 +17,9 @@ AllCops:
   ExtraDetails: false
   TargetRubyVersion: 2.3
 
-# Limiting module/class lengths in specs is counterproductive
+# Active Merchant gateways are not amenable to length restrictions
 Metrics/ClassLength:
-  Exclude:
-    - 'test/**/*'
+  Enabled: false
 
 Metrics/ModuleLength:
-  Exclude:
-    - 'test/**/*'
+  Enabled: false
