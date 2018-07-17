@@ -384,6 +384,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_scrubbed(@visa.number, clean_transcript)
     assert_scrubbed(@visa.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:password], clean_transcript)
+    assert_scrubbed(@gateway.options[:api_key], clean_transcript)
   end
 
   private

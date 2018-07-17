@@ -156,7 +156,6 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         reference, _, _ = split_auth(authorization)
-
         post = {}
         add_amount(post, money)
         add_reference(post, reference)
@@ -313,7 +312,6 @@ module ActiveMerchant #:nodoc:
         post[:serviceVersion] = SP_SERVICE_VERSION
         post[:responseFormat] = 'QS'
         post[:cardValidation] = (options[:cardValidation].to_i == 1) || '0'
-
         post[:operationType] = options[:operationType] || options[:operation] || secure_profile_action(:new)
         post[:customerCode] = options[:billing_id] || options[:vault_id] || false
         post[:status] = options[:status]
@@ -462,6 +460,7 @@ module ActiveMerchant #:nodoc:
           params[:username] = @options[:user] if @options[:user]
           params[:password] = @options[:password] if @options[:password]
           params[:merchant_id] = @options[:login]
+          params[:passcode] = @options[:api_key]
         end
         params[:vbvEnabled] = '0'
         params[:scEnabled] = '0'

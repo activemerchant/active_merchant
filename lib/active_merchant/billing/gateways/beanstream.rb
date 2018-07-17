@@ -199,6 +199,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?passcode=)[^&\s]*(&?)/, '\1[FILTERED]\2').
           gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
           gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
       end

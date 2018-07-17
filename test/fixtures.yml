@@ -67,6 +67,7 @@ beanstream:
   password: password
   secure_profile_api_key: API Access Passcode
   recurring_api_key: API Access Passcode
+  api_key: API KEY
 
 beanstream_interac:
   login: merchant id
