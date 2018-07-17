@@ -363,6 +363,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_level_3_tax(xml, options={})
+        if (level_3 = options[:level_3_data])
+          xml.tag! 
+      end
+
       def add_level_2_advice_addendum(xml, options={})
         if (level_2 = options[:level_2_data])
           xml.tag! :AMEXTranAdvAddn1, byte_limit(level_2[:advice_addendum_1], 40) if level_2[:advice_addendum_1]
@@ -383,6 +388,14 @@ module ActiveMerchant #:nodoc:
           xml.tag! :PCDestState,      byte_limit(format_address_field(level_2[:state]), 2) if level_2[:state]
         end
       end
+
+      def add_level_3_purchase(xml, options={})
+        if (level_3 = options[:level_3_data])
+          xml.tag! :PC3FreightAmt,    byte_limit(level_3[:freight_amount], 12) if level_3[:freight_amount]
+          xml.tag! :PC3DutyAmt,       byte_limit(level_3[:duty_amount], 12) if level_3[:duty_amount]
+          xml.tag! :PC3ShipFromZip,   byte_limit(level_3[:ship_from_zip], 10) if level_3[:ship_from_zip]
+          xml.tag! :PC3DestCountryCd, byte_limit(address[:dest_country], 3) if address[:dest_country]
+          xml.tag! :PC3DiscAmt,       byte_limit(level_3[:discount_amount], 12) if level_3[:discount_amount]
 
       def add_address(xml, creditcard, options)
         if(address = (options[:billing_address] || options[:address]))
