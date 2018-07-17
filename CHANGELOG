@@ -9,6 +9,7 @@
 * Global Collect: Fix customer data field structure [curiousepic] #2929
 * Adyen: Set Default Name for Apple Pay Transactions [nfarve] #2930
 * Beanstream: Update to use api key with login credentials [nfarve] #2934
+* CT Payments: Fix a typo in the live URL scheme [bpollack] #2936
 
 == Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909

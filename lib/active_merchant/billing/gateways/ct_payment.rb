@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CtPaymentGateway < Gateway
       self.test_url = 'https://test.ctpaiement.ca/v1/'
-      self.live_url = 'hhtps://www.ctpaiement.com/v1/'
+      self.live_url = 'https://www.ctpaiement.com/v1/'
 
       self.supported_countries = ['US', 'CA']
       self.default_currency = 'CAD'
