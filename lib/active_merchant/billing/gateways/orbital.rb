@@ -306,7 +306,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((<OrbitalConnectionUsername>).+(</OrbitalConnectionUsername>)), '\1[FILTERED]\2').
           gsub(%r((<OrbitalConnectionPassword>).+(</OrbitalConnectionPassword>)), '\1[FILTERED]\2').
           gsub(%r((<AccountNum>).+(</AccountNum>)), '\1[FILTERED]\2').
-          gsub(%r((<CCAccountNum>).+(</CCAccountNum>)), '\1[FILTERED]\2').
+          # the response sometimes contains a new line that cuts off the end of the closing tag
+          gsub(%r((<CCAccountNum>).+(</CC)), '\1[FILTERED]\2').
           gsub(%r((<CardSecVal>).+(</CardSecVal>)), '\1[FILTERED]\2').
           gsub(%r((<MerchantID>).+(</MerchantID>)), '\1[FILTERED]\2').
           gsub(%r((<CustomerMerchantID>).+(</CustomerMerchantID>)), '\1[FILTERED]\2')
@@ -361,6 +362,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_level_3_tax(xml, options={})
+        if (level_3 = options[:level_3_data])
+          xml.tag! :PC3VATtaxAmt, byte_limit(level_3[:vat_tax], 12) if level_3[:vat_tax]
+          xml.tag! :PC3AltTaxAmt, byte_limit(level_3[:alt_tax], 9) if level_3[:alt_tax]
+          xml.tag! :PC3VATtaxRate, byte_limit(level_3[:vat_rate], 4) if level_3[:vat_rate]
+          xml.tag! :PC3AltTaxInd, byte_limit(level_3[:alt_ind], 15) if level_3[:alt_ind]
+        end
+      end
+
       def add_level_2_advice_addendum(xml, options={})
         if (level_2 = options[:level_2_data])
           xml.tag! :AMEXTranAdvAddn1, byte_limit(level_2[:advice_addendum_1], 40) if level_2[:advice_addendum_1]
@@ -379,6 +389,35 @@ module ActiveMerchant #:nodoc:
           xml.tag! :PCDestAddress2,   byte_limit(format_address_field(level_2[:address2]), 30) if level_2[:address2]
           xml.tag! :PCDestCity,       byte_limit(format_address_field(level_2[:city]), 20) if level_2[:city]
           xml.tag! :PCDestState,      byte_limit(format_address_field(level_2[:state]), 2) if level_2[:state]
+        end
+      end
+
+      def add_level_3_purchase(xml, options={})
+        if (level_3 = options[:level_3_data])
+          xml.tag! :PC3FreightAmt,    byte_limit(level_3[:freight_amount], 12) if level_3[:freight_amount]
+          xml.tag! :PC3DutyAmt,       byte_limit(level_3[:duty_amount], 12) if level_3[:duty_amount]
+          xml.tag! :PC3DestCountryCd, byte_limit(level_3[:dest_country], 3) if level_3[:dest_country]
+          xml.tag! :PC3ShipFromZip,   byte_limit(level_3[:ship_from_zip], 10) if level_3[:ship_from_zip]
+          xml.tag! :PC3DiscAmt,       byte_limit(level_3[:discount_amount], 12) if level_3[:discount_amount]
+        end
+      end
+
+      def add_line_items(xml, options={})
+        xml.tag! :PC3LineItemCount, byte_limit(options[:line_items].count, 2)
+        xml.tag! :PC3LineItemArray do
+          options[:line_items].each_with_index do |line_item, index|
+            xml.tag! :PC3LineItem do
+              xml.tag! :PC3DtlIndex,  byte_limit(index + 1, 2)
+              line_item.each do |key, value|
+                if key == :line_tot
+                  formatted_key = :PC3Dtllinetot
+                else
+                  formatted_key = "PC3Dtl#{key.to_s.camelize}".to_sym
+                end
+                xml.tag! formatted_key, value
+              end
+            end
+          end
         end
       end
 
@@ -715,6 +754,9 @@ module ActiveMerchant #:nodoc:
             end
 
             add_level_2_purchase(xml, parameters)
+            add_level_3_purchase(xml, parameters)
+            add_level_3_tax(xml, parameters)
+            add_line_items(xml, parameters) if parameters[:line_items]
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
           end

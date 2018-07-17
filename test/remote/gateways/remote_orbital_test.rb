@@ -40,6 +40,58 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       zip: address[:zip],
     }
 
+    @level_3_options_visa = {
+      freight_amount: 1,
+      duty_amount: 1,
+      ship_from_zip: 27604,
+      dest_country: 'USA',
+      discount_amount: 1,
+      vat_tax: 1,
+      vat_rate: 25
+    }
+
+    @level_2_options_master = {
+      freight_amount: 1,
+      duty_amount: 1,
+      ship_from_zip: 27604,
+      dest_country: 'USA',
+      alt_tax: 1,
+      alt_ind: 25
+    }
+
+    @line_items_visa = [
+      {
+        desc: 'another item',
+        prod_cd: generate_unique_id[0, 11],
+        qty: 1,
+        u_o_m: 'LBR',
+        tax_amt: 250,
+        tax_rate: 10000,
+        line_tot: 2500,
+        disc: 250,
+        comm_cd: '00584',
+        unit_cost: 2500,
+        gross_net: 'Y',
+        tax_type: 'sale',
+        debit_ind: 'C'
+      },
+      {
+        desc: 'something else',
+        prod_cd: generate_unique_id[0, 11],
+        qty: 1,
+        u_o_m: 'LBR',
+        tax_amt: 125,
+        tax_rate: 5000,
+        line_tot: 2500,
+        disc: 250,
+        comm_cd: '00584',
+        unit_cost: 250000,
+        gross_net: 'Y',
+        tax_type: 'sale',
+        debit_ind: 'C'
+      }
+    ]
+
     @test_suite = [
       {card: :visa, AVSzip: 11111, CVD: 111,  amount: 3000},
       {card: :visa, AVSzip: 33333, CVD: nil,  amount: 3801},
@@ -74,6 +126,13 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_level_2_data
     response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_3_data
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options_visa, line_items: @line_items_visa))
 
     assert_success response
     assert_equal 'Approved', response.message

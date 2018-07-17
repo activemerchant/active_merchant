@@ -30,6 +30,48 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       zip: address[:zip],
     }
 
+    @level_3 = {
+      freight_amount: '15',
+      duty_amount: '10',
+      dest_country: 'US',
+      ship_from_zip: '12345',
+      discount_amount: '20',
+      vat_tax: '25',
+      alt_tax: '30',
+      vat_rate: '7',
+      alt_ind: 'Y'
+    }
+
+    @line_items =
+      [
+        {
+          desc: 'credit card payment',
+          prod_cd: 'service',
+          qty: '30',
+          u_o_m: 'EAC',
+          tax_amt: '10',
+          tax_rate: '8.25',
+          line_tot: '20',
+          disc: '6',
+          unit_cost: '5',
+          gross_net: 'Y',
+          disc_ind: 'Y'
+        },
+        {
+          desc: 'credit card payment',
+          prod_cd: 'service',
+          qty: '30',
+          u_o_m: 'EAC',
+          tax_amt: '10',
+          tax_rate: '8.25',
+          line_tot: '20',
+          disc: '6',
+          unit_cost: '5',
+          gross_net: 'Y',
+          disc_ind: 'Y'
+        }
+      ]
+
     @options = { order_id: '1'}
     @options_stored_credentials = {
       mit_msg_type: 'MRSB',
@@ -79,6 +121,42 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<PCDestAddress2>#{@level_2[:address2]}</PCDestAddress2>}, data
       assert_match %{<PCDestCity>#{@level_2[:city]}</PCDestCity>}, data
       assert_match %{<PCDestState>#{@level_2[:state]}</PCDestState>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_level_3_data
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(level_3_data: @level_3))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<PC3FreightAmt>#{@level_3[:freight_amount].to_i}</PC3FreightAmt>}, data
+      assert_match %{<PC3DutyAmt>#{@level_3[:duty_amount].to_i}</PC3DutyAmt>}, data
+      assert_match %{<PC3DestCountryCd>#{@level_3[:dest_country]}</PC3DestCountryCd>}, data
+      assert_match %{<PC3ShipFromZip>#{@level_3[:ship_from_zip].to_i}</PC3ShipFromZip>}, data
+      assert_match %{<PC3DiscAmt>#{@level_3[:discount_amount].to_i}</PC3DiscAmt>}, data
+      assert_match %{<PC3VATtaxAmt>#{@level_3[:vat_tax].to_i}</PC3VATtaxAmt>}, data
+      assert_match %{<PC3VATtaxRate>#{@level_3[:vat_rate].to_i}</PC3VATtaxRate>}, data
+      assert_match %{<PC3AltTaxAmt>#{@level_3[:alt_tax].to_i}</PC3AltTaxAmt>}, data
+      assert_match %{<PC3AltTaxInd>#{@level_3[:alt_ind]}</PC3AltTaxInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_line_items_data
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(line_items: @line_items))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<PC3DtlIndex>1</PC3DtlIndex>}, data
+      assert_match %{<PC3DtlDesc>#{@line_items[1][:desc]}</PC3DtlDesc>}, data
+      assert_match %{<PC3DtlProdCd>#{@line_items[1][:prod_cd]}</PC3DtlProdCd>}, data
+      assert_match %{<PC3DtlQty>#{@line_items[1][:qty].to_i}</PC3DtlQty>}, data
+      assert_match %{<PC3DtlUOM>#{@line_items[1][:u_o_m]}</PC3DtlUOM>}, data
+      assert_match %{<PC3DtlTaxAmt>#{@line_items[1][:tax_amt].to_i}</PC3DtlTaxAmt>}, data
+      assert_match %{<PC3DtlTaxRate>#{@line_items[1][:tax_rate]}</PC3DtlTaxRate>}, data
+      assert_match %{<PC3Dtllinetot>#{@line_items[1][:line_tot].to_i}</PC3Dtllinetot>}, data
+      assert_match %{<PC3DtlDisc>#{@line_items[1][:disc].to_i}</PC3DtlDisc>}, data
+      assert_match %{<PC3DtlUnitCost>#{@line_items[1][:unit_cost].to_i}</PC3DtlUnitCost>}, data
+      assert_match %{<PC3DtlGrossNet>#{@line_items[1][:gross_net]}</PC3DtlGrossNet>}, data
+      assert_match %{<PC3DtlDiscInd>#{@line_items[1][:disc_ind]}</PC3DtlDiscInd>}, data
+      assert_match %{<PC3DtlIndex>2</PC3DtlIndex>}, data
     end.respond_with(successful_purchase_response)
   end
 
