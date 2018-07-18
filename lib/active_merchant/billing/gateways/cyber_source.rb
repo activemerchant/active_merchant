@@ -708,9 +708,13 @@ module ActiveMerchant #:nodoc:
       # Response object
       def commit(request, action, amount, options)
         begin
-          response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
+          raw_response = ssl_post(test? ? self.test_url : self.live_url, build_request(request, options))
         rescue ResponseError => e
-          response = parse(e.response.body)
+          raw_response = e.response.body
+        end
+
+        begin
+          response = parse(raw_response)
         rescue REXML::ParseException => e
           response = { message: e.to_s }
         end

@@ -482,6 +482,16 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
+  def test_does_not_throw_on_invalid_xml
+    raw_response = mock
+    raw_response.expects(:body).returns(invalid_xml_response)
+    exception = ActiveMerchant::ResponseError.new(raw_response)
+    @gateway.expects(:ssl_post).raises(exception)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+  end
+
   private
 
   def pre_scrubbed
@@ -730,6 +740,10 @@ class CyberSourceTest < Test::Unit::TestCase
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-635495097"><wsu:Created>2018-05-01T14:28:36.773Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.121"><c:merchantReferenceCode>23751b5aeb076ea5940c5b656284bf6a</c:merchantReferenceCode><c:requestID>5251849164756591904009</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj//wSTHLQMXdtQnQUJGxDds0bNnDRoo0+VcdXMBUafKuOrnpAuWT9zDJpJlukB29J4YBpMctAxd21CdBQkwQ3g</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>12.02</c:amount><c:authorizationCode>831000</c:authorizationCode><c:avsCode>Y</c:avsCode><c:avsCodeRaw>Y</c:avsCodeRaw><c:authorizedDateTime>2018-05-01T14:28:36Z</c:authorizedDateTime><c:processorResponse>00</c:processorResponse><c:reconciliationID>ZLIU5GM27GBP</c:reconciliationID><c:authRecord>0110322000000E10000200000000000000120205011428360272225A4C495535474D32374742503833313030303030000159004400103232415050524F56414C0022313457303136313530373033383032303934473036340006564943524120</c:authRecord></c:ccAuthReply><c:ccCaptureReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2018-05-01T14:28:36Z</c:requestDateTime><c:amount>12.02</c:amount><c:reconciliationID>76466844</c:reconciliationID></c:ccCaptureReply><c:payerAuthValidateReply><c:reasonCode>100</c:reasonCode><c:authenticationResult>0</c:authenticationResult><c:authenticationStatusMessage>Success</c:authenticationStatusMessage><c:cavv>AAABAWFlmQAAAABjRWWZEEFgFz+=</c:cavv><c:cavvAlgorithm>2</c:cavvAlgorithm><c:commerceIndicator>vbv</c:commerceIndicator><c:eci>05</c:eci><c:eciRaw>05</c:eciRaw><c:xid>S2R4eGtHbEZqbnozeGhBRHJ6QzA=</c:xid><c:paresStatus>Y</c:paresStatus></c:payerAuthValidateReply></c:replyMessage></soap:Body></soap:Envelope>
     XML
+  end
+
+  def invalid_xml_response
+    "What's all this then, govna?</p>"
   end
 
   def assert_xml_valid_to_xsd(data, root_element = '//s:Body/*')
