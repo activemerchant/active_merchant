@@ -39,6 +39,59 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       zip: address[:zip],
     }
 
+
+    @level_3_options_visa = {
+      freight_amount: 1,
+      duty_amount: 1,
+      ship_from_zip: 27604,
+      dest_country: 'USA',
+      discount_amount: 1,
+      vat_tax: 1,
+      vat_rate: 25
+    }
+
+    @level_2_options_master = {
+      freight_amount: 1,
+      duty_amount: 1,
+      ship_from_zip: 27604,
+      dest_country: 'USA',
+      alt_tax: 1,
+      alt_ind: 25
+    }
+
+    @line_items_visa = [
+      {
+        PC3_dtl_desc: 'another item',
+        PC3_dtl_prod_cd: generate_unique_id[0,11],
+        PC3_dtl_qty: 1,
+        PC3_dtl_UOM: 'LBR',
+        PC3_dtl_tax_amt: 250,
+        PC3_dtl_tax_rate: 10000,
+        PC3_dtllinetot: 2500,
+        PC3_dtl_disc: 250,
+        PC3_dtl_comm_cd: '00584',
+        PC3_dtl_unit_cost: 2500,
+        PC3_dtl_gross_net: 'Y',
+        PC3_dtl_tax_type: 'sale',
+        PC3_dtl_debit_ind: 'C'
+      },
+      {
+        PC3_dtl_desc: 'something else',
+        PC3_dtl_prod_cd: generate_unique_id[0,11],
+        PC3_dtl_qty: 1,
+        PC3_dtl_UOM: 'LBR',
+        PC3_dtl_tax_amt: 125,
+        PC3_dtl_tax_rate: 05000,
+        PC3_dtllinetot: 2500,
+        PC3_dtl_disc: 250,
+        PC3_dtl_comm_cd: '00584',
+        PC3_dtl_unit_cost: 250000,
+        PC3_dtl_gross_net: 'Y',
+        PC3_dtl_tax_type: 'sale',
+        PC3_dtl_debit_ind: 'C'
+      }
+    ]
+
     @test_suite = [
       {:card => :visa, :AVSzip => 11111, :CVD =>	111,  :amount => 3000},
       {:card => :visa, :AVSzip => 33333, :CVD =>	nil,  :amount => 3801},
@@ -73,6 +126,20 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_level_2_data
     response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_3_data
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options_visa, line_items: @line_items_visa))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_line_items
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(level_2_data: @level_2_options, level_3_data: @level_3_options_visa, line_items: @line_items_visa))
 
     assert_success response
     assert_equal 'Approved', response.message

@@ -365,7 +365,11 @@ module ActiveMerchant #:nodoc:
 
       def add_level_3_tax(xml, options={})
         if (level_3 = options[:level_3_data])
-          xml.tag! 
+          xml.tag! :PC3VATtaxAmt, byte_limit(level_3[:vat_tax], 12) if level_3[:vat_tax]
+          xml.tag! :PC3AltTaxAmt, byte_limit(level_3[:alt_tax], 9) if level_3[:alt_tax]
+          xml.tag! :PC3VATtaxRate, byte_limit(level_3[:vat_rate], 4) if level_3[:vat_rate]
+          xml.tag! :PC3AltTaxInd, byte_limit(level_3[:alt_ind],15) if level_3[:alt_ind]
+        end
       end
 
       def add_level_2_advice_addendum(xml, options={})
@@ -393,9 +397,29 @@ module ActiveMerchant #:nodoc:
         if (level_3 = options[:level_3_data])
           xml.tag! :PC3FreightAmt,    byte_limit(level_3[:freight_amount], 12) if level_3[:freight_amount]
           xml.tag! :PC3DutyAmt,       byte_limit(level_3[:duty_amount], 12) if level_3[:duty_amount]
+          xml.tag! :PC3DestCountryCd, byte_limit(level_3[:dest_country], 3) if level_3[:dest_country]
           xml.tag! :PC3ShipFromZip,   byte_limit(level_3[:ship_from_zip], 10) if level_3[:ship_from_zip]
-          xml.tag! :PC3DestCountryCd, byte_limit(address[:dest_country], 3) if address[:dest_country]
           xml.tag! :PC3DiscAmt,       byte_limit(level_3[:discount_amount], 12) if level_3[:discount_amount]
+        end
+      end
+
+      def add_line_items(xml, options={})
+        xml.tag! :PC3LineItemCount, byte_limit(options[:line_items].count, 2)
+        xml.tag! :PC3LineItemArray do
+          options[:line_items].each_with_index do |line_item, index|
+            xml.tag! :PC3LineItem do
+              xml.tag! :PC3DtlIndex,  byte_limit(index+1, 2)
+              line_item.each do |key, value|
+                xml.tag! remove_camel_case(key), value
+              end
+            end
+          end
+        end
+      end
+
+      def remove_camel_case(key)
+        String(key).split('_').inject([]){ |buffer,e| buffer.push((buffer.empty? || e === e.upcase) ? e : e.capitalize) }.join
+      end
 
       def add_address(xml, creditcard, options)
         if(address = (options[:billing_address] || options[:address]))
@@ -646,6 +670,9 @@ module ActiveMerchant #:nodoc:
             end
 
             add_level_2_purchase(xml, parameters)
+            add_level_3_purchase(xml, parameters)
+            add_level_3_tax(xml, parameters)
+            add_line_items(xml, parameters) if parameters[:line_items]
           end
         end
         xml.target!
