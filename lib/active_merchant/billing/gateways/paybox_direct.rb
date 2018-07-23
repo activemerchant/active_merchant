@@ -34,7 +34,8 @@ module ActiveMerchant #:nodoc:
         'CHF'=> '756',
         'GBP'=> '826',
         'USD'=> '840',
-        'EUR'=> '978'
+        'EUR'=> '978',
+        'XPF'=> '953'
       }
 
       SUCCESS_CODES = ['00000']
