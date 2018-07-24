@@ -93,8 +93,9 @@ module ActiveMerchant #:nodoc:
         post[:card_exp] = expdate(payment)
         post[:cvv2] = payment.verification_value
         post[:recurring] = options[:recurring] if options[:recurring]
-        post[:recurringStartDate] = options[:recurring_start_date] if options[:recurring_start_date]
-        post[:recurringEndDate] = options[:recurring_end_date] if options[:recurring_end_date]
+        post[:recurring_start_date] = options[:recurring_start_date] if options[:recurring_start_date]
+        post[:recurring_end_date] = options[:recurring_end_date] if options[:recurring_end_date]
+        post[:recurring_type] = options[:recurring_type] if options[:recurring_type]
       end
 
       def add_reference(post, action, money, authorization)
