@@ -13,7 +13,6 @@
 * CyberSource: Don't throw exceptions on HTML responses [bpollack] #2937
 * CyberSource: Remove extraneous parameter blocking echecks [chriscz] #2861
 * FirstPay: Update Fields For Recurring Payments [nfarve] #2940
-* BlueSnap: Update list of supported countries [curiousepic] #2942
 * Remove unused handle_response method [bl] #2309
 * Barclaycard Smartpay: bump API version to v30 [bpollack] #2941
 
