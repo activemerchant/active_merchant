@@ -13,6 +13,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.barclaycardsmartpay.com/'
       self.display_name = 'Barclaycard Smartpay'
 
+      API_VERSION = 'v30'
+
       def initialize(options = {})
         requires!(options, :company, :merchant, :password)
         super
@@ -222,11 +224,11 @@ module ActiveMerchant #:nodoc:
       def build_url(action)
         case action
         when 'store'
-          "#{test? ? self.test_url : self.live_url}/Recurring/v12/storeToken"
+          "#{test? ? self.test_url : self.live_url}/Recurring/#{API_VERSION}/storeToken"
         when 'finalize3ds'
-          "#{test? ? self.test_url : self.live_url}/Payment/v12/authorise3d"
+          "#{test? ? self.test_url : self.live_url}/Payment/#{API_VERSION}/authorise3d"
         else
-          "#{test? ? self.test_url : self.live_url}/Payment/v12/#{action}"
+          "#{test? ? self.test_url : self.live_url}/Payment/#{API_VERSION}/#{action}"
         end
       end
 
