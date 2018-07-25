@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def address
-        {  'name'       => full_name,
+        {  'name'       => @params['shiptoname'] || full_name,
            'company'    => nil,
            'address1'   => @params['street'],
            'address2'   => @params['shiptostreet2'] || @params['street2'],

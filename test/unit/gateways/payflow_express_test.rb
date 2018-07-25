@@ -117,6 +117,31 @@ class PayflowExpressTest < Test::Unit::TestCase
     assert_nil address['phone']
   end
 
+  def test_get_express_details_with_ship_to_name
+    @gateway.expects(:ssl_post).returns(successful_get_express_details_response_with_ship_to_name)
+    response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
+    assert_instance_of PayflowExpressResponse, response
+    assert_success response
+    assert response.test?
+
+    assert_equal 'EC-2OPN7UJGFWK9OYFV', response.token
+    assert_equal '12345678901234567', response.payer_id
+    assert_equal 'Buyer1@paypal.com', response.email
+    assert_equal 'Joe Smith', response.full_name
+    assert_equal 'US', response.payer_country
+
+    assert address = response.address
+    assert_equal 'John Joseph', address['name']
+    assert_nil address['company']
+    assert_equal '111 Main St.', address['address1']
+    assert_nil address['address2']
+    assert_equal 'San Jose', address['city']
+    assert_equal 'CA', address['state']
+    assert_equal '95100', address['zip']
+    assert_equal 'US', address['country']
+    assert_nil address['phone']
+  end
+
   def test_get_express_details_with_invalid_xml
     @gateway.expects(:ssl_post).returns(successful_get_express_details_response(:street => 'Main & Magic'))
     response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
@@ -166,6 +191,43 @@ class PayflowExpressTest < Test::Unit::TestCase
           <CorrelationID>9c3706997455e</CorrelationID>
         </PayPalResult>
         <ExtData Name='LASTNAME' Value='Smith'/>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
+  </XMLPayResponse>
+    RESPONSE
+  end
+
+  def successful_get_express_details_response_with_ship_to_name
+    <<-RESPONSE
+<XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
+  <ResponseData>
+    <Vendor>TEST</Vendor>
+    <Partner>verisign</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>0</Result>
+        <Message>Approved</Message>
+        <PayPalResult>
+          <EMail>Buyer1@paypal.com</EMail>
+          <PayerID>12345678901234567</PayerID>
+          <Token>EC-2OPN7UJGFWK9OYFV</Token>
+          <FeeAmount>0</FeeAmount>
+          <PayerStatus>verified</PayerStatus>
+          <Name>Joe</Name>
+          <ShipTo>
+            <Address>
+              <Street>111 Main St.</Street>
+              <City>San Jose</City>
+              <State>CA</State>
+              <Zip>95100</Zip>
+              <Country>US</Country>
+            </Address>
+          </ShipTo>
+          <CorrelationID>9c3706997455e</CorrelationID>
+        </PayPalResult>
+        <ExtData Name='LASTNAME' Value='Smith'/>
+        <ExtData Name='SHIPTONAME' Value='John Joseph'/>
       </TransactionResult>
     </TransactionResults>
   </ResponseData>
