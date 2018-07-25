@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
         # self.service_url = 'https://api.sandbox.epayments.com/merchant/prepare'
 
         def self.service_url
-          'https://api.sandbox.epayments.com/merchant/prepare'
+          'https://api.epayments.com/merchant/prepare'
         end
 
         def self.helper(order, account, options = {})
