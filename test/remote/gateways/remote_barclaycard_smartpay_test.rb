@@ -6,8 +6,8 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     BarclaycardSmartpayGateway.ssl_strict = false
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111', :month => 8, :year => 2018, :verification_value => 737)
-    @declined_card = credit_card('4000300011112220', :month => 8, :year => 2018, :verification_value => 737)
+    @credit_card = credit_card('4111111111111111', :month => 10, :year => 2020, :verification_value => 737)
+    @declined_card = credit_card('4000300011112220', :month => 3, :year => 2030, :verification_value => 737)
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @options = {
@@ -236,6 +236,11 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     # This test will fail currently (the credit will succeed), but it should succeed after October 29th
     # response = @gateway.credit(@amount, @credit_card, @options)
     # assert_failure response
+  end
+
+  def test_successful_third_party_payout
+    response = @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({third_party_payout: true}))
+    assert_success response
   end
 
   def test_successful_void

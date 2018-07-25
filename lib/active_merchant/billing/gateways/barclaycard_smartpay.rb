@@ -68,7 +68,27 @@ module ActiveMerchant #:nodoc:
         post[:nationality] = options[:nationality] if options[:nationality]
         post[:shopperName] = options[:shopper_name] if options[:shopper_name]
 
-        commit('refundWithData', post)
+        if options[:third_party_payout]
+          post[:recurring] = options[:recurring_contract] || {contract: 'PAYOUT'}
+          MultiResponse.run do |r|
+            r.process {
+              commit(
+                'storeDetailAndSubmitThirdParty',
+                post,
+                @options[:store_payout_account],
+                @options[:store_payout_password])
+            }
+            r.process {
+              commit(
+                'confirmThirdParty',
+                modification_request(r.authorization, @options),
+                @options[:review_payout_account],
+                @options[:review_payout_password])
+            }
+          end
+        else
+          commit('refundWithData', post)
+        end
       end
 
       def void(identification, options = {})
@@ -128,9 +148,10 @@ module ActiveMerchant #:nodoc:
         '18' => 'I'	  # Neither postal code nor address were checked
       }
 
-      def commit(action, post)
+      def commit(action, post, account = 'ws', password = @options[:password])
         request = post_data(flatten_hash(post))
-        raw_response = ssl_post(build_url(action), request, headers)
+        request_headers = headers(account, password)
+        raw_response = ssl_post(build_url(action), request, request_headers)
         response = parse(raw_response)
 
         Response.new(
@@ -181,10 +202,10 @@ module ActiveMerchant #:nodoc:
         flat_hash
       end
 
-      def headers
+      def headers(account, password)
         {
           'Content-Type' => 'application/x-www-form-urlencoded; charset=utf-8',
-          'Authorization' => 'Basic ' + Base64.strict_encode64("ws@Company.#{@options[:company]}:#{@options[:password]}").strip
+          'Authorization' => 'Basic ' + Base64.strict_encode64("#{account}@Company.#{@options[:company]}:#{password}").strip
         }
       end
 
@@ -214,10 +235,10 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         return true if response['result'] == 'Success'
-        return true if response['resultCode'] == 'Authorised'
-        return true if response['resultCode'] == 'Received'
-        successful_responses = %w([capture-received] [cancel-received] [refund-received])
-        successful_responses.include?(response['response'])
+
+        successful_results = %w(Authorised Received [payout-submit-received])
+        successful_responses = %w([capture-received] [cancel-received] [refund-received] [payout-confirm-received])
+        successful_results.include?(response['resultCode']) || successful_responses.include?(response['response'])
       end
 
       def build_url(action)
@@ -226,6 +247,8 @@ module ActiveMerchant #:nodoc:
           "#{test? ? self.test_url : self.live_url}/Recurring/#{API_VERSION}/storeToken"
         when 'finalize3ds'
           "#{test? ? self.test_url : self.live_url}/Payment/#{API_VERSION}/authorise3d"
+        when 'storeDetailAndSubmitThirdParty', 'confirmThirdParty'
+          "#{test? ? self.test_url : self.live_url}/Payout/#{API_VERSION}/#{action}"
         else
           "#{test? ? self.test_url : self.live_url}/Payment/#{API_VERSION}/#{action}"
         end
@@ -263,11 +286,11 @@ module ActiveMerchant #:nodoc:
         hash = {}
         hash[:houseNumberOrName] = house
         hash[:street]            = street
-        hash[:city]              = address[:city] if address[:city]
-        hash[:stateOrProvince]   = address[:state] if address[:state]
-        hash[:postalCode]        = address[:zip] if address[:zip]
-        hash[:country]           = address[:country] if address[:country]
-        hash
+        hash[:city]              = address[:city]
+        hash[:stateOrProvince]   = address[:state]
+        hash[:postalCode]        = address[:zip]
+        hash[:country]           = address[:country]
+        hash.keep_if { |_, v| v }
       end
 
       def amount_hash(money, currency)
@@ -301,20 +324,20 @@ module ActiveMerchant #:nodoc:
 
       def payment_request(money, options)
         hash = {}
-        hash[:merchantAccount]  = @options[:merchant]
-        hash[:reference]        = options[:order_id] if options[:order_id]
-        hash[:shopperEmail]     = options[:email] if options[:email]
-        hash[:shopperIP]        = options[:ip] if options[:ip]
-        hash[:shopperReference] = options[:customer] if options[:customer]
-        hash[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
-        hash[:deviceFingerprint]  = options[:device_fingerprint] if options[:device_fingerprint]
+        hash[:merchantAccount]    = @options[:merchant]
+        hash[:reference]          = options[:order_id]
+        hash[:shopperEmail]       = options[:email]
+        hash[:shopperIP]          = options[:ip]
+        hash[:shopperReference]   = options[:customer]
+        hash[:shopperInteraction] = options[:shopper_interaction]
+        hash[:deviceFingerprint]  = options[:device_fingerprint]
         hash.keep_if { |_, v| v }
       end
 
       def store_request(options)
         hash = {}
         hash[:merchantAccount]  = @options[:merchant]
-        hash[:shopperEmail]     = options[:email] if options[:email]
+        hash[:shopperEmail]     = options[:email]
         hash[:shopperReference] = options[:customer] if options[:customer]
         hash.keep_if { |_, v| v }
       end
