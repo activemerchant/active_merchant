@@ -198,13 +198,13 @@ module ActiveMerchant #:nodoc:
 
       def url(params)
         p "params for url: ", params
-        if params[:transaction]
-          "#{base_url}/ManageCardVault"
-        else
-          action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
-          "#{base_url}/#{action}"
-        end
-        # "#{base_url}/ProcessRequest"
+        # if params[:transaction]
+        #   "#{base_url}/ManageCardVault"
+        # else
+        #   action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
+        #   "#{base_url}/#{action}"
+        # end
+        "#{base_url}/ProcessRequest"
       end
 
       def base_url
