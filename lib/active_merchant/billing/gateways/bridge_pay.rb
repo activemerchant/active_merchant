@@ -183,7 +183,9 @@ module ActiveMerchant #:nodoc:
 
       def commit(parameters)
         data = post_data(parameters)
-        raw = parse(ssl_post(url(parameters), data))
+        raw = parse(ssl_post(url(parameters), data, {
+            'Content-Type'  => 'text/xml;charset=UTF-8'
+        }))
 
         Response.new(
           success_from(raw),
@@ -195,12 +197,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(params)
+        p "params for url: ", params
         if params[:transaction]
           "#{base_url}/ManageCardVault"
         else
           action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
           "#{base_url}/#{action}"
         end
+        # "#{base_url}/ProcessRequest"
       end
 
       def base_url
