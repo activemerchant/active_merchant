@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         #   action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
         #   "#{base_url}/#{action}"
         # end
-        "#{base_url}/ProcessRequest"
+        "#{base_url}"
       end
 
       def base_url
