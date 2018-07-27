@@ -92,11 +92,11 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?Password=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?TransitNum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?AccountNum=)[^&]*)i, '\1[FILTERED]')
+            gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
+            gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
+            gsub(%r((&?Password=)[^&]*)i, '\1[FILTERED]').
+            gsub(%r((&?TransitNum=)[^&]*)i, '\1[FILTERED]').
+            gsub(%r((&?AccountNum=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -183,34 +183,28 @@ module ActiveMerchant #:nodoc:
 
       def commit(parameters)
         data = post_data(parameters)
-        raw = parse(ssl_post(url(parameters), data, {
-            'Content-Type'  => 'text/xml;charset=UTF-8'
-        }))
+        raw = parse(ssl_post(url(parameters), data))
 
         Response.new(
-          success_from(raw),
-          message_from(raw),
-          raw,
-          authorization: authorization_from(raw),
-          test: test?
+            success_from(raw),
+            message_from(raw),
+            raw,
+            authorization: authorization_from(raw),
+            test: test?
         )
       end
 
       def url(params)
-        p "params for url: ", params
-        p "params for url: ", base_url
-        # if params[:transaction]
-        #   "#{base_url}/ManageCardVault"
-        # else
-        #   action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
-        #   "#{base_url}/#{action}"
-        # end
-        "#{base_url}/ProcessCreditCard"
+        if params[:transaction]
+          "#{base_url}/ManageCardVault"
+        else
+          action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
+          "#{base_url}/#{action}"
+        end
       end
 
       def base_url
-        test_url
-        # test? ? test_url : live_url
+        test? ? test_url : live_url
       end
 
       def success_from(response)
@@ -242,8 +236,8 @@ module ActiveMerchant #:nodoc:
 
       def post_data(post)
         {
-          :UserName => @options[:user_name],
-          :Password => @options[:password]
+            :UserName => @options[:user_name],
+            :Password => @options[:password]
         }.merge(post).collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
       end
     end
