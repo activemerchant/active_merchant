@@ -183,7 +183,9 @@ module ActiveMerchant #:nodoc:
 
       def commit(parameters)
         data = post_data(parameters)
-        raw = parse(ssl_post(url(parameters), data))
+        raw = parse(ssl_post(url(parameters), data, {
+            'Content-Type'  => 'text/xml;charset=UTF-8'
+        }))
 
         Response.new(
             success_from(raw),
