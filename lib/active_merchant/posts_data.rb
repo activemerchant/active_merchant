@@ -46,7 +46,6 @@ module ActiveMerchant #:nodoc:
     end
 
     def raw_ssl_request(method, endpoint, data, headers = {})
-      puts "request data---->", endpoint
       logger.warn "#{self.class} using ssl_strict=false, which is insecure" if logger unless ssl_strict
       logger.warn "#{self.class} posting to plaintext endpoint, which is insecure" if logger unless endpoint.to_s =~ /^https:/
 
@@ -73,7 +72,8 @@ module ActiveMerchant #:nodoc:
       connection.proxy_address = proxy_address
       connection.proxy_port    = proxy_port
 
-      connection.request(method, data, headers)
+      conn = connection.request(method, data, headers)
+      puts "connection", conn
     end
 
     private
