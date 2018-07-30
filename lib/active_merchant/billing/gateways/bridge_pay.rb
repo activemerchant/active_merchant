@@ -21,15 +21,11 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, payment_method, options={})
         post = initialize_required_fields('Sale')
-        puts "post data", post
         # Allow the same amount in multiple transactions.
         post[:ExtData] = '<Force>T</Force>'
         add_invoice(post, amount, options)
-        puts "invoice:----> "
         add_payment_method(post, payment_method)
-        puts "payment:----> "
         add_customer_data(post, options)
-        puts "cutomer---"
         commit(post)
       end
 
@@ -185,6 +181,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(parameters)
         data = post_data(parameters)
+        puts "into commit first"
         raw = parse(ssl_post(url(parameters), data, {
             'Content-Type'  => 'text/xml;charset=UTF-8'
         }))
@@ -243,6 +240,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(post)
+        puts "into post data: ---", post
         {
             :UserName => @options[:user_name],
             :Password => @options[:password]
