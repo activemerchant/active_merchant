@@ -21,13 +21,15 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, payment_method, options={})
         post = initialize_required_fields('Sale')
-
+        puts "post data", post
         # Allow the same amount in multiple transactions.
         post[:ExtData] = '<Force>T</Force>'
         add_invoice(post, amount, options)
+        puts "invoice:----> "
         add_payment_method(post, payment_method)
+        puts "payment:----> "
         add_customer_data(post, options)
-
+        puts "cutomer---"
         commit(post)
       end
 
@@ -186,7 +188,7 @@ module ActiveMerchant #:nodoc:
         raw = parse(ssl_post(url(parameters), data, {
             'Content-Type'  => 'text/xml;charset=UTF-8'
         }))
-
+        puts "into commit----"
         Response.new(
             success_from(raw),
             message_from(raw),
@@ -197,16 +199,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(params)
-        if params[:transaction]
-          "#{base_url}/ManageCardVault"
-        else
-          action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
-          "#{base_url}/#{action}"
-        end
+        # if params[:transaction]
+        #   "#{base_url}/ManageCardVault"
+        # else
+        #   action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
+        #   "#{base_url}/#{action}"
+        # end
+        puts "base url", base_url
+        "#{base_url}/ProcessCreditCard"
       end
 
       def base_url
-        test? ? test_url : live_url
+        # test? ? test_url : live_url
+        test_url
+        puts "test_url"
       end
 
       def success_from(response)
