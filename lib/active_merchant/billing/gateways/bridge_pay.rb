@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'BridgePay'
       self.homepage_url = 'http://www.bridgepaynetwork.com/'
 
-      self.test_url = 'https://gatewaystage.itstgate.com/SmartPayments/transact3.asmx'
+      self.test_url = 'https://www.bridgepaynetsecuretest.com/PaymentService/RequestHandler.svc'
       self.live_url = 'https://gateway.itstgate.com/SmartPayments/transact3.asmx'
 
       self.supported_countries = ['CA', 'US']
@@ -21,13 +21,11 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, payment_method, options={})
         post = initialize_required_fields('Sale')
-
         # Allow the same amount in multiple transactions.
         post[:ExtData] = '<Force>T</Force>'
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
-
         commit(post)
       end
 
@@ -92,11 +90,11 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?Password=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?TransitNum=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?AccountNum=)[^&]*)i, '\1[FILTERED]')
+            gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
+            gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
+            gsub(%r((&?Password=)[^&]*)i, '\1[FILTERED]').
+            gsub(%r((&?TransitNum=)[^&]*)i, '\1[FILTERED]').
+            gsub(%r((&?AccountNum=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -183,28 +181,35 @@ module ActiveMerchant #:nodoc:
 
       def commit(parameters)
         data = post_data(parameters)
-        raw = parse(ssl_post(url(parameters), data))
-
+        puts "into commit first"
+        raw = parse(ssl_post(url(parameters), data, {
+            'Content-Type'  => 'text/xml;charset=UTF-8'
+        }))
+        puts "into commit----"
         Response.new(
-          success_from(raw),
-          message_from(raw),
-          raw,
-          authorization: authorization_from(raw),
-          test: test?
+            success_from(raw),
+            message_from(raw),
+            raw,
+            authorization: authorization_from(raw),
+            test: test?
         )
       end
 
       def url(params)
-        if params[:transaction]
-          "#{base_url}/ManageCardVault"
-        else
-          action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
-          "#{base_url}/#{action}"
-        end
+        # if params[:transaction]
+        #   "#{base_url}/ManageCardVault"
+        # else
+        #   action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
+        #   "#{base_url}/#{action}"
+        # end
+        puts "test url", "#{test_url}/ProcessCreditCard"
+        return "#{test_url}/ProcessCreditCard"
       end
 
       def base_url
-        test? ? test_url : live_url
+        # test? ? test_url : live_url
+        test_url
+        puts "test_url", test_url
       end
 
       def success_from(response)
@@ -235,9 +240,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(post)
+        puts "into post data: ---", post
         {
-          :UserName => @options[:user_name],
-          :Password => @options[:password]
+            :UserName => @options[:user_name],
+            :Password => @options[:password]
         }.merge(post).collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
       end
     end

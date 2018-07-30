@@ -72,7 +72,8 @@ module ActiveMerchant #:nodoc:
       connection.proxy_address = proxy_address
       connection.proxy_port    = proxy_port
 
-      connection.request(method, data, headers)
+      conn = connection.request(method, data, headers)
+      puts "connection", conn
     end
 
     private
