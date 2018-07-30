@@ -205,14 +205,14 @@ module ActiveMerchant #:nodoc:
         #   action = params[:TransitNum] ? 'ProcessCheck' : 'ProcessCreditCard'
         #   "#{base_url}/#{action}"
         # end
-        puts "base url", base_url
-        "#{base_url}/ProcessCreditCard"
+        puts "test url", test_url
+        "#{test_url}/ProcessCreditCard"
       end
 
       def base_url
         # test? ? test_url : live_url
         test_url
-        puts "test_url"
+        puts "test_url", test_url
       end
 
       def success_from(response)
