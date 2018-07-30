@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         #   "#{base_url}/#{action}"
         # end
         puts "test url", test_url
-        "#{test_url}/ProcessCreditCard"
+        "#{test_url}/ProcessRequest"
       end
 
       def base_url
