@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'BridgePay'
       self.homepage_url = 'http://www.bridgepaynetwork.com/'
 
-      self.test_url = 'https://gatewaystage.itstgate.com/SmartPayments/transact3.asmx'
+      self.test_url = 'https://www.bridgepaynetsecuretest.com/PaymentService/RequestHandler.svc'
       self.live_url = 'https://gateway.itstgate.com/SmartPayments/transact3.asmx'
 
       self.supported_countries = ['CA', 'US']
