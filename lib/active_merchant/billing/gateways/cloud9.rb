@@ -109,6 +109,8 @@ module ActiveMerchant #:nodoc: ALL
         '999' => STANDARD_ERROR_CODE[:processing_error],   # Processor no response code, Please refer response text
       }
 
+      TRANSACTION_AGE_LIMIT = 6.months
+
       # This gateway requires that a valid username and password be passed in the +options+ hash.
       #
       # === Required Options
@@ -192,17 +194,14 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def refund(amount, authorization, options = {})
-        auth_amount = options[:authorized_amount].to_i
-        amount    ||= auth_amount # if no amount passed, assume full refund
-        amount      = auth_amount - amount
-        void        = amount == 0
+        amount, action = refund_amount_and_action(amount, options)
 
         post = {}
         add_configure_group(post, options)
-        add_request_amount_group(post, options, void ? nil : amount)
+        add_request_amount_group(post, options, amount.positive? ? amount : nil)
         add_trace_group(post, options, authorization)
-        add_custom_group(post, void)
-        commit(void ? REVERSE : ADJUST, 'restApi', post)
+        add_custom_group(post, amount.zero?)
+        commit(action, 'restApi', post)
       end
 
       # A Credit transaction is used to authorize a refund to a customer's credit card account without reference to a
@@ -430,6 +429,29 @@ module ActiveMerchant #:nodoc: ALL
           'ResponseCode' => STANDARD_ERROR_CODE[:processing_error],
           'ResponseText' => msg
         }
+      end
+
+      # Determine what refund action to call, and what amount to pass on:
+      # - if full refund, issue Reverse with $0, we will instruct Cloud9 to Refund if tx too old
+      # - if <tt>transaction</tt> still active, issue Adjust and new transaction amount
+      # - if <tt>transaction</tt> already archived, issue Refund, and amount to credit
+      def refund_amount_and_action(amount, options)
+        auth_amount = options[:authorized_amount].to_i
+        amount ||= auth_amount # if no amount passed, assume full refund
+
+        if amount == auth_amount
+          amount = 0
+          action = REVERSE
+        else
+          transaction_date = Time.iso8601(options[:transaction_date])
+          if transaction_date < Time.now - TRANSACTION_AGE_LIMIT
+            action = REFUND
+          else
+            amount = auth_amount - amount
+            action = ADJUST
+          end
+        end
+        return amount, action
       end
 
       def response_error(raw_response)
