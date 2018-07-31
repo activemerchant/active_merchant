@@ -211,6 +211,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Expiry_Date', expdate(credit_card)
           xml.tag! 'CardHoldersName', credit_card.name
           xml.tag! 'CardType', card_type(credit_card.brand)
+          xml.tag! 'WalletProviderID', options[:wallet_provider_id] if options[:wallet_provider_id]
 
           add_credit_card_eci(xml, credit_card, options)
           add_credit_card_verification_strings(xml, credit_card, options)
@@ -273,6 +274,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'Expiry_Date', expdate(credit_card)
         xml.tag! 'CardHoldersName', credit_card.name
         xml.tag! 'CardType', card_type(credit_card.brand)
+        xml.tag! 'WalletProviderID', options[:wallet_provider_id] if options[:wallet_provider_id]
         add_card_authentication_data(xml, options)
       end
 
@@ -398,9 +400,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if(response[:faultcode] && response[:faultstring])
+        if response[:faultcode] && response[:faultstring]
           response[:faultstring]
-        elsif(response[:error_number] && response[:error_number] != '0')
+        elsif response[:error_number] && response[:error_number] != '0'
           response[:error_description]
         else
           result = (response[:exact_message] || '')

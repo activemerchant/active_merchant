@@ -49,6 +49,16 @@ class FirstdataE4V27Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_wallet
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge!({wallet_provider_id: 4}))
+    end.check_request do |endpoint, data, headers|
+      assert_match /WalletProviderID>4</, data
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     assert response = @gateway.void(@authorization, @options)
