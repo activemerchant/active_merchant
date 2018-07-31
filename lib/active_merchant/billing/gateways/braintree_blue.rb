@@ -534,8 +534,7 @@ module ActiveMerchant #:nodoc:
           :customer => {
             :id => options[:store] == true ? "" : options[:store],
             :email => scrub_email(options[:email]),
-            :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-              options[:billing_address][:phone]),
+            :phone => options[:phone] || options.dig(:billing_address, :phone),
             :first_name => options[:billing_address][:name].split(/\s+/, 2)[0], # getting first name
             :last_name => options[:billing_address][:name].split(/\s+/, 2)[1] # getting all names after first
           },
