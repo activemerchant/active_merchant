@@ -16,6 +16,11 @@ require 'support/ssl_verify'
 require 'support/outbound_hosts'
 require 'bundler/gem_tasks'
 
+desc 'Open an irb session preloaded with this library'
+task :console do
+  sh 'irb -rubygems -I lib -r active_merchant.rb'
+end
+
 task :tag_release do
   system "git tag 'v#{ActiveMerchant::VERSION}'"
   system "git push --tags"
