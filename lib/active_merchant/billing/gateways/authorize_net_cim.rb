@@ -54,6 +54,8 @@ module ActiveMerchant #:nodoc:
         :auth_capture => 'profileTransAuthCapture',
         :auth_only => 'profileTransAuthOnly',
         :capture_only => 'profileTransCaptureOnly',
+        # JDW Custom Mods
+        :ecc_refund => 'profileTransRefund',
         :prior_auth_capture => 'profileTransPriorAuthCapture',
         :refund => 'profileTransRefund',
         :void => 'profileTransVoid'
@@ -496,7 +498,8 @@ module ActiveMerchant #:nodoc:
           # Merchant-assigned reference ID for the request
           xml.tag!('refId', options[:ref_id]) if options[:ref_id]
           # Order options
-          add_order(xml, options[:order]) if options[:order]
+          # JDW Custom Mods
+          # add_order(xml, options[:order]) if options[:order]
           send("build_#{action}_request", xml, options)
         end
       end
@@ -615,6 +618,8 @@ module ActiveMerchant #:nodoc:
       def build_create_customer_profile_transaction_request(xml, options)
         options[:extra_options] ||= {}
         options[:extra_options].merge!('x_delim_char' => @options[:delimiter]) if @options[:delimiter]
+        # JDW Custom Mods
+        options[:extra_options].merge!('x_duplicate_window' => @options[:duplicate_window]) if @options[:duplicate_window]
 
         add_transaction(xml, options[:transaction])
         xml.tag!('extraOptions') do

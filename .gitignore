@@ -9,4 +9,5 @@ Gemfile*.lock
 *.gem
 .rvmrc
 /doc/
+.idea
 .ruby-version
