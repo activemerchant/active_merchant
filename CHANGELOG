@@ -18,6 +18,7 @@
 * Safecharge: Remove duplicate supported country [curiousepic]
 * Payflow Express: Use SHIPTONAME instead of `full_name` for shipping address [filipebarcos] #2945
 * FirstData: add support for WalletProviderID in v27 gateway [bpollack] #2946
+* Addded default bundler binstubs [bdewater] #2500
 
 == Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909
