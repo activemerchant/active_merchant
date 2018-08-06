@@ -116,7 +116,7 @@ module ActiveMerchant
 
       def verify_credentials
         begin
-          ssl_get("#{url}/nonexistent", headers)
+          ssl_get(url.to_s, headers)
         rescue ResponseError => e
           return false if e.response.code.to_i == 401
         end
@@ -209,6 +209,7 @@ module ActiveMerchant
 
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
+        return forbidden_response(response.body) if response.code.to_i == 403
 
         parsed = {}
         doc = Nokogiri::XML(response.body)
@@ -337,6 +338,10 @@ module ActiveMerchant
 
       def bad_authentication_response
         { 'description' => 'Unable to authenticate.  Please check your credentials.' }
+      end
+
+      def forbidden_response(body)
+        { 'description' => body }
       end
     end
   end
