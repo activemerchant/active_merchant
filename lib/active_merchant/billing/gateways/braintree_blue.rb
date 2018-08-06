@@ -535,8 +535,8 @@ module ActiveMerchant #:nodoc:
             :id => options[:store] == true ? "" : options[:store],
             :email => scrub_email(options[:email]),
             :phone => options[:phone] || options.dig(:billing_address, :phone),
-            :first_name => options[:billing_address][:name].split(/\s+/, 2)[0], # getting first name
-            :last_name => options[:billing_address][:name].split(/\s+/, 2)[1] # getting all names after first
+            :first_name => options[:billing_address][:name].reverse.split(/\s+/, 2).last.reverse, # getting name minus last name (because of reverse the last item is the first name)
+            :last_name => options[:billing_address][:name].reverse.split(/\s+/, 2).first.reverse # getting last name (because of reverse the first item is the last name)
           },
           :options => {
             :store_in_vault => options[:store] ? true : false,
