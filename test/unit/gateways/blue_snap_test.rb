@@ -140,6 +140,14 @@ class BlueSnapTest < Test::Unit::TestCase
     assert !@gateway.verify_credentials
   end
 
+  def test_failed_forbidden_response
+    @gateway.expects(:raw_ssl_request).returns(forbidden_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal '<xml>You are not authorized to perform this request due to inappropriate role permissions.</xml>', response.message
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -516,12 +524,15 @@ class BlueSnapTest < Test::Unit::TestCase
     MockResponse.failed(body, 400)
   end
 
+  def forbidden_response
+    MockResponse.new(403, '<xml>You are not authorized to perform this request due to inappropriate role permissions.</xml>')
+  end
+
   def credentials_are_legit_response
     MockResponse.new(400, '<xml>Server Error</xml>')
   end
 
   def credentials_are_bogus_response
-    MockResponse.new(401, %{<!DOCTYPE html><html><head><title>Apache Tomcat/8.0.24 - Error report</title><style type="text/css">H1 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:22px;} H2 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:16px;} H3 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:14px;} BODY {font-family:Tahoma,Arial,sans-serif;color:black;background-color:white;} B {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;} P {font-family:Tahoma,Arial,sans-serif;background:white;color:black;font-size:12px;}A {color : black;}A.name {color : black;}.line {height: 1px; background-color: #525D76; border: none;}</style> </head><body><h1>HTTP Status 401 - Bad credentials</h1><div class="line"></div><p><b>type</b> Status report</p><p><b>message</b> <u>Bad credentials</u></p><p><b>description</b> <u>This request requires HTTP authentication.</u></p><hr class="line"><h3>Apache Tomcat/8.0.24</h3></body></html>})
+    MockResponse.new(401, %{<!DOCTYPE html><html lang="en"><head><title>HTTP Status 401 – Unauthorized</title><style type="text/css">h1 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:22px;} h2 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:16px;} h3 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:14px;} body {font-family:Tahoma,Arial,sans-serif;color:black;background-color:white;} b {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;} p {font-family:Tahoma,Arial,sans-serif;background:white;color:black;font-size:12px;} a {color:black;} a.name {color:black;} .line {height:1px;background-color:#525D76;border:none;}</style></head><body><h1>HTTP Status 401 – Unauthorized</h1><hr class="line" /><p><b>Type</b> Status Report</p><p><b>Message</b> Bad credentials</p><p><b>Description</b> The request has not been applied because it lacks valid authentication credentials for the target resource.</p><hr class="line" /><h3>Apache Tomcat Version X</h3></body></html>})
   end
-
 end
