@@ -38,7 +38,8 @@ EOYAML
   end
 
   def next_identifier
-    fixtures = (YAML.safe_load(File.read(fixtures_file)).keys + [identifier], [], [], true).uniq.sort
-    fixtures[fixtures.sort.index(identifier)+1]
+    # list = YAML.safe_load(File.read(fixtures_file)).keys + [identifier]
+    # fixtures = [list, [], [], true].uniq.sort
+    # fixtures[fixtures.sort.index(identifier)+1]
   end
 end

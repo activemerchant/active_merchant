@@ -186,7 +186,7 @@ clearhaus: &clearhaus
   api_key: a2c583e7-23f2-4097-b327-84a87128cfb4
 
 clearhaus_secure:
-  <<: *clearhaus
+  api_key: a2c583e7-23f2-4097-b327-84a87128cfb4
   signing_key: 7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2
   private_key: |
     -----BEGIN RSA PRIVATE KEY-----
@@ -1263,3 +1263,8 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+# Working credentials, no need to replace
+paymentwall:
+  project_key: 05af67b300a3b0e93548852aace52892
+  secret_key: 8cdac512b1322ed549bbd7ff0fb72c68
