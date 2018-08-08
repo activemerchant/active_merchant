@@ -2,7 +2,7 @@ require 'test_helper'
 
 class PaymentwallTest < Test::Unit::TestCase
   def setup
-    @gateway = PaymentwallGateway.new(some_credential: 'login', another_credential: 'password')
+    @gateway = PaymentwallGateway.new(public_key: 'login', secret_key: 'password')
     @credit_card = credit_card
     @amount = 100
 
@@ -19,7 +19,7 @@ class PaymentwallTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'REPLACE', response.authorization
+    assert_equal 'CHARGED', response.authorization
     assert response.test?
   end
 
@@ -131,12 +131,7 @@ class PaymentwallTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_paymentwall_test.rb \
-        -n test_successful_purchase
+      {\"type\":\"token\",\"token\":\"ot_3453a957e71d394e624ed2c49c25e796\",\"test\":1,\"active\":1,\"expires_in\":300,\"card\":{\"type\":\"Visa\",\"last4\":\"4242\",\"bin\":\"424242\",\"exp_month\":\"9\",\"exp_year\":\"2019\"}}
     )
   end
 

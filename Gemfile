@@ -3,6 +3,7 @@ gemspec
 
 gem 'jruby-openssl', :platforms => :jruby
 gem 'rubocop', '~> 0.58.1', require: false
+gem 'byebug'
 
 group :test, :remote_test do
   # gateway-specific dependencies, keeping these gems out of the gemspec

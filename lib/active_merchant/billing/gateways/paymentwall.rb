@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
             cvv: creditcard.verification_value
           }
         }
-        
+
         post[:token] = parse(
           api_request(:post, 'token', cc_data)
         )['token'] rescue nil
@@ -141,21 +141,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-        if action == 'authonly' || action == 'sale' || action == 'capture'
-          parameters[:history][:registration_date] = Time.now.to_i
-        end
-
         if action == 'authonly'
-          parameters[:options][:capture] = 0
+          parameters[:options] = {capture: 0}
         elsif action == 'sale' || action == 'capture'
-          parameters[:options][:capture] = 1
+          parameters[:options] = {capture: 1}
         end
 
         parameters.to_query
       end
 
       def success_from(response)
-        response["refunded"] || response["captured"] && response["amount"] == response["amount_paid"]
+        response["refunded"] || response["amount"] == response["amount_paid"] && response["amount_paid"].to_i > 0
       end
 
       def message_from(response)

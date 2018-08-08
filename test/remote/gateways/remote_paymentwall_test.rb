@@ -31,6 +31,7 @@ class RemotePaymentwallTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
+    assert_equal 'AUTHORIZED', auth.message
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
@@ -45,7 +46,7 @@ class RemotePaymentwallTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'REQUEST IS EMPTY', response.message
+    assert_equal 'CHARGE NOT FOUND', response.message
   end
 
   def test_successful_refund
