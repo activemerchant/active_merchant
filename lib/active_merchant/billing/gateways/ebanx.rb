@@ -1,15 +1,15 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EbanxGateway < Gateway
-      self.test_url = 'https://sandbox.ebanx.com/ws/'
-      self.live_url = 'https://api.ebanx.com/ws/'
+      self.test_url = 'https://sandbox.ebanxpay.com/ws/'
+      self.live_url = 'https://api.ebanxpay.com/ws/'
 
       self.supported_countries = ['BR', 'MX', 'CO']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
       self.homepage_url = 'http://www.ebanx.com/'
-      self.display_name = 'Ebanx'
+      self.display_name = 'EBANX'
 
       CARD_BRAND = {
         visa: 'visa',
