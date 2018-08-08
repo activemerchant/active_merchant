@@ -9,7 +9,11 @@ class PaymentwallTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      ip: '172.217.3.78',
+      browser_domain: 'example.com',
+      email: 'you@gmail.com',
+      plan: 'Example'
     }
   end
 
@@ -136,6 +140,9 @@ class PaymentwallTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
+    %(
+      {\"type\":\"Error\",\"object\":\"Error\",\"error\":\"Wrong Card Number: Since you are using a test API key, please use a test card, e.g. 4242 4242 4242 4242\",\"code\":3117}
+    )
   end
 
   def successful_authorize_response
