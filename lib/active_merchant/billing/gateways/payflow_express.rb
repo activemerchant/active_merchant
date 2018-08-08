@@ -9,9 +9,7 @@ module ActiveMerchant #:nodoc:
       # in the docs that they recommend you pass the exact same parameters to both setup and authorize/purchase.
       #
       # This information was gleaned from a mix of:
-      # * PayFlow documentation
-      #   * for key value pairs: {Express Checkout for Payflow Pro (PDF)}[https://cms.paypal.com/cms_content/US/en_US/files/developer/PFP_ExpressCheckout_PP.pdf]
-      #   * XMLPay: {Payflow Pro XMLPay Developer's Guide (PDF)}[https://cms.paypal.com/cms_content/US/en_US/files/developer/PP_PayflowPro_XMLPay_Guide.pdf]
+      # * {PayFlow documentation}[https://developer.paypal.com/docs/classic/payflow/integration-guide/]
       # * previous ActiveMerchant code
       # * trial & error
       #
@@ -221,4 +219,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
