@@ -148,6 +148,7 @@ module ActiveMerchant #:nodoc:
           currency: options[:currency] || currency(money)
         }
         post[:amount] = amount
+        post[:recurringProcessingModel] = options[:recurring_processing_model] if options[:recurring_processing_model]
       end
 
       def add_invoice_for_modification(post, money, options)

@@ -31,7 +31,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_ip: '77.110.174.153',
       shopper_reference: 'John Smith',
       billing_address: address(),
-      order_id: '123'
+      order_id: '123',
+      recurring_processing_model: 'CardOnFile'
     }
   end
 

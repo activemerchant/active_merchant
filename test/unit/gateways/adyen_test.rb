@@ -33,7 +33,8 @@ class AdyenTest < Test::Unit::TestCase
       billing_address: address(),
       shopper_reference: 'John Smith',
       order_id: '345123',
-      installments: 2
+      installments: 2,
+      recurring_processing_model: 'CardOnFile'
     }
   end
 
@@ -156,8 +157,11 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:ssl_post).returns(successful_store_response)
-    response = @gateway.store(@credit_card, @options)
+    response = stub_comms do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
+    end.respond_with(successful_store_response)
     assert_success response
     assert_equal '#8835205392522157#8315202663743702', response.authorization
   end
