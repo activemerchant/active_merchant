@@ -19,6 +19,7 @@
 * Payflow Express: Use SHIPTONAME instead of `full_name` for shipping address [filipebarcos] #2945
 * FirstData: add support for WalletProviderID in v27 gateway [bpollack] #2946
 * BlueSnap: Handle 403 responses [curiousepic] #2948
+* BlueSnap: Add StoreCard Field [nfarve] #2953
 
 == Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909
