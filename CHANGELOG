@@ -12,6 +12,7 @@
 * Adyen: Add RecurringProcessingModel [nfarve] #2951
 * Optimal Payments: update country list [bpollack] #2961
 * Ebanx: update sandbox and production URLs [vnbrs] #2949
+* Ebanx: support additional countries [vnbrs] #2950
 
 == Version 1.81.0 (July 30, 2018)
 * GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915
