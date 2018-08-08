@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.ebanx.com/ws/'
       self.live_url = 'https://api.ebanx.com/ws/'
 
-      self.supported_countries = ['BR', 'MX', 'CO']
+      self.supported_countries = ['BR', 'MX', 'CO', 'CL', 'AR']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
