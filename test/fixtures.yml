@@ -1266,5 +1266,5 @@ worldpay_us:
 
 # Working credentials, no need to replace
 paymentwall:
-  project_key: 05af67b300a3b0e93548852aace52892
+  public_key: 05af67b300a3b0e93548852aace52892
   secret_key: 8cdac512b1322ed549bbd7ff0fb72c68

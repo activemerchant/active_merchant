@@ -14,46 +14,39 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Paymentwall'
       self.money_format = :dollars
 
-      STANDARD_ERROR_CODE_MAPPING = {}
-
       def initialize(options={})
-        requires!(options, :project_key, :secret_key)
+        requires!(options, :public_key, :secret_key)
         super
       end
 
-      def purchase(money, payment, options={})
-        validate!
-        post = options.merge(add_invoice(post, money, options))
+      def purchase(money, creditcard, options={})
+        validate!(options)
+        post = options.merge(add_invoice(money, options))
         add_payment(post, creditcard)
-        add_customer_data(post, options)
+        add_customer_data(post, creditcard)        
 
-        commit('sale', post)
+        commit('sale', 'charge', post)
       end
 
       def authorize(money, creditcard, options={})
-        validate!
-        post = options.merge(add_invoice(post, money, options))
+        validate!(options)
+        post = options.merge(add_invoice(money, options))
         add_payment(post, creditcard)
-        add_customer_data(post, options)
+        add_customer_data(post, creditcard)
 
         commit('authonly', 'charge', post)
       end
 
       def capture(money, authorization, options={})
-        validate!
-        post = options.merge(add_invoice(post, money, options))
-        add_payment(post, creditcard)
-        add_customer_data(post, options)
-
-        commit('capture', 'charge', post)
+        commit('capture', "charge/#{authorization}/capture", {})
       end
 
       def refund(authorization, options={})
-        commit('refund', "charge/#{authorization}/refund", {chargeid: authorization})
+        commit('refund', "charge/#{authorization}/refund", {})
       end
 
       def void(authorization, options={})
-        commit('void', "charge/#{authorization}/void", {chargeid: authorization})
+        commit('void', "charge/#{authorization}/void", {})
       end
 
       def verify(credit_card, options={})
@@ -63,16 +56,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      private
-
-      def api_request(httpmethod, endpoint, data)
-        data = data.merge({
-          public_key: @options[:project_key]
-        })
-        if httpmethod == :post
-          ssl_post(endpoint, data)
-        end
+      def supports_scrubbing?
+        true
       end
+
+      def scrub(transcript)
+        transcript.gsub(%r((X-Apikey: )\w+), '\1[FILTERED]').
+          gsub(%r((&?card%5Bcvv%5D=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?card%5Bexp_month%5D=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?card%5Bexp_year%5D=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?card%5Bnumber%5D=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?public_key=)\w+), '\1[FILTERED]').
+          gsub(%r((&?token=)\w+), '\1[FILTERED]')
+      end
+
+      private
 
       def add_customer_data(post, creditcard)
         post['customer'] = {
@@ -81,9 +79,11 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_invoice(post, money, options)
+      def add_invoice(money, options)
+        post = {}
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
+        post
       end
 
       def add_payment(post, creditcard)
@@ -95,7 +95,23 @@ module ActiveMerchant #:nodoc:
             cvv: creditcard.verification_value
           }
         }
-        post[:token] = parse(api_request(:post, '/token', cc_data))['token']
+        
+        post[:token] = parse(
+          api_request(:post, 'token', cc_data)
+        )['token'] rescue nil
+      end
+
+      def api_request(httpmethod, endpoint, data)
+        url = (test? ? test_url : live_url)
+        data = data.merge({
+          public_key: @options[:public_key]
+        })
+        x = data.to_query
+        if httpmethod == :post
+          ssl_post(url+endpoint, x, {
+            'X-ApiKey' => @options[:secret_key]
+          })
+        end
       end
 
       def parse(body)
@@ -104,9 +120,13 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, endpoint='', parameters)
         url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url+endpoint, post_data(action, parameters, {
-          'X-ApiKey' => @options[:secret_key]
-        })))
+        begin
+          response = parse(ssl_post(url+endpoint, post_data(action, parameters), {
+            'X-ApiKey' => @options[:secret_key]
+          }))
+        rescue ResponseError => e
+          response = { "error" => JSON.parse(e.response.body)["error"] }
+        end
 
         Response.new(
           success_from(response),
@@ -120,21 +140,32 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def post_data(action, parameters = {})
+        if action == 'authonly' || action == 'sale' || action == 'capture'
+          parameters[:history][:registration_date] = Time.now.to_i
+        end
+
+        if action == 'authonly'
+          parameters[:options][:capture] = 0
+        elsif action == 'sale' || action == 'capture'
+          parameters[:options][:capture] = 1
+        end
+
+        parameters.to_query
+      end
+
       def success_from(response)
+        response["refunded"] || response["captured"] && response["amount"] == response["amount_paid"]
       end
 
       def message_from(response)
+        return response["error"].upcase if response["error"]
+        return "REFUNDED" if response["refunded"] 
+        response["captured"] ? "CHARGED" : "AUTHORIZED"
       end
 
       def authorization_from(response)
-      end
-
-      def post_data(action, parameters = {})
-        if action == 'authonly'
-          parameters[:options][:capture] = 0
-        else
-          parameters[:options][:capture] = 1
-        end
+        response["id"]
       end
 
       def error_code_from(response)
@@ -143,8 +174,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def validate!
-        requires!(options, :browser_ip, :browser_domain, :email, :description, :plan, :history)
+      def validate!(options)
+        requires!(options, :ip, :browser_domain, :email, :description, :plan)
       end
     end
   end
