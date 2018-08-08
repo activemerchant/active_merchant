@@ -5,8 +5,8 @@ class RemotePaymentwallTest < Test::Unit::TestCase
     @gateway = PaymentwallGateway.new(fixtures(:paymentwall))
 
     @amount = 100
-    @credit_card = credit_card('4242 4242 4242 4242')
-    @declined_card = credit_card('4000300011112220')
+    @credit_card = credit_card
+    @declined_card = credit_card('4242424242424242', verification_value: '111')
     @options = {
       billing_address: address,
       description: 'Store Purchase',

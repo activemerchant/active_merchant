@@ -14,6 +14,13 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Paymentwall'
       self.money_format = :dollars
 
+      STANDARD_ERROR_CODE_MAPPING = {
+        '3011' => STANDARD_ERROR_CODE[:card_declined],
+        '3014' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '3010' => STANDARD_ERROR_CODE[:card_declined],
+        '3112' => STANDARD_ERROR_CODE[:processing_error]
+      }
+
       def initialize(options={})
         requires!(options, :public_key, :secret_key)
         super
@@ -23,7 +30,7 @@ module ActiveMerchant #:nodoc:
         validate!(options)
         post = options.merge(add_invoice(money, options))
         add_payment(post, creditcard)
-        add_customer_data(post, creditcard)        
+        add_customer_data(post, creditcard)
 
         commit('sale', 'charge', post)
       end
@@ -41,7 +48,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', "charge/#{authorization}/capture", {})
       end
 
-      def refund(authorization, options={})
+      def refund(money, authorization, options={})
         commit('refund', "charge/#{authorization}/refund", {})
       end
 
@@ -95,10 +102,10 @@ module ActiveMerchant #:nodoc:
             cvv: creditcard.verification_value
           }
         }
-
         post[:token] = parse(
           api_request(:post, 'token', cc_data)
         )['token'] rescue nil
+
       end
 
       def api_request(httpmethod, endpoint, data)
@@ -118,6 +125,7 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
+      # commit('sale', 'charge', post)
       def commit(action, endpoint='', parameters)
         url = (test? ? test_url : live_url)
         begin
@@ -146,7 +154,7 @@ module ActiveMerchant #:nodoc:
         elsif action == 'sale' || action == 'capture'
           parameters[:options] = {capture: 1}
         end
-
+        parameters[:browser_ip] = parameters[:ip]
         parameters.to_query
       end
 
@@ -166,7 +174,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         unless success_from(response)
-          # TODO: lookup error code for this response
+          STANDARD_ERROR_CODE_MAPPING[response['code'].to_s]
         end
       end
 
