@@ -5,108 +5,108 @@ module ActiveMerchant #:nodoc: ALL
     # === Cloud 9 payment gateway.
     #
     class Cloud9Gateway < Gateway
-      self.test_url             = 'https://testlink.c9pg.com:11911'
-      self.live_url             = 'https://link.c9pg.com:11911'
-      self.default_currency     = 'USD'
-      self.display_name         = 'Cloud9 Payment Gateway'
-      self.homepage_url         = 'http://cloud9paymentgateway.com'
-      self.money_format         = :cents
-      self.supported_countries  = %w[CA US]
-      self.supported_cardtypes  = %i[visa master american_express jcb discover]
+      self.test_url = 'https://testlink.c9pg.com:11911'
+      self.live_url = 'https://link.c9pg.com:11911'
+      self.default_currency = 'USD'
+      self.display_name = 'Cloud9 Payment Gateway'
+      self.homepage_url = 'http://cloud9paymentgateway.com'
+      self.money_format = :cents
+      self.supported_countries = %w[CA US]
+      self.supported_cardtypes = %i[visa master american_express jcb discover]
 
       # TRANSACTION_TYPES = [AUTHORIZE, PURCHASE, CAPTURE, ADD_TIP, VOID, REFUND, INQUIRY, MODIFY, BATCH]
-      AUTHORIZE         = 'Auth'
-      PURCHASE          = 'Sale'
-      CAPTURE           = 'Finalize'
-      ADD_TIP           = 'Addtip'
-      VOID              = 'Void'
-      REVERSE           = 'Reverse'
-      REFUND            = 'Refund'
-      ADJUST            = 'Adjust'
-      INQUIRY           = 'Inquiry'
-      MODIFY            = 'Modify'
-      BATCH             = 'Batch'
-      CREATE_TOKEN      = 'CreateCardToken'
+      AUTHORIZE = 'Auth'
+      PURCHASE = 'Sale'
+      CAPTURE = 'Finalize'
+      ADD_TIP = 'Addtip'
+      VOID = 'Void'
+      REVERSE = 'Reverse'
+      REFUND = 'Refund'
+      ADJUST = 'Adjust'
+      INQUIRY = 'Inquiry'
+      MODIFY = 'Modify'
+      BATCH = 'Batch'
+      CREATE_TOKEN = 'CreateCardToken'
 
-      TAX_INDICATORS    = %w[Ntprvd Prvded NonTax].freeze
-      FUNDING_CREDIT    = 'Credit'
-      FUNDING_TYPES     = [FUNDING_CREDIT, 'Debit', 'EBT Food', 'EBT Cash', 'Prepaid', 'Gift'].freeze
-      ENCRYPT_TARGETS   = %w[Track1 Track2 PAN].freeze
+      TAX_INDICATORS = %w[Ntprvd Prvded NonTax].freeze
+      FUNDING_CREDIT = 'Credit'
+      FUNDING_TYPES = [FUNDING_CREDIT, 'Debit', 'EBT Food', 'EBT Cash', 'Prepaid', 'Gift'].freeze
+      ENCRYPT_TARGETS = %w[Track1 Track2 PAN].freeze
 
-      STATUS_CANCEL     = 'cancel'
-      STATUS_FAIL       = 'fail'
-      STATUS_INVALID    = 'invalidData'
-      STATUS_SUCCESS    = 'success'
-      STATUS_TIMEOUT    = 'timeout'
+      STATUS_CANCEL = 'cancel'
+      STATUS_FAIL = 'fail'
+      STATUS_INVALID = 'invalidData'
+      STATUS_SUCCESS = 'success'
+      STATUS_TIMEOUT = 'timeout'
 
-      ENTRY_SWIPE       = 'Swipe'
-      ENTRY_MANUAL      = 'Manual'
-      ENTRY_PROXIMITY   = 'Proximity'
-      ENTRY_CONTACT     = 'ChipContact'
+      ENTRY_SWIPE = 'Swipe'
+      ENTRY_MANUAL = 'Manual'
+      ENTRY_PROXIMITY = 'Proximity'
+      ENTRY_CONTACT = 'ChipContact'
       ENTRY_CONTACTLESS = 'ChipContactless'
-      ENTRY_EMV_FB_SWP  = 'EMVFallback2Swip'
+      ENTRY_EMV_FB_SWP = 'EMVFallback2Swip'
 
       STANDARD_ERROR_CODE_MAPPING = {
-        '001' => STANDARD_ERROR_CODE[:call_issuer],        # Refer to issuer
-        '002' => STANDARD_ERROR_CODE[:call_issuer],        # Refer to issuer-Special condition
-        '003' => STANDARD_ERROR_CODE[:config_error],       # Invalid Merchant ID
-        '004' => STANDARD_ERROR_CODE[:pick_up_card],       # Pick up card (no fraud)
-        '005' => STANDARD_ERROR_CODE[:card_declined],      # do not honour
-        '006' => STANDARD_ERROR_CODE[:card_declined],      # Error response text from check service
-        '007' => STANDARD_ERROR_CODE[:pick_up_card],       # pick up card (fraud account)
+        '001' => STANDARD_ERROR_CODE[:call_issuer], # Refer to issuer
+        '002' => STANDARD_ERROR_CODE[:call_issuer], # Refer to issuer-Special condition
+        '003' => STANDARD_ERROR_CODE[:config_error], # Invalid Merchant ID
+        '004' => STANDARD_ERROR_CODE[:pick_up_card], # Pick up card (no fraud)
+        '005' => STANDARD_ERROR_CODE[:card_declined], # do not honour
+        '006' => STANDARD_ERROR_CODE[:card_declined], # Error response text from check service
+        '007' => STANDARD_ERROR_CODE[:pick_up_card], # pick up card (fraud account)
         # '008' => STANDARD_ERROR_CODE[:approved],
         # '010' => STANDARD_ERROR_CODE[:partial_approval],
         # '011' => STANDARD_ERROR_CODE[:vip_approval],
-        '012' => STANDARD_ERROR_CODE[:config_error],       # invalid transaction
-        '013' => STANDARD_ERROR_CODE[:invalid_number],     # invalid amount
-        '014' => STANDARD_ERROR_CODE[:invalid_number],     # invalid card number
-        '015' => STANDARD_ERROR_CODE[:config_error],       # no such issuer
-        '019' => STANDARD_ERROR_CODE[:processing_error],   # Re-enter transaction
-        '021' => STANDARD_ERROR_CODE[:processing_error],   # Unable to back out transaction
-        '028' => STANDARD_ERROR_CODE[:processing_error],   # File is temporarily unavailable
-        '034' => STANDARD_ERROR_CODE[:unsupported_feature],# transaction cancelled - mastercard use only
-        '051' => STANDARD_ERROR_CODE[:card_declined],      # insufficient funds
-        '054' => STANDARD_ERROR_CODE[:expired_card],       # expired card
-        '055' => STANDARD_ERROR_CODE[:incorrect_pin],      # incorrect pin
-        '057' => STANDARD_ERROR_CODE[:config_error],       # transaction not permitted - card
-        '058' => STANDARD_ERROR_CODE[:config_error],       # transaction not permitted - terminal
-        '059' => STANDARD_ERROR_CODE[:config_error],       # transaction not permitted - merchant
-        '062' => STANDARD_ERROR_CODE[:card_declined],      # invalid service code - restricted
-        '075' => STANDARD_ERROR_CODE[:card_declined],      # pin retries exceeded
-        '076' => STANDARD_ERROR_CODE[:processing_error],   # Unable to locate, no match
-        '078' => STANDARD_ERROR_CODE[:config_error],       # no account
-        '079' => STANDARD_ERROR_CODE[:config_error],       # Already reversed at switch
-        '081' => STANDARD_ERROR_CODE[:processing_error],   # Cryptographic error
-        '082' => STANDARD_ERROR_CODE[:incorrect_cvc],      # CVV data not correct
-        '083' => STANDARD_ERROR_CODE[:incorrect_pin],      # cannot verify pin
+        '012' => STANDARD_ERROR_CODE[:config_error], # invalid transaction
+        '013' => STANDARD_ERROR_CODE[:invalid_number], # invalid amount
+        '014' => STANDARD_ERROR_CODE[:invalid_number], # invalid card number
+        '015' => STANDARD_ERROR_CODE[:config_error], # no such issuer
+        '019' => STANDARD_ERROR_CODE[:processing_error], # Re-enter transaction
+        '021' => STANDARD_ERROR_CODE[:processing_error], # Unable to back out transaction
+        '028' => STANDARD_ERROR_CODE[:processing_error], # File is temporarily unavailable
+        '034' => STANDARD_ERROR_CODE[:unsupported_feature], # transaction cancelled - mastercard use only
+        '051' => STANDARD_ERROR_CODE[:card_declined], # insufficient funds
+        '054' => STANDARD_ERROR_CODE[:expired_card], # expired card
+        '055' => STANDARD_ERROR_CODE[:incorrect_pin], # incorrect pin
+        '057' => STANDARD_ERROR_CODE[:config_error], # transaction not permitted - card
+        '058' => STANDARD_ERROR_CODE[:config_error], # transaction not permitted - terminal
+        '059' => STANDARD_ERROR_CODE[:config_error], # transaction not permitted - merchant
+        '062' => STANDARD_ERROR_CODE[:card_declined], # invalid service code - restricted
+        '075' => STANDARD_ERROR_CODE[:card_declined], # pin retries exceeded
+        '076' => STANDARD_ERROR_CODE[:processing_error], # Unable to locate, no match
+        '078' => STANDARD_ERROR_CODE[:config_error], # no account
+        '079' => STANDARD_ERROR_CODE[:config_error], # Already reversed at switch
+        '081' => STANDARD_ERROR_CODE[:processing_error], # Cryptographic error
+        '082' => STANDARD_ERROR_CODE[:incorrect_cvc], # CVV data not correct
+        '083' => STANDARD_ERROR_CODE[:incorrect_pin], # cannot verify pin
         # '085' => STANDARD_ERROR_CODE[:card_ok],          # no reason to decline
-        '091' => STANDARD_ERROR_CODE[:processing_error],   # no reply Issuer or switch is unavailable
-        '092' => STANDARD_ERROR_CODE[:processing_error],   # Destination not found
-        '093' => STANDARD_ERROR_CODE[:processing_error],   # Violation, cannot complete
-        '094' => STANDARD_ERROR_CODE[:processing_error],   # Unable to locate, no match
-        '096' => STANDARD_ERROR_CODE[:processing_error],   # System malfunction
-        '0FF' => STANDARD_ERROR_CODE[:processing_error],   # Network error
-        '101' => STANDARD_ERROR_CODE[:config_error],       # Invalid GMID
-        '102' => STANDARD_ERROR_CODE[:config_error],       # Invalid GTID
-        '103' => STANDARD_ERROR_CODE[:config_error],       # Invalid GMPW
-        '104' => STANDARD_ERROR_CODE[:invalid_number],     # Invalid GTRC
-        '105' => STANDARD_ERROR_CODE[:invalid_number],     # Invalid Card Token
-        '106' => STANDARD_ERROR_CODE[:config_error],       # Invalid Database
-        '107' => STANDARD_ERROR_CODE[:processing_error],   # Processor does not support card type
-        '108' => STANDARD_ERROR_CODE[:processing_error],   # Processor not supported or not loaded to system
-        '109' => STANDARD_ERROR_CODE[:invalid_number],     # Invalid amount
-        '110' => STANDARD_ERROR_CODE[:processing_error],   # Void amount exceeds original authorized amount
-        '111' => STANDARD_ERROR_CODE[:config_error],       # Offline transaction can only be used for Credit/EBT Footstamp's sale
-        '112' => STANDARD_ERROR_CODE[:config_error],       # Credit/EBT Foodstamp card with cashback is not allowed
-        '113' => STANDARD_ERROR_CODE[:processing_error],   # Addtip must be based on Auth/Sale transaction
-        '114' => STANDARD_ERROR_CODE[:processing_error],   # Finalize must be based on Auth transaction
-        '115' => STANDARD_ERROR_CODE[:processing_error],   # Original transaction has already been voided
-        '116' => STANDARD_ERROR_CODE[:processing_error],   # Offline transaction must supply AuthCode
-        '117' => STANDARD_ERROR_CODE[:processing_error],   # Engine process transaction time out
-        '118' => STANDARD_ERROR_CODE[:processing_error],   # Proxy process message time out
-        '119' => STANDARD_ERROR_CODE[:processing_error],   # PDC process transaction time out
-        '120' => STANDARD_ERROR_CODE[:processing_error],   # Processor process transaction time out
-        '999' => STANDARD_ERROR_CODE[:processing_error],   # Processor no response code, Please refer response text
+        '091' => STANDARD_ERROR_CODE[:processing_error], # no reply Issuer or switch is unavailable
+        '092' => STANDARD_ERROR_CODE[:processing_error], # Destination not found
+        '093' => STANDARD_ERROR_CODE[:processing_error], # Violation, cannot complete
+        '094' => STANDARD_ERROR_CODE[:processing_error], # Unable to locate, no match
+        '096' => STANDARD_ERROR_CODE[:processing_error], # System malfunction
+        '0FF' => STANDARD_ERROR_CODE[:processing_error], # Network error
+        '101' => STANDARD_ERROR_CODE[:config_error], # Invalid GMID
+        '102' => STANDARD_ERROR_CODE[:config_error], # Invalid GTID
+        '103' => STANDARD_ERROR_CODE[:config_error], # Invalid GMPW
+        '104' => STANDARD_ERROR_CODE[:invalid_number], # Invalid GTRC
+        '105' => STANDARD_ERROR_CODE[:invalid_number], # Invalid Card Token
+        '106' => STANDARD_ERROR_CODE[:config_error], # Invalid Database
+        '107' => STANDARD_ERROR_CODE[:processing_error], # Processor does not support card type
+        '108' => STANDARD_ERROR_CODE[:processing_error], # Processor not supported or not loaded to system
+        '109' => STANDARD_ERROR_CODE[:invalid_number], # Invalid amount
+        '110' => STANDARD_ERROR_CODE[:processing_error], # Void amount exceeds original authorized amount
+        '111' => STANDARD_ERROR_CODE[:config_error], # Offline transaction can only be used for Credit/EBT Footstamp's sale
+        '112' => STANDARD_ERROR_CODE[:config_error], # Credit/EBT Foodstamp card with cashback is not allowed
+        '113' => STANDARD_ERROR_CODE[:processing_error], # Addtip must be based on Auth/Sale transaction
+        '114' => STANDARD_ERROR_CODE[:processing_error], # Finalize must be based on Auth transaction
+        '115' => STANDARD_ERROR_CODE[:processing_error], # Original transaction has already been voided
+        '116' => STANDARD_ERROR_CODE[:processing_error], # Offline transaction must supply AuthCode
+        '117' => STANDARD_ERROR_CODE[:processing_error], # Engine process transaction time out
+        '118' => STANDARD_ERROR_CODE[:processing_error], # Proxy process message time out
+        '119' => STANDARD_ERROR_CODE[:processing_error], # PDC process transaction time out
+        '120' => STANDARD_ERROR_CODE[:processing_error], # Processor process transaction time out
+        '999' => STANDARD_ERROR_CODE[:processing_error], # Processor no response code, Please refer response text
       }
 
       TRANSACTION_AGE_LIMIT = 6.months
@@ -288,11 +288,11 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>:cash_back_amount</tt> -- cash back amount included with +money+, optional
       # * <tt>:tax_indicator</tt> -- additional info on tax amount, optional, defaults +Prvded+
       def add_request_amount_group(post, options, money = nil)
-        post[:MainAmt]        = amount(money) if money.present?
-        post[:TipAmt]         = amount(options[:tip_amount]) if options[:tip_amount].present?
-        post[:IncTaxAmt]      = amount(options[:tax_amount]) if options[:tax_amount].present?
+        post[:MainAmt] = amount(money) if money.present?
+        post[:TipAmt] = amount(options[:tip_amount]) if options[:tip_amount].present?
+        post[:IncTaxAmt] = amount(options[:tax_amount]) if options[:tax_amount].present?
         post[:IncCashBackAmt] = amount(options[:cash_back_amount]) if options[:cash_back_amount].present?
-        post[:TaxIndicator]   = options[:tax_indicator] if TAX_INDICATORS.include?(options[:tax_indicator])
+        post[:TaxIndicator] = options[:tax_indicator] if TAX_INDICATORS.include?(options[:tax_indicator])
       end
 
       # Add the Action Group of options - used for ALL transactions
@@ -351,24 +351,24 @@ module ActiveMerchant #:nodoc: ALL
         post[:NeedSwipCard] = 'N'
         if credit_card.respond_to?(:number)
           if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
-            post[:Track2]    = credit_card.track_data
+            post[:Track2] = credit_card.track_data
             post[:EntryMode] = ENTRY_SWIPE
           else
-            post[:AccountNum]      = credit_card.number
-            post[:ExpDate]         = if credit_card.month.present? && credit_card.year.present?
-                                       (credit_card.month + 100).to_s[1..2] + credit_card.year.to_s[-2..-1]
-                                     end
-            post[:CVVNum]          = credit_card.verification_value if credit_card.verification_value?
-            post[:CustomerName]    = credit_card.name if credit_card.name.present?
+            post[:AccountNum] = credit_card.number
+            post[:ExpDate] = if credit_card.month.present? && credit_card.year.present?
+                               (credit_card.month + 100).to_s[1..2] + credit_card.year.to_s[-2..-1]
+                             end
+            post[:CVVNum] = credit_card.verification_value if credit_card.verification_value?
+            post[:CustomerName] = credit_card.name if credit_card.name.present?
             post[:CustomerZipCode] = options[:address][:zip] if options.dig(:address, :zip).present?
             post[:CustomerAddress] = options[:address][:address1] if options.dig(:address, :address1).present?
-            post[:CardPresent]     = credit_card.manual_entry || false ? 'N' : 'Y'
-            post[:EntryMode]       = ENTRY_MANUAL
+            post[:CardPresent] = credit_card.manual_entry || false ? 'N' : 'Y'
+            post[:EntryMode] = ENTRY_MANUAL
           end
           post[:Medium] = FUNDING_TYPES.include?(options[:funding]) ? options[:funding] : FUNDING_CREDIT
         elsif credit_card.is_a?(String)
           post[:CardToken] = credit_card
-          post[:Medium]    = FUNDING_CREDIT
+          post[:Medium] = FUNDING_CREDIT
           post[:EntryMode] = ENTRY_MANUAL
         elsif credit_card.blank?
           post[:NeedSwipCard] = 'Y'
@@ -378,10 +378,10 @@ module ActiveMerchant #:nodoc: ALL
 
       def add_pin_group(post, credit_card)
         if credit_card.respond_to?(:encrypted_pin_cryptogram) &&
-           credit_card.encrypted_pin_cryptogram.present? &&
-           credit_card.encrypted_pin_ksn.present?
+          credit_card.encrypted_pin_cryptogram.present? &&
+          credit_card.encrypted_pin_ksn.present?
           post[:PinBlock] = credit_card.encrypted_pin_cryptogram
-          post[:KSN]      = credit_card.encrypted_pin_ksn
+          post[:KSN] = credit_card.encrypted_pin_ksn
         end
       end
 
@@ -425,7 +425,7 @@ module ActiveMerchant #:nodoc: ALL
         msg = 'Invalid response received from the Cloud9 API.'
         msg + "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          'Status'       => STATUS_FAIL,
+          'Status' => STATUS_FAIL,
           'ResponseCode' => STANDARD_ERROR_CODE[:processing_error],
           'ResponseText' => msg
         }
@@ -439,17 +439,15 @@ module ActiveMerchant #:nodoc: ALL
         auth_amount = options[:authorized_amount].to_i
         amount ||= auth_amount # if no amount passed, assume full refund
 
-        if amount == auth_amount
+        transaction_date = Time.iso8601(options[:transaction_date])
+        if transaction_date < Time.now - TRANSACTION_AGE_LIMIT
+          action = REFUND
+        elsif amount == auth_amount
           amount = 0
           action = REVERSE
         else
-          transaction_date = Time.iso8601(options[:transaction_date])
-          if transaction_date < Time.now - TRANSACTION_AGE_LIMIT
-            action = REFUND
-          else
-            amount = auth_amount - amount
-            action = ADJUST
-          end
+          amount = auth_amount - amount
+          action = ADJUST
         end
         return amount, action
       end
@@ -504,7 +502,7 @@ module ActiveMerchant #:nodoc: ALL
       def headers(_options = {})
         {
           'Content-Type': 'application/json',
-          'User-Agent':   "Cloud9/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'User-Agent': "Cloud9/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
         }
       end
 
