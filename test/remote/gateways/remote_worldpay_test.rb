@@ -82,9 +82,18 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorize_and_purchase_with_instalments
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(instalment: 3))
+    assert_success auth
+    assert_equal 'SUCCESS', auth.message
+    assert auth.authorization
+    sleep(40)
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
   def test_successful_authorize_with_3ds
     session_id = generate_unique_id
-    order_id = @options[:order_id]
     options = @options.merge(
               {
                 execute_threed: true,
@@ -106,7 +115,6 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_failed_authorize_with_3ds
     session_id = generate_unique_id
-    order_id = @options[:order_id]
     options = @options.merge(
               {
                 execute_threed: true,
@@ -196,7 +204,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(30, response.authorization)
     assert_failure refund
-    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' is required.", refund.message
+    assert_equal 'Order not ready', refund.message
   end
 
   def test_refund_nonexistent_transaction

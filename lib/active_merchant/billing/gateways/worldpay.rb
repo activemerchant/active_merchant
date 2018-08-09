@@ -168,6 +168,9 @@ module ActiveMerchant #:nodoc:
               if options[:hcg_additional_data]
                 add_hcg_additional_data(xml, options)
               end
+              if options[:instalments]
+                add_instalments_data(xml, options)
+              end
             end
           end
         end
@@ -292,6 +295,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_instalments_data(xml, options)
+        xml.tag! 'thirdPartyData' do
+          xml.tag! 'instalments', options[:instalments]
+          xml.tag! 'cpf', options[:cpf] if options[:cpf]
+        end
+      end
+
       def address_with_defaults(address)
         address ||= {}
         address.delete_if { |_, v| v.blank? }
@@ -370,7 +380,7 @@ module ActiveMerchant #:nodoc:
       def handle_response(response)
         case response.code.to_i
         when 200...300
-          @cookie = response.response['Set-Cookie']
+          @cookie = response['Set-Cookie']
           response.body
         else
           raise ResponseError.new(response)

@@ -352,6 +352,26 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_instalments
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(instalments: 3))
+    end.check_request do |endpoint, data, headers|
+      unless /<capture>/ =~ data
+        assert_match %r(<instalments>3</instalments>), data
+        assert_no_match %r(cpf), data
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(instalments: 3, cpf: 12341234))
+    end.check_request do |endpoint, data, headers|
+      unless /<capture>/ =~ data
+        assert_match %r(<instalments>3</instalments>), data
+        assert_match %r(<cpf>12341234</cpf>), data
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+  end
+
   def test_ip
     stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge(ip: '192.137.11.44'))
