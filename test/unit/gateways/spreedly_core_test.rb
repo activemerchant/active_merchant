@@ -294,6 +294,21 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_match %r(#{@not_found_transaction}), response.message
   end
 
+  def test_gateway_specific_response_fileds_returned_correctly
+    @gateway.expects(:raw_ssl_request).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @payment_method_token)
+    assert_success response
+
+    assert_not_empty response.params['gateway_specific_response_fields']
+    assert_includes response.params['gateway_specific_response_fields'].keys, 'migs'
+
+    migs_response_fields = response.params.dig('gateway_specific_response_fields', 'migs')
+    assert_equal migs_response_fields['batch_no'], '20122018'
+    assert_equal migs_response_fields['receipt_no'], 'rxI320t'
+    assert_equal migs_response_fields['authorize_id'], '800385'
+  end
+
   def test_scrubbing
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -332,6 +347,13 @@ class SpreedlyCoreTest < Test::Unit::TestCase
           <created_at type="datetime">2012-12-06T20:28:14Z</created_at>
           <updated_at type="datetime">2012-12-06T20:28:14Z</updated_at>
         </response>
+        <gateway_specific_response_fields>
+          <migs>
+           <batch_no>20122018</batch_no>
+           <authorize_id>800385</authorize_id>
+           <receipt_no>rxI320t</receipt_no>
+          </migs>
+        </gateway_specific_response_fields>
         <payment_method>
           <token>5WxC03VQ0LmmkYvIHl7XsPKIpUb</token>
           <created_at type="datetime">2012-12-06T20:20:29Z</created_at>
