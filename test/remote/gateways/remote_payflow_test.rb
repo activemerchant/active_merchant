@@ -135,6 +135,32 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorize_and_complete_capture
+    assert auth = @gateway.authorize(100 * 2, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+
+    assert capture = @gateway.capture(100, auth.authorization, :capture_complete => 'Y')
+    assert_success capture
+
+    assert capture = @gateway.capture(100, auth.authorization)
+    assert_failure capture
+  end
+
+  def test_authorize_and_uncomplete_capture
+    assert auth = @gateway.authorize(100 * 2, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+
+    assert capture = @gateway.capture(100, auth.authorization, :capture_complete => 'N')
+    assert_success capture
+
+    assert capture = @gateway.capture(100, auth.authorization)
+    assert_success capture
+  end
+
   def test_failed_capture
     assert response = @gateway.capture(100, '999')
     assert_failure response
