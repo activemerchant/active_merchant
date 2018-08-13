@@ -1,6 +1,15 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+== Version 1.82.0 (August 13, 2018)
+* FirstData: add support for WalletProviderID in v27 gateway [bpollack] #2946
+* BlueSnap: Handle 403 responses [curiousepic] #2948
+* BlueSnap: Add StoreCard Field [nfarve] #2953
+* Worldpay: support installments [bpollack] #2957
+* Paymentez: support partial refunds [bpollack] #2959
+* Payflow: allow support for partial captures [pi3r] #2952
+
+== Version 1.81.0 (July 30, 2018)
 * GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915
 * Pin Payments: Pass reference for statement desc [curiousepic] #2919
 * FirstData: introduce v27 gateway [shasum] #2912
@@ -17,11 +26,6 @@
 * Barclaycard Smartpay: bump API version to v30 [bpollack] #2941
 * Safecharge: Remove duplicate supported country [curiousepic]
 * Payflow Express: Use SHIPTONAME instead of `full_name` for shipping address [filipebarcos] #2945
-* FirstData: add support for WalletProviderID in v27 gateway [bpollack] #2946
-* BlueSnap: Handle 403 responses [curiousepic] #2948
-* BlueSnap: Add StoreCard Field [nfarve] #2953
-* Worldpay: support installments [bpollack] #2957
-* Paymentez: support partial refunds [bpollack] #2959
 
 == Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909
