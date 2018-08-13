@@ -120,6 +120,7 @@ module ActiveMerchant #:nodoc:
         add_operator_id(post, options)
         add_invoice(post,0, options)
         add_payment(post, credit_card)
+        add_address(post, credit_card, options)
         add_customer_data(post, options)
 
         commit('verifyAccount', post)
@@ -171,7 +172,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         if address = options[:billing_address] || options[:address]
-          post[:CardHolderAddress] = ("#{address[:address1]} #{address[:address2]}").rjust(20, ' ')
+          post[:CardHolderAddress] = ("#{address[:address1]} #{address[:address2]} #{address[:city]} #{address[:state]}").rjust(20, ' ')
           post[:CardHolderPostalCode] = address[:zip].gsub(/\s+/, '').rjust(9, ' ')
         end
       end

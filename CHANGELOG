@@ -8,6 +8,7 @@
 * Worldpay: support installments [bpollack] #2957
 * Paymentez: support partial refunds [bpollack] #2959
 * Payflow: allow support for partial captures [pi3r] #2952
+* CT Payment: Update How Address is Passed [nfarve] #2960
 
 == Version 1.81.0 (July 30, 2018)
 * GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915
