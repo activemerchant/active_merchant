@@ -76,8 +76,11 @@ module ActiveMerchant #:nodoc:
         commit_transaction('capture', post)
       end
 
-      def refund(_money, authorization, options = {})
-        void(authorization, options)
+      def refund(money, authorization, options = {})
+        post = {transaction: {id: authorization}}
+        post[:order] = {amount: amount(money).to_f} if money
+
+        commit_transaction('refund', post)
       end
 
       def void(authorization, _options = {})

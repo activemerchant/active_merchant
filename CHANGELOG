@@ -21,6 +21,7 @@
 * BlueSnap: Handle 403 responses [curiousepic] #2948
 * BlueSnap: Add StoreCard Field [nfarve] #2953
 * Worldpay: support installments [bpollack] #2957
+* Paymentez: support partial refunds [bpollack] #2959
 
 == Version 1.80.0 (July 4, 2018)
 * Default SSL min_version to TLS 1.1 to comply with June 30 PCI DSS deadline [bdewater] #2909

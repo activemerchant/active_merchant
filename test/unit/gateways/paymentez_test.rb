@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class PaymentezTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = PaymentezGateway.new(application_code: 'foo', app_key: 'bar')
     @credit_card = credit_card
@@ -107,7 +109,17 @@ class PaymentezTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, '1234', @options)
+    response = @gateway.refund(nil, '1234', @options)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_partial_refund
+    response = stub_comms do
+      @gateway.refund(@amount, '1234', @options)
+    end.check_request do |_endpoint, data, _headers|
+      assert_match /"amount":1.0/, data
+    end.respond_with(successful_refund_response)
     assert_success response
     assert response.test?
   end

@@ -47,6 +47,14 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
+  def test_successful_refund
+    auth = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert refund = @gateway.refund(@amount, @credit_card, @options)
+    assert_success refund
+  end
+
   def test_successful_void
     auth = @gateway.purchase(@amount, @credit_card, @options)
     assert_success auth
