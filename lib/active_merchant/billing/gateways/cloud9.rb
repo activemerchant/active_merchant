@@ -194,13 +194,13 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def refund(amount, authorization, options = {})
-        amount, action = refund_amount_and_action(amount, options)
+        msg_amount, action = refund_amount_and_action(amount, options)
 
         post = {}
         add_configure_group(post, options)
-        add_request_amount_group(post, options, amount.positive? ? amount : nil)
-        add_trace_group(post, options, authorization)
-        add_custom_group(post, amount.zero?)
+        add_request_amount_group(post, options, msg_amount.positive? ? msg_amount : nil)
+        add_trace_group(post, options, action == REFUND ? nil : authorization)
+        add_custom_group(post, msg_amount.zero?)
         commit(action, 'restApi', post)
       end
 
