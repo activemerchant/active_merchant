@@ -11,6 +11,7 @@
 * CT Payment: Update How Address is Passed [nfarve] #2960
 * Adyen: Add RecurringProcessingModel [nfarve] #2951
 * Optimal Payments: update country list [bpollack] #2961
+* Ebanx: update sandbox and production URLs [vnbrs] #2949
 
 == Version 1.81.0 (July 30, 2018)
 * GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915
