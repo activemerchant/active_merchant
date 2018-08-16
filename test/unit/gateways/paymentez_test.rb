@@ -118,7 +118,7 @@ class PaymentezTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.refund(@amount, '1234', @options)
     end.check_request do |_endpoint, data, _headers|
-      assert_match /"amount":1.0/, data
+      assert_match(/"amount":1.0/, data)
     end.respond_with(successful_refund_response)
     assert_success response
     assert response.test?

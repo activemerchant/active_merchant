@@ -207,7 +207,7 @@ module ActiveMerchant #:nodoc:
         url = (test? ? test_url : live_url) + action
         response = parse(ssl_post(url, post_data(action, parameters)))
 
-        final_response = Response.new(
+        Response.new(
           success_from(response),
           message_from(response),
           response,

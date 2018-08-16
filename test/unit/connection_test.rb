@@ -48,7 +48,7 @@ class ConnectionTest < Test::Unit::TestCase
     headers = { 'Content-Type' => 'text/xml' }.freeze
     Net::HTTP.any_instance.expects(:get).with('/tx.php', headers.merge({'connection' => 'close'})).returns(@ok)
     Net::HTTP.any_instance.expects(:start).returns(true)
-    response = @connection.request(:get, nil, headers)
+    @connection.request(:get, nil, headers)
     assert_equal({ 'Content-Type' => 'text/xml' }, headers)
   end
 

@@ -53,7 +53,7 @@ class FirstdataE4V27Test < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge!({wallet_provider_id: 4}))
     end.check_request do |endpoint, data, headers|
-      assert_match /WalletProviderID>4</, data
+      assert_match(/WalletProviderID>4</, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
