@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
              secret
              action
              buyer
+             email
+             phone
              product
              currency
              price
