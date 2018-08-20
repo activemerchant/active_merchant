@@ -13,6 +13,8 @@ module ActiveMerchant #:nodoc:
           mapping :secret, 'secret'
           mapping :action, 'action'
           mapping :buyer, 'buyer'
+          mapping :email, 'email'
+          mapping :phone, 'phone'
           mapping :product, 'product'
           mapping :currency, 'currency'
           mapping :price, 'price'
