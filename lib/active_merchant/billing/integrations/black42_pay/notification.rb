@@ -12,7 +12,6 @@ module ActiveMerchant #:nodoc:
              action
              buyer
              email
-             phone
              product
              currency
              price
