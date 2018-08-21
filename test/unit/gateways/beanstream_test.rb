@@ -10,7 +10,7 @@ class BeanstreamTest < Test::Unit::TestCase
                  :login => 'merchant id',
                  :user => 'username',
                  :password => 'password',
-                 :api_key => 'api_key'
+                 :region => :america
                )
 
     @credit_card = credit_card
