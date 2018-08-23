@@ -17,6 +17,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @declined_card = credit_card('4000300011112220')
 
+    @improperly_branded_maestro = credit_card(
+      '5500000000000004',
+      month: 8,
+      year: 2018,
+      first_name: 'John',
+      last_name: 'Smith',
+      verification_value: '737',
+      brand: 'mastercard'
+    )
+
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
       :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       :month              => '08',
@@ -45,7 +55,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase
@@ -75,10 +85,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_succesful_purchase_with_brand_override
+    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({overwrite_brand: true, selected_brand: 'maestro'}))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -154,7 +170,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.store(@declined_card, @options)
 
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase_using_stored_card
@@ -184,7 +200,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match 'Refused', response.message
+    assert_match 'CVC Declined', response.message
   end
 
   def test_invalid_login

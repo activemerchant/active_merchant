@@ -100,6 +100,20 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_maestro_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({selected_brand: 'maestro', overwrite_brand: 'true'}))
+    end.check_request do |endpoint, data, headers|
+      if endpoint =~ /authorise/
+        assert_match(/"overwriteBrand":true/, data)
+        assert_match(/"selectedBrand":"maestro"/, data)
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+    assert_equal '7914775043909934#8814775564188305#', response.authorization
+    assert response.test?
+  end
+
   def test_installments_sent
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)

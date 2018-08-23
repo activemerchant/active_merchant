@@ -114,9 +114,12 @@ module ActiveMerchant #:nodoc:
         post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
         post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
-        post[:selectedBrand] = options[:selected_brand] || NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
+        post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
         post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
+        post[:additionalData] ||= {}
+        post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
       end
 
       def add_shopper_interaction(post, payment, options={})
