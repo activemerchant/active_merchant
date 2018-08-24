@@ -16,6 +16,7 @@
 * Gateway generator: fix a typo that would cause the script to crash [bpollack] #2962
 * Clearhaus: use $0 for verify transactions [bpollack] #2964
 * Global Collect: properly handle partial captures [bpollack] #2967
+* Braintree: Add support for GooglePay [dtykocki] [#2966]
 
 == Version 1.81.0 (July 30, 2018)
 * GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915

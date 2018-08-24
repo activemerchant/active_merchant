@@ -598,7 +598,7 @@ module ActiveMerchant #:nodoc:
                 :cryptogram => credit_card_or_vault_id.payment_cryptogram,
                 :eci_indicator => credit_card_or_vault_id.eci
               }
-          elsif credit_card_or_vault_id.source == :android_pay
+            elsif credit_card_or_vault_id.source == :android_pay || credit_card_or_vault_id.source == :google_pay
               parameters[:android_pay_card] = {
                 :number => credit_card_or_vault_id.number,
                 :cryptogram => credit_card_or_vault_id.payment_cryptogram,

@@ -659,6 +659,8 @@ Metrics/ParameterLists:
 # Offense count: 126
 Metrics/PerceivedComplexity:
   Max: 32
+  Exclude:
+    - 'lib/active_merchant/billing/gateways/braintree_blue.rb'
 
 # Offense count: 6
 Naming/AccessorMethodName:
