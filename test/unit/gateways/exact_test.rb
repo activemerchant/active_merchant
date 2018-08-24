@@ -2,8 +2,8 @@ require 'test_helper'
 
 class ExactTest < Test::Unit::TestCase
   def setup
-    @gateway = ExactGateway.new( :login    => "A00427-01",
-                                 :password => "testus" )
+    @gateway = ExactGateway.new( :login    => 'A00427-01',
+                                 :password => 'testus' )
 
     @credit_card = credit_card
     @amount = 100
@@ -27,7 +27,7 @@ class ExactTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert response = @gateway.refund(@amount, "123")
+    assert response = @gateway.refund(@amount, '123')
     assert_success response
   end
 
@@ -35,7 +35,7 @@ class ExactTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      assert response = @gateway.credit(@amount, "123")
+      assert response = @gateway.credit(@amount, '123')
       assert_success response
     end
   end
@@ -50,7 +50,7 @@ class ExactTest < Test::Unit::TestCase
 
 
   def test_expdate
-    assert_equal( "%02d%s" % [ @credit_card.month,
+    assert_equal( '%02d%s' % [ @credit_card.month,
                                @credit_card.year.to_s[-2..-1] ],
                   @gateway.send(:expdate, @credit_card) )
   end

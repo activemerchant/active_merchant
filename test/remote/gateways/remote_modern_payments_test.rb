@@ -22,14 +22,14 @@ class RemoteModernPaymentTest < Test::Unit::TestCase
 
     # Test mode seems to not return "approved = true"
     assert_failure response
-    assert_match %r{RESPONSECODE=A}, response.params["auth_string"]
+    assert_match %r{RESPONSECODE=A}, response.params['auth_string']
     assert_equal ModernPaymentsCimGateway::FAILURE_MESSAGE, response.message
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match %r{RESPONSECODE=D}, response.params["auth_string"]
+    assert_match %r{RESPONSECODE=D}, response.params['auth_string']
     assert_equal ModernPaymentsCimGateway::FAILURE_MESSAGE, response.message
   end
 

@@ -27,7 +27,7 @@ class RemotePaystationTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_in_gbp
-    assert response = @gateway.purchase(@successful_amount, @credit_card, @options.merge(:currency => "GBP"))
+    assert response = @gateway.purchase(@successful_amount, @credit_card, @options.merge(:currency => 'GBP'))
     assert_success response
 
     assert_equal 'Transaction successful', response.message
@@ -35,10 +35,10 @@ class RemotePaystationTest < Test::Unit::TestCase
 
   def test_failed_purchases
     [
-      ["insufficient_funds", @insufficient_funds_amount, "Insufficient Funds"],
-      ["invalid_transaction", @invalid_transaction_amount, "Transaction Type Not Supported"],
-      ["expired_card", @expired_card_amount, "Expired Card"],
-      ["bank_error", @bank_error_amount, "Error Communicating with Bank"]
+      ['insufficient_funds', @insufficient_funds_amount, 'Insufficient Funds'],
+      ['invalid_transaction', @invalid_transaction_amount, 'Transaction Type Not Supported'],
+      ['expired_card', @expired_card_amount, 'Expired Card'],
+      ['bank_error', @bank_error_amount, 'Error Communicating with Bank']
     ].each do |name, amount, message|
 
         assert response = @gateway.purchase(amount, @credit_card, @options)
@@ -53,7 +53,7 @@ class RemotePaystationTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @options.merge(:token => "justatest#{time}"))
     assert_success response
 
-    assert_equal "Future Payment Saved Ok", response.message
+    assert_equal 'Future Payment Saved Ok', response.message
     assert_equal "justatest#{time}", response.token
   end
 
@@ -63,7 +63,7 @@ class RemotePaystationTest < Test::Unit::TestCase
 
     assert charge_response = @gateway.purchase(@successful_amount, store_response.token, @options)
     assert_success charge_response
-    assert_equal "Transaction successful", charge_response.message
+    assert_equal 'Transaction successful', charge_response.message
   end
 
   def test_authorize_and_capture
@@ -85,7 +85,7 @@ class RemotePaystationTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@successful_amount, auth.authorization, @options)
     assert_failure capture
 
-    assert_equal "Card Security Code (CVV/CSC) Required", capture.message
+    assert_equal 'Card Security Code (CVV/CSC) Required', capture.message
   end
 
   def test_invalid_login
@@ -101,13 +101,28 @@ class RemotePaystationTest < Test::Unit::TestCase
     assert_success response
     refund = @gateway.refund(@successful_amount, response.authorization, @options)
     assert_success refund
-    assert_equal "Transaction successful", refund.message
+    assert_equal 'Transaction successful', refund.message
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, "", @options)
+    response = @gateway.refund(nil, '', @options)
     assert_failure response
-    assert_equal "Error 11:", response.params["strong"]
+    assert_equal 'Error 11:', response.params['strong']
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{Transaction successful}, response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+  end
 end

@@ -24,23 +24,23 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_match %r(^cust_\w+$), response.authorization
-    assert_equal "customer", response.params["objectType"]
-    assert_match %r(^card_\w+$), response.params["cards"][0]["id"]
-    assert_equal "card", response.params["cards"][0]["objectType"]
+    assert_equal 'customer', response.params['objectType']
+    assert_match %r(^card_\w+$), response.params['cards'][0]['id']
+    assert_equal 'card', response.params['cards'][0]['objectType']
 
     @options[:customer_id] = response.authorization
     response = @gateway.store(@new_credit_card, @options)
     assert_success response
-    assert_match %r(^card_\w+$), response.params["card"]["id"]
-    assert_equal @options[:customer_id], response.params["card"]["customerId"]
+    assert_match %r(^card_\w+$), response.params['card']['id']
+    assert_equal @options[:customer_id], response.params['card']['customerId']
 
     response = @gateway.customer(@options)
     assert_success response
-    assert_equal @options[:customer_id], response.params["id"]
-    assert_equal "401288", response.params["cards"][0]["first6"]
-    assert_equal "1881", response.params["cards"][0]["last4"]
-    assert_equal "424242", response.params["cards"][1]["first6"]
-    assert_equal "4242", response.params["cards"][1]["last4"]
+    assert_equal @options[:customer_id], response.params['id']
+    assert_equal '401288', response.params['cards'][0]['first6']
+    assert_equal '1881', response.params['cards'][0]['last4']
+    assert_equal '424242', response.params['cards'][1]['first6']
+    assert_equal '4242', response.params['cards'][1]['last4']
   end
 
   # def test_dump_transcript
@@ -61,8 +61,8 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Transaction approved", response.message
-    assert_equal "foo@example.com", response.params["metadata"]["email"]
+    assert_equal 'Transaction approved', response.message
+    assert_equal 'foo@example.com', response.params['metadata']['email']
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
@@ -76,9 +76,9 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_authorization_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    assert !authorization.params["captured"]
-    assert_equal @options[:description], authorization.params["description"]
-    assert_equal @options[:email], authorization.params["metadata"]["email"]
+    assert !authorization.params['captured']
+    assert_equal @options[:description], authorization.params['description']
+    assert_equal @options[:email], authorization.params['metadata']['email']
 
     response = @gateway.capture(@amount, authorization.authorization)
     assert_success response
@@ -103,10 +103,10 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
 
-    assert refund.params["refunded"]
-    assert_equal 0, refund.params["amount"]
-    assert_equal 1, refund.params["refunds"].size
-    assert_equal @amount, refund.params["refunds"].map{|r| r["amount"]}.sum
+    assert refund.params['refunded']
+    assert_equal 0, refund.params['amount']
+    assert_equal 1, refund.params['refunds'].size
+    assert_equal @amount, refund.params['refunds'].map{|r| r['amount']}.sum
 
     assert refund.authorization
   end
@@ -121,10 +121,10 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
 
     second_refund = @gateway.refund(@refund_amount, purchase.authorization)
     assert_success second_refund
-    assert second_refund.params["refunded"]
-    assert_equal @amount - 2 * @refund_amount, second_refund.params["amount"]
-    assert_equal 2, second_refund.params["refunds"].size
-    assert_equal 2 * @refund_amount, second_refund.params["refunds"].map{|r| r["amount"]}.sum
+    assert second_refund.params['refunded']
+    assert_equal @amount - 2 * @refund_amount, second_refund.params['amount']
+    assert_equal 2, second_refund.params['refunds'].size
+    assert_equal 2 * @refund_amount, second_refund.params['refunds'].map{|r| r['amount']}.sum
     assert second_refund.authorization
   end
 
@@ -147,14 +147,14 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_successful_void
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    assert !authorization.params["captured"]
+    assert !authorization.params['captured']
 
     void = @gateway.void(authorization.authorization, @options)
     assert_success void
-    assert void.params["refunded"]
-    assert_equal 0, void.params["amount"]
-    assert_equal 1, void.params["refunds"].size
-    assert_equal @amount, void.params["refunds"].map{|r| r["amount"]}.sum
+    assert void.params['refunded']
+    assert_equal 0, void.params['amount']
+    assert_equal 1, void.params['refunds'].size
+    assert_equal @amount, void.params['refunds'].map{|r| r['amount']}.sum
     assert void.authorization
   end
 
@@ -188,7 +188,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     gateway = SecurionPayGateway.new(secret_key: 'active_merchant_test')
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match "Provided API key is invalid", response.message
+    assert_match 'Provided API key is invalid', response.message
   end
 
   def test_invalid_number_for_purchase

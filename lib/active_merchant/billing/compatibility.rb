@@ -27,7 +27,7 @@ module ActiveMerchant
 
       def self.humanize(lower_case_and_underscored_word)
         result = lower_case_and_underscored_word.to_s.dup
-        result.gsub!(/_id$/, "")
+        result.gsub!(/_id$/, '')
         result.gsub!(/_/, ' ')
         result.gsub(/([a-z\d]*)/i) { |match|
           match.downcase

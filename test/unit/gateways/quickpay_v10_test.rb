@@ -26,7 +26,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       response = @gateway.purchase(@amount, @credit_card, @options)
       assert response
       assert_success response
-      assert_equal 1145, response.authorization
+      assert_equal '1145', response.authorization
       assert response.test?
     end.check_request do |endpoint, data, headers|
       parsed = parse(data)
@@ -45,13 +45,13 @@ class QuickpayV10Test < Test::Unit::TestCase
     stub_comms do
       assert response = @gateway.authorize(@amount, @credit_card, @options)
       assert_success response
-      assert_equal 1145, response.authorization
+      assert_equal '1145', response.authorization
       assert response.test?
     end.check_request do |endpoint, data, headers|
       parsed_data = parse(data)
       if parsed_data['order_id']
         assert_match %r{/payments}, endpoint
-        assert_match "1.1.1.1", @options[:customer_ip]
+        assert_match '1.1.1.1', @options[:customer_ip]
       else
         assert_match %r{/payments/\d+/authorize}, endpoint
       end
@@ -111,7 +111,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorization_response)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
   end
 
   def test_failed_verify
@@ -119,7 +119,7 @@ class QuickpayV10Test < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorization_response, {'id' => 1145}.to_json)
     assert_failure response
-    assert_equal "Validation error", response.message
+    assert_equal 'Validation error', response.message
   end
 
   def test_supported_countries
@@ -146,108 +146,108 @@ class QuickpayV10Test < Test::Unit::TestCase
 
   def successful_payment_response
     {
-      "id"          =>1145,
-      "order_id"    =>"310f59c57a",
-      "accepted"    =>false,
-      "test_mode"   =>false,
-      "branding_id" =>nil,
-      "variables"   =>{},
-      "acquirer"    =>nil,
-      "operations"  =>[],
-      "metadata"    =>{},
-      "created_at"  =>"2015-03-30T16:56:17Z",
-      "balance"     =>0,
-      "currency"    =>"DKK"
+      'id'          =>1145,
+      'order_id'    =>'310f59c57a',
+      'accepted'    =>false,
+      'test_mode'   =>false,
+      'branding_id' =>nil,
+      'variables'   =>{},
+      'acquirer'    =>nil,
+      'operations'  =>[],
+      'metadata'    =>{},
+      'created_at'  =>'2015-03-30T16:56:17Z',
+      'balance'     =>0,
+      'currency'    =>'DKK'
     }.to_json
   end
 
   def successful_authorization_response
     {
-       "id"          => 1145,
-       "order_id"    => "310f59c57a",
-       "accepted"    => false,
-       "test_mode"   => true,
-       "branding_id" => nil,
-       "variables"   => {},
-       "acquirer"    => "clearhaus",
-       "operations"  => [],
-       "metadata"    => {
-          "type"             =>"card",
-          "brand"            =>"quickpay-test-card",
-          "last4"            =>"0008",
-          "exp_month"        =>9,
-          "exp_year"         =>2016,
-          "country"          =>"DK",
-          "is_3d_secure"     =>false,
-          "customer_ip"      =>nil,
-          "customer_country" =>nil
+       'id'          => 1145,
+       'order_id'    => '310f59c57a',
+       'accepted'    => false,
+       'test_mode'   => true,
+       'branding_id' => nil,
+       'variables'   => {},
+       'acquirer'    => 'clearhaus',
+       'operations'  => [],
+       'metadata'    => {
+          'type'             =>'card',
+          'brand'            =>'quickpay-test-card',
+          'last4'            =>'0008',
+          'exp_month'        =>9,
+          'exp_year'         =>2016,
+          'country'          =>'DK',
+          'is_3d_secure'     =>false,
+          'customer_ip'      =>nil,
+          'customer_country' =>nil
        },
-      "created_at" => "2015-03-30T16:56:17Z",
-      "balance"    => 0,
-      "currency"   => "DKK"
+      'created_at' => '2015-03-30T16:56:17Z',
+      'balance'    => 0,
+      'currency'   => 'DKK'
     }.to_json
   end
 
   def successful_capture_response
     {
-      "id"          =>1145,
-      "order_id"    =>"310f59c57a",
-      "accepted"    =>true,
-      "test_mode"   =>true,
-      "branding_id" =>nil,
-      "variables"   =>{},
-      "acquirer"    =>"clearhaus",
-      "operations"  =>[],
-      "metadata"    =>{"type"=>"card", "brand"=>"quickpay-test-card", "last4"=>"0008", "exp_month"=>9, "exp_year"=>2016, "country"=>"DK", "is_3d_secure"=>false, "customer_ip"=>nil, "customer_country"=>nil},
-      "created_at"  =>"2015-03-30T16:56:17Z",
-      "balance"     =>0,
-      "currency"    =>"DKK"
+      'id'          =>1145,
+      'order_id'    =>'310f59c57a',
+      'accepted'    =>true,
+      'test_mode'   =>true,
+      'branding_id' =>nil,
+      'variables'   =>{},
+      'acquirer'    =>'clearhaus',
+      'operations'  =>[],
+      'metadata'    =>{'type'=>'card', 'brand'=>'quickpay-test-card', 'last4'=>'0008', 'exp_month'=>9, 'exp_year'=>2016, 'country'=>'DK', 'is_3d_secure'=>false, 'customer_ip'=>nil, 'customer_country'=>nil},
+      'created_at'  =>'2015-03-30T16:56:17Z',
+      'balance'     =>0,
+      'currency'    =>'DKK'
     }.to_json
   end
 
   def succesful_refund_response
     {
-       "id"          =>1145,
-       "order_id"    =>"310f59c57a",
-       "accepted"    =>true,
-       "test_mode"   =>true,
-       "branding_id" =>nil,
-       "variables"   =>{},
-       "acquirer"    =>"clearhaus",
-       "operations"  =>[],
-       "metadata"=>{
-          "type"             =>"card",
-          "brand"            =>"quickpay-test-card",
-          "last4"            =>"0008",
-          "exp_month"        =>9,
-          "exp_year"         =>2016,
-          "country"          =>"DK",
-          "is_3d_secure"     =>false,
-          "customer_ip"      =>nil,
-          "customer_country" =>nil
+       'id'          =>1145,
+       'order_id'    =>'310f59c57a',
+       'accepted'    =>true,
+       'test_mode'   =>true,
+       'branding_id' =>nil,
+       'variables'   =>{},
+       'acquirer'    =>'clearhaus',
+       'operations'  =>[],
+       'metadata'=>{
+          'type'             =>'card',
+          'brand'            =>'quickpay-test-card',
+          'last4'            =>'0008',
+          'exp_month'        =>9,
+          'exp_year'         =>2016,
+          'country'          =>'DK',
+          'is_3d_secure'     =>false,
+          'customer_ip'      =>nil,
+          'customer_country' =>nil
         },
-        "created_at" =>"2015-03-30T16:56:17Z",
-        "balance"    =>100,
-        "currency"   =>"DKK"
+        'created_at' =>'2015-03-30T16:56:17Z',
+        'balance'    =>100,
+        'currency'   =>'DKK'
       }.to_json
   end
 
   def failed_authorization_response
     {
-      'message' => "Validation error",
-      "errors" => {
-        "id" => ["is not valid"]
+      'message' => 'Validation error',
+      'errors' => {
+        'id' => ['is not valid']
       }
     }.to_json
   end
 
   def failed_payment_response
     {
-      "message" => "Validation error",
-      "errors" => {
-        "currency" => ["must be three uppercase letters"]
+      'message' => 'Validation error',
+      'errors' => {
+        'currency' => ['must be three uppercase letters']
       },
-      "error_code" => nil
+      'error_code' => nil
     }.to_json
   end
 

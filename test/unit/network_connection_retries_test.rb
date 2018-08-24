@@ -19,7 +19,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
       end
     end
 
-    assert_equal "The remote server dropped the connection", raised.message
+    assert_equal 'The remote server dropped the connection', raised.message
   end
 
   def test_econnreset_raises_correctly
@@ -28,14 +28,11 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
         raise Errno::ECONNRESET
       end
     end
-    assert_equal "The remote server reset the connection", raised.message
+    assert_equal 'The remote server reset the connection', raised.message
   end
 
   def test_timeout_errors_raise_correctly
-    exceptions = [Timeout::Error, Errno::ETIMEDOUT]
-    if RUBY_VERSION >= '2.0.0'
-      exceptions += [Net::ReadTimeout, Net::OpenTimeout]
-    end
+    exceptions = [Timeout::Error, Errno::ETIMEDOUT, Net::ReadTimeout, Net::OpenTimeout]
 
     exceptions.each do |exception|
       raised = assert_raises(ActiveMerchant::ConnectionError) do
@@ -43,7 +40,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
           raise exception
         end
       end
-      assert_equal "The connection to the remote server timed out", raised.message
+      assert_equal 'The connection to the remote server timed out', raised.message
     end
   end
 
@@ -53,14 +50,12 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
         raise SocketError
       end
     end
-    assert_equal "The connection to the remote server could not be established", raised.message
+    assert_equal 'The connection to the remote server could not be established', raised.message
   end
 
   def test_ssl_errors_raise_correctly
-    exceptions = [OpenSSL::SSL::SSLError]
-    if RUBY_VERSION >= '2.1.0'
-      exceptions += [OpenSSL::SSL::SSLErrorWaitWritable, OpenSSL::SSL::SSLErrorWaitReadable]
-    end
+    exceptions = [OpenSSL::SSL::SSLError, OpenSSL::SSL::SSLErrorWaitWritable,
+                  OpenSSL::SSL::SSLErrorWaitReadable]
 
     exceptions.each do |exception|
       raised = assert_raises(ActiveMerchant::ConnectionError) do
@@ -68,7 +63,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
           raise exception
         end
       end
-      assert_equal "The SSL connection to the remote server could not be established", raised.message
+      assert_equal 'The SSL connection to the remote server could not be established', raised.message
     end
   end
 
@@ -174,7 +169,7 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @requester.expects(:post).raises(MyNewError)
 
     assert_raises(ActiveMerchant::ConnectionError) do
-      retry_exceptions :connection_exceptions => {MyNewError => "my message"} do
+      retry_exceptions :connection_exceptions => {MyNewError => 'my message'} do
         @requester.post
       end
     end

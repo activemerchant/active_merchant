@@ -14,7 +14,7 @@ class RemoteIppTest < Test::Unit::TestCase
   end
 
   def test_dump_transcript
-    skip("Transcript scrubbing for this gateway has been tested.")
+    skip('Transcript scrubbing for this gateway has been tested.')
     dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 

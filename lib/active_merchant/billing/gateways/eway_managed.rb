@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, billing_address)
         add_misc_fields(post, options)
 
-        commit("CreateCustomer", post)
+        commit('CreateCustomer', post)
       end
 
       def update(billing_id, creditcard, options={})
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, billing_address)
         add_misc_fields(post, options)
 
-        commit("UpdateCustomer", post)
+        commit('UpdateCustomer', post)
       end
 
       # Process a payment in the given amount against the stored credit card given by billing_id
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
         post[:amount]=money
         add_invoice(post, options)
 
-        commit("ProcessPayment", post)
+        commit('ProcessPayment', post)
       end
 
       # Get customer's stored credit card details given by billing_id
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:managedCustomerID] = billing_id.to_s
 
-        commit("QueryCustomer", post)
+        commit('QueryCustomer', post)
       end
 
       # TODO: eWay API also provides QueryPayment
@@ -106,8 +106,8 @@ module ActiveMerchant #:nodoc:
       private
 
       def eway_requires!(hash)
-        raise ArgumentError.new("Missing eWay required parameter in `billing_address`: title") unless hash.has_key?(:title)
-        raise ArgumentError.new("Missing eWay required parameter in `billing_address`: country") unless hash.has_key?(:country)
+        raise ArgumentError.new('Missing eWay required parameter in `billing_address`: title') unless hash.has_key?(:title)
+        raise ArgumentError.new('Missing eWay required parameter in `billing_address`: country') unless hash.has_key?(:country)
       end
 
       def add_address(post, address)
@@ -140,8 +140,8 @@ module ActiveMerchant #:nodoc:
       # add credit card details to be stored by eway. NOTE eway requires "title" field
       def add_creditcard(post, creditcard)
         post[:CCNumber]  = creditcard.number
-        post[:CCExpiryMonth]  = sprintf("%.2i", creditcard.month)
-        post[:CCExpiryYear] = sprintf("%.4i", creditcard.year)[-2..-1]
+        post[:CCExpiryMonth]  = sprintf('%.2i', creditcard.month)
+        post[:CCExpiryYear] = sprintf('%.4i', creditcard.year)[-2..-1]
         post[:CCNameOnCard] = creditcard.name
         post[:FirstName] = creditcard.first_name
         post[:LastName]  = creditcard.last_name
@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         reply = {}
         xml = REXML::Document.new(body)
-        if root = REXML::XPath.first(xml, "//soap:Fault") then
+        if root = REXML::XPath.first(xml, '//soap:Fault') then
            reply=parse_fault(root)
         else
           if root = REXML::XPath.first(xml, '//ProcessPaymentResponse/ewayResponse') then
@@ -173,12 +173,12 @@ module ActiveMerchant #:nodoc:
                     # ERROR: This state should never occur. If there is a problem,
                     #        a soap:Fault will be returned. The presence of this
                     #        element always means a success.
-                    raise StandardError, "Unexpected \"false\" in UpdateCustomerResult"
+                    raise StandardError, 'Unexpected "false" in UpdateCustomerResult'
                   end
                 else
                   # ERROR: This state should never occur currently. We have handled
                   #        responses for all the methods which we support.
-                  raise StandardError, "Unexpected response"
+                  raise StandardError, 'Unexpected response'
                 end
               end
             end

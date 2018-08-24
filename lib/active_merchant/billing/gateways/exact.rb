@@ -3,15 +3,15 @@ module ActiveMerchant #:nodoc:
     class ExactGateway < Gateway
       self.live_url = self.test_url = 'https://secure2.e-xact.com/vplug-in/transaction/rpc-enc/service.asmx'
 
-      API_VERSION = "8.5"
+      API_VERSION = '8.5'
 
-      TEST_LOGINS = [ {:login => "A00049-01", :password => "test1"},
-                      {:login => "A00427-01", :password => "testus"} ]
+      TEST_LOGINS = [ {:login => 'A00049-01', :password => 'test1'},
+                      {:login => 'A00427-01', :password => 'testus'} ]
 
-      TRANSACTIONS = { :sale          => "00",
-                       :authorization => "01",
-                       :capture       => "32",
-                       :credit        => "34" }
+      TRANSACTIONS = { :sale          => '00',
+                       :authorization => '01',
+                       :capture       => '32',
+                       :credit        => '34' }
 
 
       ENVELOPE_NAMESPACES = { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
                               'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'
                             }
 
-      SEND_AND_COMMIT_ATTRIBUTES = { 'xmlns:n1' => "http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Request",
+      SEND_AND_COMMIT_ATTRIBUTES = { 'xmlns:n1' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Request',
                                      'env:encodingStyle' => 'http://schemas.xmlsoap.org/soap/encoding/'
                                    }
 
@@ -27,11 +27,11 @@ module ActiveMerchant #:nodoc:
                                             'xsi:type' => 'n2:Transaction'
                                           }
 
-      POST_HEADERS = { 'soapAction' => "http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/SendAndCommit",
+      POST_HEADERS = { 'soapAction' => 'http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/SendAndCommit',
                        'Content-Type' => 'text/xml'
                      }
 
-      SUCCESS = "true"
+      SUCCESS = 'true'
 
       SENSITIVE_FIELDS = [ :verification_str2, :expiry_date, :card_number ]
 
@@ -207,9 +207,9 @@ module ActiveMerchant #:nodoc:
         response = {}
         xml = REXML::Document.new(xml)
 
-        if root = REXML::XPath.first(xml, "//types:TransactionResult")
+        if root = REXML::XPath.first(xml, '//types:TransactionResult')
           parse_elements(response, root)
-        elsif root = REXML::XPath.first(xml, "//soap:Fault")
+        elsif root = REXML::XPath.first(xml, '//soap:Fault')
           parse_elements(response, root)
         end
 

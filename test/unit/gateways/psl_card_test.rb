@@ -55,10 +55,10 @@ class PslCardTest < Test::Unit::TestCase
   
   private
   def successful_purchase_response
-    "ResponseCode=00&Message=AUTHCODE:01256&CrossReference=08012522454901256086&First4=4543&Last4=9982&ExpMonth=12&ExpYear=2010&AVSCV2Check=ALL MATCH&Amount=1000&QAAddress=76 Roseby Avenue Manchester&QAPostcode=M63X 7TH&MerchantName=Merchant Name&QAName=John Smith"
+    'ResponseCode=00&Message=AUTHCODE:01256&CrossReference=08012522454901256086&First4=4543&Last4=9982&ExpMonth=12&ExpYear=2010&AVSCV2Check=ALL MATCH&Amount=1000&QAAddress=76 Roseby Avenue Manchester&QAPostcode=M63X 7TH&MerchantName=Merchant Name&QAName=John Smith'
   end
   
   def unsuccessful_purchase_response
-    "ResponseCode=05&Message=CARD DECLINED&QAAddress=The Parkway Larches Approach Hull North Humberside&QAPostcode=HU7 9OP&MerchantName=Merchant Name&QAName="
+    'ResponseCode=05&Message=CARD DECLINED&QAAddress=The Parkway Larches Approach Hull North Humberside&QAPostcode=HU7 9OP&MerchantName=Merchant Name&QAName='
   end
 end

@@ -29,7 +29,7 @@ class GatewayTest < Test::Unit::TestCase
     assert_nothing_raised do
       Gateway.supported_countries = all_country_codes
       assert Gateway.supported_countries == all_country_codes,
-        "List of supported countries not properly set"
+        'List of supported countries not properly set'
     end
   end
 
@@ -54,18 +54,18 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_card_brand
-    credit_card = stub(:brand => "visa")
-    assert_equal "visa", Gateway.card_brand(credit_card)
+    credit_card = stub(:brand => 'visa')
+    assert_equal 'visa', Gateway.card_brand(credit_card)
   end
 
   def test_card_brand_using_type
-    credit_card = stub(:type => "String")
-    assert_equal "string", Gateway.card_brand(credit_card)
+    credit_card = stub(:type => 'String')
+    assert_equal 'string', Gateway.card_brand(credit_card)
   end
 
   def test_setting_application_id_outside_the_class_definition
     assert_equal SimpleTestGateway.application_id, SubclassGateway.application_id
-    SimpleTestGateway.application_id = "New Application ID"
+    SimpleTestGateway.application_id = 'New Application ID'
 
     assert_equal SimpleTestGateway.application_id, SubclassGateway.application_id
   end
@@ -83,25 +83,37 @@ class GatewayTest < Test::Unit::TestCase
   def test_localized_amount_should_ignore_money_format_for_non_fractional_currencies
     Gateway.money_format = :dollars
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
-    assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
+    assert_equal '12', @gateway.send(:localized_amount, 1234, 'ISK')
 
     Gateway.money_format = :cents
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
-    assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
+    assert_equal '12', @gateway.send(:localized_amount, 1234, 'ISK')
+  end
+
+  def test_localized_amount_returns_three_decimal_places_for_three_decimal_currencies
+    @gateway.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
+
+    Gateway.money_format = :dollars
+    assert_equal '0.100', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '1.234', @gateway.send(:localized_amount, 1234, 'BHD')
+
+    Gateway.money_format = :cents
+    assert_equal '100', @gateway.send(:localized_amount, 100, 'OMR')
+    assert_equal '1234', @gateway.send(:localized_amount, 1234, 'BHD')
   end
 
   def test_split_names
-    assert_equal ["Longbob", "Longsen"], @gateway.send(:split_names, "Longbob Longsen")
+    assert_equal ['Longbob', 'Longsen'], @gateway.send(:split_names, 'Longbob Longsen')
   end
 
   def test_split_names_with_single_name
-    assert_equal ["", "Prince"], @gateway.send(:split_names, "Prince")
+    assert_equal ['', 'Prince'], @gateway.send(:split_names, 'Prince')
   end
 
   def test_split_names_with_empty_names
-    assert_equal [nil, nil], @gateway.send(:split_names, "")
+    assert_equal [nil, nil], @gateway.send(:split_names, '')
     assert_equal [nil, nil], @gateway.send(:split_names, nil)
-    assert_equal [nil, nil], @gateway.send(:split_names, " ")
+    assert_equal [nil, nil], @gateway.send(:split_names, ' ')
   end
 
 
@@ -115,7 +127,7 @@ class GatewayTest < Test::Unit::TestCase
     refute gateway.supports_scrubbing?
 
     assert_raise(RuntimeError) do
-      gateway.scrub("hi")
+      gateway.scrub('hi')
     end
   end
 

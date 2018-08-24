@@ -28,7 +28,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "353583515|252889136", response.authorization
+    assert_equal '353583515|252889136', response.authorization
     assert response.test?
   end
 
@@ -46,7 +46,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "421414035|306588394", response.authorization
+    assert_equal '421414035|306588394', response.authorization
     assert response.test?
   end
 
@@ -63,7 +63,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "354275517|253394390", response.authorization
+    assert_equal '354275517|253394390', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -80,7 +80,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "353583515|252889136", response.authorization
+    assert_equal '353583515|252889136', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -98,7 +98,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "353583515|252889136", response.authorization
+    assert_equal '353583515|252889136', response.authorization
 
     refund = stub_comms do
       @gateway.void(response.authorization)
@@ -122,7 +122,7 @@ class WorldpayUsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_unsuccessful_verify
@@ -172,7 +172,22 @@ class WorldpayUsTest < Test::Unit::TestCase
     end.respond_with(empty_purchase_response)
 
     assert_failure response
-    assert_equal "Unable to read error message", response.message
+    assert_equal 'Unable to read error message', response.message
+  end
+
+  def test_backup_url
+    response = stub_comms(@gateway) do
+      @gateway.purchase(@amount, @credit_card, use_backup_url: true)
+    end.check_request do |endpoint, data, headers|
+      assert_equal WorldpayUsGateway.backup_url, endpoint
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed_check), post_scrubbed_check
   end
 
   private
@@ -418,5 +433,97 @@ result=0
 Status=Declined
 transid=0
     )
+  end
+
+  def pre_scrubbed
+    <<-EOS
+opening connection to trans.worldpay.us:443...
+opened
+starting SSL for trans.worldpay.us:443...
+SSL established
+<- "POST /cgi-bin/process.cgi HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: trans.worldpay.us\r\nContent-Length: 425\r\n\r\n"
+<- "acctid=MPNAB&action=ns_quicksale_cc&amount=1.00&ccname=Longbob+Longsen&ccnum=4446661234567892&ci_billaddr1=456+My+Street&ci_billaddr2=Apt+1&ci_billcity=Ottawa&ci_billcountry=CA&ci_billstate=ON&ci_billzip=K1C2N6&ci_companyname=Widgets+Inc&ci_email=&ci_ipaddress=&ci_phone=%28555%29555-5555&currencycode=USD&cvv2=987&expmon=09&expyear=2019&merchantordernumber=67f4f20082e79684f036f25dafe96304&merchantpin=1234567890&subid=SPREE"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Tue, 13 Feb 2018 19:28:27 GMT\r\n"
+-> "Server: Apache\r\n"
+-> "X-Frame-Options: SAMEORIGIN\r\n"
+-> "Content-Type: text/html;charset=ISO-8859-1\r\n"
+-> "Content-Length: 962\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 962 bytes...
+-> "<html><body><plaintext>\r\nAccepted=SALE:036586:477::919067116:N::N\r\nhistoryid=919067116\r\norderid=722189706\r\nAccepted=SALE:036586:477::919067116:N::N\r\nACCOUNTNUMBER=************7892\r\nACCTID=MPNAB\r\nauthcode=036586\r\nAuthNo=SALE:036586:477::919067116:N::N\r\nAVS_RESULT=N\r\nBATCHNUMBER=\r\nCVV2_RESULT=N\r\nDEBIT_TRACE_NUMBER=\r\nENTRYMETHOD=M\r\nhistoryid=919067116\r\nMERCHANT_DBA_ADDR=11121 Willows Road NE\r\nMERCHANT_DBA_CITY=Redmond\r\nMERCHANT_DBA_NAME=Merchant Partners\r\nMERCHANT_DBA_PHONE=4254979909\r\nMERCHANT_DBA_STATE=WA\r\nMERCHANTID=542929804946788\r\nMERCHANTORDERNUMBER=67f4f20082e79684f036f25dafe96304\r\norderid=722189706\r\nPAYTYPE=Visa\r\nPRODUCT_DESCRIPTION=\r\nReason=\r\nRECEIPT_FOOTER=Thank You\r\nrecurid=0\r\nrefcode=919067116-036586\r\nresult=1\r\nSEQUENCE_NUMBER=370609730\r\nStatus=Accepted\r\nSUBID=SPREE\r\nSYSTEMAUDITTRACENUMBER=477\r\nTERMINALID=160551\r\nTRANSGUID=d5701d57-9147-4ded-b596-6805581f081c:266\r\ntransid=370609730\r\ntransresult=APPROVED\r\nVISATRANSACTIONID=088044000036586\r\n"
+read 962 bytes
+Conn close
+    EOS
+  end
+
+  def post_scrubbed
+    <<-EOS
+opening connection to trans.worldpay.us:443...
+opened
+starting SSL for trans.worldpay.us:443...
+SSL established
+<- "POST /cgi-bin/process.cgi HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: trans.worldpay.us\r\nContent-Length: 425\r\n\r\n"
+<- "acctid=MPNAB&action=ns_quicksale_cc&amount=1.00&ccname=Longbob+Longsen&ccnum=[FILTERED]&ci_billaddr1=456+My+Street&ci_billaddr2=Apt+1&ci_billcity=Ottawa&ci_billcountry=CA&ci_billstate=ON&ci_billzip=K1C2N6&ci_companyname=Widgets+Inc&ci_email=&ci_ipaddress=&ci_phone=%28555%29555-5555&currencycode=USD&cvv2=[FILTERED]&expmon=09&expyear=2019&merchantordernumber=67f4f20082e79684f036f25dafe96304&merchantpin=[FILTERED]&subid=SPREE"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Tue, 13 Feb 2018 19:28:27 GMT\r\n"
+-> "Server: Apache\r\n"
+-> "X-Frame-Options: SAMEORIGIN\r\n"
+-> "Content-Type: text/html;charset=ISO-8859-1\r\n"
+-> "Content-Length: 962\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 962 bytes...
+-> "<html><body><plaintext>\r\nAccepted=SALE:036586:477::919067116:N::N\r\nhistoryid=919067116\r\norderid=722189706\r\nAccepted=SALE:036586:477::919067116:N::N\r\nACCOUNTNUMBER=************7892\r\nACCTID=MPNAB\r\nauthcode=036586\r\nAuthNo=SALE:036586:477::919067116:N::N\r\nAVS_RESULT=N\r\nBATCHNUMBER=\r\nCVV2_RESULT=N\r\nDEBIT_TRACE_NUMBER=\r\nENTRYMETHOD=M\r\nhistoryid=919067116\r\nMERCHANT_DBA_ADDR=11121 Willows Road NE\r\nMERCHANT_DBA_CITY=Redmond\r\nMERCHANT_DBA_NAME=Merchant Partners\r\nMERCHANT_DBA_PHONE=4254979909\r\nMERCHANT_DBA_STATE=WA\r\nMERCHANTID=542929804946788\r\nMERCHANTORDERNUMBER=67f4f20082e79684f036f25dafe96304\r\norderid=722189706\r\nPAYTYPE=Visa\r\nPRODUCT_DESCRIPTION=\r\nReason=\r\nRECEIPT_FOOTER=Thank You\r\nrecurid=0\r\nrefcode=919067116-036586\r\nresult=1\r\nSEQUENCE_NUMBER=370609730\r\nStatus=Accepted\r\nSUBID=SPREE\r\nSYSTEMAUDITTRACENUMBER=477\r\nTERMINALID=160551\r\nTRANSGUID=d5701d57-9147-4ded-b596-6805581f081c:266\r\ntransid=370609730\r\ntransresult=APPROVED\r\nVISATRANSACTIONID=088044000036586\r\n"
+read 962 bytes
+Conn close
+    EOS
+  end
+
+  def pre_scrubbed_check
+    <<-EOS
+opening connection to trans.worldpay.us:443...
+opened
+starting SSL for trans.worldpay.us:443...
+SSL established
+<- "POST /cgi-bin/process.cgi HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: trans.worldpay.us\r\nContent-Length: 412\r\n\r\n"
+<- "acctid=MPNAB&action=ns_quicksale_check&amount=1.00&ci_billaddr1=456+My+Street&ci_billaddr2=Apt+1&ci_billcity=Ottawa&ci_billcountry=CA&ci_billstate=ON&ci_billzip=K1C2N6&ci_companyname=Widgets+Inc&ci_email=&ci_ipaddress=&ci_phone=%28555%29555-5555&ckaba=244183602&ckacct=15378535&ckaccttype=1&ckno=12345654321&currencycode=USD&merchantordernumber=5ec80ff8210dc9d24248ac2777d6b4f3&merchantpin=1234567890&subid=SPREE"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Tue, 13 Feb 2018 19:29:38 GMT\r\n"
+-> "Server: Apache\r\n"
+-> "X-Frame-Options: SAMEORIGIN\r\n"
+-> "Content-Type: text/html;charset=ISO-8859-1\r\n"
+-> "Content-Length: 414\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 414 bytes...
+-> "<html><body><plaintext>\r\nDeclined=DECLINED:1103180001:Invalid Bank:\r\nhistoryid=919060608\r\norderid=722196666\r\nACCOUNTNUMBER=****8535\r\nDeclined=DECLINED:1103180001:Invalid Bank:\r\nENTRYMETHOD=KEYED\r\nhistoryid=919060608\r\nMERCHANTORDERNUMBER=5ec80ff8210dc9d24248ac2777d6b4f3\r\norderid=722196666\r\nPAYTYPE=Check\r\nrcode=1103180001\r\nReason=DECLINED:1103180001:Invalid Bank:\r\nrecurid=0\r\nresult=0\r\nStatus=Declined\r\ntransid=0\r\n"
+read 414 bytes
+Conn close
+    EOS
+  end
+
+  def post_scrubbed_check
+    <<-EOS
+opening connection to trans.worldpay.us:443...
+opened
+starting SSL for trans.worldpay.us:443...
+SSL established
+<- "POST /cgi-bin/process.cgi HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: trans.worldpay.us\r\nContent-Length: 412\r\n\r\n"
+<- "acctid=MPNAB&action=ns_quicksale_check&amount=1.00&ci_billaddr1=456+My+Street&ci_billaddr2=Apt+1&ci_billcity=Ottawa&ci_billcountry=CA&ci_billstate=ON&ci_billzip=K1C2N6&ci_companyname=Widgets+Inc&ci_email=&ci_ipaddress=&ci_phone=%28555%29555-5555&ckaba=244183602&ckacct=[FILTERED]&ckaccttype=1&ckno=12345654321&currencycode=USD&merchantordernumber=5ec80ff8210dc9d24248ac2777d6b4f3&merchantpin=[FILTERED]&subid=SPREE"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Date: Tue, 13 Feb 2018 19:29:38 GMT\r\n"
+-> "Server: Apache\r\n"
+-> "X-Frame-Options: SAMEORIGIN\r\n"
+-> "Content-Type: text/html;charset=ISO-8859-1\r\n"
+-> "Content-Length: 414\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 414 bytes...
+-> "<html><body><plaintext>\r\nDeclined=DECLINED:1103180001:Invalid Bank:\r\nhistoryid=919060608\r\norderid=722196666\r\nACCOUNTNUMBER=****8535\r\nDeclined=DECLINED:1103180001:Invalid Bank:\r\nENTRYMETHOD=KEYED\r\nhistoryid=919060608\r\nMERCHANTORDERNUMBER=5ec80ff8210dc9d24248ac2777d6b4f3\r\norderid=722196666\r\nPAYTYPE=Check\r\nrcode=1103180001\r\nReason=DECLINED:1103180001:Invalid Bank:\r\nrecurid=0\r\nresult=0\r\nStatus=Declined\r\ntransid=0\r\n"
+read 414 bytes
+Conn close
+    EOS
   end
 end

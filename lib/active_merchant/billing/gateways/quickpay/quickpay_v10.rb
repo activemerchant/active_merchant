@@ -15,26 +15,34 @@ module ActiveMerchant
       end
 
       def purchase(money, credit_card_or_reference, options = {})
-        MultiResponse.run(true) do |r|
+        MultiResponse.run do |r|
+          if credit_card_or_reference.is_a?(String)
+            r.process { create_token(credit_card_or_reference, options) }
+            credit_card_or_reference = r.authorization
+          end
           r.process { create_payment(money, options) }
           r.process {
             post = authorization_params(money, credit_card_or_reference, options)
             add_autocapture(post, false)
-            commit(synchronized_path("/payments/#{r.authorization}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
           }
           r.process {
             post = capture_params(money, credit_card_or_reference, options)
-            commit(synchronized_path("/payments/#{r.authorization}/capture"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/capture"), post)
           }
         end
       end
 
       def authorize(money, credit_card_or_reference, options = {})
-        MultiResponse.run(true) do |r|
+        MultiResponse.run do |r|
+          if credit_card_or_reference.is_a?(String)
+            r.process { create_token(credit_card_or_reference, options) }
+            credit_card_or_reference = r.authorization
+          end
           r.process { create_payment(money, options) }
           r.process {
             post = authorization_params(money, credit_card_or_reference, options)
-            commit(synchronized_path("/payments/#{r.authorization}/authorize"), post)
+            commit(synchronized_path("/payments/#{r.responses.last.params["id"]}/authorize"), post)
           }
         end
       end
@@ -71,12 +79,10 @@ module ActiveMerchant
         MultiResponse.run do |r|
           r.process { create_store(options) }
           r.process { authorize_store(r.authorization, credit_card, options)}
-          r.process { create_token(r.authorization, options.merge({id: r.authorization}))}
         end
       end
 
       def unstore(identification)
-        identification = identification.split(";").last
         commit(synchronized_path "/cards/#{identification}/cancel")
       end
 
@@ -93,11 +99,11 @@ module ActiveMerchant
 
       private
 
-        def authorization_params(money, credit_card, options = {})
+        def authorization_params(money, credit_card_or_reference, options = {})
           post = {}
 
           add_amount(post, money, options)
-          add_credit_card_or_reference(post, credit_card)
+          add_credit_card_or_reference(post, credit_card_or_reference)
           add_additional_params(:authorize, post, options)
 
           post
@@ -126,7 +132,6 @@ module ActiveMerchant
 
         def create_token(identification, options)
           post = {}
-          post[:id] = options[:id]
           commit(synchronized_path("/cards/#{identification}/tokens"), post)
         end
 
@@ -150,15 +155,15 @@ module ActiveMerchant
 
           Response.new(success, message_from(success, response), response,
             :test => test?,
-            :authorization => authorization_from(response, params[:id])
+            :authorization => authorization_from(response)
           )
         end
 
-        def authorization_from(response, auth_id)
-          if response["token"]
-            "#{response["token"]};#{auth_id}"
+        def authorization_from(response)
+          if response['token']
+            response['token'].to_s
           else
-             response["id"]
+             response['id'].to_s
           end
         end
 
@@ -190,7 +195,7 @@ module ActiveMerchant
             post[:shipping_address] = map_address(options[:shipping_address])
           end
 
-          [:metadata, :brading_id, :variables].each do |field|
+          [:metadata, :branding_id, :variables].each do |field|
             post[field] = options[field] if options[field]
           end
         end
@@ -205,8 +210,7 @@ module ActiveMerchant
         def add_credit_card_or_reference(post, credit_card_or_reference, options = {})
           post[:card]             ||= {}
           if credit_card_or_reference.is_a?(String)
-            reference = credit_card_or_reference.split(";").first
-            post[:card][:token] = reference
+            post[:card][:token] = credit_card_or_reference
           else
             post[:card][:number]     = credit_card_or_reference.number
             post[:card][:cvd]        = credit_card_or_reference.verification_value
@@ -227,13 +231,13 @@ module ActiveMerchant
         end
 
         def message_from(success, response)
-          success ? 'OK' : (response['message'] || invalid_operation_message(response) || "Unknown error - please contact QuickPay")
+          success ? 'OK' : (response['message'] || invalid_operation_message(response) || 'Unknown error - please contact QuickPay')
         end
 
         def invalid_operation_code?(response)
           if response['operations']
             operation = response['operations'].last
-            operation && operation['qp_status_code'] != "20000"
+            operation && operation['qp_status_code'] != '20000'
           end
         end
 
@@ -263,11 +267,11 @@ module ActiveMerchant
         def headers
           auth = Base64.strict_encode64(":#{@options[:api_key]}")
           {
-            "Authorization"  => "Basic " + auth,
-            "User-Agent"     => "Quickpay-v#{API_VERSION} ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-            "Accept"         => "application/json",
-            "Accept-Version" => "v#{API_VERSION}",
-            "Content-Type"   => "application/json"
+            'Authorization'  => 'Basic ' + auth,
+            'User-Agent'     => "Quickpay-v#{API_VERSION} ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+            'Accept'         => 'application/json',
+            'Accept-Version' => "v#{API_VERSION}",
+            'Content-Type'   => 'application/json'
           }
         end
 
@@ -282,7 +286,7 @@ module ActiveMerchant
         def json_error(raw_response)
           msg = 'Invalid response received from the Quickpay API.'
           msg += "  (The raw response returned by the API was #{raw_response.inspect})"
-          { "message" => msg }
+          { 'message' => msg }
         end
 
         def synchronized_path(path)

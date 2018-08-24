@@ -11,7 +11,7 @@ class VerifiTest < Test::Unit::TestCase
     #  Replace with your login and password for the Verifi test environment
     @options = {
       :order_id => '37',
-      :email => "test@example.com",
+      :email => 'test@example.com',
       :billing_address => address
     }
 

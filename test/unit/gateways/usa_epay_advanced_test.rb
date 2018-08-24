@@ -26,40 +26,40 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
       :year => 12,
       :brand => 'visa',
       :verification_value => '123',
-      :first_name => "Fred",
-      :last_name => "Flintstone"
+      :first_name => 'Fred',
+      :last_name => 'Flintstone'
     )
 
     @check = ActiveMerchant::Billing::Check.new(
       :account_number => '123456789012',
       :routing_number => '123456789',
       :account_type => 'checking',
-      :first_name => "Fred",
-      :last_name => "Flintstone"
+      :first_name => 'Fred',
+      :last_name => 'Flintstone'
     )
 
     payment_methods = [
       {
-        :name => "My Visa", # optional
+        :name => 'My Visa', # optional
         :sort => 2, # optional
         :method => @credit_card
       },
       {
-        :name => "My Checking",
+        :name => 'My Checking',
         :method => @check
       }
     ]
 
     payment_method = {
-      :name => "My new Visa", # optional
+      :name => 'My new Visa', # optional
       :method => @credit_card
     }
 
     @customer_options = {
       :id => 1, # optional: merchant assigned id, usually db id
-      :notes =>  "Note about customer", # optional
-      :data => "Some Data", # optional
-      :url => "awesomesite.com", # optional
+      :notes =>  'Note about customer', # optional
+      :data => 'Some Data', # optional
+      :url => 'awesomesite.com', # optional
       :payment_methods => payment_methods # optional
     }
 
@@ -195,6 +195,18 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert response.test?
     assert_success response
+    assert_equal 'true', response.message
+    assert_nil response.authorization
+  end
+
+  def test_successful_quick_update_customer
+    @gateway.expects(:ssl_post).returns(successful_customer_response('quickUpdateCustomer'))
+
+    assert response = @gateway.quick_update_customer({customer_number: @options[:customer_number], update_data: @customer_options})
+    assert_instance_of Response, response
+    assert response.test?
+    assert_success response
+    assert_equal 'true', response.params['quick_update_customer_return']
     assert_equal 'true', response.message
     assert_nil response.authorization
   end

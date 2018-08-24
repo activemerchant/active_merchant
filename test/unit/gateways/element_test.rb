@@ -49,7 +49,7 @@ class ElementTest < Test::Unit::TestCase
   def test_successful_purchase_with_payment_account_token
     @gateway.expects(:ssl_post).returns(successful_purchase_with_payment_account_token_response)
 
-    response = @gateway.purchase(@amount, "payment-account-token-id", @options)
+    response = @gateway.purchase(@amount, 'payment-account-token-id', @options)
     assert_success response
 
     assert_equal '2005838405|100', response.authorization
@@ -58,7 +58,7 @@ class ElementTest < Test::Unit::TestCase
   def test_failed_purchase_with_payment_account_token
     @gateway.expects(:ssl_post).returns(failed_purchase_with_payment_account_token_response)
 
-    response = @gateway.purchase(@amount, "bad-payment-account-token-id", @options)
+    response = @gateway.purchase(@amount, 'bad-payment-account-token-id', @options)
     assert_failure response
   end
   def test_successful_authorize
@@ -81,7 +81,7 @@ class ElementTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "trans-id")
+    response = @gateway.capture(@amount, 'trans-id')
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -89,7 +89,7 @@ class ElementTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "bad-trans-id")
+    response = @gateway.capture(@amount, 'bad-trans-id')
     assert_failure response
     assert_equal 'TransactionID required', response.message
   end
@@ -97,7 +97,7 @@ class ElementTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, "trans-id")
+    response = @gateway.refund(@amount, 'trans-id')
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -105,7 +105,7 @@ class ElementTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "bad-trans-id")
+    response = @gateway.refund(@amount, 'bad-trans-id')
     assert_failure response
     assert_equal 'TransactionID required', response.message
   end
@@ -113,7 +113,7 @@ class ElementTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    response = @gateway.void("trans-id")
+    response = @gateway.void('trans-id')
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -121,7 +121,7 @@ class ElementTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.void("bad-trans-id")
+    response = @gateway.void('bad-trans-id')
     assert_failure response
     assert_equal 'TransactionAmount required', response.message
   end
@@ -151,7 +151,7 @@ class ElementTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(error_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal response.message, "TargetNamespace required"
+    assert_equal response.message, 'TargetNamespace required'
     assert_failure response
   end
 

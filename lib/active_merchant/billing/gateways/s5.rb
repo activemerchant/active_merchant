@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
 
       def store(payment, options = {})
         request = build_xml_request do |xml|
-          xml.Payment(code: SUPPORTED_TRANSACTIONS["store"])
+          xml.Payment(code: SUPPORTED_TRANSACTIONS['store'])
           add_account(xml, payment)
           add_customer(xml, payment, options)
           add_recurrence_mode(xml, options)
@@ -174,20 +174,20 @@ module ActiveMerchant #:nodoc:
 
       def add_recurrence_mode(xml, options)
         if options[:recurring] == true
-          xml.Recurrence(mode: "REPEATED")
+          xml.Recurrence(mode: 'REPEATED')
         else
-          xml.Recurrence(mode: "INITIAL")
+          xml.Recurrence(mode: 'INITIAL')
         end
       end
 
       def parse(body)
         results  = {}
         xml = Nokogiri::XML(body)
-        resp = xml.xpath("//Response/Transaction/Identification")
+        resp = xml.xpath('//Response/Transaction/Identification')
         resp.children.each do |element|
           results[element.name.downcase.to_sym] = element.text
         end
-        resp = xml.xpath("//Response/Transaction/Processing")
+        resp = xml.xpath('//Response/Transaction/Processing')
         resp.children.each do |element|
           results[element.name.downcase.to_sym] = element.text
         end

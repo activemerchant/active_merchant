@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
       private
       # Used for capturing, which is currently not supported.
       def add_reference(post, identification)
-        auth, trans_id = identification.split(";")
+        auth, trans_id = identification.split(';')
         post[:authnum]    = auth
         post[:transid] = trans_id
       end
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        [ response[:authnum], response[:transid] ].compact.join(";")
+        [ response[:authnum], response[:transid] ].compact.join(';')
       end
 
       def test_response?(response)
@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         response = {}
         body.to_s.each_line do |l|
-          key, value = l.split(":", 2)
+          key, value = l.split(':', 2)
           response[key.to_s.downcase.to_sym] = value.strip
         end
         response
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
         parameters[:merchant_id]      = @options[:login]
         parameters[:password]         = @options[:password]
 
-        parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

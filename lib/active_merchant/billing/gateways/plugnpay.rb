@@ -3,80 +3,80 @@ module ActiveMerchant
     class PlugnpayGateway < Gateway
       class PlugnpayPostData < PostData
         # Fields that will be sent even if they are blank
-        self.required_fields = [ :publisher_name, :publisher_password,
-          :card_amount, :card_name, :card_number, :card_exp, :orderID ]
+        self.required_fields = [:publisher_name, :publisher_password,
+                                :card_amount, :card_name, :card_number, :card_exp, :orderID]
       end
       self.live_url = self.test_url = 'https://pay1.plugnpay.com/payment/pnpremote.cgi'
 
       CARD_CODE_MESSAGES = {
-        "M" => "Card verification number matched",
-        "N" => "Card verification number didn't match",
-        "P" => "Card verification number was not processed",
-        "S" => "Card verification number should be on card but was not indicated",
-        "U" => "Issuer was not certified for card verification"
+        'M' => 'Card verification number matched',
+        'N' => "Card verification number didn't match",
+        'P' => 'Card verification number was not processed',
+        'S' => 'Card verification number should be on card but was not indicated',
+        'U' => 'Issuer was not certified for card verification'
       }
 
       CARD_CODE_ERRORS = %w( N S )
 
       AVS_MESSAGES = {
-        "A" => "Street address matches billing information, zip/postal code does not",
-        "B" => "Address information not provided for address verification check",
-        "E" => "Address verification service error",
-        "G" => "Non-U.S. card-issuing bank",
-        "N" => "Neither street address nor zip/postal match billing information",
-        "P" => "Address verification not applicable for this transaction",
-        "R" => "Payment gateway was unavailable or timed out",
-        "S" => "Address verification service not supported by issuer",
-        "U" => "Address information is unavailable",
-        "W" => "9-digit zip/postal code matches billing information, street address does not",
-        "X" => "Street address and 9-digit zip/postal code matches billing information",
-        "Y" => "Street address and 5-digit zip/postal code matches billing information",
-        "Z" => "5-digit zip/postal code matches billing information, street address does not",
+        'A' => 'Street address matches billing information, zip/postal code does not',
+        'B' => 'Address information not provided for address verification check',
+        'E' => 'Address verification service error',
+        'G' => 'Non-U.S. card-issuing bank',
+        'N' => 'Neither street address nor zip/postal match billing information',
+        'P' => 'Address verification not applicable for this transaction',
+        'R' => 'Payment gateway was unavailable or timed out',
+        'S' => 'Address verification service not supported by issuer',
+        'U' => 'Address information is unavailable',
+        'W' => '9-digit zip/postal code matches billing information, street address does not',
+        'X' => 'Street address and 9-digit zip/postal code matches billing information',
+        'Y' => 'Street address and 5-digit zip/postal code matches billing information',
+        'Z' => '5-digit zip/postal code matches billing information, street address does not',
       }
 
       AVS_ERRORS = %w( A E N R W Z )
 
       PAYMENT_GATEWAY_RESPONSES = {
-        "P01" => "AVS Mismatch Failure",
-        "P02" => "CVV2 Mismatch Failure",
-        "P21" => "Transaction may not be marked",
-        "P30" => "Test Tran. Bad Card",
-        "P35" => "Test Tran. Problem",
-        "P40" => "Username already exists",
-        "P41" => "Username is blank",
-        "P50" => "Fraud Screen Failure",
-        "P51" => "Missing PIN Code",
-        "P52" => "Invalid Bank Acct. No.",
-        "P53" => "Invalid Bank Routing No.",
-        "P54" => "Invalid/Missing Check No.",
-        "P55" => "Invalid Credit Card No.",
-        "P56" => "Invalid CVV2/CVC2 No.",
-        "P57" => "Expired. CC Exp. Date",
-        "P58" => "Missing Data",
-        "P59" => "Missing Email Address",
-        "P60" => "Zip Code does not match Billing State.",
-        "P61" => "Invalid Billing Zip Code",
-        "P62" => "Zip Code does not match Shipping State.",
-        "P63" => "Invalid Shipping Zip Code",
-        "P64" => "Invalid Credit Card CVV2/CVC2 Format.",
-        "P65" => "Maximum number of attempts has been exceeded.",
-        "P66" => "Credit Card number has been flagged and can not be used to access this service.",
-        "P67" => "IP Address is on Blocked List.",
-        "P68" => "Billing country does not match ipaddress country.",
-        "P69" => "US based ipaddresses are currently blocked.",
-        "P70" => "Credit Cards issued from this bank are currently not being accepted.",
-        "P71" => "Credit Cards issued from this bank are currently not being accepted.",
-        "P72" => "Daily volume exceeded.",
-        "P73" => "Too many transactions within allotted time.",
-        "P91" => "Missing/incorrect password",
-        "P92" => "Account not configured for mobil administration",
-        "P93" => "IP Not registered to username.",
-        "P94" => "Mode not permitted for this account.",
-        "P95" => "Currently Blank",
-        "P96" => "Currently Blank",
-        "P97" => "Processor not responding",
-        "P98" => "Missing merchant/publisher name",
-        "P99" => "Currently Blank"
+        'P01' => 'AVS Mismatch Failure',
+        'P02' => 'CVV2 Mismatch Failure',
+        'P21' => 'Transaction may not be marked',
+        'P30' => 'Test Tran. Bad Card',
+        'P35' => 'Test Tran. Problem',
+        'P40' => 'Username already exists',
+        'P41' => 'Username is blank',
+        'P50' => 'Fraud Screen Failure',
+        'P51' => 'Missing PIN Code',
+        'P52' => 'Invalid Bank Acct. No.',
+        'P53' => 'Invalid Bank Routing No.',
+        'P54' => 'Invalid/Missing Check No.',
+        'P55' => 'Invalid Credit Card No.',
+        'P56' => 'Invalid CVV2/CVC2 No.',
+        'P57' => 'Expired. CC Exp. Date',
+        'P58' => 'Missing Data',
+        'P59' => 'Missing Email Address',
+        'P60' => 'Zip Code does not match Billing State.',
+        'P61' => 'Invalid Billing Zip Code',
+        'P62' => 'Zip Code does not match Shipping State.',
+        'P63' => 'Invalid Shipping Zip Code',
+        'P64' => 'Invalid Credit Card CVV2/CVC2 Format.',
+        'P65' => 'Maximum number of attempts has been exceeded.',
+        'P66' => 'Credit Card number has been flagged and can not be used to access this service.',
+        'P67' => 'IP Address is on Blocked List.',
+        'P68' => 'Billing country does not match ipaddress country.',
+        'P69' => 'US based ipaddresses are currently blocked.',
+        'P70' => 'Credit Cards issued from this bank are currently not being accepted.',
+        'P71' => 'Credit Cards issued from this bank are currently not being accepted.',
+        'P72' => 'Daily volume exceeded.',
+        'P73' => 'Too many transactions within allotted time.',
+        'P91' => 'Missing/incorrect password',
+        'P92' => 'Account not configured for mobil administration',
+        'P93' => 'IP Not registered to username.',
+        'P94' => 'Mode not permitted for this account.',
+        'P95' => 'Currently Blank',
+        'P96' => 'Currently Blank',
+        'P97' => 'Processor not responding',
+        'P98' => 'Missing merchant/publisher name',
+        'P99' => 'Currently Blank'
       }
 
       TRANSACTIONS = {
@@ -273,8 +273,8 @@ module ActiveMerchant
       end
 
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+        year  = sprintf('%.4i', creditcard.year)
+        month = sprintf('%.2i', creditcard.month)
 
         "#{month}/#{year[-2..-1]}"
       end

@@ -177,7 +177,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     authorization = response.authorization
     assert response = @gateway.refund(@amount+1, authorization)
     assert_failure response
-    assert_equal 'Only $2.0 available for refund', response.message
+    assert_equal 'Only 2.00 AUD available for refund', response.message
   end
 
   def test_invalid_login
@@ -222,7 +222,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert card_id = response.authorization
     assert unstore_response = @gateway.unstore(card_id)
     assert_success unstore_response
-    assert_equal "Successful", unstore_response.message
+    assert_equal 'Successful', unstore_response.message
   end
 
   def test_successful_purchase_using_stored_card
@@ -246,7 +246,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
 
     purchase_response = @gateway.purchase(trigger_amount, gateway_id)
 
-    assert gateway_id = purchase_response.params["crn"]
+    assert gateway_id = purchase_response.params['crn']
     assert_failure purchase_response
     assert_equal 'Invalid Amount', purchase_response.message
   end

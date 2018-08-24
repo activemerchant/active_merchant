@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'http://payments.intuit.com'
       self.display_name = 'QuickBooks Payments'
-      ENDPOINT =  "/quickbooks/v4/payments/charges"
+      ENDPOINT =  '/quickbooks/v4/payments/charges'
       OAUTH_ENDPOINTS = {
         site: 'https://oauth.intuit.com',
         request_token_path: '/oauth/v1/get_request_token',
@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_charge_data(post, payment, options)
-        post[:capture] = "true"
+        post[:capture] = 'true'
 
         commit(ENDPOINT, post)
       end
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_charge_data(post, payment, options)
-        post[:capture] = "false"
+        post[:capture] = 'false'
 
         commit(ENDPOINT, post)
       end
@@ -78,6 +78,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         capture_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/capture"
         post[:amount] = localized_amount(money, currency(money))
+        add_context(post, options)
 
         commit(capture_uri, post)
       end
@@ -85,6 +86,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         post = {}
         post[:amount] = localized_amount(money, currency(money))
+        add_context(post, options)
 
         commit(refund_uri(authorization), post)
       end
@@ -137,18 +139,26 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment, options = {})
         add_creditcard(post, payment, options)
+        add_context(post, options)
       end
 
       def add_creditcard(post, creditcard, options = {})
         card = {}
         card[:number] = creditcard.number
-        card[:expMonth] = "%02d" % creditcard.month
+        card[:expMonth] = '%02d' % creditcard.month
         card[:expYear] = creditcard.year
         card[:cvc] = creditcard.verification_value if creditcard.verification_value?
         card[:name] = creditcard.name if creditcard.name
         card[:commercialCardCode] = options[:card_code] if options[:card_code]
 
         post[:card] = card
+      end
+
+      def add_context(post, options = {})
+        post[:context] = {
+          mobile: options.fetch(:mobile, false),
+          isEcommerce: options.fetch(:ecommerce, true)
+        }
       end
 
       def parse(body)
@@ -208,7 +218,7 @@ module ActiveMerchant #:nodoc:
           oauth_nonce: generate_unique_id,
           oauth_timestamp: Time.now.to_i.to_s,
           oauth_signature_method: 'HMAC-SHA1',
-          oauth_version: "1.0",
+          oauth_version: '1.0',
           oauth_consumer_key: @options[:consumer_key],
           oauth_token: @options[:access_token]
         }
@@ -227,9 +237,9 @@ module ActiveMerchant #:nodoc:
         oauth_headers += oauth_parameters.map {|k, v| "#{k}=\"#{v}\""}
 
         {
-          "Content-type" => "application/json",
-          "Request-Id" => generate_unique_id,
-          "Authorization" => oauth_headers.join(', ')
+          'Content-type' => 'application/json',
+          'Request-Id' => generate_unique_id,
+          'Authorization' => oauth_headers.join(', ')
         }
       end
 
@@ -248,11 +258,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response['errors'].present? ? response["errors"].map {|error_hash| error_hash["message"] }.join(" ") : response['status']
+        response['errors'].present? ? response['errors'].map {|error_hash| error_hash['message'] }.join(' ') : response['status']
       end
 
       def errors_from(response)
-        response['errors'].present? ? STANDARD_ERROR_CODE_MAPPING[response["errors"].first["code"]] : ""
+        response['errors'].present? ? STANDARD_ERROR_CODE_MAPPING[response['errors'].first['code']] : ''
       end
 
       def authorization_from(response)

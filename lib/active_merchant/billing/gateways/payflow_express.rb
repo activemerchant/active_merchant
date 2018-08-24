@@ -9,9 +9,7 @@ module ActiveMerchant #:nodoc:
       # in the docs that they recommend you pass the exact same parameters to both setup and authorize/purchase.
       #
       # This information was gleaned from a mix of:
-      # * PayFlow documentation
-      #   * for key value pairs: {Express Checkout for Payflow Pro (PDF)}[https://cms.paypal.com/cms_content/US/en_US/files/developer/PFP_ExpressCheckout_PP.pdf]
-      #   * XMLPay: {Payflow Pro XMLPay Developer's Guide (PDF)}[https://cms.paypal.com/cms_content/US/en_US/files/developer/PP_PayflowPro_XMLPay_Guide.pdf]
+      # * {PayFlow documentation}[https://developer.paypal.com/docs/classic/payflow/integration-guide/]
       # * previous ActiveMerchant code
       # * trial & error
       #
@@ -178,7 +176,7 @@ module ActiveMerchant #:nodoc:
             end
             if items.any?
               xml.tag! 'ExtData', 'Name' => 'CURRENCY', 'Value' => options[:currency] || currency(money)
-              xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(options[:subtotal] || money)
+              xml.tag! 'ExtData', 'Name' => 'ITEMAMT', 'Value' => amount(options[:subtotal] || money)
             end
             xml.tag! 'DiscountAmt', amount(options[:discount]) if options[:discount]
             xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
@@ -192,7 +190,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_paypal_details(xml, options)
-         xml.tag! 'PayPal' do
+        xml.tag! 'PayPal' do
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
           xml.tag! 'ReturnURL', options[:return_url] unless options[:return_url].blank?
           xml.tag! 'CancelURL', options[:cancel_return_url] unless options[:cancel_return_url].blank?
@@ -221,4 +219,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

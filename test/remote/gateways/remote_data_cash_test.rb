@@ -44,8 +44,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
       :brand => :solo,
       :issue_number => 5,
       :start_month => 12,
-      :start_year => 2006,
-      :verification_value => 444
+      :start_year => 2006
     )
 
     @address = {
@@ -303,6 +302,23 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert_equal '1.98 > remaining funds 0.00', second_refund.message
   end
 
+  def test_successful_refund_of_a_repeat_payment
+    @params[:set_up_continuous_authority] = true
+    response = @gateway.purchase(@amount, @mastercard, @params)
+    assert_success response
+    assert !response.authorization.to_s.split(';')[2].blank?
+    assert response.test?
+
+    # Make second payment on the continuous authorization that was set up in the first purchase
+    second_order_params = { :order_id => generate_unique_id }
+    purchase = @gateway.purchase(201, response.authorization, second_order_params)
+    assert_success purchase
+
+    # Refund payment that was made via the continuous authorization payment above
+    refund = @gateway.refund(201, purchase.authorization)
+    assert_success refund
+  end
+
   def test_order_id_that_is_too_short
     @params[:order_id] = @params[:order_id].first(5)
     response = @gateway.purchase(@amount, @mastercard, @params)
@@ -316,4 +332,14 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visa_delta, @params)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@visa_delta.number, transcript)
+    assert_scrubbed(@visa_delta.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
 end

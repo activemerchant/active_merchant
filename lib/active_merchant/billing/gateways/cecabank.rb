@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
 
         root = REXML::Document.new(body).root
 
-        response[:success] = (root.attributes['valor'] == "OK")
+        response[:success] = (root.attributes['valor'] == 'OK')
         response[:date] = root.attributes['fecha']
         response[:operation_number] = root.attributes['numeroOperacion']
         response[:message] = root.attributes['valor']
@@ -142,7 +142,7 @@ module ActiveMerchant #:nodoc:
           response[:error_code] = root.elements['ERROR/codigo'].text
           response[:error_message] = root.elements['ERROR/descripcion'].text
         else
-          if("000" == root.elements['OPERACION'].attributes['numeroOperacion'])
+          if root.elements['OPERACION'].attributes['numeroOperacion'] == '000'
             if(root.elements['OPERACION/numeroAutorizacion'])
               response[:authorization] = root.elements['OPERACION/numeroAutorizacion'].text
             end
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
 
       rescue REXML::ParseException => e
         response[:success] = false
-        response[:message] = "Unable to parse the response."
+        response[:message] = 'Unable to parse the response.'
         response[:error_message] = e.message
         response
       end
@@ -195,15 +195,15 @@ module ActiveMerchant #:nodoc:
           else
             "#{key}=#{CGI.escape(value.to_s)}"
           end
-        end.compact.join("&")
+        end.compact.join('&')
       end
 
       def build_authorization(response)
-        [response[:reference], response[:authorization]].join("|")
+        [response[:reference], response[:authorization]].join('|')
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
 
       def generate_signature(action, parameters)

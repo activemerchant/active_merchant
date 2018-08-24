@@ -14,7 +14,7 @@ class ClearhausTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
-    @test_signing_key = "7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2"
+    @test_signing_key = '7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2'
   end
 
   def test_successful_purchase
@@ -77,7 +77,7 @@ class ClearhausTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_card
     stub_comms do
-      response = @gateway.authorize(@amount, "4110", @options)
+      response = @gateway.authorize(@amount, '4110', @options)
       assert_success response
 
       assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization
@@ -223,9 +223,9 @@ class ClearhausTest < Test::Unit::TestCase
       assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization
       assert response.test?
     end.check_request do |method, endpoint, data, headers|
-      assert headers["Signature"]
-      assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers["Signature"]
-      assert_match %r{02f56ed1f6c60cdefd$}, headers["Signature"]
+      assert headers['Signature']
+      assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers['Signature']
+      assert_match %r{02f56ed1f6c60cdefd$}, headers['Signature']
     end.respond_with(successful_authorize_response)
   end
 
@@ -242,20 +242,20 @@ class ClearhausTest < Test::Unit::TestCase
       assert_equal '84412a34-fa29-4369-a098-0165a80e8fda', response.authorization
       assert response.test?
     end.check_request do |method, endpoint, data, headers|
-      assert headers["Signature"]
-      assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers["Signature"]
-      assert_match %r{02f56ed1f6c60cdefd$}, headers["Signature"]
+      assert headers['Signature']
+      assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers['Signature']
+      assert_match %r{02f56ed1f6c60cdefd$}, headers['Signature']
     end.respond_with(successful_authorize_response)
   end
 
   def test_unsuccessful_signing_request_with_invalid_key
-    gateway = ClearhausGateway.new(api_key: "test_key",  signing_key: @test_signing_key, private_key: "foo")
+    gateway = ClearhausGateway.new(api_key: 'test_key',  signing_key: @test_signing_key, private_key: 'foo')
 
     # stub actual network access, but this shouldn't be reached
     gateway.stubs(:ssl_post).returns(nil)
 
-    card = credit_card("4111111111111111", month: "06", year: "2018", verification_value: "123")
-    options = { currency: "EUR", ip: "1.1.1.1" }
+    card = credit_card('4111111111111111', month: '06', year: '2018', verification_value: '123')
+    options = { currency: 'EUR', ip: '1.1.1.1' }
 
     response = gateway.authorize(2050, card, options)
     assert_failure response
@@ -364,13 +364,13 @@ Conn close
 
   def successful_authorize_response
     {
-      "id"     => "84412a34-fa29-4369-a098-0165a80e8fda",
-      "status" => {
-          "code" => 20000
+      'id'     => '84412a34-fa29-4369-a098-0165a80e8fda',
+      'status' => {
+          'code' => 20000
       },
-      "processed_at" => "2014-07-09T09:53:41+00:00",
-      "_links" => {
-          "captures" => { "href" => "/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/captures" }
+      'processed_at' => '2014-07-09T09:53:41+00:00',
+      '_links' => {
+          'captures' => { 'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/captures' }
       }
     }.to_json
   end
@@ -381,18 +381,18 @@ Conn close
 
   def successful_capture_response
     {
-        "id" => "d8e92a70-3030-4d4d-8ad2-684b230c1bed",
-        "status" => {
-            "code" => 20000
+        'id' => 'd8e92a70-3030-4d4d-8ad2-684b230c1bed',
+        'status' => {
+            'code' => 20000
         },
-        "processed_at" => "2014-07-09T11:47:28+00:00",
-        "amount" => 1000,
-        "_links" => {
-            "authorization" => {
-                "href" => "/authorizations/84412a34-fa29-4369-a098-0165a80e8fda"
+        'processed_at' => '2014-07-09T11:47:28+00:00',
+        'amount' => 1000,
+        '_links' => {
+            'authorization' => {
+                'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda'
             },
-            "refunds" => {
-                "href" => "/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/refunds"
+            'refunds' => {
+                'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda/refunds'
             }
         }
     }.to_json
@@ -404,14 +404,14 @@ Conn close
 
   def successful_refund_response
     {
-      "id" => "f04c0872-47ce-4683-8d8c-e154221bba14",
-      "status" => {
-          "code" => 20000
+      'id' => 'f04c0872-47ce-4683-8d8c-e154221bba14',
+      'status' => {
+          'code' => 20000
       },
-      "processed_at" => "2014-07-09T11:57:58+00:00",
-      "amount" => 500,
-      "_links" => {
-          "authorization" => { "href" => "/authorizations/84412a34-fa29-4369-a098-0165a80e8fda" }
+      'processed_at' => '2014-07-09T11:57:58+00:00',
+      'amount' => 500,
+      '_links' => {
+          'authorization' => { 'href' => '/authorizations/84412a34-fa29-4369-a098-0165a80e8fda' }
       }
     }.to_json
   end
@@ -422,23 +422,23 @@ Conn close
 
   def successful_void_response
     {
-      "id" => "77d08c40-cfa9-42e3-993d-795f772b70a4",
-      "status" => {
-        "code" => 20000
+      'id' => '77d08c40-cfa9-42e3-993d-795f772b70a4',
+      'status' => {
+        'code' => 20000
       },
-      "processed_at" => "2015-08-21T16:44:48+00:00",
-      "_links" => {
-        "self" => {
-          "href" => "/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4"
+      'processed_at' => '2015-08-21T16:44:48+00:00',
+      '_links' => {
+        'self' => {
+          'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4'
         },
-        "card" => {
-          "href" => "/cards/27127636-0748-4df5-97fe-e58a0c29b618"
+        'card' => {
+          'href' => '/cards/27127636-0748-4df5-97fe-e58a0c29b618'
         },
-        "captures" => {
-          "href" => "/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/captures"
+        'captures' => {
+          'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/captures'
         },
-        "voids" => { "href" => "/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/voids"},
-        "refunds" => { "href" => "/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/refunds"}
+        'voids' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/voids'},
+        'refunds' => { 'href' => '/authorizations/77d08c40-cfa9-42e3-993d-795f772b70a4/refunds'}
       }
     }
   end
@@ -449,16 +449,16 @@ Conn close
 
   def successful_store_response
     {
-      "id" => "58dabba0-e9ea-4133-8c38-bfa1028c1ed2",
-      "status" => {
-          "code"=> 20000
+      'id' => '58dabba0-e9ea-4133-8c38-bfa1028c1ed2',
+      'status' => {
+          'code'=> 20000
       },
-      "processed_at" => "2014-07-09T12:14:31+00:00",
-      "last4" => "0004",
-      "scheme" => "mastercard",
-      "_links" => {
-          "authorizations" => { "href" => "/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/authorizations" },
-          "credits"=> { "href" => "/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/credits" }
+      'processed_at' => '2014-07-09T12:14:31+00:00',
+      'last4' => '0004',
+      'scheme' => 'mastercard',
+      '_links' => {
+          'authorizations' => { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/authorizations' },
+          'credits'=> { 'href' => '/cards/58dabba0-e9ea-4133-8c38-bfa1028c1ed2/credits' }
       }
     }.to_json
   end
@@ -468,7 +468,7 @@ Conn close
   end
 
   def failed_ch_response
-    { "status" => { "code" => 40000, "message" => "General input error" }}.to_json
+    { 'status' => { 'code' => 40000, 'message' => 'General input error' }}.to_json
   end
 
 end

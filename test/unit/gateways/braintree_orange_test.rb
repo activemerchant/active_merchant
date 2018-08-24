@@ -24,21 +24,31 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal '510695343', response.authorization
   end
 
+  def test_fractional_amounts
+    response = stub_comms do
+      @gateway.purchase(100, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      refute_match(/amount=1.00/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
     assert response = @gateway.store(@credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal "853162645", response.authorization
-    assert_equal response.authorization, response.params["customer_vault_id"]
+    assert_equal '853162645', response.authorization
+    assert_equal response.authorization, response.params['customer_vault_id']
   end
 
   def test_add_processor
     result = {}
 
     @gateway.send(:add_processor, result,   {:processor => 'ccprocessorb'} )
-    assert_equal ["processor_id"], result.stringify_keys.keys.sort
+    assert_equal ['processor_id'], result.stringify_keys.keys.sort
     assert_equal 'ccprocessorb', result[:processor_id]
   end
 
@@ -77,27 +87,27 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_address, result,   {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
-    assert_equal ["address1", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
-    assert_equal 'CO', result["state"]
-    assert_equal '164 Waverley Street', result["address1"]
-    assert_equal 'US', result["country"]
+    assert_equal ['address1', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
+    assert_equal 'CO', result['state']
+    assert_equal '164 Waverley Street', result['address1']
+    assert_equal 'US', result['country']
   end
 
   def test_add_shipping_address
     result = {}
 
-    @gateway.send(:add_address, result,   {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'},"shipping" )
-    assert_equal ["shipping_address1", "shipping_city", "shipping_company", "shipping_country", "shipping_phone", "shipping_state", "shipping_zip"], result.stringify_keys.keys.sort
-    assert_equal 'CO', result["shipping_state"]
-    assert_equal '164 Waverley Street', result["shipping_address1"]
-    assert_equal 'US', result["shipping_country"]
+    @gateway.send(:add_address, result,   {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'},'shipping' )
+    assert_equal ['shipping_address1', 'shipping_city', 'shipping_company', 'shipping_country', 'shipping_phone', 'shipping_state', 'shipping_zip'], result.stringify_keys.keys.sort
+    assert_equal 'CO', result['shipping_state']
+    assert_equal '164 Waverley Street', result['shipping_address1']
+    assert_equal 'US', result['shipping_country']
   end
 
   def test_adding_store_adds_vault_id_flag
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card, :store => true)
-    assert_equal ["ccexp", "ccnumber", "customer_vault", "cvv", "firstname", "lastname"], result.stringify_keys.keys.sort
+    assert_equal ['ccexp', 'ccnumber', 'customer_vault', 'cvv', 'firstname', 'lastname'], result.stringify_keys.keys.sort
     assert_equal 'add_customer', result[:customer_vault]
   end
 
@@ -105,7 +115,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card, {} )
-    assert_equal ["ccexp", "ccnumber", "cvv", "firstname", "lastname"], result.stringify_keys.keys.sort
+    assert_equal ['ccexp', 'ccnumber', 'cvv', 'firstname', 'lastname'], result.stringify_keys.keys.sort
     assert_nil result[:customer_vault]
   end
 
@@ -179,14 +189,14 @@ class BraintreeOrangeTest < Test::Unit::TestCase
   end
 
   def successful_store_response
-    "response=1&responsetext=Customer Added&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=&response_code=100&merchant_defined_field_6=&merchant_defined_field_7=&customer_vault_id=853162645"
+    'response=1&responsetext=Customer Added&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=&response_code=100&merchant_defined_field_6=&merchant_defined_field_7=&customer_vault_id=853162645'
   end
 
   def transcript
-    "username=demo&password=password&type=sale&orderid=8267b7f890aac7699f6ebc93c7c94d96&ccnumber=4111111111111111&cvv=123&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=456+My+Street&address2=Apt+1&company=Widgets+Inc&phone=%28555%29555-5555&zip=K1C2N6&city=Ottawa&country=CA&state=ON&currency=USD&tax=&amount=77.70"
+    'username=demo&password=password&type=sale&orderid=8267b7f890aac7699f6ebc93c7c94d96&ccnumber=4111111111111111&cvv=123&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=456+My+Street&address2=Apt+1&company=Widgets+Inc&phone=%28555%29555-5555&zip=K1C2N6&city=Ottawa&country=CA&state=ON&currency=USD&tax=&amount=77.70'
   end
 
   def scrubbed_transcript
-    "username=demo&password=password&type=sale&orderid=8267b7f890aac7699f6ebc93c7c94d96&ccnumber=[FILTERED]&cvv=[FILTERED]&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=456+My+Street&address2=Apt+1&company=Widgets+Inc&phone=%28555%29555-5555&zip=K1C2N6&city=Ottawa&country=CA&state=ON&currency=USD&tax=&amount=77.70"
+    'username=demo&password=password&type=sale&orderid=8267b7f890aac7699f6ebc93c7c94d96&ccnumber=[FILTERED]&cvv=[FILTERED]&ccexp=0916&firstname=Longbob&lastname=Longsen&address1=456+My+Street&address2=Apt+1&company=Widgets+Inc&phone=%28555%29555-5555&zip=K1C2N6&city=Ottawa&country=CA&state=ON&currency=USD&tax=&amount=77.70'
   end
 end

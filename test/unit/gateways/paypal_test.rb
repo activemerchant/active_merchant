@@ -156,7 +156,7 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_descriptors_passed
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: "Eggcellent", soft_descriptor_city: "New York"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(soft_descriptor: 'Eggcellent', soft_descriptor_city: 'New York'))
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<n2:SoftDescriptor>Eggcellent}, data)
       assert_match(%r{<n2:SoftDescriptorCity>New York}, data)
@@ -190,10 +190,10 @@ class PaypalTest < Test::Unit::TestCase
   def test_paypal_timeout_error
     @gateway.stubs(:ssl_post).returns(paypal_timeout_error_response)
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "SOAP-ENV:Server", response.params['faultcode']
-    assert_equal "Internal error", response.params['faultstring']
-    assert_equal "Timeout processing request", response.params['detail']
-    assert_equal "SOAP-ENV:Server: Internal error - Timeout processing request", response.message
+    assert_equal 'SOAP-ENV:Server', response.params['faultcode']
+    assert_equal 'Internal error', response.params['faultstring']
+    assert_equal 'Timeout processing request', response.params['detail']
+    assert_equal 'SOAP-ENV:Server: Internal error - Timeout processing request', response.message
   end
 
   def test_pem_file_accessor
@@ -239,7 +239,7 @@ class PaypalTest < Test::Unit::TestCase
       login: 'cody',
       password: 'test',
       pem: 'PEM',
-      button_source: "WOOHOO"
+      button_source: 'WOOHOO'
     )
 
     xml = REXML::Document.new(gateway.send(:build_sale_or_authorization_request, 'Test', @amount, @credit_card, {}))
@@ -252,7 +252,7 @@ class PaypalTest < Test::Unit::TestCase
       login: 'cody',
       password: 'test',
       pem: 'PEM',
-      button_source: "WOOHOO"
+      button_source: 'WOOHOO'
     )
 
     xml = REXML::Document.new(gateway.send(:build_sale_or_authorization_request, 'Test', @amount, @credit_card, {}))
@@ -348,8 +348,8 @@ class PaypalTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "SuccessWithWarning", response.params["ack"]
-    assert_equal "Payment Pending your review in Fraud Management Filters", response.message
+    assert_equal 'SuccessWithWarning', response.params['ack']
+    assert_equal 'Payment Pending your review in Fraud Management Filters', response.message
     assert response.fraud_review?
   end
 
@@ -358,7 +358,7 @@ class PaypalTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, 'authorization')
     assert_failure response
-    assert_equal "Transaction must be accepted in Fraud Management Filters before capture.", response.message
+    assert_equal 'Transaction must be accepted in Fraud Management Filters before capture.', response.message
   end
 
   # This occurs when sufficient 3rd party API permissions are not present to make the call for the user
@@ -366,8 +366,8 @@ class PaypalTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(authentication_failed_response)
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "10002", response.params["error_codes"]
-    assert_equal "You do not have permissions to make this API call", response.message
+    assert_equal '10002', response.params['error_codes']
+    assert_equal 'You do not have permissions to make this API call', response.message
   end
 
   def test_amount_format_for_jpy_currency
@@ -379,7 +379,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_successful_create_profile
     @gateway.expects(:ssl_post).returns(successful_create_profile_paypal_response)
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, @credit_card, :description => "some description", :start_date => Time.now, :frequency => 12, :period => 'Month')
+      @gateway.recurring(@amount, @credit_card, :description => 'some description', :start_date => Time.now, :frequency => 12, :period => 'Month')
     end
     assert_instance_of Response, response
     assert response.success?
@@ -391,7 +391,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_failed_create_profile
     @gateway.expects(:ssl_post).returns(failed_create_profile_paypal_response)
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, @credit_card, :description => "some description", :start_date => Time.now, :frequency => 12, :period => 'Month')
+      @gateway.recurring(@amount, @credit_card, :description => 'some description', :start_date => Time.now, :frequency => 12, :period => 'Month')
     end
     assert_instance_of Response, response
     assert !response.success?
@@ -481,14 +481,14 @@ class PaypalTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     response = stub_comms do
-      @gateway.transfer 1000, 'fred@example.com', :receiver_type => "EmailAddress"
+      @gateway.transfer 1000, 'fred@example.com', :receiver_type => 'EmailAddress'
     end.check_request do |endpoint, data, headers|
       assert_match %r{<ReceiverType>EmailAddress</ReceiverType>}, data
       assert_match %r{<ReceiverEmail>fred@example\.com</ReceiverEmail>}, data
     end.respond_with(successful_purchase_response)
 
     response = stub_comms do
-      @gateway.transfer 1000, 'fred@example.com', :receiver_type => "UserID"
+      @gateway.transfer 1000, 'fred@example.com', :receiver_type => 'UserID'
     end.check_request do |endpoint, data, headers|
       assert_match %r{<ReceiverType>UserID</ReceiverType>}, data
       assert_match %r{<ReceiverID>fred@example\.com</ReceiverID>}, data
@@ -500,8 +500,8 @@ class PaypalTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_zero_dollar_auth_response)
     assert_success response
-    assert_equal "This card authorization verification is not a payment transaction.", response.message
-    assert_equal "0.00", response.params["amount"]
+    assert_equal 'This card authorization verification is not a payment transaction.', response.message
+    assert_equal '0.00', response.params['amount']
   end
 
   def test_failed_verify
@@ -518,8 +518,8 @@ class PaypalTest < Test::Unit::TestCase
       @gateway.verify(amex_card, @options)
     end.respond_with(successful_one_dollar_auth_response, successful_void_response)
     assert_success response
-    assert_equal "Success", response.message
-    assert_equal "1.00", response.params["amount"]
+    assert_equal 'Success', response.message
+    assert_equal '1.00', response.params['amount']
   end
 
   def test_successful_verify_non_visa_mc_failed_void
@@ -528,8 +528,8 @@ class PaypalTest < Test::Unit::TestCase
       @gateway.verify(amex_card, @options)
     end.respond_with(successful_one_dollar_auth_response, failed_void_response)
     assert_success response
-    assert_equal "Success", response.message
-    assert_equal "1.00", response.params["amount"]
+    assert_equal 'Success', response.message
+    assert_equal '1.00', response.params['amount']
   end
 
   def test_failed_verify_non_visa_mc
@@ -539,7 +539,7 @@ class PaypalTest < Test::Unit::TestCase
     end.respond_with(failed_one_dollar_auth_response, successful_void_response)
     assert_failure response
     assert_match %r{This transaction cannot be processed}, response.message
-    assert_equal "1.00", response.params["amount"]
+    assert_equal '1.00', response.params['amount']
   end
 
   def test_scrub
@@ -566,7 +566,7 @@ class PaypalTest < Test::Unit::TestCase
       assert_no_match(%r{CVV2}, data)
     end.respond_with(successful_purchase_response)
 
-    @credit_card.verification_value = "  "
+    @credit_card.verification_value = '  '
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
@@ -575,7 +575,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_card_declined
-    ["15005", "10754", "10752", "10759", "10761", "15002", "11084"].each do |error_code|
+    ['15005', '10754', '10752', '10759', '10761', '15002', '11084'].each do |error_code|
       @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)
@@ -585,7 +585,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_incorrect_cvc
-    ["15004"].each do |error_code|
+    ['15004'].each do |error_code|
       @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)
@@ -595,7 +595,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_invalid_cvc
-    ["10762"].each do |error_code|
+    ['10762'].each do |error_code|
       @gateway.expects(:ssl_request).returns(response_with_error_code(error_code))
 
       response = @gateway.purchase(@amount, @credit_card, @options)
@@ -605,7 +605,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_error_code_with_no_mapping_returns_standardized_processing_error
-    @gateway.expects(:ssl_request).returns(response_with_error_code("999999"))
+    @gateway.expects(:ssl_request).returns(response_with_error_code('999999'))
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal(:processing_error, response.error_code)
@@ -642,7 +642,7 @@ class PaypalTest < Test::Unit::TestCase
       starting SSL for api-3t.sandbox.paypal.com:443...
       SSL established
       <- "POST /2.0/ HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-3t.sandbox.paypal.com\r\nContent-Length: 2229\r\n\r\n"
-      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><env:Envelope xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><env:Header><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xmlns:n1=\"urn:ebay:apis:eBLBaseComponents\" env:mustUnderstand=\"0\"><n1:Credentials><n1:Username>[FILTERED]</n1:Username><n1:Password>[FILTERED]</n1:Password><n1:Subject/><n1:Signature>AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx</n1:Signature></n1:Credentials></RequesterCredentials></env:Header><env:Body><DoDirectPaymentReq xmlns=\"urn:ebay:api:PayPalAPI\">\n  <DoDirectPaymentRequest xmlns:n2=\"urn:ebay:apis:eBLBaseComponents\">\n    <n2:Version>72</n2:Version>\n    <n2:DoDirectPaymentRequestDetails>\n      <n2:PaymentAction>Sale</n2:PaymentAction>\n      <n2:PaymentDetails>\n        <n2:OrderTotal currencyID=\"USD\">1.00</n2:OrderTotal>\n        <n2:OrderDescription>Stuff that you purchased, yo!</n2:OrderDescription>\n        <n2:InvoiceID>70e472b155c61d27fe19555a96d51127</n2:InvoiceID>\n        <n2:ButtonSource>ActiveMerchant</n2:ButtonSource>\n      </n2:PaymentDetails>\n      <n2:CreditCard>\n        <n2:CreditCardType>Visa</n2:CreditCardType>\n        <n2:CreditCardNumber>[FILTERED]</n2:CreditCardNumber>\n        <n2:ExpMonth>09</n2:ExpMonth>\n        <n2:ExpYear>2015</n2:ExpYear>\n        <n2:CVV2>[FILTERED]</n2:CVV2>\n        <n2:CardOwner>\n          <n2:PayerName>\n            <n2:FirstName>Longbob</n2:FirstName>\n            <n2:LastName>Longsen</n2:LastName>\n          </n2:PayerName>\n          <n2:Payer>buyer@jadedpallet.com</n2:Payer>\n          <n2:Address>\n            <n2:Name>Longbob Longsen</n2:Name>\n            <n2:Street1>1234 Penny Lane</n2:Street1>\n            <n2:Street2/>\n            <n2:CityName>Jonsetown</n2:CityName>\n            <n2:StateOrProvince>NC</n2:StateOrProvince>\n            <n2:Country>US</n2:Country>\n            <n2:PostalCode>23456</n2:PostalCode>\n          </n2:Address>\n        </n2:CardOwner>\n      </n2:CreditCard>\n      <n2:IPAddress>10.0.0.1</n2:IPAddress>\n    </n2:DoDirectPaymentRequestDetails>\n  </DoDirectPaymentRequest>\n</DoDirectPaymentReq>\n</env:Body></env:Envelope>"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><env:Envelope xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><env:Header><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xmlns:n1=\"urn:ebay:apis:eBLBaseComponents\" env:mustUnderstand=\"0\"><n1:Credentials><n1:Username>[FILTERED]</n1:Username><n1:Password>[FILTERED]</n1:Password><n1:Subject/><n1:Signature>[FILTERED]</n1:Signature></n1:Credentials></RequesterCredentials></env:Header><env:Body><DoDirectPaymentReq xmlns=\"urn:ebay:api:PayPalAPI\">\n  <DoDirectPaymentRequest xmlns:n2=\"urn:ebay:apis:eBLBaseComponents\">\n    <n2:Version>72</n2:Version>\n    <n2:DoDirectPaymentRequestDetails>\n      <n2:PaymentAction>Sale</n2:PaymentAction>\n      <n2:PaymentDetails>\n        <n2:OrderTotal currencyID=\"USD\">1.00</n2:OrderTotal>\n        <n2:OrderDescription>Stuff that you purchased, yo!</n2:OrderDescription>\n        <n2:InvoiceID>70e472b155c61d27fe19555a96d51127</n2:InvoiceID>\n        <n2:ButtonSource>ActiveMerchant</n2:ButtonSource>\n      </n2:PaymentDetails>\n      <n2:CreditCard>\n        <n2:CreditCardType>Visa</n2:CreditCardType>\n        <n2:CreditCardNumber>[FILTERED]</n2:CreditCardNumber>\n        <n2:ExpMonth>09</n2:ExpMonth>\n        <n2:ExpYear>2015</n2:ExpYear>\n        <n2:CVV2>[FILTERED]</n2:CVV2>\n        <n2:CardOwner>\n          <n2:PayerName>\n            <n2:FirstName>Longbob</n2:FirstName>\n            <n2:LastName>Longsen</n2:LastName>\n          </n2:PayerName>\n          <n2:Payer>buyer@jadedpallet.com</n2:Payer>\n          <n2:Address>\n            <n2:Name>Longbob Longsen</n2:Name>\n            <n2:Street1>1234 Penny Lane</n2:Street1>\n            <n2:Street2/>\n            <n2:CityName>Jonsetown</n2:CityName>\n            <n2:StateOrProvince>NC</n2:StateOrProvince>\n            <n2:Country>US</n2:Country>\n            <n2:PostalCode>23456</n2:PostalCode>\n          </n2:Address>\n        </n2:CardOwner>\n      </n2:CreditCard>\n      <n2:IPAddress>10.0.0.1</n2:IPAddress>\n    </n2:DoDirectPaymentRequestDetails>\n  </DoDirectPaymentRequest>\n</DoDirectPaymentReq>\n</env:Body></env:Envelope>"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Date: Tue, 02 Dec 2014 18:44:21 GMT\r\n"
       -> "Server: Apache\r\n"

@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
       def fill_card(soap, card)
         soap.tag!('cardNumber', card.number.to_s)
         soap.tag!('cardSecurityCode', card.verification_value.to_s)
-        soap.tag!('cardExpireMonth', card.month.to_s.rjust(2, "0"))
+        soap.tag!('cardExpireMonth', card.month.to_s.rjust(2, '0'))
         soap.tag!('cardExpireYear', card.year.to_s)
       end
 
@@ -157,8 +157,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(soap_action, soap, options)
-        headers = {"SOAPAction" => "\"urn:Interface##{soap_action}\"",
-                   "Content-Type" => "text/xml; charset=utf-8"}
+        headers = {'SOAPAction' => "\"urn:Interface##{soap_action}\"",
+                   'Content-Type' => 'text/xml; charset=utf-8'}
         response_string = ssl_post(test? ? self.test_url : self.live_url, soap, headers)
         response = parse(response_string, soap_action)
         return Response.new(response['errorcode'] == '000',

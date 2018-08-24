@@ -1,16 +1,16 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class HdfcGateway < Gateway
-      self.display_name = "HDFC"
-      self.homepage_url = "http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i"
+      self.display_name = 'HDFC'
+      self.homepage_url = 'http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i'
 
-      self.test_url = "https://securepgtest.fssnet.co.in/pgway/servlet/"
-      self.live_url = "https://securepg.fssnet.co.in/pgway/servlet/"
+      self.test_url = 'https://securepgtest.fssnet.co.in/pgway/servlet/'
+      self.live_url = 'https://securepg.fssnet.co.in/pgway/servlet/'
 
-      self.supported_countries = ["IN"]
-      self.default_currency = "INR"
+      self.supported_countries = ['IN']
+      self.default_currency = 'INR'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :discover, :diners_club]
 
@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("purchase", post)
+        commit('purchase', post)
       end
 
       def authorize(amount, payment_method, options={})
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("authorize", post)
+        commit('authorize', post)
       end
 
       def capture(amount, authorization, options={})
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("capture", post)
+        commit('capture', post)
       end
 
       def refund(amount, authorization, options={})
@@ -52,22 +52,22 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("refund", post)
+        commit('refund', post)
       end
 
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
-      CURRENCY_CODES["AED"] = "784"
-      CURRENCY_CODES["AUD"] = "036"
-      CURRENCY_CODES["CAD"] = "124"
-      CURRENCY_CODES["EUR"] = "978"
-      CURRENCY_CODES["GBP"] = "826"
-      CURRENCY_CODES["INR"] = "356"
-      CURRENCY_CODES["OMR"] = "512"
-      CURRENCY_CODES["QAR"] = "634"
-      CURRENCY_CODES["SGD"] = "702"
-      CURRENCY_CODES["USD"] = "840"
+      CURRENCY_CODES['AED'] = '784'
+      CURRENCY_CODES['AUD'] = '036'
+      CURRENCY_CODES['CAD'] = '124'
+      CURRENCY_CODES['EUR'] = '978'
+      CURRENCY_CODES['GBP'] = '826'
+      CURRENCY_CODES['INR'] = '356'
+      CURRENCY_CODES['OMR'] = '512'
+      CURRENCY_CODES['QAR'] = '634'
+      CURRENCY_CODES['SGD'] = '702'
+      CURRENCY_CODES['USD'] = '840'
 
       def add_invoice(post, amount, options)
         post[:amt] = amount(amount)
@@ -127,14 +127,14 @@ EOA
       end
 
       def fix_xml(xml)
-        xml.gsub(/&(?!(?:amp|quot|apos|lt|gt);)/, "&amp;")
+        xml.gsub(/&(?!(?:amp|quot|apos|lt|gt);)/, '&amp;')
       end
 
       ACTIONS = {
-        "purchase" => "1",
-        "refund" => "2",
-        "authorize" => "4",
-        "capture" => "5",
+        'purchase' => '1',
+        'refund' => '2',
+        'authorize' => '4',
+        'capture' => '5',
       }
 
       def commit(action, post)
@@ -164,13 +164,13 @@ EOA
       end
 
       def url(action)
-        endpoint = "TranPortalXMLServlet"
+        endpoint = 'TranPortalXMLServlet'
         (test? ? test_url : live_url) + endpoint
       end
 
       def success_from(result)
         case result
-        when "CAPTURED", "APPROVED", "NOT ENROLLED", "ENROLLED"
+        when 'CAPTURED', 'APPROVED', 'NOT ENROLLED', 'ENROLLED'
           true
         else
           false
@@ -179,23 +179,23 @@ EOA
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          (response[:error_text] || response[:result] || "Unable to read error message").split("-").last
+          (response[:error_text] || response[:result] || 'Unable to read error message').split('-').last
         end
       end
 
       def authorization_from(request, response)
-        [response[:tranid], request[:member]].join("|")
+        [response[:tranid], request[:member]].join('|')
       end
 
       def split_authorization(authorization)
-        tranid, member = authorization.split("|")
+        tranid, member = authorization.split('|')
         [tranid, member]
       end
 
       def escape(string, max_length=250)
-        return "" unless string
+        return '' unless string
         if max_length
           string = string[0...max_length]
         end

@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(request)
-        raw_response = ssl_post((test? ? self.test_url : self.live_url), "DATA=" + request)
+        raw_response = ssl_post((test? ? self.test_url : self.live_url), 'DATA=' + request)
 
         response = parse(raw_response)
 
@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        (response[:response] == "Approved")
+        (response[:response] == 'Approved')
       end
 
       def normalize(text)
@@ -190,10 +190,8 @@ module ActiveMerchant #:nodoc:
 
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
           ActiveSupport::Inflector.transliterate(text,'')
-        elsif RUBY_VERSION >= '1.9'
-          text.gsub(/[^\x00-\x7F]+/, '')
         else
-          ActiveSupport::Inflector.transliterate(text).to_s
+          text.gsub(/[^\x00-\x7F]+/, '')
         end
       end
     end

@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaystationGateway < Gateway
 
-      self.live_url = self.test_url = "https://www.paystation.co.nz/direct/paystation.dll"
+      self.live_url = self.test_url = 'https://www.paystation.co.nz/direct/paystation.dll'
 
       # an "error code" of "0" means "No error - transaction successful"
       SUCCESSFUL_RESPONSE_CODE = '0'
@@ -75,7 +75,6 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
-
       def refund(money, authorization, options={})
         post = new_request
         add_amount(post, money, options)
@@ -85,15 +84,29 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def verify(credit_card, options={})
+        authorize(0, credit_card, options)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((pstn_cn=)\d*), '\1[FILTERED]').
+          gsub(%r((pstn_cc=)\d*), '\1[FILTERED]')
+      end
+
       private
 
         def new_request
           {
             :pi    => @options[:paystation_id], # paystation account id
             :gi    => @options[:gateway_id],    # paystation gateway id
-            "2p"   => "t",                      # two-party transaction type
-            :nr    => "t",                      # -- redirect??
-            :df    => "yymm"                    # date format: optional sometimes, required others
+            '2p'   => 't',                      # two-party transaction type
+            :nr    => 't',                      # -- redirect??
+            :df    => 'yymm'                    # date format: optional sometimes, required others
           }
         end
 
@@ -115,27 +128,27 @@ module ActiveMerchant #:nodoc:
         end
 
         def add_token(post, token)
-          post[:fp] = "t"    # turn on "future payments" - what paystation calls Token Billing
+          post[:fp] = 't'    # turn on "future payments" - what paystation calls Token Billing
           post[:ft] = token
         end
 
         def store_credit_card(post, options)
-          post[:fp] = "t"                                # turn on "future payments" - what paystation calls Token Billing
-          post[:fs] = "t"                                # tells paystation to store right now, not bill
+          post[:fp] = 't'                                # turn on "future payments" - what paystation calls Token Billing
+          post[:fs] = 't'                                # tells paystation to store right now, not bill
           post[:ft] = options[:token] if options[:token] # specify a token to use that, or let Paystation generate one
         end
 
         def add_authorize_flag(post, options)
-          post[:pa] = "t" # tells Paystation that this is a pre-auth authorisation payment (account must be in pre-auth mode)
+          post[:pa] = 't' # tells Paystation that this is a pre-auth authorisation payment (account must be in pre-auth mode)
         end
 
         def add_refund_specific_fields(post, authorization)
-          post[:rc] = "t"
+          post[:rc] = 't'
           post[:rt] = authorization
         end
 
         def add_authorization_token(post, auth_token, verification_value = nil)
-          post[:cp] = "t" # Capture Payment flag – tells Paystation this transaction should be treated as a capture payment
+          post[:cp] = 't' # Capture Payment flag – tells Paystation this transaction should be treated as a capture payment
           post[:cx] = auth_token
           post[:cc] = verification_value
         end
@@ -158,15 +171,15 @@ module ActiveMerchant #:nodoc:
         end
 
         def commit(post)
-          post[:tm] = "T" if test?
-          pstn_prefix_params = post.collect { |key, value| "pstn_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+          post[:tm] = 'T' if test?
+          pstn_prefix_params = post.collect { |key, value| "pstn_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
 
           data     = ssl_post(self.live_url, "#{pstn_prefix_params}&paystation=_empty")
           response = parse(data)
           message  = message_from(response)
 
           PaystationResponse.new(success?(response), message, response,
-              :test          => (response[:tm] && response[:tm].downcase == "t"),
+              :test          => (response[:tm] && response[:tm].downcase == 't'),
               :authorization => response[:paystation_transaction_id]
           )
         end
@@ -187,7 +200,7 @@ module ActiveMerchant #:nodoc:
 
     class PaystationResponse < Response
       def token
-        @params["future_payment_token"]
+        @params['future_payment_token']
       end
     end
   end

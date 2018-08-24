@@ -7,6 +7,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     @gateway = UsaEpayTransactionGateway.new(:login => 'LOGIN')
 
     @credit_card = credit_card('4242424242424242')
+    @check = check
     @options = {
       :billing_address  => address,
       :shipping_address => address
@@ -43,6 +44,15 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_request_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_echeck)
+
+    response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert_equal '133134803', response.authorization
+    assert response.test?
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
@@ -54,7 +64,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_passing_extra_info
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => "1337", :description => "socool"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => '1337', :description => 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
@@ -68,6 +78,17 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(:test_mode => true))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMtestmode=1/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_email_receipt
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'bobby@hill.com', :cust_receipt => 'Yes', :cust_receipt_name => 'socool'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMcustreceipt=Yes/, data)
+      assert_match(/UMcustreceiptname=socool/, data)
+      assert_match(/UMtestmode=0/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -119,7 +140,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_authorize_passing_extra_info
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => "1337", :description => "socool"))
+      @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => '1337', :description => 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
@@ -174,6 +195,15 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_refund_request_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_refund_response_echeck)
+
+    response = @gateway.refund(@amount, '65074409', @options)
+    assert_success response
+    assert_equal '133134926', response.authorization
+    assert response.test?
+  end
+
   def test_successful_refund_passing_extra_info
     response = stub_comms do
       @gateway.refund(@amount, '65074409', @options)
@@ -199,6 +229,15 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     response = @gateway.void('65074409', @options)
     assert_success response
     assert_equal '63812270', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_void_request_with_echeck
+    @gateway.expects(:ssl_post).returns(successful_void_response_echeck)
+
+    response = @gateway.void('65074409', @options)
+    assert_success response
+    assert_equal '133134971', response.authorization
     assert response.test?
   end
 
@@ -328,10 +367,10 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_add_track_data_with_creditcard
-    @credit_card.track_data = "data"
+    @credit_card.track_data = 'data'
 
     @gateway.expects(:ssl_post).with do |_, body|
-      body.include?("UMmagstripe=data")
+      body.include?('UMmagstripe=data')
     end.returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -339,11 +378,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_add_track_data_with_empty_data
-    ["", nil].each do |data|
+    ['', nil].each do |data|
       @credit_card.track_data = data
 
       @gateway.expects(:ssl_post).with do |_, body|
-        refute body.include? "UMmagstripe="
+        refute body.include? 'UMmagstripe='
         body
       end.returns(successful_purchase_response)
 
@@ -367,14 +406,21 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_does_not_raise_error_on_missing_values
-    @gateway.expects(:ssl_post).returns("status")
+    @gateway.expects(:ssl_post).returns('status')
     assert_nothing_raised do
       response = @gateway.purchase(@amount, @credit_card, @options)
       assert_failure response
     end
   end
 
-private
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed_track_data), post_scrubbed_track_data
+    assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
+  end
+
+  private
 
   def assert_address(type, post, expected_first_name = nil, expected_last_name = nil)
     prefix = key_prefix(type)
@@ -414,26 +460,183 @@ private
   end
 
   def successful_purchase_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled'
   end
 
   def unsuccessful_purchase_response
-    "UMversion=2.9&UMstatus=Declined&UMauthCode=000000&UMrefNum=55076060&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Not%20Processed&UMcvv2ResultCode=P&UMvpasResultCode=&UMresult=D&UMerror=Card%20Declined&UMerrorcode=10127&UMbatch=596&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Declined&UMauthCode=000000&UMrefNum=55076060&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Not%20Processed&UMcvv2ResultCode=P&UMvpasResultCode=&UMresult=D&UMerror=Card%20Declined&UMerrorcode=10127&UMbatch=596&UMfiller=filled'
   end
 
   def successful_authorize_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled'
   end
 
   def successful_capture_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
   end
 
   def successful_refund_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=63813138&UMavsResult=Unmapped%20AVS%20response%20%28%20%20%20%29&UMavsResultCode=%20%20%20&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=1.00&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=63813138&UMavsResult=Unmapped%20AVS%20response%20%28%20%20%20%29&UMavsResultCode=%20%20%20&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=1.00&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
   end
 
   def successful_void_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=&UMrefNum=63812270&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Transaction%20Voided%20Successfully&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=&UMrefNum=63812270&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Transaction%20Voided%20Successfully&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
+  end
+
+  def successful_purchase_response_echeck
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=TMEC4D&UMrefNum=133134803&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=180316&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=18031621233065&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
+  end
+
+  def successful_refund_response_echeck
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=TM1E74&UMrefNum=133134926&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
+  end
+
+  def successful_void_response_echeck
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=TM80A5&UMrefNum=133134971&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
+  end
+
+
+  def pre_scrubbed
+    <<-EOS
+opening connection to sandbox.usaepay.com:443...
+opened
+starting SSL for sandbox.usaepay.com:443...
+SSL established
+<- "POST /gate HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: sandbox.usaepay.com\r\nContent-Length: 774\r\n\r\n"
+<- "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4000100011112224&UMcvv2=123&UMexpir=0919&UMname=Longbob+Longsen&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=NC&UMbillzip=27614&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=27614&UMcommand=cc%3Asale&UMkey=4EoZ5U2Q55j976W7eplC71i6b7kn4pcV&UMsoftware=Active+Merchant&UMtestmode=0&UMhash=s%2F5268F91058BC9F9FA944693D799F324B2497B7247850A51E53226309FB2540F0%2F7b4c4f6a4e775141cc0e4e10c0388d9adeb47fd1%2Fn"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Server: http\r\n"
+-> "Date: Tue, 13 Feb 2018 18:17:20 GMT\r\n"
+-> "Content-Type: text/html\r\n"
+-> "Content-Length: 485\r\n"
+-> "Connection: close\r\n"
+-> "P3P: policyref=\"http://www.usaepay.com/w3c/p3p.xml\", CP=\"NON TAIa IVAa IVDa OUR NOR PHY ONL UNI FIN INT DEM\"\r\n"
+-> "Strict-Transport-Security: max-age=15768000\r\n"
+-> "\r\n"
+reading 485 bytes...
+-> "UMversion=2.9&UMstatus=Approved&UMauthCode=042366&UMrefNum=132020588&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=120&UMbatchRefNum=848&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=A&UMauthAmount=1&UMfiller=filled"
+read 485 bytes
+Conn close
+    EOS
+  end
+
+  def post_scrubbed
+    <<-EOS
+opening connection to sandbox.usaepay.com:443...
+opened
+starting SSL for sandbox.usaepay.com:443...
+SSL established
+<- "POST /gate HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: sandbox.usaepay.com\r\nContent-Length: 774\r\n\r\n"
+<- "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=[FILTERED]&UMcvv2=[FILTERED]&UMexpir=0919&UMname=Longbob+Longsen&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=NC&UMbillzip=27614&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=27614&UMcommand=cc%3Asale&UMkey=[FILTERED]&UMsoftware=Active+Merchant&UMtestmode=0&UMhash=s%2F5268F91058BC9F9FA944693D799F324B2497B7247850A51E53226309FB2540F0%2F7b4c4f6a4e775141cc0e4e10c0388d9adeb47fd1%2Fn"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Server: http\r\n"
+-> "Date: Tue, 13 Feb 2018 18:17:20 GMT\r\n"
+-> "Content-Type: text/html\r\n"
+-> "Content-Length: 485\r\n"
+-> "Connection: close\r\n"
+-> "P3P: policyref=\"http://www.usaepay.com/w3c/p3p.xml\", CP=\"NON TAIa IVAa IVDa OUR NOR PHY ONL UNI FIN INT DEM\"\r\n"
+-> "Strict-Transport-Security: max-age=15768000\r\n"
+-> "\r\n"
+reading 485 bytes...
+-> "UMversion=2.9&UMstatus=Approved&UMauthCode=042366&UMrefNum=132020588&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=120&UMbatchRefNum=848&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=A&UMauthAmount=1&UMfiller=filled"
+read 485 bytes
+Conn close
+    EOS
+  end
+
+  def pre_scrubbed_track_data
+    <<-EOS
+opening connection to sandbox.usaepay.com:443...
+opened
+starting SSL for sandbox.usaepay.com:443...
+SSL established
+<- "POST /gate HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: sandbox.usaepay.com\r\nContent-Length: 382\r\n\r\n"
+<- "UMamount=1.00&UMinvoice=&UMdescription=&UMmagstripe=%25B4000100011112224%5ELONGSEN%2FL.+%5E19091200000000000000%2A%2A123%2A%2A%2A%2A%2A%2A%3F&UMcardpresent=true&UMcommand=cc%3Asale&UMkey=4EoZ5U2Q55j976W7eplC71i6b7kn4pcV&UMsoftware=Active+Merchant&UMtestmode=0&UMhash=s%2FE27734F076643B23131E5432C1E225EFF982A73D350179EFC2F191CA499B59A4%2F13391bd14ab6e61058cc9a1b78f259a4c26aa8e1%2Fn"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Server: http\r\n"
+-> "Date: Tue, 13 Feb 2018 18:13:11 GMT\r\n"
+-> "Content-Type: text/html\r\n"
+-> "Content-Length: 485\r\n"
+-> "Connection: close\r\n"
+-> "P3P: policyref=\"http://www.usaepay.com/w3c/p3p.xml\", CP=\"NON TAIa IVAa IVDa OUR NOR PHY ONL UNI FIN INT DEM\"\r\n"
+-> "Strict-Transport-Security: max-age=15768000\r\n"
+-> "\r\n"
+reading 485 bytes...
+-> "UMversion=2.9&UMstatus=Approved&UMauthCode=042087&UMrefNum=132020522&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=120&UMbatchRefNum=848&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=A&UMauthAmount=1&UMfiller=filled"
+read 485 bytes
+Conn close
+    EOS
+  end
+
+  def post_scrubbed_track_data
+    <<-EOS
+opening connection to sandbox.usaepay.com:443...
+opened
+starting SSL for sandbox.usaepay.com:443...
+SSL established
+<- "POST /gate HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: sandbox.usaepay.com\r\nContent-Length: 382\r\n\r\n"
+<- "UMamount=1.00&UMinvoice=&UMdescription=&UMmagstripe=[FILTERED]&UMcardpresent=true&UMcommand=cc%3Asale&UMkey=[FILTERED]&UMsoftware=Active+Merchant&UMtestmode=0&UMhash=s%2FE27734F076643B23131E5432C1E225EFF982A73D350179EFC2F191CA499B59A4%2F13391bd14ab6e61058cc9a1b78f259a4c26aa8e1%2Fn"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Server: http\r\n"
+-> "Date: Tue, 13 Feb 2018 18:13:11 GMT\r\n"
+-> "Content-Type: text/html\r\n"
+-> "Content-Length: 485\r\n"
+-> "Connection: close\r\n"
+-> "P3P: policyref=\"http://www.usaepay.com/w3c/p3p.xml\", CP=\"NON TAIa IVAa IVDa OUR NOR PHY ONL UNI FIN INT DEM\"\r\n"
+-> "Strict-Transport-Security: max-age=15768000\r\n"
+-> "\r\n"
+reading 485 bytes...
+-> "UMversion=2.9&UMstatus=Approved&UMauthCode=042087&UMrefNum=132020522&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=120&UMbatchRefNum=848&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=A&UMauthAmount=1&UMfiller=filled"
+read 485 bytes
+Conn close
+    EOS
+  end
+
+  def pre_scrubbed_echeck
+    <<-EOS
+opening connection to sandbox.usaepay.com:443...
+opened
+starting SSL for sandbox.usaepay.com:443...
+SSL established
+<- "POST /gate HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: sandbox.usaepay.com\r\nContent-Length: 762\r\n\r\n"
+<- "UMamount=1.00&UMinvoice=&UMdescription=&UMaccount=15378535&UMrouting=244183602&UMname=Jim+Smith&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=NC&UMbillzip=27614&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=27614&UMcommand=check%3Asale&UMkey=4EoZ5U2Q55j976W7eplC71i6b7kn4pcV&UMsoftware=Active+Merchant&UMtestmode=0&UMhash=s%2F7F71E7DCB851901EA1D4E2CA1C60D2A7E8BAB99FA10F6220E821BD8B8331114B%2F85f1a7ab01b725c4eed80a12c78ef65d3fa367e6%2Fn"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Server: http\r\n"
+-> "Date: Fri, 16 Mar 2018 20:54:49 GMT\r\n"
+-> "Content-Type: text/html\r\n"
+-> "Content-Length: 572\r\n"
+-> "Connection: close\r\n"
+-> "P3P: policyref=\"http://www.usaepay.com/w3c/p3p.xml\", CP=\"NON TAIa IVAa IVDa OUR NOR PHY ONL UNI FIN INT DEM\"\r\n"
+-> "Strict-Transport-Security: max-age=15768000\r\n"
+-> "\r\n"
+reading 572 bytes...
+-> "UMversion=2.9&UMstatus=Approved&UMauthCode=TMEAAF&UMrefNum=133135121&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=180316&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=18031621233689&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+read 572 bytes
+Conn close
+    EOS
+  end
+
+  def post_scrubbed_echeck
+    <<-EOS
+opening connection to sandbox.usaepay.com:443...
+opened
+starting SSL for sandbox.usaepay.com:443...
+SSL established
+<- "POST /gate HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: sandbox.usaepay.com\r\nContent-Length: 762\r\n\r\n"
+<- "UMamount=1.00&UMinvoice=&UMdescription=&UMaccount=[FILTERED]&UMrouting=244183602&UMname=Jim+Smith&UMbillfname=Jim&UMbilllname=Smith&UMbillcompany=Widgets+Inc&UMbillstreet=456+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=NC&UMbillzip=27614&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Jim&UMshiplname=Smith&UMshipcompany=Widgets+Inc&UMshipstreet=456+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=456+My+Street&UMzip=27614&UMcommand=check%3Asale&UMkey=[FILTERED]&UMsoftware=Active+Merchant&UMtestmode=0&UMhash=s%2F7F71E7DCB851901EA1D4E2CA1C60D2A7E8BAB99FA10F6220E821BD8B8331114B%2F85f1a7ab01b725c4eed80a12c78ef65d3fa367e6%2Fn"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Server: http\r\n"
+-> "Date: Fri, 16 Mar 2018 20:54:49 GMT\r\n"
+-> "Content-Type: text/html\r\n"
+-> "Content-Length: 572\r\n"
+-> "Connection: close\r\n"
+-> "P3P: policyref=\"http://www.usaepay.com/w3c/p3p.xml\", CP=\"NON TAIa IVAa IVDa OUR NOR PHY ONL UNI FIN INT DEM\"\r\n"
+-> "Strict-Transport-Security: max-age=15768000\r\n"
+-> "\r\n"
+reading 572 bytes...
+-> "UMversion=2.9&UMstatus=Approved&UMauthCode=TMEAAF&UMrefNum=133135121&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=180316&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=18031621233689&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+read 572 bytes
+Conn close
+    EOS
   end
 end

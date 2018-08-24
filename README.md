@@ -31,11 +31,15 @@ You can check out the latest source from git:
 
 Installation from RubyGems:
 
-    gem install activemerchant
+```console
+gem install activemerchant
+```
 
 Or, if you're using Bundler, just add the following to your Gemfile:
 
-    gem 'activemerchant'
+```ruby
+gem 'activemerchant'
+```
 
 ## Usage
 
@@ -91,7 +95,6 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [Bank Frick](http://www.bankfrickacquiring.com/) - LI, US
 * [Banwire](http://www.banwire.com/) - MX
 * [Barclays ePDQ Extra Plus](http://www.barclaycard.co.uk/business/accepting-payments/epdq-ecomm/) - GB
-* [Barclays ePDQ MPI](http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/) - GB
 * [Be2Bill](http://www.be2bill.com/) - FR
 * [Beanstream.com](http://www.beanstream.com/) - CA, US
 * [BluePay](http://www.bluepay.com/) - US
@@ -162,7 +165,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [NETPAY Gateway](http://www.netpay.com.mx) - MX
 * [NMI](http://nmi.com/) - US
 * [Ogone](http://www.ogone.com/) - BE, DE, FR, NL, AT, CH
-* [Omise](https://www.omise.co/) - TH
+* [Omise](https://www.omise.co/) - TH, JP
 * [Openpay](Openpay) - MX
 * [Optimal Payments](http://www.optimalpayments.com/) - CA, US, GB
 * [Orbital Paymentech](http://chasepaymentech.com/) - US, CA
@@ -233,3 +236,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 ## API stability policy
 
 Functionality or APIs that are deprecated will be marked as such. Deprecated functionality is removed on major version changes - for example, deprecations from 2.x are removed in 3.x.
+
+## Ruby and Rails compatibility policies
+
+Because Active Merchant is a payment library, it needs to take security seriously. For this reason, Active Merchant guarantees compatibility only with actively supported versions of Ruby and Rails. At the time of this writing, that means that Ruby 2.3+ and Rails 4.2+ are supported.

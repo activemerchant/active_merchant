@@ -37,7 +37,7 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
   def test_failed_capture
    assert response = @gateway.capture(@amount, '')
    assert_failure response
-   assert_equal "Unable to find transaction", response.message
+   assert_equal 'Unable to find transaction', response.message
   end
 
   def test_successful_refund
@@ -54,7 +54,7 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
 
    response = @gateway.refund(@amount+100, response.authorization)
    assert_failure response
-   assert_equal "Unable to credit more than captured amount", response.message
+   assert_equal 'Unable to credit more than captured amount', response.message
   end
 
   def test_successful_void
@@ -71,7 +71,7 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
 
    response = @gateway.void(response.authorization)
    assert_failure response
-   assert_equal "Unable to annul, wrong state", response.message
+   assert_equal 'Unable to annul, wrong state', response.message
   end
 
   def test_successful_amex_purchase
@@ -111,7 +111,7 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
   def test_error_in_payment_details
    assert response = @gateway.purchase(@amount, credit_card(''), @options)
    assert_failure response
-   assert_equal "Cardnumber:Required", response.message
+   assert_equal 'Cardnumber:Required', response.message
   end
 
   def test_amount_is_not_required_again_when_capturing_authorization
@@ -119,11 +119,11 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
    assert_success response
 
    assert response = @gateway.capture(nil, response.authorization)
-   assert_equal "OK", response.message
+   assert_equal 'OK', response.message
   end
 
   def test_query_fails
-    query = @gateway.send(:query_transaction, "bogus", @options)
+    query = @gateway.send(:query_transaction, 'bogus', @options)
     assert_failure query
     assert_match(/unable to find/i, query.message)
   end

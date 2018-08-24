@@ -50,7 +50,7 @@ class CamsTest < Test::Unit::TestCase
   end
 
   def test_successful_capture
-    authorization = "12345678#54321"
+    authorization = '12345678#54321'
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
     assert capture = @gateway.capture(@amount, authorization)
@@ -65,7 +65,7 @@ class CamsTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    authorization = "12345678#54321"
+    authorization = '12345678#54321'
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
     assert refund = @gateway.refund(nil, authorization)
@@ -80,7 +80,7 @@ class CamsTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    authorization = "12345678#54321"
+    authorization = '12345678#54321'
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
     assert void = @gateway.void(authorization)

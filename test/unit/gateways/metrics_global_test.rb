@@ -46,7 +46,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
     @gateway.send(:add_address, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'DE', :state => ''} )
 
-    assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
+    assert_equal ['address', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:state]
     assert_equal '164 Waverley Street', result[:address]
     assert_equal 'DE', result[:country]
@@ -57,7 +57,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
     @gateway.send(:add_address, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
 
-    assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
+    assert_equal ['address', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
     assert_equal 'CO', result[:state]
     assert_equal '164 Waverley Street', result[:address]
     assert_equal 'US', result[:country]
@@ -101,7 +101,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
   def test_purchase_meets_minimum_requirements
     params = {
-      :amount => "1.01",
+      :amount => '1.01',
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
@@ -121,7 +121,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
 
   def test_refund_passing_extra_info
     response = stub_comms do
-      @gateway.refund(50, '123456789', :card_number => @credit_card.number, :first_name => "Bob", :last_name => "Smith", :zip => "12345")
+      @gateway.refund(50, '123456789', :card_number => @credit_card.number, :first_name => 'Bob', :last_name => 'Smith', :zip => '12345')
     end.check_request do |endpoint, data, headers|
       assert_match(/x_first_name=Bob/, data)
       assert_match(/x_last_name=Smith/, data)
@@ -167,7 +167,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert response.fraud_review?
-    assert_equal "Thank you! For security reasons your order is currently being reviewed", response.message
+    assert_equal 'Thank you! For security reasons your order is currently being reviewed', response.message
   end
 
   def test_avs_result
@@ -195,13 +195,13 @@ class MetricsGlobalTest < Test::Unit::TestCase
       :response_reason_code => '27',
       :response_reason_text => 'Failure.',
     }
-    assert_equal "CVV does not match", @gateway.message_from(result)
+    assert_equal 'CVV does not match', @gateway.message_from(result)
 
     result[:card_code] = 'M'
-    assert_equal "Street address matches, but 5-digit and 9-digit postal code do not match.", @gateway.message_from(result)
+    assert_equal 'Street address matches, but 5-digit and 9-digit postal code do not match.', @gateway.message_from(result)
 
     result[:response_reason_code] = '22'
-    assert_equal "Failure", @gateway.message_from(result)
+    assert_equal 'Failure', @gateway.message_from(result)
   end
 
   private
@@ -231,6 +231,6 @@ class MetricsGlobalTest < Test::Unit::TestCase
   end
 
   def fraud_review_response
-    "$4$,$$,$253$,$Thank you! For security reasons your order is currently being reviewed.$,$$,$X$,$0$,$$,$$,$1.00$,$$,$auth_capture$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$207BCBBF78E85CF174C87AE286B472D2$,$M$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$"
+    '$4$,$$,$253$,$Thank you! For security reasons your order is currently being reviewed.$,$$,$X$,$0$,$$,$$,$1.00$,$$,$auth_capture$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$207BCBBF78E85CF174C87AE286B472D2$,$M$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
   end
 end

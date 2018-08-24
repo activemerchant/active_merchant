@@ -14,12 +14,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'iATS Payments'
 
       ACTIONS = {
-        purchase: "ProcessCreditCardV1",
-        purchase_check: "ProcessACHEFTV1",
-        refund: "ProcessCreditCardRefundWithTransactionIdV1",
-        refund_check: "ProcessACHEFTRefundWithTransactionIdV1",
-        store: "CreateCreditCardCustomerCodeV1",
-        unstore: "DeleteCustomerCodeV1"
+        purchase: 'ProcessCreditCardV1',
+        purchase_check: 'ProcessACHEFTV1',
+        refund: 'ProcessCreditCardRefundWithTransactionIdV1',
+        refund_check: 'ProcessACHEFTRefundWithTransactionIdV1',
+        store: 'CreateCreditCardCustomerCodeV1',
+        unstore: 'DeleteCustomerCodeV1'
       }
 
       def initialize(options={})
@@ -145,19 +145,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+        year  = sprintf('%.4i', creditcard.year)
+        month = sprintf('%.2i', creditcard.month)
 
         "#{month}/#{year[-2..-1]}"
       end
 
       def creditcard_brand(brand)
         case brand
-        when "visa" then "VISA"
-        when "master" then "MC"
-        when "discover" then "DSC"
-        when "american_express" then "AMX"
-        when "maestro" then "MAESTR"
+        when 'visa' then 'VISA'
+        when 'master' then 'MC'
+        when 'discover' then 'DSC'
+        when 'american_express' then 'AMX'
+        when 'maestro' then 'MAESTR'
         else
           raise "Unhandled credit card brand #{brand}"
         end
@@ -178,12 +178,12 @@ module ActiveMerchant #:nodoc:
 
       def endpoints
         {
-          purchase: "ProcessLink.asmx",
-          purchase_check: "ProcessLink.asmx",
-          refund: "ProcessLink.asmx",
-          refund_check: "ProcessLink.asmx",
-          store: "CustomerLink.asmx",
-          unstore: "CustomerLink.asmx"
+          purchase: 'ProcessLink.asmx',
+          purchase_check: 'ProcessLink.asmx',
+          refund: 'ProcessLink.asmx',
+          refund_check: 'ProcessLink.asmx',
+          store: 'CustomerLink.asmx',
+          unstore: 'CustomerLink.asmx'
         }
       end
 
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
 
-        xml.elements.each("//IATSRESPONSE/*") do |node|
+        xml.elements.each('//IATSRESPONSE/*') do |node|
           recursively_parse_element(node, response)
         end
       end
@@ -225,15 +225,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def successful_result_message?(response)
-        response[:authorization_result].start_with?('OK')
+        response[:authorization_result] ? response[:authorization_result].start_with?('OK') : false
       end
 
       def success_from(response)
-        response[:status] == "Success" && successful_result_message?(response)
+        response[:status] == 'Success' && successful_result_message?(response)
       end
 
       def message_from(response)
-        if(!successful_result_message?(response))
+        if !successful_result_message?(response) && response[:authorization_result]
           return response[:authorization_result].strip
         elsif(response[:status] == 'Failure')
           return response[:errors]
@@ -253,14 +253,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
 
       def envelope_namespaces
         {
-          "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance",
-          "xmlns:xsd" => "http://www.w3.org/2001/XMLSchema",
-          "xmlns:soap12" => "http://www.w3.org/2003/05/soap-envelope"
+          'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance',
+          'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+          'xmlns:soap12' => 'http://www.w3.org/2003/05/soap-envelope'
         }
       end
 
@@ -269,7 +269,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
         xml.tag! 'soap12:Envelope', envelope_namespaces do
           xml.tag! 'soap12:Body' do
-            xml.tag! ACTIONS[action], { "xmlns" => "https://www.iatspayments.com/NetGate/" } do
+            xml.tag! ACTIONS[action], { 'xmlns' => 'https://www.iatspayments.com/NetGate/' } do
               xml.tag!('agentCode', @options[:agent_code])
               xml.tag!('password', @options[:password])
               parameters.each do |name, value|

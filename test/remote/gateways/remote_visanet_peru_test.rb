@@ -1,22 +1,22 @@
-require "test_helper"
+require 'test_helper'
 
 class RemoteVisanetPeruTest < Test::Unit::TestCase
   def setup
     @gateway = VisanetPeruGateway.new(fixtures(:visanet_peru))
 
     @amount = 100
-    @credit_card = credit_card("4500340090000016", verification_value: "377")
-    @declined_card = credit_card("4111111111111111")
+    @credit_card = credit_card('4500340090000016', verification_value: '377')
+    @declined_card = credit_card('4111111111111111')
 
     @options = {
       billing_address: address,
       order_id: generate_unique_id,
-      email: "visanetperutest@mailinator.com"
+      email: 'visanetperutest@mailinator.com'
     }
   end
 
   def test_invalid_login
-    gateway = VisanetPeruGateway.new(access_key_id: "", secret_access_key: "", merchant_id: "")
+    gateway = VisanetPeruGateway.new(access_key_id: '', secret_access_key: '', merchant_id: '')
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
@@ -24,70 +24,70 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
     assert response.authorization
-    assert_equal @options[:order_id], response.params["externalTransactionId"]
+    assert_equal @options[:order_id], response.params['externalTransactionId']
     assert response.test?
   end
 
   def test_successful_purchase_with_merchant_define_data
-    options = @options.merge(merchant_define_data: { field3: "movil", field91: "101266802", field92: "TheMerchant" })
+    options = @options.merge(merchant_define_data: { field3: 'movil', field91: '101266802', field92: 'TheMerchant' })
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
   end
 
   def test_successful_purchase_sans_options
     response = @gateway.purchase(@amount, @credit_card)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal "Operacion Denegada.", response.message
+    assert_equal 'Operacion Denegada.', response.message
   end
 
   def test_successful_authorize_and_capture
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
     assert response.authorization
-    assert_equal @options[:order_id], response.params["externalTransactionId"]
-    assert_equal "1.00", response.params["data"]["IMP_AUTORIZADO"]
+    assert_equal @options[:order_id], response.params['externalTransactionId']
+    assert_equal '1.00', response.params['data']['IMP_AUTORIZADO']
 
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
-    assert_equal "OK", capture.message
+    assert_equal 'OK', capture.message
     assert capture.authorization
-    assert_equal @options[:order_id], capture.params["externalTransactionId"]
+    assert_equal @options[:order_id], capture.params['externalTransactionId']
   end
 
   def test_successful_authorize_fractional_amount
     amount = 199
     response = @gateway.authorize(amount, @credit_card)
     assert_success response
-    assert_equal "OK", response.message
-    assert_equal "1.99", response.params["data"]["IMP_AUTORIZADO"]
+    assert_equal 'OK', response.message
+    assert_equal '1.99', response.params['data']['IMP_AUTORIZADO']
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal "Operacion Denegada.", response.message
+    assert_equal 'Operacion Denegada.', response.message
 
-    @options[:email] = "cybersource@reject.com"
+    @options[:email] = 'cybersource@reject.com'
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal "El pedido ha sido rechazado por Decision Manager", response.message
+    assert_equal 'REJECT', response.message
   end
 
   def test_failed_capture
-    response = @gateway.capture("900000044")
+    response = @gateway.capture('900000044')
     assert_failure response
     assert_match /NUMORDEN 900000044 no se encuentra registrado/, response.message
     assert_equal 400, response.error_code
@@ -99,11 +99,22 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount, response.authorization)
     assert_success refund
-    assert_equal "OK", refund.message
+    assert_equal 'OK', refund.message
+  end
+
+  def test_successful_refund_unsettled
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    new_auth = "_|#{response.authorization.split('|')[1]}"
+    refund = @gateway.refund(@amount, new_auth, @options.merge(force_full_refund_if_unsettled: true, ruc: '20341198217'))
+    # this test will fail currently because there is no E2E test working for visanet
+    # assert_success refund
+    # assert_equal "OK", refund.message
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, "900000044" )
+    response = @gateway.refund(@amount, '900000044' )
     assert_failure response
     assert_match /NUMORDEN 900000044 no se encuentra registrado/, response.message
     assert_equal 400, response.error_code
@@ -115,11 +126,11 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
 
     void = @gateway.void(response.authorization)
     assert_success void
-    assert_equal "OK", void.message
+    assert_equal 'OK', void.message
   end
 
   def test_failed_void
-    response = @gateway.void("900000044")
+    response = @gateway.void('900000044')
     assert_failure response
     assert_match /NUMORDEN no se encuentra registrado/, response.message
     assert_equal 400, response.error_code
@@ -128,15 +139,15 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "OK", response.message
-    assert_equal @options[:order_id], response.params["externalTransactionId"]
+    assert_equal 'OK', response.message
+    assert_equal @options[:order_id], response.params['externalTransactionId']
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal "Operacion Denegada.", response.message
+    assert_equal 'Operacion Denegada.', response.message
   end
 
   def test_transcript_scrubbing

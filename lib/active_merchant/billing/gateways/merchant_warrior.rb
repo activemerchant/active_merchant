@@ -68,6 +68,18 @@ module ActiveMerchant #:nodoc:
         commit('addCard', post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?paymentCardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((CardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?paymentCardCSC=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?apiKey=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_transaction(post, identification)
@@ -79,13 +91,13 @@ module ActiveMerchant #:nodoc:
 
         post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]
-        post['customerState'] = address[:state]
+        post['customerState'] = address[:state] || 'N/A'
         post['customerCity'] = address[:city]
         post['customerAddress'] = address[:address1]
         post['customerPostCode'] = address[:zip]
-		post['customerIP'] = address[:ip]
-		post['customerPhone'] = address[:phone]
-		post['customerEmail'] = address[:email]
+        post['customerIP'] = address[:ip]
+        post['customerPhone'] = address[:phone]
+        post['customerEmail'] = address[:email]
       end
 
       def add_order_id(post, options)
@@ -107,7 +119,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         post['paymentCardNumber'] = creditcard.number
         post['paymentCardName'] = scrub_name(creditcard.name)
-        post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime("%m%y")
+        post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime('%m%y')
         post['paymentCardCSC'] = creditcard.verification_value if creditcard.verification_value?
       end
 
@@ -176,14 +188,14 @@ module ActiveMerchant #:nodoc:
 
       def url_for(action, post)
         if token?(post)
-          [(test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL), action].join("/")
+          [(test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL), action].join('/')
         else
           (test? ? POST_TEST_URL : POST_LIVE_URL)
         end
       end
 
       def token?(post)
-        (post["cardID"] || post["cardName"])
+        (post['cardID'] || post['cardName'])
       end
 
       def success?(response)
@@ -191,7 +203,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(post)
-        post.collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+        post.collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end
   end

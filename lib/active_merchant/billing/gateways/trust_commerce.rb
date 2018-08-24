@@ -67,38 +67,38 @@ module ActiveMerchant #:nodoc:
     class TrustCommerceGateway < Gateway
       self.live_url = self.test_url = 'https://vault.trustcommerce.com/trans/'
 
-      SUCCESS_TYPES = ["approved", "accepted"]
+      SUCCESS_TYPES = ['approved', 'accepted']
 
       DECLINE_CODES = {
-        "decline"       => "The credit card was declined",
-        "avs"           => "AVS failed; the address entered does not match the billing address on file at the bank",
-        "cvv"           => "CVV failed; the number provided is not the correct verification number for the card",
-        "call"          => "The card must be authorized manually over the phone",
-        "expiredcard"   => "Issuer was not certified for card verification",
-        "carderror"     => "Card number is invalid",
-        "authexpired"   => "Attempt to postauth an expired (more than 14 days old) preauth",
-        "fraud"         => "CrediGuard fraud score was below requested threshold",
-        "blacklist"     => "CrediGuard blacklist value was triggered",
-        "velocity"      => "CrediGuard velocity control value was triggered",
-        "dailylimit"    => "Daily limit in transaction count or amount as been reached",
-        "weeklylimit"   => "Weekly limit in transaction count or amount as been reached",
-        "monthlylimit"  => "Monthly limit in transaction count or amount as been reached"
+        'decline'       => 'The credit card was declined',
+        'avs'           => 'AVS failed; the address entered does not match the billing address on file at the bank',
+        'cvv'           => 'CVV failed; the number provided is not the correct verification number for the card',
+        'call'          => 'The card must be authorized manually over the phone',
+        'expiredcard'   => 'Issuer was not certified for card verification',
+        'carderror'     => 'Card number is invalid',
+        'authexpired'   => 'Attempt to postauth an expired (more than 14 days old) preauth',
+        'fraud'         => 'CrediGuard fraud score was below requested threshold',
+        'blacklist'     => 'CrediGuard blacklist value was triggered',
+        'velocity'      => 'CrediGuard velocity control value was triggered',
+        'dailylimit'    => 'Daily limit in transaction count or amount as been reached',
+        'weeklylimit'   => 'Weekly limit in transaction count or amount as been reached',
+        'monthlylimit'  => 'Monthly limit in transaction count or amount as been reached'
       }
 
       BADDATA_CODES = {
-        "missingfields"       => "One or more parameters required for this transaction type were not sent",
-        "extrafields"         => "Parameters not allowed for this transaction type were sent",
-        "badformat"           => "A field was improperly formatted, such as non-digit characters in a number field",
-        "badlength"           => "A field was longer or shorter than the server allows",
-        "merchantcantaccept"  => "The merchant can't accept data passed in this field",
-        "mismatch"            => "Data in one of the offending fields did not cross-check with the other offending field"
+        'missingfields'       => 'One or more parameters required for this transaction type were not sent',
+        'extrafields'         => 'Parameters not allowed for this transaction type were sent',
+        'badformat'           => 'A field was improperly formatted, such as non-digit characters in a number field',
+        'badlength'           => 'A field was longer or shorter than the server allows',
+        'merchantcantaccept'  => "The merchant can't accept data passed in this field",
+        'mismatch'            => 'Data in one of the offending fields did not cross-check with the other offending field'
       }
 
       ERROR_CODES = {
-        "cantconnect"   => "Couldn't connect to the TrustCommerce gateway",
-        "dnsfailure"    => "The TCLink software was unable to resolve DNS hostnames",
-        "linkfailure"   => "The connection was established, but was severed before the transaction could complete",
-        "failtoprocess" => "The bank servers are offline and unable to authorize transactions"
+        'cantconnect'   => "Couldn't connect to the TrustCommerce gateway",
+        'dnsfailure'    => 'The TCLink software was unable to resolve DNS hostnames',
+        'linkfailure'   => 'The connection was established, but was severed before the transaction could complete',
+        'failtoprocess' => 'The bank servers are offline and unable to authorize transactions'
       }
 
       TEST_LOGIN = 'TestMerchant'
@@ -313,7 +313,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(params, creditcard)
-        params[:media]     = "cc"
+        params[:media]     = 'cc'
         params[:name]      = creditcard.name
         params[:cc]        = creditcard.number
         params[:exp]       = expdate(creditcard)
@@ -370,7 +370,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters)
-        parameters.collect { |key, value| "#{key}=#{ CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "#{key}=#{ CGI.escape(value.to_s)}" }.join('&')
       end
 
       def commit(action, parameters)
@@ -388,13 +388,13 @@ module ActiveMerchant #:nodoc:
         end
 
         # to be considered successful, transaction status must be either "approved" or "accepted"
-        success = SUCCESS_TYPES.include?(data["status"])
+        success = SUCCESS_TYPES.include?(data['status'])
         message = message_from(data)
         Response.new(success, message, data,
           :test => test?,
-          :authorization => data["transid"],
-          :cvv_result => data["cvv"],
-          :avs_result => { :code => data["avs"] }
+          :authorization => data['transid'],
+          :cvv_result => data['cvv'],
+          :avs_result => { :code => data['avs'] }
         )
       end
 
@@ -410,15 +410,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(data)
-        case data["status"]
-        when "decline"
-          return DECLINE_CODES[data["declinetype"]]
-        when "baddata"
-          return BADDATA_CODES[data["error"]]
-        when "error"
-          return ERROR_CODES[data["errortype"]]
+        case data['status']
+        when 'decline'
+          return DECLINE_CODES[data['declinetype']]
+        when 'baddata'
+          return BADDATA_CODES[data['error']]
+        when 'error'
+          return ERROR_CODES[data['errortype']]
         else
-          return "The transaction was successful"
+          return 'The transaction was successful'
         end
       end
 

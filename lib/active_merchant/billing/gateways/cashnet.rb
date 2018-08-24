@@ -3,12 +3,13 @@ module ActiveMerchant #:nodoc:
     class CashnetGateway < Gateway
       include Empty
 
-      self.live_url      = "https://commerce.cashnet.com/"
+      self.live_url = 'https://commerce.cashnet.com/'
+      self.test_url = 'https://train.cashnet.com/'
 
-      self.supported_countries = ["US"]
+      self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
-      self.homepage_url        = "http://www.higherone.com/"
-      self.display_name        = "Cashnet"
+      self.homepage_url        = 'http://www.higherone.com/'
+      self.display_name        = 'Cashnet'
       self.money_format        = :dollars
       self.max_retries         = 0
 
@@ -33,7 +34,7 @@ module ActiveMerchant #:nodoc:
           :password,
           :merchant_gateway_name
         )
-        options[:default_item_code] ||= "FEE"
+        options[:default_item_code] ||= 'FEE'
         super
       end
 
@@ -54,11 +55,22 @@ module ActiveMerchant #:nodoc:
         commit('REFUND', money, post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript
+          .gsub(%r{(password=)[^&]+}, '\1[FILTERED]')
+          .gsub(%r{(cardno=)[^&]+}, '\1[FILTERED]')
+          .gsub(%r{(cid=)[^&]+}, '\1[FILTERED]')
+      end
+
       private
 
       def commit(action, money, fields)
         fields[:amount] = amount(money)
-        url = live_url + CGI.escape(@options[:merchant_gateway_name])
+        url = (test? ? test_url : live_url) + CGI.escape(@options[:merchant_gateway_name])
         raw_response = ssl_post(url, post_data(action, fields))
         parsed_response = parse(raw_response)
 
@@ -80,9 +92,9 @@ module ActiveMerchant #:nodoc:
         post[:merchant]       = @options[:merchant]
         post[:operator]       = @options[:operator]
         post[:password]       = @options[:password]
-        post[:station]        = (@options[:station] || "WEB")
+        post[:station]        = (@options[:station] || 'WEB')
         post[:custcode]       = (@options[:custcode] || "ActiveMerchant/#{ActiveMerchant::VERSION}")
-        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def add_creditcard(post, creditcard)
@@ -130,14 +142,14 @@ module ActiveMerchant #:nodoc:
       def handle_response(response)
         if (200...300).include?(response.code.to_i)
           return response.body
-        elsif 302 == response.code.to_i
+        elsif response.code.to_i == 302
           return ssl_get(URI.parse(response['location']))
         end
         raise ResponseError.new(response)
       end
 
       def unparsable_response(raw_response)
-        message = "Unparsable response received from Cashnet. Please contact Cashnet if you continue to receive this message."
+        message = 'Unparsable response received from Cashnet. Please contact Cashnet if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end

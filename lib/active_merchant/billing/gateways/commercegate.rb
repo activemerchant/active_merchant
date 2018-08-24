@@ -65,15 +65,15 @@ module ActiveMerchant #:nodoc:
           post[:state]       = address[:state]
           post[:postalCode]  = address[:zip]
         end
-        post[:countryCode] = ((address && address[:country]) || "US")
+        post[:countryCode] = ((address && address[:country]) || 'US')
       end
 
       def add_auth_purchase_options(post, money, options)
         add_address(post, options[:address])
 
-        post[:customerIP]  = options[:ip] || "127.0.0.1"
+        post[:customerIP]  = options[:ip] || '127.0.0.1'
         post[:amount]      = amount(money)
-        post[:email]       = options[:email] || "unknown@example.com"
+        post[:email]       = options[:email] || 'unknown@example.com'
         post[:currencyCode]= options[:currency] || currency(money)
         post[:merchAcct]   = options[:merchant]
 
@@ -127,8 +127,8 @@ module ActiveMerchant #:nodoc:
         if response['returnText'].present?
           response['returnText']
         else
-          "Invalid response received from the CommerceGate API. " +
-          "Please contact CommerceGate support if you continue to receive this message. " +
+          'Invalid response received from the CommerceGate API. ' +
+          'Please contact CommerceGate support if you continue to receive this message. ' +
           "(The raw response returned by the API was #{response.inspect})"
         end
       end
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters)
         parameters.collect do |key, value|
           "#{key}=#{CGI.escape(value.to_s)}"
-        end.join("&")
+        end.join('&')
       end
     end
   end

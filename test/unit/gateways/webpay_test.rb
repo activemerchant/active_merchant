@@ -30,7 +30,7 @@ class WebpayTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, "ch_test_charge")
+    assert response = @gateway.capture(@amount, 'ch_test_charge')
     assert_success response
     assert response.test?
   end
@@ -54,12 +54,12 @@ class WebpayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal @amount / 100, response.params["amount"]
+    assert_equal @amount / 100, response.params['amount']
   end
 
   def test_successful_purchase_with_token
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, "cus_xxx|card_xxx")
+      @gateway.purchase(@amount, 'cus_xxx|card_xxx')
     end.check_request do |method, endpoint, data, headers|
       assert_match(/customer=cus_xxx/, data)
       assert_match(/card=card_xxx/, data)
@@ -121,20 +121,20 @@ class WebpayTest < Test::Unit::TestCase
 
   def test_add_customer
     post = {}
-    @gateway.send(:add_customer, post, 'card_token', {:customer => "test_customer"})
-    assert_equal "test_customer", post[:customer]
+    @gateway.send(:add_customer, post, 'card_token', {:customer => 'test_customer'})
+    assert_equal 'test_customer', post[:customer]
   end
 
   def test_doesnt_add_customer_if_card
     post = {}
-    @gateway.send(:add_customer, post, @credit_card, {:customer => "test_customer"})
+    @gateway.send(:add_customer, post, @credit_card, {:customer => 'test_customer'})
     assert !post[:customer]
   end
 
   def test_add_customer_data
     post = {}
-    @gateway.send(:add_customer_data, post, {:description => "a test customer"})
-    assert_equal "a test customer", post[:description]
+    @gateway.send(:add_customer_data, post, {:description => 'a test customer'})
+    assert_equal 'a test customer', post[:description]
   end
 
   def test_add_address

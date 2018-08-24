@@ -5,46 +5,46 @@ module ActiveMerchant #:nodoc:
     class VerifiGateway < Gateway
       class VerifiPostData < PostData
         # Fields that will be sent even if they are blank
-        self.required_fields = [ :amount, :type, :ccnumber, :ccexp, :firstname, :lastname,
-          :company, :address1, :address2, :city, :state, :zip, :country, :phone ]
+        self.required_fields = [:amount, :type, :ccnumber, :ccexp, :firstname, :lastname,
+                                :company, :address1, :address2, :city, :state, :zip, :country, :phone]
       end
 
       self.live_url = self.test_url = 'https://secure.verifi.com/gw/api/transact.php'
 
       RESPONSE_CODE_MESSAGES = {
-        "100" => "Transaction was Approved",
-        "200" => "Transaction was Declined by Processor",
-        "201" => "Do Not Honor",
-        "202" => "Insufficient Funds",
-        "203" => "Over Limit",
-        "204" => "Transaction not allowed",
-        "220" => "Incorrect payment Data",
-        "221" => "No Such Card Issuer",
-        "222" => "No Card Number on file with Issuer",
-        "223" => "Expired Card",
-        "224" => "Invalid Expiration Date",
-        "225" => "Invalid Card Security Code",
-        "240" => "Call Issuer for Further Information",
-        "250" => "Pick Up Card",
-        "251" => "Lost Card",
-        "252" => "Stolen Card",
-        "253" => "Fraudulent Card",
-        "260" => "Declined With further Instructions Available (see response text)",
-        "261" => "Declined - Stop All Recurring Payments",
-        "262" => "Declined - Stop this Recurring Program",
-        "263" => "Declined - Update Cardholder Data Available",
-        "264" => "Declined - Retry in a few days",
-        "300" => "Transaction was Rejected by Gateway",
-        "400" => "Transaction Error Returned by Processor",
-        "410" => "Invalid Merchant Configuration",
-        "411" => "Merchant Account is Inactive",
-        "420" => "Communication Error",
-        "421" => "Communication Error with Issuer",
-        "430" => "Duplicate Transaction at Processor",
-        "440" => "Processor Format Error",
-        "441" => "Invalid Transaction Information",
-        "460" => "Processor Feature Not Available",
-        "461" => "Unsupported Card Type"
+        '100' => 'Transaction was Approved',
+        '200' => 'Transaction was Declined by Processor',
+        '201' => 'Do Not Honor',
+        '202' => 'Insufficient Funds',
+        '203' => 'Over Limit',
+        '204' => 'Transaction not allowed',
+        '220' => 'Incorrect payment Data',
+        '221' => 'No Such Card Issuer',
+        '222' => 'No Card Number on file with Issuer',
+        '223' => 'Expired Card',
+        '224' => 'Invalid Expiration Date',
+        '225' => 'Invalid Card Security Code',
+        '240' => 'Call Issuer for Further Information',
+        '250' => 'Pick Up Card',
+        '251' => 'Lost Card',
+        '252' => 'Stolen Card',
+        '253' => 'Fraudulent Card',
+        '260' => 'Declined With further Instructions Available (see response text)',
+        '261' => 'Declined - Stop All Recurring Payments',
+        '262' => 'Declined - Stop this Recurring Program',
+        '263' => 'Declined - Update Cardholder Data Available',
+        '264' => 'Declined - Retry in a few days',
+        '300' => 'Transaction was Rejected by Gateway',
+        '400' => 'Transaction Error Returned by Processor',
+        '410' => 'Invalid Merchant Configuration',
+        '411' => 'Merchant Account is Inactive',
+        '420' => 'Communication Error',
+        '421' => 'Communication Error with Issuer',
+        '430' => 'Duplicate Transaction at Processor',
+        '440' => 'Processor Format Error',
+        '441' => 'Invalid Transaction Information',
+        '460' => 'Processor Feature Not Available',
+        '461' => 'Unsupported Card Type'
       }
 
       SUCCESS = 1
@@ -180,10 +180,10 @@ module ActiveMerchant #:nodoc:
         # MD5(username|password|orderid|amount|time)
         now = Time.now.to_i.to_s
         md5 = Digest::MD5.new
-        md5 << @options[:login].to_s + "|"
-        md5 << @options[:password].to_s + "|"
-        md5 << options[:order_id].to_s + "|"
-        md5 << amount(money).to_s + "|"
+        md5 << @options[:login].to_s + '|'
+        md5 << @options[:password].to_s + '|'
+        md5 << options[:order_id].to_s + '|'
+        md5 << amount(money).to_s + '|'
         md5 << now
         post[:key]  = md5.hexdigest
         post[:time] = now
@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:response_code_message] ? response[:response_code_message] : ""
+        response[:response_code_message] || ''
       end
 
       def parse(body)

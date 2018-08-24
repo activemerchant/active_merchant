@@ -95,14 +95,14 @@ module ActiveMerchant #:nodoc:
         post[:version]        = API_VERSION
         post[:login]          = @options[:login]
         post[:tran_key]       = @options[:password]
-        post[:relay_response] = "FALSE"
+        post[:relay_response] = 'FALSE'
         post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
+        post[:delim_data]     = 'TRUE'
+        post[:delim_char]     = ','
+        post[:encap_char]     = '$'
         post[:solution_ID]    = application_id if application_id
 
-        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
 

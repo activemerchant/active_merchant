@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
 
       private
       def clean_description(description)
-        description.to_s.slice(0,32).encode("US-ASCII", invalid: :replace, undef: :replace, replace: '?')
+        description.to_s.slice(0,32).encode('US-ASCII', invalid: :replace, undef: :replace, replace: '?')
       end
 
       def prepare_options_hash(options)
@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
 
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
         # Pending Status also means Acknowledged (as stated in their specification)
-        success = response[:FunctionResult] == "ACK" || response[:FunctionResult] == "PENDING"
+        success = response[:FunctionResult] == 'ACK' || response[:FunctionResult] == 'PENDING'
         message = response[:Message]
         authorization = response[:GuWID]
 
@@ -185,8 +185,8 @@ module ActiveMerchant #:nodoc:
           :cvv_result => response[:CVCResponseCode]
         )
       rescue ResponseError => e
-        if e.response.code == "401"
-          return Response.new(false, "Invalid Login")
+        if e.response.code == '401'
+          return Response.new(false, 'Invalid Login')
         else
           raise
         end
@@ -200,12 +200,12 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'WIRECARD_BXML' do
           xml.tag! 'W_REQUEST' do
-          xml.tag! 'W_JOB' do
-              xml.tag! 'JobID', ''
-              # UserID for this transaction
-              xml.tag! 'BusinessCaseSignature', options[:signature] || options[:login]
-              # Create the whole rest of the message
-              add_transaction_data(xml, money, options)
+            xml.tag! 'W_JOB' do
+               xml.tag! 'JobID', ''
+               # UserID for this transaction
+               xml.tag! 'BusinessCaseSignature', options[:signature] || options[:login]
+               # Create the whole rest of the message
+               add_transaction_data(xml, money, options)
             end
           end
         end
@@ -235,17 +235,18 @@ module ActiveMerchant #:nodoc:
               add_address(xml, options[:billing_address])
             when :capture, :bookback
               xml.tag! 'GuWID', options[:preauthorization]
-              add_amount(xml, money)
+              add_amount(xml, money, options)
             when :reversal
               xml.tag! 'GuWID', options[:preauthorization]
             end
+            add_customer_data(xml, options)
           end
         end
       end
 
       # Includes the payment (amount, currency, country) to the transaction-xml
       def add_invoice(xml, money, options)
-        add_amount(xml, money)
+        add_amount(xml, money, options)
         xml.tag! 'Currency', options[:currency] || currency(money)
         xml.tag! 'CountryCode', options[:billing_address][:country]
         xml.tag! 'RECURRING_TRANSACTION' do
@@ -254,13 +255,13 @@ module ActiveMerchant #:nodoc:
       end
 
       # Include the amount in the transaction-xml
-      def add_amount(xml, money)
-        xml.tag! 'Amount', amount(money)
+      def add_amount(xml, money, options)
+        xml.tag! 'Amount', localized_amount(money, options[:currency] || currency(money))
       end
 
       # Includes the credit-card data to the transaction-xml
       def add_creditcard(xml, creditcard)
-        raise "Creditcard must be supplied!" if creditcard.nil?
+        raise 'Creditcard must be supplied!' if creditcard.nil?
         xml.tag! 'CREDIT_CARD_DATA' do
           xml.tag! 'CreditCardNumber', creditcard.number
           xml.tag! 'CVC2', creditcard.verification_value
@@ -308,7 +309,7 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "#{basepath}/W_JOB")
           parse_response(response, root)
-        elsif root = REXML::XPath.first(xml, "//ERROR")
+        elsif root = REXML::XPath.first(xml, '//ERROR')
           parse_error_only_response(response, root)
         else
           response[:Message] = "No valid XML response message received. \
@@ -319,7 +320,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_error_only_response(response, root)
-        error_code = REXML::XPath.first(root, "Number")
+        error_code = REXML::XPath.first(root, 'Number')
         response[:ErrorCode] = error_code.text if error_code
         response[:Message] = parse_error(root)
       end
@@ -330,11 +331,11 @@ module ActiveMerchant #:nodoc:
 
         root.elements.to_a.each do |node|
           if node.name =~ /FNC_CC_/
-            status = REXML::XPath.first(node, "CC_TRANSACTION/PROCESSING_STATUS")
+            status = REXML::XPath.first(node, 'CC_TRANSACTION/PROCESSING_STATUS')
           end
         end
 
-        message = ""
+        message = ''
         if status
           if info = status.elements['Info']
             message << info.text
@@ -351,7 +352,7 @@ module ActiveMerchant #:nodoc:
             end
           end
 
-          error_code = REXML::XPath.first(status, "ERROR/Number")
+          error_code = REXML::XPath.first(status, 'ERROR/Number')
           response['ErrorCode'] = error_code.text if error_code
         end
 
@@ -360,7 +361,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Parse a generic error response from the gateway
-      def parse_error(root, message = "")
+      def parse_error(root, message = '')
         # Get errors if available and append them to the message
         errors = errors_to_string(root)
         unless errors.strip.blank?
@@ -375,7 +376,7 @@ module ActiveMerchant #:nodoc:
       def errors_to_string(root)
         # Get context error messages (can be 0..*)
         errors = []
-        REXML::XPath.each(root, "//ERROR") do |error_elem|
+        REXML::XPath.each(root, '//ERROR') do |error_elem|
           error = {}
           error[:Advice] = []
           error[:Message] = error_elem.elements['Message'].text
@@ -400,18 +401,18 @@ module ActiveMerchant #:nodoc:
 
       # Amex have different AVS response codes
       AMEX_TRANSLATED_AVS_CODES = {
-        "A" => "B", # CSC and Address Matched
-        "F" => "D", # All Data Matched
-        "N" => "I", # CSC Match
-        "U" => "U", # Data Not Checked
-        "Y" => "D", # All Data Matched
-        "Z" => "P", # CSC and Postcode Matched
+        'A' => 'B', # CSC and Address Matched
+        'F' => 'D', # All Data Matched
+        'N' => 'I', # CSC Match
+        'U' => 'U', # Data Not Checked
+        'Y' => 'D', # All Data Matched
+        'Z' => 'P', # CSC and Postcode Matched
       }
 
       # Amex have different AVS response codes to visa etc
       def avs_code(response, options)
         if response.has_key?(:AVS_ProviderResultCode)
-          if options[:credit_card].present? && ActiveMerchant::Billing::CreditCard.brand?(options[:credit_card].number) == "american_express"
+          if options[:credit_card].present? && ActiveMerchant::Billing::CreditCard.brand?(options[:credit_card].number) == 'american_express'
             AMEX_TRANSLATED_AVS_CODES[response[:AVS_ProviderResultCode]]
           else
             response[:AVS_ProviderResultCode]
@@ -423,7 +424,7 @@ module ActiveMerchant #:nodoc:
       # (for http basic authentication)
       def encoded_credentials
         credentials = [@options[:login], @options[:password]].join(':')
-        "Basic " << Base64.encode64(credentials).strip
+        'Basic ' << Base64.encode64(credentials).strip
       end
     end
   end

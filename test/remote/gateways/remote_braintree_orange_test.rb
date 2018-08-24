@@ -37,15 +37,15 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
-    assert_not_nil response.params["customer_vault_id"]
+    assert_not_nil response.params['customer_vault_id']
   end
 
   def test_successful_add_to_vault_with_store_method
     assert response = @gateway.store(@credit_card)
     assert_equal 'Customer Added', response.message
     assert_success response
-    assert_match %r{^\d+$}, response.params["customer_vault_id"]
-    assert_equal response.params["customer_vault_id"], response.authorization
+    assert_match %r{^\d+$}, response.params['customer_vault_id']
+    assert_equal response.params['customer_vault_id'], response.authorization
   end
 
   def test_failed_add_to_vault_with_store_method
@@ -59,7 +59,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
-    assert_not_nil customer_id = response.params["customer_vault_id"]
+    assert_not_nil customer_id = response.params['customer_vault_id']
 
     assert second_response = @gateway.purchase(@amount*2, customer_id, @options)
     assert_equal 'This transaction has been approved', second_response.message
@@ -71,7 +71,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
-    assert_equal @options[:store], response.params["customer_vault_id"].to_i
+    assert_equal @options[:store], response.params['customer_vault_id'].to_i
   end
 
   def test_add_to_vault_with_custom_vault_id_with_store_method
@@ -79,7 +79,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, @options.dup)
     assert_equal 'Customer Added', response.message
     assert_success response
-    assert_equal @options[:billing_id], response.params["customer_vault_id"].to_i
+    assert_equal @options[:billing_id], response.params['customer_vault_id'].to_i
   end
 
   def test_add_to_vault_with_store_and_check
@@ -142,10 +142,16 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert  response.message.match(/Invalid Transaction ID \/ Object ID specified:/)
   end
 
+  def test_authorize_with_three_d_secure_pass_thru
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(eci: '05', xid: 'xid', cavv: 'cavv'))
+    assert_success auth
+    assert_equal 'This transaction has been approved', auth.message
+  end
+
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "This transaction has been approved", response.message
+    assert_equal 'This transaction has been approved', response.message
   end
 
   def test_failed_verify
@@ -170,7 +176,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
       @gateway.purchase(@declined_amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
-    
+
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end

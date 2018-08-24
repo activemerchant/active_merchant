@@ -75,6 +75,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_transaction_type(post, :authorization)
         add_customer_ip(post, options)
+        add_recurring_payment(post, options)
         commit(post)
       end
 
@@ -86,6 +87,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_transaction_type(post, purchase_action(source))
         add_customer_ip(post, options)
+        add_recurring_payment(post, options)
         commit(post)
       end
 
@@ -168,7 +170,7 @@ module ActiveMerchant #:nodoc:
       #can't actually delete a secure profile with the supplicated API. This function sets the status of the profile to closed (C).
       #Closed profiles will have to removed manually.
       def delete(vault_id)
-        update(vault_id, false, {:status => "C"})
+        update(vault_id, false, {:status => 'C'})
       end
 
       alias_method :unstore, :delete
@@ -197,6 +199,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(/(&?password=)[^&\s]*(&?)/, '\1[FILTERED]\2').
+          gsub(/(&?passcode=)[^&\s]*(&?)/, '\1[FILTERED]\2').
           gsub(/(&?trnCardCvd=)\d*(&?)/, '\1[FILTERED]\2').
           gsub(/(&?trnCardNumber=)\d*(&?)/, '\1[FILTERED]\2')
       end

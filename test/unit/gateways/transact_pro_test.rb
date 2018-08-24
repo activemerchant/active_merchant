@@ -84,7 +84,7 @@ class TransactProTest < Test::Unit::TestCase
 
     capture = @gateway.capture(nil, '3d25ab044075924479d3836f549b015481d15d74|100')
     assert_failure capture
-    assert_equal "4dd02f79f428470bbd794590834dfbf38b5721ac|100", capture.authorization
+    assert_equal '4dd02f79f428470bbd794590834dfbf38b5721ac|100', capture.authorization
     assert_equal 'Failed', capture.message
   end
 
@@ -154,31 +154,31 @@ class TransactProTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    "ID:a27891dedd57e875df653144c518b8fb646b2351~Status:Success~MerchantID:1410896668~Terminal:Rietumu - non3D~ResultCode:000~ApprovalCode:646391~CardIssuerCountry:XX"
+    'ID:a27891dedd57e875df653144c518b8fb646b2351~Status:Success~MerchantID:1410896668~Terminal:Rietumu - non3D~ResultCode:000~ApprovalCode:646391~CardIssuerCountry:XX'
   end
 
   def failed_purchase_response
-    "ID:fed54b10b610bb760816aad42721672e8fd19327~Status:Failed~MerchantID:1410965369~Terminal:Rietumu - non3D~ResultCode:908~ApprovalCode:-3~CardIssuerCountry:XX"
+    'ID:fed54b10b610bb760816aad42721672e8fd19327~Status:Failed~MerchantID:1410965369~Terminal:Rietumu - non3D~ResultCode:908~ApprovalCode:-3~CardIssuerCountry:XX'
   end
 
   def successful_authorize_response
-    "ID:3d25ab044075924479d3836f549b015481d15d74~Status:HoldOk~MerchantID:1410974273~Terminal:Rietumu - non3D~ResultCode:000~ApprovalCode:524282~CardIssuerCountry:XX"
+    'ID:3d25ab044075924479d3836f549b015481d15d74~Status:HoldOk~MerchantID:1410974273~Terminal:Rietumu - non3D~ResultCode:000~ApprovalCode:524282~CardIssuerCountry:XX'
   end
 
   def failed_authorize_response
-    "ID:c9c789a575ba8556e2c5f56174d859c23ac56e09~Status:Failed~MerchantID:1410974976~Terminal:Rietumu - non3D~ResultCode:908~ApprovalCode:-3~CardIssuerCountry:XX"
+    'ID:c9c789a575ba8556e2c5f56174d859c23ac56e09~Status:Failed~MerchantID:1410974976~Terminal:Rietumu - non3D~ResultCode:908~ApprovalCode:-3~CardIssuerCountry:XX'
   end
 
   def successful_capture_response
-    "ID:3d25ab044075924479d3836f549b015481d15d74~Status:Success~MerchantID:1410974273~Terminal:Rietumu - non3D~ResultCode:000~ApprovalCode:524282~CardIssuerCountry:XX"
+    'ID:3d25ab044075924479d3836f549b015481d15d74~Status:Success~MerchantID:1410974273~Terminal:Rietumu - non3D~ResultCode:000~ApprovalCode:524282~CardIssuerCountry:XX'
   end
 
   def failed_capture_response
-    "ID:4dd02f79f428470bbd794590834dfbf38b5721ac~Status:Failed~MerchantID:1325788706~Terminal:TerminalName~ResultCode:000~ApprovalCode:804958"
+    'ID:4dd02f79f428470bbd794590834dfbf38b5721ac~Status:Failed~MerchantID:1325788706~Terminal:TerminalName~ResultCode:000~ApprovalCode:804958'
   end
 
   def successful_refund_response
-    "Refund Success"
+    'Refund Success'
   end
 
   def failed_refund_response
@@ -186,14 +186,14 @@ class TransactProTest < Test::Unit::TestCase
   end
 
   def successful_void_response
-    "DMS canceled OK"
+    'DMS canceled OK'
   end
 
   def failed_void_response
-    "DMS Cancel failed"
+    'DMS Cancel failed'
   end
 
   def successful_init_response
-    "OK:a27891dedd57e875df653144c518b8fb646b2351"
+    'OK:a27891dedd57e875df653144c518b8fb646b2351'
   end
 end

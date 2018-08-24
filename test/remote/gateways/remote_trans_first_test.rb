@@ -35,7 +35,7 @@ class RemoteTransFirstTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_sans_cvv
-    @credit_card.verification_value = ""
+    @credit_card.verification_value = ''
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
   end
@@ -70,13 +70,32 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     assert_equal 'Insufficient funds', response.message
   end
 
-  def test_successful_refund
+  def test_successful_void
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
+    assert void = @gateway.void(purchase.authorization)
+    assert_success void
   end
+
+  # Refunds can only be successfully run on settled transactions which take 24 hours 
+  # def test_successful_refund
+  #   assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_success purchase
+
+  #   assert refund = @gateway.refund(@amount, purchase.authorization)
+  #   assert_equal @amount, refund.params["amount"].to_i*100
+  #   assert_success refund
+  # end
+
+  # def test_successful_partial_refund
+  #   assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #   assert_success purchase
+
+  #   assert refund = @gateway.refund(@amount-1, purchase.authorization)
+  #   assert_equal @amount-1, refund.params["amount"].to_i*100
+  #   assert_success refund
+  # end
 
   def test_successful_refund_with_echeck
     assert purchase = @gateway.purchase(@amount, @check, @options)

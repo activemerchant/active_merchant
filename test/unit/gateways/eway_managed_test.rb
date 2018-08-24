@@ -76,10 +76,10 @@ class EwayManagedTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @valid_customer_id, @options)
     assert_instance_of EwayManagedGateway::EwayResponse, response
-    assert_equal "00,Transaction Approved(Test Gateway)", response.message
+    assert_equal '00,Transaction Approved(Test Gateway)', response.message
     assert_success response
-    assert_equal "123456", response.authorization
-    assert_equal "123456", response.params['transaction_number']
+    assert_equal '123456', response.authorization
+    assert_equal '123456', response.params['transaction_number']
     assert response.test?
   end
 
@@ -141,9 +141,9 @@ class EwayManagedTest < Test::Unit::TestCase
 
     assert response = @gateway.store(@credit_card, @options)
     assert_instance_of EwayManagedGateway::EwayResponse, response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
     assert_success response
-    assert_equal "1234567", response.token
+    assert_equal '1234567', response.token
     assert response.test?
   end
 
@@ -230,7 +230,7 @@ class EwayManagedTest < Test::Unit::TestCase
 
     assert response = @gateway.store(@credit_card, @options)
     assert_instance_of EwayManagedGateway::EwayResponse, response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
     assert_success response
     assert response.test?
   end
@@ -240,7 +240,7 @@ class EwayManagedTest < Test::Unit::TestCase
 
     assert response = @gateway.retrieve(@valid_customer_id)
     assert_instance_of EwayManagedGateway::EwayResponse, response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
     assert_success response
     assert response.test?
   end

@@ -37,24 +37,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options = {})
-        options = options.merge(:gvp_order_type => "sales")
+        options = options.merge(:gvp_order_type => 'sales')
         commit(money, build_sale_request(money, credit_card, options))
       end
 
       def authorize(money, credit_card, options = {})
-        options = options.merge(:gvp_order_type => "preauth")
+        options = options.merge(:gvp_order_type => 'preauth')
         commit(money, build_authorize_request(money, credit_card, options))
       end
 
       def capture(money, ref_id, options = {})
-        options = options.merge(:gvp_order_type => "postauth")
+        options = options.merge(:gvp_order_type => 'postauth')
         commit(money, build_capture_request(money, ref_id, options))
       end
 
       private
 
       def security_data
-        rjusted_terminal_id = @options[:terminal_id].to_s.rjust(9, "0")
+        rjusted_terminal_id = @options[:terminal_id].to_s.rjust(9, '0')
         Digest::SHA1.hexdigest(@options[:password].to_s + rjusted_terminal_id).upcase
       end
 
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         hash_data   = generate_hash_data(format_order_id(options[:order_id]), @options[:terminal_id], card_number, amount(money), security_data)
 
         xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct! :xml, :version => "1.0", :encoding => "UTF-8"
+        xml.instruct! :xml, :version => '1.0', :encoding => 'UTF-8'
 
         xml.tag! 'GVPSRequest' do
           xml.tag! 'Mode', test? ? 'TEST' : 'PROD'
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_authorize_request(money, credit_card, options)
-         build_xml_request(money, credit_card, options) do |xml|
+        build_xml_request(money, credit_card, options) do |xml|
           add_customer_data(xml, options)
           add_order_data(xml, options)  do
             add_addresses(xml, options)
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
 
       def build_capture_request(money, ref_id, options)
         options = options.merge(:order_id => ref_id)
-         build_xml_request(money, ref_id, options) do |xml|
+        build_xml_request(money, ref_id, options) do |xml|
           add_customer_data(xml, options)
           add_order_data(xml, options)
           add_transaction_data(xml, money, options)
@@ -197,10 +197,8 @@ module ActiveMerchant #:nodoc:
 
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
           ActiveSupport::Inflector.transliterate(text,'')
-        elsif RUBY_VERSION >= '1.9'
-          text.gsub(/[^\x00-\x7F]+/, '')
         else
-          ActiveSupport::Inflector.transliterate(text).to_s
+          text.gsub(/[^\x00-\x7F]+/, '')
         end
       end
 
@@ -219,7 +217,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(money,request)
         url = test? ? self.test_url : self.live_url
-        raw_response = ssl_post(url, "data=" + request)
+        raw_response = ssl_post(url, 'data=' + request)
         response = parse(raw_response)
 
         success = success?(response)
@@ -250,7 +248,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response[:message] == "Approved"
+        response[:message] == 'Approved'
       end
 
       def strip_invalid_xml_chars(xml)

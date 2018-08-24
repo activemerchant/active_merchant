@@ -1,9 +1,9 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BorgunGateway < Gateway
-      self.display_name = "Borgun"
+      self.display_name = 'Borgun'
       self.homepage_url = 'http://www.borgun.com'
 
       self.test_url = 'https://gatewaytest.borgun.is/ws/Heimir.pub.ws:Authorization'
@@ -26,7 +26,6 @@ module ActiveMerchant #:nodoc:
         post[:TransType] = '1'
         add_invoice(post, money, options)
         add_payment_method(post, payment)
-
         commit('sale', post)
       end
 
@@ -35,7 +34,6 @@ module ActiveMerchant #:nodoc:
         post[:TransType] = '5'
         add_invoice(post, money, options)
         add_payment_method(post, payment)
-
         commit('authonly', post)
       end
 
@@ -57,9 +55,10 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         post = {}
-        # TransType and TrAmount must match original values from auth or purchase.
-        _, _, _, _, _, transtype, tramount = split_authorization(authorization)
+        # TransType, TrAmount, and currency must match original values from auth or purchase.
+        _, _, _, _, _, transtype, tramount, currency = split_authorization(authorization)
         post[:TransType] = transtype
+        options[:currency] = options[:currency] || CURRENCY_CODES.key(currency)
         add_invoice(post, tramount.to_i, options)
         add_reference(post, authorization)
         commit('void', post)
@@ -78,26 +77,27 @@ module ActiveMerchant #:nodoc:
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
-      CURRENCY_CODES["ISK"] = "352"
-      CURRENCY_CODES["EUR"] = "978"
+      CURRENCY_CODES['ISK'] = '352'
+      CURRENCY_CODES['EUR'] = '978'
+      CURRENCY_CODES['USD'] = '840'
 
       def add_invoice(post, money, options)
         post[:TrAmount] = amount(money)
         post[:TrCurrency] = CURRENCY_CODES[options[:currency] || currency(money)]
+        post[:TerminalID] = options[:terminal_id] || '1'
       end
 
       def add_payment_method(post, payment_method)
         post[:PAN] = payment_method.number
         post[:ExpDate] = format(payment_method.year, :two_digits) + format(payment_method.month, :two_digits)
         post[:CVC2] = payment_method.verification_value
-        post[:DateAndTime] = Time.now.strftime("%y%m%d%H%M%S")
+        post[:DateAndTime] = Time.now.strftime('%y%m%d%H%M%S')
         post[:RRN] = 'AMRCNT' + six_random_digits
       end
 
       def add_reference(post, authorization)
-        dateandtime, batch, transaction, rrn, authcode, _, _ = split_authorization(authorization)
+        dateandtime, _batch, transaction, rrn, authcode, _, _, _ = split_authorization(authorization)
         post[:DateAndTime] = dateandtime
-        post[:Batch] = batch
         post[:Transaction] = transaction
         post[:RRN] = rrn
         post[:AuthCode] = authcode
@@ -129,7 +129,6 @@ module ActiveMerchant #:nodoc:
         post[:Version] = '1000'
         post[:Processor] = @options[:processor]
         post[:MerchantID] = @options[:merchant_id]
-        post[:TerminalID] = 1
 
         url = (test? ? test_url : live_url)
         request = build_request(action, post)
@@ -152,7 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
           response[:message] || "Error with ActionCode=#{response[:actioncode]}"
         end
@@ -166,13 +165,14 @@ module ActiveMerchant #:nodoc:
           response[:rrn],
           response[:authcode],
           response[:transtype],
-          response[:tramount]
-        ].join("|")
+          response[:tramount],
+          response[:trcurrency]
+        ].join('|')
       end
 
       def split_authorization(authorization)
-        dateandtime, batch, transaction, rrn, authcode, transtype, tramount = authorization.split("|")
-        [dateandtime, batch, transaction, rrn, authcode, transtype, tramount]
+        dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency = authorization.split('|')
+        [dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency]
       end
 
       def headers

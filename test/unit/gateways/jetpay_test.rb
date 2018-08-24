@@ -28,7 +28,7 @@ class JetpayTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '8afa688fd002821362;TEST97;100;KKLIHOJKKNKKHJKONJHOLHOL', response.authorization
-    assert_equal('TEST97', response.params["approval"])
+    assert_equal('TEST97', response.params['approval'])
     assert response.test?
   end
 
@@ -48,18 +48,18 @@ class JetpayTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal('cbf902091334a0b1aa;TEST01;100;KKLIHOJKKNKKHJKONOHCLOIO', response.authorization)
-    assert_equal('TEST01', response.params["approval"])
+    assert_equal('TEST01', response.params['approval'])
     assert response.test?
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(1111, "010327153017T10018;502F7B;1111")
+    assert response = @gateway.capture(1111, '010327153017T10018;502F7B;1111')
     assert_success response
 
     assert_equal('010327153017T10018;502F6B;1111;', response.authorization)
-    assert_equal('502F6B', response.params["approval"])
+    assert_equal('502F6B', response.params['approval'])
     assert response.test?
   end
 
@@ -70,7 +70,7 @@ class JetpayTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal('010327153x17T10418;502F7B;500;', response.authorization)
-    assert_equal('502F7B', response.params["approval"])
+    assert_equal('502F7B', response.params['approval'])
     assert response.test?
   end
 

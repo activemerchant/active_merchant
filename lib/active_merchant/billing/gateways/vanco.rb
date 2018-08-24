@@ -23,14 +23,14 @@ module ActiveMerchant
       def purchase(money, payment_method, options={})
         MultiResponse.run do |r|
           r.process { login }
-          r.process { commit(purchase_request(money, payment_method, r.params["response_sessionid"], options), :response_transactionref) }
+          r.process { commit(purchase_request(money, payment_method, r.params['response_sessionid'], options), :response_transactionref) }
         end
       end
 
       def refund(money, authorization, options={})
         MultiResponse.run do |r|
           r.process { login }
-          r.process { commit(refund_request(money, authorization, r.params["response_sessionid"]), :response_creditrequestreceived) }
+          r.process { commit(refund_request(money, authorization, r.params['response_sessionid']), :response_creditrequestreceived) }
         end
       end
 
@@ -66,7 +66,7 @@ module ActiveMerchant
 
       def childnode_to_response(response, node, childnode)
         name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        if name == "response_errors" && !childnode.elements.empty?
+        if name == 'response_errors' && !childnode.elements.empty?
           add_errors_to_response(response, childnode.to_s)
         else
           response[name.downcase.to_sym] = childnode.text
@@ -77,13 +77,13 @@ module ActiveMerchant
         errors_hash = Hash.from_xml(errors_xml).values.first
         response[:response_errors] = errors_hash
 
-        error = errors_hash["Error"]
+        error = errors_hash['Error']
         if error.kind_of?(Hash)
-          response[:error_message] = error["ErrorDescription"]
-          response[:error_codes] = error["ErrorCode"]
+          response[:error_message] = error['ErrorDescription']
+          response[:error_codes] = error['ErrorCode']
         elsif error.kind_of?(Array)
-          error_str = error.map { |e| e["ErrorDescription"]}.join(". ")
-          error_codes = error.map { |e| e["ErrorCode"]}.join(", ")
+          error_str = error.map { |e| e['ErrorDescription']}.join('. ')
+          error_codes = error.map { |e| e['ErrorCode']}.join(', ')
           response[:error_message] = "#{error_str}."
           response[:error_codes] = error_codes
         end
@@ -107,7 +107,7 @@ module ActiveMerchant
       end
 
       def message_from(succeeded, response)
-        return "Success" if succeeded
+        return 'Success' if succeeded
         response[:error_message]
       end
 
@@ -116,7 +116,7 @@ module ActiveMerchant
           response[:response_customerref],
           response[:response_paymentmethodref],
           response[:response_transactionref]
-        ].join("|")
+        ].join('|')
       end
 
       def split_authorization(authorization)
@@ -125,7 +125,7 @@ module ActiveMerchant
 
       def purchase_request(money, payment_method, session_id, options)
         build_xml_request do |doc|
-          add_auth(doc, "EFTAddCompleteTransaction", session_id)
+          add_auth(doc, 'EFTAddCompleteTransaction', session_id)
 
           doc.Request do
             doc.RequestVars do
@@ -141,7 +141,7 @@ module ActiveMerchant
 
       def refund_request(money, authorization, session_id)
         build_xml_request do |doc|
-          add_auth(doc, "EFTAddCredit", session_id)
+          add_auth(doc, 'EFTAddCredit', session_id)
 
           doc.Request do
             doc.RequestVars do
@@ -203,7 +203,7 @@ module ActiveMerchant
         doc.CardExpYear(format(credit_card.year, :two_digits))
         doc.CardCVV2(credit_card.verification_value)
         doc.CardBillingName(credit_card.name)
-        doc.AccountType("CC")
+        doc.AccountType('CC')
         add_billing_address(doc, options)
       end
 
@@ -220,28 +220,28 @@ module ActiveMerchant
       end
 
       def add_echeck(doc, echeck)
-        if echeck.account_type == "savings"
-          doc.AccountType("S")
+        if echeck.account_type == 'savings'
+          doc.AccountType('S')
         else
-          doc.AccountType("C")
+          doc.AccountType('C')
         end
 
         doc.CustomerName("#{echeck.last_name}, #{echeck.first_name}")
         doc.AccountNumber(echeck.account_number)
         doc.RoutingNumber(echeck.routing_number)
-        doc.TransactionTypeCode("WEB")
+        doc.TransactionTypeCode('WEB')
       end
 
       def add_purchase_noise(doc)
-        doc.StartDate("0000-00-00")
-        doc.FrequencyCode("O")
+        doc.StartDate('0000-00-00')
+        doc.FrequencyCode('O')
       end
 
       def add_refund_noise(doc)
-        doc.ContactName("Bilbo Baggins")
-        doc.ContactPhone("1234567890")
-        doc.ContactExtension("None")
-        doc.ReasonForCredit("Refund requested")
+        doc.ContactName('Bilbo Baggins')
+        doc.ContactPhone('1234567890')
+        doc.ContactExtension('None')
+        doc.ReasonForCredit('Refund requested')
       end
 
       def add_options(doc, options)
@@ -259,7 +259,7 @@ module ActiveMerchant
       def login_request
         build_xml_request do |doc|
           doc.Auth do
-            add_request(doc, "Login")
+            add_request(doc, 'Login')
           end
 
           doc.Request do
@@ -273,7 +273,7 @@ module ActiveMerchant
 
       def build_xml_request
         builder = Nokogiri::XML::Builder.new
-        builder.__send__("VancoWS") do |doc|
+        builder.__send__('VancoWS') do |doc|
           yield(doc)
         end
         builder.to_xml

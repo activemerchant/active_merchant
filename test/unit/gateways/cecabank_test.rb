@@ -42,9 +42,9 @@ class CecabankTest < Test::Unit::TestCase
 
   def test_expiration_date_sent_correctly
     stub_comms do
-      @gateway.purchase(@amount, credit_card("4242424242424242", month: 1, year: 2014), @options)
+      @gateway.purchase(@amount, credit_card('4242424242424242', month: 1, year: 2014), @options)
     end.check_request do |endpoint, data, headers|
-      assert_match(/Caducidad=201401&/, data, "Expected expiration date format is yyyymm")
+      assert_match(/Caducidad=201401&/, data, 'Expected expiration date format is yyyymm')
     end.respond_with(successful_purchase_response)
   end
 
@@ -59,7 +59,7 @@ class CecabankTest < Test::Unit::TestCase
   def test_successful_refund_request
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert response = @gateway.refund(@amount, "reference", @options)
+    assert response = @gateway.refund(@amount, 'reference', @options)
     assert_instance_of Response, response
     assert_success response
     assert response.test?
@@ -68,7 +68,7 @@ class CecabankTest < Test::Unit::TestCase
   def test_unsuccessful_refund_request
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert response = @gateway.refund(@amount, "reference", @options)
+    assert response = @gateway.refund(@amount, 'reference', @options)
     assert_failure response
     assert response.test?
   end

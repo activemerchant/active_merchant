@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        @options[:login] == "TEST0"
+        @options[:login] == 'TEST0'
       end
 
       def authorize(money, creditcard, options = {})
@@ -94,11 +94,11 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         h = {}
-        body.gsub!("<html><body><plaintext>", "")
+        body.gsub!('<html><body><plaintext>', '')
         body.
           split("\r\n").
           map do |i|
-            a = i.split("=")
+            a = i.split('=')
             h[a.first] = a.last unless a.first.nil?
           end
         h
@@ -111,30 +111,30 @@ module ActiveMerchant #:nodoc:
 
         case action
         when :sale
-          parameters[:action] = "ns_quicksale_cc"
+          parameters[:action] = 'ns_quicksale_cc'
         when :authonly
-          parameters[:action] = "ns_quicksale_cc"
+          parameters[:action] = 'ns_quicksale_cc'
           parameters[:authonly] = 1
         when :capture
-          parameters[:action] = "ns_quicksale_cc"
+          parameters[:action] = 'ns_quicksale_cc'
         end
 
-        response = parse(ssl_post(self.live_url, parameters.to_post_data) || "")
+        response = parse(ssl_post(self.live_url, parameters.to_post_data) || '')
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => response["refcode"]
+          :authorization => response['refcode']
         )
       end
 
       def successful?(response)
-        response["Status"] == "Accepted"
+        response['Status'] == 'Accepted'
       end
 
       def message_from(response)
         if successful?(response)
-          "Accepted"
+          'Accepted'
         else
-          response["Reason"].split(":")[2].capitalize unless response["Reason"].nil?
+          response['Reason'].split(':')[2].capitalize unless response['Reason'].nil?
         end
       end
     end

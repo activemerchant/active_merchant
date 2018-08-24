@@ -13,7 +13,7 @@ class WirecardTest < Test::Unit::TestCase
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
     @unsupported_card = credit_card('4200000000000000', brand: :maestro)
-    @amex_card = credit_card('370000000000000', brand: "american_express")
+    @amex_card = credit_card('370000000000000', brand: 'american_express')
 
     @amount = 111
 
@@ -149,23 +149,23 @@ class WirecardTest < Test::Unit::TestCase
 
   def test_unauthorized_capture
     @gateway.expects(:ssl_post).returns(unauthorized_capture_response)
-    assert response = @gateway.capture(@amount, "1234567890123456789012", @options)
+    assert response = @gateway.capture(@amount, '1234567890123456789012', @options)
 
     assert_failure response
     assert_equal TEST_CAPTURE_GUWID, response.authorization
-    assert response.message["Could not find referenced transaction for GuWID 1234567890123456789012."]
+    assert response.message['Could not find referenced transaction for GuWID 1234567890123456789012.']
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
-    assert response = @gateway.refund(@amount - 30, "TheIdentifcation", @options)
+    assert response = @gateway.refund(@amount - 30, 'TheIdentifcation', @options)
     assert_failure response
     assert_match %r{Not prudent}, response.message
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
-    assert response = @gateway.refund(@amount - 30, "TheIdentifcation", @options)
+    assert response = @gateway.refund(@amount - 30, 'TheIdentifcation', @options)
     assert_failure response
     assert_match %r{Not gonna do it}, response.message
   end
@@ -187,7 +187,7 @@ class WirecardTest < Test::Unit::TestCase
   end
 
   def test_description_trucated_to_32_chars_in_authorize
-    options = { description: "32chars-------------------------EXTRA" }
+    options = { description: '32chars-------------------------EXTRA' }
 
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
@@ -197,7 +197,7 @@ class WirecardTest < Test::Unit::TestCase
   end
 
   def test_description_trucated_to_32_chars_in_purchase
-    options = { description: "32chars-------------------------EXTRA" }
+    options = { description: '32chars-------------------------EXTRA' }
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -207,7 +207,7 @@ class WirecardTest < Test::Unit::TestCase
   end
 
   def test_description_is_ascii_encoded_since_wirecard_does_not_like_utf_8
-    options = { description: "¿Dónde está la estación?" }
+    options = { description: '¿Dónde está la estación?' }
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -220,18 +220,18 @@ class WirecardTest < Test::Unit::TestCase
     options = @options.merge(billing_address: @address_avs)
     @gateway.expects(:ssl_post).returns(failed_avs_response)
     response = @gateway.purchase(@amount, @credit_card, options)
-    assert_match %r{A}, response.avs_result["code"]
+    assert_match %r{A}, response.avs_result['code']
   end
 
   def test_failed_amex_avs_response_code
     options = @options.merge(billing_address: @address_avs)
     @gateway.expects(:ssl_post).returns(failed_avs_response)
     response = @gateway.purchase(@amount, @amex_card, options)
-    assert_match %r{B}, response.avs_result["code"]
+    assert_match %r{B}, response.avs_result['code']
   end
 
   def test_commerce_type_option
-    options = { commerce_type: "MOTO" }
+    options = { commerce_type: 'MOTO' }
 
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -244,7 +244,7 @@ class WirecardTest < Test::Unit::TestCase
     stub_comms do
       @gateway.store(@credit_card)
     end.check_request do |endpoint, body, headers|
-      assert_xml_element_text(body, "//RECURRING_TRANSACTION/Type", "Initial")
+      assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end
 
@@ -252,7 +252,7 @@ class WirecardTest < Test::Unit::TestCase
     stub_comms do
       @gateway.store(@credit_card)
     end.check_request do |endpoint, body, headers|
-      assert_xml_element_text(body, "//CC_TRANSACTION/Amount", "100")
+      assert_xml_element_text(body, '//CC_TRANSACTION/Amount', '100')
     end.respond_with(successful_authorization_response)
   end
 
@@ -260,7 +260,7 @@ class WirecardTest < Test::Unit::TestCase
     stub_comms do
       @gateway.store(@credit_card, :amount => 120)
     end.check_request do |endpoint, body, headers|
-      assert_xml_element_text(body, "//CC_TRANSACTION/Amount", "120")
+      assert_xml_element_text(body, '//CC_TRANSACTION/Amount', '120')
     end.respond_with(successful_authorization_response)
   end
 
@@ -268,7 +268,7 @@ class WirecardTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, '45678', @options)
     end.check_request do |endpoint, body, headers|
-      assert_xml_element_text(body, "//GuWID", '45678')
+      assert_xml_element_text(body, '//GuWID', '45678')
       assert_no_match(/<CREDIT_CARD_DATA>/, body)
     end.respond_with(successful_authorization_response)
   end
@@ -277,24 +277,24 @@ class WirecardTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, '87654', @options)
     end.check_request do |endpoint, body, headers|
-      assert_xml_element_text(body, "//GuWID", '87654')
+      assert_xml_element_text(body, '//GuWID', '87654')
       assert_no_match(/<CREDIT_CARD_DATA>/, body)
     end.respond_with(successful_authorization_response)
   end
 
   def test_authorization_with_recurring_transaction_type_initial
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:recurring => "Initial"))
+      @gateway.authorize(@amount, @credit_card, @options.merge(:recurring => 'Initial'))
     end.check_request do |endpoint, body, headers|
-      assert_xml_element_text(body, "//RECURRING_TRANSACTION/Type", 'Initial')
+      assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end
 
   def test_purchase_using_with_recurring_transaction_type_initial
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:recurring => "Initial"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(:recurring => 'Initial'))
     end.check_request do |endpoint, body, headers|
-      assert_xml_element_text(body, "//RECURRING_TRANSACTION/Type", 'Initial')
+      assert_xml_element_text(body, '//RECURRING_TRANSACTION/Type', 'Initial')
     end.respond_with(successful_authorization_response)
   end
 
@@ -310,8 +310,8 @@ class WirecardTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_failure response
-    assert_equal "Job Refused", response.params["Message"]
-    assert_equal "10003", response.params["ErrorCode"]
+    assert_equal 'Job Refused', response.params['Message']
+    assert_equal '10003', response.params['ErrorCode']
   end
 
   def test_transcript_scrubbing

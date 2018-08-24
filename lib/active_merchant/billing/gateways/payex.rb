@@ -1,4 +1,4 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://payex.com/'
       self.display_name = 'Payex'
-      self.default_currency = "EUR"
+      self.default_currency = 'EUR'
 
       TRANSACTION_STATUS = {
         sale:       '0',
@@ -360,11 +360,11 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         xmldoc = Nokogiri::XML(xml)
-        body = xmldoc.xpath("//soap:Body/*[1]")[0].inner_text
+        body = xmldoc.xpath('//soap:Body/*[1]')[0].inner_text
 
         doc = Nokogiri::XML(body)
 
-        doc.root.xpath("*").each do |node|
+        doc.root.xpath('*').each do |node|
           if (node.elements.size == 0)
             response[node.name.downcase.to_sym] = node.text
           else

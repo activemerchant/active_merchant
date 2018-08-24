@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_description(post, options)
-        post[:description] = options[:description] || "Description"
+        post[:description] = options[:description] || 'Description'
       end
 
       def add_testmode(post)
@@ -196,7 +196,7 @@ module ActiveMerchant #:nodoc:
         params[:apikey] = @options[:apikey] if @options[:apikey]
         params[:md5check] = generate_check_hash(action, params)
 
-        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def generate_check_hash(action, params)
@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
 
       # Limited to 20 digits max
       def format_order_number(number)
-        number.to_s.gsub(/[^\w]/, '').rjust(4, "0")[0...20]
+        number.to_s.gsub(/[^\w]/, '').rjust(4, '0')[0...20]
       end
     end
   end

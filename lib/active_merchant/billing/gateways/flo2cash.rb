@@ -13,10 +13,10 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
       BRAND_MAP = {
-        "visa" => "VISA",
-        "master" => "MC",
-        "american_express" => "AMEX",
-        "diners_club" => "DINERS"
+        'visa' => 'VISA',
+        'master' => 'MC',
+        'american_express' => 'AMEX',
+        'diners_club' => 'DINERS'
       }
 
       def initialize(options={})
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("ProcessAuthorise", post)
+        commit('ProcessAuthorise', post)
       end
 
       def capture(amount, authorization, options={})
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("ProcessCapture", post)
+        commit('ProcessCapture', post)
       end
 
       def refund(amount, authorization, options={})
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("ProcessRefund", post)
+        commit('ProcessRefund', post)
       end
 
       def supports_scrubbing?
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["NZD"] = "554"
+      CURRENCY_CODES['NZD'] = '554'
 
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         begin
           raw = parse(ssl_post(url, data, headers(action)), action)
         rescue ActiveMerchant::ResponseError => e
-          if(e.response.code == "500" && e.response.body.start_with?("<?xml"))
+          if(e.response.code == '500' && e.response.body.start_with?('<?xml'))
             raw = parse(e.response.body, action)
           else
             raise
@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
       def parse(body, action)
         response = {}
         xml = REXML::Document.new(body)
-        root = (REXML::XPath.first(xml, "//#{action}Response") || REXML::XPath.first(xml, "//detail"))
+        root = (REXML::XPath.first(xml, "//#{action}Response") || REXML::XPath.first(xml, '//detail'))
 
         root.elements.to_a.each do |node|
           parse_element(response, node)
@@ -184,9 +184,9 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          response[:message] || response[:errormessage] || "Unable to read error message"
+          response[:message] || response[:errormessage] || 'Unable to read error message'
         end
       end
 

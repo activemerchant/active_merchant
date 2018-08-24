@@ -854,11 +854,13 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, request)
         url = test? ? test_url : live_url
-        xml = ssl_post(url, request, "Content-Type" => "text/xml")
+        xml = ssl_post(url, request, 'Content-Type' => 'text/xml')
 
         response_params = parse(action, xml)
 
-        message = response_params['messages']['message']['text']
+        message_element= response_params['messages']['message']
+        first_error = message_element.is_a?(Array) ? message_element.first : message_element
+        message = first_error['text']
         test_mode = @options[:test_requests] || message =~ /Test Mode/
         success = response_params['messages']['result_code'] == 'Ok'
         response_params['direct_response'] = parse_direct_response(response_params['direct_response']) if response_params['direct_response']
@@ -867,7 +869,7 @@ module ActiveMerchant #:nodoc:
         response_options = {}
         response_options[:test] = test_mode
         response_options[:authorization] = transaction_id || response_params['customer_profile_id'] || (response_params['profile'] ? response_params['profile']['customer_profile_id'] : nil)
-        response_options[:error_code] = response_params['messages']['message']['code'] unless success
+        response_options[:error_code] = first_error['code'] unless success
 
         Response.new(success, message, response_params, response_options)
       end
@@ -940,7 +942,7 @@ module ActiveMerchant #:nodoc:
       def parse(action, xml)
         xml = REXML::Document.new(xml)
         root = REXML::XPath.first(xml, "//#{CIM_ACTIONS[action]}Response") ||
-               REXML::XPath.first(xml, "//ErrorResponse")
+               REXML::XPath.first(xml, '//ErrorResponse')
         if root
           response = parse_element(root)
         end

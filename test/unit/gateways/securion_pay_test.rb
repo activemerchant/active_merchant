@@ -28,9 +28,9 @@ class SecurionPayTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_match %r(^cust_\w+$), response.authorization
-    assert_equal "customer", response.params["objectType"]
-    assert_match %r(^card_\w+$), response.params["cards"][0]["id"]
-    assert_equal "card", response.params["cards"][0]["objectType"]
+    assert_equal 'customer', response.params['objectType']
+    assert_match %r(^card_\w+$), response.params['cards'][0]['id']
+    assert_equal 'card', response.params['cards'][0]['objectType']
 
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     @gateway.expects(:ssl_post).returns(successful_void_response)
@@ -38,18 +38,18 @@ class SecurionPayTest < Test::Unit::TestCase
     @options[:customer_id] = response.authorization
     response = @gateway.store(@new_credit_card, @options)
     assert_success response
-    assert_match %r(^card_\w+$), response.params["card"]["id"]
-    assert_equal @options[:customer_id], response.params["card"]["customerId"]
+    assert_match %r(^card_\w+$), response.params['card']['id']
+    assert_equal @options[:customer_id], response.params['card']['customerId']
 
     @gateway.expects(:ssl_request).returns(successful_customer_update_response)
 
     response = @gateway.customer(@options)
     assert_success response
-    assert_equal @options[:customer_id], response.params["id"]
-    assert_equal "401288", response.params["cards"][0]["first6"]
-    assert_equal "1881", response.params["cards"][0]["last4"]
-    assert_equal "424242", response.params["cards"][1]["first6"]
-    assert_equal "4242", response.params["cards"][1]["last4"]
+    assert_equal @options[:customer_id], response.params['id']
+    assert_equal '401288', response.params['cards'][0]['first6']
+    assert_equal '1881', response.params['cards'][0]['last4']
+    assert_equal '424242', response.params['cards'][1]['first6']
+    assert_equal '4242', response.params['cards'][1]['last4']
   end
 
   def test_successful_purchase
@@ -65,7 +65,7 @@ class SecurionPayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_token
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.purchase(@amount, "tok_xxx")
+      @gateway.purchase(@amount, 'tok_xxx')
     end.check_request do |method, endpoint, data, headers|
       assert_match(/card=tok_xxx/, data)
       refute_match(/card\[number\]/, data)
@@ -86,7 +86,7 @@ class SecurionPayTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({ description: "test charge", ip: "127.127.127.127", user_agent: "browser XXX", referrer: "http://www.foobar.com", email: "foo@bar.com" })
+      updated_options = @options.merge({ description: 'test charge', ip: '127.127.127.127', user_agent: 'browser XXX', referrer: 'http://www.foobar.com', email: 'foo@bar.com' })
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=test\+charge/, data)
@@ -99,7 +99,7 @@ class SecurionPayTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase_without_email_or_order
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({ description: "test charge", ip: "127.127.127.127", user_agent: "browser XXX", referrer: "http://www.foobar.com" })
+      updated_options = @options.merge({ description: 'test charge', ip: '127.127.127.127', user_agent: 'browser XXX', referrer: 'http://www.foobar.com' })
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=test\+charge/, data)
@@ -177,7 +177,7 @@ class SecurionPayTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "char_CqH9rftszMnaMYBrgtVI49LM", @options)
+    response = @gateway.capture(@amount, 'char_CqH9rftszMnaMYBrgtVI49LM', @options)
     assert_instance_of Response, response
     assert_success response
     assert response.test?
@@ -186,7 +186,7 @@ class SecurionPayTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "invalid_authorization_token", @options)
+    response = @gateway.capture(@amount, 'invalid_authorization_token', @options)
     assert_failure response
     assert_match(/^Requested Charge does not exist/, response.message)
     assert_nil response.authorization
@@ -199,10 +199,10 @@ class SecurionPayTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, 'char_DQca5ZjbewP2Oe0lIsNe4EXP', @options)
     assert_instance_of Response, response
     assert_success response
-    assert response.params["refunded"]
-    assert_equal 0, response.params["amount"]
-    assert_equal 1, response.params["refunds"].size
-    assert_equal @amount, response.params["refunds"].map{|r| r["amount"]}.sum
+    assert response.params['refunded']
+    assert_equal 0, response.params['amount']
+    assert_equal 1, response.params['refunds'].size
+    assert_equal @amount, response.params['refunds'].map{|r| r['amount']}.sum
     assert_equal 'char_DQca5ZjbewP2Oe0lIsNe4EXP', response.authorization
     assert response.test?
   end
@@ -213,9 +213,9 @@ class SecurionPayTest < Test::Unit::TestCase
     response = @gateway.refund(@refund_amount, 'char_oVnJ1j6fZqOvnopBBvlnpEuX', @options)
     assert_instance_of Response, response
     assert_success response
-    assert response.params["refunded"]
-    assert_equal @amount - @refund_amount, response.params["amount"]
-    assert_equal @refund_amount, response.params["refunds"].map{|r| r["amount"]}.sum
+    assert response.params['refunded']
+    assert_equal @amount - @refund_amount, response.params['amount']
+    assert_equal @refund_amount, response.params['refunds'].map{|r| r['amount']}.sum
     assert_equal 'char_oVnJ1j6fZqOvnopBBvlnpEuX', response.authorization
     assert response.test?
   end
@@ -252,7 +252,7 @@ class SecurionPayTest < Test::Unit::TestCase
 
     response = @gateway.void('invalid_authorization_token', @options)
     assert_failure response
-    assert_equal "Requested Charge does not exist", response.message
+    assert_equal 'Requested Charge does not exist', response.message
     assert_nil response.authorization
   end
 
@@ -268,7 +268,7 @@ class SecurionPayTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Transaction approved", response.message
+    assert_equal 'Transaction approved', response.message
   end
 
   def test_failed_verify
@@ -276,7 +276,7 @@ class SecurionPayTest < Test::Unit::TestCase
       @gateway.verify(@declined_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "The card was declined for other reason.", response.message
+    assert_equal 'The card was declined for other reason.', response.message
   end
 
   def test_scrub

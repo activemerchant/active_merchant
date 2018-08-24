@@ -12,10 +12,10 @@ class OgoneTest < Test::Unit::TestCase
 
     @gateway = OgoneGateway.new(@credentials)
     @credit_card = credit_card
-    @mastercard  = credit_card('5399999999999999', :brand => "mastercard")
+    @mastercard  = credit_card('5399999999999999', :brand => 'mastercard')
     @amount = 100
-    @identification = "3014726"
-    @billing_id = "myalias"
+    @identification = '3014726'
+    @billing_id = 'myalias'
     @options = {
       :order_id => '1',
       :billing_address => address,
@@ -34,7 +34,7 @@ class OgoneTest < Test::Unit::TestCase
     @parameters_d3d = {
       'FLAG3D' => 'Y',
       'WIN3DS' => 'MAINW',
-      'HTTP_ACCEPT' => "*/*"
+      'HTTP_ACCEPT' => '*/*'
     }
   end
 
@@ -145,7 +145,7 @@ class OgoneTest < Test::Unit::TestCase
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
-    assert response = @gateway.capture(@amount, "3048326")
+    assert response = @gateway.capture(@amount, '3048326')
     assert_success response
     assert_equal '3048326;SAL', response.authorization
     assert response.test?
@@ -153,7 +153,7 @@ class OgoneTest < Test::Unit::TestCase
 
   def test_successful_capture_with_action_option
     @gateway.expects(:ssl_post).returns(successful_capture_response)
-    assert response = @gateway.capture(@amount, "3048326", :action => 'SAS')
+    assert response = @gateway.capture(@amount, '3048326', :action => 'SAS')
     assert_success response
     assert_equal '3048326;SAS', response.authorization
     assert response.test?
@@ -161,7 +161,7 @@ class OgoneTest < Test::Unit::TestCase
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
-    assert response = @gateway.void("3048606")
+    assert response = @gateway.void('3048606')
     assert_success response
     assert_equal '3048606;DES', response.authorization
     assert response.test?
@@ -170,7 +170,7 @@ class OgoneTest < Test::Unit::TestCase
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      assert response = @gateway.credit(@amount, "3049652;SAL")
+      assert response = @gateway.credit(@amount, '3049652;SAL')
       assert_success response
       assert_equal '3049652;RFD', response.authorization
       assert response.test?
@@ -181,13 +181,13 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_unreferenced_credit_response)
     assert response = @gateway.credit(@amount, @credit_card)
     assert_success response
-    assert_equal "3049654;RFD", response.authorization
+    assert_equal '3049654;RFD', response.authorization
     assert response.test?
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
-    assert response = @gateway.refund(@amount, "3049652")
+    assert response = @gateway.refund(@amount, '3049652')
     assert_success response
     assert_equal '3049652;RFD', response.authorization
     assert response.test?
@@ -197,14 +197,14 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response).then.returns(successful_void_response)
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "The transaction was successful", response.message
+    assert_equal 'The transaction was successful', response.message
   end
 
   def test_failed_verify
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
     assert response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal "Unknown order", response.message
+    assert_equal 'Unknown order', response.message
   end
 
   def test_successful_store
@@ -251,7 +251,7 @@ class OgoneTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
 
-    assert_equal "Unknown order", response.message
+    assert_equal 'Unknown order', response.message
   end
 
   def test_supported_countries
@@ -328,19 +328,19 @@ class OgoneTest < Test::Unit::TestCase
   def test_format_error_message_with_slash_separator
     @gateway.expects(:ssl_post).returns('<ncresponse NCERRORPLUS="unknown order/1/i/67.192.100.64" STATUS="0" />')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "Unknown order", response.message
+    assert_equal 'Unknown order', response.message
   end
 
   def test_format_error_message_with_pipe_separator
     @gateway.expects(:ssl_post).returns('<ncresponse NCERRORPLUS=" no card no|no exp date|no brand" STATUS="0" />')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "No card no, no exp date, no brand", response.message
+    assert_equal 'No card no, no exp date, no brand', response.message
   end
 
   def test_format_error_message_with_no_separator
     @gateway.expects(:ssl_post).returns('<ncresponse NCERRORPLUS=" unknown order " STATUS="0" />')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "Unknown order", response.message
+    assert_equal 'Unknown order', response.message
   end
 
   def test_without_signature
@@ -350,7 +350,7 @@ class OgoneTest < Test::Unit::TestCase
       gateway.purchase(@amount, @credit_card, @options)
     end
 
-    gateway = OgoneGateway.new(@credentials.merge(:signature => nil, :signature_encryptor => "none"))
+    gateway = OgoneGateway.new(@credentials.merge(:signature => nil, :signature_encryptor => 'none'))
     gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert_no_deprecation_warning do
       gateway.purchase(@amount, @credit_card, @options)
@@ -360,7 +360,7 @@ class OgoneTest < Test::Unit::TestCase
   def test_signature_for_accounts_created_before_10_may_20101
     gateway = OgoneGateway.new(@credentials.merge(:signature_encryptor => nil))
     assert signature = gateway.send(:add_signature, @parameters)
-    assert_equal Digest::SHA1.hexdigest("1100EUR4111111111111111MrPSPIDRES2mynicesig").upcase, signature
+    assert_equal Digest::SHA1.hexdigest('1100EUR4111111111111111MrPSPIDRES2mynicesig').upcase, signature
   end
 
   def test_signature_for_accounts_with_signature_encryptor_to_sha1
@@ -394,13 +394,13 @@ class OgoneTest < Test::Unit::TestCase
     gateway = OgoneGateway.new(@credentials)
 
     gateway.send(:add_d3d, post, { :win_3ds => :pop_up })
-    assert 'POPUP', post["WIN3DS"]
+    assert 'POPUP', post['WIN3DS']
 
     gateway.send(:add_d3d, post, { :win_3ds => :pop_ix })
-    assert 'POPIX', post["WIN3DS"]
+    assert 'POPIX', post['WIN3DS']
 
     gateway.send(:add_d3d, post, { :win_3ds => :invalid })
-    assert 'MAINW', post["WIN3DS"]
+    assert 'MAINW', post['WIN3DS']
   end
 
   def test_3dsecure_additional_options
@@ -408,8 +408,8 @@ class OgoneTest < Test::Unit::TestCase
     gateway = OgoneGateway.new(@credentials)
 
     gateway.send(:add_d3d, post, {
-      :http_accept => "text/html",
-      :http_user_agent => "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
+      :http_accept => 'text/html',
+      :http_user_agent => 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)',
       :accept_url => 'https://accept_url',
       :decline_url => 'https://decline_url',
       :exception_url => 'https://exception_url',
@@ -419,8 +419,8 @@ class OgoneTest < Test::Unit::TestCase
       :complus => 'com_plus',
       :language => 'fr_FR'
     })
-    assert_equal post['HTTP_ACCEPT'], "text/html"
-    assert_equal post['HTTP_USER_AGENT'], "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)"
+    assert_equal post['HTTP_ACCEPT'], 'text/html'
+    assert_equal post['HTTP_USER_AGENT'], 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)'
     assert_equal post['ACCEPTURL'], 'https://accept_url'
     assert_equal post['DECLINEURL'], 'https://decline_url'
     assert_equal post['EXCEPTIONURL'], 'https://exception_url'
@@ -445,19 +445,24 @@ class OgoneTest < Test::Unit::TestCase
     assert_instance_of Hash, response.params
   end
 
+  def test_transcript_scrubbing
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
   private
 
   def string_to_digest
-    "ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig"+
-    "CN=Client NamemynicesigCURRENCY=EURmynicesigOPERATION=RESmynicesig"+
-    "ORDERID=1mynicesigPSPID=MrPSPIDmynicesig"
+    'ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig'+
+    'CN=Client NamemynicesigCURRENCY=EURmynicesigOPERATION=RESmynicesig'+
+    'ORDERID=1mynicesigPSPID=MrPSPIDmynicesig'
   end
 
   def d3d_string_to_digest
-    "ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig"+
-    "CN=Client NamemynicesigCURRENCY=EURmynicesigFLAG3D=Ymynicesig"+
-    "HTTP_ACCEPT=*/*mynicesigOPERATION=RESmynicesigORDERID=1mynicesig"+
-    "PSPID=MrPSPIDmynicesigWIN3DS=MAINWmynicesig"
+    'ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig'+
+    'CN=Client NamemynicesigCURRENCY=EURmynicesigFLAG3D=Ymynicesig'+
+    'HTTP_ACCEPT=*/*mynicesigOPERATION=RESmynicesigORDERID=1mynicesig'+
+    'PSPID=MrPSPIDmynicesigWIN3DS=MAINWmynicesig'
   end
 
   def successful_authorize_response
@@ -752,6 +757,54 @@ class OgoneTest < Test::Unit::TestCase
     ALIAS="2">
     </ncresponse>
     END
+  end
+
+  def pre_scrub
+    %q{
+opening connection to secure.ogone.com:443...
+opened
+starting SSL for secure.ogone.com:443...
+SSL established
+<- "POST /ncol/test/orderdirect.asp HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: secure.ogone.com\r\nContent-Length: 455\r\n\r\n"
+<- "CARDNO=4000100011112224&CN=Longbob+Longsen&COM=Store+Purchase&CVC=123&ECI=7&ED=0919&Operation=SAL&OwnerZip=K1C2N6&Owneraddress=456+My+Street&PSPID=spreedlyinc&PSWD=spreedly1test&SHASign=A67038AB141C6E54C51315F993DC83F5C28A9E585C6C8A79346F802E6557C0C8EE233A5FF1352AAD3C6AA5D476CF49F2B0DF512C63BA624F0583B72C1DCABCEF&USERID=spreedlytest&amount=100&currency=EUR&orderID=7de271d36c1c36999a6039d99179b2&ownercty=CA&ownertelno=%28555%29555-5555&ownertown=Ottawa"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Cache-Control: private, max-age=0\r\n"
+-> "Content-Length: 152\r\n"
+-> "Content-Type: text/XML; Charset=iso-8859-1\r\n"
+-> "Expires: Mon, 08 Jan 2018 18:13:04 GMT\r\n"
+-> "Strict-Transport-Security: max-age=31536000;includeSubdomains\r\n"
+-> "Date: Mon, 08 Jan 2018 18:14:05 GMT\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 152 bytes...
+-> "<?xml version=\"1.0\"?><ncresponse\r\norderID=\"7de271d36c1c36999a6039d99179b2\"\r\nPAYID=\"3029762647\"\r\nNCERROR=\"0\"\r\nSTATUS=\"9\"\r\nNCERRORPLUS=\"!\">\r\n</ncresponse>"
+read 152 bytes
+Conn close
+    }
+  end
+
+  def post_scrub
+    %q{
+opening connection to secure.ogone.com:443...
+opened
+starting SSL for secure.ogone.com:443...
+SSL established
+<- "POST /ncol/test/orderdirect.asp HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: secure.ogone.com\r\nContent-Length: 455\r\n\r\n"
+<- "CARDNO=[FILTERED]&CN=Longbob+Longsen&COM=Store+Purchase&CVC=[FILTERED]&ECI=7&ED=0919&Operation=SAL&OwnerZip=K1C2N6&Owneraddress=456+My+Street&PSPID=spreedlyinc&PSWD=[FILTERED]&SHASign=A67038AB141C6E54C51315F993DC83F5C28A9E585C6C8A79346F802E6557C0C8EE233A5FF1352AAD3C6AA5D476CF49F2B0DF512C63BA624F0583B72C1DCABCEF&USERID=spreedlytest&amount=100&currency=EUR&orderID=7de271d36c1c36999a6039d99179b2&ownercty=CA&ownertelno=%28555%29555-5555&ownertown=Ottawa"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Cache-Control: private, max-age=0\r\n"
+-> "Content-Length: 152\r\n"
+-> "Content-Type: text/XML; Charset=iso-8859-1\r\n"
+-> "Expires: Mon, 08 Jan 2018 18:13:04 GMT\r\n"
+-> "Strict-Transport-Security: max-age=31536000;includeSubdomains\r\n"
+-> "Date: Mon, 08 Jan 2018 18:14:05 GMT\r\n"
+-> "Connection: close\r\n"
+-> "\r\n"
+reading 152 bytes...
+-> "<?xml version=\"1.0\"?><ncresponse\r\norderID=\"7de271d36c1c36999a6039d99179b2\"\r\nPAYID=\"3029762647\"\r\nNCERROR=\"0\"\r\nSTATUS=\"9\"\r\nNCERRORPLUS=\"!\">\r\n</ncresponse>"
+read 152 bytes
+Conn close
+    }
   end
 
 end

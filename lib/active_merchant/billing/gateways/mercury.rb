@@ -81,20 +81,33 @@ module ActiveMerchant #:nodoc:
         commit('CardLookup', request)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r(&lt;), '<').
+          gsub(%r(&gt;), '>').
+          gsub(%r((<pw>).*(</pw>))i, '\1[FILTERED]\2').
+          gsub(%r((<AcctNo>)(\d|x)*(</AcctNo>))i, '\1[FILTERED]\3').
+          gsub(%r((<CVVData>)\d*(</CVVData>))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def build_non_authorized_request(action, money, credit_card, options)
         xml = Builder::XmlMarkup.new
 
-        xml.tag! "TStream" do
-          xml.tag! "Transaction" do
+        xml.tag! 'TStream' do
+          xml.tag! 'Transaction' do
             xml.tag! 'TranType', 'Credit'
             xml.tag! 'TranCode', action
-            if options[:allow_partial_auth] && (action == 'PreAuth' || action == 'Sale')
-              xml.tag! "PartialAuth", "Allow"
+            if options[:allow_partial_auth] && ['PreAuth', 'Sale'].include?(action)
+              xml.tag! 'PartialAuth', 'Allow'
             end
             add_invoice(xml, options[:order_id], nil, options)
-            add_reference(xml, "RecordNumberRequested")
+            add_reference(xml, 'RecordNumberRequested')
             add_customer_data(xml, options)
             add_amount(xml, money, options)
             add_credit_card(xml, credit_card, action)
@@ -108,15 +121,15 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
-        ref_no = "1" if ref_no.blank?
+        ref_no = '1' if ref_no.blank?
 
-        xml.tag! "TStream" do
-          xml.tag! "Transaction" do
+        xml.tag! 'TStream' do
+          xml.tag! 'Transaction' do
             xml.tag! 'TranType', 'Credit'
             if options[:allow_partial_auth] && (action == 'PreAuthCapture')
-              xml.tag! "PartialAuth", "Allow"
+              xml.tag! 'PartialAuth', 'Allow'
             end
-            xml.tag! 'TranCode', (@use_tokenization ? (action + "ByRecordNo") : action)
+            xml.tag! 'TranCode', (@use_tokenization ? (action + 'ByRecordNo') : action)
             add_invoice(xml, invoice_no, ref_no, options)
             add_reference(xml, record_no)
             add_customer_data(xml, options)
@@ -124,9 +137,9 @@ module ActiveMerchant #:nodoc:
             add_credit_card(xml, credit_card, action) if credit_card
             add_address(xml, options)
             xml.tag! 'TranInfo' do
-              xml.tag! "AuthCode", auth_code
-              xml.tag! "AcqRefData", acq_ref_data
-              xml.tag! "ProcessData", process_data 
+              xml.tag! 'AuthCode', auth_code
+              xml.tag! 'AcqRefData', acq_ref_data
+              xml.tag! 'ProcessData', process_data
             end
           end
         end
@@ -136,8 +149,8 @@ module ActiveMerchant #:nodoc:
       def build_card_lookup_request(credit_card, options)
         xml = Builder::XmlMarkup.new
 
-        xml.tag! "TStream" do
-          xml.tag! "Transaction" do
+        xml.tag! 'TStream' do
+          xml.tag! 'Transaction' do
             xml.tag! 'TranType', 'CardLookup'
             xml.tag! 'RecordNo', 'RecordNumberRequested'
             xml.tag! 'Frequency', 'OneTime'
@@ -159,15 +172,15 @@ module ActiveMerchant #:nodoc:
 
       def add_reference(xml, record_no)
         if @use_tokenization
-          xml.tag! "Frequency", "OneTime"
-          xml.tag! "RecordNo", record_no
+          xml.tag! 'Frequency', 'OneTime'
+          xml.tag! 'RecordNo', record_no
         end
       end
 
       def add_customer_data(xml, options)
         xml.tag! 'IpAddress', options[:ip] if options[:ip]
         if options[:customer]
-          xml.tag! "TranInfo" do
+          xml.tag! 'TranInfo' do
             xml.tag! 'CustomerCode', options[:customer]
           end
         end
@@ -242,12 +255,12 @@ module ActiveMerchant #:nodoc:
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
 
-        xml.elements.each("//CmdResponse/*") do |node|
+        xml.elements.each('//CmdResponse/*') do |node|
           response[node.name.underscore.to_sym] = node.text
         end
 
-        xml.elements.each("//TranResponse/*") do |node|
-          if node.name.to_s == "Amount"
+        xml.elements.each('//TranResponse/*') do |node|
+          if node.name.to_s == 'Amount'
             node.elements.each do |amt|
               response[amt.name.underscore.to_sym] = amt.text
             end
@@ -280,8 +293,8 @@ module ActiveMerchant #:nodoc:
 
       def build_header
         {
-          "SOAPAction" => "http://www.mercurypay.com/CreditTransaction",
-          "Content-Type" => "text/xml; charset=utf-8"
+          'SOAPAction' => 'http://www.mercurypay.com/CreditTransaction',
+          'Content-Type' => 'text/xml; charset=utf-8'
         }
       end
 
@@ -306,7 +319,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        dollars, cents = (response[:purchase] || "").split(".").collect{|e| e.to_i}
+        dollars, cents = (response[:purchase] || '').split('.').collect{|e| e.to_i}
         dollars ||= 0
         cents ||= 0
         [
@@ -317,17 +330,17 @@ module ActiveMerchant #:nodoc:
           response[:process_data],
           response[:record_no],
           ((dollars * 100) + cents).to_s
-        ].join(";")
+        ].join(';')
       end
 
       def split_authorization(authorization)
-        invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = authorization.split(";")
+        invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = authorization.split(';')
         [invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount]
       end
 
       ENVELOPE_NAMESPACES = {
         'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-        'xmlns:soap' => "http://schemas.xmlsoap.org/soap/envelope/",
+        'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/',
         'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'
       }
 

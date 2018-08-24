@@ -54,7 +54,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '', :order_id => '1')
     assert_failure response
-    assert_equal "Invalid data", response.message
+    assert_equal 'Invalid data', response.message
   end
   
   def test_purchase_and_partial_credit
@@ -97,7 +97,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Non autorise", response.message
+    assert_equal 'Non autorise', response.message
   end
 
   def test_invalid_login_without_rang
@@ -107,6 +107,6 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Non autorise", response.message
+    assert_equal 'Non autorise', response.message
   end
 end

@@ -17,7 +17,7 @@ class GatewaySupport #:nodoc:
       begin
         gateway_class = ('ActiveMerchant::Billing::' + gateway_name.camelize).constantize
       rescue NameError
-        puts "Could not load gateway " + gateway_name.camelize + " from " + f + "."
+        puts 'Could not load gateway ' + gateway_name.camelize + ' from ' + f + '.'
       end
     end
     @gateways = Gateway.implementations.sort_by(&:name)
@@ -31,7 +31,7 @@ class GatewaySupport #:nodoc:
   def features
     width = 15
 
-    print "Name".center(width + 20)
+    print 'Name'.center(width + 20)
     ACTIONS.each{|f| print "#{f.to_s.capitalize.center(width)}" }
     puts
 

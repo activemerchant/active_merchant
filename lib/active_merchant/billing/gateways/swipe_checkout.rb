@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
         post[:td_user_data] = options[:order_id] if options[:order_id]
         post[:td_item] = options[:description] if options[:description]
         post[:td_description] = options[:description] if options[:description]
-        post[:item_quantity] = "1"
+        post[:item_quantity] = '1'
       end
 
       def add_creditcard(post, creditcard)
@@ -95,16 +95,16 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         case action
-        when "sale"
+        when 'sale'
           begin
             response = call_api(TRANSACTION_API, parameters)
 
             # response code and message params should always be present
-            code = response["response_code"]
-            message = response["message"]
+            code = response['response_code']
+            message = response['message']
 
             if code == 200
-              result = response["data"]["result"]
+              result = response['data']['result']
               success = (result == 'accepted' || (test? && result == 'test-accepted'))
 
               Response.new(success,

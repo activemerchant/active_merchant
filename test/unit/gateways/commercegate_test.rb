@@ -24,8 +24,8 @@ class CommercegateTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '100130291387', response.authorization
-    assert_equal 'U', response.avs_result["code"]
-    assert_equal 'S', response.cvv_result["code"]
+    assert_equal 'U', response.avs_result['code']
+    assert_equal 'S', response.cvv_result['code']
   end
 
   def test_successful_capture
@@ -44,8 +44,8 @@ class CommercegateTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '100130291412', response.authorization
-    assert_equal 'U', response.avs_result["code"]
-    assert_equal 'S', response.cvv_result["code"]
+    assert_equal 'U', response.avs_result['code']
+    assert_equal 'S', response.cvv_result['code']
     assert_equal 'rdkhkRXjPVCXf5jU2Zz5NCcXBihGuaNz', response.params['token']
   end
 
@@ -97,34 +97,34 @@ class CommercegateTest < Test::Unit::TestCase
   private
 
   def failed_request_response
-    "returnCode=-125&returnText=Invalid+operation"
+    'returnCode=-125&returnText=Invalid+operation'
   end
 
   def successful_purchase_response
-    "action=SALE&returnCode=0&returnText=Success&authCode=040404&avsCode=U&cvvCode=S&amount=10.00&currencyCode=EUR&transID=100130291412&token=rdkhkRXjPVCXf5jU2Zz5NCcXBihGuaNz"
+    'action=SALE&returnCode=0&returnText=Success&authCode=040404&avsCode=U&cvvCode=S&amount=10.00&currencyCode=EUR&transID=100130291412&token=rdkhkRXjPVCXf5jU2Zz5NCcXBihGuaNz'
   end
 
   def successful_authorize_response
-    "action=AUTH&returnCode=0&returnText=Success&authCode=726293&avsCode=U&cvvCode=S&amount=10.00&currencyCode=EUR&transID=100130291387&token=Hf4lDYcKdJsdX92WJ2CpNlEUdh05utsI"
+    'action=AUTH&returnCode=0&returnText=Success&authCode=726293&avsCode=U&cvvCode=S&amount=10.00&currencyCode=EUR&transID=100130291387&token=Hf4lDYcKdJsdX92WJ2CpNlEUdh05utsI'
   end
 
   def failed_authorize_response_invalid_country
-    "action=AUTH&returnCode=-103&returnText=Invalid+country"
+    'action=AUTH&returnCode=-103&returnText=Invalid+country'
   end
 
   def successful_capture_response
-    "action=CAPTURE&returnCode=0&returnText=Success&amount=10.00&currencyCode=EUR&transID=100130291402"
+    'action=CAPTURE&returnCode=0&returnText=Success&amount=10.00&currencyCode=EUR&transID=100130291402'
   end
 
   def failed_capture_response_invalid_trans_id
-    "action=CAPTURE&returnCode=-121&returnText=Previous+transaction+not+found"
+    'action=CAPTURE&returnCode=-121&returnText=Previous+transaction+not+found'
   end
 
   def successful_refund_response
-    "action=REFUND&returnCode=0&returnText=Success&amount=10.00&currencyCode=EUR&transID=100130291425"
+    'action=REFUND&returnCode=0&returnText=Success&amount=10.00&currencyCode=EUR&transID=100130291425'
   end
 
   def successful_void_response
-    "action=VOID_AUTH&returnCode=0&returnText=Success&amount=10.00&currencyCode=EUR&transID=100130425094"
+    'action=VOID_AUTH&returnCode=0&returnText=Success&amount=10.00&currencyCode=EUR&transID=100130425094'
   end
 end

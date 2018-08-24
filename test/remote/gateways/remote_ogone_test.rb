@@ -7,14 +7,15 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @gateway = OgoneGateway.new(fixtures(:ogone))
     @amount = 100
     @credit_card     = credit_card('4000100011112224')
-    @mastercard      = credit_card('5399999999999999', :brand => "mastercard")
+    @mastercard      = credit_card('5399999999999999', :brand => 'mastercard')
     @declined_card   = credit_card('1111111111111111')
     @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
     @options = {
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
       :description => 'Store Purchase',
-      :currency => fixtures(:ogone)[:currency] || 'EUR'
+      :currency => fixtures(:ogone)[:currency] || 'EUR',
+      :origin => 'STORE'
     }
   end
 
@@ -26,13 +27,13 @@ class RemoteOgoneTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_utf8_encoding_1
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "Rémy", :last_name => "Fröåïør"), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => 'Rémy', :last_name => 'Fröåïør'), @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
   def test_successful_purchase_with_utf8_encoding_2
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "ワタシ", :last_name => "ёжзийклмнопрсуфхцч"), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => 'ワタシ', :last_name => 'ёжзийклмнопрсуфхцч'), @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
@@ -70,9 +71,9 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_successful_purchase_with_3d_secure
     assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(:d3d => true))
     assert_success response
-    assert_equal '46', response.params["STATUS"]
+    assert_equal '46', response.params['STATUS']
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-    assert response.params["HTML_ANSWER"]
+    assert response.params['HTML_ANSWER']
   end
 
   def test_successful_with_non_numeric_order_id
@@ -208,24 +209,24 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "The transaction was successful", response.message
+    assert_equal 'The transaction was successful', response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal "No brand", response.message
+    assert_equal 'No brand', response.message
   end
 
   def test_reference_transactions
     # Setting an alias
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:billing_id => 'awesomeman', :order_id=>Time.now.to_i.to_s+'1'))
     assert_success response
     # Updating an alias
-    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"2"))
+    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:billing_id => 'awesomeman', :order_id=>Time.now.to_i.to_s+'2'))
     assert_success response
     # Using an alias (i.e. don't provide the credit card)
-    assert response = @gateway.purchase(@amount, "awesomeman", @options.merge(:order_id => Time.now.to_i.to_s + "3"))
+    assert response = @gateway.purchase(@amount, 'awesomeman', @options.merge(:order_id => Time.now.to_i.to_s + '3'))
     assert_success response
   end
 
@@ -238,5 +239,16 @@ class RemoteOgoneTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

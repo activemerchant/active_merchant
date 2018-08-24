@@ -119,7 +119,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def test_successful_check_refund
     response = stub_comms do
-      @gateway.refund(@amount, "ref|check", @options)
+      @gateway.refund(@amount, 'ref|check', @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/<ProcessACHEFTRefundWithTransactionIdV1/, data)
       assert_match(/<agentCode>login<\/agentCode>/, data)
@@ -140,7 +140,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def test_failed_check_refund
     response = stub_comms do
-      @gateway.refund(@amount, "ref|check", @options)
+      @gateway.refund(@amount, 'ref|check', @options)
     end.respond_with(failed_check_refund_response)
 
     assert response
@@ -192,7 +192,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def test_successful_unstore
     response = stub_comms do
-      @gateway.unstore("TheAuthorization", @options)
+      @gateway.unstore('TheAuthorization', @options)
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<customerCode>TheAuthorization</customerCode>}, data)
     end.respond_with(successful_unstore_response)
@@ -241,6 +241,16 @@ class IatsPaymentsTest < Test::Unit::TestCase
     @gateway.supported_countries.each do |country_code|
       assert ActiveMerchant::Country.find(country_code), "Supported country code #{country_code} is invalid. Please use a value explicitly listed in ActiveMerchant::Country class."
     end
+  end
+
+  def test_failed_connection
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(failed_connection_response)
+
+    assert response
+    assert_failure response
+    assert_match(/Server Error/, response.message)
   end
 
   def test_scrub
@@ -508,6 +518,26 @@ class IatsPaymentsTest < Test::Unit::TestCase
               </IATSRESPONSE>
             </DeleteCustomerCodeV1Result>
           </DeleteCustomerCodeV1Response>
+        </soap:Body>
+      </soap:Envelope>
+    XML
+  end
+
+  def failed_connection_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <ProcessCreditCardV1Response xmlns="https://www.iatspayments.com/NetGate/">
+            <ProcessCreditCardV1Result>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Failure</STATUS>
+                <ERRORS>Server Error</ERRORS>
+                <PROCESSRESULT>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </ProcessCreditCardV1Result>
+          </ProcessCreditCardV1Response>
         </soap:Body>
       </soap:Envelope>
     XML

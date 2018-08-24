@@ -35,13 +35,13 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'EUR'
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
-      self.supported_countries = %w(IE GB FR BE NL LU IT)
+      self.supported_countries = %w(IE GB FR BE NL LU IT US CA ES)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
 
-      SUCCESS, DECLINED          = "Successful", "Declined"
-      BANK_ERROR = REALEX_ERROR  = "Gateway is in maintenance. Please try again later."
-      ERROR = CLIENT_DEACTIVATED = "Gateway Error"
+      SUCCESS, DECLINED          = 'Successful', 'Declined'
+      BANK_ERROR = REALEX_ERROR  = 'Gateway is in maintenance. Please try again later.'
+      ERROR = CLIENT_DEACTIVATED = 'Gateway Error'
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -64,7 +64,7 @@ module ActiveMerchant
       end
 
       def capture(money, authorization, options = {})
-        request = build_capture_request(authorization, options)
+        request = build_capture_request(money, authorization, options)
         commit(request)
       end
 
@@ -98,16 +98,13 @@ module ActiveMerchant
         response = parse(ssl_post(self.live_url, request))
 
         Response.new(
-          (response[:result] == "00"),
+          (response[:result] == '00'),
           message_from(response),
           response,
           :test => (response[:message] =~ %r{\[ test system \]}),
           :authorization => authorization_from(response),
-          :cvv_result => response[:cvnresult],
-          :avs_result => {
-            :street_match => response[:avspostcoderesponse],
-            :postal_match => response[:avspostcoderesponse]
-          }
+          avs_result: AVSResult.new(code: response[:avspostcoderesponse]),
+          cvv_result: CVVResult.new(response[:cvnresult])
         )
       end
 
@@ -143,20 +140,22 @@ module ActiveMerchant
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
+          add_network_tokenization_card(xml, credit_card) if credit_card.is_a?(NetworkTokenizationCreditCard)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
         xml.target!
       end
 
-      def build_capture_request(authorization, options)
+      def build_capture_request(money, authorization, options)
         timestamp = new_timestamp
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'settle' do
           add_merchant_details(xml, options)
+          add_amount(xml, money, options)
           add_transaction_identifiers(xml, authorization, options)
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), nil, nil, nil)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), nil)
         end
         xml.target!
       end
@@ -254,9 +253,21 @@ module ActiveMerchant
         end
       end
 
+      def add_network_tokenization_card(xml, payment)
+        xml.tag! 'mpi' do
+          xml.tag! 'cavv', payment.payment_cryptogram
+          xml.tag! 'eci', payment.eci
+        end
+        xml.tag! 'supplementarydata' do
+          xml.tag! 'item', 'type' => 'mobile' do
+            xml.tag! 'field01', payment.source.to_s.gsub('_','-')
+          end
+        end
+      end
+
       def format_address_code(address)
         code = [address[:zip].to_s, address[:address1].to_s + address[:address2].to_s]
-        code.collect{|e| e.gsub(/\D/, "")}.reject{|e| e.empty?}.join("|")
+        code.collect{|e| e.gsub(/\D/, '')}.reject{|e| e.empty?}.join('|')
       end
 
       def new_timestamp
@@ -264,8 +275,8 @@ module ActiveMerchant
       end
 
       def add_signed_digest(xml, *values)
-        string = Digest::SHA1.hexdigest(values.join("."))
-        xml.tag! 'sha1hash', Digest::SHA1.hexdigest([string, @options[:password]].join("."))
+        string = Digest::SHA1.hexdigest(values.join('.'))
+        xml.tag! 'sha1hash', Digest::SHA1.hexdigest([string, @options[:password]].join('.'))
       end
 
       def auto_settle_flag(action)
@@ -279,11 +290,11 @@ module ActiveMerchant
       def message_from(response)
         message = nil
         case response[:result]
-        when "00"
+        when '00'
           message = SUCCESS
-        when "101"
+        when '101'
           message = response[:message]
-        when "102", "103"
+        when '102', '103'
           message = DECLINED
         when /^2[0-9][0-9]/
           message = BANK_ERROR
@@ -291,9 +302,9 @@ module ActiveMerchant
           message = REALEX_ERROR
         when /^5[0-9][0-9]/
           message = response[:message]
-        when "600", "601", "603"
+        when '600', '601', '603'
           message = ERROR
-        when "666"
+        when '666'
           message = CLIENT_DEACTIVATED
         else
           message = DECLINED

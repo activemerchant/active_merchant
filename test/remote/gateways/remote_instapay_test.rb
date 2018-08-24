@@ -56,6 +56,6 @@ class RemoteInstapayTest < Test::Unit::TestCase
     
     assert response = gateway.purchase(@amount, @credit_card)
     assert_failure response
-    assert_equal "Invalid merchant", response.message
+    assert_equal 'Invalid merchant', response.message
   end
 end

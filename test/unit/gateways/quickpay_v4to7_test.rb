@@ -4,7 +4,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   include CommStub
   
   def merchant_id
-    "80000000000"  
+    '80000000000'  
   end
   
   def setup
@@ -133,7 +133,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   end
 
   def test_add_testmode_does_not_add_testmode_if_transaction_id_present
-    post_hash = {:transaction => "12345"}
+    post_hash = {:transaction => '12345'}
     @gateway.send(:add_testmode, post_hash)
     assert_equal nil, post_hash[:testmode]
   end
@@ -146,7 +146,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def test_finalize_is_disabled_by_default
     stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, "12345")
+      @gateway.capture(@amount, '12345')
     end.check_request do |method, endpoint, data, headers|
       assert data =~ /finalize=0/
     end.respond_with(successful_capture_response)
@@ -154,7 +154,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def test_finalize_is_enabled
     stub_comms(@gateway, :ssl_request) do
-      @gateway.capture(@amount, "12345", finalize: true)
+      @gateway.capture(@amount, '12345', finalize: true)
     end.check_request do |method, endpoint, data, headers|
       assert data =~ /finalize=1/
     end.respond_with(successful_capture_response)
@@ -192,33 +192,33 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def expected_store_parameters_v6
     {
-      "cardnumber"=>["4242424242424242"],
-      "cvd"=>["123"],
-      "expirationdate"=>[expected_expiration_date],
-      "ordernumber"=>["fa73664073e23597bbdd"],
-      "description"=>["Storing Card"],
-      "testmode"=>["1"],
-      "protocol"=>["6"],
-      "msgtype"=>["subscribe"],
-      "merchant"=>[merchant_id],
-      "md5check"=>[mock_md5_hash]
+      'cardnumber'=>['4242424242424242'],
+      'cvd'=>['123'],
+      'expirationdate'=>[expected_expiration_date],
+      'ordernumber'=>['fa73664073e23597bbdd'],
+      'description'=>['Storing Card'],
+      'testmode'=>['1'],
+      'protocol'=>['6'],
+      'msgtype'=>['subscribe'],
+      'merchant'=>[merchant_id],
+      'md5check'=>[mock_md5_hash]
     }
   end
 
   def expected_store_parameters_v7
     {
-      "amount"=>["0"],
-      "currency"=>["DKK"],
-      "cardnumber"=>["4242424242424242"],
-      "cvd"=>["123"],
-      "expirationdate"=>[expected_expiration_date],
-      "ordernumber"=>["ed7546cb4ceb8f017ea4"],
-      "description"=>["Storing Card"],
-      "testmode"=>["1"],
-      "protocol"=>["7"],
-      "msgtype"=>["subscribe"],
-      "merchant"=>[merchant_id],
-      "md5check"=>[mock_md5_hash]
+      'amount'=>['0'],
+      'currency'=>['DKK'],
+      'cardnumber'=>['4242424242424242'],
+      'cvd'=>['123'],
+      'expirationdate'=>[expected_expiration_date],
+      'ordernumber'=>['ed7546cb4ceb8f017ea4'],
+      'description'=>['Storing Card'],
+      'testmode'=>['1'],
+      'protocol'=>['7'],
+      'msgtype'=>['subscribe'],
+      'merchant'=>[merchant_id],
+      'md5check'=>[mock_md5_hash]
     }
   end
 
@@ -227,6 +227,6 @@ class QuickpayV4to7Test < Test::Unit::TestCase
   end
 
   def mock_md5_hash
-    "mock_hash"
+    'mock_hash'
   end
 end

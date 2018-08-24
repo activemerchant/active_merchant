@@ -64,7 +64,7 @@ class RemoteTransactProTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(nil, 'bogus|100')
     assert_failure response
-    assert_equal "bogus|100", response.authorization
+    assert_equal 'bogus|100', response.authorization
   end
 
   def test_successful_refund

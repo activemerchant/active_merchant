@@ -47,11 +47,11 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_valid_start_year_can_handle_strings
-    assert valid_start_year?("2009")
+    assert valid_start_year?('2009')
   end
 
   def test_valid_month_can_handle_strings
-    assert valid_month?("1")
+    assert valid_month?('1')
   end
 
   def test_valid_expiry_year_can_handle_strings
@@ -154,6 +154,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'laser', CreditCard.brand?('677117111234')
   end
 
+  def test_should_detect_sodexo_card
+    assert_equal 'sodexo', CreditCard.brand?('60606944957644')
+  end
+
+  def test_should_detect_vr_card
+    assert_equal 'vr', CreditCard.brand?('63703644957644')
+  end
+
   def test_should_detect_when_an_argument_brand_does_not_match_calculated_brand
     assert CreditCard.matching_brand?('4175001000000000', 'visa')
     assert_false CreditCard.matching_brand?('4175001000000000', 'master')
@@ -187,8 +195,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_matching_invalid_card
-    assert_nil CreditCard.brand?("XXXXXXXXXXXX0000")
-    assert_false CreditCard.valid_number?("XXXXXXXXXXXX0000")
+    assert_nil CreditCard.brand?('XXXXXXXXXXXX0000')
+    assert_false CreditCard.valid_number?('XXXXXXXXXXXX0000')
   end
 
   def test_16_digit_maestro_uk

@@ -44,7 +44,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_long_order_id
-    options = {order_id: "thisislongerthan17characters"}
+    options = {order_id: 'thisislongerthan17characters'}
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
@@ -197,5 +197,17 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
       }))
     assert_success response
     assert_equal 'This transaction has been approved', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_match(%r{cvv2\=\[FILTERED\]}, transcript)
+    assert_no_match(%r{cvv2=#{@credit_card.verification_value}}, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 end

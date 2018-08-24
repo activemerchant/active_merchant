@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CamsGateway < Gateway
-      self.live_url = "https://secure.centralams.com/gw/api/transact.php"
+      self.live_url = 'https://secure.centralams.com/gw/api/transact.php'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
           post[:transactionid] = split_authorization(payment)[0]
         end
 
-        commit("sale", post)
+        commit('sale', post)
       end
 
       def authorize(money, payment, options={})
@@ -156,8 +156,8 @@ module ActiveMerchant #:nodoc:
 
       def add_reference(post, authorization)
         transaction_id, authcode = split_authorization(authorization)
-        post["transactionid"] = transaction_id
-        post["authcode"]      = authcode
+        post['transactionid'] = transaction_id
+        post['authcode']      = authcode
       end
 
       def add_invoice(post, money, options)
@@ -172,10 +172,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        kvs = body.split("&")
+        kvs = body.split('&')
 
         kvs.inject({}) { |h, kv|
-          k,v = kv.split("=")
+          k,v = kv.split('=')
           h[k] = v
           h
         }
@@ -199,19 +199,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["response_code"] == "100"
+        response['response_code'] == '100'
       end
 
       def message_from(response)
-        response["responsetext"]
+        response['responsetext']
       end
 
       def authorization_from(response)
-        [response["transactionid"], response["authcode"]].join("#")
+        [response['transactionid'], response['authcode']].join('#')
       end
 
       def split_authorization(authorization)
-        transaction_id, authcode = authorization.split("#")
+        transaction_id, authcode = authorization.split('#')
         [transaction_id, authcode]
       end
 
@@ -219,11 +219,11 @@ module ActiveMerchant #:nodoc:
         parameters[:password] = @options[:password]
         parameters[:username] = @options[:username]
 
-        parameters.collect{|k,v| "#{k}=#{v}" }.join("&")
+        parameters.collect{|k,v| "#{k}=#{v}" }.join('&')
       end
 
       def error_code_from(response)
-        STANDARD_ERROR_CODE_MAPPING[response["response_code"]]
+        STANDARD_ERROR_CODE_MAPPING[response['response_code']]
       end
     end
   end

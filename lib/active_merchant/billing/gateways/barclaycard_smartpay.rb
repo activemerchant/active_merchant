@@ -4,13 +4,16 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
-      self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'GE', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
+      self.supported_countries = ['AL', 'AD', 'AM', 'AT', 'AZ', 'BY', 'BE', 'BA', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IS', 'IE', 'IT', 'KZ', 'LV', 'LI', 'LT', 'LU', 'MK', 'MT', 'MD', 'MC', 'ME', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SM', 'RS', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'UA', 'GB', 'VA']
       self.default_currency = 'EUR'
+      self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
 
       self.homepage_url = 'https://www.barclaycardsmartpay.com/'
       self.display_name = 'Barclaycard Smartpay'
+
+      API_VERSION = 'v30'
 
       def initialize(options = {})
         requires!(options, :company, :merchant, :password)
@@ -32,15 +35,9 @@ module ActiveMerchant #:nodoc:
         post = payment_request(money, options)
         post[:amount] = amount_hash(money, options[:currency])
         post[:card] = credit_card_hash(creditcard)
-
-        if address = (options[:billing_address] || options[:address])
-          post[:billingAddress] = address_hash(address)
-        end
-
-        if options[:shipping_address]
-          post[:deliveryAddress] = address_hash(options[:shipping_address])
-        end
-
+        post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
+        post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
+        add_3ds(post, options) if options[:execute_threed]
         commit('authorise', post)
       end
 
@@ -66,6 +63,10 @@ module ActiveMerchant #:nodoc:
         post = payment_request(money, options)
         post[:amount] = amount_hash(money, options[:currency])
         post[:card] = credit_card_hash(creditcard)
+        post[:dateOfBirth] = options[:date_of_birth] if options[:date_of_birth]
+        post[:entityType]  = options[:entity_type] if options[:entity_type]
+        post[:nationality] = options[:nationality] if options[:nationality]
+        post[:shopperName] = options[:shopper_name] if options[:shopper_name]
 
         commit('refundWithData', post)
       end
@@ -138,7 +139,7 @@ module ActiveMerchant #:nodoc:
           response,
           test: test?,
           avs_result: AVSResult.new(:code => parse_avs_code(response)),
-          authorization: response['recurringDetailReference'] || response['pspReference']
+          authorization: response['recurringDetailReference'] || authorization_from(post, response)
         )
 
       rescue ResponseError => e
@@ -157,8 +158,15 @@ module ActiveMerchant #:nodoc:
         raise
       end
 
+      def authorization_from(parameters, response)
+        authorization = [parameters[:originalReference], response['pspReference']].compact
+
+        return nil if authorization.empty?
+        return authorization.join('#')
+      end
+
       def parse_avs_code(response)
-        AVS_MAPPING[response["avsResult"][0..1].strip] if response["avsResult"]
+        AVS_MAPPING[response['avsResult'][0..1].strip] if response['avsResult']
       end
 
       def flatten_hash(hash, prefix = nil)
@@ -206,8 +214,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return true if response.has_key?('authCode')
         return true if response['result'] == 'Success'
+        return true if response['resultCode'] == 'Authorised'
         return true if response['resultCode'] == 'Received'
         successful_responses = %w([capture-received] [cancel-received] [refund-received])
         successful_responses.include?(response['response'])
@@ -216,31 +224,58 @@ module ActiveMerchant #:nodoc:
       def build_url(action)
         case action
         when 'store'
-          "#{test? ? self.test_url : self.live_url}/Recurring/v12/storeToken"
+          "#{test? ? self.test_url : self.live_url}/Recurring/#{API_VERSION}/storeToken"
+        when 'finalize3ds'
+          "#{test? ? self.test_url : self.live_url}/Payment/#{API_VERSION}/authorise3d"
         else
-          "#{test? ? self.test_url : self.live_url}/Payment/v12/#{action}"
+          "#{test? ? self.test_url : self.live_url}/Payment/#{API_VERSION}/#{action}"
         end
       end
 
-      def address_hash(address)
-        full_address = "#{address[:address1]} #{address[:address2]}" if address
-        street = address[:street] if address[:street]
-        house = address[:houseNumberOrName] if address[:houseNumberOrName]
+      def billing_address_hash(options)
+        address = options[:address] || options[:billing_address] if options[:address] || options[:billing_address]
+        street = options[:street] || parse_street(address)
+        house = options[:house_number] || parse_house_number(address)
 
+        create_address_hash(address, house, street)
+      end
+
+      def shipping_address_hash(options)
+        address = options[:shipping_address]
+        street = options[:shipping_street] || parse_street(address)
+        house = options[:shipping_house_number] || parse_house_number(address)
+
+        create_address_hash(address, house, street)
+      end
+
+      def parse_street(address)
+        address_to_parse = "#{address[:address1]} #{address[:address2]}"
+        street = address[:street] || address_to_parse.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
+        street.empty? ? 'Not Provided' : street
+      end
+
+      def parse_house_number(address)
+        address_to_parse = "#{address[:address1]} #{address[:address2]}"
+        house = address[:houseNumberOrName] || address_to_parse.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        house.empty? ? 'Not Provided' : house
+      end
+
+      def create_address_hash(address, house, street)
         hash = {}
+        hash[:houseNumberOrName] = house
+        hash[:street]            = street
         hash[:city]              = address[:city] if address[:city]
-        hash[:street]            = street || full_address.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
-        hash[:houseNumberOrName] = house || full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
-        hash[:postalCode]        = address[:zip] if address[:zip]
         hash[:stateOrProvince]   = address[:state] if address[:state]
+        hash[:postalCode]        = address[:zip] if address[:zip]
         hash[:country]           = address[:country] if address[:country]
         hash
       end
 
       def amount_hash(money, currency)
+        currency = currency || currency(money)
         hash = {}
-        hash[:currency] = currency || currency(money)
-        hash[:value]    = amount(money) if money
+        hash[:currency] = currency
+        hash[:value]    = localized_amount(money, currency) if money
         hash
       end
 
@@ -257,8 +292,12 @@ module ActiveMerchant #:nodoc:
       def modification_request(reference, options)
         hash = {}
         hash[:merchantAccount]    = @options[:merchant]
-        hash[:originalReference]  = reference if reference
+        hash[:originalReference]  = psp_reference_from(reference)
         hash.keep_if { |_, v| v }
+      end
+
+      def psp_reference_from(authorization)
+        authorization.nil? ? nil : authorization.split('#').first
       end
 
       def payment_request(money, options)
@@ -268,6 +307,7 @@ module ActiveMerchant #:nodoc:
         hash[:shopperEmail]     = options[:email] if options[:email]
         hash[:shopperIP]        = options[:ip] if options[:ip]
         hash[:shopperReference] = options[:customer] if options[:customer]
+        hash[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
         hash.keep_if { |_, v| v }
       end
 
@@ -277,6 +317,11 @@ module ActiveMerchant #:nodoc:
         hash[:shopperEmail]     = options[:email] if options[:email]
         hash[:shopperReference] = options[:customer] if options[:customer]
         hash.keep_if { |_, v| v }
+      end
+
+      def add_3ds(post, options)
+        post[:additionalData] = { executeThreeD: 'true' }
+        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
       end
     end
   end

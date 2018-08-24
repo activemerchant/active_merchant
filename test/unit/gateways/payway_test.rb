@@ -221,35 +221,35 @@ class PaywayTest < Test::Unit::TestCase
   private
 
     def successful_response_store
-      "response.responseCode=00"
+      'response.responseCode=00'
     end
 
     def successful_response_visa
-      "response.summaryCode=0&response.responseCode=08&response.cardSchemeName=VISA"
+      'response.summaryCode=0&response.responseCode=08&response.cardSchemeName=VISA'
     end
 
     def successful_response_master_card
-      "response.summaryCode=0&response.responseCode=08&response.cardSchemeName=MASTERCARD"
+      'response.summaryCode=0&response.responseCode=08&response.cardSchemeName=MASTERCARD'
     end
 
     def purchase_with_invalid_credit_card_response
-      "response.summaryCode=1&response.responseCode=14"
+      'response.summaryCode=1&response.responseCode=14'
     end
 
     def purchase_with_expired_credit_card_response
-      "response.summaryCode=1&response.responseCode=54"
+      'response.summaryCode=1&response.responseCode=54'
     end
 
     def purchase_with_invalid_month_response
-      "response.summaryCode=3&response.responseCode=QA"
+      'response.summaryCode=3&response.responseCode=QA'
     end
 
     def bad_login_response
-      "response.summaryCode=3&response.responseCode=QH"
+      'response.summaryCode=3&response.responseCode=QH'
     end
 
     def bad_merchant_response
-      "response.summaryCode=3&response.responseCode=QK"
+      'response.summaryCode=3&response.responseCode=QK'
     end
 
     def certificate

@@ -3,7 +3,7 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FirstPayGateway < Gateway
-      self.live_url = 'https://secure.1stpaygateway.net/secure/gateway/xmlgateway.aspx'
+      self.live_url = 'https://secure.goemerchant.com/secure/gateway/xmlgateway.aspx'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_address(post, payment, options)
         add_customer_data(post, options)
 
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_address(post, payment, options)
         add_customer_data(post, options)
 
@@ -66,18 +66,20 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:owner_email] = options[:email] if options[:email]
         post[:remote_ip_address] = options[:ip] if options[:ip]
+        post[:processor_id] = options[:processor_id] if options[:processor_id]
       end
 
       def add_address(post, creditcard, options)
-        address = options[:billing_address] || options[:address]
-        post[:owner_name] = address[:name]
-        post[:owner_street] = address[:address1]
-        post[:owner_street2] = address[:address2] if address[:address2]
-        post[:owner_city] = address[:city]
-        post[:owner_state] = address[:state]
-        post[:owner_zip] = address[:zip]
-        post[:owner_country] = address[:country]
-        post[:owner_phone] = address[:phone] if address[:phone]
+        if address = options[:billing_address] || options[:address]
+          post[:owner_name] = address[:name]
+          post[:owner_street] = address[:address1]
+          post[:owner_street2] = address[:address2] if address[:address2]
+          post[:owner_city] = address[:city]
+          post[:owner_state] = address[:state]
+          post[:owner_zip] = address[:zip]
+          post[:owner_country] = address[:country]
+          post[:owner_phone] = address[:phone] if address[:phone]
+        end
       end
 
       def add_invoice(post, money, options)
@@ -85,11 +87,15 @@ module ActiveMerchant #:nodoc:
         post[:total] = amount(money)
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options)
         post[:card_name] = payment.brand # Unclear if need to map to known names or open text field??
         post[:card_number] = payment.number
         post[:card_exp] = expdate(payment)
         post[:cvv2] = payment.verification_value
+        post[:recurring] = options[:recurring] if options[:recurring]
+        post[:recurring_start_date] = options[:recurring_start_date] if options[:recurring_start_date]
+        post[:recurring_end_date] = options[:recurring_end_date] if options[:recurring_end_date]
+        post[:recurring_type] = options[:recurring_type] if options[:recurring_type]
       end
 
       def add_reference(post, action, money, authorization)
@@ -102,7 +108,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         doc = Nokogiri::XML(xml)
-        doc.root.xpath("//RESPONSE/FIELDS/FIELD").each do |field|
+        doc.root.xpath('//RESPONSE/FIELDS/FIELD').each do |field|
           response[field['KEY']] = field.text
         end unless doc.root.nil?
 

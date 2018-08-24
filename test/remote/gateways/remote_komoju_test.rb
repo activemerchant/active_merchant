@@ -14,10 +14,10 @@ class RemoteKomojuTest < Test::Unit::TestCase
       :order_id => generate_unique_id,
       :description => 'Store Purchase',
       :tax => '10.0',
-      :ip => "192.168.0.1",
-      :email => "valid@email.com",
-      :browser_language => "en",
-      :browser_user_agent => "user_agent"
+      :ip => '192.168.0.1',
+      :email => 'valid@email.com',
+      :browser_language => 'en',
+      :browser_user_agent => 'user_agent'
     }
   end
 
@@ -27,7 +27,7 @@ class RemoteKomojuTest < Test::Unit::TestCase
     assert response.authorization.present?
     assert_equal 'Transaction succeeded', response.message
     assert_equal 100, response.params['amount']
-    assert_equal "1111", response.params['payment_details']['last_four_digits']
+    assert_equal '1111', response.params['payment_details']['last_four_digits']
     assert_equal true, response.params['captured_at'].present?
   end
 
@@ -37,7 +37,7 @@ class RemoteKomojuTest < Test::Unit::TestCase
     assert response.authorization.present?
     assert_equal 'Transaction succeeded', response.message
     assert_equal 100, response.params['amount']
-    assert_equal "1111", response.params['payment_details']['last_four_digits']
+    assert_equal '1111', response.params['payment_details']['last_four_digits']
     assert_equal true, response.params['captured_at'].present?
   end
 

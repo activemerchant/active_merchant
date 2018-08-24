@@ -32,7 +32,7 @@ class PayboxDirectTest < Test::Unit::TestCase
     # Replace with authorization number from the successful response
     assert_equal response.params['numappel'].to_s + response.params['numtrans'], response.authorization
     assert_equal 'XXXXXX', response.params['autorisation']
-    assert_equal "The transaction was approved", response.message
+    assert_equal 'The transaction was approved', response.message
     assert response.test?
   end
 
@@ -55,10 +55,10 @@ class PayboxDirectTest < Test::Unit::TestCase
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/NUMAPPEL=transid/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/NUMAPPEL=transid/), anything).returns('')
     @gateway.expects(:parse).returns({})
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transid", @options)
+      @gateway.credit(@amount, 'transid', @options)
     end
   end
 
@@ -66,10 +66,10 @@ class PayboxDirectTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(anything) do |_, body|
       body.include?('NUMAPPEL=transid')
       body.include?('MONTANT=0000000100&DEVISE=97')
-    end.returns("")
+    end.returns('')
 
     @gateway.expects(:parse).returns({})
-    @gateway.refund(@amount, "transid", @options)
+    @gateway.refund(@amount, 'transid', @options)
   end
 
   def test_unsuccessful_request
@@ -77,12 +77,12 @@ class PayboxDirectTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Demande trait?e avec succ?s ✔漢", response.message
+    assert_equal 'Demande trait?e avec succ?s ✔漢', response.message
     assert response.test?
   end
 
   def test_keep_the_card_code_not_considered_fraudulent
-    @gateway.expects(:ssl_post).returns(purchase_response("00104"))
+    @gateway.expects(:ssl_post).returns(purchase_response('00104'))
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -90,7 +90,7 @@ class PayboxDirectTest < Test::Unit::TestCase
   end
 
   def test_do_not_honour_code_not_considered_fraudulent
-    @gateway.expects(:ssl_post).returns(purchase_response("00105"))
+    @gateway.expects(:ssl_post).returns(purchase_response('00105'))
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -98,7 +98,7 @@ class PayboxDirectTest < Test::Unit::TestCase
   end
 
   def test_card_absent_from_file_code_not_considered_fraudulent
-    @gateway.expects(:ssl_post).returns(purchase_response("00156"))
+    @gateway.expects(:ssl_post).returns(purchase_response('00156'))
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -113,7 +113,7 @@ class PayboxDirectTest < Test::Unit::TestCase
   private
 
   # Place raw successful response from gateway here
-  def purchase_response(code="00000")
+  def purchase_response(code='00000')
     "NUMTRANS=0720248861&NUMAPPEL=0713790302&NUMQUESTION=0000790217&SITE=1999888&RANG=99&AUTORISATION=XXXXXX&CODEREPONSE=#{code}&COMMENTAIRE=Demande trait?e avec succ?s ✔漢"
   end
 

@@ -4,7 +4,7 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    ActiveMerchant.expects(:deprecated).with("ARB functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it.")
+    ActiveMerchant.expects(:deprecated).with('ARB functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it.')
     @gateway = AuthorizeNetArbGateway.new(
       :login => 'X',
       :password => 'Y'
@@ -25,7 +25,7 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
         :unit => :days
       },
       :duration => {
-        :start_date => Time.now.strftime("%Y-%m-%d"),
+        :start_date => Time.now.strftime('%Y-%m-%d'),
         :occurrences => 30
       }
    )
@@ -69,8 +69,8 @@ class AuthorizeNetArbTest < Test::Unit::TestCase
   end
 
   def test_expdate_formatting
-    assert_equal '2009-09', @gateway.send(:expdate, credit_card('4111111111111111', :month => "9", :year => "2009"))
-    assert_equal '2013-11', @gateway.send(:expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
+    assert_equal '2009-09', @gateway.send(:expdate, credit_card('4111111111111111', :month => '9', :year => '2009'))
+    assert_equal '2013-11', @gateway.send(:expdate, credit_card('4111111111111111', :month => '11', :year => '2013'))
   end
 
   private

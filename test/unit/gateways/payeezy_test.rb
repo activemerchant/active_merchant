@@ -5,19 +5,17 @@ class PayeezyGateway < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = PayeezyGateway.new(
-      apikey: "45234543524353",
-      apisecret: "4235423325",
-      token: "rewrt-23543543542353542"
-    )
+    @gateway = PayeezyGateway.new(fixtures(:payeezy))
 
     @credit_card = credit_card
+    @bad_credit_card = credit_card('4111111111111113')
     @check = check
     @amount = 100
     @options = {
-      :billing_address => address
+      :billing_address => address,
+      :ta_token => '123'
     }
-    @authorization = "ET1700|106625152|credit_card|4738"
+    @authorization = 'ET1700|106625152|credit_card|4738'
   end
 
   def test_invalid_credentials
@@ -26,7 +24,7 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @credit_card, {})
     assert_failure response
     assert response.test?
-    assert_equal '||credit_card|', response.authorization
+    assert response.authorization
     assert_equal 'HMAC validation Failure', response.message
   end
 
@@ -36,7 +34,7 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @credit_card, {})
     assert_failure response
     assert response.test?
-    assert_equal '||credit_card|', response.authorization
+    assert response.authorization
     assert_equal 'Access denied', response.message
   end
 
@@ -46,7 +44,7 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @credit_card, {})
     assert_failure response
     assert response.test?
-    assert_equal '||credit_card|', response.authorization
+    assert response.authorization
     assert_equal 'Invalid ApiKey for given resource', response.message
   end
 
@@ -59,9 +57,58 @@ class PayeezyGateway < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
   end
 
+  def test_successful_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_equal 'Token successfully created.', response.message
+    assert response.test?
+  end
+
+  def test_successful_store_and_purchase
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_match %r{Token successfully created}, response.message
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    purchase = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success purchase
+  end
+
+  def test_failed_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@bad_credit_card, @options.merge(js_security_key: 'js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c'))
+    end.respond_with(failed_store_response)
+
+    assert_failure response
+    assert_equal 'The credit card number check failed', response.message
+    assert response.test?
+  end
+
   def test_successful_purchase_with_echeck
     @gateway.expects(:ssl_post).returns(successful_purchase_echeck_response)
     assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert_equal 'ET133078|69864362|tele_check|100', response.authorization
+    assert response.test?
+    assert_equal 'Transaction Normal - Approved', response.message
+  end
+
+  def test_successful_purchase_defaulting_check_number
+    check_without_number = check(number: nil)
+
+    response = stub_comms do
+      @gateway.purchase(@amount, check_without_number, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/001/, data)
+    end.respond_with(successful_purchase_echeck_response)
+
     assert_success response
     assert_equal 'ET133078|69864362|tele_check|100', response.authorization
     assert response.test?
@@ -73,12 +120,12 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal response.error_code, "card_expired"
+    assert_equal response.error_code, 'card_expired'
   end
 
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'ET156862|69601979|credit_card|100', response.authorization
     assert response.test?
@@ -94,7 +141,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
-    assert response = @gateway.capture(@amount, "ET156862|69601979|credit_card|100")
+    assert response = @gateway.capture(@amount, 'ET156862|69601979|credit_card|100')
     assert_success response
     assert_equal 'ET176427|69601874|credit_card|100', response.authorization
     assert response.test?
@@ -103,7 +150,7 @@ class PayeezyGateway < Test::Unit::TestCase
 
   def test_failed_capture
     @gateway.expects(:ssl_post).raises(failed_capture_response)
-    assert response = @gateway.capture(@amount, "")
+    assert response = @gateway.capture(@amount, '')
     assert_instance_of Response, response
     assert_failure response
   end
@@ -158,8 +205,8 @@ class PayeezyGateway < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, @authorization)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal response.error_code, "server_error"
-    assert_equal response.message, "ProcessedBad Request (69) - Invalid Transaction Tag"
+    assert_equal response.error_code, 'server_error'
+    assert_equal response.message, 'ProcessedBad Request (69) - Invalid Transaction Tag'
   end
 
   def test_supported_countries
@@ -193,6 +240,13 @@ class PayeezyGateway < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_gateway_message_surfaces
+    @gateway.expects(:ssl_post).returns(below_minimum_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Below Minimum Sale', response.message
+  end
+
   def test_card_type
     assert_equal 'Visa', PayeezyGateway::CREDIT_CARD_BRAND['visa']
     assert_equal 'Mastercard', PayeezyGateway::CREDIT_CARD_BRAND['master']
@@ -204,6 +258,10 @@ class PayeezyGateway < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_scrub_store
+    assert_equal @gateway.scrub(pre_scrubbed_store), post_scrubbed_store
   end
 
   def test_scrub_echeck
@@ -253,7 +311,7 @@ class PayeezyGateway < Test::Unit::TestCase
     opened
     starting SSL for api-cert.payeezy.com:443...
       SSL established
-    <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: oKB61AAxbN3xwC6gVAH3dp58FmioHSAT\r\nToken: [FILTERED]\r\nNonce: 5803993876.636232\r\nTimestamp: 1449523748359\r\nAuthorization: NGRlZjJkMWNlMDc5NGI5OTVlYTQxZDRkOGQ4NjRhNmZhNDgwZmIyNTZkMWJhN2M3MDdkNDI0ZWI1OGUwMGExMA==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\nContent-Length: 365\r\n\r\n"
+    <- "POST /v1/transactions HTTP/1.1\r\nContent-Type: application/json\r\nApikey: [FILTERED]\r\nToken: [FILTERED]\r\nNonce: 5803993876.636232\r\nTimestamp: 1449523748359\r\nAuthorization: NGRlZjJkMWNlMDc5NGI5OTVlYTQxZDRkOGQ4NjRhNmZhNDgwZmIyNTZkMWJhN2M3MDdkNDI0ZWI1OGUwMGExMA==\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\nContent-Length: 365\r\n\r\n"
     <- "{\"transaction_type\":\"purchase\",\"merchant_ref\":null,\"method\":\"credit_card\",\"credit_card\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"0916\",\"cvv\":\"[FILTERED]\"},\"billing_address\":{\"street\":\"456 My Street\",\"city\":\"Ottawa\",\"state_province\":\"ON\",\"zip_postal_code\":\"K1C2N6\",\"country\":\"CA\"},\"currency_code\":\"USD\",\"amount\":\"100\"}"
     -> "HTTP/1.1 201 Created\r\n"
     -> "Access-Control-Allow-Headers: Content-Type, apikey, token\r\n"
@@ -335,6 +393,62 @@ class PayeezyGateway < Test::Unit::TestCase
     TRANSCRIPT
   end
 
+  def pre_scrubbed_store
+    <<-TRANSCRIPT
+    opening connection to api-cert.payeezy.com:443...
+    opened
+    starting SSL for api-cert.payeezy.com:443...
+    SSL established
+    <- "GET /v1/securitytokens?apikey=UyDMTXx6TD9WErF6ynw7xeEfCAn8fcGs&js_security_key=js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c&ta_token=120&callback=Payeezy.callback&type=FDToken&credit_card.type=Visa&credit_card.cardholder_name=Longbob+Longsen&credit_card.card_number=4242424242424242&credit_card.exp_date=0919&credit_card.cvv=123 HTTP/1.1\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\n\r\n"
+    -> "HTTP/1.1 200 Success\r\n"
+    -> "Content-Language: en-US\r\n"
+    -> "Content-Type: application/json\r\n"
+    -> "correlation_id: 228.1574930196886\r\n"
+    -> "Date: Fri, 12 Jan 2018 09:28:22 GMT\r\n"
+    -> "statuscode: 201\r\n"
+    -> "X-Archived-Client-IP: 10.180.205.250\r\n"
+    -> "X-Backside-Transport: OK OK,OK OK\r\n"
+    -> "X-Client-IP: 10.180.205.250,54.218.45.37\r\n"
+    -> "X-Global-Transaction-ID: 463881989\r\n"
+    -> "X-Powered-By: Servlet/3.0\r\n"
+    -> "Content-Length: 266\r\n"
+    -> "Connection: Close\r\n"
+    -> "\r\n"
+    reading 266 bytes...
+    -> "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.1574930196886\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"2158545373614242\"}}\n        })\n      "
+    read 266 bytes
+    Conn close
+    TRANSCRIPT
+  end
+
+  def post_scrubbed_store
+    <<-TRANSCRIPT
+    opening connection to api-cert.payeezy.com:443...
+    opened
+    starting SSL for api-cert.payeezy.com:443...
+    SSL established
+    <- "GET /v1/securitytokens?apikey=[FILTERED]js_security_key=js-f4c4b54f08d6c44c8cad3ea80bbf92c4f4c4b54f08d6c44c&ta_token=120&callback=Payeezy.callback&type=FDToken&credit_card.type=Visa&credit_card.cardholder_name=Longbob+Longsen&credit_card.card_number=[FILTERED]credit_card.exp_date=0919&credit_card.cvv=[FILTERED] HTTP/1.1\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-cert.payeezy.com\r\n\r\n"
+    -> "HTTP/1.1 200 Success\r\n"
+    -> "Content-Language: en-US\r\n"
+    -> "Content-Type: application/json\r\n"
+    -> "correlation_id: 228.1574930196886\r\n"
+    -> "Date: Fri, 12 Jan 2018 09:28:22 GMT\r\n"
+    -> "statuscode: 201\r\n"
+    -> "X-Archived-Client-IP: 10.180.205.250\r\n"
+    -> "X-Backside-Transport: OK OK,OK OK\r\n"
+    -> "X-Client-IP: 10.180.205.250,54.218.45.37\r\n"
+    -> "X-Global-Transaction-ID: 463881989\r\n"
+    -> "X-Powered-By: Servlet/3.0\r\n"
+    -> "Content-Length: 266\r\n"
+    -> "Connection: Close\r\n"
+    -> "\r\n"
+    reading 266 bytes...
+    -> "\n       Payeezy.callback({\n        \t\"status\":201,\n        \t\"results\":{\"correlation_id\":\"228.1574930196886\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"2158545373614242\"}}\n        })\n      "
+    read 266 bytes
+    Conn close
+    TRANSCRIPT
+  end
+
   def successful_purchase_response
     <<-RESPONSE
     {\"method\":\"credit_card\",\"amount\":\"1\",\"currency\":\"USD\",\"avs\":\"4\",\"card\":{\"type\":\"Visa\",\"cardholder_name\":\"Bobsen 995\",\"card_number\":\"4242\",\"exp_date\":\"0816\"},\"token\":{\"token_type\":\"transarmor\",\"token_data\":{\"value\":\"0152552999534242\"}},\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET114541\",\"transaction_tag\":\"55083431\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"correlation_id\":\"124.1433862672836\"}
@@ -344,6 +458,18 @@ class PayeezyGateway < Test::Unit::TestCase
   def successful_purchase_echeck_response
     <<-RESPONSE
     {\"correlation_id\":\"228.1449688619062\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"purchase\",\"transaction_id\":\"ET133078\",\"transaction_tag\":\"69864362\",\"method\":\"tele_check\",\"amount\":\"100\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\",\"tele_check\":{\"accountholder_name\":\"Jim Smith\",\"check_number\":\"1\",\"check_type\":\"P\",\"account_number\":\"8535\",\"routing_number\":\"244183602\"}}
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+    {\"correlation_id\":\"124.1792879391754\",\"status\":\"success\",\"type\":\"FDToken\",\"token\":{\"type\":\"Visa\",\"cardholder_name\":\"Longbob Longsen\",\"exp_date\":\"0919\",\"value\":\"9045348309244242\"}}
+        RESPONSE
+  end
+
+  def failed_store_response
+    <<-RESPONSE
+    {\"correlation_id\":\"124.1792940806770\",\"status\":\"failed\",\"Error\":{\"messages\":[{\"code\":\"invalid_card_number\",\"description\":\"The credit card number check failed\"}]},\"type\":\"FDToken\"}
     RESPONSE
   end
 
@@ -385,7 +511,7 @@ response: !ruby/object:Net::HTTPBadRequest
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_authorize_response
@@ -415,6 +541,12 @@ message:
   def successful_refund_echeck_response
     <<-RESPONSE
     {\"correlation_id\":\"228.1449688783287\",\"transaction_status\":\"approved\",\"validation_status\":\"success\",\"transaction_type\":\"refund\",\"transaction_id\":\"69864710\",\"transaction_tag\":\"69864710\",\"method\":\"tele_check\",\"amount\":\"50\",\"currency\":\"USD\",\"bank_resp_code\":\"100\",\"bank_message\":\"Approved\",\"gateway_resp_code\":\"00\",\"gateway_message\":\"Transaction Normal\"}
+    RESPONSE
+  end
+
+  def below_minimum_response
+    <<-RESPONSE
+    {\"correlation_id\":\"123.1234678982\",\"transaction_status\":\"declined\",\"validation_status\":\"success\",\"transaction_type\":\"authorize\",\"transaction_tag\":\"92384753\",\"method\":\"credit_card\",\"amount\":\"250\",\"currency\":\"USD\",\"card\":{\"type\":\"Mastercard\",\"cardholder_name\":\"Omri Test\",\"card_number\":\"[FILTERED]\",\"exp_date\":\"0123\"},\"gateway_resp_code\":\"36\",\"gateway_message\":\"Below Minimum Sale\"}
     RESPONSE
   end
 
@@ -454,7 +586,7 @@ response: !ruby/object:Net::HTTPBadRequest
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def successful_void_response
@@ -499,7 +631,7 @@ response: !ruby/object:Net::HTTPBadRequest
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def failed_capture_response
@@ -539,7 +671,7 @@ response: !ruby/object:Net::HTTPBadRequest
   body_exist: true
 message:
   RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPBadRequest', 'ActiveMerchant::ResponseError'])
   end
 
   def invalid_token_response
@@ -578,7 +710,7 @@ response: !ruby/object:Net::HTTPUnauthorized
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def invalid_token_response_integration
@@ -603,7 +735,7 @@ response: !ruby/object:Net::HTTPUnauthorized
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPUnauthorized', 'ActiveMerchant::ResponseError'])
   end
 
   def bad_credentials_response
@@ -628,6 +760,6 @@ response: !ruby/object:Net::HTTPForbidden
   body_exist: true
 message:
     RESPONSE
-    YAML.load(yamlexcep)
+    YAML.safe_load(yamlexcep, ['Net::HTTPForbidden', 'ActiveMerchant::ResponseError'])
   end
 end

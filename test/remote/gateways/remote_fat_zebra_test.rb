@@ -10,7 +10,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
     @options = {
       :order_id => rand(100000).to_s,
-      :ip => "123.1.2.3"
+      :ip => '1.2.3.4'
     }
   end
 
@@ -147,5 +147,15 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Login', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
   end
 end

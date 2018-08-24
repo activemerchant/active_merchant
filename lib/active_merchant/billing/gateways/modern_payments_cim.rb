@@ -1,20 +1,20 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ModernPaymentsCimGateway < Gateway #:nodoc:
-      self.test_url = "https://secure.modpay.com/netservices/test/ModpayTest.asmx"
+      self.test_url = 'https://secure.modpay.com/netservices/test/ModpayTest.asmx'
       self.live_url = 'https://secure.modpay.com/ws/modpay.asmx'
 
-      LIVE_XMLNS = "https://secure.modpay.com/ws/"
-      TEST_XMLNS = "https://secure.modpay.com/netservices/test/"
+      LIVE_XMLNS = 'https://secure.modpay.com/ws/'
+      TEST_XMLNS = 'https://secure.modpay.com/netservices/test/'
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.modpay.com'
       self.display_name = 'Modern Payments'
 
-      SUCCESS_MESSAGE = "Transaction accepted"
-      FAILURE_MESSAGE = "Transaction failed"
-      ERROR_MESSAGE   = "Transaction error"
+      SUCCESS_MESSAGE = 'Transaction accepted'
+      FAILURE_MESSAGE = 'Transaction failed'
+      ERROR_MESSAGE   = 'Transaction error'
 
       PAYMENT_METHOD = {
         :check => 1,
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def modify_customer_credit_card(customer_id, credit_card)
-        raise ArgumentError, "The customer_id cannot be blank" if customer_id.blank?
+        raise ArgumentError, 'The customer_id cannot be blank' if customer_id.blank?
 
         post = {}
         add_customer_id(post, customer_id)
@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize_credit_card_payment(customer_id, amount)
-        raise ArgumentError, "The customer_id cannot be blank" if customer_id.blank?
+        raise ArgumentError, 'The customer_id cannot be blank' if customer_id.blank?
 
         post = {}
         add_customer_id(post, customer_id)
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_payment(customer_id, amount, options = {})
-        raise ArgumentError, "The customer_id cannot be blank" if customer_id.blank?
+        raise ArgumentError, 'The customer_id cannot be blank' if customer_id.blank?
 
         post = {}
         add_customer_id(post, customer_id)
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
 
       private
       def add_payment_details(post, options)
-        post[:pmtDate] = (options[:payment_date] || Time.now.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        post[:pmtDate] = (options[:payment_date] || Time.now.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         post[:pmtType] = PAYMENT_METHOD[options[:payment_method] || :credit_card]
       end
 
@@ -118,9 +118,9 @@ module ActiveMerchant #:nodoc:
             'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance' } do
 
           xml.tag! 'env:Body' do
-            xml.tag! action, { "xmlns" => xmlns(action) } do
-              xml.tag! "clientId", @options[:login]
-              xml.tag! "clientCode", @options[:password]
+            xml.tag! action, { 'xmlns' => xmlns(action) } do
+              xml.tag! 'clientId', @options[:login]
+              xml.tag! 'clientCode', @options[:password]
               params.each {|key, value| xml.tag! key, value }
             end
           end
@@ -163,14 +163,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_key(action)
-        action == "AuthorizeCreditCardPayment" ? :trans_id : "#{action.underscore}_result".to_sym
+        action == 'AuthorizeCreditCardPayment' ? :trans_id : "#{action.underscore}_result".to_sym
       end
 
       def successful?(action, response)
         key = authorization_key(action)
 
         if key == :trans_id
-          response[:approved] == "true"
+          response[:approved] == 'true'
         else
           response[key].to_i > 0
         end
@@ -195,7 +195,7 @@ module ActiveMerchant #:nodoc:
           root.elements.to_a.each do |node|
             parse_element(response, node)
           end
-        elsif root = REXML::XPath.first(xml, "//soap:Fault")
+        elsif root = REXML::XPath.first(xml, '//soap:Fault')
           root.elements.to_a.each do |node|
             response[node.name.underscore.to_sym] = node.text
           end

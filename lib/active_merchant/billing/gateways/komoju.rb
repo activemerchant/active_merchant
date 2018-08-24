@@ -3,8 +3,8 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class KomojuGateway < Gateway
-      self.test_url = "https://sandbox.komoju.com/api/v1"
-      self.live_url = "https://komoju.com/api/v1"
+      self.test_url = 'https://sandbox.komoju.com/api/v1'
+      self.live_url = 'https://komoju.com/api/v1'
       self.supported_countries = ['JP']
       self.default_currency = 'JPY'
       self.money_format = :cents
@@ -13,10 +13,10 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb]
 
       STANDARD_ERROR_CODE_MAPPING = {
-        "bad_verification_value" => "incorrect_cvc",
-        "card_expired" => "expired_card",
-        "card_declined" => "card_declined",
-        "invalid_number" => "invalid_number"
+        'bad_verification_value' => 'incorrect_cvc',
+        'card_expired' => 'expired_card',
+        'card_declined' => 'card_declined',
+        'invalid_number' => 'invalid_number'
       }
 
       def initialize(options = {})
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         post[:tax] = options[:tax] if options[:tax]
         add_fraud_details(post, options)
 
-        commit("/payments", post)
+        commit('/payments', post)
       end
 
       def refund(money, identification, options = {})
@@ -82,15 +82,15 @@ module ActiveMerchant #:nodoc:
 
       def commit(path, params)
         response = api_request(path, params.to_json)
-        success = !response.key?("error")
-        message = (success ? "Transaction succeeded" : response["error"]["message"])
+        success = !response.key?('error')
+        message = (success ? 'Transaction succeeded' : response['error']['message'])
         Response.new(
           success,
           message,
           response,
           test: test?,
-          error_code: (success ? nil : error_code(response["error"]["code"])),
-          authorization: (success ? response["id"] : nil)
+          error_code: (success ? nil : error_code(response['error']['code'])),
+          authorization: (success ? response['id'] : nil)
         )
       end
 
@@ -104,10 +104,10 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Authorization" => "Basic " + Base64.encode64(@options[:login].to_s + ":").strip,
-          "Accept" => "application/json",
-          "Content-Type" => "application/json",
-          "User-Agent" => "Komoju/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
+          'Authorization' => 'Basic ' + Base64.encode64(@options[:login].to_s + ':').strip,
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/json',
+          'User-Agent' => "Komoju/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end
     end

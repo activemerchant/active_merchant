@@ -19,32 +19,32 @@ module ActiveMerchant #:nodoc:
       }
 
       AVS_CODE_TRANSLATOR = {
-        '0' =>  "Approved, Address verification was not requested.",
-        'A' =>  "Approved, Address matches only.",
-        'B' =>  "Address Match. Street Address math for international transaction Postal Code not verified because of incompatible formats (Acquirer sent both street address and Postal Code)",
-        'C' =>  "Serv Unavailable. Street address and Postal Code not verified for international transaction because of incompatible formats (Acquirer sent both street and Postal Code).",
-        'D' =>  "Exact Match, Street Address and Postal Code match for international transaction.",
-        'F' =>  "Exact Match, Street Address and Postal Code match. Applies to UK only.",
-        'G' =>  "Ver Unavailable, Non-U.S. Issuer does not participate.",
-        'I' =>  "Ver Unavailable, Address information not verified for international transaction",
-        'M' =>  "Exact Match, Street Address and Postal Code match for international transaction",
-        'N' =>  "No - Address and ZIP Code does not match",
-        'P' =>  "Zip Match, Postal Codes match for international transaction Street address not verified because of incompatible formats (Acquirer sent both street address and Postal Code).",
-        'R' =>  "Retry - Issuer system unavailable",
-        'S' =>  "Serv Unavailable, Service not supported",
-        'U' =>  "Ver Unavailable, Address unavailable.",
-        'W' =>  "ZIP match - Nine character numeric ZIP match only.",
-        'X' =>  "Exact match, Address and nine-character ZIP match.",
-        'Y' =>  "Exact Match, Address and five character ZIP match.",
-        'Z' =>  "Zip Match, Five character numeric ZIP match only.",
-        '1' =>  "Cardholder name and ZIP match AMEX only.",
-        '2' =>  "Cardholder name, address, and ZIP match AMEX only.",
-        '3' =>  "Cardholder name and address match AMEX only.",
-        '4' =>  "Cardholder name match AMEX only.",
-        '5' =>  "Cardholder name incorrect, ZIP match AMEX only.",
-        '6' =>  "Cardholder name incorrect, address and ZIP match AMEX only.",
-        '7' =>  "Cardholder name incorrect, address match AMEX only.",
-        '8' =>  "Cardholder, all do not match AMEX only."
+        '0' =>  'Approved, Address verification was not requested.',
+        'A' =>  'Approved, Address matches only.',
+        'B' =>  'Address Match. Street Address math for international transaction Postal Code not verified because of incompatible formats (Acquirer sent both street address and Postal Code)',
+        'C' =>  'Serv Unavailable. Street address and Postal Code not verified for international transaction because of incompatible formats (Acquirer sent both street and Postal Code).',
+        'D' =>  'Exact Match, Street Address and Postal Code match for international transaction.',
+        'F' =>  'Exact Match, Street Address and Postal Code match. Applies to UK only.',
+        'G' =>  'Ver Unavailable, Non-U.S. Issuer does not participate.',
+        'I' =>  'Ver Unavailable, Address information not verified for international transaction',
+        'M' =>  'Exact Match, Street Address and Postal Code match for international transaction',
+        'N' =>  'No - Address and ZIP Code does not match',
+        'P' =>  'Zip Match, Postal Codes match for international transaction Street address not verified because of incompatible formats (Acquirer sent both street address and Postal Code).',
+        'R' =>  'Retry - Issuer system unavailable',
+        'S' =>  'Serv Unavailable, Service not supported',
+        'U' =>  'Ver Unavailable, Address unavailable.',
+        'W' =>  'ZIP match - Nine character numeric ZIP match only.',
+        'X' =>  'Exact match, Address and nine-character ZIP match.',
+        'Y' =>  'Exact Match, Address and five character ZIP match.',
+        'Z' =>  'Zip Match, Five character numeric ZIP match only.',
+        '1' =>  'Cardholder name and ZIP match AMEX only.',
+        '2' =>  'Cardholder name, address, and ZIP match AMEX only.',
+        '3' =>  'Cardholder name and address match AMEX only.',
+        '4' =>  'Cardholder name match AMEX only.',
+        '5' =>  'Cardholder name incorrect, ZIP match AMEX only.',
+        '6' =>  'Cardholder name incorrect, address and ZIP match AMEX only.',
+        '7' =>  'Cardholder name incorrect, address match AMEX only.',
+        '8' =>  'Cardholder, all do not match AMEX only.'
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
         begin
           raw_response = ssl_post(live_url, post.to_json, {'Content-Type' => 'application/json'} )
           response = parse(raw_response)
-          success = (response['RESPONSE_CODE'] == "00")
+          success = (response['RESPONSE_CODE'] == '00')
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
@@ -201,12 +201,12 @@ module ActiveMerchant #:nodoc:
       def json_error(raw_response)
         {
           error_message: 'Invalid response received from the Payhub API.  Please contact wecare@payhub.com if you continue to receive this message.' +
-            '  (The raw response returned by the API was #{raw_response.inspect})'
+            "  (The raw response returned by the API was #{raw_response.inspect})"
         }
       end
 
       def response_message(response)
-        (response['RESPONSE_TEXT'] || response["RESPONSE_CODE"] || response[:error_message])
+        (response['RESPONSE_TEXT'] || response['RESPONSE_CODE'] || response[:error_message])
       end
     end
   end

@@ -36,29 +36,29 @@ class EfsnetTest < Test::Unit::TestCase
   end
 
   def test_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/AccountNumber>#{@credit_card.number}<\/AccountNumber/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/AccountNumber>#{@credit_card.number}<\/AccountNumber/), anything).returns('')
     @gateway.credit(@amount, @credit_card, :order_id => 5)
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OriginalTransactionID>transaction_id<\/OriginalTransactionID>/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OriginalTransactionID>transaction_id<\/OriginalTransactionID>/), anything).returns('')
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", :order_id => 5)
+      @gateway.credit(@amount, 'transaction_id', :order_id => 5)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OriginalTransactionID>transaction_id<\/OriginalTransactionID>/), anything).returns("")
-    @gateway.refund(@amount, "transaction_id", :order_id => 5)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OriginalTransactionID>transaction_id<\/OriginalTransactionID>/), anything).returns('')
+    @gateway.refund(@amount, 'transaction_id', :order_id => 5)
   end
 
   def test_authorize_is_valid_xml
     params = {
-      :order_id => "order1",
-      :transaction_amount => "1.01",
-      :account_number => "4242424242424242",
-      :expiration_month => "12",
-      :expiration_year => "2029",
+      :order_id => 'order1',
+      :transaction_amount => '1.01',
+      :account_number => '4242424242424242',
+      :expiration_month => '12',
+      :expiration_year => '2029',
     }
 
     assert data = @gateway.send(:post_data, :credit_card_authorize, params)
@@ -67,10 +67,10 @@ class EfsnetTest < Test::Unit::TestCase
 
   def test_settle_is_valid_xml
     params = {
-      :order_id => "order1",
-      :transaction_amount => "1.01",
-      :original_transaction_amount => "1.01",
-      :original_transaction_id => "1",
+      :order_id => 'order1',
+      :transaction_amount => '1.01',
+      :original_transaction_amount => '1.01',
+      :original_transaction_id => '1',
     }
 
     assert data = @gateway.send(:post_data, :credit_card_settle, params)

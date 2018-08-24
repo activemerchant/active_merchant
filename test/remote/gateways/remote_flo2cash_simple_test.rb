@@ -25,7 +25,7 @@ class RemoteFlo2cashSimpleTest < Test::Unit::TestCase
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Authentication error. Username and/or Password are incorrect", response.message
+    assert_equal 'Authentication error. Username and/or Password are incorrect', response.message
   end
 
   def test_successful_purchase
@@ -53,7 +53,7 @@ class RemoteFlo2cashSimpleTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal "Original transaction not found", response.message
+    assert_equal 'Original transaction not found', response.message
   end
 
   def test_transcript_scrubbing

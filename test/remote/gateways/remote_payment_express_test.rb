@@ -20,26 +20,26 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "The Transaction was approved", response.message
+    assert_equal 'The Transaction was approved', response.message
     assert_not_nil response.authorization
   end
 
   def test_successful_purchase_with_reference_id
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "The Transaction was approved", response.message
+    assert_equal 'The Transaction was approved', response.message
     assert_success response
     assert_not_nil response.authorization
   end
 
   def test_declined_purchase
-    assert response = @gateway.purchase(@amount, credit_card("5431111111111228"), @options)
+    assert response = @gateway.purchase(@amount, credit_card('5431111111111228'), @options)
     assert_match %r{declined}i, response.message
     assert_failure response
   end
 
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal "The Transaction was approved", response.message
+    assert_equal 'The Transaction was approved', response.message
     assert_success response
     assert_not_nil response.authorization
   end
@@ -59,7 +59,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal 'The Transaction was approved', purchase.message
     assert !purchase.authorization.blank?
-    assert refund = @gateway.refund(amount, purchase.authorization, :description => "Giving a refund")
+    assert refund = @gateway.refund(amount, purchase.authorization, :description => 'Giving a refund')
     assert_success refund
   end
 
@@ -75,14 +75,14 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
       :password => ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_match %r{error}i, response.message
+    assert_match %r{Invalid Credentials}i, response.message
     assert_failure response
   end
 
   def test_store_credit_card
     assert response = @gateway.store(@credit_card)
     assert_success response
-    assert_equal "The Transaction was approved", response.message
+    assert_equal 'The Transaction was approved', response.message
     assert_not_nil token = response.authorization
     assert_equal token, response.token
   end
@@ -91,7 +91,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     token = Time.now.to_i.to_s #hehe
     assert response = @gateway.store(@credit_card, :billing_id => token)
     assert_success response
-    assert_equal "The Transaction was approved", response.message
+    assert_equal 'The Transaction was approved', response.message
     assert_not_nil response.authorization
     assert_equal token, response.authorization
   end
@@ -107,11 +107,11 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   def test_store_and_charge
     assert response = @gateway.store(@credit_card)
     assert_success response
-    assert_equal "The Transaction was approved", response.message
+    assert_equal 'The Transaction was approved', response.message
     assert (token = response.authorization)
 
     assert purchase = @gateway.purchase( @amount, token)
-    assert_equal "The Transaction was approved", purchase.message
+    assert_equal 'The Transaction was approved', purchase.message
     assert_success purchase
     assert_not_nil purchase.authorization
   end
@@ -119,7 +119,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   def test_store_and_authorize_and_capture
     assert response = @gateway.store(@credit_card)
     assert_success response
-    assert_equal "The Transaction was approved", response.message
+    assert_equal 'The Transaction was approved', response.message
     assert (token = response.authorization)
 
     assert auth = @gateway.authorize(@amount, token, @options)
@@ -138,6 +138,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@gateway.options[:password], clean_transcript)
   end
 
 end

@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, payment_source, options)
         add_details_data(post, options)
 
-        commit(:post, 'charges', post)
+        commit(:post, 'charges', post, options)
       end
 
       def authorize(money, payment_source, options = {})
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
         add_details_data(post, options)
 
         post[:capture] = false
-        commit(:post, "charges", post)
+        commit(:post, 'charges', post, options)
       end
 
       def capture(money, identifier, options = {})
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = identifier
         add_order(post, money, options)
 
-        commit(:post, "charges/#{identifier}/capture", post)
+        commit(:post, "charges/#{identifier}/capture", post, options)
       end
 
       def refund(money, identifier, options)
@@ -52,12 +52,12 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = identifier
         add_order(post, money, options)
 
-        commit(:post, "charges/#{identifier}/refund", post)
+        commit(:post, "charges/#{identifier}/refund", post, options)
       end
 
       def void(identifier, options = {})
         post = {}
-        commit(:post, "charges/#{identifier}/void", post)
+        commit(:post, "charges/#{identifier}/void", post, options)
       end
 
       def supports_scrubbing
@@ -74,24 +74,24 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_order(post, money, options)
-        post[:description] = options[:description] || "Active Merchant Purchase"
+        post[:description] = options[:description] || 'Active Merchant Purchase'
         post[:reference_id] = options[:order_id] if options[:order_id]
         post[:currency] = (options[:currency] || currency(money)).downcase
+        post[:monthly_installments] = options[:monthly_installments] if options[:monthly_installments]
         post[:amount] = amount(money)
       end
 
       def add_details_data(post, options)
         details = {}
-        details[:name] = options[:customer] if options[:customer]
+        details[:name] = options[:customer] || (options[:billing_address][:name] if options[:billing_address])
+        details[:phone] = options[:phone] || (options[:billing_address][:phone] if options[:billing_address])
         details[:email] = options[:email] if options[:email]
-        details[:phone] = options[:phone] if options[:phone]
-        post[:device_fingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
         details[:ip] = options[:ip] if options[:ip]
         add_billing_address(details, options)
         add_line_items(details, options)
         add_shipment(details, options)
-
         post[:details] = details
+        post[:device_fingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
       end
 
       def add_shipment(post, options)
@@ -173,23 +173,28 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def headers(meta)
+      def headers(options)
         {
-          "Accept" => "application/vnd.conekta-v#{options[:version]}+json",
-          "Accept-Language" => "es",
-          "Authorization" => "Basic " + Base64.encode64("#{options[:key]}:"),
-          "RaiseHtmlError" => "false",
-          "Conekta-Client-User-Agent" => {"agent"=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
-          "X-Conekta-Client-User-Agent" => user_agent,
-          "X-Conekta-Client-User-Metadata" => meta.to_json
+          'Accept' => "application/vnd.conekta-v#{@options[:version]}+json",
+          'Accept-Language' => 'es',
+          'Authorization' => 'Basic ' + Base64.encode64("#{@options[:key]}:"),
+          'RaiseHtmlError' => 'false',
+          'Conekta-Client-User-Agent' => {'agent'=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
+          'X-Conekta-Client-User-Agent' => conekta_client_user_agent(options),
+          'X-Conekta-Client-User-Metadata' => options[:meta].to_json
         }
+      end
+
+      def conekta_client_user_agent(options)
+        return user_agent unless options[:application]
+        JSON.dump(JSON.parse(user_agent).merge!({application: options[:application]}))
       end
 
       def commit(method, url, parameters, options = {})
         success = false
         begin
-          raw_response = parse(ssl_request(method, live_url + url, (parameters ? parameters.to_query : nil), headers(options[:meta])))
-          success = (raw_response.key?("object") && (raw_response["object"] != "error"))
+          raw_response = parse(ssl_request(method, live_url + url, (parameters ? parameters.to_query : nil), headers(options)))
+          success = (raw_response.key?('object') && (raw_response['object'] != 'error'))
         rescue ResponseError => e
           raw_response = response_error(e.response.body)
         rescue JSON::ParserError
@@ -198,10 +203,10 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success,
-          raw_response["message_to_purchaser"],
+          raw_response['message_to_purchaser'],
           raw_response,
           test: test?,
-          authorization: raw_response["id"]
+          authorization: raw_response['id']
         )
       end
 
@@ -217,7 +222,7 @@ module ActiveMerchant #:nodoc:
         msg = 'Invalid response received from the Conekta API.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          "message" => msg
+          'message' => msg
         }
       end
     end

@@ -3,11 +3,6 @@ require 'test_helper'
 
 class RemoteFinansbankTest < Test::Unit::TestCase
   def setup
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
-
     @gateway = FinansbankGateway.new(fixtures(:finansbank))
 
     @amount = 100
@@ -80,7 +75,7 @@ class RemoteFinansbankTest < Test::Unit::TestCase
     assert_failure void
     assert_nil void.params['order_id']
     assert_equal 'Declined (Reason: 99 - Net miktardan fazlasi iade edilemez.)', void.message
-    assert_equal "CORE-2503", void.params['errorcode']
+    assert_equal 'CORE-2503', void.params['errorcode']
   end
 
   def test_void
@@ -100,6 +95,6 @@ class RemoteFinansbankTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Declined (Reason: 99 - System based initialization problem. Please try again later.)', response.message
-    assert_equal "2100", response.params['errorcode']
+    assert_equal '2100', response.params['errorcode']
   end
 end

@@ -1,15 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class DibsGateway < Gateway
-      self.display_name = "DIBS"
-      self.homepage_url = "http://www.dibspayment.com/"
+      self.display_name = 'DIBS'
+      self.homepage_url = 'http://www.dibspayment.com/'
 
-      self.live_url = "https://api.dibspayment.com/merchant/v1/JSON/Transaction/"
+      self.live_url = 'https://api.dibspayment.com/merchant/v1/JSON/Transaction/'
 
-      self.supported_countries = ["US", "FI", "NO", "SE", "GB"]
-      self.default_currency = "USD"
+      self.supported_countries = ['US', 'FI', 'NO', 'SE', 'GB']
+      self.default_currency = 'USD'
       self.money_format = :cents
-      self.ssl_version = :TLSv1
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       def initialize(options={})
@@ -90,12 +89,12 @@ module ActiveMerchant #:nodoc:
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["USD"] = "840"
-      CURRENCY_CODES["DKK"] = "208"
-      CURRENCY_CODES["NOK"] = "578"
-      CURRENCY_CODES["SEK"] = "752"
-      CURRENCY_CODES["GBP"] = "826"
-      CURRENCY_CODES["EUR"] = "978"
+      CURRENCY_CODES['USD'] = '840'
+      CURRENCY_CODES['DKK'] = '208'
+      CURRENCY_CODES['NOK'] = '578'
+      CURRENCY_CODES['SEK'] = '752'
+      CURRENCY_CODES['GBP'] = '826'
+      CURRENCY_CODES['EUR'] = '978'
 
       def add_invoice(post, money, options)
         post[:orderId] = options[:order_id] || generate_unique_id
@@ -115,7 +114,7 @@ module ActiveMerchant #:nodoc:
         post[:startMonth] = payment_method.start_month if payment_method.start_month
         post[:startYear] = payment_method.start_year if payment_method.start_year
         post[:issueNumber] = payment_method.issue_number if payment_method.issue_number
-        post[:clientIp] = options[:ip] || "127.0.0.1"
+        post[:clientIp] = options[:ip] || '127.0.0.1'
         post[:test] = true if test?
       end
 
@@ -129,12 +128,12 @@ module ActiveMerchant #:nodoc:
       end
 
       ACTIONS = {
-        authorize: "AuthorizeCard",
-        authorize_ticket: "AuthorizeTicket",
-        capture: "CaptureTransaction",
-        void: "CancelTransaction",
-        refund: "RefundTransaction",
-        store: "CreateTicket"
+        authorize: 'AuthorizeCard',
+        authorize_ticket: 'AuthorizeTicket',
+        capture: 'CaptureTransaction',
+        void: 'CancelTransaction',
+        refund: 'RefundTransaction',
+        store: 'CreateTicket'
       }
 
       def commit(action, post)
@@ -156,7 +155,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Content-Type" => "application/x-www-form-urlencoded"
+          'Content-Type' => 'application/x-www-form-urlencoded'
         }
       end
 
@@ -166,7 +165,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_hmac(post)
-        data = post.sort.collect { |key, value| "#{key}=#{value.to_s}" }.join("&")
+        data = post.sort.collect { |key, value| "#{key}=#{value.to_s}" }.join('&')
         digest = OpenSSL::Digest.new('sha256')
         key = [@options[:secret_key]].pack('H*')
         post[:MAC] = OpenSSL::HMAC.hexdigest(digest, key, data)
@@ -181,14 +180,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(raw_response)
-        raw_response["status"] == "ACCEPT"
+        raw_response['status'] == 'ACCEPT'
       end
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          response["status"] + ": " + response["declineReason"] || "Unable to read error message"
+          response['status'] + ': ' + response['declineReason'] || 'Unable to read error message'
         end
       end
 
@@ -197,7 +196,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unparsable_response(raw_response)
-        message = "Invalid JSON response received from Dibs. Please contact Dibs if you continue to receive this message."
+        message = 'Invalid JSON response received from Dibs. Please contact Dibs if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end

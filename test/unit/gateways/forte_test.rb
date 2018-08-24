@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class ForteTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = ForteGateway.new(location_id: 'location_id', account_id: 'account_id', api_key: 'api_key', secret: 'secret')
     @credit_card = credit_card
@@ -15,9 +17,9 @@ class ForteTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:handle_resp).returns(successful_purchase_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(successful_purchase_response))
     assert_success response
 
     assert_equal 'trn_bb7687a7-3d3a-40c2-8fa9-90727a814249#123456', response.authorization
@@ -26,24 +28,25 @@ class ForteTest < Test::Unit::TestCase
 
   def test_purchase_passes_options
     options = { order_id: '1' }
-
     @gateway.expects(:commit).with(anything, has_entries(:order_number => '1'))
 
-    @gateway.purchase(@amount, @credit_card, options)
+    stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.respond_with(MockedResponse.new(successful_purchase_response))
   end
 
   def test_failed_purchase
-    @gateway.expects(:handle_resp).returns(failed_purchase_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(failed_purchase_response))
     assert_failure response
-    assert_equal "INVALID TRN", response.message
+    assert_equal 'INVALID TRN', response.message
   end
 
   def test_successful_purchase_with_echeck
-    @gateway.expects(:handle_resp).returns(successful_echeck_purchase_response)
-
-    response = @gateway.purchase(@amount, @check, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @check, @options)
+    end.respond_with(MockedResponse.new(successful_echeck_purchase_response))
     assert_success response
 
     assert_equal 'trn_bb7687a7-3d3a-40c2-8fa9-90727a814249#123456', response.authorization
@@ -51,89 +54,113 @@ class ForteTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_echeck
-    @gateway.expects(:handle_resp).returns(failed_echeck_purchase_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(failed_echeck_purchase_response))
     assert_failure response
-    assert_equal "INVALID CREDIT CARD NUMBER", response.message
+    assert_equal 'INVALID CREDIT CARD NUMBER', response.message
   end
 
   def test_successful_authorize
-    @gateway.expects(:handle_resp).returns(successful_authorize_response)
-
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(successful_authorize_response))
     assert_success response
   end
 
   def test_failed_authorize
-    @gateway.expects(:handle_resp).returns(failed_authorize_response)
-
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(failed_authorize_response))
     assert_failure response
-    assert_equal "INVALID CREDIT CARD NUMBER", response.message
+    assert_equal 'INVALID CREDIT CARD NUMBER', response.message
   end
 
   def test_successful_capture
-    @gateway.expects(:handle_resp).returns(successful_capture_response)
-
-    response = @gateway.capture(@amount, "authcode")
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.capture(@amount, 'authcode')
+    end.respond_with(MockedResponse.new(successful_capture_response))
     assert_success response
   end
 
   def test_failed_capture
-    @gateway.expects(:handle_resp).returns(failed_capture_response)
-
-    response = @gateway.capture(@amount, "authcode")
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.capture(@amount, 'authcode')
+    end.respond_with(MockedResponse.new(failed_capture_response))
     assert_failure response
   end
 
   def test_successful_credit
-    @gateway.expects(:handle_resp).returns(successful_credit_response)
-
-    response = @gateway.credit(@amount, @credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(successful_credit_response))
     assert_success response
   end
 
   def test_failed_credit
-    @gateway.expects(:handle_resp).returns(failed_credit_response)
-
-    response = @gateway.credit(@amount, @credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.respond_with(MockedResponse.new(failed_credit_response))
     assert_failure response
   end
 
   def test_successful_void
-    @gateway.expects(:handle_resp).returns(successful_credit_response)
-
-    response = @gateway.void("authcode")
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.void('authcode')
+    end.respond_with(MockedResponse.new(successful_credit_response))
     assert_success response
   end
 
   def test_failed_void
-    @gateway.expects(:handle_resp).returns(failed_credit_response)
-
-    response = @gateway.void("authcode")
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.void('authcode')
+    end.respond_with(MockedResponse.new(failed_credit_response))
     assert_failure response
   end
 
   def test_successful_verify
-    @gateway.expects(:handle_resp).times(2).returns(successful_authorize_response, successful_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(MockedResponse.new(successful_authorize_response), MockedResponse.new(successful_void_response))
     assert_success response
   end
 
   def test_successful_verify_with_failed_void
-    @gateway.expects(:handle_resp).times(2).returns(successful_authorize_response, failed_void_response)
-
-    response = @gateway.verify(@credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(MockedResponse.new(successful_authorize_response), MockedResponse.new(failed_void_response))
     assert_success response
   end
 
   def test_failed_verify
-    @gateway.expects(:handle_resp).returns(failed_authorize_response)
-
-    response = @gateway.verify(@credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(MockedResponse.new(failed_authorize_response))
     assert_failure response
+  end
+
+  def test_successful_refund
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.refund(@amount, 'authcode')
+    end.respond_with(MockedResponse.new(successful_refund_response))
+    assert_success response
+  end
+
+  def test_failed_refund
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.refund(@amount, 'authcode')
+    end.respond_with(MockedResponse.new(failed_refund_response))
+    assert_failure response
+  end
+
+  def test_handles_improper_padding
+    @gateway = ForteGateway.new(location_id: ' improperly-padded ', account_id: '  account_id  ', api_key: 'api_key', secret: 'secret')
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |type, url, parameters, headers|
+      URI.parse(url)
+    end.respond_with(MockedResponse.new(successful_purchase_response))
+    assert_success response
   end
 
   def test_scrub
@@ -142,6 +169,14 @@ class ForteTest < Test::Unit::TestCase
   end
 
   private
+
+  class MockedResponse
+    attr :code, :body
+    def initialize(body, code = 200)
+      @code = code
+      @body = body
+    end
+  end
 
   def pre_scrubbed
     %q(
@@ -527,5 +562,55 @@ class ForteTest < Test::Unit::TestCase
         }
       }
     )
+  end
+
+  def successful_refund_response
+    <<-SUCCESS
+    {
+        "transaction_id": "trn_6ad08872-a8c9-44a9-baca-670c31de98a1",
+        "location_id": "loc_176008",
+        "original_transaction_id": "trn_cf645bab-72cc-41d5-a9d2-376845333008",
+        "order_number": "1",
+        "action": "disburse",
+        "authorization_amount": 1,
+        "authorization_code": "123456",
+        "entered_by": "f087a90f00f0ae57050c937ed3815c9f",
+        "billing_address": {
+            "first_name": "Jim",
+            "last_name": "Smith",
+            "physical_address": {
+                "street_line1": "456 My Street",
+                "street_line2": "Apt 1",
+                "locality": "Ottawa",
+                "region": "ON",
+                "postal_code": "K1C2N6"
+            }
+        },
+        "response": {
+            "environment": "sandbox",
+            "response_type": "A",
+            "response_code": "A01",
+            "response_desc": "TEST APPROVAL",
+            "authorization_code": "123456",
+            "avs_result": "Y",
+            "cvv_code": "M"
+        }
+    }
+    SUCCESS
+  end
+
+  def failed_refund_response
+    <<-FAILED
+    {
+      "location_id": "loc_176008",
+      "action": "reverse",
+      "authorization_amount": 1,
+      "entered_by": "f087a90f00f0ae57050c937ed3815c9f",
+      "response": {
+        "environment": "sandbox",
+        "response_desc": "Error[1]: The field authorization_code is required when performing a reverse action. Error[2]: The field original_transaction_id is required when performing a reverse action."
+      }
+    }
+    FAILED
   end
 end

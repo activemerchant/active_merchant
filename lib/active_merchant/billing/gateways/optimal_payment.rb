@@ -5,7 +5,9 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['CA', 'US', 'GB']
+      self.supported_countries = ['CA', 'US', 'GB', 'AU', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK',
+                                  'EE', 'FI', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT',
+                                  'NL', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH']
 
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :solo] # :switch?
@@ -59,15 +61,26 @@ module ActiveMerchant #:nodoc:
         commit('ccSettlement', money, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((%3CstorePwd%3E).*(%3C(%2F|/)storePwd%3E))i, '\1[FILTERED]\2').
+          gsub(%r((%3CcardNum%3E)\d*(%3C(%2F|/)cardNum%3E))i, '\1[FILTERED]\2').
+          gsub(%r((%3Ccvd%3E)\d*(%3C(%2F|/)cvd%3E))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def parse_card_or_auth(card_or_auth, options)
         if card_or_auth.respond_to?(:number)
           @credit_card = card_or_auth
-          @stored_data = ""
+          @stored_data = ''
         else
           options[:confirmationNumber] = card_or_auth
-          @stored_data = "StoredData"
+          @stored_data = 'StoredData'
         end
       end
 
@@ -259,9 +272,11 @@ module ActiveMerchant #:nodoc:
           if brand = card_type(@credit_card.brand)
             xml.tag! 'cardType'     , brand
           end
-          if @credit_card.verification_value
+          if @credit_card.verification_value?
             xml.tag! 'cvdIndicator' , '1' # Value Provided
             xml.tag! 'cvd'          , @credit_card.verification_value
+          else
+            xml.tag! 'cvdIndicator' , '0'
           end
         end
       end

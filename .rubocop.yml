@@ -1,0 +1,25 @@
+inherit_from: .rubocop_todo.yml
+
+# Please keep AllCops, Bundler, Layout, Style, Metrics groups and then order cops
+# alphabetically
+#
+# References:
+#   * https://github.com/bbatsov/ruby-style-guide
+#   * https://rubocop.readthedocs.io/
+AllCops:
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  Exclude:
+    - "generators/**/*"
+    - "lib/active_merchant/billing/gateways/paypal/**/*"
+    - "lib/active_merchant/billing/gateways/paypal_express.rb"
+    - "vendor/**/*"
+  ExtraDetails: false
+  TargetRubyVersion: 2.3
+
+# Active Merchant gateways are not amenable to length restrictions
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false

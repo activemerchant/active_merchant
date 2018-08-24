@@ -32,7 +32,7 @@ class InspireTest < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(nil, "identifier")
+      @gateway.refund(nil, 'identifier')
     end.check_request do |_, data, _|
       assert_match %r{identifier}, data
       assert_no_match %r{amount}, data
@@ -42,7 +42,7 @@ class InspireTest < Test::Unit::TestCase
 
   def test_partial_refund
     response = stub_comms do
-      @gateway.refund(100, "identifier")
+      @gateway.refund(100, 'identifier')
     end.check_request do |_, data, _|
       assert_match %r{identifier}, data
       assert_match %r{amount}, data
@@ -52,7 +52,7 @@ class InspireTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "identifier")
+      @gateway.refund(nil, 'identifier')
     end.respond_with(failed_refund_response)
     assert_failure response
   end
@@ -61,7 +61,7 @@ class InspireTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_address, result, nil, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
-    assert_equal ["address1", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
+    assert_equal ['address1', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
     assert_equal 'CO', result[:state]
     assert_equal '164 Waverley Street', result[:address1]
     assert_equal 'US', result[:country]
@@ -79,7 +79,7 @@ class InspireTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card, :store => true)
-    assert_equal ["ccexp", "ccnumber", "customer_vault", "cvv", "firstname", "lastname"], result.stringify_keys.keys.sort
+    assert_equal ['ccexp', 'ccnumber', 'customer_vault', 'cvv', 'firstname', 'lastname'], result.stringify_keys.keys.sort
     assert_equal 'add_customer', result[:customer_vault]
   end
 
@@ -87,7 +87,7 @@ class InspireTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card, {} )
-    assert_equal ["ccexp", "ccnumber", "cvv", "firstname", "lastname"], result.stringify_keys.keys.sort
+    assert_equal ['ccexp', 'ccnumber', 'cvv', 'firstname', 'lastname'], result.stringify_keys.keys.sort
     assert_nil result[:customer_vault]
   end
 
@@ -133,11 +133,11 @@ class InspireTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
-    "response=1&responsetext=SUCCESS&authcode=&transactionid=2594884528&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=100"
+    'response=1&responsetext=SUCCESS&authcode=&transactionid=2594884528&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=100'
   end
 
   def failed_refund_response
-    "response=3&responsetext=Invalid Transaction ID specified REFID:3150951931&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=300"
+    'response=3&responsetext=Invalid Transaction ID specified REFID:3150951931&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=300'
   end
 end
 

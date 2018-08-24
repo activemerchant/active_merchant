@@ -24,8 +24,8 @@ class BanwireTest < Test::Unit::TestCase
     @amex_credit_card = credit_card('375932134599999',
                                     :month => 3,
                                     :year => 2017,
-                                    :first_name => "Banwire",
-                                    :last_name => "Test Card")
+                                    :first_name => 'Banwire',
+                                    :last_name => 'Test Card')
     @amex_options = {
         :order_id => '2',
         :email => 'test@email.com',

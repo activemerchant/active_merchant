@@ -21,7 +21,7 @@ class QuickBooksTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
-    @authorization = "ECZ7U0SO423E"
+    @authorization = 'ECZ7U0SO423E'
   end
 
   def test_successful_purchase
@@ -29,7 +29,7 @@ class QuickBooksTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "EF1IQ9GGXS2D", response.authorization
+    assert_equal 'EF1IQ9GGXS2D', response.authorization
     assert response.test?
   end
 
@@ -110,6 +110,16 @@ class QuickBooksTest < Test::Unit::TestCase
 
   def test_scrub_with_small_json
     assert_equal @gateway.scrub(pre_scrubbed_small_json), post_scrubbed_small_json
+  end
+
+  def test_default_context
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_endpoint, data, _headers|
+      json = JSON.parse(data)
+      refute json.fetch('context').fetch('mobile')
+      assert json.fetch('context').fetch('isEcommerce')
+    end.respond_with(successful_purchase_response)
   end
 
   private

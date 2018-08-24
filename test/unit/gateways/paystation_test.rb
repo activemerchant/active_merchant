@@ -27,7 +27,7 @@ class PaystationTest < Test::Unit::TestCase
 
     assert_equal '0008813023-01', response.authorization
 
-    assert_equal 'Store Purchase', response.params["merchant_reference"]
+    assert_equal 'Store Purchase', response.params['merchant_reference']
     assert response.test?
   end
 
@@ -42,24 +42,24 @@ class PaystationTest < Test::Unit::TestCase
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
-    assert response = @gateway.store(@credit_card, @options.merge(:token => "justatest1310263135"))
+    assert response = @gateway.store(@credit_card, @options.merge(:token => 'justatest1310263135'))
     assert_success response
     assert response.test?
 
-    assert_equal "justatest1310263135", response.token
+    assert_equal 'justatest1310263135', response.token
   end
 
   def test_successful_purchase_from_token
     @gateway.expects(:ssl_post).returns(successful_stored_purchase_response)
 
-    token = "u09fxli14afpnd6022x0z82317beqe9e2w048l9it8286k6lpvz9x27hdal9bl95"
+    token = 'u09fxli14afpnd6022x0z82317beqe9e2w048l9it8286k6lpvz9x27hdal9bl95'
 
     assert response = @gateway.purchase(@amount, token, @options)
     assert_success response
 
     assert_equal '0009062149-01', response.authorization
 
-    assert_equal 'Store Purchase', response.params["merchant_reference"]
+    assert_equal 'Store Purchase', response.params['merchant_reference']
     assert response.test?
   end
 
@@ -75,7 +75,7 @@ class PaystationTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, "0009062250-01", @options.merge(:credit_card_verification => 123))
+    assert response = @gateway.capture(@amount, '0009062250-01', @options.merge(:credit_card_verification => 123))
     assert_success response
   end
 
@@ -87,7 +87,7 @@ class PaystationTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal '0008813023-01', response.authorization
-    assert_equal 'Store Purchase', response.params["merchant_reference"]
+    assert_equal 'Store Purchase', response.params['merchant_reference']
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization, @options)
@@ -100,10 +100,22 @@ class PaystationTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "", @options)
+      @gateway.refund(nil, '', @options)
     end.respond_with(failed_refund_response)
 
     assert_failure response
+  end
+
+  def test_successful_verify
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
   private
@@ -406,6 +418,14 @@ class PaystationTest < Test::Unit::TestCase
     def failed_refund_response
       %(<?xml version="1.0" standalone="yes"?>
         <FONT FACE="Arial" SIZE="2"><strong>Error 11:</strong> Not enough input parameters.</FONT>)
+    end
+
+    def pre_scrubbed
+      'pstn_pi=609035&pstn_gi=PUSHPAY&pstn_2p=t&pstn_nr=t&pstn_df=yymm&pstn_ms=a755b9c84a530aee91dc3077f57294b0&pstn_mo=Store+Purchase&pstn_mr=&pstn_am=&pstn_cu=NZD&pstn_cn=5123456789012346&pstn_ct=visa&pstn_ex=1305&pstn_cc=123&pstn_tm=T&paystation=_empty'
+    end
+
+    def post_scrubbed
+      'pstn_pi=609035&pstn_gi=PUSHPAY&pstn_2p=t&pstn_nr=t&pstn_df=yymm&pstn_ms=a755b9c84a530aee91dc3077f57294b0&pstn_mo=Store+Purchase&pstn_mr=&pstn_am=&pstn_cu=NZD&pstn_cn=[FILTERED]&pstn_ct=visa&pstn_ex=1305&pstn_cc=[FILTERED]&pstn_tm=T&paystation=_empty'
     end
 
 end

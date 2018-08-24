@@ -28,7 +28,7 @@ class RemoteTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "cardNumber is invalid.", response.message
+    assert_equal 'cardNumber is invalid.', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -49,7 +49,7 @@ class RemoteTest < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(@partial_amount, auth.authorization)
-    assert_equal capture.params['captureDetail']['amount'], sprintf("%.2f", @partial_amount.to_f / 100)
+    assert_equal capture.params['captureDetail']['amount'], sprintf('%.2f', @partial_amount.to_f / 100)
     assert_success capture
   end
 
@@ -71,7 +71,7 @@ class RemoteTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@partial_amount, purchase.authorization)
-    assert_equal refund.params['amount'], sprintf("%.2f", @partial_amount.to_f / 100)
+    assert_equal refund.params['amount'], sprintf('%.2f', @partial_amount.to_f / 100)
     assert_success refund
   end
 

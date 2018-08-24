@@ -31,7 +31,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'NETbilling'
       self.homepage_url = 'http://www.netbilling.com'
       self.supported_countries = ['US']
-      self.ssl_version = :TLSv1
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
       def initialize(options = {})
@@ -225,7 +224,7 @@ module ActiveMerchant #:nodoc:
         parameters[:pay_type] = 'C'
         parameters[:tran_type] = TRANSACTIONS[action]
 
-        parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
     end

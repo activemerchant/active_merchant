@@ -1,14 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class Latitude19Gateway < Gateway
-      self.display_name = "Latitude19 Gateway"
-      self.homepage_url = "http://www.l19tech.com"
+      self.display_name = 'Latitude19 Gateway'
+      self.homepage_url = 'http://www.l19tech.com'
 
-      self.live_url = "https://gateway.l19tech.com/payments/"
-      self.test_url = "https://gateway-sb.l19tech.com/payments/"
+      self.live_url = 'https://gateway.l19tech.com/payments/'
+      self.test_url = 'https://gateway-sb.l19tech.com/payments/'
 
-      self.supported_countries = ["US", "CA"]
-      self.default_currency = "USD"
+      self.supported_countries = ['US', 'CA']
+      self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
@@ -43,12 +43,12 @@ module ActiveMerchant #:nodoc:
       }
 
       BRAND_MAP = {
-        "master" => "MC",
-        "visa" => "VI",
-        "american_express" => "AX",
-        "discover" => "DS",
-        "diners_club" => "DC",
-        "jcb" => "JC"
+        'master' => 'MC',
+        'visa' => 'VI',
+        'american_express' => 'AX',
+        'discover' => 'DS',
+        'diners_club' => 'DC',
+        'jcb' => 'JC'
       }
 
       def initialize(options={})
@@ -58,31 +58,31 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, payment_method, options={})
         if payment_method.is_a?(String)
-          auth_or_sale("sale", payment_method, amount, nil, options)
+          auth_or_sale('sale', payment_method, amount, nil, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
             r.process { get_token(r.authorization, payment_method, options) }
-            r.process { auth_or_sale("sale", r.authorization, amount, payment_method, options) }
+            r.process { auth_or_sale('sale', r.authorization, amount, payment_method, options) }
           end
         end
       end
 
       def authorize(amount, payment_method, options={})
         if payment_method.is_a?(String)
-          auth_or_sale("auth", payment_method, amount, nil, options)
+          auth_or_sale('auth', payment_method, amount, nil, options)
         else
           MultiResponse.run() do |r|
             r.process { get_session(options) }
             r.process { get_token(r.authorization, payment_method, options) }
-            r.process { auth_or_sale("auth", r.authorization, amount, payment_method, options) }
+            r.process { auth_or_sale('auth', r.authorization, amount, payment_method, options) }
           end
         end
       end
 
       def capture(amount, authorization, options={})
         post = {}
-        post[:method] = "deposit"
+        post[:method] = 'deposit'
         add_request_id(post)
 
         params = {}
@@ -93,18 +93,18 @@ module ActiveMerchant #:nodoc:
         add_credentials(params, post[:method])
 
         post[:params] = [params]
-        commit("v1/", post)
+        commit('v1/', post)
       end
 
       def void(authorization, options={})
         method, pgwTID = split_authorization(authorization)
         case method
-        when "auth"
-          reverse_or_void("reversal", pgwTID, options)
-        when "deposit", "sale"
-          reverse_or_void("void", pgwTID, options)
+        when 'auth'
+          reverse_or_void('reversal', pgwTID, options)
+        when 'deposit', 'sale'
+          reverse_or_void('void', pgwTID, options)
         else
-          message = "Unsupported operation: successful Purchase, Authorize and unsettled Capture transactions can only be voided."
+          message = 'Unsupported operation: successful Purchase, Authorize and unsettled Capture transactions can only be voided.'
           return Response.new(false, message)
         end
       end
@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment_method, options={})
-        verify(payment_method, options, "store")
+        verify(payment_method, options, 'store')
       end
 
       def supports_scrubbing?
@@ -155,14 +155,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_timestamp()
-        Time.now.getutc.strftime("%Y%m%d%H%M%S")
+        Time.now.getutc.strftime('%Y%m%d%H%M%S')
       end
 
       def add_hmac(params, method)
-        if method == "getSession"
-          hmac_message = params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + params[:requestTimeStamp] + "|" + method
+        if method == 'getSession'
+          hmac_message = params[:pgwAccountNumber] + '|' + params[:pgwConfigurationId] + '|' + params[:requestTimeStamp] + '|' + method
         else
-          hmac_message = params[:pgwAccountNumber] + "|" + params[:pgwConfigurationId] + "|" + (params[:orderNumber] || "") + "|" + method + "|" + (params[:amount] || "") + "|" + (params[:sessionToken] || "") + "|" + (params[:accountToken] || "")
+          hmac_message = params[:pgwAccountNumber] + '|' + params[:pgwConfigurationId] + '|' + (params[:orderNumber] || '') + '|' + method + '|' + (params[:amount] || '') + '|' + (params[:sessionToken] || '') + '|' + (params[:accountToken] || '')
         end
 
         OpenSSL::HMAC.hexdigest('sha512', @options[:secret], hmac_message)
@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
         params[:pgwAccountNumber] = @options[:account_number]
         params[:pgwConfigurationId] = @options[:configuration_id]
 
-        params[:requestTimeStamp] = add_timestamp() if method == "getSession"
+        params[:requestTimeStamp] = add_timestamp() if method == 'getSession'
 
         params[:pgwHMAC] = add_hmac(params, method)
       end
@@ -180,11 +180,11 @@ module ActiveMerchant #:nodoc:
       def add_invoice(params, money, options)
         params[:amount] = amount(money)
         params[:orderNumber] = options[:order_id]
-        params[:transactionClass] = options[:transaction_class] || "eCommerce"
+        params[:transactionClass] = options[:transaction_class] || 'eCommerce'
       end
 
       def add_payment_method(params, credit_card)
-        params[:cardExp] = format(credit_card.month, :two_digits).to_s + "/" + format(credit_card.year, :two_digits).to_s
+        params[:cardExp] = format(credit_card.month, :two_digits).to_s + '/' + format(credit_card.year, :two_digits).to_s
         params[:cardType] = BRAND_MAP[credit_card.brand.to_s]
         params[:cvv] = credit_card.verification_value
         params[:firstName] = credit_card.first_name
@@ -204,19 +204,19 @@ module ActiveMerchant #:nodoc:
 
       def get_session(options={})
         post = {}
-        post[:method] = "getSession"
+        post[:method] = 'getSession'
         add_request_id(post)
 
         params = {}
         add_credentials(params, post[:method])
 
         post[:params] = [params]
-        commit("session", post)
+        commit('session', post)
       end
 
       def get_token(authorization, payment_method, options={})
         post = {}
-        post[:method] = "tokenize"
+        post[:method] = 'tokenize'
         add_request_id(post)
 
         params = {}
@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
         params[:cardNumber] = payment_method.number
 
         post[:params] = [params]
-        commit("token", post)
+        commit('token', post)
       end
 
       def auth_or_sale(method, authorization, amount, credit_card, options={})
@@ -244,12 +244,12 @@ module ActiveMerchant #:nodoc:
         add_credentials(params, post[:method])
 
         post[:params] = [params]
-        commit("v1/", post)
+        commit('v1/', post)
       end
 
       def verifyOnly(action, authorization, credit_card, options={})
         post = {}
-        post[:method] = "verifyOnly"
+        post[:method] = 'verifyOnly'
         add_request_id(post)
 
         params = {}
@@ -260,17 +260,17 @@ module ActiveMerchant #:nodoc:
         else
           _, params[:accountToken] = split_authorization(authorization)
         end
-        params[:requestAccountToken] = "1" if action == "store"
+        params[:requestAccountToken] = '1' if action == 'store'
         add_invoice(params, 0, options)
         add_credentials(params, post[:method])
 
         post[:params] = [params]
-        commit("v1/", post)
+        commit('v1/', post)
       end
 
       def refundWithCard(authorization, amount, credit_card, options={})
         post = {}
-        post[:method] = "refundWithCard"
+        post[:method] = 'refundWithCard'
         add_request_id(post)
 
         params = {}
@@ -284,7 +284,7 @@ module ActiveMerchant #:nodoc:
         add_credentials(params, post[:method])
 
         post[:params] = [params]
-        commit("v1/", post)
+        commit('v1/', post)
       end
 
       def reverse_or_void(method, pgwTID, options={})
@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
         add_credentials(params, post[:method])
 
         post[:params] = [params]
-        commit("v1/", post)
+        commit('v1/', post)
       end
 
       def commit(endpoint, post)
@@ -327,7 +327,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Content-Type"  => "application/json"
+          'Content-Type'  => 'application/json'
         }
       end
 
@@ -344,51 +344,51 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        return false if response["result"].nil? || response["error"]
+        return false if response['result'].nil? || response['error']
 
-        if response["result"].key?("pgwResponseCode")
-          response["error"].nil? && response["result"]["lastActionSucceeded"] == 1 && response["result"]["pgwResponseCode"] == "100"
+        if response['result'].key?('pgwResponseCode')
+          response['error'].nil? && response['result']['lastActionSucceeded'] == 1 && response['result']['pgwResponseCode'] == '100'
         else
-          response["error"].nil? && response["result"]["lastActionSucceeded"] == 1
+          response['error'].nil? && response['result']['lastActionSucceeded'] == 1
         end
       end
 
       def message_from(response)
-        return response["error"] if response["error"]
-        return "Failed" unless response.key?("result")
+        return response['error'] if response['error']
+        return 'Failed' unless response.key?('result')
 
-        if response["result"].key?("pgwResponseCode")
-          RESPONSE_CODE_MAPPING[response["result"]["pgwResponseCode"]] || response["result"]["responseText"]
+        if response['result'].key?('pgwResponseCode')
+          RESPONSE_CODE_MAPPING[response['result']['pgwResponseCode']] || response['result']['responseText']
         else
-          response["result"]["lastActionSucceeded"] == 1 ? "Succeeded" : "Failed"
+          response['result']['lastActionSucceeded'] == 1 ? 'Succeeded' : 'Failed'
         end
       end
 
       def error_from(response)
-        return response["error"] if response["error"]
-        return "Failed" unless response.key?("result")
-        return response["result"]["pgwResponseCode"] || response["result"]["processor"]["responseCode"] || "Failed"
+        return response['error'] if response['error']
+        return 'Failed' unless response.key?('result')
+        return response['result']['pgwResponseCode'] || response['result']['processor']['responseCode'] || 'Failed'
       end
 
       def authorization_from(response, method)
-        method + "|" + (
-          response["result"]["sessionId"] ||
-          response["result"]["sessionToken"] ||
-          response["result"]["pgwTID"] ||
-          response["result"]["accountToken"]
+        method + '|' + (
+          response['result']['sessionId'] ||
+          response['result']['sessionToken'] ||
+          response['result']['pgwTID'] ||
+          response['result']['accountToken']
         )
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
 
       def avs_from(response)
-        response["result"].key?("avsResponse") ? AVSResult.new(code: response["result"]["avsResponse"]) : nil
+        response['result'].key?('avsResponse') ? AVSResult.new(code: response['result']['avsResponse']) : nil
       end
 
       def cvv_from(response)
-        response["result"].key?("cvvResponse") ? CVVResult.new(response["result"]["cvvResponse"]) : nil
+        response['result'].key?('cvvResponse') ? CVVResult.new(response['result']['cvvResponse']) : nil
       end
 
       def response_error(raw_response)
@@ -407,7 +407,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unparsable_response(raw_response)
-        message = "Invalid JSON response received from Latitude19Gateway. Please contact Latitude19Gateway if you continue to receive this message."
+        message = 'Invalid JSON response received from Latitude19Gateway. Please contact Latitude19Gateway if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end

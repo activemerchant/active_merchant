@@ -13,7 +13,7 @@ class SagePayTest < Test::Unit::TestCase
         :name => 'Tekin Suleyman',
         :address1 => 'Flat 10 Lapwing Court',
         :address2 => 'West Didsbury',
-        :city => "Manchester",
+        :city => 'Manchester',
         :county => 'Greater Manchester',
         :country => 'GB',
         :zip => 'M20 2PS'
@@ -31,7 +31,7 @@ class SagePayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "1;B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520;4193753;OHMETD7DFK;purchase", response.authorization
+    assert_equal '1;B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520;4193753;OHMETD7DFK;purchase', response.authorization
     assert_success response
   end
 
@@ -57,20 +57,39 @@ class SagePayTest < Test::Unit::TestCase
     assert_equal 'https://test.sagepay.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
   end
 
-  def test_avs_result
+  def test_matched_avs_result
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_equal 'Y', response.avs_result['postal_match']
+    assert_equal 'Y', response.avs_result['street_match']
+  end
+
+  def test_partially_matched_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
+
     assert_equal 'Y', response.avs_result['postal_match']
     assert_equal 'N', response.avs_result['street_match']
   end
 
-   def test_cvv_result
-     @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  def test_matched_cvv_result
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
-     response = @gateway.purchase(@amount, @credit_card, @options)
-     assert_equal 'N', response.cvv_result['code']
-   end
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_not_matched_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_equal 'N', response.cvv_result['code']
+  end
 
   def test_dont_send_fractional_amount_for_chinese_yen
     @amount = 100_00  # 100 YEN
@@ -215,7 +234,7 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_description_is_truncated
-    huge_description = "SagePay transactions fail if the déscription is more than 100 characters. Therefore, we truncate it to 100 characters." + " Lots more text " * 1000
+    huge_description = 'SagePay transactions fail if the déscription is more than 100 characters. Therefore, we truncate it to 100 characters.' + ' Lots more text ' * 1000
     stub_comms(@gateway, :ssl_request) do
       purchase_with_options(description: huge_description)
     end.check_request do |method, endpoint, data, headers|
@@ -224,7 +243,7 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_protocol_version_is_honoured
-    gateway = SagePayGateway.new(protocol_version: '2.23', login: "X")
+    gateway = SagePayGateway.new(protocol_version: '2.23', login: 'X')
 
     stub_comms(gateway, :ssl_request) do
       gateway.purchase(@amount, @credit_card, @options)
@@ -238,7 +257,7 @@ class SagePayTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
-      assert data.include?("ReferrerID=00000000-0000-0000-0000-000000000001")
+      assert data.include?('ReferrerID=00000000-0000-0000-0000-000000000001')
     end.respond_with(successful_purchase_response)
   ensure
     ActiveMerchant::Billing::SagePayGateway.application_id = nil
@@ -281,8 +300,37 @@ class SagePayTest < Test::Unit::TestCase
 
   def test_truncate_accounts_for_url_encoding
     assert_nil @gateway.send(:truncate, nil, 3)
-    assert_equal "Wow", @gateway.send(:truncate, "WowAmaze", 3)
-    assert_equal "Joikam Lomström", @gateway.send(:truncate, "Joikam Lomström Rate", 20)
+    assert_equal 'Wow', @gateway.send(:truncate, 'WowAmaze', 3)
+    assert_equal 'Joikam Lomström', @gateway.send(:truncate, 'Joikam Lomström Rate', 20)
+  end
+
+  def test_successful_authorization_and_capture_and_refund
+    auth = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with(successful_authorize_response)
+    assert_success auth
+
+    capture = stub_comms do
+      @gateway.capture(@amount, auth.authorization)
+    end.respond_with(successful_capture_response)
+    assert_success capture
+
+    refund = stub_comms do
+      @gateway.refund(@amount, capture.authorization,
+        order_id: generate_unique_id,
+        description: 'Refund txn'
+       )
+    end.respond_with(successful_refund_response)
+    assert_success refund
+  end
+
+  def test_repeat_purchase_with_reference_token
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, '1455548a8d178beecd88fe6a285f50ff;{0D2ACAF0-FA64-6DFF-3869-7ADDDC1E0474};15353766;BS231FNE14;purchase', @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/RelatedVPSTxId=%7B0D2ACAF0-FA64-6DFF-3869-7ADDDC1E0474%/, data)
+      assert_match(/TxType=REPEAT/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private
@@ -336,6 +384,25 @@ PostCodeResult=MATCHED
 CV2Result=NOTMATCHED
 3DSecureStatus=NOTCHECKED
 Token=1
+    RESP
+  end
+
+  def successful_refund_response
+    <<-RESP
+VPSProtocol=3.00
+Status=OK
+StatusDetail=0000 : The Authorisation was Successful.
+SecurityKey=KUMJBP02HM
+TxAuthNo=15282432
+VPSTxId={08C870A9-1E53-3852-BA44-CBC91612CBCA}
+    RESP
+  end
+
+  def successful_capture_response
+    <<-RESP
+VPSProtocol=3.00
+Status=OK
+StatusDetail=2004 : The Release was Successful.
     RESP
   end
 

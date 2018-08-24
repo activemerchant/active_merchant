@@ -28,11 +28,6 @@ require 'active_support/core_ext/hash/conversions'
 require 'active_support/core_ext/object/conversions'
 require 'active_support/core_ext/class/attribute'
 require 'active_support/core_ext/enumerable'
-
-if(!defined?(ActiveSupport::VERSION) || (ActiveSupport::VERSION::STRING < "4.1"))
-  require 'active_support/core_ext/class/attribute_accessors'
-end
-
 require 'active_support/core_ext/module/attribute_accessors'
 
 require 'base64'
@@ -42,8 +37,10 @@ require 'cgi'
 require 'rexml/document'
 require 'timeout'
 require 'socket'
+require 'openssl'
 
 require 'active_merchant/network_connection_retries'
+require 'active_merchant/net_http_ssl_connection'
 require 'active_merchant/connection'
 require 'active_merchant/post_data'
 require 'active_merchant/posts_data'
@@ -54,7 +51,7 @@ require 'active_merchant/country'
 
 module ActiveMerchant
   def self.deprecated(message, caller=Kernel.caller[1])
-    warning = caller + ": " + message
+    warning = caller + ': ' + message
     if(respond_to?(:logger) && logger.present?)
       logger.warn(warning)
     else

@@ -140,11 +140,11 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         case response['response'].to_i
         when APPROVED
-          "Transaction Approved"
+          'Transaction Approved'
         when DECLINED
-          "Transaction Declined"
+          'Transaction Declined'
         else
-          "Error in transaction data or system error"
+          'Error in transaction data or system error'
         end
       end
 

@@ -2,21 +2,21 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SecureNetGateway < Gateway
 
-      API_VERSION = "4.0"
+      API_VERSION = '4.0'
 
       TRANSACTIONS = {
-        :auth_only                      => "0000",
-        :auth_capture                   => "0100",
-        :prior_auth_capture             => "0200",
-        :void                           => "0400",
-        :credit                         => "0500"
+        :auth_only                      => '0000',
+        :auth_capture                   => '0100',
+        :prior_auth_capture             => '0200',
+        :void                           => '0400',
+        :credit                         => '0500'
       }
 
       XML_ATTRIBUTES = {
-                        'xmlns' => "http://gateway.securenet.com/API/Contracts",
-                        'xmlns:i' => "http://www.w3.org/2001/XMLSchema-instance"
+                        'xmlns' => 'http://gateway.securenet.com/API/Contracts',
+                        'xmlns:i' => 'http://www.w3.org/2001/XMLSchema-instance'
                        }
-      NIL_ATTRIBUTE = { 'i:nil' => "true" }
+      NIL_ATTRIBUTE = { 'i:nil' => 'true' }
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -61,12 +61,23 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<CARDNUMBER>)\d+(</CARDNUMBER>))i, '\1[FILTERED]\2').
+          gsub(%r((<CARDCODE>)\d+(</CARDCODE>))i, '\1[FILTERED]\2').
+          gsub(%r((<SECUREKEY>).+(</SECUREKEY>))i, '\1[FILTERED]\2')
+      end
 
       private
+
       def commit(request)
         xml = build_request(request)
         url = test? ? self.test_url : self.live_url
-        data = ssl_post(url, xml, "Content-Type" => "text/xml")
+        data = ssl_post(url, xml, 'Content-Type' => 'text/xml')
         response = parse(data)
 
         Response.new(success?(response), message_from(response), response,
@@ -81,7 +92,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         xml.instruct!
-        xml.tag!("TRANSACTION", XML_ATTRIBUTES) do
+        xml.tag!('TRANSACTION', XML_ATTRIBUTES) do
           xml << request
         end
 
@@ -105,7 +116,7 @@ module ActiveMerchant #:nodoc:
         transaction_id, amount_in_ref, last_four = split_authorization(authorization)
 
         xml.tag! 'AMOUNT', amount(money) || amount_in_ref
-        xml.tag!("CARD") do
+        xml.tag!('CARD') do
           xml.tag! 'CARDNUMBER', last_four
         end
 
@@ -117,7 +128,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, creditcard)
-        xml.tag!("CARD") do
+        xml.tag!('CARD') do
           xml.tag! 'CARDCODE', creditcard.verification_value if creditcard.verification_value?
           xml.tag! 'CARDNUMBER', creditcard.number
           xml.tag! 'EXPDATE', expdate(creditcard)
@@ -138,7 +149,7 @@ module ActiveMerchant #:nodoc:
         return unless creditcard
 
         if address = options[:billing_address] || options[:address]
-          xml.tag!("CUSTOMER_BILL") do
+          xml.tag!('CUSTOMER_BILL') do
             xml.tag! 'ADDRESS', address[:address1].to_s
             xml.tag! 'CITY', address[:city].to_s
             xml.tag! 'COMPANY', address[:company].to_s
@@ -156,7 +167,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if address = options[:shipping_address]
-          xml.tag!("CUSTOMER_SHIP") do
+          xml.tag!('CUSTOMER_SHIP') do
             xml.tag! 'ADDRESS', address[:address1].to_s
             xml.tag! 'CITY', address[:city].to_s
             xml.tag! 'COMPANY', address[:company].to_s
@@ -182,7 +193,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_merchant_key(xml, options)
-        xml.tag!("MERCHANT_KEY") do
+        xml.tag!('MERCHANT_KEY') do
           xml.tag! 'GROUPID', 0
           xml.tag! 'SECUREKEY', @options[:password]
           xml.tag! 'SECURENETID', @options[:login]
@@ -225,7 +236,7 @@ module ActiveMerchant #:nodoc:
       def parse(xml)
         response = {}
         xml = REXML::Document.new(xml)
-        root = REXML::XPath.first(xml, "//GATEWAYRESPONSE")
+        root = REXML::XPath.first(xml, '//GATEWAYRESPONSE')
         if root
           root.elements.to_a.each do |node|
             recurring_parse_element(response, node)
@@ -244,15 +255,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        transaction_id, amount, last_four = authorization.split("|")
+        transaction_id, amount, last_four = authorization.split('|')
         [transaction_id, amount, last_four]
       end
 
       def build_authorization(response)
-        [response[:transactionid], response[:transactionamount], response[:last4_digits]].join("|")
+        [response[:transactionid], response[:transactionamount], response[:last4_digits]].join('|')
       end
 
     end
   end
 end
-

@@ -14,7 +14,9 @@ module ActiveMerchant #:nodoc:
         'dankort'            => /^5019\d{12}$/,
         'maestro'            => /^(5[06-8]|6\d)\d{10,17}$/,
         'forbrugsforeningen' => /^600722\d{10}$/,
-        'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/
+        'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/,
+        'sodexo'             => /^(606071|603389|606070|606069|606068|600818)\d{8}$/,
+        'vr'                 => /^(627416|637036)\d{8}$/
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -147,7 +149,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def type?(number)
-          ActiveMerchant.deprecated "CreditCard#type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand? instead."
+          ActiveMerchant.deprecated 'CreditCard#type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand? instead.'
           brand?(number)
         end
 
@@ -169,7 +171,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def matching_type?(number, brand)
-          ActiveMerchant.deprecated "CreditCard#matching_type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#matching_brand? instead."
+          ActiveMerchant.deprecated 'CreditCard#matching_type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#matching_brand? instead.'
           matching_brand?(number, brand)
         end
 

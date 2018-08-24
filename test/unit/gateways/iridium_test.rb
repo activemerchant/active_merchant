@@ -50,7 +50,7 @@ class IridiumTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(1111, "1;100115172046327701460093;460093")
+    assert response = @gateway.capture(1111, '1;100115172046327701460093;460093')
     assert_success response
 
     assert_equal('100115172047506301812526', response.authorization)
@@ -103,7 +103,7 @@ class IridiumTest < Test::Unit::TestCase
   def test_use_ducktyping_for_credit_card
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    credit_card = stub(:number => '4242424242424242', :verification_value => '123', :name => "Hans Tester", :year => 2012, :month => 1)
+    credit_card = stub(:number => '4242424242424242', :verification_value => '123', :name => 'Hans Tester', :year => 2012, :month => 1)
 
     assert_nothing_raised do
       assert_success @gateway.purchase(@amount, credit_card, @options)

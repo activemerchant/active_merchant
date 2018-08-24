@@ -21,20 +21,20 @@ module ActiveMerchant #:nodoc:
       }
 
       CURRENCY_CODES = {
-        "AUD"=> '036',
-        "CAD"=> '124',
-        "CZK"=> '203',
-        "DKK"=> '208',
-        "HKD"=> '344',
-        "ICK"=> '352',
-        "JPY"=> '392',
-        "NOK"=> '578',
-        "SGD"=> '702',
-        "SEK"=> '752',
-        "CHF"=> '756',
-        "GBP"=> '826',
-        "USD"=> '840',
-        "EUR"=> '978'
+        'AUD'=> '036',
+        'CAD'=> '124',
+        'CZK'=> '203',
+        'DKK'=> '208',
+        'HKD'=> '344',
+        'ICK'=> '352',
+        'JPY'=> '392',
+        'NOK'=> '578',
+        'SGD'=> '702',
+        'SEK'=> '752',
+        'CHF'=> '756',
+        'GBP'=> '826',
+        'USD'=> '840',
+        'EUR'=> '978'
       }
 
       SUCCESS_CODES = ['00000']
@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
           :archivage => parameters[:order_id]
         )
 
-        parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def unique_id(seed = 0)

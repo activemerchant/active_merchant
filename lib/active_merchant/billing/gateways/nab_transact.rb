@@ -6,11 +6,11 @@ module ActiveMerchant #:nodoc:
     # be a rebadged Securepay Australia service, though some differences exist.
     class NabTransactGateway < Gateway
       API_VERSION = 'xml-4.2'
-      PERIODIC_API_VERSION = "spxml-4.2"
+      PERIODIC_API_VERSION = 'spxml-4.2'
 
       class_attribute :test_periodic_url, :live_periodic_url
 
-      self.test_url = 'https://transact.nab.com.au/test/xmlapi/payment'
+      self.test_url = 'https://demo.transact.nab.com.au/xmlapi/payment'
       self.live_url = 'https://transact.nab.com.au/live/xmlapi/payment'
       self.test_periodic_url = 'https://transact.nab.com.au/xmlapidemo/periodic'
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        return "" if transcript.blank?
+        return '' if transcript.blank?
         transcript.
           gsub(%r((<cardNumber>)[^<]+(<))i, '\1[FILTERED]\2').
           gsub(%r((<cvv>)[^<]+(<))i, '\1[FILTERED]\2').
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
 
       def build_purchase_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new
-        xml.tag! 'amount', amount(money)
+        xml.tag! 'amount', localized_amount(money, options[:currency] || currency(money))
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
 
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
 
         transaction_id, order_id, preauth_id, original_amount = reference.split('*')
 
-        xml.tag! 'amount', (money ? amount(money) : original_amount)
+        xml.tag! 'amount', (money ? localized_amount(money, options[:currency] || currency(money)) : original_amount)
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'txnID', transaction_id
         xml.tag! 'purchaseOrderNo', order_id
@@ -156,8 +156,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Payment'
           xml.tag! 'Payment' do
-            xml.tag! 'TxnList', "count" => 1 do
-              xml.tag! 'Txn', "ID" => 1 do
+            xml.tag! 'TxnList', 'count' => 1 do
+              xml.tag! 'Txn', 'ID' => 1 do
                 xml.tag! 'txnType', TRANSACTIONS[action]
                 xml.tag! 'txnSource', 23
                 xml << body
@@ -187,8 +187,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Periodic'
           xml.tag! 'Periodic' do
-            xml.tag! 'PeriodicList', "count" => 1 do
-              xml.tag! 'PeriodicItem', "ID" => 1 do
+            xml.tag! 'PeriodicList', 'count' => 1 do
+              xml.tag! 'PeriodicItem', 'ID' => 1 do
                 xml.tag! 'actionType', action.to_s
                 xml.tag! 'periodicType', PERIODIC_TYPES[action] if PERIODIC_TYPES[action]
                 xml << body
@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'crn', identification
         xml.tag! 'currency', options[:currency] || currency(money)
-        xml.tag! 'amount', amount(money)
+        xml.tag! 'amount', localized_amount(money, options[:currency] || currency(money))
 
         xml.target!
       end

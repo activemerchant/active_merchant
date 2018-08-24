@@ -31,7 +31,7 @@ class IppTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "89435577", response.authorization
+    assert_equal '89435577', response.authorization
   end
 
   def test_failed_purchase
@@ -40,9 +40,9 @@ class IppTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Do Not Honour", response.message
+    assert_equal 'Do Not Honour', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-    assert_equal "", response.authorization
+    assert_equal '', response.authorization
   end
 
   def test_successful_authorize
@@ -55,12 +55,12 @@ class IppTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "89435583", response.authorization
+    assert_equal '89435583', response.authorization
   end
 
   def test_successful_capture
     response = stub_comms do
-      @gateway.capture(@amount, "receipt")
+      @gateway.capture(@amount, 'receipt')
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<SubmitSingleCapture }, data)
       assert_match(%r{<Receipt>receipt<}, data)
@@ -72,7 +72,7 @@ class IppTest < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(@amount, "receipt")
+      @gateway.refund(@amount, 'receipt')
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<SubmitSingleRefund }, data)
       assert_match(%r{<Receipt>receipt<}, data)

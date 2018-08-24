@@ -142,8 +142,8 @@ class HpsTest < Test::Unit::TestCase
   def test_successful_purchase_with_swipe_encryption_type_01
     @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
 
-    @options[:encryption_type] = "01"
-    @credit_card.track_data = "&lt;E1052711%B5473501000000014^MC TEST CARD^251200000000000000000000000000000000?|GVEY/MKaKXuqqjKRRueIdCHPPoj1gMccgNOtHC41ymz7bIvyJJVdD3LW8BbwvwoenI+|+++++++C4cI2zjMp|11;5473501000000014=25120000000000000000?|8XqYkQGMdGeiIsgM0pzdCbEGUDP|+++++++C4cI2zjMp|00|||/wECAQECAoFGAgEH2wYcShV78RZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0PX50qfj4dt0lu9oFBESQQNkpoxEVpCW3ZKmoIV3T93zphPS3XKP4+DiVlM8VIOOmAuRrpzxNi0TN/DWXWSjUC8m/PI2dACGdl/hVJ/imfqIs68wYDnp8j0ZfgvM26MlnDbTVRrSx68Nzj2QAgpBCHcaBb/FZm9T7pfMr2Mlh2YcAt6gGG1i2bJgiEJn8IiSDX5M2ybzqRT86PCbKle/XCTwFFe1X|&gt;"
+    @options[:encryption_type] = '01'
+    @credit_card.track_data = '&lt;E1052711%B5473501000000014^MC TEST CARD^251200000000000000000000000000000000?|GVEY/MKaKXuqqjKRRueIdCHPPoj1gMccgNOtHC41ymz7bIvyJJVdD3LW8BbwvwoenI+|+++++++C4cI2zjMp|11;5473501000000014=25120000000000000000?|8XqYkQGMdGeiIsgM0pzdCbEGUDP|+++++++C4cI2zjMp|00|||/wECAQECAoFGAgEH2wYcShV78RZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0PX50qfj4dt0lu9oFBESQQNkpoxEVpCW3ZKmoIV3T93zphPS3XKP4+DiVlM8VIOOmAuRrpzxNi0TN/DWXWSjUC8m/PI2dACGdl/hVJ/imfqIs68wYDnp8j0ZfgvM26MlnDbTVRrSx68Nzj2QAgpBCHcaBb/FZm9T7pfMr2Mlh2YcAt6gGG1i2bJgiEJn8IiSDX5M2ybzqRT86PCbKle/XCTwFFe1X|&gt;'
     response = @gateway.purchase(@amount,@credit_card,@options)
 
     assert_success response
@@ -188,6 +188,11 @@ class HpsTest < Test::Unit::TestCase
 
   def test_test_returns_false
     assert_false @gateway.send(:test?)
+  end
+
+  def test_transcript_scrubbing
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
   end
 
   private
@@ -602,6 +607,66 @@ class HpsTest < Test::Unit::TestCase
    </soap:Body>
 </soap:Envelope>
     RESPONSE
+  end
+
+  def pre_scrub
+    %q{
+opening connection to posgateway.cert.secureexchange.net:443...
+opened
+starting SSL for posgateway.cert.secureexchange.net:443...
+SSL established
+<- "POST /Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: posgateway.cert.secureexchange.net\r\nContent-Length: 1295\r\n\r\n"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP:Envelope xmlns:SOAP=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hps=\"http://Hps.Exchange.PosGateway\"><SOAP:Body><hps:PosRequest><hps:Ver1.0><hps:Header><hps:SecretAPIKey>skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ</hps:SecretAPIKey></hps:Header><hps:Transaction><hps:CreditSale><hps:Block1><hps:Amt>1.00</hps:Amt><hps:AllowDup>Y</hps:AllowDup><hps:CardHolderData><hps:CardHolderFirstName>Longbob</hps:CardHolderFirstName><hps:CardHolderLastName>Longsen</hps:CardHolderLastName><hps:CardHolderAddr>456 My Street</hps:CardHolderAddr><hps:CardHolderCity>Ottawa</hps:CardHolderCity><hps:CardHolderState>ON</hps:CardHolderState><hps:CardHolderZip>K1C2N6</hps:CardHolderZip></hps:CardHolderData><hps:AdditionalTxnFields><hps:Description>Store Purchase</hps:Description><hps:InvoiceNbr>1</hps:InvoiceNbr></hps:AdditionalTxnFields><hps:CardData><hps:ManualEntry><hps:CardNbr>4000100011112224</hps:CardNbr><hps:ExpMonth>9</hps:ExpMonth><hps:ExpYear>2019</hps:ExpYear><hps:CVV2>123</hps:CVV2><hps:CardPresent>N</hps:CardPresent><hps:ReaderPresent>N</hps:ReaderPresent></hps:ManualEntry><hps:TokenRequest>N</hps:TokenRequest></hps:CardData></hps:Block1></hps:CreditSale></hps:Transaction></hps:Ver1.0></hps:PosRequest></SOAP:Body></SOAP:Envelope>"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Cache-Control: private, max-age=0\r\n"
+-> "Content-Type: text/xml; charset=utf-8\r\n"
+-> "Server: Microsoft-IIS/7.5\r\n"
+-> "X-dynaTrace: PT=266421;PA=-1324159421;SP=Gateway Cert;PS=1926692524\r\n"
+-> "dynaTrace: PT=266421;PA=-1324159421;SP=Gateway Cert;PS=1926692524\r\n"
+-> "X-AspNet-Version: 4.0.30319\r\n"
+-> "X-Powered-By: ASP.NET\r\n"
+-> "X-Frame-Options: DENY\r\n"
+-> "X-Content-Type-Options: nosniff\r\n"
+-> "Date: Mon, 08 Jan 2018 16:28:18 GMT\r\n"
+-> "Connection: close\r\n"
+-> "Content-Length: 1067\r\n"
+-> "\r\n"
+reading 1067 bytes...
+-> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><PosResponse rootUrl=\"https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway\" xmlns=\"http://Hps.Exchange.PosGateway\"><Ver1.0><Header><LicenseId>95878</LicenseId><SiteId>95881</SiteId><DeviceId>2409000</DeviceId><GatewayTxnId>1035967766</GatewayTxnId><GatewayRspCode>0</GatewayRspCode><GatewayRspMsg>Success</GatewayRspMsg><RspDT>2018-01-08T10:28:18.5555936</RspDT></Header><Transaction><CreditSale><RspCode>00</RspCode><RspText>APPROVAL</RspText><AuthCode>64349A</AuthCode><AVSRsltCode>0</AVSRsltCode><CVVRsltCode>M</CVVRsltCode><RefNbr>800818231451</RefNbr><AVSResultCodeActi"
+-> "on>ACCEPT</AVSResultCodeAction><CVVResultCodeAction>ACCEPT</CVVResultCodeAction><CardType>Visa</CardType><AVSRsltText>AVS Not Requested.</AVSRsltText><CVVRsltText>Match.</CVVRsltText></CreditSale></Transaction></Ver1.0></PosResponse></soap:Body></soap:Envelope>"
+read 1067 bytes
+Conn close
+    }
+  end
+
+  def post_scrub
+    %q{
+opening connection to posgateway.cert.secureexchange.net:443...
+opened
+starting SSL for posgateway.cert.secureexchange.net:443...
+SSL established
+<- "POST /Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: posgateway.cert.secureexchange.net\r\nContent-Length: 1295\r\n\r\n"
+<- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP:Envelope xmlns:SOAP=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hps=\"http://Hps.Exchange.PosGateway\"><SOAP:Body><hps:PosRequest><hps:Ver1.0><hps:Header><hps:SecretAPIKey>[FILTERED]</hps:SecretAPIKey></hps:Header><hps:Transaction><hps:CreditSale><hps:Block1><hps:Amt>1.00</hps:Amt><hps:AllowDup>Y</hps:AllowDup><hps:CardHolderData><hps:CardHolderFirstName>Longbob</hps:CardHolderFirstName><hps:CardHolderLastName>Longsen</hps:CardHolderLastName><hps:CardHolderAddr>456 My Street</hps:CardHolderAddr><hps:CardHolderCity>Ottawa</hps:CardHolderCity><hps:CardHolderState>ON</hps:CardHolderState><hps:CardHolderZip>K1C2N6</hps:CardHolderZip></hps:CardHolderData><hps:AdditionalTxnFields><hps:Description>Store Purchase</hps:Description><hps:InvoiceNbr>1</hps:InvoiceNbr></hps:AdditionalTxnFields><hps:CardData><hps:ManualEntry><hps:CardNbr>[FILTERED]</hps:CardNbr><hps:ExpMonth>9</hps:ExpMonth><hps:ExpYear>2019</hps:ExpYear><hps:CVV2>[FILTERED]</hps:CVV2><hps:CardPresent>N</hps:CardPresent><hps:ReaderPresent>N</hps:ReaderPresent></hps:ManualEntry><hps:TokenRequest>N</hps:TokenRequest></hps:CardData></hps:Block1></hps:CreditSale></hps:Transaction></hps:Ver1.0></hps:PosRequest></SOAP:Body></SOAP:Envelope>"
+-> "HTTP/1.1 200 OK\r\n"
+-> "Cache-Control: private, max-age=0\r\n"
+-> "Content-Type: text/xml; charset=utf-8\r\n"
+-> "Server: Microsoft-IIS/7.5\r\n"
+-> "X-dynaTrace: PT=266421;PA=-1324159421;SP=Gateway Cert;PS=1926692524\r\n"
+-> "dynaTrace: PT=266421;PA=-1324159421;SP=Gateway Cert;PS=1926692524\r\n"
+-> "X-AspNet-Version: 4.0.30319\r\n"
+-> "X-Powered-By: ASP.NET\r\n"
+-> "X-Frame-Options: DENY\r\n"
+-> "X-Content-Type-Options: nosniff\r\n"
+-> "Date: Mon, 08 Jan 2018 16:28:18 GMT\r\n"
+-> "Connection: close\r\n"
+-> "Content-Length: 1067\r\n"
+-> "\r\n"
+reading 1067 bytes...
+-> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><PosResponse rootUrl=\"https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway\" xmlns=\"http://Hps.Exchange.PosGateway\"><Ver1.0><Header><LicenseId>95878</LicenseId><SiteId>95881</SiteId><DeviceId>2409000</DeviceId><GatewayTxnId>1035967766</GatewayTxnId><GatewayRspCode>0</GatewayRspCode><GatewayRspMsg>Success</GatewayRspMsg><RspDT>2018-01-08T10:28:18.5555936</RspDT></Header><Transaction><CreditSale><RspCode>00</RspCode><RspText>APPROVAL</RspText><AuthCode>64349A</AuthCode><AVSRsltCode>0</AVSRsltCode><CVVRsltCode>M</CVVRsltCode><RefNbr>800818231451</RefNbr><AVSResultCodeActi"
+-> "on>ACCEPT</AVSResultCodeAction><CVVResultCodeAction>ACCEPT</CVVResultCodeAction><CardType>Visa</CardType><AVSRsltText>AVS Not Requested.</AVSRsltText><CVVRsltText>Match.</CVVRsltText></CreditSale></Transaction></Ver1.0></PosResponse></soap:Body></soap:Envelope>"
+read 1067 bytes
+Conn close
+    }
   end
 
 end

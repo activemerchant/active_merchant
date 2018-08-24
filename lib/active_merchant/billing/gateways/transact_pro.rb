@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
           post[:state]   = (address[:state].blank? ? 'NA' : address[:state].to_s)
           post[:zip]     = address[:zip].to_s
           post[:country] = address[:country].to_s
-          post[:phone]   = (address[:phone].to_s.gsub(/[^0-9]/, '') || "0000000")
+          post[:phone]   = (address[:phone].to_s.gsub(/[^0-9]/, '') || '0000000')
         end
 
         if address = options[:shipping_address]
@@ -153,8 +153,8 @@ module ActiveMerchant #:nodoc:
       def add_payment_cc(post, credit_card)
         post[:cc] = credit_card.number
         post[:cvv] = credit_card.verification_value if credit_card.verification_value?
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
+        year  = sprintf('%.4i', credit_card.year)
+        month = sprintf('%.2i', credit_card.month)
         post[:expire] = "#{month}/#{year[2..3]}"
       end
 
@@ -166,10 +166,10 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         if body =~ /^ID:/
           body.split('~').reduce(Hash.new) { |h,v|
-            m = v.match("(.*?):(.*)")
+            m = v.match('(.*?):(.*)')
             h.merge!(m[1].underscore.to_sym => m[2])
           }
-        elsif (m = body.match("(.*?):(.*)"))
+        elsif (m = body.match('(.*?):(.*)'))
           m[1] == 'OK' ?
             { status: 'success', id: m[2] } :
             { status: 'failure', message: m[2] }
@@ -195,12 +195,12 @@ module ActiveMerchant #:nodoc:
         identifier = (response[:id] || parameters[:init_transaction_id])
         authorization = [identifier]
         authorization << amount if amount
-        authorization.join("|")
+        authorization.join('|')
       end
 
       def split_authorization(authorization)
         if authorization =~ /|/
-          identifier, amount = authorization.split("|")
+          identifier, amount = authorization.split('|')
           [identifier, amount.to_i]
         else
           authorization

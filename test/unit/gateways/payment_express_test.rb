@@ -11,7 +11,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
     @visa = credit_card
 
-    @solo = credit_card("6334900000000005", :brand => "solo", :issue_number => '01')
+    @solo = credit_card('6334900000000005', :brand => 'solo', :issue_number => '01')
 
     @options = {
       :order_id => generate_unique_id,
@@ -74,9 +74,9 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_successful_card_store_with_custom_billing_id
-    @gateway.expects(:ssl_post).returns(successful_store_response(:billing_id => "my-custom-id"))
+    @gateway.expects(:ssl_post).returns(successful_store_response(:billing_id => 'my-custom-id'))
 
-    assert response = @gateway.store(@visa, :billing_id => "my-custom-id")
+    assert response = @gateway.store(@visa, :billing_id => 'my-custom-id')
     assert_success response
     assert response.test?
     assert_equal 'my-custom-id', response.token
@@ -158,9 +158,9 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_pass_optional_txn_data
     options = {
-      :txn_data1 => "Transaction Data 1",
-      :txn_data2 => "Transaction Data 2",
-      :txn_data3 => "Transaction Data 3"
+      :txn_data1 => 'Transaction Data 1',
+      :txn_data2 => 'Transaction Data 2',
+      :txn_data3 => 'Transaction Data 3'
     }
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
@@ -172,12 +172,12 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_pass_optional_txn_data_truncated_to_255_chars
     options = {
-      :txn_data1 => "Transaction Data 1-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA",
-      :txn_data2 => "Transaction Data 2-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA",
-      :txn_data3 => "Transaction Data 3-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA"
+      :txn_data1 => 'Transaction Data 1-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
+      :txn_data2 => 'Transaction Data 2-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA',
+      :txn_data3 => 'Transaction Data 3-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA'
     }
 
-    truncated_addendum = "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345"
+    truncated_addendum = '01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345'
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<TxnData1>Transaction Data 1-#{truncated_addendum}<\/TxnData1>/, body)
@@ -244,7 +244,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_purchase_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.purchase(@amount, @visa, {:order_id => "16chars---------EXTRA"})
+      @gateway.purchase(@amount, @visa, {:order_id => '16chars---------EXTRA'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
@@ -252,7 +252,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_authorize_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.authorize(@amount, @visa, {:order_id => "16chars---------EXTRA"})
+      @gateway.authorize(@amount, @visa, {:order_id => '16chars---------EXTRA'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
@@ -260,7 +260,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_capture_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:order_id => "16chars---------EXTRA"})
+      @gateway.capture(@amount, 'identification', {:order_id => '16chars---------EXTRA'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
@@ -268,7 +268,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_refund_truncates_order_id_to_16_chars
     stub_comms do
-      @gateway.refund(@amount, 'identification', {:description => 'refund', :order_id => "16chars---------EXTRA"})
+      @gateway.refund(@amount, 'identification', {:description => 'refund', :order_id => '16chars---------EXTRA'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
     end.respond_with(successful_authorization_response)
@@ -276,7 +276,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_purchase_truncates_description_to_50_chars
     stub_comms do
-      @gateway.purchase(@amount, @visa, {:description => "50chars-------------------------------------------EXTRA"})
+      @gateway.purchase(@amount, @visa, {:description => '50chars-------------------------------------------EXTRA'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
@@ -284,7 +284,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_authorize_truncates_description_to_50_chars
     stub_comms do
-      @gateway.authorize(@amount, @visa, {:description => "50chars-------------------------------------------EXTRA"})
+      @gateway.authorize(@amount, @visa, {:description => '50chars-------------------------------------------EXTRA'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
@@ -292,7 +292,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_capture_truncates_description_to_50_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:description => "50chars-------------------------------------------EXTRA"})
+      @gateway.capture(@amount, 'identification', {:description => '50chars-------------------------------------------EXTRA'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
@@ -300,7 +300,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_refund_truncates_description_to_50_chars
     stub_comms do
-      @gateway.capture(@amount, 'identification', {:description => "50chars-------------------------------------------EXTRA"})
+      @gateway.capture(@amount, 'identification', {:description => '50chars-------------------------------------------EXTRA'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<MerchantReference>50chars-------------------------------------------<\/MerchantReference>/, data)
     end.respond_with(successful_authorization_response)
@@ -336,7 +336,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
     # refund
     stub_comms do
-      @gateway.refund(@amount, 'identification', {:description => "description"}.merge(options))
+      @gateway.refund(@amount, 'identification', {:description => 'description'}.merge(options))
     end.check_request do |endpoint, data, headers|
       yield data
     end.respond_with(successful_authorization_response)
@@ -433,6 +433,6 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def scrubbed_transcript
-    %(<Txn><CardHolderName>Longbob Longsen</CardHolderName><CardNumber>[FILTERED]</CardNumber><DateExpiry>0916</DateExpiry><Cvc2>[FILTERED]</Cvc2><Cvc2Presence>1</Cvc2Presence><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>59956b468905bde7</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>456 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PostUsername>WaysactDev</PostUsername><PostPassword>kvr52dw9</PostPassword><TxnType>Purchase</TxnType></Txn>)
+    %(<Txn><CardHolderName>Longbob Longsen</CardHolderName><CardNumber>[FILTERED]</CardNumber><DateExpiry>0916</DateExpiry><Cvc2>[FILTERED]</Cvc2><Cvc2Presence>1</Cvc2Presence><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>59956b468905bde7</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>456 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PostUsername>WaysactDev</PostUsername><PostPassword>[FILTERED]</PostPassword><TxnType>Purchase</TxnType></Txn>)
   end
 end

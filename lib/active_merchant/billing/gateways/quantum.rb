@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
         headers = { 'Content-Type' => 'text/xml' }
         response = parse(ssl_post(self.live_url, build_request(request, options), headers))
 
-        success = response[:request_status] == "Success"
+        success = response[:request_status] == 'Success'
         message = response[:request_message]
 
         if success # => checking for connectivity success first
@@ -231,19 +231,19 @@ module ActiveMerchant #:nodoc:
         begin
           xml = REXML::Document.new(xml)
 
-          root = REXML::XPath.first(xml, "//QGWRequest/ResponseSummary")
+          root = REXML::XPath.first(xml, '//QGWRequest/ResponseSummary')
           parse_element(reply, root)
           reply[:request_status] = reply[:Status]
           reply[:request_message] = "#{reply[:Status]}: #{reply[:StatusDescription]}"
 
-          if root = REXML::XPath.first(xml, "//QGWRequest/Result")
+          if root = REXML::XPath.first(xml, '//QGWRequest/Result')
             root.elements.to_a.each do |node|
               parse_element(reply, node)
             end
           end
         rescue Exception
           reply[:request_status] = 'Failure'
-          reply[:request_message] = "Failure: There was a problem parsing the response XML"
+          reply[:request_message] = 'Failure: There was a problem parsing the response XML'
         end
 
         return reply
@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
           node.elements.each{|e| parse_element(reply, e) }
         else
           if node.parent.name =~ /item/
-            parent = node.parent.name + (node.parent.attributes["id"] ? "_" + node.parent.attributes["id"] : '')
+            parent = node.parent.name + (node.parent.attributes['id'] ? '_' + node.parent.attributes['id'] : '')
             reply[(parent + '_' + node.name).to_sym] = node.text
           else
             reply[node.name.to_sym] = node.text

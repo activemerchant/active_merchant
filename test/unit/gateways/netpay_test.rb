@@ -34,17 +34,17 @@ class NetpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes("StoreId=12345"),
-        includes("UserName=login"),
-        includes("Password=password"),
-        includes("ResourceName=Auth"),
-        includes("Total=10.00"),
+        includes('StoreId=12345'),
+        includes('UserName=login'),
+        includes('Password=password'),
+        includes('ResourceName=Auth'),
+        includes('Total=10.00'),
         includes("CardNumber=#{@credit_card.number}"),
-        includes("ExpDate=" + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
+        includes('ExpDate=' + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
         includes("CustomerName=#{CGI.escape(@credit_card.name)}"),
         includes("CVV2=#{@credit_card.verification_value}"),
         includes("Comments=#{CGI.escape(@options[:description])}"),
-        includes("CurrencyCode=484")
+        includes('CurrencyCode=484')
       )
     ).returns(successful_response)
 
@@ -81,17 +81,17 @@ class NetpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes("StoreId=12345"),
-        includes("UserName=login"),
-        includes("Password=password"),
-        includes("ResourceName=PreAuth"),
-        includes("Total=10.00"),
+        includes('StoreId=12345'),
+        includes('UserName=login'),
+        includes('Password=password'),
+        includes('ResourceName=PreAuth'),
+        includes('Total=10.00'),
         includes("CardNumber=#{@credit_card.number}"),
-        includes("ExpDate=" + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
+        includes('ExpDate=' + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
         includes("CustomerName=#{CGI.escape(@credit_card.name)}"),
         includes("CVV2=#{@credit_card.verification_value}"),
         includes("Comments=#{CGI.escape(@options[:description])}"),
-        includes("CurrencyCode=484")
+        includes('CurrencyCode=484')
       )
     ).returns(successful_response)
 
@@ -107,7 +107,7 @@ class NetpayTest < Test::Unit::TestCase
       anything,
       all_of(
         includes('ResourceName=PostAuth'),
-        includes("Total=10.00"),
+        includes('Total=10.00'),
         includes("OrderId=#{@order_id}")
       )
     ).returns(successful_response)
@@ -120,9 +120,9 @@ class NetpayTest < Test::Unit::TestCase
       anything,
       all_of(
         includes('ResourceName=Refund'),
-        includes("Total=10.00"),
+        includes('Total=10.00'),
         includes("OrderId=#{@order_id}"),
-        includes("CurrencyCode=484")
+        includes('CurrencyCode=484')
       )
     ).returns(successful_response)
     assert response = @gateway.void("#{@order_id}|10.00|484")
@@ -134,7 +134,7 @@ class NetpayTest < Test::Unit::TestCase
       anything,
       all_of(
         includes('ResourceName=Credit'),
-        includes("Total=10.00"),
+        includes('Total=10.00'),
         includes("OrderId=#{@order_id}")
       )
     ).returns(successful_response)

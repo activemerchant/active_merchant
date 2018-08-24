@@ -101,19 +101,19 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_url, :live_url
 
-      self.test_url = "https://www.payjunctionlabs.com/quick_link"
-      self.live_url = "https://payjunction.com/quick_link"
+      self.test_url = 'https://www.payjunctionlabs.com/quick_link'
+      self.live_url = 'https://payjunction.com/quick_link'
 
       TEST_LOGIN = 'pj-ql-01'
       TEST_PASSWORD = 'pj-ql-01p'
 
-      SUCCESS_CODES = ["00", "85"]
+      SUCCESS_CODES = ['00', '85']
       SUCCESS_MESSAGE = 'The transaction was approved.'
 
       FAILURE_MESSAGE = 'The transaction was declined.'
 
       DECLINE_CODES = {
-        "AE"  => 'Address verification failed because address did not match.',
+        'AE'  => 'Address verification failed because address did not match.',
         'ZE'  => 'Address verification failed because zip did not match.',
         'XE'  => 'Address verification failed because zip and address did not match.',
         'YE'  => 'Address verification failed because zip and address did not match.',
@@ -144,8 +144,8 @@ module ActiveMerchant #:nodoc:
         '96'  => 'Declined because of a system error.',
         'N7'  => 'Declined because of a CVV2/CVC2 mismatch.',
         'M4'  => 'Declined.',
-        "FE"  => "There was a format error with your Trinity Gateway Service (API) request.",
-        "LE"  => "Could not log you in (problem with dc_logon and/or dc_password).",
+        'FE'  => 'There was a format error with your Trinity Gateway Service (API) request.',
+        'LE'  => 'Could not log you in (problem with dc_logon and/or dc_password).',
         'NL'  => 'Aborted because of a system error, please try again later. ',
         'AB'  => 'Aborted because of an upstream system error, please try again later.'
       }
@@ -366,7 +366,7 @@ module ActiveMerchant #:nodoc:
         params[:version] = API_VERSION
         params[:transaction_type] = action
 
-        params.reject{|k,v| v.blank?}.collect{ |k, v| "dc_#{k.to_s}=#{CGI.escape(v.to_s)}" }.join("&")
+        params.reject{|k,v| v.blank?}.collect{ |k, v| "dc_#{k.to_s}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def parse(body)

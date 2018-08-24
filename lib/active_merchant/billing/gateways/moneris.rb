@@ -181,24 +181,26 @@ module ActiveMerchant #:nodoc:
       private # :nodoc: all
 
       def expdate(creditcard)
-        sprintf("%.4i", creditcard.year)[-2..-1] + sprintf("%.2i", creditcard.month)
+        sprintf('%.4i', creditcard.year)[-2..-1] + sprintf('%.2i', creditcard.month)
       end
 
-      def add_payment_source(post, source, options)
-        if source.is_a?(String)
-          post[:data_key]   = source
+      def add_payment_source(post, payment_method, options)
+        if payment_method.is_a?(String)
+          post[:data_key]   = payment_method
           post[:cust_id]    = options[:customer]
         else
-          if source.respond_to?(:track_data) && source.track_data.present?
+          if payment_method.respond_to?(:track_data) && payment_method.track_data.present?
             post[:pos_code]   = '00'
-            post[:track2]     = source.track_data
+            post[:track2]     = payment_method.track_data
           else
-            post[:pan]        = source.number
-            post[:expdate]    = expdate(source)
-            post[:cvd_value]  = source.verification_value if source.verification_value?
-            post[:cavv] = source.payment_cryptogram if source.is_a?(NetworkTokenizationCreditCard)
+            post[:pan]        = payment_method.number
+            post[:expdate]    = expdate(payment_method)
+            post[:cvd_value]  = payment_method.verification_value if payment_method.verification_value?
+            post[:cavv] = payment_method.payment_cryptogram if payment_method.is_a?(NetworkTokenizationCreditCard)
+            post[:wallet_indicator] = wallet_indicator(payment_method.source.to_s) if payment_method.is_a?(NetworkTokenizationCreditCard)
+            post[:crypt_type] = (payment_method.eci || 7) if payment_method.is_a?(NetworkTokenizationCreditCard)
           end
-          post[:cust_id] = options[:customer] || source.name
+          post[:cust_id] = options[:customer] || payment_method.name
         end
       end
 
@@ -250,7 +252,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-        response = { :message => "Global Error Receipt", :complete => false }
+        response = { :message => 'Global Error Receipt', :complete => false }
         hashify_xml!(xml, response)
         response
       end
@@ -265,9 +267,9 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         xml   = REXML::Document.new
-        root  = xml.add_element("request")
-        root.add_element("store_id").text  = options[:login]
-        root.add_element("api_token").text = options[:password]
+        root  = xml.add_element('request')
+        root.add_element('store_id').text  = options[:login]
+        root.add_element('api_token').text = options[:password]
         root.add_element(transaction_element(action, parameters))
 
         xml.to_s
@@ -305,39 +307,45 @@ module ActiveMerchant #:nodoc:
       def cvd_element(cvd_value)
         element = REXML::Element.new('cvd_info')
         if cvd_value
-          element.add_element('cvd_indicator').text = "1"
+          element.add_element('cvd_indicator').text = '1'
           element.add_element('cvd_value').text = cvd_value
         else
-          element.add_element('cvd_indicator').text = "0"
+          element.add_element('cvd_indicator').text = '0'
         end
         element
       end
 
+      def wallet_indicator(token_source)
+        return 'APP' if token_source == 'apple_pay'
+        return 'ANP' if token_source == 'android_pay'
+        nil
+      end
+
       def message_from(message)
         return 'Unspecified error' if message.blank?
-        message.gsub(/[^\w]/, ' ').split.join(" ").capitalize
+        message.gsub(/[^\w]/, ' ').split.join(' ').capitalize
       end
 
       def actions
         {
-          "purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code],
-          "preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code],
-          "command"            => [:order_id],
-          "refund"             => [:order_id, :amount, :txn_number, :crypt_type],
-          "indrefund"          => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
-          "completion"         => [:order_id, :comp_amount, :txn_number, :crypt_type],
-          "purchasecorrection" => [:order_id, :txn_number, :crypt_type],
-          "cavv_preauth"       => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
-          "cavv_purchase"      => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
-          "transact"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
-          "Batchcloseall"      => [],
-          "opentotals"         => [:ecr_number],
-          "batchclose"         => [:ecr_number],
-          "res_add_cc"         => [:pan, :expdate, :crypt_type, :email, :phone, :note],
-          "res_delete"         => [:data_key],
-          "res_update_cc"      => [:data_key, :pan, :expdate, :crypt_type],
-          "res_purchase_cc"    => [:data_key, :order_id, :cust_id, :amount, :crypt_type],
-          "res_preauth_cc"     => [:data_key, :order_id, :cust_id, :amount, :crypt_type]
+          'purchase'           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code],
+          'preauth'            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code],
+          'command'            => [:order_id],
+          'refund'             => [:order_id, :amount, :txn_number, :crypt_type],
+          'indrefund'          => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          'completion'         => [:order_id, :comp_amount, :txn_number, :crypt_type],
+          'purchasecorrection' => [:order_id, :txn_number, :crypt_type],
+          'cavv_preauth'       => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+          'cavv_purchase'      => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv, :crypt_type, :wallet_indicator],
+          'transact'           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          'Batchcloseall'      => [],
+          'opentotals'         => [:ecr_number],
+          'batchclose'         => [:ecr_number],
+          'res_add_cc'         => [:pan, :expdate, :crypt_type],
+          'res_delete'         => [:data_key],
+          'res_update_cc'      => [:data_key, :pan, :expdate, :crypt_type],
+          'res_purchase_cc'    => [:data_key, :order_id, :cust_id, :amount, :crypt_type],
+          'res_preauth_cc'     => [:data_key, :order_id, :cust_id, :amount, :crypt_type]
         }
       end
     end
