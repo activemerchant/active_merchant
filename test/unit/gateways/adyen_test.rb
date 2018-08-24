@@ -261,8 +261,10 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @apple_pay_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', JSON.parse(data)['mpiData']['cavv']
-      assert_equal '07', JSON.parse(data)['mpiData']['eci']
+      parsed = JSON.parse(data)
+      assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
+      assert_equal '07', parsed['mpiData']['eci']
+      assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
     end.respond_with(successful_authorize_response)
     assert_success response
   end

@@ -35,6 +35,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :verification_value => nil
     )
 
+    @google_pay_card = network_tokenization_credit_card('4111111111111111',
+      :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      :month              => '08',
+      :year               => '2018',
+      :source             => :google_pay,
+      :verification_value => nil
+    )
+
     @options = {
       reference: '345123',
       shopper_email: 'john.smith@test.com',
@@ -87,6 +95,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_succesful_purchase_with_brand_override
     response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({overwrite_brand: true, selected_brand: 'maestro'}))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_google_pay
+    response = @gateway.purchase(@amount, @google_pay_card, @options)
     assert_success response
     assert_equal '[capture-received]', response.message
   end

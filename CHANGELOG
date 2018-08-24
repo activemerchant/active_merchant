@@ -15,6 +15,7 @@
 * Adyen: allow overriding card brands [bpollack] #2968
 * Adyen: allow custom routing [bpollack] #2969
 * First Pay: Adds scrubbing [deedeelavinder] #2972
+* Adyen: Add support for GooglePay [dtykocki] #2971
 
 == Version 1.82.0 (August 13, 2018)
 * FirstData: add support for WalletProviderID in v27 gateway [bpollack] #2946
