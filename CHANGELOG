@@ -18,6 +18,7 @@
 * Global Collect: properly handle partial captures [bpollack] #2967
 * Braintree: Add support for GooglePay [dtykocki] [#2966]
 * Adyen: allow overriding card brands [bpollack] #2968
+* Adyen: allow custom routing [bpollack] #2969
 
 == Version 1.81.0 (July 30, 2018)
 * GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915

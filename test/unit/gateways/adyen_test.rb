@@ -122,6 +122,14 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_custom_routing_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({custom_routing_flag: 'abcdefg'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'abcdefg', JSON.parse(data)['additionalData']['customRoutingFlag']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 

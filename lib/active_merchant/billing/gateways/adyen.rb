@@ -120,6 +120,7 @@ module ActiveMerchant #:nodoc:
         post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
         post[:additionalData] ||= {}
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
+        post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
       end
 
       def add_shopper_interaction(post, payment, options={})
