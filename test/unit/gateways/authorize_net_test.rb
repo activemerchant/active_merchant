@@ -596,7 +596,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     store = @gateway.store(@credit_card, @options)
     assert_failure store
     assert_match(/The field length is invalid/, store.message)
-    assert_equal('15', store.params['message_code'])
+    assert_equal('E00015', store.params['message_code'])
   end
 
   def test_successful_unstore
@@ -617,7 +617,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     unstore = @gateway.unstore('35959426#32506918#cim_store')
     assert_failure unstore
     assert_match(/The record cannot be found/, unstore.message)
-    assert_equal('40', unstore.params['message_code'])
+    assert_equal('E00040', unstore.params['message_code'])
   end
 
   def test_successful_store_new_payment_profile

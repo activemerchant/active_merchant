@@ -822,13 +822,13 @@ module ActiveMerchant
         end
 
         if(element = doc.at_xpath('//errors/error'))
-          response[:response_reason_code] = element.at_xpath('errorCode').content[/0*(\d+)$/, 1]
+          response[:response_reason_code] = element.at_xpath('errorCode').content
           response[:response_reason_text] = element.at_xpath('errorText').content.chomp('.')
         elsif(element = doc.at_xpath('//transactionResponse/messages/message'))
-          response[:response_reason_code] = element.at_xpath('code').content[/0*(\d+)$/, 1]
+          response[:response_reason_code] = element.at_xpath('code').content
           response[:response_reason_text] = element.at_xpath('description').content.chomp('.')
         elsif(element = doc.at_xpath('//messages/message'))
-          response[:response_reason_code] = element.at_xpath('code').content[/0*(\d+)$/, 1]
+          response[:response_reason_code] = element.at_xpath('code').content
           response[:response_reason_text] = element.at_xpath('text').content.chomp('.')
         else
           response[:response_reason_code] = nil
@@ -876,7 +876,7 @@ module ActiveMerchant
         doc = Nokogiri::XML(body).remove_namespaces!
 
         if (element = doc.at_xpath('//messages/message'))
-          response[:message_code] = element.at_xpath('code').content[/0*(\d+)$/, 1]
+          response[:message_code] = element.at_xpath('code').content
           response[:message_text] = element.at_xpath('text').content.chomp('.')
         end
 
