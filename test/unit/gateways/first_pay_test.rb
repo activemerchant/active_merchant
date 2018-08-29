@@ -199,6 +199,11 @@ class FirstPayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
 
   def successful_purchase_response
@@ -361,6 +366,52 @@ class FirstPayTest < Test::Unit::TestCase
     <FIELD KEY="response1">Void Failed. Transaction cannot be voided.</FIELD>
     <FIELD KEY="reference_number1">1</FIELD>
     <FIELD KEY="error1" />
+  </FIELDS>
+</RESPONSE>)
+  end
+
+  def pre_scrubbed
+    %(<RESPONSE>
+  <FIELDS>
+    <FIELD KEY="order_id">77b61bfe08510e00852f2f20011e7952d80f9a4be17d27cf</FIELD>
+    <FIELD KEY="total">1.00</FIELD><FIELD KEY="card_name">visa</FIELD>
+    <FIELD KEY="card_number">4111111111111111</FIELD>
+    <FIELD KEY="card_exp">0919</FIELD>
+    <FIELD KEY="cvv2">789</FIELD>
+    <FIELD KEY="owner_name">Jim Smith</FIELD>
+    <FIELD KEY="owner_street">456 My Street</FIELD>
+    <FIELD KEY="owner_street2">Apt 1</FIELD>
+    <FIELD KEY="owner_city">Ottawa</FIELD>
+    <FIELD KEY="owner_state">ON</FIELD>
+    <FIELD KEY="owner_zip">K1C2N6</FIELD>
+    <FIELD KEY="owner_country">CA</FIELD>
+    <FIELD KEY="owner_phone">(555)555-5555</FIELD>
+    <FIELD KEY="transaction_center_id">1264</FIELD>
+    <FIELD KEY="gateway_id">a91c38c3-7d7f-4d29-acc7-927b4dca0dbe</FIELD>
+    <FIELD KEY="operation_type">sale</FIELD>
+  </FIELDS>
+</RESPONSE>)
+  end
+
+  def post_scrubbed
+    %(<RESPONSE>
+  <FIELDS>
+    <FIELD KEY=\"order_id\">77b61bfe08510e00852f2f20011e7952d80f9a4be17d27cf</FIELD>
+    <FIELD KEY=\"total\">1.00</FIELD><FIELD KEY=\"card_name\">visa</FIELD>
+    <FIELD KEY=\"card_number[FILTERED]</FIELD>
+    <FIELD KEY=\"card_exp\">0919</FIELD>
+    <FIELD KEY=\"cvv2[FILTERED]</FIELD>
+    <FIELD KEY=\"owner_name\">Jim Smith</FIELD>
+    <FIELD KEY=\"owner_street\">456 My Street</FIELD>
+    <FIELD KEY=\"owner_street2\">Apt 1</FIELD>
+    <FIELD KEY=\"owner_city\">Ottawa</FIELD>
+    <FIELD KEY=\"owner_state\">ON</FIELD>
+    <FIELD KEY=\"owner_zip\">K1C2N6</FIELD>
+    <FIELD KEY=\"owner_country\">CA</FIELD>
+    <FIELD KEY=\"owner_phone\">(555)555-5555</FIELD>
+    <FIELD KEY=\"transaction_center_id\">1264</FIELD>
+    <FIELD KEY=\"gateway_id[FILTERED]</FIELD>
+    <FIELD KEY=\"operation_type\">sale</FIELD>
   </FIELDS>
 </RESPONSE>)
   end

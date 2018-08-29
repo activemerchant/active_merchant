@@ -56,6 +56,17 @@ module ActiveMerchant #:nodoc:
         commit('void', post)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((gateway_id)[^<]*(</FIELD>))i, '\1[FILTERED]\2').
+          gsub(%r((card_number)[^<]*(</FIELD>))i, '\1[FILTERED]\2').
+          gsub(%r((cvv2)[^<]*(</FIELD>))i, '\1[FILTERED]\2')
+      end
+
       private
 
       def add_authentication(post, options)

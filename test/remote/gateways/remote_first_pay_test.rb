@@ -116,4 +116,16 @@ class RemoteFirstPayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
   end
+
+  def test_transcript_scrubbing
+    @credit_card.verification_value = 789
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:gateway_id], transcript)
+  end
 end

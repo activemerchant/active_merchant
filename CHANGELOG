@@ -19,6 +19,7 @@
 * Braintree: Add support for GooglePay [dtykocki] [#2966]
 * Adyen: allow overriding card brands [bpollack] #2968
 * Adyen: allow custom routing [bpollack] #2969
+* First Pay: Adds scrubbing [deedeelavinder] #2972
 
 == Version 1.81.0 (July 30, 2018)
 * GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915
