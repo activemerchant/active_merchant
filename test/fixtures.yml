@@ -428,6 +428,15 @@ iveri:
   cert_id: CB69E68D-C7E7-46B9-9B7A-025DCABAD6EF
   app_id: d10a603d-4ade-405b-93f1-826dfc0181e8
 
+# the test_user and test_password might not be required
+# for all test hosts, however in our case that's how the
+# customer set it up :-(
+jackson_river:
+  hostname: https://api.example.com/springboard-api/springboard-forms/submit
+  api_key: API_KEY
+  test_user: TEST_USER
+  test_password: TEST_PASSWORD
+
 jetpay:
   login: TESTTERMINAL
 
