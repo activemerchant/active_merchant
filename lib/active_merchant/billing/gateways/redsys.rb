@@ -1,4 +1,5 @@
 # coding: utf-8
+
 require 'nokogiri'
 
 module ActiveMerchant #:nodoc:

@@ -70,7 +70,6 @@ module ActiveMerchant #:nodoc:
               add_address(xml, address)
             end
           end
-
         end
 
         xml.target!

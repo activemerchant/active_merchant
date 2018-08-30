@@ -1,6 +1,5 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
     class UsaEpayTransactionGateway < Gateway
       self.live_url = 'https://www.usaepay.com/gate'
       self.test_url = 'https://sandbox.usaepay.com/gate'

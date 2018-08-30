@@ -190,7 +190,6 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response, params),
           test: test?
         )
-
       rescue JSON::ParserError
         return unparsable_response(response)
       end

@@ -467,7 +467,6 @@ module ActiveMerchant #:nodoc:
 
         params.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
-
     end
   end
 end

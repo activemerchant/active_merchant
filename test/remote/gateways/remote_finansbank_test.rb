@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 require 'test_helper'
 
 class RemoteFinansbankTest < Test::Unit::TestCase

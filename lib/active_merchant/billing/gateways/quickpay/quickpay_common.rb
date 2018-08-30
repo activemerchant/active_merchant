@@ -1,6 +1,5 @@
 
 module QuickpayCommon
-
   MD5_CHECK_FIELDS = {
     3 => {
       :authorize => %w(protocol msgtype merchant ordernumber amount
@@ -184,5 +183,4 @@ module QuickpayCommon
 
     "#{year}#{month}"
   end
-
 end

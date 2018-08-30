@@ -67,10 +67,8 @@ class CardknoxTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-
       assert_match %r{xCardNum=4242424242424242}, data
       assert_match %r{xCardPresent=true}, data
-
     end.respond_with(successful_purchase_response)
 
     assert_success response

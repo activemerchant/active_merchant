@@ -173,7 +173,6 @@ module ActiveMerchant #:nodoc:
         elsif body['error']
           error_response(body)
         end
-
       rescue JSON::ParserError
         return unparsable_response(raw_response)
       end

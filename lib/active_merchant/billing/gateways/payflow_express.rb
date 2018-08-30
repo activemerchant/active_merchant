@@ -180,7 +180,6 @@ module ActiveMerchant #:nodoc:
             end
             xml.tag! 'DiscountAmt', amount(options[:discount]) if options[:discount]
             xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
-
           end
 
           xml.tag! 'Tender' do

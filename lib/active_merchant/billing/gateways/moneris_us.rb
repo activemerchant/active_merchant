@@ -2,7 +2,6 @@ require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
     # To learn more about the Moneris (US) gateway, please contact
     # ussales@moneris.com for a copy of their integration guide. For
     # information on remote testing, please see "Test Environment Penny Value

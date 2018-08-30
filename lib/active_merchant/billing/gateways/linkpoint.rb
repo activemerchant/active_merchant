@@ -2,7 +2,6 @@ require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
     # Initialization Options
     # :login                Your store number
     # :pem                  The text of your linkpoint PEM file. Note

@@ -2,7 +2,6 @@ require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
     class EfsnetGateway < Gateway
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -169,9 +168,7 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
 
         xml.elements.each('//Reply//TransactionReply/*') do |node|
-
           response[node.name.underscore.to_sym] = normalize(node.text)
-
         end unless xml.root.nil?
 
         response

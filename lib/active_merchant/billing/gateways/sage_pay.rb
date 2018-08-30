@@ -436,6 +436,5 @@ module ActiveMerchant #:nodoc:
         payment_method.split(';').last == 'purchase'
       end
     end
-
   end
 end

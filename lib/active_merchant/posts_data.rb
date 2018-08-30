@@ -1,6 +1,5 @@
 module ActiveMerchant #:nodoc:
   module PostsData  #:nodoc:
-
     def self.included(base)
       base.class_attribute :ssl_strict
       base.ssl_strict = true
@@ -89,6 +88,5 @@ module ActiveMerchant #:nodoc:
         raise ResponseError.new(response)
       end
     end
-
   end
 end

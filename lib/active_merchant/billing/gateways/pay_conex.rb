@@ -213,7 +213,6 @@ module ActiveMerchant #:nodoc:
           :cvv_result => CVVResult.new(response['cvv2_response']),
           test: test?
         )
-
       rescue JSON::ParserError
         unparsable_response(raw_response)
       end

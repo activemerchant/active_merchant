@@ -190,7 +190,6 @@ module ActiveMerchant #:nodoc:
       def build_xml_request
         builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml.remote do |doc|
-
             add_authentication(doc)
             yield(doc)
           end

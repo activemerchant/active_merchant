@@ -152,7 +152,6 @@ module ActiveMerchant #:nodoc:
         end
 
         return response
-
       rescue REXML::ParseException => e
         response[:success] = false
         response[:message] = 'Unable to parse the response.'

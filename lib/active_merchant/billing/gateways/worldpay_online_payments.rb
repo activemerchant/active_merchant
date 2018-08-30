@@ -160,7 +160,6 @@ module ActiveMerchant #:nodoc:
             success = true
             response = {}
           end
-
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)

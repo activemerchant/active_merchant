@@ -141,7 +141,6 @@ module ActiveMerchant #:nodoc:
           avs_result: AVSResult.new(:code => parse_avs_code(response)),
           authorization: response['recurringDetailReference'] || authorization_from(post, response)
         )
-
       rescue ResponseError => e
         case e.response.code
         when '401'

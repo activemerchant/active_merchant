@@ -216,7 +216,6 @@ module ActiveMerchant
       def add_credit_card(xml, credit_card, address)
 
         xml.tag! :Card do
-
           # DataCash calls the CC number 'pan'
           xml.tag! :pan, credit_card.number
           xml.tag! :expirydate, format_date(credit_card.month, credit_card.year)

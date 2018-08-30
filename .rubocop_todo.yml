@@ -82,22 +82,6 @@ Layout/ElseAlignment:
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
     - 'lib/active_merchant/billing/response.rb'
 
-# Offense count: 11
-# Cop supports --auto-correct.
-Layout/EmptyLineAfterMagicComment:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/ogone.rb'
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'test/remote/gateways/remote_banwire_test.rb'
-    - 'test/remote/gateways/remote_barclays_epdq_extra_plus_test.rb'
-    - 'test/remote/gateways/remote_finansbank_test.rb'
-    - 'test/remote/gateways/remote_ogone_test.rb'
-    - 'test/remote/gateways/remote_webpay_test.rb'
-    - 'test/remote/gateways/remote_wirecard_test.rb'
-    - 'test/unit/gateways/finansbank_test.rb'
-    - 'test/unit/gateways/usa_epay_advanced_test.rb'
-    - 'test/unit/gateways/wirecard_test.rb'
-
 # Offense count: 66
 # Cop supports --auto-correct.
 # Configuration parameters: AllowAdjacentOneLineDefs, NumberOfEmptyLines.
@@ -114,29 +98,6 @@ Layout/EmptyLines:
 Layout/EmptyLinesAroundAccessModifier:
   Enabled: false
 
-# Offense count: 2
-# Cop supports --auto-correct.
-Layout/EmptyLinesAroundArguments:
-  Exclude:
-    - 'test/unit/gateways/cardknox_test.rb'
-    - 'test/unit/gateways/usa_epay_transaction_test.rb'
-
-# Offense count: 15
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: empty_lines, no_empty_lines
-Layout/EmptyLinesAroundBlockBody:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/cc5.rb'
-    - 'lib/active_merchant/billing/gateways/data_cash.rb'
-    - 'lib/active_merchant/billing/gateways/efsnet.rb'
-    - 'lib/active_merchant/billing/gateways/payflow_express.rb'
-    - 'lib/active_merchant/billing/gateways/telr.rb'
-    - 'test/remote/gateways/remote_paystation_test.rb'
-    - 'test/remote/gateways/remote_realex_test.rb'
-    - 'test/unit/gateways/cardknox_test.rb'
-    - 'test/unit/gateways/usa_epay_transaction_test.rb'
-
 # Offense count: 165
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
@@ -144,47 +105,10 @@ Layout/EmptyLinesAroundBlockBody:
 Layout/EmptyLinesAroundClassBody:
   Enabled: false
 
-# Offense count: 10
-# Cop supports --auto-correct.
-Layout/EmptyLinesAroundExceptionHandlingKeywords:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/barclaycard_smartpay.rb'
-    - 'lib/active_merchant/billing/gateways/cecabank.rb'
-    - 'lib/active_merchant/billing/gateways/exact.rb'
-    - 'lib/active_merchant/billing/gateways/pay_conex.rb'
-    - 'lib/active_merchant/billing/gateways/pin.rb'
-    - 'lib/active_merchant/billing/gateways/wepay.rb'
-    - 'lib/active_merchant/billing/gateways/worldpay.rb'
-    - 'lib/active_merchant/billing/gateways/worldpay_online_payments.rb'
-    - 'lib/active_merchant/connection.rb'
-    - 'test/unit/gateways/worldpay_test.rb'
-
 # Offense count: 64
 # Cop supports --auto-correct.
 Layout/EmptyLinesAroundMethodBody:
   Enabled: false
-
-# Offense count: 18
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: empty_lines, empty_lines_except_namespace, empty_lines_special, no_empty_lines
-Layout/EmptyLinesAroundModuleBody:
-  Exclude:
-    - 'lib/active_merchant/billing/credit_card_formatting.rb'
-    - 'lib/active_merchant/billing/gateways/beanstream/beanstream_core.rb'
-    - 'lib/active_merchant/billing/gateways/efsnet.rb'
-    - 'lib/active_merchant/billing/gateways/ezic.rb'
-    - 'lib/active_merchant/billing/gateways/linkpoint.rb'
-    - 'lib/active_merchant/billing/gateways/mastercard.rb'
-    - 'lib/active_merchant/billing/gateways/moneris.rb'
-    - 'lib/active_merchant/billing/gateways/moneris_us.rb'
-    - 'lib/active_merchant/billing/gateways/payment_express.rb'
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_common.rb'
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_v10.rb'
-    - 'lib/active_merchant/billing/gateways/sage_pay.rb'
-    - 'lib/active_merchant/billing/gateways/trans_first.rb'
-    - 'lib/active_merchant/billing/gateways/usa_epay_transaction.rb'
-    - 'lib/active_merchant/posts_data.rb'
 
 # Offense count: 40
 # Cop supports --auto-correct.

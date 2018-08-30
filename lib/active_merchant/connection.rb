@@ -117,7 +117,6 @@ module ActiveMerchant
           result
         end
       end
-
     ensure
       info 'connection_request_total_time=%.4fs' % [Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start], tag
       http.finish if http.started?

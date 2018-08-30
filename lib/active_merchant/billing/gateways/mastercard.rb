@@ -1,7 +1,6 @@
 module ActiveMerchant
   module Billing
     module MastercardGateway
-
       def initialize(options={})
         requires!(options, :userid, :password)
         super
@@ -262,7 +261,6 @@ module ActiveMerchant
         next_transactionid = SecureRandom.uuid
         [orderid, next_transactionid, prev_transactionid]
       end
-
     end
   end
 end

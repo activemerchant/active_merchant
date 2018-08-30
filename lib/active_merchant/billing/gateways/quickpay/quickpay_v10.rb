@@ -292,8 +292,6 @@ module ActiveMerchant
         def synchronized_path(path)
           "#{path}?synchronized"
         end
-
     end
-
   end
 end

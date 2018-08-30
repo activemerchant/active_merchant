@@ -1,5 +1,4 @@
 module ActiveMerchant #:nodoc:
-
   module Billing #:nodoc:
     class TransFirstGateway < Gateway
       self.test_url = 'https://ws.cert.transfirst.com'

@@ -437,7 +437,6 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_equal WorldpayGateway.test_url, endpoint
     end.respond_with(successful_authorize_response, successful_capture_response)
-
   ensure
     ActiveMerchant::Billing::Base.mode = :test
   end
