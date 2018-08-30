@@ -1,13 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-== Version 1.82.0 (August 13, 2018)
-* FirstData: add support for WalletProviderID in v27 gateway [bpollack] #2946
-* BlueSnap: Handle 403 responses [curiousepic] #2948
-* BlueSnap: Add StoreCard Field [nfarve] #2953
-* Worldpay: support installments [bpollack] #2957
-* Paymentez: support partial refunds [bpollack] #2959
-* Payflow: allow support for partial captures [pi3r] #2952
+
+== Version 1.83.0 (August 30, 2018)
 * CT Payment: Update How Address is Passed [nfarve] #2960
 * Adyen: Add RecurringProcessingModel [nfarve] #2951
 * Optimal Payments: update country list [bpollack] #2961
@@ -20,6 +15,14 @@
 * Adyen: allow overriding card brands [bpollack] #2968
 * Adyen: allow custom routing [bpollack] #2969
 * First Pay: Adds scrubbing [deedeelavinder] #2972
+
+== Version 1.82.0 (August 13, 2018)
+* FirstData: add support for WalletProviderID in v27 gateway [bpollack] #2946
+* BlueSnap: Handle 403 responses [curiousepic] #2948
+* BlueSnap: Add StoreCard Field [nfarve] #2953
+* Worldpay: support installments [bpollack] #2957
+* Paymentez: support partial refunds [bpollack] #2959
+* Payflow: allow support for partial captures [pi3r] #2952
 
 == Version 1.81.0 (July 30, 2018)
 * GlobalCollect: Don't overwrite contactDetails [curiousepic] #2915
