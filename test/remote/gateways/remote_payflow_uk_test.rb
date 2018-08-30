@@ -72,7 +72,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
      assert_success response
      assert response.test?
      assert_not_nil response.authorization
-   end
+  end
   
   def test_no_card_issue_or_card_start_with_switch
     assert response = @gateway.purchase(100000, @switch, @options)

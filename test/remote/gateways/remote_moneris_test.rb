@@ -233,7 +233,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     })
   end
 
-    def test_purchase_scrubbing
+  def test_purchase_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end

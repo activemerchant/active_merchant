@@ -57,17 +57,6 @@ Layout/CommentIndentation:
     - 'test/unit/gateways/eway_managed_test.rb'
     - 'test/unit/gateways/opp_test.rb'
 
-# Offense count: 4
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleAlignWith, AutoCorrect, Severity.
-# SupportedStylesAlignWith: start_of_line, def
-Layout/DefEndAlignment:
-  Exclude:
-    - 'test/remote/gateways/remote_moneris_test.rb'
-    - 'test/remote/gateways/remote_pay_conex_test.rb'
-    - 'test/remote/gateways/remote_payflow_uk_test.rb'
-    - 'test/unit/gateways/optimal_payment_test.rb'
-
 # Offense count: 513
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
