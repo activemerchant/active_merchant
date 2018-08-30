@@ -276,7 +276,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     assert_equal 'Successful', response.message
-    assert_equal '1', response.params['message_code']
+    assert_equal 'I00001', response.params['message_code']
   end
 
   def test_successful_store_new_payment_profile
@@ -290,7 +290,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.store(new_card, customer_profile_id: customer_profile_id)
     assert_success response
     assert_equal 'Successful', response.message
-    assert_equal '1', response.params['message_code']
+    assert_equal 'I00001', response.params['message_code']
   end
 
   def test_failed_store_new_payment_profile
@@ -310,7 +310,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.store(credit_card('141241'))
     assert_failure response
     assert_equal 'The field length is invalid for Card Number', response.message
-    assert_equal '15', response.params['message_code']
+    assert_equal 'E00015', response.params['message_code']
   end
 
   def test_successful_purchase_using_stored_card
@@ -330,7 +330,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The credit card number is invalid.', response.message
     assert_equal 'incorrect_number', response.error_code
-    assert_equal '27', response.params['message_code']
+    assert_equal 'E00027', response.params['message_code']
     assert_equal '6', response.params['response_reason_code']
     assert_match %r{Address not verified}, response.avs_result['message']
   end
@@ -395,7 +395,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
     assert_equal 'The credit card number is invalid.', response.message
     assert_equal 'incorrect_number', response.error_code
-    assert_equal '27', response.params['message_code']
+    assert_equal 'E00027', response.params['message_code']
     assert_equal '6', response.params['response_reason_code']
     assert_match %r{Address not verified}, response.avs_result['message']
   end
@@ -534,6 +534,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     ), response.params.keys.sort
 
     assert_equal 'User authentication failed due to invalid authentication values', response.message
+    assert_equal 'E00007', response.params['response_reason_code']
   end
 
   def test_partial_capture
