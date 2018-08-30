@@ -251,6 +251,34 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_equal 'Credenciales inválidas', response.message
   end
 
+  # As noted above, capture transactions are currently not supported, but in the hope
+  # they will one day be, here you go
+
+  # def test_successful_capture
+  #   response = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success response
+  #   assert_equal 'APPROVED', response.message
+  #   assert_match %r(^\d+\|(\w|-)+$), response.authorization
+
+  #   capture = @gateway.capture(@amount, response.authorization, @options)
+  #   assert_success capture
+  #   assert_equal 'APPROVED', response.message
+  #   assert response.test?
+  # end
+
+  # def test_successful_partial_capture
+  #   response = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success response
+  #   assert_equal 'APPROVED', response.message
+  #   assert_match %r(^\d+\|(\w|-)+$), response.authorization
+
+  #   capture = @gateway.capture(@amount - 1, response.authorization, @options)
+  #   assert_success capture
+  #   assert_equal 'APPROVED', response.message
+  #   assert_equal '39.99', response.params['TX_VALUE']['value']
+  #   assert response.test?
+  # end
+
   def test_well_formed_refund_fails_as_expected
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -298,7 +326,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_failure capture
     assert_equal 'Internal payment provider error. ', capture.message
   end

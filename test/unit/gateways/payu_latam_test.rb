@@ -207,6 +207,14 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_partial_capture
+    stub_comms do
+      @gateway.capture(@amount - 1, '4000|authorization', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal '39.99', JSON.parse(data)['transaction']['additionalValues']['TX_VALUE']['value']
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_void_response)
 

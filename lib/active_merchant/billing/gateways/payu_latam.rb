@@ -52,6 +52,11 @@ module ActiveMerchant #:nodoc:
         add_transaction_elements(post, 'CAPTURE', options)
         add_reference(post, authorization)
 
+        if !amount.nil? && amount.to_f != 0.0
+          post[:transaction][:additionalValues] ||= {}
+          post[:transaction][:additionalValues][:TX_VALUE] = invoice_for(amount, options)[:TX_VALUE]
+        end
+
         commit('capture', post)
       end
 
@@ -220,6 +225,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
+        post[:transaction][:order][:additionalValues] = invoice_for(money, options)
+      end
+
+      def invoice_for(money, options)
         tx_value = {}
         tx_value[:value] = amount(money)
         tx_value[:currency] = options[:currency] || currency(money)
@@ -237,7 +246,7 @@ module ActiveMerchant #:nodoc:
         additional_values[:TX_TAX] = tx_tax if @options[:payment_country] == 'CO'
         additional_values[:TX_TAX_RETURN_BASE] = tx_tax_return_base if @options[:payment_country] == 'CO'
 
-        post[:transaction][:order][:additionalValues] = additional_values
+        additional_values
       end
 
       def add_signature(post)
