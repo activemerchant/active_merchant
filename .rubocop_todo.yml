@@ -42,11 +42,6 @@ Layout/CaseIndentation:
 Layout/ClosingHeredocIndentation:
   Enabled: false
 
-# Offense count: 35
-# Cop supports --auto-correct.
-Layout/ClosingParenthesisIndentation:
-  Enabled: false
-
 # Offense count: 20
 # Cop supports --auto-correct.
 Layout/CommentIndentation:

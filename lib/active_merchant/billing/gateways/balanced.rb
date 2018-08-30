@@ -236,12 +236,12 @@ module ActiveMerchant #:nodoc:
 
       def headers
         @@ua ||= JSON.dump(
-           bindings_version: ActiveMerchant::VERSION,
-           lang: 'ruby',
-           lang_version: "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-           lib_version: BalancedGateway::VERSION,
-           platform: RUBY_PLATFORM,
-           publisher: 'active_merchant'
+          bindings_version: ActiveMerchant::VERSION,
+          lang: 'ruby',
+          lang_version: "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
+          lib_version: BalancedGateway::VERSION,
+          platform: RUBY_PLATFORM,
+          publisher: 'active_merchant'
         )
 
         {

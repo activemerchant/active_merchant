@@ -261,9 +261,9 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = BarclaycardSmartpayGateway.new(
-    company: '',
-    merchant: '',
-    password: ''
+      company: '',
+      merchant: '',
+      password: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

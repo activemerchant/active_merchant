@@ -331,7 +331,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
     message = SagePayGateway.simulate ? 'VSP Simulator cannot find your vendor name.  Ensure you have have supplied a Vendor field with your VSP Vendor name assigned to it.' : '3034 : The Vendor or VendorName value is required.'
 
     gateway = SagePayGateway.new(
-        :login => ''
+      :login => ''
     )
     assert response = gateway.purchase(@amount, @mastercard, @options)
     assert_equal message, response.message

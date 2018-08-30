@@ -175,11 +175,11 @@ class OptimalPaymentTest < Test::Unit::TestCase
     begin
       ActiveMerchant::Billing::Base.mode = :production
       @gateway = OptimalPaymentGateway.new(
-                    :account_number => '12345678',
-                   :store_id => 'login',
-                   :password => 'password',
-                   :test => true
-                 )
+        :account_number => '12345678',
+        :store_id => 'login',
+        :password => 'password',
+        :test => true
+      )
       @gateway.expects(:ssl_post).with('https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1', anything).returns(successful_purchase_response)
 
       assert response = @gateway.purchase(@amount, @credit_card, @options)

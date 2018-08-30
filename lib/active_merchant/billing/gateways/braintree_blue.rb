@@ -347,10 +347,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_from_result(result)
-        Response.new(result.success?, message_from_result(result),
+        Response.new(
+          result.success?,
+          message_from_result(result),
           { braintree_transaction: transaction_hash(result) },
           { authorization: (result.transaction.id if result.transaction) }
-         )
+        )
       end
 
       def response_params(result)

@@ -49,7 +49,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
       ud_field_1: 'Value1',
       ud_field_2: 'Value2',
       ud_field_3: 'Value3'
-      )
+    )
     assert response = @gateway.purchase(@amount_approved, @credit_card, options)
     assert_success response
   end

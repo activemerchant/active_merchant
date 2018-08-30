@@ -49,8 +49,8 @@ class RemoteCardSaveTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = CardSaveGateway.new(
-    :login => '',
-    :password => ''
+      :login => '',
+      :password => ''
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

@@ -179,8 +179,8 @@ module ActiveMerchant #:nodoc:
           message  = message_from(response)
 
           PaystationResponse.new(success?(response), message, response,
-              :test          => (response[:tm] && response[:tm].downcase == 't'),
-              :authorization => response[:paystation_transaction_id]
+            :test          => (response[:tm] && response[:tm].downcase == 't'),
+            :authorization => response[:paystation_transaction_id]
           )
         end
 

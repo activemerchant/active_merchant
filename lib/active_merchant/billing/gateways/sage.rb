@@ -364,9 +364,12 @@ module ActiveMerchant #:nodoc:
         end
 
         def commit(action, request)
-          response = parse(@gateway.ssl_post(@live_url,
-            build_soap_request(action, request),
-            build_headers(action))
+          response = parse(
+            @gateway.ssl_post(
+              @live_url,
+              build_soap_request(action, request),
+              build_headers(action)
+            )
           )
 
           case action

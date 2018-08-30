@@ -170,11 +170,11 @@ module ActiveMerchant #:nodoc:
       
         response = body['response']
         Response.new(
-         true,
-         response['status_message'],
-         body,
-         authorization: token(response),
-         test: test?
+          true,
+          response['status_message'],
+          body,
+          authorization: token(response),
+          test: test?
         )
       end
 

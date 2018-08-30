@@ -60,10 +60,10 @@ class KushkiTest < Test::Unit::TestCase
     }
 
     amount = 100 * (
-        options[:amount][:subtotal_iva_0].to_f +
-        options[:amount][:subtotal_iva].to_f +
-        options[:amount][:iva].to_f +
-        options[:amount][:ice].to_f
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f
     )
 
     response = stub_comms do
@@ -93,10 +93,10 @@ class KushkiTest < Test::Unit::TestCase
     }
 
     amount = 100 * (
-    options[:amount][:subtotal_iva_0].to_f +
-        options[:amount][:subtotal_iva].to_f +
-        options[:amount][:iva].to_f +
-        options[:amount][:ice].to_f
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f
     )
 
     response = stub_comms do
@@ -130,10 +130,10 @@ class KushkiTest < Test::Unit::TestCase
     }
 
     amount = 100 * (
-    options[:amount][:subtotal_iva_0].to_f +
-        options[:amount][:subtotal_iva].to_f +
-        options[:amount][:iva].to_f +
-        options[:amount][:ice].to_f
+      options[:amount][:subtotal_iva_0].to_f +
+      options[:amount][:subtotal_iva].to_f +
+      options[:amount][:iva].to_f +
+      options[:amount][:ice].to_f
     )
 
     response = stub_comms do

@@ -28,14 +28,14 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     )
     
     @switch = CreditCard.new(
-       :brand               => 'switch',
-       :number              => '5641820000000005',
-       :verification_value => '000',
-       :month               => 1,
-       :year                => 2008,
-       :first_name          => 'Fred',
-       :last_name           => 'Brooks'
-      )
+      :brand               => 'switch',
+      :number              => '5641820000000005',
+      :verification_value => '000',
+      :month               => 1,
+      :year                => 2008,
+      :first_name          => 'Fred',
+      :last_name           => 'Brooks'
+    )
 
     @options = { 
       :billing_address => {

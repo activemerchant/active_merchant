@@ -188,8 +188,8 @@ class RemoteQuickpayTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = QuickpayGateway.new(
-        :login => '',
-        :password => ''
+      :login => '',
+      :password => ''
     )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_equal 'Invalid merchant id', response.message

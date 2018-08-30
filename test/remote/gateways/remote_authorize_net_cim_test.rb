@@ -850,17 +850,17 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
     @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
     assert response = @gateway.create_customer_profile_transaction(
-     :transaction => {
-       :customer_profile_id => @customer_profile_id,
-       :customer_payment_profile_id => @customer_payment_profile_id,
-       :type => :auth_only,
-       :order => {
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :type => :auth_only,
+        :order => {
           :invoice_number => key.to_s,
           :description => "Test Order Description #{key.to_s}",
           :purchase_order_number => key.to_s
         },
-       :amount => @amount
-     }
+        :amount => @amount
+      }
     )
 
     assert response.test?

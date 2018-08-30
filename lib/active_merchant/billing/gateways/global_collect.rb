@@ -239,12 +239,12 @@ module ActiveMerchant #:nodoc:
 
         succeeded = success_from(response)
         Response.new(
-        succeeded,
-        message_from(succeeded, response),
-        response,
-        authorization: authorization_from(succeeded, response),
-        error_code: error_code_from(succeeded, response),
-        test: test?
+          succeeded,
+          message_from(succeeded, response),
+          response,
+          authorization: authorization_from(succeeded, response),
+          error_code: error_code_from(succeeded, response),
+          test: test?
         )
 
       end
