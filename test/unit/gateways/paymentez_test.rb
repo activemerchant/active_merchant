@@ -226,7 +226,7 @@ Conn close
   end
 
   def successful_purchase_response
-    %q(
+    '
       {
         "transaction": {
           "status": "success",
@@ -249,11 +249,11 @@ Conn close
           "number": "1111"
         }
       }
-    )
+    '
   end
 
   def failed_purchase_response
-    %q(
+    '
       {
         "transaction": {
           "status": "failure",
@@ -276,11 +276,11 @@ Conn close
           "number": "4242"
         }
       }
-    )
+    '
   end
 
   def successful_authorize_response
-    %q(
+    '
       {
         "transaction": {
           "status": "success",
@@ -305,11 +305,11 @@ Conn close
           "number": "1111"
         }
       }
-    )
+    '
   end
 
   def failed_authorize_response
-    %q(
+    '
       {
         "transaction": {
           "status": "failure",
@@ -335,11 +335,11 @@ Conn close
           "origin": "Paymentez"
         }
       }
-    )
+    '
   end
 
   def successful_capture_response
-    %q(
+    '
       {
         "transaction": {
           "status": "success",
@@ -364,7 +364,7 @@ Conn close
           "number": "1111"
         }
       }
-    )
+    '
   end
 
   def failed_capture_response
@@ -395,7 +395,7 @@ Conn close
   end
 
   def failed_store_response
-    %q(
+    '
       {
         "card": {
           "bin": "424242",
@@ -409,11 +409,11 @@ Conn close
           "number": "4242"
         }
       }
-    )
+    '
   end
 
   def expired_card_response
-    %q(
+    '
       {
        "transaction":{
           "status":"failure",
@@ -437,11 +437,11 @@ Conn close
           "origin":"Paymentez"
        }
       }
-    )
+    '
   end
 
   def crash_response
-    %q(
+    '
       <html>
         <head>
           <title>Internal Server Error</title>
@@ -451,6 +451,6 @@ Conn close
 
         </body>
       </html>
-    )
+    '
   end
 end

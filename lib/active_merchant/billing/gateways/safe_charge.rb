@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def element_name_to_symbol(response, childnode)
-        name = "#{childnode.name.downcase}"
+        name = childnode.name.downcase
         response[name.to_sym] = childnode.text
       end
 

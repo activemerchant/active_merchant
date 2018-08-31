@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
-              name = "#{childnode.name.downcase}"
+              name = childnode.name.downcase
               response[name.to_sym] = childnode.text
             end
           end

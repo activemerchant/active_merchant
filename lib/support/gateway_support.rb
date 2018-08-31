@@ -32,13 +32,13 @@ class GatewaySupport #:nodoc:
     width = 15
 
     print 'Name'.center(width + 20)
-    ACTIONS.each{|f| print "#{f.to_s.capitalize.center(width)}" }
+    ACTIONS.each{|f| print f.to_s.capitalize.center(width) }
     puts
 
     each_gateway do |g|
-      print "#{g.display_name.ljust(width + 20)}"
+      print g.display_name.ljust(width + 20)
       ACTIONS.each do |f|
-        print "#{(g.instance_methods.include?(f.to_s) ? "Y" : "N").center(width)}"
+        print((g.instance_methods.include?(f.to_s) ? 'Y' : 'N').center(width))
       end
       puts
     end

@@ -126,8 +126,8 @@ module ActiveMerchant #:nodoc:
         elsif creditcard.respond_to?(:number)
           card = {
             card_number: creditcard.number,
-            expiration_month: "#{sprintf("%02d", creditcard.month)}",
-            expiration_year: "#{"#{creditcard.year}"[-2, 2]}",
+            expiration_month: sprintf('%02d', creditcard.month),
+            expiration_year: creditcard.year.to_s[-2, 2],
             cvv2: creditcard.verification_value,
             holder_name: creditcard.name
           }

@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         post[:card_num] = creditcard.number
         post[:card_name] = creditcard.name
         post[:card_type] = card_brand(creditcard)
-        post[:card_exp] = "#{sprintf("%02d", creditcard.month)}/#{"#{creditcard.year}"[-2, 2]}"
+        post[:card_exp] = "#{sprintf("%02d", creditcard.month)}/#{creditcard.year.to_s[-2, 2]}"
         post[:card_ccv2] = creditcard.verification_value
       end
 

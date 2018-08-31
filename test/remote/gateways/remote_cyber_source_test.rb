@@ -12,19 +12,19 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     @three_ds_unenrolled_card = credit_card('4000000000000051',
       verification_value: '321',
       month: '12',
-      year: "#{Time.now.year + 2}",
+      year: (Time.now.year + 2).to_s,
       brand: :visa
     )
     @three_ds_enrolled_card = credit_card('4000000000000002',
       verification_value: '321',
       month: '12',
-      year: "#{Time.now.year + 2}",
+      year: (Time.now.year + 2).to_s,
       brand: :visa
     )
     @three_ds_invalid_card = credit_card('4000000000000010',
       verification_value: '321',
       month: '12',
-      year: "#{Time.now.year + 2}",
+      year: (Time.now.year + 2).to_s,
       brand: :visa
     )
 

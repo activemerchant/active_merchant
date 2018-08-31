@@ -312,7 +312,7 @@ module ActiveMerchant #:nodoc:
           Key: @options[:api_key],
           Version: '4.5.4',
           SoftwareName: 'Active Merchant',
-          SoftwareVersion: "#{ActiveMerchant::VERSION}",
+          SoftwareVersion: ActiveMerchant::VERSION.to_s,
           Command: command,
         }
 

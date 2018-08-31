@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
       #   notification = chronopay.notification(raw_post)
       #
       def self.integration(name)
-        Billing::Integrations.const_get("#{name.to_s.downcase}".camelize)
+        Billing::Integrations.const_get(name.to_s.downcase.camelize)
       end
 
       # A check to see if we're in test mode

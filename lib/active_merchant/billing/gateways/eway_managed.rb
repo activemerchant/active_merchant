@@ -253,9 +253,9 @@ module ActiveMerchant #:nodoc:
               end
             end
             xml.tag! 'soap12:Body' do |x|
-              x.tag! "#{action}", {'xmlns' => 'https://www.eway.com.au/gateway/managedpayment'} do |y|
+              x.tag! action, {'xmlns' => 'https://www.eway.com.au/gateway/managedpayment'} do |y|
                 post.each do |key, value|
-                  y.tag! "#{key}", "#{value}"
+                  y.tag! key, value
                 end
               end
             end

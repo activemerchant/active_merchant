@@ -162,8 +162,8 @@ module ActiveMerchant #:nodoc:
           post[:card][:name] = payment_source.name
           post[:card][:cvc] = payment_source.verification_value
           post[:card][:number] = payment_source.number
-          post[:card][:exp_month] = "#{sprintf("%02d", payment_source.month)}"
-          post[:card][:exp_year] = "#{"#{payment_source.year}"[-2, 2]}"
+          post[:card][:exp_month] = sprintf('%02d', payment_source.month)
+          post[:card][:exp_year] = payment_source.year.to_s[-2, 2]
           add_address(post[:card], options)
         end
       end

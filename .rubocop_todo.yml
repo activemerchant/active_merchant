@@ -1533,39 +1533,6 @@ Style/TrailingCommaInHashLiteral:
 Style/TrailingUnderscoreVariable:
   Enabled: false
 
-# Offense count: 26
-# Cop supports --auto-correct.
-Style/UnneededInterpolation:
-  Exclude:
-    - 'lib/active_merchant/billing/base.rb'
-    - 'lib/active_merchant/billing/compatibility.rb'
-    - 'lib/active_merchant/billing/gateways/banwire.rb'
-    - 'lib/active_merchant/billing/gateways/cardknox.rb'
-    - 'lib/active_merchant/billing/gateways/conekta.rb'
-    - 'lib/active_merchant/billing/gateways/digitzs.rb'
-    - 'lib/active_merchant/billing/gateways/eway_managed.rb'
-    - 'lib/active_merchant/billing/gateways/first_giving.rb'
-    - 'lib/active_merchant/billing/gateways/merchant_one.rb'
-    - 'lib/active_merchant/billing/gateways/openpay.rb'
-    - 'lib/active_merchant/billing/gateways/pay_junction_v2.rb'
-    - 'lib/active_merchant/billing/gateways/safe_charge.rb'
-    - 'lib/active_merchant/billing/gateways/telr.rb'
-    - 'lib/support/gateway_support.rb'
-    - 'test/remote/gateways/remote_cyber_source_test.rb'
-
-# Offense count: 54
-# Cop supports --auto-correct.
-Style/UnneededPercentQ:
-  Exclude:
-    - 'test/unit/gateways/clearhaus_test.rb'
-    - 'test/unit/gateways/forte_test.rb'
-    - 'test/unit/gateways/merchant_warrior_test.rb'
-    - 'test/unit/gateways/nmi_test.rb'
-    - 'test/unit/gateways/orbital_test.rb'
-    - 'test/unit/gateways/payex_test.rb'
-    - 'test/unit/gateways/paymentez_test.rb'
-    - 'test/unit/gateways/world_net_test.rb'
-
 # Offense count: 117
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, MinSize, WordRegex.

@@ -193,7 +193,7 @@ class ForteTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    %q(
+    '
       {
         "transaction_id":"trn_bb7687a7-3d3a-40c2-8fa9-90727a814249",
         "account_id":"act_300111",
@@ -227,11 +227,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_bb7687a7-3d3a-40c2-8fa9-90727a814249/settlements"
         }
       }
-    )
+    '
   end
 
   def failed_purchase_response
-    %q(
+    '
       {
         "transaction_id":"trn_e9ea64c4-5c2c-43dd-9138-f2661b59947c",
         "account_id":"act_300111",
@@ -261,11 +261,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_e9ea64c4-5c2c-43dd-9138-f2661b59947c/settlements"
         }
       }
-    )
+    '
   end
 
   def successful_echeck_purchase_response
-    %q(
+    '
       {
         "transaction_id":"trn_bb7687a7-3d3a-40c2-8fa9-90727a814249",
         "account_id":"act_300111",
@@ -306,11 +306,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_bb7687a7-3d3a-40c2-8fa9-90727a814249/settlements"
         }
       }
-    )
+    '
   end
 
   def failed_echeck_purchase_response
-    %q(
+    '
       {
         "transaction_id":"trn_bb7687a7-3d3a-40c2-8fa9-90727a814249",
         "account_id":"act_300111",
@@ -348,11 +348,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_bb7687a7-3d3a-40c2-8fa9-90727a814249/settlements"
         }
       }
-    )
+    '
   end
 
   def successful_authorize_response
-    %q(
+    '
       {
         "transaction_id":"trn_527fdc8a-d3d0-4680-badc-bfa784c63c13",
         "account_id":"act_300111",
@@ -386,11 +386,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_527fdc8a-d3d0-4680-badc-bfa784c63c13/settlements"
         }
       }
-    )
+    '
   end
 
   def failed_authorize_response
-    %q(
+    '
       {
         "transaction_id":"trn_7c045645-98b3-4c8a-88d6-e8d686884564",
         "account_id":"act_300111",
@@ -420,11 +420,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_7c045645-98b3-4c8a-88d6-e8d686884564/settlements"
         }
       }
-    )
+    '
   end
 
   def successful_capture_response
-    %q(
+    '
       {
         "transaction_id":"trn_94a04a97-c847-4420-820b-fb153a1f0f64",
         "account_id":"act_300111",
@@ -444,11 +444,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_94a04a97-c847-4420-820b-fb153a1f0f64/settlements"
         }
       }
-    )
+    '
   end
 
   def failed_capture_response
-    %q(
+    '
       {
         "account_id":"act_300111",
         "location_id":"loc_176008",
@@ -459,11 +459,11 @@ class ForteTest < Test::Unit::TestCase
           "response_desc":"The field transaction_id is required."
         }
       }
-    )
+    '
   end
 
   def successful_credit_response
-    %q(
+    '
       {
         "transaction_id":"trn_357b284e-1dde-42ba-b0a5-5f66e08c7d9f",
         "account_id":"act_300111",
@@ -497,11 +497,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_357b284e-1dde-42ba-b0a5-5f66e08c7d9f/settlements"
         }
       }
-    )
+    '
   end
 
   def failed_credit_response
-    %q(
+    '
       {
         "transaction_id":"trn_ce70ce9a-6265-4892-9a83-5825cb869ed5",
         "account_id":"act_300111",
@@ -523,11 +523,11 @@ class ForteTest < Test::Unit::TestCase
             "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_ce70ce9a-6265-4892-9a83-5825cb869ed5/settlements"
           }
         }
-    )
+    '
   end
 
   def successful_void_response
-    %q(
+    '
       {
         "transaction_id":"trn_6c9d049e-1971-45fb-a4da-a0c35c4ed274",
         "account_id":"act_300111",
@@ -546,11 +546,11 @@ class ForteTest < Test::Unit::TestCase
           "settlements":"https://sandbox.forte.net/API/v2/transactions/trn_6c9d049e-1971-45fb-a4da-a0c35c4ed274/settlements"
         }
       }
-    )
+    '
   end
 
   def failed_void_response
-    %q(
+    '
       {
         "account_id":"act_300111",
         "location_id":"loc_176008",
@@ -561,7 +561,7 @@ class ForteTest < Test::Unit::TestCase
           "response_desc":"The field transaction_id is required."
         }
       }
-    )
+    '
   end
 
   def successful_refund_response

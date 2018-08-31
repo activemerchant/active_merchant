@@ -133,8 +133,8 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           'User-Agent'        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          'JG_APPLICATIONKEY' => "#{@options[:application_key]}",
-          'JG_SECURITYTOKEN'  => "#{@options[:security_token]}"
+          'JG_APPLICATIONKEY' => @options[:application_key].to_s,
+          'JG_SECURITYTOKEN'  => @options[:security_token].to_s
         }
       end
     end

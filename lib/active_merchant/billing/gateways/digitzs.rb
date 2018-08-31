@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
         post[:data][:attributes] = {
           merchantId: options[:merchant_id],
           name: payment.name,
-          externalId: "#{SecureRandom.hex(16)}"
+          externalId: SecureRandom.hex(16)
         }
 
         post

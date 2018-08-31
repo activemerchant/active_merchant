@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
        post['cvv'] = creditcard.verification_value
        post['ccnumber'] = creditcard.number
-       post['ccexp'] =  "#{sprintf("%02d", creditcard.month)}#{"#{creditcard.year}"[-2, 2]}"
+       post['ccexp'] = "#{sprintf("%02d", creditcard.month)}#{creditcard.year.to_s[-2, 2]}"
       end
 
       def commit(action, money, parameters={})
