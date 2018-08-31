@@ -247,15 +247,15 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: error_code_from(response)
         )
-        rescue ResponseError => e
-          message = get_error_message(e)
-          return Response.new(
-                   false,
-                   "#{STANDARD_ERROR_MESSAGE_MAPPING[e.response.code]} #{message}",
-                   parse(e.response.body),
-                   test: test?,
-                   error_code: STANDARD_ERROR_CODE_MAPPING[e.response.code],
-                 )
+      rescue ResponseError => e
+        message = get_error_message(e)
+        return Response.new(
+          false,
+          "#{STANDARD_ERROR_MESSAGE_MAPPING[e.response.code]} #{message}",
+          parse(e.response.body),
+          test: test?,
+          error_code: STANDARD_ERROR_CODE_MAPPING[e.response.code],
+        )
       end
 
       def success_from(response)

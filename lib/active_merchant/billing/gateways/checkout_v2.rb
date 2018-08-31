@@ -180,11 +180,11 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         JSON.parse(body)
-        rescue JSON::ParserError
-          {
-            'message' => 'Invalid JSON response received from CheckoutV2Gateway. Please contact CheckoutV2Gateway if you continue to receive this message.',
-            'raw_response' => scrub(body)
-          }
+      rescue JSON::ParserError
+        {
+          'message' => 'Invalid JSON response received from CheckoutV2Gateway. Please contact CheckoutV2Gateway if you continue to receive this message.',
+          'raw_response' => scrub(body)
+        }
       end
 
       def success_from(response)

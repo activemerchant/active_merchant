@@ -243,13 +243,6 @@ Layout/MultilineOperationIndentation:
 
 # Offense count: 2
 # Cop supports --auto-correct.
-Layout/RescueEnsureAlignment:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/checkout_v2.rb'
-    - 'lib/active_merchant/billing/gateways/mundipagg.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
 Layout/SpaceAfterColon:
   Exclude:
     - 'test/remote/gateways/remote_micropayment_test.rb'
