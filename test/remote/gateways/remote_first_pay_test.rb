@@ -108,6 +108,7 @@ class RemoteFirstPayTest < Test::Unit::TestCase
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_match /Merchant: 1234 has encountered error #DTO-200-TC./, response.error_code
   end
 
   def test_recurring_payment
