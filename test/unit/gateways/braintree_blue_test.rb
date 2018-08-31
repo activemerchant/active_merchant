@@ -562,8 +562,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
         cavv: 'cavv',
         eci_flag: 'eci',
         xid: 'xid',
-    })).
-   returns(braintree_result)
+      })).
+      returns(braintree_result)
 
     @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {cavv: 'cavv', eci: 'eci', xid: 'xid'})
   end

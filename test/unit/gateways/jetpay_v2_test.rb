@@ -163,11 +163,11 @@ class JetpayV2Test < Test::Unit::TestCase
 
   def test_purchase_sends_additional_options
     @gateway.expects(:ssl_post).
-    with(anything, regexp_matches(/<TaxAmount ExemptInd=\"false\">777<\/TaxAmount>/)).
-    with(anything, regexp_matches(/<UDField1>Value1<\/UDField1>/)).
-    with(anything, regexp_matches(/<UDField2>Value2<\/UDField2>/)).
-    with(anything, regexp_matches(/<UDField3>Value3<\/UDField3>/)).
-    returns(successful_purchase_response)
+      with(anything, regexp_matches(/<TaxAmount ExemptInd=\"false\">777<\/TaxAmount>/)).
+      with(anything, regexp_matches(/<UDField1>Value1<\/UDField1>/)).
+      with(anything, regexp_matches(/<UDField2>Value2<\/UDField2>/)).
+      with(anything, regexp_matches(/<UDField3>Value3<\/UDField3>/)).
+      returns(successful_purchase_response)
 
     @gateway.purchase(@amount, @credit_card, {:tax => '777', :ud_field_1 => 'Value1', :ud_field_2 => 'Value2', :ud_field_3 => 'Value3'})
   end

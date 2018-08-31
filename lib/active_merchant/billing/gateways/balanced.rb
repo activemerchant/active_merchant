@@ -117,8 +117,8 @@ module ActiveMerchant #:nodoc:
         case identifier
         when %r{\|}
           uri = identifier.
-            split('|').
-            detect{|part| part.size > 0}
+                split('|').
+                detect{|part| part.size > 0}
           uri.split('/')[2]
         when %r{\/}
           identifier.split('/')[5]

@@ -89,8 +89,8 @@ module ActiveMerchant
 
       def scrub(transcript)
         transcript.
-        gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-        gsub(%r((<number>)\d+(</number>))i, '\1[FILTERED]\2')
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((<number>)\d+(</number>))i, '\1[FILTERED]\2')
       end
 
       private

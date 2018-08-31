@@ -215,9 +215,12 @@ class ConnectionTest < Test::Unit::TestCase
   end
 
   def test_mixture_of_failures_with_retry_safe_enabled
-    Net::HTTP.any_instance.expects(:start).times(3).raises(Errno::ECONNRESET).
-                                                    raises(Errno::ECONNREFUSED).
-                                                    raises(EOFError)
+    Net::HTTP.any_instance.
+      expects(:start).
+      times(3).
+      raises(Errno::ECONNRESET).
+      raises(Errno::ECONNREFUSED).
+      raises(EOFError)
 
     @connection.retry_safe = true
 

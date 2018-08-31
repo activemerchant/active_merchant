@@ -206,23 +206,6 @@ Layout/MultilineHashBraceLayout:
 Layout/MultilineMethodCallBraceLayout:
   Enabled: false
 
-# Offense count: 34
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: aligned, indented, indented_relative_to_receiver
-Layout/MultilineMethodCallIndentation:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/balanced.rb'
-    - 'lib/active_merchant/billing/gateways/ogone.rb'
-    - 'lib/active_merchant/billing/gateways/realex.rb'
-    - 'lib/active_merchant/billing/gateways/sage.rb'
-    - 'lib/active_merchant/billing/gateways/telr.rb'
-    - 'test/unit/connection_test.rb'
-    - 'test/unit/gateways/braintree_blue_test.rb'
-    - 'test/unit/gateways/jetpay_v2_test.rb'
-    - 'test/unit/gateways/wirecard_test.rb'
-    - 'test/unit/network_connection_retries_test.rb'
-
 # Offense count: 35
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, IndentationWidth.

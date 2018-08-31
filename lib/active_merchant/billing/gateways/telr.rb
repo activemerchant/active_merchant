@@ -87,9 +87,9 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-        gsub(%r((<Number>)[^<]+(<))i, '\1[FILTERED]\2').
-        gsub(%r((<CVV>)[^<]+(<))i, '\1[FILTERED]\2').
-        gsub(%r((<Key>)[^<]+(<))i, '\1[FILTERED]\2')
+          gsub(%r((<Number>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<CVV>)[^<]+(<))i, '\1[FILTERED]\2').
+          gsub(%r((<Key>)[^<]+(<))i, '\1[FILTERED]\2')
       end
 
       private
