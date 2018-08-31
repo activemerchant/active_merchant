@@ -7,7 +7,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway = BraintreeBlueGateway.new(
       :merchant_id => 'test',
       :public_key => 'test',
-      :private_key => 'test'
+      :private_key => 'test',
+      :test => true
     )
 
     @internal_gateway = @gateway.instance_variable_get( :@braintree_gateway )
@@ -63,13 +64,53 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorize_transaction
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      returns(braintree_result)
+
+    response = @gateway.authorize(100, credit_card('41111111111111111111'))
+
+    assert_equal 'transaction_id', response.authorization
+    assert_equal true, response.test
+  end
+
+  def test_purchase_transaction
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      returns(braintree_result)
+
+    response = @gateway.purchase(100, credit_card('41111111111111111111'))
+
+    assert_equal 'transaction_id', response.authorization
+    assert_equal true, response.test
+  end
+
+  def test_capture_transaction
+    Braintree::TransactionGateway.any_instance.expects(:submit_for_settlement).
+      returns(braintree_result(:id => 'capture_transaction_id'))
+
+    response = @gateway.capture(100, 'transaction_id')
+
+    assert_equal 'capture_transaction_id', response.authorization
+    assert_equal true, response.test
+  end
+
+  def test_refund_transaction
+    Braintree::TransactionGateway.any_instance.expects(:refund).
+      returns(braintree_result(:id => 'refund_transaction_id'))
+
+    response = @gateway.refund(1000, 'transaction_id')
+    assert_equal 'refund_transaction_id', response.authorization
+    assert_equal true, response.test
+  end
+
   def test_void_transaction
     Braintree::TransactionGateway.any_instance.expects(:void).
       with('transaction_id').
       returns(braintree_result(:id => 'void_transaction_id'))
 
-    response = @gateway.void('transaction_id', :test => true)
+    response = @gateway.void('transaction_id')
     assert_equal 'void_transaction_id', response.authorization
+    assert_equal true, response.test
   end
 
   def test_verify_good_credentials

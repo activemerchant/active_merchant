@@ -347,11 +347,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_from_result(result)
+        response_hash = { braintree_transaction: transaction_hash(result) }
+
         Response.new(
           result.success?,
           message_from_result(result),
-          { braintree_transaction: transaction_hash(result) },
-          { authorization: (result.transaction.id if result.transaction) }
+          response_hash,
+          authorization: (result.transaction.id if result.transaction),
+          test: test?
         )
       end
 
@@ -369,6 +372,7 @@ module ActiveMerchant #:nodoc:
           options[:avs_result] = { code: avs_code_from(result.transaction) }
           options[:cvv_result] = result.transaction.cvv_response_code
         end
+        options[:test] = test?
         options
       end
 
