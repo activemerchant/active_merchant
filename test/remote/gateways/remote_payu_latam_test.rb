@@ -118,7 +118,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
         zip: '01019-030',
         phone: '(11)756312633'
       ),
-      buyer:{
+      buyer: {
         cnpj: '32593371000110'
       }
     }

@@ -224,13 +224,6 @@ Layout/MultilineOperationIndentation:
     - 'test/unit/gateways/ogone_test.rb'
     - 'test/unit/gateways/skip_jack_test.rb'
 
-# Offense count: 2
-# Cop supports --auto-correct.
-Layout/SpaceAfterColon:
-  Exclude:
-    - 'test/remote/gateways/remote_micropayment_test.rb'
-    - 'test/remote/gateways/remote_payu_latam_test.rb'
-
 # Offense count: 315
 # Cop supports --auto-correct.
 Layout/SpaceAfterComma:
