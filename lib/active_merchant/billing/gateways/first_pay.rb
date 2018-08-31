@@ -134,6 +134,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response),
+          error_code: error_code_from(response),
           test: test?
         )
       end
@@ -149,6 +150,10 @@ module ActiveMerchant #:nodoc:
         # Silly inconsistent gateway. Always make capitalized (but not all caps)
         msg = (response['auth_response'] || response['response1'])
         msg.downcase.capitalize if msg
+      end
+
+      def error_code_from(response)
+        response['error']
       end
 
       def authorization_from(response)
