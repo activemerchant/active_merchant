@@ -199,6 +199,14 @@ class FirstPayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_error_message
+    @gateway.stubs(:ssl_post).returns(failed_login_response)
+    response = @gateway.void('1')
+
+    assert_failure response
+    assert response.error_code.include?('Merchant: 1234 has encountered error #DTO-200-TC.')
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -366,6 +374,21 @@ class FirstPayTest < Test::Unit::TestCase
     <FIELD KEY="response1">Void Failed. Transaction cannot be voided.</FIELD>
     <FIELD KEY="reference_number1">1</FIELD>
     <FIELD KEY="error1" />
+  </FIELDS>
+</RESPONSE>)
+  end
+
+  def failed_login_response
+    %(<RESPONSE>
+  <FIELDS>
+  <FIELD KEY="status">0</FIELD>
+  <FIELD KEY="auth_code"></FIELD>
+  <FIELD KEY="auth_response"></FIELD>
+  <FIELD KEY="avs_code"></FIELD>
+  <FIELD KEY="cvv2_code"></FIELD>
+  <FIELD KEY="reference_number"></FIELD>
+  <FIELD KEY="order_id">a0d2560dda18631ce325c07dcbda2a9880fd17fb344fd233</FIELD>
+  <FIELD KEY="error">Merchant: 1234 has encountered error #DTO-200-TC. Please call 888-638-7867 if you feel this is in error.</FIELD>
   </FIELDS>
 </RESPONSE>)
   end
