@@ -14,6 +14,7 @@ module ActiveMerchant #:nodoc:
           mapping :action, 'action'
           mapping :buyer, 'buyer'
           mapping :email, 'email'
+          mapping :description, 'description'
           mapping :product, 'product'
           mapping :currency, 'currency'
           mapping :price, 'price'
