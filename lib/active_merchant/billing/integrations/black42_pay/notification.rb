@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
              action
              buyer
              email
-             description
+             comments
              product
              currency
              price
