@@ -2,6 +2,7 @@
 
 == HEAD
 * PayU Latam: support partial captures [bpollack] #2974
+* Braintree: Reflect correct test mode in Braintree responses [elfassy] [#2980]
 * FirstPay: Expose error code [curiousepic] #2979
 * Barclaycard Smartpay: Pass device_fingerprint when specified [dtykocki] #2981
 
