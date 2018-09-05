@@ -159,9 +159,10 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_extra_options
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(shopper_interaction: 'ContAuth'))
+      @gateway.authorize(@amount, @credit_card, @options.merge(shopper_interaction: 'ContAuth', device_fingerprint: 'abcde123'))
     end.check_request do |endpoint, data, headers|
       assert_match(/shopperInteraction=ContAuth/, data)
+      assert_match(/deviceFingerprint=abcde123/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response

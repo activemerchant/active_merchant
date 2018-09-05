@@ -307,6 +307,7 @@ module ActiveMerchant #:nodoc:
         hash[:shopperIP]        = options[:ip] if options[:ip]
         hash[:shopperReference] = options[:customer] if options[:customer]
         hash[:shopperInteraction] = options[:shopper_interaction] if options[:shopper_interaction]
+        hash[:deviceFingerprint]  = options[:device_fingerprint] if options[:device_fingerprint]
         hash.keep_if { |_, v| v }
       end
 
