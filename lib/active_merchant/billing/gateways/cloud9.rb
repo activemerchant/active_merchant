@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc: ALL
           MultiResponse.run do |r|
             r.process { commit(MODIFY, 'restApi', post) }
             return r.primary_response unless r.primary_response.success?
-            r.process { commit(CAPTURE, 'restApi', post) }
+            r.process { commit(CAPTURE, 'restApi', post.except(:MainAmt)) }
           end.responses.last
         else
           commit(CAPTURE, 'restApi', post)
