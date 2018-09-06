@@ -2,21 +2,21 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
     module CreditCardMethods
-      CARD_COMPANIES = {
-        'visa'               => /^4\d{12}(\d{3})?(\d{3})?$/,
-        'master'             => /^(5[1-5]\d{4}|677189|222[1-9]\d{2}|22[3-9]\d{3}|2[3-6]\d{4}|27[01]\d{3}|2720\d{2})\d{10}$/,
-        'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/,
-        'american_express'   => /^3[47]\d{13}$/,
-        'diners_club'        => /^3(0[0-5]|[68]\d)\d{11}$/,
-        'jcb'                => /^35(28|29|[3-8]\d)\d{12}$/,
-        'switch'             => /^6759\d{12}(\d{2,3})?$/,
-        'solo'               => /^6767\d{12}(\d{2,3})?$/,
-        'dankort'            => /^5019\d{12}$/,
-        'maestro'            => /^(5[06-8]|6\d)\d{10,17}$/,
-        'forbrugsforeningen' => /^600722\d{10}$/,
-        'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/,
-        'sodexo'             => /^(606071|603389|606070|606069|606068|600818)\d{8}$/,
-        'vr'                 => /^(627416|637036)\d{8}$/
+      CARD_COMPANY_DETECTORS = {
+        'visa'               => ->(num) { num =~ /^4\d{12}(\d{3})?(\d{3})?$/ },
+        'master'             => ->(num) { num =~ /^(5[1-5]\d{4}|677189|222[1-9]\d{2}|22[3-9]\d{3}|2[3-6]\d{4}|27[01]\d{3}|2720\d{2})\d{10}$/ },
+        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/ },
+        'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
+        'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
+        'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
+        'switch'             => ->(num) { num =~ /^6759\d{12}(\d{2,3})?$/ },
+        'solo'               => ->(num) { num =~ /^6767\d{12}(\d{2,3})?$/ },
+        'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
+        'maestro'            => ->(num) { num =~ /^(5[06-8]|6\d)\d{10,17}$/ },
+        'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
+        'laser'              => ->(num) { num =~ /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/ },
+        'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{8}$/ },
+        'vr'                 => ->(num) { num =~ /^(627416|637036)\d{8}$/ }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -77,7 +77,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_verification_value_length(brand)
-        brand == 'american_express' ? 4 : 3
+        case brand
+        when 'american_express'
+          4
+        when 'maestro'
+          0
+        else
+          3
+        end
       end
 
       def valid_issue_number?(number)
@@ -103,13 +110,8 @@ module ActiveMerchant #:nodoc:
             valid_checksum?(number)
         end
 
-        # Regular expressions for the known card companies.
-        #
-        # References:
-        # - http://en.wikipedia.org/wiki/Credit_card_number
-        # - http://www.barclaycardbusiness.co.uk/information_zone/processing/bin_rules.html
         def card_companies
-          CARD_COMPANIES
+          CARD_COMPANY_DETECTORS.keys
         end
 
         # Returns a string containing the brand of card from the list of known information below.
@@ -128,11 +130,11 @@ module ActiveMerchant #:nodoc:
         def brand?(number)
           return 'bogus' if valid_test_mode_card_number?(number)
 
-          card_companies.reject { |c,p| c == 'maestro' }.each do |company, pattern|
-            return company.dup if number =~ pattern
+          CARD_COMPANY_DETECTORS.reject { |c, f| c == 'maestro' }.each do |company, func|
+            return company.dup if func.call(number)
           end
 
-          return 'maestro' if number =~ card_companies['maestro']
+          return 'maestro' if CARD_COMPANY_DETECTORS['maestro'].call(number)
 
           return nil
         end

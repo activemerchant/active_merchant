@@ -350,7 +350,7 @@ module ActiveMerchant #:nodoc:
         errors = []
 
         if !empty?(brand)
-          errors << [:brand, 'is invalid']  if !CreditCard.card_companies.keys.include?(brand)
+          errors << [:brand, 'is invalid']  if !CreditCard.card_companies.include?(brand)
         end
 
         if empty?(number)

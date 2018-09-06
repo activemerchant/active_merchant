@@ -208,7 +208,7 @@ module ActiveMerchant #:nodoc:
       def determine_funding_source(source)
         case
         when source.is_a?(String) then :vault
-        when CreditCard.card_companies.keys.include?(card_brand(source)) then :credit_card
+        when CreditCard.card_companies.include?(card_brand(source)) then :credit_card
         when card_brand(source) == 'check' then :check
         else raise ArgumentError, 'Unsupported funding source provided'
         end
