@@ -83,7 +83,7 @@ class DataCashTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :switch, :solo, :laser ], DataCashGateway.supported_cardtypes
+    assert_equal [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :switch, :solo ], DataCashGateway.supported_cardtypes
   end
 
   def test_purchase_with_missing_order_id_option

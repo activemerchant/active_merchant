@@ -125,35 +125,6 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'forbrugsforeningen', CreditCard.brand?('6007221000000000')
   end
 
-  def test_should_detect_laser_card
-    # 16 digits
-    assert_equal 'laser', CreditCard.brand?('6304985028090561')
-
-    # 18 digits
-    assert_equal 'laser', CreditCard.brand?('630498502809056151')
-
-    # 19 digits
-    assert_equal 'laser', CreditCard.brand?('6304985028090561515')
-
-    # 17 digits
-    assert_not_equal 'laser', CreditCard.brand?('63049850280905615')
-
-    # 15 digits
-    assert_not_equal 'laser', CreditCard.brand?('630498502809056')
-
-    # Alternate format
-    assert_equal 'laser', CreditCard.brand?('6706950000000000000')
-
-    # Alternate format (16 digits)
-    assert_equal 'laser', CreditCard.brand?('6706123456789012')
-
-    # New format (16 digits)
-    assert_equal 'laser', CreditCard.brand?('6709123456789012')
-
-    # Ulster bank (Ireland) with 12 digits
-    assert_equal 'laser', CreditCard.brand?('677117111234')
-  end
-
   def test_should_detect_sodexo_card
     assert_equal 'sodexo', CreditCard.brand?('60606944957644')
   end

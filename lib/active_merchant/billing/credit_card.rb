@@ -20,7 +20,6 @@ module ActiveMerchant #:nodoc:
     # * Dankort
     # * Maestro
     # * Forbrugsforeningen
-    # * Laser
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -93,7 +92,6 @@ module ActiveMerchant #:nodoc:
       # * +'dankort'+
       # * +'maestro'+
       # * +'forbrugsforeningen'+
-      # * +'laser'+
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #
