@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
     module CreditCardMethods
       CARD_COMPANY_DETECTORS = {
         'visa'               => ->(num) { num =~ /^4\d{12}(\d{3})?(\d{3})?$/ },
-        'master'             => ->(num) { num =~ /^(5[1-5]\d{4}|677189|222[1-9]\d{2}|22[3-9]\d{3}|2[3-6]\d{4}|27[01]\d{3}|2720\d{2})\d{10}$/ },
+        'master'             => ->(num) { num.to_s.size == 16 && in_bin_range?(num.to_s.slice(0, 6), MASTERCARD_RANGES) },
         'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
         'switch'             => ->(num) { num =~ /^6759\d{12}(\d{2,3})?$/ },
         'solo'               => ->(num) { num =~ /^6767\d{12}(\d{2,3})?$/ },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
-        'maestro'            => ->(num) { num =~ /^(5[06-8]|6\d)\d{10,17}$/ },
+        'maestro'            => ->(num) { (12..19).include?(num.to_s.size) && in_bin_range?(num.to_s.slice(0, 6), MAESTRO_RANGES) },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{8}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{8}$/ }
@@ -38,12 +38,31 @@ module ActiveMerchant #:nodoc:
         (491730..491759),
       ]
 
+      # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
+      MASTERCARD_RANGES = [
+        (222100..272099),
+        (510000..559999),
+      ]
+
+      # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
+      MAESTRO_RANGES = [
+        (639000..639099),
+        (670000..679999),
+      ]
+
       def self.included(base)
         base.extend(ClassMethods)
       end
 
+      def self.in_bin_range?(number, ranges)
+        bin = number.to_i
+        ranges.any? do |range|
+          range.cover?(bin)
+        end
+      end
+
       def valid_month?(month)
-        (1..12).include?(month.to_i)
+        (1..12).cover?(month.to_i)
       end
 
       def credit_card?
@@ -114,26 +133,12 @@ module ActiveMerchant #:nodoc:
         end
 
         # Returns a string containing the brand of card from the list of known information below.
-        # Need to check the cards in a particular order, as there is some overlap of the allowable ranges
-        #--
-        # TODO Refactor this method. We basically need to tighten up the Maestro Regexp.
-        #
-        # Right now the Maestro regexp overlaps with the MasterCard regexp (IIRC). If we can tighten
-        # things up, we can boil this whole thing down to something like...
-        #
-        #   def brand?(number)
-        #     return 'visa' if valid_test_mode_card_number?(number)
-        #     card_companies.find([nil]) { |brand, regexp| number =~ regexp }.first.dup
-        #   end
-        #
         def brand?(number)
           return 'bogus' if valid_test_mode_card_number?(number)
 
-          CARD_COMPANY_DETECTORS.reject { |c, f| c == 'maestro' }.each do |company, func|
+          CARD_COMPANY_DETECTORS.each do |company, func|
             return company.dup if func.call(number)
           end
-
-          return 'maestro' if CARD_COMPANY_DETECTORS['maestro'].call(number)
 
           return nil
         end

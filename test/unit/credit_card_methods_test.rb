@@ -9,9 +9,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
   def maestro_card_numbers
     %w[
-      5000000000000000 5099999999999999 5600000000000000
-      5899999999999999 6000000000000000 6999999999999999
-      6761999999999999 6763000000000000 5038999999999999
+      6390000000000000 6390700000000000 6390990000000000
+      6761999999999999 6763000000000000 6799999999999999
     ]
   end
 
@@ -110,14 +109,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_should_detect_maestro_cards
-    assert_equal 'maestro', CreditCard.brand?('5020100000000000')
+    assert_equal 'maestro', CreditCard.brand?('675675000000000')
 
     maestro_card_numbers.each { |number| assert_equal 'maestro', CreditCard.brand?(number) }
     non_maestro_card_numbers.each { |number| assert_not_equal 'maestro', CreditCard.brand?(number) }
   end
 
   def test_should_detect_mastercard
-    assert_equal 'master', CreditCard.brand?('6771890000000000')
+    assert_equal 'master', CreditCard.brand?('2720890000000000')
     assert_equal 'master', CreditCard.brand?('5413031000000000')
   end
 
@@ -139,14 +138,14 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_detecting_full_range_of_maestro_card_numbers
-    maestro = '50000000000'
+    maestro = '63900000000'
 
     assert_equal 11, maestro.length
     assert_not_equal 'maestro', CreditCard.brand?(maestro)
 
     while maestro.length < 19
       maestro << '0'
-      assert_equal 'maestro', CreditCard.brand?(maestro)
+      assert_equal 'maestro', CreditCard.brand?(maestro), "Failed for bin #{maestro}"
     end
 
     assert_equal 19, maestro.length
