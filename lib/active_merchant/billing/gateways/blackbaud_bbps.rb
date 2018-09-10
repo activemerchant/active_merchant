@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       SOAP_XMLNS = { xmlns: SOAP_ACTION_NS }.freeze
 
       def initialize(options = {})
-        requires!(options, :hostname, :username, :password)
+        requires!(options, :url, :username, :password)
         super
       end
 
@@ -101,14 +101,24 @@ module ActiveMerchant #:nodoc:
       def headers(action)
         {
           'Content-Type'    => 'text/xml; charset=utf-8',
-          'Host'            => @options[:hostname],
+          'Host'            => hostname,
           'SOAPAction'      => "#{SOAP_ACTION_NS}/#{action}",
           'Authorization'   => "Basic #{basic_auth}"
         }
       end
 
+      def hostname
+        URI.parse(normalised_url).host
+      end
+
+      def normalised_url
+        # note: URI will throw an exception if `@options[:url]` does not contain
+        # the protocol so we do this naive dance
+        @options[:url].start_with?('http') ? @options[:url] : "https://#{@options[:url]}"
+      end
+
       def url
-        "https://#{@options[:hostname].strip}/bbAppFx/AppFxWebService.asmx"
+        normalised_url.strip
       end
 
       def commit(action, xml)

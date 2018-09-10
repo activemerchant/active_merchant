@@ -81,7 +81,7 @@ bit_pay:
   api_key: 'rKrahSl7WRrYeKRUhGzbvW3nBzo0jG4FPaL8uPYaoPk'
 
 blackbaud_bbps:
-  hostname: hostname_from_blackbaud
+  url: full_url_api
   username: username
   password: password
 
