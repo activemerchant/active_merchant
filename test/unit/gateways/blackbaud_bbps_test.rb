@@ -2,7 +2,7 @@ require 'test_helper'
 
 class BlackbaudBbpsTest < Test::Unit::TestCase
   def setup
-    @gateway = BlackbaudBbpsGateway.new(hostname: 'foo', username: 'bar', password: 'sekrit')
+    @gateway = BlackbaudBbpsGateway.new(url: 'foo', username: 'bar', password: 'sekrit')
     @credit_card = credit_card
 
     @options = {

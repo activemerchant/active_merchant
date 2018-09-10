@@ -8,6 +8,7 @@ class RemoteBlackbaudBbpsTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('1111111111111111')
     @options = {
+      database_to_use: '27308T',
       client_app: 'Evergiving Test'
     }
   end
