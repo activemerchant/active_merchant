@@ -21,6 +21,12 @@ allied_wallet:
   merchant_id: merchant_id
   token: token
 
+amex:
+  currency: USD
+  api_version: 40
+  username: username
+  password: password
+
 # Working credentials, no need to replace as of Oct 28 2014
 authorize_net:
   login: 7Tt72zseSzH
