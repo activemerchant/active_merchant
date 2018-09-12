@@ -42,21 +42,6 @@ Layout/CaseIndentation:
 Layout/ClosingHeredocIndentation:
   Enabled: false
 
-# Offense count: 20
-# Cop supports --auto-correct.
-Layout/CommentIndentation:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/firstdata_e4.rb'
-    - 'lib/active_merchant/billing/gateways/ogone.rb'
-    - 'lib/active_merchant/billing/gateways/opp.rb'
-    - 'lib/active_merchant/billing/gateways/payflow_express.rb'
-    - 'test/remote/gateways/remote_itransact_test.rb'
-    - 'test/remote/gateways/remote_opp_test.rb'
-    - 'test/remote/gateways/remote_paypal_test.rb'
-    - 'test/remote/gateways/remote_world_net_test.rb'
-    - 'test/unit/gateways/eway_managed_test.rb'
-    - 'test/unit/gateways/opp_test.rb'
-
 # Offense count: 513
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.

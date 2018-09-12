@@ -18,8 +18,8 @@ class OppTest < Test::Unit::TestCase
       merchant_transaction_id: "active_merchant_test_complete #{time}",
       address: address,
       description: 'Store Purchase - Books',
-#      risk_workflow: true,
-#      test_mode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
+      #      risk_workflow: true,
+      #      test_mode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
 
       billing_address: {
         name:     'Billy Billing',
@@ -67,7 +67,7 @@ class OppTest < Test::Unit::TestCase
     @options = @complete_request_options if request_type == 'complete'
   end
 
-# ****************************************** SUCCESSFUL TESTS ******************************************
+  # ****************************************** SUCCESSFUL TESTS ******************************************
   def test_successful_purchase
     @gateway.expects(:raw_ssl_request).returns(successful_response('DB', @test_success_id))
     response = @gateway.purchase(@amount, @valid_card, @options)
@@ -121,7 +121,7 @@ class OppTest < Test::Unit::TestCase
     assert void.test?
   end
 
-# ****************************************** FAILURE TESTS ******************************************
+  # ****************************************** FAILURE TESTS ******************************************
   def test_failed_purchase
     @gateway.expects(:raw_ssl_request).returns(failed_response('DB', @test_failure_id))
     response = @gateway.purchase(@amount, @invalid_card, @options)

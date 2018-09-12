@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'FirstData Global Gateway e4'
 
       STANDARD_ERROR_CODE_MAPPING = {
-      # Bank error codes: https://firstdata.zendesk.com/entries/471297-First-Data-Global-Gateway-e4-Bank-Response-Codes
+        # Bank error codes: https://firstdata.zendesk.com/entries/471297-First-Data-Global-Gateway-e4-Bank-Response-Codes
         '201' => STANDARD_ERROR_CODE[:incorrect_number],
         '531' => STANDARD_ERROR_CODE[:invalid_cvc],
         '503' => STANDARD_ERROR_CODE[:invalid_cvc],
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
         '401' => STANDARD_ERROR_CODE[:call_issuer],
         '402' => STANDARD_ERROR_CODE[:call_issuer],
         '501' => STANDARD_ERROR_CODE[:pickup_card],
-      # Ecommerce error codes -- https://firstdata.zendesk.com/entries/451980-ecommerce-response-codes-etg-codes
+        # Ecommerce error codes -- https://firstdata.zendesk.com/entries/451980-ecommerce-response-codes-etg-codes
         '22' => STANDARD_ERROR_CODE[:invalid_number],
         '25' => STANDARD_ERROR_CODE[:invalid_expiry_date],
         '31' => STANDARD_ERROR_CODE[:incorrect_cvc],

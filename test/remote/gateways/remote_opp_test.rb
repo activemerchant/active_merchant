@@ -18,8 +18,8 @@ class RemoteOppTest < Test::Unit::TestCase
       merchant_transaction_id: "active_merchant_test_complete #{time}",
       address: address,
       description: 'Store Purchase - Books',
-#      riskWorkflow: true,
-#      testMode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
+        #      riskWorkflow: true,
+        #      testMode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
 
         billing_address: {
            address1: '123 Test Street',
@@ -67,7 +67,7 @@ class RemoteOppTest < Test::Unit::TestCase
     @options = @complete_request_options if request_type == 'complete'
   end
 
-# ****************************************** SUCCESSFUL TESTS ******************************************
+  # ****************************************** SUCCESSFUL TESTS ******************************************
   def test_successful_purchase
     @options[:description] = __method__
 
@@ -162,7 +162,7 @@ class RemoteOppTest < Test::Unit::TestCase
     assert_match %r{Request successfully processed}, response.message
   end
 
-# ****************************************** FAILURE TESTS ******************************************
+  # ****************************************** FAILURE TESTS ******************************************
 
   def test_failed_purchase
     @options[:description] = __method__
@@ -199,7 +199,7 @@ class RemoteOppTest < Test::Unit::TestCase
     assert_match %r{reversal needs at least one successful transaction}, response.message
   end
 
-# ************************************** TRANSCRIPT SCRUB ******************************************
+  # ************************************** TRANSCRIPT SCRUB ******************************************
 
   def test_transcript_scrubbing
     assert @gateway.supports_scrubbing?

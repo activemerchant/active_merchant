@@ -110,9 +110,9 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
-  # UNSUPPORTED
-  #   assert_success void
-  #   assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', response.message
+    # UNSUPPORTED
+    #   assert_success void
+    #   assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', response.message
   end
 
   def test_failed_void

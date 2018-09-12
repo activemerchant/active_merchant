@@ -396,7 +396,7 @@ class EwayManagedTest < Test::Unit::TestCase
       XML
     end
 
-    # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=QueryCustomer
+  # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=QueryCustomer
   def expected_retrieve_request
     <<-XML
   <?xml version="1.0" encoding="utf-8"?>

@@ -194,7 +194,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_failed_transfer
-     # paypal allows a max transfer of $10,000
+    # paypal allows a max transfer of $10,000
     response = @gateway.transfer(1000001, 'joe@example.com')
     assert_failure response
   end
