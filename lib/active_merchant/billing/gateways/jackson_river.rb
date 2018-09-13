@@ -21,6 +21,7 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_address(post, options)
         add_customer_data(post, options)
+        add_metadata(post, options)
 
         commit('sale', post, options)
       end
@@ -64,6 +65,10 @@ module ActiveMerchant #:nodoc:
         post[:card_number] = payment.number
         post[:card_expiration_month] = payment.month
         post[:card_expiration_year]  = format(payment.year, :four_digits)
+      end
+
+      def add_metadata(post, options = {})
+        post[:ms] = options[:market_source] if options[:market_source]
       end
 
       def parse(body)
