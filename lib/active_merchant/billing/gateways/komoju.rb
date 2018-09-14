@@ -3,7 +3,7 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class KomojuGateway < Gateway
-      self.test_url = 'https://sandbox.komoju.com/api/v1'
+      self.test_url = 'https://komoju.com/api/v1'
       self.live_url = 'https://komoju.com/api/v1'
       self.supported_countries = ['JP']
       self.default_currency = 'JPY'
