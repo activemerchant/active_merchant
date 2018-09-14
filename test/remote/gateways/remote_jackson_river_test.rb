@@ -11,7 +11,8 @@ class RemoteJacksonRiverTest < Test::Unit::TestCase
       last_name: 'Longsen',
       billing_address: address,
       description: 'Store Purchase',
-      form_id: 34467
+      form_id: 34467,
+      market_source: 'FooBar_MarketSource'
     }
   end
 
