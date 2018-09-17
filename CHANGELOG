@@ -9,6 +9,7 @@
 * [POSSIBLE BREAKAGE] Determine credit cards via functions [bpollack] #2983
 * Drop support for Laser cards [bpollack] #2983
 * Improve Maestro card detection [bpollack] #2983
+* Add ROU alpha3 code for Romania [dtykocki] #2989
 
 == Version 1.83.0 (August 30, 2018)
 * CT Payment: Update How Address is Passed [nfarve] #2960
