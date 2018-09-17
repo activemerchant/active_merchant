@@ -6,6 +6,9 @@
 * FirstPay: Expose error code [curiousepic] #2979
 * Barclaycard Smartpay: Pass device_fingerprint when specified [dtykocki] #2981
 * Komoju: remove no-longer-relevant sandbox URL [miyazawadegica] #2987
+* [POSSIBLE BREAKAGE] Determine credit cards via functions [bpollack] #2983
+* Drop support for Laser cards [bpollack] #2983
+* Improve Maestro card detection [bpollack] #2983
 
 == Version 1.83.0 (August 30, 2018)
 * CT Payment: Update How Address is Passed [nfarve] #2960
