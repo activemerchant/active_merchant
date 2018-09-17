@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.default_currency = 'GBP'
       self.supported_countries = ['GB', 'US', 'CH', 'SE', 'SG', 'NO', 'JP', 'IS', 'HK', 'NL', 'CZ', 'CA', 'AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro, :solo, :switch]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro]
       self.homepage_url = 'http://www.cardstream.com/'
       self.display_name = 'CardStream'
 

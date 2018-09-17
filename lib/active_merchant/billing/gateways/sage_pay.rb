@@ -28,8 +28,6 @@ module ActiveMerchant #:nodoc:
         :visa => 'VISA',
         :master => 'MC',
         :delta => 'DELTA',
-        :solo => 'SOLO',
-        :switch => 'MAESTRO',
         :maestro => 'MAESTRO',
         :american_express => 'AMEX',
         :electron => 'UKE',
@@ -71,7 +69,7 @@ module ActiveMerchant #:nodoc:
         recipient_dob: :FIRecipientDoB
       }
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :switch, :solo, :maestro, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :diners_club]
       self.supported_countries = ['GB', 'IE']
       self.default_currency = 'GBP'
 

@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
         'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'GB',
         'IS', 'NO', 'CH'
       ]
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :solo, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :diners_club]
       self.homepage_url = 'http://www.soeasypay.com/'
       self.display_name = 'SoEasyPay'
 

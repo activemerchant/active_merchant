@@ -414,11 +414,6 @@ class CreditCardTest < Test::Unit::TestCase
     assert_nil card.month
     card.year = nil
     assert_nil card.year
-
-    card.start_month = '1'
-    assert_equal 1, card.start_month
-    card.start_year = '1'
-    assert_equal 1, card.start_year
   end
 
   def test_should_report_as_emv_if_icc_data_present

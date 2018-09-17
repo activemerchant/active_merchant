@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AE', 'IN', 'SA']
       self.default_currency = 'AED'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :maestro, :solo, :jcb]
+      self.supported_cardtypes = [:visa, :master, :american_express, :maestro, :jcb]
 
       CVC_CODE_TRANSLATOR = {
         'Y' => 'M',

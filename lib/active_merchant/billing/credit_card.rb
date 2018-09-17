@@ -15,8 +15,6 @@ module ActiveMerchant #:nodoc:
     # * American Express
     # * Diner's Club
     # * JCB
-    # * Switch
-    # * Solo
     # * Dankort
     # * Maestro
     # * Forbrugsforeningen
@@ -87,8 +85,6 @@ module ActiveMerchant #:nodoc:
       # * +'american_express'+
       # * +'diners_club'+
       # * +'jcb'+
-      # * +'switch'+
-      # * +'solo'+
       # * +'dankort'+
       # * +'maestro'+
       # * +'forbrugsforeningen'+
@@ -118,10 +114,6 @@ module ActiveMerchant #:nodoc:
       #
       # @return [String]
       attr_accessor :last_name
-
-      # Required for Switch / Solo cards
-      attr_reader :start_month, :start_year
-      attr_accessor :issue_number
 
       # Returns or sets the card verification value.
       #
@@ -301,8 +293,7 @@ module ActiveMerchant #:nodoc:
 
         errors_hash(
           errors +
-          validate_card_brand_and_number +
-          validate_switch_or_solo_attributes
+          validate_card_brand_and_number
         )
       end
 
@@ -374,27 +365,6 @@ module ActiveMerchant #:nodoc:
         elsif requires_verification_value?
           errors << [:verification_value, 'is required']
         end
-        errors
-      end
-
-      def validate_switch_or_solo_attributes #:nodoc:
-        errors = []
-
-        if %w[switch solo].include?(brand)
-          valid_start_month = valid_month?(start_month)
-          valid_start_year = valid_start_year?(start_year)
-
-          if((!valid_start_month || !valid_start_year) && !valid_issue_number?(issue_number))
-            if empty?(issue_number)
-              errors << [:issue_number, 'cannot be empty']
-              errors << [:start_month, 'is invalid'] if !valid_start_month
-              errors << [:start_year,  'is invalid'] if !valid_start_year
-            else
-              errors << [:issue_number, 'is invalid'] if !valid_issue_number?(issue_number)
-            end
-          end
-        end
-
         errors
       end
 

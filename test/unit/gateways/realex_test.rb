@@ -99,7 +99,7 @@ class RealexTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [ :visa, :master, :american_express, :diners_club, :switch, :solo ], RealexGateway.supported_cardtypes
+    assert_equal [ :visa, :master, :american_express, :diners_club ], RealexGateway.supported_cardtypes
   end
 
   def test_avs_result_not_supported

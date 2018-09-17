@@ -110,10 +110,6 @@ module ActiveMerchant #:nodoc:
         post[:cvc] = payment_method.verification_value if payment_method.verification_value
         post[:expYear] = format(payment_method.year, :two_digits)
         post[:expMonth] = payment_method.month
-
-        post[:startMonth] = payment_method.start_month if payment_method.start_month
-        post[:startYear] = payment_method.start_year if payment_method.start_year
-        post[:issueNumber] = payment_method.issue_number if payment_method.issue_number
         post[:clientIp] = options[:ip] || '127.0.0.1'
         post[:test] = true if test?
       end

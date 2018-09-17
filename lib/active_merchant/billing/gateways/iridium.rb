@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :solo, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro, :jcb, :diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.iridiumcorp.co.uk/'

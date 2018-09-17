@@ -11,7 +11,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
     @visa = credit_card
 
-    @solo = credit_card('6334900000000005', :brand => 'solo', :issue_number => '01')
+    @solo = credit_card('6334900000000005', :brand => 'maestro')
 
     @options = {
       :order_id => generate_unique_id,

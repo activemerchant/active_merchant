@@ -17,11 +17,11 @@ module ActiveMerchant
       self.default_currency = 'GBP'
 
       self.supported_countries = ['GB']
-      # Visa Credit, Visa Debit, Mastercard, Maestro, Solo, Electron,
+      # Visa Credit, Visa Debit, Mastercard, Maestro, Electron,
       # American Express, Diners Club, JCB, International Maestro,
       # Style, Clydesdale Financial Services, Other
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :switch, :solo, :maestro ]
+      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
       self.homepage_url = 'http://www.paymentsolutionsltd.com/'
       self.display_name = 'PSL Payment Solutions'
 

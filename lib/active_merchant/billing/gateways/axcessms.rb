@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT MX NL
                                     NO PL PT RO RU SE SI SK TR US VA)
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :solo]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro]
 
       self.homepage_url = 'http://www.axcessms.com/'
       self.display_name = 'Axcess MS'

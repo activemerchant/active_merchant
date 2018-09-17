@@ -25,6 +25,6 @@ class PayflowUkTest < Test::Unit::TestCase
   end
   
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :solo, :switch], PayflowUkGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover], PayflowUkGateway.supported_cardtypes
   end
 end

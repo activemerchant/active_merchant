@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
         @express ||= PayflowExpressUkGateway.new(@options)
       end
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :solo, :switch]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = ['GB']
       self.homepage_url = 'https://www.paypal.com/uk/webapps/mpp/pro'
       self.display_name = 'PayPal Payments Pro (UK)'

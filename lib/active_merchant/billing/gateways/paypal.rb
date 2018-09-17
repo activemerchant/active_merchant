@@ -81,12 +81,6 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:ExpYear', format(credit_card.year, :four_digits)
           xml.tag! 'n2:CVV2', credit_card.verification_value unless credit_card.verification_value.blank?
 
-          if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
-            xml.tag! 'n2:StartMonth', format(credit_card.start_month, :two_digits) unless credit_card.start_month.blank?
-            xml.tag! 'n2:StartYear', format(credit_card.start_year, :four_digits) unless credit_card.start_year.blank?
-            xml.tag! 'n2:IssueNumber', format(credit_card.issue_number, :two_digits) unless credit_card.issue_number.blank?
-          end
-
           xml.tag! 'n2:CardOwner' do
             xml.tag! 'n2:PayerName' do
               xml.tag! 'n2:FirstName', credit_card.first_name
@@ -110,8 +104,6 @@ module ActiveMerchant #:nodoc:
         when 'master'           then 'MasterCard'
         when 'discover'         then 'Discover'
         when 'american_express' then 'Amex'
-        when 'switch'           then 'Switch'
-        when 'solo'             then 'Solo'
         end
       end
 

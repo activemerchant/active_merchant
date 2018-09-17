@@ -26,14 +26,12 @@ module ActiveMerchant
         'visa'              => 'VISA',
         'american_express'  => 'AMEX',
         'diners_club'       => 'DINERS',
-        'switch'            => 'SWITCH',
-        'solo'              => 'SWITCH',
         'maestro'           => 'MC'
       }
 
       self.money_format = :cents
       self.default_currency = 'EUR'
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo ]
+      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club ]
       self.supported_countries = %w(IE GB FR BE NL LU IT US CA ES)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
@@ -244,7 +242,7 @@ module ActiveMerchant
           xml.tag! 'expdate', expiry_date(credit_card)
           xml.tag! 'chname', credit_card.name
           xml.tag! 'type', CARD_MAPPING[card_brand(credit_card).to_s]
-          xml.tag! 'issueno', credit_card.issue_number
+          xml.tag! 'issueno', ''
           xml.tag! 'cvn' do
             xml.tag! 'number', credit_card.verification_value
             xml.tag! 'presind', (options['presind'] || (credit_card.verification_value? ? 1 : nil))

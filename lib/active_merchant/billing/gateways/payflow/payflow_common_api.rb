@@ -43,8 +43,6 @@ module ActiveMerchant #:nodoc:
         :american_express => 'Amex',
         :jcb => 'JCB',
         :diners_club => 'DinersClub',
-        :switch => 'Switch',
-        :solo => 'Solo'
       }
 
       TRANSACTIONS = {

@@ -6,7 +6,7 @@ module ActiveMerchant
       self.default_currency = 'GBP'
       self.supported_countries = ['GB']
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :switch, :solo ]
+      self.supported_cardtypes = [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro ]
 
       self.homepage_url = 'http://www.datacash.com/'
       self.display_name = 'DataCash'
@@ -219,16 +219,6 @@ module ActiveMerchant
           # DataCash calls the CC number 'pan'
           xml.tag! :pan, credit_card.number
           xml.tag! :expirydate, format_date(credit_card.month, credit_card.year)
-
-          # optional values - for Solo etc
-          if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
-
-            xml.tag! :issuenumber, credit_card.issue_number unless credit_card.issue_number.blank?
-
-            if !credit_card.start_month.blank? && !credit_card.start_year.blank?
-              xml.tag! :startdate, format_date(credit_card.start_month, credit_card.start_year)
-            end
-          end
 
           xml.tag! :Cv2Avs do
             xml.tag! :cv2, credit_card.verification_value if credit_card.verification_value?

@@ -364,25 +364,11 @@ class PayflowTest < Test::Unit::TestCase
     assert_match %r(<PaymentHistory>Y</PaymentHistory), request
   end
 
-  def test_format_issue_number
-    xml = Builder::XmlMarkup.new
-    credit_card = credit_card('5641820000000005',
-      :brand         => 'switch',
-      :issue_number  => 1
-    )
-
-    @gateway.send(:add_credit_card, xml, credit_card)
-    doc = REXML::Document.new(xml.target!)
-    node = REXML::XPath.first(doc, '/Card/ExtData')
-    assert_equal '01', node.attributes['Value']
-  end
-
   def test_add_credit_card_with_three_d_secure
     xml = Builder::XmlMarkup.new
     credit_card = credit_card(
       '5641820000000005',
-      :brand => 'switch',
-      :issue_number => 1
+      :brand => 'maestro'
     )
 
     @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option))
