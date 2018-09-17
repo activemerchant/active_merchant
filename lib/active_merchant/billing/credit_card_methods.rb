@@ -4,13 +4,13 @@ module ActiveMerchant #:nodoc:
     module CreditCardMethods
       CARD_COMPANY_DETECTORS = {
         'visa'               => ->(num) { num =~ /^4\d{12}(\d{3})?(\d{3})?$/ },
-        'master'             => ->(num) { num.to_s.size == 16 && in_bin_range?(num.to_s.slice(0, 6), MASTERCARD_RANGES) },
+        'master'             => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MASTERCARD_RANGES) },
         'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
         'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
-        'maestro'            => ->(num) { (12..19).include?(num.to_s.size) && in_bin_range?(num.to_s.slice(0, 6), MAESTRO_RANGES) },
+        'maestro'            => ->(num) { (12..19).include?(num&.size) && in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{8}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{8}$/ }
@@ -158,11 +158,12 @@ module ActiveMerchant #:nodoc:
         end
 
         def first_digits(number)
-          number.to_s.slice(0,6)
+          number.slice(0,6)
         end
 
         def last_digits(number)
-          number.to_s.length <= 4 ? number : number.to_s.slice(-4..-1)
+          return '' if number.nil?
+          number.length <= 4 ? number : number.slice(-4..-1)
         end
 
         def mask(number)
@@ -182,16 +183,16 @@ module ActiveMerchant #:nodoc:
         private
 
         def valid_card_number_length?(number) #:nodoc:
-          number.to_s.length >= 12
+          number.length >= 12
         end
 
         def valid_card_number_characters?(number) #:nodoc:
-          !number.to_s.match(/\D/)
+          !number.match(/\D/)
         end
 
         def valid_test_mode_card_number?(number) #:nodoc:
           ActiveMerchant::Billing::Base.test? &&
-            %w[1 2 3 success failure error].include?(number.to_s)
+            %w[1 2 3 success failure error].include?(number)
         end
 
         ODD_LUHN_VALUE = {
