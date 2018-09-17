@@ -13,7 +13,13 @@ module ActiveMerchant #:nodoc:
         'maestro'            => ->(num) { (12..19).include?(num&.size) && in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{8}$/ },
-        'vr'                 => ->(num) { num =~ /^(627416|637036)\d{8}$/ }
+        'vr'                 => ->(num) { num =~ /^(627416|637036)\d{8}$/ },
+        'carnet'             => lambda { |num|
+          num&.size == 16 && (
+            in_bin_range?(num.slice(0, 6), CARNET_RANGES) ||
+            CARNET_BINS.any? { |bin| num.slice(0, bin.size) == bin }
+          )
+        }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -35,6 +41,18 @@ module ActiveMerchant #:nodoc:
         (484428..484455),
         (491730..491759),
       ]
+
+      CARNET_RANGES = [
+        (506199..506499),
+      ]
+
+      CARNET_BINS = Set.new(
+        [
+          '286900', '502275', '606333', '627535', '636318', '636379', '639388',
+          '639484', '639559', '50633601', '50633606', '58877274', '62753500',
+          '60462203', '60462204', '588772'
+        ]
+      )
 
       # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
       MASTERCARD_RANGES = [

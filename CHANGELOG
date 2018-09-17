@@ -11,6 +11,7 @@
 * Improve Maestro card detection [bpollack] #2983
 * Add ROU alpha3 code for Romania [dtykocki] #2989
 * [POSSIBLE BREAKAGE] Drop support for Solo and Switch cards [bpollack] #2991
+* Add support for Carnet cards [bpollack] #2992
 
 == Version 1.83.0 (August 30, 2018)
 * CT Payment: Update How Address is Passed [nfarve] #2960

@@ -187,6 +187,19 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'maestro', CreditCard.brand?(number)
   end
 
+  def test_carnet_cards
+    numbers = [
+      '5062280000000000',
+      '6046220312312312',
+      '6393889871239871',
+      '5022751231231231',
+    ]
+    numbers.each do |num|
+      assert_equal 16, num.length
+      assert_equal 'carnet', CreditCard.brand?(num)
+    end
+  end
+
   def test_electron_cards
     # return the card number so assert failures are easy to isolate
     electron_test = Proc.new do |card_number|
