@@ -3,8 +3,8 @@ require 'test_helper'
 class CreditCardTest < Test::Unit::TestCase
   def setup
     CreditCard.require_verification_value = false
-    @visa = credit_card('4779139500118580',   :brand => 'visa')
-    @solo = credit_card('676700000000000000', :brand => 'solo', :issue_number => '01')
+    @visa = credit_card('4779139500118580', brand: 'visa')
+    @maestro = credit_card('676700000000000000', brand: 'maestro', verification_value: '')
   end
 
   def teardown
@@ -32,8 +32,8 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid @visa
   end
 
-  def test_should_be_a_valid_solo_card
-    assert_valid @solo
+  def test_should_be_a_valid_maestro_card
+    assert_valid @maestro
   end
 
   def test_cards_with_empty_names_should_not_be_valid
@@ -167,12 +167,6 @@ class CreditCardTest < Test::Unit::TestCase
     assert_match(/expired/, errors[:year].first)
   end
 
-  def test_should_be_valid_with_start_month_and_year_as_string
-    @solo.start_month = '2'
-    @solo.start_year = '2007'
-    assert_valid @solo
-  end
-
   def test_should_identify_wrong_card_brand
     c = credit_card(:brand => 'master')
     assert_not_valid c
@@ -240,44 +234,6 @@ class CreditCardTest < Test::Unit::TestCase
     CreditCard.require_verification_value = true
     card = credit_card('1', brand: 'bogus', verification_value: nil)
     assert_not_valid card
-  end
-
-  def test_should_require_valid_start_date_for_solo_or_switch
-    @solo.start_month  = nil
-    @solo.start_year   = nil
-    @solo.issue_number = nil
-
-    errors = assert_not_valid @solo
-    assert errors[:start_month]
-    assert errors[:start_year]
-    assert errors[:issue_number]
-
-    @solo.start_month = 2
-    @solo.start_year  = 2007
-    assert_valid @solo
-  end
-
-  def test_should_require_a_valid_issue_number_for_solo_or_switch
-    @solo.start_month  = nil
-    @solo.start_year   = 2005
-    @solo.issue_number = nil
-
-    errors = assert_not_valid @solo
-    assert errors[:start_month]
-    assert_equal ['cannot be empty'], errors[:issue_number]
-
-    @solo.issue_number = 3
-    assert_valid @solo
-  end
-
-  def test_should_require_a_validate_non_empty_issue_number_for_solo_or_switch
-    @solo.issue_number = 'invalid'
-
-    errors = assert_not_valid @solo
-    assert_equal ['is invalid'], errors[:issue_number]
-
-    @solo.issue_number = 3
-    assert_valid @solo
   end
 
   def test_should_return_last_four_digits_of_card_number
@@ -437,7 +393,7 @@ class CreditCardTest < Test::Unit::TestCase
       assert_equal @visa.type, @visa.brand
     end
     assert_deprecation_warning('CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead.') do
-      assert_equal @solo.type, @solo.brand
+      assert_equal @maestro.type, @maestro.brand
     end
   end
 

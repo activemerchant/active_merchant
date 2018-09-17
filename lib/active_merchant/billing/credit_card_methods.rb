@@ -9,8 +9,6 @@ module ActiveMerchant #:nodoc:
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
         'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
-        'switch'             => ->(num) { num =~ /^6759\d{12}(\d{2,3})?$/ },
-        'solo'               => ->(num) { num =~ /^6767\d{12}(\d{2,3})?$/ },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
         'maestro'            => ->(num) { (12..19).include?(num.to_s.size) && in_bin_range?(num.to_s.slice(0, 6), MAESTRO_RANGES) },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },

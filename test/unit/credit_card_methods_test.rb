@@ -172,19 +172,19 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def test_16_digit_maestro_uk
     number = '6759000000000000'
     assert_equal 16, number.length
-    assert_equal 'switch', CreditCard.brand?(number)
+    assert_equal 'maestro', CreditCard.brand?(number)
   end
 
   def test_18_digit_maestro_uk
     number = '675900000000000000'
     assert_equal 18, number.length
-    assert_equal 'switch', CreditCard.brand?(number)
+    assert_equal 'maestro', CreditCard.brand?(number)
   end
 
   def test_19_digit_maestro_uk
     number = '6759000000000000000'
     assert_equal 19, number.length
-    assert_equal 'switch', CreditCard.brand?(number)
+    assert_equal 'maestro', CreditCard.brand?(number)
   end
 
   def test_electron_cards
