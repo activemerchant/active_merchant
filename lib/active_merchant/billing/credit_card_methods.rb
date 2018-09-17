@@ -5,7 +5,8 @@ module ActiveMerchant #:nodoc:
       CARD_COMPANIES = {
         'visa'               => /^4\d{12}(\d{3})?(\d{3})?$/,
         'master'             => /^(5[1-5]\d{4}|677189|222[1-9]\d{2}|22[3-9]\d{3}|2[3-6]\d{4}|27[01]\d{3}|2720\d{2})\d{10}$/,
-        'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/,
+        'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62212[6-9]|6221[3-9][0-9]|622[2-8][0-9][0-9]|6229[0-1][0-9]|62292[0-5]\d{10})$/,
+        'unionpay'          => /^(62\d{14,17})$/,
         'american_express'   => /^3[47]\d{13}$/,
         'diners_club'        => /^3(0[0-5]|[68]\d)\d{11}$/,
         'jcb'                => /^35(28|29|[3-8]\d)\d{12}$/,
@@ -18,6 +19,8 @@ module ActiveMerchant #:nodoc:
         'sodexo'             => /^(606071|603389|606070|606069|606068|600818)\d{8}$/,
         'vr'                 => /^(627416|637036)\d{8}$/
       }
+
+      CHECKSUM_EXEMPTIONS = %w(unionpay)
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
       ELECTRON_RANGES = [
@@ -221,6 +224,8 @@ module ActiveMerchant #:nodoc:
         # Please see http://en.wikipedia.org/wiki/Luhn_algorithm for details.
         # This implementation is from the luhn_checksum gem, https://github.com/zendesk/luhn_checksum.
         def valid_checksum?(numbers) #:nodoc:
+          return true if checksum_exempt?(numbers)
+
           sum = 0
 
           odd = true
@@ -235,6 +240,12 @@ module ActiveMerchant #:nodoc:
           end
 
           sum % 10 == 0
+        end
+
+        def checksum_exempt?(number)
+          brand = brand?(number)
+
+          CHECKSUM_EXEMPTIONS.include?(brand)
         end
       end
     end
