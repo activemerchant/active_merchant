@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
       def add_capture(post, options)
         capture = options[:capture]
 
-        post[:capture] = capture == false ? false : true
+        post[:capture] = capture != false
       end
 
       def add_creditcard(post, creditcard)

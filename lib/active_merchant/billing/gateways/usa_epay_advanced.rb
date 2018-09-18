@@ -1568,7 +1568,7 @@ module ActiveMerchant #:nodoc:
 
         if response.respond_to?(:[]) && p = response["#{action}_return"]
           if p.respond_to?(:key?) && p.key?('result_code')
-            success = p['result_code'] == 'A' ? true : false
+            success = p['result_code'] == 'A'
             authorization = p['ref_num']
             avs = AVS_RESULTS[p['avs_result_code']]
             cvv = p['card_code_result_code']

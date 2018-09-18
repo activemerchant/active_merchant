@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        @service_key[0]=='T' ? true : false
+        @service_key[0] == 'T'
       end
 
       def response_error(raw_response)
