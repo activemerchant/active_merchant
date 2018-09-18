@@ -172,17 +172,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(response)
-        begin
-          JSON.parse(response)
-        rescue JSON::ParserError
-          msg = 'Invalid JSON response received from Fat Zebra. Please contact support@fatzebra.com.au if you continue to receive this message.'
-          msg += "  (The raw response returned by the API was #{response.inspect})"
-          {
-            'successful' => false,
-            'response' => {},
-            'errors' => [msg]
-          }
-        end
+        JSON.parse(response)
+      rescue JSON::ParserError
+        msg = 'Invalid JSON response received from Fat Zebra. Please contact support@fatzebra.com.au if you continue to receive this message.'
+        msg += "  (The raw response returned by the API was #{response.inspect})"
+        {
+          'successful' => false,
+          'response' => {},
+          'errors' => [msg]
+        }
       end
 
       def get_url(uri)

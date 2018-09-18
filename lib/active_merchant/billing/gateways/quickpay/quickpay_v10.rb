@@ -276,11 +276,9 @@ module ActiveMerchant
         end
 
         def response_error(raw_response)
-          begin
-            parse(raw_response)
-          rescue JSON::ParserError
-            json_error(raw_response)
-          end
+          parse(raw_response)
+        rescue JSON::ParserError
+          json_error(raw_response)
         end
 
         def json_error(raw_response)

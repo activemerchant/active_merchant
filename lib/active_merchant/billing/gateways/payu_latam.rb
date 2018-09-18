@@ -319,25 +319,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, params)
-        begin
-          raw_response = ssl_post(url, post_data(params), headers)
-          response = parse(raw_response)
-        rescue ResponseError => e
-          raw_response = e.response.body
-          response_error(raw_response)
-        rescue JSON::ParserError
-          unparsable_response(raw_response)
-        else
-          success = success_from(action, response)
-          Response.new(
-            success,
-            message_from(action, success, response),
-            response,
-            authorization: success ? authorization_from(action, response) : nil,
-            error_code: success ? nil : error_from(action, response),
-            test: test?
-          )
-        end
+        raw_response = ssl_post(url, post_data(params), headers)
+        response = parse(raw_response)
+      rescue ResponseError => e
+        raw_response = e.response.body
+        response_error(raw_response)
+      rescue JSON::ParserError
+        unparsable_response(raw_response)
+      else
+        success = success_from(action, response)
+        Response.new(
+          success,
+          message_from(action, success, response),
+          response,
+          authorization: success ? authorization_from(action, response) : nil,
+          error_code: success ? nil : error_from(action, response),
+          test: test?
+        )
       end
 
       def headers
@@ -425,18 +423,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_error(raw_response)
-        begin
-          response = parse(raw_response)
-        rescue JSON::ParserError
-          unparsable_response(raw_response)
-        else
-          return Response.new(
-            false,
-            message_from('', false, response),
-            response,
-            :test => test?
-          )
-        end
+        response = parse(raw_response)
+      rescue JSON::ParserError
+        unparsable_response(raw_response)
+      else
+        return Response.new(
+          false,
+          message_from('', false, response),
+          response,
+          :test => test?
+        )
       end
 
       def unparsable_response(raw_response)

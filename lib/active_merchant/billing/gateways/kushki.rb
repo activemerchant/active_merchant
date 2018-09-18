@@ -186,15 +186,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        begin
-          JSON.parse(body)
-        rescue JSON::ParserError
-          message = 'Invalid JSON response received from KushkiGateway. Please contact KushkiGateway if you continue to receive this message.'
-          message += " (The raw response returned by the API was #{body.inspect})"
-          {
-            'message' => message
-          }
-        end
+        JSON.parse(body)
+      rescue JSON::ParserError
+        message = 'Invalid JSON response received from KushkiGateway. Please contact KushkiGateway if you continue to receive this message.'
+        message += " (The raw response returned by the API was #{body.inspect})"
+        {
+          'message' => message
+        }
       end
 
       def success_from(response)

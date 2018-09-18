@@ -172,23 +172,21 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_in_production_with_test_param_sends_request_to_test_server
-    begin
-      ActiveMerchant::Billing::Base.mode = :production
-      @gateway = OptimalPaymentGateway.new(
-        :account_number => '12345678',
-        :store_id => 'login',
-        :password => 'password',
-        :test => true
-      )
-      @gateway.expects(:ssl_post).with('https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1', anything).returns(successful_purchase_response)
+    ActiveMerchant::Billing::Base.mode = :production
+    @gateway = OptimalPaymentGateway.new(
+      :account_number => '12345678',
+      :store_id => 'login',
+      :password => 'password',
+      :test => true
+    )
+    @gateway.expects(:ssl_post).with('https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1', anything).returns(successful_purchase_response)
 
-      assert response = @gateway.purchase(@amount, @credit_card, @options)
-      assert_instance_of Response, response
-      assert_success response
-      assert response.test?
-    ensure
-      ActiveMerchant::Billing::Base.mode = :test
-    end
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert response.test?
+  ensure
+    ActiveMerchant::Billing::Base.mode = :test
   end
 
   def test_avs_result_in_response

@@ -380,11 +380,9 @@ module ActiveMerchant #:nodoc:
         end
 
         def expiration #:nodoc:
-          begin
-            Time.utc(year, month, month_days, 23, 59, 59)
-          rescue ArgumentError
-            Time.at(0).utc
-          end
+          Time.utc(year, month, month_days, 23, 59, 59)
+        rescue ArgumentError
+          Time.at(0).utc
         end
 
         private

@@ -1334,11 +1334,6 @@ Style/RandomWithOffset:
     - 'test/remote/gateways/remote_pay_junction_test.rb'
     - 'test/unit/gateways/beanstream_test.rb'
 
-# Offense count: 21
-# Cop supports --auto-correct.
-Style/RedundantBegin:
-  Enabled: false
-
 # Offense count: 87
 # Cop supports --auto-correct.
 # Configuration parameters: AllowMultipleReturnValues.

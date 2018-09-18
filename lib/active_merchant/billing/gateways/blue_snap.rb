@@ -237,11 +237,9 @@ module ActiveMerchant
       end
 
       def api_request(action, request, verb)
-        begin
-          ssl_request(verb, url(action), request, headers)
-        rescue ResponseError => e
-          e.response
-        end
+        ssl_request(verb, url(action), request, headers)
+      rescue ResponseError => e
+        e.response
       end
 
       def commit(action, verb = :post)

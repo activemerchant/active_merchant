@@ -318,11 +318,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        begin
-          JSON.parse(body)
-        rescue JSON::ParserError
-          json_error(body)
-        end
+        JSON.parse(body)
+      rescue JSON::ParserError
+        json_error(body)
       end
 
       def json_error(body)
