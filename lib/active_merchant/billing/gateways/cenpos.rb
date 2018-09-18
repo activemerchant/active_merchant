@@ -313,7 +313,7 @@ module ActiveMerchant #:nodoc:
       def validation_result_element_text(element)
         result_text = element.elements.detect { |elem|
           elem.name == 'Result'
-        }.children.detect { |elem| elem.text }.text
+        }.children.detect(&:text).text
 
         result_text.split(';').collect(&:strip)
       end

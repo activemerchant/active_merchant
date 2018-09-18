@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def payment_history
-        @payment_history ||= @params['rp_payment_result'].collect{ |result| result.stringify_keys } rescue []
+        @payment_history ||= @params['rp_payment_result'].collect(&:stringify_keys) rescue []
       end
     end
   end

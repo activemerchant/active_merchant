@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       def update(vault_id, creditcard, options = {})
         braintree_credit_card = nil
         commit do
-          braintree_credit_card = @braintree_gateway.customer.find(vault_id).credit_cards.detect { |cc| cc.default? }
+          braintree_credit_card = @braintree_gateway.customer.find(vault_id).credit_cards.detect(&:default?)
           return Response.new(false, 'Braintree::NotFoundError') if braintree_credit_card.nil?
 
           options.merge!(:update_existing_token => braintree_credit_card.token)

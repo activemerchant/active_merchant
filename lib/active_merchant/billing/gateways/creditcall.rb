@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
           r.process { capture(money, r.authorization, options) }
         end
 
-        merged_params = multi_response.responses.map { |r| r.params }.reduce({}, :merge)
+        merged_params = multi_response.responses.map(&:params).reduce({}, :merge)
         
         Response.new(
           multi_response.primary_response.success?,

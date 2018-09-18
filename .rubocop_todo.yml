@@ -1453,22 +1453,6 @@ Style/StringLiteralsInInterpolation:
 Style/SymbolArray:
   Enabled: false
 
-# Offense count: 9
-# Cop supports --auto-correct.
-# Configuration parameters: IgnoredMethods.
-# IgnoredMethods: respond_to, define_method
-Style/SymbolProc:
-  Exclude:
-    - 'lib/active_merchant/billing/compatibility.rb'
-    - 'lib/active_merchant/billing/gateways/braintree_blue.rb'
-    - 'lib/active_merchant/billing/gateways/cenpos.rb'
-    - 'lib/active_merchant/billing/gateways/checkout_v2.rb'
-    - 'lib/active_merchant/billing/gateways/creditcall.rb'
-    - 'lib/active_merchant/billing/gateways/mercury.rb'
-    - 'lib/active_merchant/billing/gateways/payflow/payflow_response.rb'
-    - 'lib/active_merchant/billing/gateways/psl_card.rb'
-    - 'lib/active_merchant/billing/gateways/realex.rb'
-
 # Offense count: 15
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, AllowSafeAssignment.

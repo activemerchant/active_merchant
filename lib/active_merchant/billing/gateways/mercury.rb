@@ -319,7 +319,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        dollars, cents = (response[:purchase] || '').split('.').collect{|e| e.to_i}
+        dollars, cents = (response[:purchase] || '').split('.').collect(&:to_i)
         dollars ||= 0
         cents ||= 0
         [
