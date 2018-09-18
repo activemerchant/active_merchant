@@ -4,7 +4,7 @@ class OmiseTest < Test::Unit::TestCase
   def setup
     @gateway = OmiseGateway.new(
       public_key: 'pkey_test_abc',
-      secret_key: 'skey_test_123',
+      secret_key: 'skey_test_123'
     )
 
     @credit_card = credit_card

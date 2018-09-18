@@ -103,7 +103,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   def test_invalid_login_without_rang
     gateway = PayboxDirectGateway.new(
                 login: '199988899',
-                password: '1999888F',
+                password: '1999888F'
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
           "#{STANDARD_ERROR_MESSAGE_MAPPING[e.response.code]} #{message}",
           parse(e.response.body),
           test: test?,
-          error_code: STANDARD_ERROR_CODE_MAPPING[e.response.code],
+          error_code: STANDARD_ERROR_CODE_MAPPING[e.response.code]
         )
       end
 

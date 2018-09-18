@@ -9,7 +9,7 @@ class QuickBooksTest < Test::Unit::TestCase
       consumer_secret: 'consumer_secret',
       access_token: 'access_token',
       token_secret: 'token_secret',
-      realm: 'realm_ID',
+      realm: 'realm_ID'
     )
 
     @credit_card = credit_card

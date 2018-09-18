@@ -42,7 +42,7 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
-        includes('invoice_number=thisislongerthan1'),
+        includes('invoice_number=thisislongerthan1')
       )
     ).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, options)

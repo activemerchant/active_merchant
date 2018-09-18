@@ -398,7 +398,7 @@ class RemoteLitleTest < Test::Unit::TestCase
   def test_successful_purchase_with_dynamic_descriptors
     assert response = @gateway.purchase(10010, @credit_card1, @options.merge(
       descriptor_name: 'SuperCompany',
-      descriptor_phone: '9193341121',
+      descriptor_phone: '9193341121'
     ))
     assert_success response
     assert_equal 'Approved', response.message

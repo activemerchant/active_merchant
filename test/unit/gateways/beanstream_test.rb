@@ -22,7 +22,7 @@ class BeanstreamTest < Test::Unit::TestCase
       number: '4030000010001234',
       payment_cryptogram: 'cryptogram goes here',
       eci: 'an ECI value',
-      transaction_id: 'transaction ID',
+      transaction_id: 'transaction ID'
     )
 
     @check       = check(

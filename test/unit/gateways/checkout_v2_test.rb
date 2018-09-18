@@ -5,7 +5,7 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def setup
     @gateway = CheckoutV2Gateway.new(
-      secret_key: '1111111111111',
+      secret_key: '1111111111111'
     )
 
     @credit_card = credit_card

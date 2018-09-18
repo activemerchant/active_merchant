@@ -258,7 +258,7 @@ module ActiveMerchant
           avs_result: avs_result(parsed),
           cvv_result: cvv_result(parsed),
           error_code: error_code_from(parsed),
-          test: test?,
+          test: test?
         )
       end
 

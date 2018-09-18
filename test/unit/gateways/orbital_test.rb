@@ -237,7 +237,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       :dest_address2 => 'L%u%xury S|u^i\\t/e',
       :dest_city =>     '/Winn/i%p|e^g\\',
       :dest_zip =>      'A1A 2B2',
-      :dest_state =>    '^MB',
+      :dest_state =>    '^MB'
     )
 
     response = stub_comms do

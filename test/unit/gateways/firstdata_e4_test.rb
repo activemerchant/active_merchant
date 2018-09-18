@@ -225,7 +225,7 @@ class FirstdataE4Test < Test::Unit::TestCase
         brand: 'american_express',
         transaction_id: '123',
         eci: '05',
-        payment_cryptogram: 'whatever_the_cryptogram_of_at_least_20_characters_is',
+        payment_cryptogram: 'whatever_the_cryptogram_of_at_least_20_characters_is'
       )
 
       @gateway.purchase(@amount, credit_card, @options)
@@ -244,7 +244,7 @@ class FirstdataE4Test < Test::Unit::TestCase
         brand: 'discover',
         transaction_id: '123',
         eci: '05',
-        payment_cryptogram: 'whatever_the_cryptogram_is',
+        payment_cryptogram: 'whatever_the_cryptogram_is'
       )
 
       @gateway.purchase(@amount, credit_card, @options)
@@ -264,7 +264,7 @@ class FirstdataE4Test < Test::Unit::TestCase
           brand: brand,
           transaction_id: '123',
           eci: '05',
-          payment_cryptogram: 'whatever_the_cryptogram_is',
+          payment_cryptogram: 'whatever_the_cryptogram_is'
         )
 
         @gateway.purchase(@amount, credit_card, @options)

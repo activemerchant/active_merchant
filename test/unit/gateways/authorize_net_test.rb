@@ -1031,7 +1031,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_truncation
     card = credit_card('4242424242424242',
       first_name: 'a' * 51,
-      last_name: 'a' * 51,
+      last_name: 'a' * 51
     )
 
     options = {
@@ -1043,7 +1043,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         city: 'a' * 41,
         state: 'a' * 41,
         zip: 'a' * 21,
-        country: 'a' * 61,
+        country: 'a' * 61
       ),
       shipping_address: address(
         name: ['a' * 51, 'a' * 51].join(' '),
@@ -1052,7 +1052,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         city: 'a' * 41,
         state: 'a' * 41,
         zip: 'a' * 21,
-        country: 'a' * 61,
+        country: 'a' * 61
       )
     }
 

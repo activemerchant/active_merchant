@@ -76,7 +76,7 @@ class RemoteIppTest < Test::Unit::TestCase
   def test_invalid_login
     gateway = IppGateway.new(
       username: '',
-      password: '',
+      password: ''
     )
     response = gateway.purchase(200, @credit_card, @options)
     assert_failure response

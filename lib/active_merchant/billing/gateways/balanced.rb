@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
           message_from(raw_response),
           raw_response,
           authorization: authorization_from(entity_name, raw_response),
-          test: test?,
+          test: test?
         )
       end
 

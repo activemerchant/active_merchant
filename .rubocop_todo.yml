@@ -1487,13 +1487,6 @@ Style/TernaryParentheses:
     - 'lib/active_merchant/billing/gateways/payeezy.rb'
     - 'lib/active_merchant/billing/gateways/visanet_peru.rb'
 
-# Offense count: 27
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInArguments:
-  Enabled: false
-
 # Offense count: 7
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyleForMultiline.

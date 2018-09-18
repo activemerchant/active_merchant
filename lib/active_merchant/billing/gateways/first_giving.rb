@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
           (response['friendlyErrorMessage'] || response['verboseErrorMessage'] || response['acknowledgement']),
           response,
           authorization: response['transactionId'],
-          test: test?,
+          test: test?
         )
       end
 

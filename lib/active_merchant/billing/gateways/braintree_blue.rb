@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
           :private_key       => options[:private_key],
           :environment       => (options[:environment] || (test? ? :sandbox : :production)).to_sym,
           :custom_user_agent => "ActiveMerchant #{ActiveMerchant::VERSION}",
-          :logger            => options[:logger] || logger,
+          :logger            => options[:logger] || logger
         )
 
         @braintree_gateway = Braintree::Gateway.new( @configuration )

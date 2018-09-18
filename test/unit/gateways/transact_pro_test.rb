@@ -5,7 +5,7 @@ class TransactProTest < Test::Unit::TestCase
     @gateway = TransactProGateway.new(
       guid: 'login',
       password: 'password',
-      terminal: 'terminal',
+      terminal: 'terminal'
     )
 
     @credit_card = credit_card

@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: authorization_from(response),
           error_code: error_code_from(response),
-          test: test?,
+          test: test?
         )
       end
 

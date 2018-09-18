@@ -6,7 +6,7 @@ class IppTest < Test::Unit::TestCase
   def setup
     @gateway = IppGateway.new(
       username: 'username',
-      password: 'password',
+      password: 'password'
     )
 
     @amount = 100

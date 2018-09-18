@@ -5,7 +5,7 @@ class SecurionPayTest < Test::Unit::TestCase
 
   def setup
     @gateway = SecurionPayGateway.new(
-      secret_key: 'pr_test_SyMyCpIJosFIAESEsZUd3TgN',
+      secret_key: 'pr_test_SyMyCpIJosFIAESEsZUd3TgN'
     )
 
     @credit_card = credit_card
