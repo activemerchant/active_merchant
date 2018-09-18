@@ -1563,7 +1563,7 @@ module ActiveMerchant #:nodoc:
 
         success, message, authorization, avs, cvv = false, FAILURE_MESSAGE, nil, nil, nil
 
-        fault = (!response) || (response.length < 1) || response.has_key?('faultcode')
+        fault = !response || (response.length < 1) || response.has_key?('faultcode')
         return [response, success, response['faultstring'], authorization, avs, cvv] if fault
 
         if response.respond_to?(:[]) && p = response["#{action}_return"]

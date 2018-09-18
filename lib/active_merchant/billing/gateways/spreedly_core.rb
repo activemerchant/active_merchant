@@ -231,7 +231,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.root.xpath('*').each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|

@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, amount)
         add_invoice(post, amount, options)
-        if (payment_method.respond_to?(:number))
+        if payment_method.respond_to?(:number)
           add_payment_method(post, payment_method, options)
           commit(:authorize, post)
         else

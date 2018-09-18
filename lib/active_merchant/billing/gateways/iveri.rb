@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         vxml = Nokogiri::XML(body).remove_namespaces!.xpath('//Envelope/Body/ExecuteResponse/ExecuteResult').inner_text
         doc = Nokogiri::XML(vxml)
         doc.xpath('*').each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             parsed[underscore(node.name)] = node.text
           else
             node.elements.each do |childnode|

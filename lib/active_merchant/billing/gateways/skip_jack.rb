@@ -318,7 +318,7 @@ module ActiveMerchant #:nodoc:
       def authorize_response_map(body)
         lines = split_lines(body)
         keys, values = split_line(lines[0]), split_line(lines[1])
-        Hash[*(keys.zip(values).flatten)].symbolize_keys
+        Hash[*keys.zip(values).flatten].symbolize_keys
       end
 
       def parse_authorization_response(body)
@@ -333,7 +333,7 @@ module ActiveMerchant #:nodoc:
         keys = [ :szSerialNumber, :szErrorCode, :szNumberRecords]
         values = split_line(lines[0])[0..2]
 
-        result = Hash[*(keys.zip(values).flatten)]
+        result = Hash[*keys.zip(values).flatten]
 
         result[:szErrorMessage] = ''
         result[:success] = (result[:szErrorCode] == '0')

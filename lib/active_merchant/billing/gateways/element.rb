@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
         end
 
         root.each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             response[node.name.downcase] = node.text
           else
             node_name = node.name.downcase

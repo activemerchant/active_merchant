@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id]   = options[:order_id]
         post[:address]    = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        action = (post[:data_key].blank?) ? 'us_preauth' : 'us_res_preauth_cc'
+        action = post[:data_key].blank? ? 'us_preauth' : 'us_res_preauth_cc'
         commit(action, post)
       end
 

@@ -132,7 +132,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match (/cvdIndicator%3E1%3C\/cvdIndicator%3E%0A%20%20%20%20%3Ccvd%3E123%3C\/cvd/), data
+      assert_match(/cvdIndicator%3E1%3C\/cvdIndicator%3E%0A%20%20%20%20%3Ccvd%3E123%3C\/cvd/, data)
     end.respond_with(successful_purchase_response)
 
     credit_card = CreditCard.new(
@@ -147,7 +147,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match (/cvdIndicator%3E0%3C\/cvdIndicator%3E%0A%20%20%3C\/card/), data
+      assert_match(/cvdIndicator%3E0%3C\/cvdIndicator%3E%0A%20%20%3C\/card/, data)
     end.respond_with(failed_purchase_response)
   end
 

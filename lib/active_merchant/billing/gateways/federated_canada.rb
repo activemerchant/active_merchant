@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        (@options[:login].eql?('demo')) && (@options[:password].eql?('password'))
+        @options[:login].eql?('demo') && @options[:password].eql?('password')
       end
 
       def message_from(response)

@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(post, payment_method, options)
         if(payment_method.is_a?(String))
           post[:customer_vault_id] = payment_method
-        elsif (payment_method.is_a?(NetworkTokenizationCreditCard))
+        elsif payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:ccnumber] = payment_method.number
           post[:ccexp] = exp_date(payment_method)
           post[:token_cryptogram] = payment_method.payment_cryptogram
