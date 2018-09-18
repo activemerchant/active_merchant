@@ -1339,12 +1339,6 @@ Style/RandomWithOffset:
 Style/RedundantBegin:
   Enabled: false
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/RedundantException:
-  Exclude:
-    - 'lib/active_merchant/billing/gateway.rb'
-
 # Offense count: 87
 # Cop supports --auto-correct.
 # Configuration parameters: AllowMultipleReturnValues.

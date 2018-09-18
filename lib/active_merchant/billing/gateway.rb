@@ -193,7 +193,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        raise RuntimeError.new('This gateway does not support scrubbing.')
+        raise 'This gateway does not support scrubbing.'
       end
 
       def supports_network_tokenization?
