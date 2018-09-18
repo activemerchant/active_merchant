@@ -192,7 +192,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
       '5062280000000000',
       '6046220312312312',
       '6393889871239871',
-      '5022751231231231',
+      '5022751231231231'
     ]
     numbers.each do |num|
       assert_equal 16, num.length
