@@ -324,6 +324,7 @@ module ActiveMerchant #:nodoc:
         add_application_fee(post, options)
         add_exchange_rate(post, options)
         add_destination(post, options)
+        add_level_three(post, options)
         post
       end
 
@@ -346,6 +347,21 @@ module ActiveMerchant #:nodoc:
           post[:destination] = {}
           post[:destination][:account] = options[:destination]
           post[:destination][:amount] = options[:destination_amount] if options[:destination_amount]
+        end
+      end
+
+      def add_level_three(post, options)
+        level_three = {}
+
+        copy_when_present(level_three, [:merchant_reference], options)
+        copy_when_present(level_three, [:customer_reference], options)
+        copy_when_present(level_three, [:shipping_address_zip], options)
+        copy_when_present(level_three, [:shipping_from_zip], options)
+        copy_when_present(level_three, [:shipping_amount], options)
+        copy_when_present(level_three, [:line_items], options)
+
+        unless level_three.empty?
+          post[:level3] = level_three
         end
       end
 
@@ -694,6 +710,22 @@ module ActiveMerchant #:nodoc:
       def auth_minimum_amount(options)
         return 100 unless options[:currency]
         return MINIMUM_AUTHORIZE_AMOUNTS[options[:currency].upcase] || 100
+      end
+
+      def copy_when_present(dest, dest_path, source, source_path = nil)
+        source_path ||= dest_path
+        source_path.each do |key|
+          return nil unless source[key]
+          source = source[key]
+        end
+
+        if source
+          dest_path.first(dest_path.size - 1).each do |key|
+            dest[key] ||= {}
+            dest = dest[key]
+          end
+          dest[dest_path.last] = source
+        end
       end
     end
   end

@@ -14,6 +14,7 @@
 * Add support for Carnet cards [bpollack] #2992
 * Stripe: support a reason for voiding a transaction [whitby3001] #2378
 * Payeezy: Add reversal_id in support of timeout reversals [dtykocki] #2997
+* Stripe: support Level 3 transaction fields [bpollack] #2996
 
 == Version 1.83.0 (August 30, 2018)
 * CT Payment: Update How Address is Passed [nfarve] #2960

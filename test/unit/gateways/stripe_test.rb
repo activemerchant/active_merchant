@@ -429,6 +429,46 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_level3_data
+    @gateway.expects(:add_creditcard)
+
+    @options[:merchant_reference] = 123
+    @options[:customer_reference] = 456
+    @options[:shipping_address_zip] = 98765
+    @options[:shipping_from_zip] = 54321
+    @options[:shipping_amount] = 40
+    @options[:line_items] = [
+      {
+        'product_code' => 1234,
+        'product_description' => 'An item',
+        'unit_cost' => 60,
+        'quantity' => 7,
+        'tax_amount' => 0
+      },
+      {
+        'product_code' => 999,
+        'tax_amount' => 888
+      }
+    ]
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |_method, endpoint, data, _headers|
+      if %r{/charges} =~ endpoint
+        assert_match('level3[merchant_reference]=123', data)
+        assert_match('level3[customer_reference]=456', data)
+        assert_match('level3[shipping_address_zip]=98765', data)
+        assert_match('level3[shipping_amount]=40', data)
+        assert_match('level3[shipping_from_zip]=54321', data)
+        assert_match('level3[line_items][0][product_description]=An+item', data)
+        assert_match('level3[line_items][1][product_code]=999', data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+  end
+
   def test_amount_localization
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
     @gateway.expects(:post_data).with do |params|

@@ -90,6 +90,38 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
   end
 
+  def test_successful_purchase_with_level3_data
+    @options[:merchant_reference] = 123
+    @options[:customer_reference] = 456
+    @options[:shipping_address_zip] = 98765
+    @options[:shipping_from_zip] = 54321
+    @options[:shipping_amount] = 10
+    @options[:line_items] = [
+      {
+        'product_code' => 1234,
+        'product_description' => 'An item',
+        'unit_cost' => 15,
+        'quantity' => 2,
+        'tax_amount' => 0
+      },
+      {
+        'product_code' => 999,
+        'product_description' => 'A totes different item',
+        'tax_amount' => 10,
+        'unit_cost' => 50,
+        'quantity' => 1,
+      }
+    ]
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'charge', response.params['object']
+    assert_equal response.authorization, response.params['id']
+    assert response.params['paid']
+    assert_equal 'ActiveMerchant Test Purchase', response.params['description']
+    assert_equal 'wow@example.com', response.params['metadata']['email']
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
