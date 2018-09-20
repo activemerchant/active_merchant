@@ -537,6 +537,15 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_void_with_reason
+    @gateway.expects(:ssl_request).with do |_, _, post, _|
+      post.include?("reason=fraudulent")
+    end.returns(successful_purchase_response(true))
+
+    assert response = @gateway.void('ch_test_charge', {reason: 'fraudulent'})
+    assert_success response
+  end
+
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response)
 
