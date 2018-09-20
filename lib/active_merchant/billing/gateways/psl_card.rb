@@ -174,12 +174,6 @@ module ActiveMerchant
         post[:ExpMonth] = credit_card.month
         post[:ExpYear] = credit_card.year
 
-        if requires_start_date_or_issue_number?(credit_card)
-          post[:IssueNumber] = credit_card.issue_number unless credit_card.issue_number.blank?
-          post[:StartMonth] = credit_card.start_month unless credit_card.start_month.blank?
-          post[:StartYear] = credit_card.start_year unless credit_card.start_year.blank?
-        end
-
         # CV2 check
         post[:AVSCV2Check] = credit_card.verification_value? ? 'YES' : 'NO'
         post[:CV2] = credit_card.verification_value if credit_card.verification_value?

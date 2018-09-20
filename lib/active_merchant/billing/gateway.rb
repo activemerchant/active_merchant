@@ -56,8 +56,6 @@ module ActiveMerchant #:nodoc:
       include PostsData
       include CreditCardFormatting
 
-      DEBIT_CARDS = [ :switch, :solo ]
-
       CREDIT_DEPRECATION_MESSAGE = 'Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead.'
       RECURRING_DEPRECATION_MESSAGE = 'Recurring functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it.'
 
@@ -303,11 +301,6 @@ module ActiveMerchant #:nodoc:
         last_name  = names.pop
         first_name = names.join(' ')
         [first_name, last_name]
-      end
-
-      def requires_start_date_or_issue_number?(credit_card)
-        return false if card_brand(credit_card).blank?
-        DEBIT_CARDS.include?(card_brand(credit_card).to_sym)
       end
 
       def requires!(hash, *params)

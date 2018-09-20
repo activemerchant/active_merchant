@@ -289,11 +289,6 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :CardNumber, credit_card.number, :required => true)
 
         add_pair(post, :ExpiryDate, format_date(credit_card.month, credit_card.year), :required => true)
-
-        if requires_start_date_or_issue_number?(credit_card)
-          add_pair(post, :StartDate, format_date(credit_card.start_month, credit_card.start_year))
-          add_pair(post, :IssueNumber, credit_card.issue_number)
-        end
         add_pair(post, :CardType, map_card_type(credit_card))
 
         add_pair(post, :CV2, credit_card.verification_value)

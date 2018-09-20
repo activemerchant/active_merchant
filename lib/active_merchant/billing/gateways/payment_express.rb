@@ -193,11 +193,6 @@ module ActiveMerchant #:nodoc:
           xml.add_element('Cvc2').text = credit_card.verification_value
           xml.add_element('Cvc2Presence').text = '1'
         end
-
-        if requires_start_date_or_issue_number?(credit_card)
-          xml.add_element('DateStart').text = format_date(credit_card.start_month, credit_card.start_year) unless credit_card.start_month.blank? || credit_card.start_year.blank?
-          xml.add_element('IssueNumber').text = credit_card.issue_number unless credit_card.issue_number.blank?
-        end
       end
 
       def add_billing_token(xml, token)

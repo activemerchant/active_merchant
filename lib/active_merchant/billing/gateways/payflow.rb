@@ -237,10 +237,6 @@ module ActiveMerchant #:nodoc:
             end
           end
 
-          if requires_start_date_or_issue_number?(credit_card)
-            xml.tag!('ExtData', 'Name' => 'CardStart', 'Value' => startdate(credit_card)) unless credit_card.start_month.blank? || credit_card.start_year.blank?
-            xml.tag!('ExtData', 'Name' => 'CardIssue', 'Value' => format(credit_card.issue_number, :two_digits)) unless credit_card.issue_number.blank?
-          end
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
         end
       end
