@@ -223,10 +223,10 @@ module ActiveMerchant #:nodoc:
         success = success?(response)
 
         Response.new(success,
-                     success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]} - #{response[:sys_err_msg]})",
-                     response,
-                     :test => test?,
-                     :authorization => response[:order_id])
+          success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]} - #{response[:sys_err_msg]})",
+          response,
+          :test => test?,
+          :authorization => response[:order_id])
       end
 
       def parse(body)

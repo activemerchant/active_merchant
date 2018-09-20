@@ -371,8 +371,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_successful_purchase_with_three_d_secure_pass_thru
     three_d_secure_params = { eci: '05', cavv: 'cavv', xid: 'xid' }
     assert response = @gateway.purchase(@amount, @credit_card,
-                                         three_d_secure: three_d_secure_params
-                                       )
+      three_d_secure: three_d_secure_params
+    )
     assert_success response
   end
 

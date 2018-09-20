@@ -64,7 +64,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     options_with_specified_currency = @options.merge({currency: 'GBP'})
     @gateway.expects(:ssl_post).returns(successful_purchase_with_specified_currency_response)
     assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014',
-                                        options_with_specified_currency)
+      options_with_specified_currency)
     assert_success response
     assert_equal 'GBP', response.params['currency']
   end

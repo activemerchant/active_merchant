@@ -23,13 +23,6 @@ Gemspec/OrderedDependencies:
 Layout/AlignHash:
   Enabled: false
 
-# Offense count: 275
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: with_first_parameter, with_fixed_indentation
-Layout/AlignParameters:
-  Enabled: false
-
 # Offense count: 113
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, IndentOneStep, IndentationWidth.

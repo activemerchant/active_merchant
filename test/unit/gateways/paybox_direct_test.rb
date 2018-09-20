@@ -10,8 +10,8 @@ class PayboxDirectTest < Test::Unit::TestCase
                )
 
     @credit_card = credit_card('1111222233334444',
-                     :brand => 'visa'
-                   )
+      :brand => 'visa'
+    )
     @amount = 100
 
     @options = {

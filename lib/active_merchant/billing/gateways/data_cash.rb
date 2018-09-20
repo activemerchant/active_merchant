@@ -238,23 +238,23 @@ module ActiveMerchant
             # a predefined one
             xml.tag! :ExtendedPolicy do
               xml.tag! :cv2_policy,
-              :notprovided =>   POLICY_REJECT,
-              :notchecked =>    POLICY_REJECT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_REJECT
+                :notprovided =>   POLICY_REJECT,
+                :notchecked =>    POLICY_REJECT,
+                :matched =>       POLICY_ACCEPT,
+                :notmatched =>    POLICY_REJECT,
+                :partialmatch =>  POLICY_REJECT
               xml.tag! :postcode_policy,
-              :notprovided =>   POLICY_ACCEPT,
-              :notchecked =>    POLICY_ACCEPT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_ACCEPT
+                :notprovided =>   POLICY_ACCEPT,
+                :notchecked =>    POLICY_ACCEPT,
+                :matched =>       POLICY_ACCEPT,
+                :notmatched =>    POLICY_REJECT,
+                :partialmatch =>  POLICY_ACCEPT
               xml.tag! :address_policy,
-              :notprovided =>   POLICY_ACCEPT,
-              :notchecked =>    POLICY_ACCEPT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_ACCEPT
+                :notprovided =>   POLICY_ACCEPT,
+                :notchecked =>    POLICY_ACCEPT,
+                :matched =>       POLICY_ACCEPT,
+                :notmatched =>    POLICY_REJECT,
+                :partialmatch =>  POLICY_ACCEPT
             end
           end
         end

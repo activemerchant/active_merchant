@@ -146,9 +146,9 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, params)
         data = ssl_post(url(action), build_request(action, params),
-                 { 'Content-Type' =>'text/xml; charset=utf-8',
-                   'SOAPAction' => "#{xmlns(action)}#{action}" }
-               )
+          { 'Content-Type' =>'text/xml; charset=utf-8',
+            'SOAPAction' => "#{xmlns(action)}#{action}" }
+        )
 
         response = parse(action, data)
         Response.new(successful?(action, response), message_from(action, response), response,

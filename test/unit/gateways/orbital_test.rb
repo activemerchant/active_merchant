@@ -181,8 +181,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_truncates_name
     card = credit_card('4242424242424242',
-                       :first_name => 'John',
-                       :last_name => 'Jacob Jingleheimer Smith-Jones')
+      :first_name => 'John',
+      :last_name => 'Jacob Jingleheimer Smith-Jones')
 
     response = stub_comms do
       @gateway.purchase(50, card, :order_id => 1, :billing_address => address)
@@ -270,8 +270,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_truncates_by_byte_length
     card = credit_card('4242424242424242',
-                       :first_name => 'John',
-                       :last_name => 'Jacob Jingleheimer Smith-Jones')
+      :first_name => 'John',
+      :last_name => 'Jacob Jingleheimer Smith-Jones')
 
     long_address = address(
       :address1 =>      '456 Stréêt Name is Really Long',
@@ -689,7 +689,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     assert_deprecation_warning do
       response = @gateway.add_customer_profile(credit_card,
-          :billing_address => address)
+        :billing_address => address)
     end
 
     assert_instance_of Response, response

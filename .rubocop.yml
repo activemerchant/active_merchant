@@ -23,3 +23,7 @@ Metrics/ClassLength:
 
 Metrics/ModuleLength:
   Enabled: false
+
+
+Layout/AlignParameters:
+  EnforcedStyle: with_fixed_indentation

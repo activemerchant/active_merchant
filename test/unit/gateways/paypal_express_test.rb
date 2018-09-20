@@ -508,18 +508,18 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_error_code_for_single_error
     @gateway.expects(:ssl_post).returns(response_with_error)
     response = @gateway.setup_authorization(100,
-                 :return_url => 'http://example.com',
-                 :cancel_return_url => 'http://example.com'
-               )
+      :return_url => 'http://example.com',
+      :cancel_return_url => 'http://example.com'
+    )
     assert_equal '10736', response.params['error_codes']
   end
 
   def test_ensure_only_unique_error_codes
     @gateway.expects(:ssl_post).returns(response_with_duplicate_errors)
     response = @gateway.setup_authorization(100,
-                 :return_url => 'http://example.com',
-                 :cancel_return_url => 'http://example.com'
-               )
+      :return_url => 'http://example.com',
+      :cancel_return_url => 'http://example.com'
+    )
 
     assert_equal '10736' , response.params['error_codes']
   end
@@ -527,9 +527,9 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_error_codes_for_multiple_errors
     @gateway.expects(:ssl_post).returns(response_with_errors)
     response = @gateway.setup_authorization(100,
-                 :return_url => 'http://example.com',
-                 :cancel_return_url => 'http://example.com'
-               )
+      :return_url => 'http://example.com',
+      :cancel_return_url => 'http://example.com'
+    )
 
     assert_equal ['10736', '10002'] , response.params['error_codes'].split(',')
   end

@@ -7,8 +7,8 @@ class RemoteSkipJackTest < Test::Unit::TestCase
     @gateway = SkipJackGateway.new(fixtures(:skip_jack))
 
     @credit_card = credit_card('4445999922225',
-                    :verification_value => '999'
-                  )
+      :verification_value => '999'
+    )
 
     @amount = 100
 

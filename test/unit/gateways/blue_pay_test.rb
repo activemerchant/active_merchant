@@ -183,7 +183,7 @@ class BluePayTest < Test::Unit::TestCase
     end
     assert_equal 'CVV does not match', get_msg('STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE')
     assert_equal 'Street address matches, but 5-digit and 9-digit postal code do not match.',
-                   get_msg('STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE')
+      get_msg('STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE')
   end
 
   # Recurring Billing Unit Tests

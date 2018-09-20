@@ -209,7 +209,7 @@ class WorldpayTest < Test::Unit::TestCase
       if data =~ /capture/
         t = Time.now
         assert_tag_with_attributes 'date',
-            {'dayOfMonth' => t.day.to_s, 'month' => t.month.to_s, 'year' => t.year.to_s},
+          {'dayOfMonth' => t.day.to_s, 'month' => t.month.to_s, 'year' => t.year.to_s},
           data
       end
     end.respond_with(successful_inquiry_response, successful_capture_response)
@@ -220,7 +220,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_tag_with_attributes 'amount',
-          {'value' => '100', 'exponent' => '2', 'currencyCode' => 'GBP'},
+        {'value' => '100', 'exponent' => '2', 'currencyCode' => 'GBP'},
         data
     end.respond_with(successful_authorize_response)
   end
@@ -230,7 +230,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(10000, @credit_card, @options.merge(currency: :JPY))
     end.check_request do |endpoint, data, headers|
       assert_tag_with_attributes 'amount',
-          {'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY'},
+        {'value' => '100', 'exponent' => '0', 'currencyCode' => 'JPY'},
         data
     end.respond_with(successful_authorize_response)
 
@@ -238,7 +238,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(10000, @credit_card, @options.merge(currency: :OMR))
     end.check_request do |endpoint, data, headers|
       assert_tag_with_attributes 'amount',
-          {'value' => '10000', 'exponent' => '3', 'currencyCode' => 'OMR'},
+        {'value' => '10000', 'exponent' => '3', 'currencyCode' => 'OMR'},
         data
     end.respond_with(successful_authorize_response)
   end

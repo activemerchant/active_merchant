@@ -262,9 +262,9 @@ module ActiveMerchant #:nodoc:
       def commit(action, request)
         begin
           data = ssl_post(url, request,
-                   'Content-Type' => 'text/xml; charset=utf-8',
-                   'SOAPAction'   => soap_action(action)
-                 )
+            'Content-Type' => 'text/xml; charset=utf-8',
+            'SOAPAction'   => soap_action(action)
+          )
           response = parse(action, data)
         rescue ActiveMerchant::ResponseError => e
           response = parse_error(e.response, action)

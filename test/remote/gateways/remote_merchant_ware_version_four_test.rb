@@ -70,8 +70,8 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
     assert purchase.authorization
 
     assert reference_purchase = @gateway.purchase(@amount,
-                                                  purchase.authorization,
-                                                  @reference_purchase_options)
+      purchase.authorization,
+      @reference_purchase_options)
     assert_success reference_purchase
     assert_not_nil reference_purchase.authorization
   end

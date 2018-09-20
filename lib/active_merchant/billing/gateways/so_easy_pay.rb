@@ -162,10 +162,10 @@ module ActiveMerchant #:nodoc:
         response_string = ssl_post(test? ? self.test_url : self.live_url, soap, headers)
         response = parse(response_string, soap_action)
         return Response.new(response['errorcode'] == '000',
-                            response['errormessage'],
-                            response,
-                            :test => test?,
-                            :authorization => response['transaction_id'])
+          response['errormessage'],
+          response,
+          :test => test?,
+          :authorization => response['transaction_id'])
       end
 
       def build_soap(request)

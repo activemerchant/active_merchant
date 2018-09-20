@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         response = parse(ssl_post(url(action), post_data(action, parameters),
-         { 'Content-Type' => 'application/soap+xml; charset=utf-8'}))
+          { 'Content-Type' => 'application/soap+xml; charset=utf-8'}))
 
         Response.new(
           success_from(response),

@@ -387,11 +387,11 @@ module ActiveMerchant #:nodoc:
         }
         response = parse(ssl_post(url, request, headers))
         Response.new(success?(response),
-                     message_from(response),
-                     response,
-                     test: test?,
-                     authorization: build_authorization(response)
-                    )
+          message_from(response),
+          response,
+          test: test?,
+          authorization: build_authorization(response)
+        )
       end
 
       def build_authorization(response)

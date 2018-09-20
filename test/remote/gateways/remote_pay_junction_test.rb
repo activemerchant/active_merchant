@@ -72,7 +72,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'capture', response.params['posture'], 'Should be a capture'
     assert_equal auth.authorization, response.authorization,
-        'Should maintain transaction ID across request'
+      'Should maintain transaction ID across request'
   end
 
   def test_successful_credit
@@ -94,7 +94,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'void', response.params['posture'], 'Should be a capture'
     assert_equal purchase.authorization, response.authorization,
-        'Should maintain transaction ID across request'
+      'Should maintain transaction ID across request'
   end
 
   def test_successful_instant_purchase
@@ -111,17 +111,17 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_equal 'capture', response.params['posture'], 'Should be captured funds'
     assert_equal 'charge', response.params['transaction_action']
     assert_not_equal purchase.authorization, response.authorization,
-        'Should have recieved new transaction ID'
+      'Should have recieved new transaction ID'
 
     assert_success response
   end
 
   def test_successful_recurring
     assert response = @gateway.recurring(AMOUNT, @credit_card,
-                        :periodicity  => :monthly,
-                        :payments     => 12,
-                        :order_id => generate_unique_id[0..15]
-                      )
+      :periodicity  => :monthly,
+      :payments     => 12,
+      :order_id => generate_unique_id[0..15]
+    )
 
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'charge', response.params['transaction_action']

@@ -90,10 +90,10 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(success?(response),
-                     response['message'],
-                     response,
-                     :test => test?,
-                     :authorization => response['code_auth'])
+          response['message'],
+          response,
+          :test => test?,
+          :authorization => response['code_auth'])
       end
 
       def success?(response)
