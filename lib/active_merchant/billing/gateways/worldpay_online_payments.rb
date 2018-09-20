@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       self.supported_countries = %w(HK US GB BE CH CZ DE DK ES FI FR GR HU IE IT LU MT NL NO PL PT SE SG TR)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :switch]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro]
 
       self.homepage_url = 'http://online.worldpay.com'
       self.display_name = 'Worldpay Online Payments'

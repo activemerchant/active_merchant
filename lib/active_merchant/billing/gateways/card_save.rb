@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       
       self.money_format = :cents
       self.default_currency = 'GBP'
-      self.supported_cardtypes = [ :visa, :switch, :maestro, :master, :american_express, :jcb ]
+      self.supported_cardtypes = [ :visa, :maestro, :master, :american_express, :jcb ]
       self.supported_countries = [ 'GB' ]
       self.homepage_url = 'http://www.cardsave.net/'
       self.display_name = 'CardSave'

@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
       # number 5551234 within area code 202 (country code 1).
       VALID_PHONE_FORMAT = /\+\d{1,3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
 
-      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :switch ]
+      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb ]
       self.supported_countries = %w(AD CY GI IM MT RO CH AT DK GR IT MC SM TR BE EE HU LV NL SK GB BG FI IS LI NO SI VA FR IL LT PL ES CZ DE IE LU PT SE)
       self.homepage_url = 'http://www.wirecard.com'
       self.display_name = 'Wirecard'

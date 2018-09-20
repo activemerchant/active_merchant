@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
 
       XSD_VERSION = '1.121'
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :switch, :dankort, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
       self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG LB)
 
       self.default_currency = 'USD'
@@ -42,7 +42,6 @@ module ActiveMerchant #:nodoc:
         :discover => '004',
         :diners_club => '005',
         :jcb => '007',
-        :switch => '024',
         :dankort => '034',
         :maestro => '042'
       }
