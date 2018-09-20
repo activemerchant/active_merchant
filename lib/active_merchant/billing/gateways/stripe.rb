@@ -491,25 +491,39 @@ module ActiveMerchant #:nodoc:
 
       def post_data(params)
         return nil unless params
+        flatten_params([], params).join('&')
+      end
 
-        params.map do |key, value|
+      def flatten_params(flattened, params, prefix = nil)
+        params.each do |key, value|
           next if value != false && value.blank?
+          flattened_key = prefix.nil? ? key : "#{prefix}[#{key}]"
           if value.is_a?(Hash)
-            h = {}
-            value.each do |k, v|
-              h["#{key}[#{k}]"] = v unless v.blank?
-            end
-            post_data(h)
+            flatten_params(flattened, value, flattened_key)
           elsif value.is_a?(Array)
-            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join('&')
+            flatten_array(flattened, value, flattened_key)
           else
-            "#{key}=#{CGI.escape(value.to_s)}"
+            flattened << "#{flattened_key}=#{CGI.escape(value.to_s)}"
           end
-        end.compact.join('&')
+        end
+        flattened
+      end
+
+      def flatten_array(flattened, array, prefix)
+        array.each_with_index do |item, idx|
+          key = "#{prefix}[#{idx}]"
+          if item.is_a?(Hash)
+            flatten_params(flattened, item, key)
+          elsif item.is_a?(Array)
+            flatten_array(flattened, item, key)
+          else
+            flattened << "#{key}=#{CGI.escape(item.to_s)}"
+          end
+        end
       end
 
       def headers(options = {})
-        key     = options[:key] || @api_key
+        key = options[:key] || @api_key
         idempotency_key = options[:idempotency_key]
 
         headers = {

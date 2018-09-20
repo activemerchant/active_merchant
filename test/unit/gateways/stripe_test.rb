@@ -501,7 +501,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_void_contains_charge_expand
     @gateway.expects(:ssl_request).with do |_, _, post, _|
-      post.include?('expand[]=charge')
+      post.include?('expand[0]=charge')
     end.returns(successful_purchase_response(true))
 
     assert response = @gateway.void('ch_test_charge')
@@ -511,7 +511,8 @@ class StripeTest < Test::Unit::TestCase
   def test_void_with_additional_expand_contains_two_expands
     @gateway.expects(:ssl_request).with do |_, _, post, _|
       parsed = CGI.parse(post)
-      parsed['expand[]'].sort == ['balance_transaction', 'charge'].sort
+      parsed['expand[0]'] = 'balance_transaction'
+      parsed['expand[1]'] = 'charge'
     end.returns(successful_purchase_response(true))
 
     assert response = @gateway.void('ch_test_charge', expand: :balance_transaction)
@@ -521,7 +522,7 @@ class StripeTest < Test::Unit::TestCase
   def test_void_with_expand_charge_only_sends_one_charge_expand
     @gateway.expects(:ssl_request).with do |_, _, post, _|
       parsed = CGI.parse(post)
-      parsed['expand[]'] == ['charge']
+      parsed['expand[0]'] == ['charge']
     end.returns(successful_purchase_response(true))
 
     assert response = @gateway.void('ch_test_charge', expand: ['charge'])
@@ -573,7 +574,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_refund_contains_charge_expand
     @gateway.expects(:ssl_request).with do |_, _, post, _|
-      post.include?('expand[]=charge')
+      post.include?('expand[0]=charge')
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
@@ -583,7 +584,8 @@ class StripeTest < Test::Unit::TestCase
   def test_refund_with_additional_expand_contains_two_expands
     @gateway.expects(:ssl_request).with do |_, _, post, _|
       parsed = CGI.parse(post)
-      parsed['expand[]'].sort == ['balance_transaction', 'charge'].sort
+      parsed['expand[0]'] = 'balance_transaction'
+      parsed['expand[1]'] = 'charge'
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', expand: :balance_transaction)
@@ -593,7 +595,7 @@ class StripeTest < Test::Unit::TestCase
   def test_refund_with_expand_charge_only_sends_one_charge_expand
     @gateway.expects(:ssl_request).with do |_, _, post, _|
       parsed = CGI.parse(post)
-      parsed['expand[]'] == ['charge']
+      parsed['expand[0]'] == ['charge']
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', expand: ['charge'])
@@ -1152,7 +1154,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_expand_parameters
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      post.include?('expand[]=balance_transaction')
+      post.include?('expand[0]=balance_transaction')
     end.returns(successful_authorization_response)
 
     @options.merge!(:expand => :balance_transaction)
@@ -1162,7 +1164,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_expand_parameters_as_array
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      post.include?('expand[]=balance_transaction&expand[]=customer')
+      post.include?('expand[0]=balance_transaction&expand[1]=customer')
     end.returns(successful_authorization_response)
 
     @options.merge!(:expand => [:balance_transaction, :customer])
