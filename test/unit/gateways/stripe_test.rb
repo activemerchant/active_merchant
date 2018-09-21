@@ -13,7 +13,10 @@ class StripeTest < Test::Unit::TestCase
     @options = {
       :billing_address => address(),
       :statement_address => statement_address(),
-      :description => 'Test Purchase'
+      :description => 'Test Purchase',
+      :shipping_address => address(),
+      :carrier => 'UPS',
+      :tracking_number => '12345'
     }
 
     @apple_pay_payment_token = apple_pay_payment_token
@@ -1016,6 +1019,21 @@ class StripeTest < Test::Unit::TestCase
 
       assert_equal nil, post[:statement_address]
     end
+  end
+
+  def test_add_shipping_info
+    post = {:card => {}}
+    @gateway.send(:add_shipping_info, post, @options)
+    assert_equal @options[:shipping_address][:zip], post[:shipping][:address][:postal_code]
+    assert_equal @options[:shipping_address][:state], post[:shipping][:address][:state]
+    assert_equal @options[:shipping_address][:address1], post[:shipping][:address][:line1]
+    assert_equal @options[:shipping_address][:address2], post[:shipping][:address][:line2]
+    assert_equal @options[:shipping_address][:country], post[:shipping][:address][:country]
+    assert_equal @options[:shipping_address][:city], post[:shipping][:address][:city]
+    assert_equal @options[:shipping_address][:name], post[:shipping][:name]
+    assert_equal @options[:shipping_address][:phone], post[:shipping][:phone]
+    assert_equal @options[:carrier], post[:shipping][:carrier]
+    assert_equal @options[:tracking_number], post[:shipping][:tracking_number]
   end
 
   def test_ensure_does_not_respond_to_credit
