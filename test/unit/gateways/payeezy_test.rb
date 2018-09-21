@@ -16,6 +16,7 @@ class PayeezyGateway < Test::Unit::TestCase
       :ta_token => '123'
     }
     @authorization = 'ET1700|106625152|credit_card|4738'
+    @reversal_id = SecureRandom.random_number(1000000).to_s
   end
 
   def test_invalid_credentials
@@ -174,9 +175,23 @@ class PayeezyGateway < Test::Unit::TestCase
   end
 
   def test_successful_void
-    @gateway.expects(:ssl_post).returns(successful_void_response)
-    assert response = @gateway.void(@authorization, @options)
+    response = stub_comms do
+      @gateway.void(@authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      json = '{"transaction_type":"void","method":"credit_card","transaction_tag":"106625152","currency_code":"USD","amount":"4738"}'
+      assert_match json, data
+    end.respond_with(successful_void_response)
+
     assert_success response
+  end
+
+  def test_successful_void_with_reversal_id
+    stub_comms do
+      @gateway.void(@authorization, @options.merge(reversal_id: @reversal_id))
+    end.check_request do |endpoint, data, headers|
+      json = "{\"transaction_type\":\"void\",\"method\":\"credit_card\",\"reversal_id\":\"#{@reversal_id}\",\"currency_code\":\"USD\",\"amount\":\"4738\"}"
+      assert_match json, data
+    end.respond_with(successful_void_response)
   end
 
   def test_failed_void

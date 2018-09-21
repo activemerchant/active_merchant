@@ -34,6 +34,7 @@ module ActiveMerchant
         params = payment_method.is_a?(String) ? { transaction_type: 'recurring' } : { transaction_type: 'purchase' }
 
         add_invoice(params, options)
+        add_reversal_id(params, options)
         add_payment_method(params, payment_method, options)
         add_address(params, options)
         add_amount(params, amount, options)
@@ -46,6 +47,7 @@ module ActiveMerchant
         params = {transaction_type: 'authorize'}
 
         add_invoice(params, options)
+        add_reversal_id(params, options)
         add_payment_method(params, payment_method, options)
         add_address(params, options)
         add_amount(params, amount, options)
@@ -84,7 +86,7 @@ module ActiveMerchant
       def void(authorization, options = {})
         params = {transaction_type: 'void'}
 
-        add_authorization_info(params, authorization)
+        add_authorization_info(params, authorization, options)
         add_amount(params, amount_from_authorization(authorization), options)
 
         commit(params, options)
@@ -123,15 +125,24 @@ module ActiveMerchant
         params[:merchant_ref] = options[:order_id]
       end
 
+      def add_reversal_id(params, options)
+        params[:reversal_id] = options[:reversal_id] if options[:reversal_id]
+      end
+
       def amount_from_authorization(authorization)
         authorization.split('|').last.to_i
       end
 
-      def add_authorization_info(params, authorization)
+      def add_authorization_info(params, authorization, options = {})
         transaction_id, transaction_tag, method, _ = authorization.split('|')
-        params[:transaction_id] = transaction_id
-        params[:transaction_tag] = transaction_tag
         params[:method] = (method == 'token') ? 'credit_card' : method
+
+        if options[:reversal_id]
+          params[:reversal_id] = options[:reversal_id]
+        else
+          params[:transaction_id] = transaction_id
+          params[:transaction_tag] = transaction_tag
+        end
       end
 
       def add_creditcard_for_tokenization(params, payment_method, options)
