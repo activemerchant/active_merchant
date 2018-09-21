@@ -36,7 +36,6 @@ class IridiumTest < Test::Unit::TestCase
     assert response.test?
   end
 
-
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
@@ -110,11 +109,9 @@ class IridiumTest < Test::Unit::TestCase
     end
   end
 
-
   def test_transcript_scrubbing
     assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
   end
-
 
   private
 

@@ -628,7 +628,6 @@ class MerchantPartnersTest < Test::Unit::TestCase
     )
   end
 
-
   def successful_store_response
     %(<?xml version="1.0"?><interface_driver>
 <trans_catalog>

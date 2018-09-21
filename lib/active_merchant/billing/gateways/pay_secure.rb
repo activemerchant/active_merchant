@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       # Used for capturing, which is currently not supported.
       def add_reference(post, identification)
         auth, trans_id = identification.split(';')
@@ -71,7 +72,6 @@ module ActiveMerchant #:nodoc:
           :test => test_response?(response),
           :authorization => authorization_from(response)
         )
-
       end
 
       def successful?(response)

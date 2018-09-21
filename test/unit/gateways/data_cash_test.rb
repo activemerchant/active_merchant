@@ -122,6 +122,7 @@ class DataCashTest < Test::Unit::TestCase
   end
 
   private
+
   def failed_purchase_response
     <<-XML
 <Response>

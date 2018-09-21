@@ -1413,7 +1413,6 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
-
   def test_passing_stripe_account_header
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
       headers.include?('Stripe-Account')

@@ -122,6 +122,7 @@ module ActiveMerchant
       end
 
       private
+
       def add_request_details(params, options)
         params['COMMENT'] = options[:description] unless options[:description].blank?
       end

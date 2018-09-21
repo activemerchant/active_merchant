@@ -151,7 +151,6 @@ class NetbanxTest < Test::Unit::TestCase
     assert response.test?
   end
 
-
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed

@@ -125,7 +125,6 @@ class EwayManagedTest < Test::Unit::TestCase
       request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'order_id'
     }.returns(successful_purchase_response)
     @gateway.purchase(@amount, @valid_customer_id, options)
-
   end
 
   def test_invalid_customer_id

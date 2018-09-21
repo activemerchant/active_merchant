@@ -240,7 +240,6 @@ module ActiveMerchant #:nodoc:
         31203 => 'Pending due to currency conflict (accept manually)',
         31204 => 'Pending due to fraud filters (accept manually)',
 
-
         40000 => 'Problem with transaction data',
         40001 => 'Problem with payment data',
         40002 => 'Invalid checksum',
@@ -320,7 +319,6 @@ module ActiveMerchant #:nodoc:
         code = parsed_response['data']['response_code'].to_i
         RESPONSE_CODES[code] || code.to_s
       end
-
 
       class ResponseParser
         attr_reader :raw_response, :parsed, :succeeded, :message, :options

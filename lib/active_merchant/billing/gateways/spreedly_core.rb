@@ -88,7 +88,6 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/void.xml", '')
       end
 
-
       # Public: Determine whether a credit card is chargeable card and available for purchases.
       #
       # payment_method - The CreditCard or the Spreedly payment method token.

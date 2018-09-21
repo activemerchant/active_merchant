@@ -214,7 +214,6 @@ class PayscoutTest < Test::Unit::TestCase
     assert_equal address[:email],      post[:shipping_email]
   end
 
-
   def test_add_currency_from_options
     post = {}
     @gateway.send(:add_currency, post, 100, { currency: 'CAD' })

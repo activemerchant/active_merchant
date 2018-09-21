@@ -69,7 +69,6 @@ class VerifiTest < Test::Unit::TestCase
     result = {}
     @gateway.send(:add_invoice_data, result, :description => 'My Purchase is great')
     assert_equal 'My Purchase is great', result[:orderdescription]
-
   end
 
   def test_purchase_meets_minimum_requirements
@@ -83,7 +82,6 @@ class VerifiTest < Test::Unit::TestCase
     minimum_requirements.each do |key|
       assert_not_nil(data =~ /#{key}=/)
     end
-
   end
 
   def test_avs_result

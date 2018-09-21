@@ -97,6 +97,7 @@ class EwayTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_purchase_response
     <<-XML
       <?xml version="1.0"?>

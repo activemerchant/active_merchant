@@ -14,7 +14,6 @@ class RemoteModernPaymentTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
-
   end
 
   def test_successful_purchase

@@ -6,7 +6,9 @@ require 'nokogiri'
 class CommonPaypalGateway < ActiveMerchant::Billing::Gateway
   include ActiveMerchant::Billing::PaypalCommonAPI
   def currency(code); 'USD'; end
+
   def localized_amount(num, code); num; end
+
   def commit(a, b); end
 end
 
@@ -119,7 +121,6 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal '123', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/TransactionID').text
     assert_equal '1.00', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/Amount').text
   end
-
 
   def test_build_manage_pending_transaction_status_request
     request = REXML::Document.new(@gateway.send(:build_manage_pending_transaction_status,123, 'Accept'))

@@ -77,7 +77,6 @@ class CecabankTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
-
   private
 
   def successful_purchase_response

@@ -236,6 +236,7 @@ read 214 bytes
 Conn close
     POST_SCRUBBED
   end
+
   # Place raw successful response from gateway here
   def successful_purchase_response
     {

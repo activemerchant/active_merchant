@@ -481,6 +481,7 @@ issuer pursuant to cardholder agreement.
   </TransactionResult>
     RESPONSE
   end
+
   def successful_purchase_with_specified_currency_response
     <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>
@@ -569,6 +570,7 @@ issuer pursuant to cardholder agreement.
   </TransactionResult>
     RESPONSE
   end
+
   def successful_purchase_response_without_transarmor
     <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>
@@ -657,6 +659,7 @@ issuer pursuant to cardholder agreement.
   </TransactionResult>
     RESPONSE
   end
+
   def successful_refund_response
     <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>

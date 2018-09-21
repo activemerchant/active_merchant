@@ -64,6 +64,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def requires_address!(options)
         raise ArgumentError.new('Missing eWay required parameters: address or billing_address') unless (options.has_key?(:address) or options.has_key?(:billing_address))
       end

@@ -104,6 +104,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((cvv2\\?":\\?")\\?"), '\1[BLANK]"').
           gsub(%r((cvv2\\?":\\?")\s+), '\1[BLANK]')
       end
+
       private
 
       def create_post_for_auth_or_purchase(money, creditcard, options)

@@ -60,7 +60,6 @@ class RemoteAuthorizeNetApplePayTest < Test::Unit::TestCase
     assert_equal 'processing_error', response.error_code
   end
 
-
   private
 
   def apple_pay_payment_token(options = {})

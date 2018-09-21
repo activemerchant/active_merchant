@@ -99,6 +99,7 @@ module ActiveMerchant #:nodoc:
       alias_method :unstore, :delete
 
       private
+
       def add_customer_data(post, options)
         if options.has_key? :email
           post[:email] = options[:email]
@@ -181,7 +182,6 @@ module ActiveMerchant #:nodoc:
           :cvv_result => response['cvvresponse'],
           :avs_result => { :code => response['avsresponse'] }
         )
-
       end
 
       def message_from(response)

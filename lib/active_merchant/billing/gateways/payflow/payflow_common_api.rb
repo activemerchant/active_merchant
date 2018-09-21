@@ -78,6 +78,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def build_request(body, options = {})
         xml = Builder::XmlMarkup.new
         xml.instruct!

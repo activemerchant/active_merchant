@@ -60,7 +60,6 @@ class SSLVerify
         puts d.name
       end
     end
-
   end
 
   def try_host(http, path)

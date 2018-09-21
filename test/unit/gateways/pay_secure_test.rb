@@ -49,6 +49,7 @@ class PaySecureTest < Test::Unit::TestCase
   end
   
   private
+
   def successful_purchase_response
     <<-RESPONSE
 Status: Accepted

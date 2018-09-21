@@ -58,7 +58,6 @@ module ActiveMerchant #:nodoc:
     # [<tt>:header_background_color</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
     # [<tt>:header_border_color</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
 
-
     class PayflowExpressGateway < Gateway
       include PayflowCommonAPI
       include PaypalExpressCommon
@@ -109,6 +108,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def build_get_express_details_request(token)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'GetExpressCheckout' do

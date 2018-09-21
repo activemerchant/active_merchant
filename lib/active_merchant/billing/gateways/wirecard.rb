@@ -138,6 +138,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def clean_description(description)
         description.to_s.slice(0,32).encode('US-ASCII', invalid: :replace, undef: :replace, replace: '?')
       end

@@ -192,7 +192,6 @@ class CardConnectTest < Test::Unit::TestCase
   end
 
   def test_failed_unstore
-
   end
 
   def test_scrub

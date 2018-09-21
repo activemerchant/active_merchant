@@ -30,7 +30,6 @@ module ActiveMerchant #:nodoc:
         'JPY' => 392
       }
 
-
       def initialize(options = {})
         requires!(options, :login, :password, :terminal_id, :merchant_id)
         super

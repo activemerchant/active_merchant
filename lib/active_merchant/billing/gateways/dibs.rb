@@ -34,7 +34,6 @@ module ActiveMerchant #:nodoc:
           add_ticket_id(post, payment_method)
           commit(:authorize_ticket, post)
         end
-
       end
 
       def capture(amount, authorization, options={})
@@ -113,7 +112,6 @@ module ActiveMerchant #:nodoc:
         post[:clientIp] = options[:ip] || '127.0.0.1'
         post[:test] = true if test?
       end
-
 
       def add_reference(post, authorization)
         post[:transactionId] = authorization

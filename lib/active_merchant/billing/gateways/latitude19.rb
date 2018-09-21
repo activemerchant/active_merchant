@@ -147,7 +147,6 @@ module ActiveMerchant #:nodoc:
           gsub(%r((\"cvv\\\":\\\")\d+), '\1[FILTERED]')
       end
 
-
       private
 
       def add_request_id(post)

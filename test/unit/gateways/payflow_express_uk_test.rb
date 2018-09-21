@@ -63,6 +63,7 @@ class PayflowExpressUkTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_get_express_details_response
     <<-RESPONSE
 <?xml version="1.0"?>

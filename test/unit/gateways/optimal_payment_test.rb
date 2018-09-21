@@ -212,7 +212,6 @@ class OptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_deprecated_options
-
     assert_deprecation_warning("The 'account' option is deprecated in favor of 'account_number' and will be removed in a future version.") do
       @gateway = OptimalPaymentGateway.new(
         :account => '12345678',

@@ -279,7 +279,6 @@ module ActiveMerchant #:nodoc:
         }.delete_if{|k, v| v.nil?}
       end
 
-
       def commit(action, source_type, parameters)
         response = parse(ssl_post(live_url, post_data(COMMANDS[source_type][action], parameters)))
 

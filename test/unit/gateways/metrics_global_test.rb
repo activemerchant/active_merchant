@@ -61,7 +61,6 @@ class MetricsGlobalTest < Test::Unit::TestCase
     assert_equal 'CO', result[:state]
     assert_equal '164 Waverley Street', result[:address]
     assert_equal 'US', result[:country]
-
   end
 
   def test_add_invoice

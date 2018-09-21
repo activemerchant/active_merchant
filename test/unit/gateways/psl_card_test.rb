@@ -54,6 +54,7 @@ class PslCardTest < Test::Unit::TestCase
   end
   
   private
+
   def successful_purchase_response
     'ResponseCode=00&Message=AUTHCODE:01256&CrossReference=08012522454901256086&First4=4543&Last4=9982&ExpMonth=12&ExpYear=2010&AVSCV2Check=ALL MATCH&Amount=1000&QAAddress=76 Roseby Avenue Manchester&QAPostcode=M63X 7TH&MerchantName=Merchant Name&QAName=John Smith'
   end

@@ -119,7 +119,6 @@ class LinkpointTest < Test::Unit::TestCase
             '12.00', :quantity => '1', :options => [{:name => 'Color', :value =>
                 'Red'}, {:name => 'Size', :value => 'XL'}]},{:id => '111', :description => 'keychain', :price => '3.00', :quantity => '1'}]}
 
-
     assert data = @gateway.send(:post_data, @amount, @credit_card, options)
     assert REXML::Document.new(data)
   end
@@ -191,6 +190,7 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_authorization_response
     '<r_csp>CSI</r_csp><r_time>Sun Jan 6 21:41:31 2008</r_time><r_ref>0004486182</r_ref><r_error/><r_ordernum>1000</r_ordernum><r_message>APPROVED</r_message><r_code>1234560004486182:NNNM:100018312899:</r_code><r_tdate>1199680890</r_tdate><r_score/><r_authresponse/><r_approved>APPROVED</r_approved><r_avs>NNNM</r_avs>'
   end

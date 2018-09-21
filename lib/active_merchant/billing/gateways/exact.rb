@@ -13,7 +13,6 @@ module ActiveMerchant #:nodoc:
                        :capture       => '32',
                        :credit        => '34' }
 
-
       ENVELOPE_NAMESPACES = { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
                               'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
                               'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'

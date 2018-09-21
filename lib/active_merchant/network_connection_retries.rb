@@ -69,6 +69,7 @@ module ActiveMerchant
     end
 
     private
+
     def log_with_retry_details(logger, attempts, time, message, tag)
       NetworkConnectionRetries.log(logger, :info, 'connection_attempt=%d connection_request_time=%.4fs connection_msg="%s"' % [attempts, time, message], tag)
     end

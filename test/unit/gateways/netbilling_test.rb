@@ -114,6 +114,7 @@ class NetbillingTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_purchase_response
     'avs_code=X&cvv2_code=M&status_code=1&auth_code=999999&trans_id=110270311543&auth_msg=TEST+APPROVED&auth_date=2008-01-25+16:43:54'
   end

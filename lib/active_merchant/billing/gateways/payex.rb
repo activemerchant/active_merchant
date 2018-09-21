@@ -70,7 +70,6 @@ module ActiveMerchant #:nodoc:
           # stored authorization
           send_autopay(amount, payment_method, true, options)
         end
-
       end
 
       # Public: Send a purchase Payex request

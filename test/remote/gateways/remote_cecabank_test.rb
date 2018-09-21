@@ -26,7 +26,6 @@ class RemoteCecabankTest < Test::Unit::TestCase
     assert_equal 'ERROR', response.message
   end
 
-
   def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase

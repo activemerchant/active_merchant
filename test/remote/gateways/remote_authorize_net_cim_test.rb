@@ -873,5 +873,4 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     return response
   end
 
-
 end

@@ -116,7 +116,6 @@ class GatewayTest < Test::Unit::TestCase
     assert_equal [nil, nil], @gateway.send(:split_names, ' ')
   end
 
-
   def test_supports_scrubbing?
     gateway = Gateway.new
     refute gateway.supports_scrubbing?

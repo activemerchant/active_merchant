@@ -74,7 +74,6 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
    end
   end
 
-
   def test_build_setup_request_valid
     @gateway.expects(:ssl_post).returns(successful_setup_response)
 
@@ -89,9 +88,7 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
                                 :amount   => 100,
                                 :description => 'Description',
                                 :category => 'Digital' } ] )
-
   end
-
 
   private
 

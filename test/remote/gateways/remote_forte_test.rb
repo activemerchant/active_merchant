@@ -24,7 +24,6 @@ class RemoteForteTest < Test::Unit::TestCase
       description: 'Store Purchase',
       order_id: '1'
     }
-
   end
 
   def test_invalid_login

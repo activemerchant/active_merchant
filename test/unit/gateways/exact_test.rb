@@ -48,7 +48,6 @@ class ExactTest < Test::Unit::TestCase
     assert_failure response
   end
 
-
   def test_expdate
     assert_equal( '%02d%s' % [ @credit_card.month,
                                @credit_card.year.to_s[-2..-1] ],
@@ -85,8 +84,8 @@ class ExactTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
-
   private
+
   def successful_purchase_response
     <<-RESPONSE
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/" xmlns:types="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><q1:SendAndCommitResponse xmlns:q1="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Response"><SendAndCommitResult href="#id1" /></q1:SendAndCommitResponse><types:TransactionResult id="id1" xsi:type="types:TransactionResult"><ExactID xsi:type="xsd:string">A00427-01</ExactID><Password xsi:type="xsd:string">#######</Password><Transaction_Type xsi:type="xsd:string">00</Transaction_Type><DollarAmount xsi:type="xsd:string">1</DollarAmount><SurchargeAmount xsi:type="xsd:string">0</SurchargeAmount><Card_Number xsi:type="xsd:string">4242424242424242</Card_Number><Transaction_Tag xsi:type="xsd:string">106625152</Transaction_Tag><Authorization_Num xsi:type="xsd:string">ET1700</Authorization_Num><Expiry_Date xsi:type="xsd:string">0909</Expiry_Date><CardHoldersName xsi:type="xsd:string">Longbob Longsen</CardHoldersName><VerificationStr2 xsi:type="xsd:string">123</VerificationStr2><CVD_Presence_Ind xsi:type="xsd:string">1</CVD_Presence_Ind><Secure_AuthRequired xsi:type="xsd:string">0</Secure_AuthRequired><Secure_AuthResult xsi:type="xsd:string">0</Secure_AuthResult><Ecommerce_Flag xsi:type="xsd:string">0</Ecommerce_Flag><CAVV_Algorithm xsi:type="xsd:string">0</CAVV_Algorithm><Reference_No xsi:type="xsd:string">1</Reference_No><Reference_3 xsi:type="xsd:string">Store Purchase</Reference_3><Language xsi:type="xsd:string">0</Language><LogonMessage xsi:type="xsd:string">Processed by:
@@ -122,6 +121,7 @@ _______________________________________
 </CTR></types:TransactionResult></soap:Body></soap:Envelope>
     RESPONSE
   end
+
   def successful_refund_response
     <<-RESPONSE
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/" xmlns:types="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><q1:SendAndCommitResponse xmlns:q1="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Response"><SendAndCommitResult href="#id1" /></q1:SendAndCommitResponse><types:TransactionResult id="id1" xsi:type="types:TransactionResult"><ExactID xsi:type="xsd:string">A00427-01</ExactID><Password xsi:type="xsd:string">#######</Password><Transaction_Type xsi:type="xsd:string">00</Transaction_Type><DollarAmount xsi:type="xsd:string">1</DollarAmount><SurchargeAmount xsi:type="xsd:string">0</SurchargeAmount><Card_Number xsi:type="xsd:string">4242424242424242</Card_Number><Transaction_Tag xsi:type="xsd:string">106625152</Transaction_Tag><Authorization_Num xsi:type="xsd:string">ET1700</Authorization_Num><Expiry_Date xsi:type="xsd:string">0909</Expiry_Date><CardHoldersName xsi:type="xsd:string">Longbob Longsen</CardHoldersName><VerificationStr2 xsi:type="xsd:string">123</VerificationStr2><CVD_Presence_Ind xsi:type="xsd:string">1</CVD_Presence_Ind><Secure_AuthRequired xsi:type="xsd:string">0</Secure_AuthRequired><Secure_AuthResult xsi:type="xsd:string">0</Secure_AuthResult><Ecommerce_Flag xsi:type="xsd:string">0</Ecommerce_Flag><CAVV_Algorithm xsi:type="xsd:string">0</CAVV_Algorithm><Reference_No xsi:type="xsd:string">1</Reference_No><Reference_3 xsi:type="xsd:string">Store Purchase</Reference_3><Language xsi:type="xsd:string">0</Language><LogonMessage xsi:type="xsd:string">Processed by:

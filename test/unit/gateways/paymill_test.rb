@@ -224,6 +224,7 @@ class PaymillTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_store_response
     MockResponse.new 200, %[jsonPFunction({"transaction":{"mode":"CONNECTOR_TEST","channel":"57313835619696ac361dc591bc973626","response":"SYNC","payment":{"code":"CC.DB"},"processing":{"code":"CC.DB.90.00","reason":{"code":"00","message":"Successful Processing"},"result":"ACK","return":{"code":"000.100.112","message":"Request successfully processed in 'Merchant in Connector Test Mode'"},"timestamp":"2013-02-12 21:33:43"},"identification":{"shortId":"1998.1832.1612","uniqueId":"tok_4f9a571b39bd8d0b4db5"}}})]
   end

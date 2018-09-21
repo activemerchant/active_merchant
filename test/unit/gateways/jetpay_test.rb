@@ -141,6 +141,7 @@ class JetpayTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_purchase_response
     <<-EOF
     <JetPayResponse>

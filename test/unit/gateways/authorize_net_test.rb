@@ -879,7 +879,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'Y', response.avs_result['street_match']
     assert_equal 'Y', response.avs_result['postal_match']
 
-
     @gateway.expects(:ssl_post).returns(address_not_provided_avs_response)
 
     response = @gateway.purchase(@amount, @credit_card)
@@ -2209,7 +2208,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </messages>
       </createCustomerProfileTransactionResponse>
     eos
-
   end
 
   def successful_void_using_stored_card_response

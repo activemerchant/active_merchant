@@ -196,7 +196,6 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
-
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

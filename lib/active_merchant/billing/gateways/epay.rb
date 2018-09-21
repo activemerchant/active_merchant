@@ -120,7 +120,6 @@ module ActiveMerchant #:nodoc:
           gsub(%r((&?cvc=)\d*(&?)), '\1[FILTERED]\2')
       end
 
-
       private
 
       def add_amount(post, money, options)

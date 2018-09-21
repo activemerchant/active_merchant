@@ -189,7 +189,6 @@ module ActiveMerchant #:nodoc:
           xml.tag!('CUSTOMER_SHIP', NIL_ATTRIBUTE) do
           end
         end
-
       end
 
       def add_merchant_key(xml, options)

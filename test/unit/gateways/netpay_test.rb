@@ -76,7 +76,6 @@ class NetpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
-
   def test_successful_authorize
     @gateway.expects(:ssl_post).with(
       anything,

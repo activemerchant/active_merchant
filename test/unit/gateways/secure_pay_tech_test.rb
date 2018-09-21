@@ -34,6 +34,7 @@ class SecurePayTechTest < Test::Unit::TestCase
   end
  
   private
+
   def successful_purchase_response
     "1,4--120119220646821,000000014511,23284,014511,20080125\r\n"
   end

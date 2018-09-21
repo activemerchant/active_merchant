@@ -66,6 +66,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def add_payment_details(post, options)
         post[:pmtDate] = (options[:payment_date] || Time.now.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         post[:pmtType] = PAYMENT_METHOD[options[:payment_method] || :credit_card]

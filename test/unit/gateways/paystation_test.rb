@@ -3,7 +3,6 @@ require 'test_helper'
 class PaystationTest < Test::Unit::TestCase
   include CommStub
   def setup
-
     @gateway = PaystationGateway.new(
                  :paystation_id => 'some_id_number',
                  :gateway_id    => 'another_id_number'
@@ -80,7 +79,6 @@ class PaystationTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(successful_purchase_response)

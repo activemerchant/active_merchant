@@ -128,7 +128,6 @@ module ActiveMerchant #:nodoc:
         post[transactions[action]] = authorization
       end
 
-
       ACTIONS = {
         purchase: 'SALE',
         authorize: 'AUTHORIZE',

@@ -604,7 +604,6 @@ module ActiveMerchant
           xml.zip(truncate(address[:zip], 20))
           xml.country(truncate(address[:country], 60))
         end
-
       end
 
       def add_order_id(xml, options)

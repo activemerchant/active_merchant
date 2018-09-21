@@ -258,6 +258,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       # Commit the transaction by posting the XML file to the LinkPoint server
       def commit(money, creditcard, options = {})
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(money, creditcard, options)))
@@ -323,7 +324,6 @@ module ActiveMerchant #:nodoc:
       # Set up the parameters hash just once so we don't have to do it
       # for every action.
       def parameters(money, creditcard, options = {})
-
         params = {
           :payment => {
             :subtotal => amount(options[:subtotal]),
@@ -417,7 +417,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(xml)
-
         # For reference, a typical response...
         # <r_csp></r_csp>
         # <r_time></r_time>

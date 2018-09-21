@@ -98,7 +98,6 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_preauth_is_valid_xml
-
    params = {
      :order_id => 'order1',
      :amount => '1.01',
@@ -113,7 +112,6 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_purchase_is_valid_xml
-
    params = {
      :order_id => 'order1',
      :amount => '1.01',
@@ -128,7 +126,6 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_capture_is_valid_xml
-
    params = {
      :order_id => 'order1',
      :amount => '1.01',

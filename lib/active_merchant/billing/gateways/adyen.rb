@@ -249,7 +249,6 @@ module ActiveMerchant #:nodoc:
           test: test?,
           error_code: success ? nil : error_code_from(response)
         )
-
       end
 
       def url

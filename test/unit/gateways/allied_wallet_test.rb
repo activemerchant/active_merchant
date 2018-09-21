@@ -278,7 +278,6 @@ class AlliedWalletTest < Test::Unit::TestCase
     )
   end
 
-
   def empty_purchase_response
     %(
     {
@@ -296,7 +295,6 @@ class AlliedWalletTest < Test::Unit::TestCase
       "id": "123456",
     )
   end
-
 
   def transcript
     %(

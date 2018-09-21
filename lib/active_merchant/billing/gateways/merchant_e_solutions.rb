@@ -158,7 +158,6 @@ module ActiveMerchant #:nodoc:
         url = test? ? self.test_url : self.live_url
         parameters[:transaction_amount]  = amount(money) if money unless action == 'V'
 
-
         response = begin
           parse( ssl_post(url, post_data(action,parameters)) )
         rescue ActiveMerchant::ResponseError => e

@@ -20,7 +20,6 @@ class PayJunctionTest < Test::Unit::TestCase
     @amount = 100
   end
 
-
   def test_detect_test_credentials_when_in_production
     Base.mode = :production
 
@@ -95,8 +94,8 @@ class PayJunctionTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
-
   private
+
   def successful_authorization_response
     <<-RESPONSE
 dc_merchant_name=PayJunction - (demo)dc_merchant_address=3 W. Carrillodc_merchant_city=Santa Barbaradc_merchant_state=CAdc_merchant_zip=93101dc_merchant_phone=800-601-0230dc_device_id=1174dc_transaction_date=2007-11-28 19:22:33.791634dc_transaction_action=chargedc_approval_code=TAS193dc_response_code=00dc_response_message=APPROVAL TAS193 dc_transaction_id=3144302dc_posture=holddc_invoice_number=9f76c4e4bd66a36dc5aeb4bd7b3a02fadc_notes=--START QUICK-LINK DEBUG--

@@ -63,6 +63,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def add_test_mode(form, options)
         form[:test_mode] = 'TRUE' if options[:test_mode]
       end

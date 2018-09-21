@@ -2,7 +2,6 @@ require 'rubygems'
 require 'active_support'
 require 'active_merchant'
 
-
 class GatewaySupport #:nodoc:
   ACTIONS = [:purchase, :authorize, :capture, :void, :credit, :recurring]
 

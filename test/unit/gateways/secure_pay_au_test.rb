@@ -27,7 +27,6 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_equal [:visa, :master, :american_express, :diners_club, :jcb], SecurePayAuGateway.supported_cardtypes
   end
 
-
   def test_successful_purchase_with_live_data
     @gateway.expects(:ssl_post).returns(successful_live_purchase_response)
 

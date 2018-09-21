@@ -74,7 +74,6 @@ class MaxipagoTest < Test::Unit::TestCase
     void = @gateway.void(auth.authorization)
     assert_success void
     assert_equal 'VOIDED', void.params['response_message']
-
   end
 
   def test_failed_void

@@ -119,7 +119,6 @@ module ActiveMerchant #:nodoc:
           ip_address: options[:ip_address]
         }.merge(options[:additional_info] || {})
 
-
         add_address(post, options)
         add_shipping_address(post, options)
       end

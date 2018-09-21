@@ -231,7 +231,6 @@ Conn close
     )
   end
 
-
   def failed_purchase_response
     %(
       {\"meta\":{},\"errors\":[{\"status\":\"400\",\"source\":{\"pointer\":\"/payments\"},\"title\":\"Bad Request\",\"detail\":\"Partner error: Credit card declined (transaction element shows reason for decline)\",\"code\":\"58\",\"meta\":{\"debug\":{\"message\":\"Include debug info with support request.\",\"resource\":\"/payments POST\",\"log\":\"2017/02/02/[23]eb325f3ca78b4f7eb2178a0d1e635a0e\",\"request\":\"73c22dc3-e980-11e6-9390-69c24d5ed1f4\"},\"transaction\":{\"code\":\"51\",\"message\":\"Insufficient funds\",\"invoice\":\"3d1f247d9112349e3db252f9f3327047\",\"authCode\":\"A11111\",\"avsResult\":\"T\"}}}]}

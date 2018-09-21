@@ -170,13 +170,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
 
-
     # 6A. void
     assert response = @gateway.void(response.authorization, {:order_id => '6A'})
     assert_equal '360', response.params['response']
     assert_equal 'No transaction found with specified transaction Id', response.message
     puts "Test #{options[:order_id]}A: #{txn_id(response)}"
-
   end
 
   def test7
@@ -1207,7 +1205,6 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal assertions[:cvv], response.cvv_result['code'] if assertions[:cvv]
     assert_equal auth_code(options[:order_id]), response.params['authCode']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
-
 
     # 1B: credit
     assert response = @gateway.credit(amount, response.authorization, {:id => transaction_id})

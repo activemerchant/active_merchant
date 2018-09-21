@@ -60,32 +60,11 @@ Layout/ElseAlignment:
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
     - 'lib/active_merchant/billing/response.rb'
 
-# Offense count: 66
-# Cop supports --auto-correct.
-# Configuration parameters: AllowAdjacentOneLineDefs, NumberOfEmptyLines.
-Layout/EmptyLineBetweenDefs:
-  Enabled: false
-
-# Offense count: 97
-# Cop supports --auto-correct.
-Layout/EmptyLines:
-  Enabled: false
-
-# Offense count: 49
-# Cop supports --auto-correct.
-Layout/EmptyLinesAroundAccessModifier:
-  Enabled: false
-
 # Offense count: 165
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: empty_lines, empty_lines_except_namespace, empty_lines_special, no_empty_lines, beginning_only, ending_only
 Layout/EmptyLinesAroundClassBody:
-  Enabled: false
-
-# Offense count: 64
-# Cop supports --auto-correct.
-Layout/EmptyLinesAroundMethodBody:
   Enabled: false
 
 # Offense count: 40

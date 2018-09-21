@@ -198,9 +198,11 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def successful_token_response
     %({"token": "TEST_RU_8fcc4f2f-8c0d-483d-a0a3-eaad7356623e","paymentMethod": {"type": "ObfuscatedCard","name": "Longbob Longsen","expiryMonth": 10,"expiryYear": 2016,"cardType": "VISA","maskedCardNumber": "**** **** **** 1111"},"reusable": true})
   end
+
   def successful_authorize_response
     %({"orderCode": "a46502d0-80ba-425b-a6db-2c57e9de91da","token": "TEST_RU_8fcc4f2f-8c0d-483d-a0a3-eaad7356623e","orderDescription": "Test Purchase","amount": 0,"currencyCode": "GBP","authorizeOnly": true,"paymentStatus": "AUTHORIZED","paymentResponse": {"type": "ObfuscatedCard","name": "Longbob Longsen","expiryMonth": 10,"expiryYear": 2016,"cardType": "VISA_CREDIT","maskedCardNumber": "**** **** **** 1111"},"environment": "TEST","authorizedAmount": 1000})
   end
+
   def failed_authorize_response
     %({"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can't be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{'reusable':false,'paymentMethod':{'type':'Card','name':'Example Name','expiryMonth':'**','expiryYear':'****','cardNumber':'**** **** **** 1111','cvc':''},'clientKey':'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810'}"}    )
   end

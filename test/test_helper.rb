@@ -127,6 +127,7 @@ module ActiveMerchant
     end
 
     private
+
     def clean_backtrace(&block)
       yield
     rescue AssertionClass => e
@@ -141,6 +142,7 @@ module ActiveMerchant
     DEFAULT_CREDENTIALS = File.join(File.dirname(__FILE__), 'fixtures.yml') unless defined?(DEFAULT_CREDENTIALS)
 
     private
+
     def default_expiration_date
       @default_expiration_date ||= Date.new((Time.now.year + 1), 9, 30)
     end
@@ -325,11 +327,11 @@ module ActionViewHelperTestHelper
   end
 
   protected
+
   def protect_against_forgery?
     false
   end
 end
-
 
 class MockResponse
   attr_reader   :code, :body, :message

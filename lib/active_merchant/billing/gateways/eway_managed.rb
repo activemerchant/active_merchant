@@ -136,7 +136,6 @@ module ActiveMerchant #:nodoc:
         post[:invoiceDescription] = options[:description]
       end
 
-
       # add credit card details to be stored by eway. NOTE eway requires "title" field
       def add_creditcard(post, creditcard)
         post[:CCNumber]  = creditcard.number

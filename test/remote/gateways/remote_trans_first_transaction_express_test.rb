@@ -76,7 +76,6 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal 'CVV matches', response.cvv_result['message']
   end
 
-
   def test_successful_purchase_without_cvv
     credit_card_opts = {
       :number => 4485896261017708,

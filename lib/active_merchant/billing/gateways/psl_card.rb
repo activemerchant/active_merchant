@@ -240,7 +240,6 @@ module ActiveMerchant
       #   -a hash with all of the values returned in the PSL response
       #
       def parse(body)
-
         fields = {}
         for line in body.split('&')
           key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten

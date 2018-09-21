@@ -48,7 +48,6 @@ class RemoteIveriTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
-
   def test_failed_purchase
     response = @gateway.purchase(@amount, @bad_card, @options)
     assert_failure response

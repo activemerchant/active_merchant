@@ -96,7 +96,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-
       def supports_scrubbing?
         true
       end

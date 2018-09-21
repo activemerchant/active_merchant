@@ -51,8 +51,6 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
-
-
   def test_successful_usd_purchase
     assert response = @gateway.purchase(@amount, @visa, @options.update(:currency => 'USD'))
     assert_equal 'OK', response.message

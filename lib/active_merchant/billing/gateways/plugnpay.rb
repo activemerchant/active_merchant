@@ -172,6 +172,7 @@ module ActiveMerchant
       end
 
       private
+
       def commit(action, post)
         response = parse( ssl_post(self.live_url, post_data(action, post)) )
         success = SUCCESS_CODES.include?(response[:finalstatus])

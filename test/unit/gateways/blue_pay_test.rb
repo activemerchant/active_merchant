@@ -68,7 +68,6 @@ class BluePayTest < Test::Unit::TestCase
     assert_equal 'AK', result[:STATE]
     assert_equal '123 Test St.', result[:ADDR1]
     assert_equal 'US', result[:COUNTRY]
-
   end
 
   def test_name_comes_from_payment_method
@@ -177,7 +176,6 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_message_from
-
     def get_msg(query)
       @gateway.send(:parse, query).message
     end

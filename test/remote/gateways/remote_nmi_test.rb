@@ -160,7 +160,6 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
-
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response

@@ -242,7 +242,6 @@ SRC
 SRC
 
     assert_xml_equal valid_refund_request_xml, @gateway.build_refund_request(@amount, '1;4321;1234', {})
-
   end
 
   def test_refund_with_rebate_secret_xml
@@ -265,7 +264,6 @@ SRC
 SRC
 
     assert_xml_equal valid_refund_request_xml, gateway.build_refund_request(@amount, '1;4321;1234', {})
-
   end
 
   def test_auth_with_address
@@ -283,7 +281,6 @@ SRC
     assert_instance_of Response, response
     assert_success response
     assert response.test?
-
   end
 
   def test_zip_in_shipping_address

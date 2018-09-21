@@ -17,6 +17,7 @@ module ActiveMerchant
     alias_method :to_s, :to_post_data
 
     private
+
     def required?(key)
       required_fields.include?(key)
     end

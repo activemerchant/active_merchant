@@ -149,7 +149,6 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount-1, auth.authorization)
     assert_failure refund
     assert_equal 'Refund not allowed on non-captured auth.', refund.message
-
   end
 
   def test_failed_partial_check_refund # the gate way does not support this transaction

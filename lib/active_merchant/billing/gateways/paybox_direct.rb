@@ -174,7 +174,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-
         parameters.update(
           :version => API_VERSION,
           :type => TRANSACTIONS[action.to_sym],

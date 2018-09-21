@@ -539,7 +539,6 @@ RESPONSE
 RESPONSE
   end
 
-
   def declined_response
     <<-RESPONSE
 {

@@ -386,6 +386,7 @@ module ActiveMerchant #:nodoc:
         end
 
         private
+
         def month_days
           mdays = [nil,31,28,31,30,31,30,31,31,30,31,30,31]
           mdays[2] = 29 if Date.leap?(year)

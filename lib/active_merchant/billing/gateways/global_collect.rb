@@ -246,7 +246,6 @@ module ActiveMerchant #:nodoc:
           error_code: error_code_from(succeeded, response),
           test: test?
         )
-
       end
 
       def headers(action, post, authorization = nil)

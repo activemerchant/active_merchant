@@ -307,7 +307,6 @@ class CenposTest < Test::Unit::TestCase
     )
   end
 
-
   def successful_credit_response
     %(
       <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><ProcessCreditCardResponse xmlns="http://tempuri.org/"><ProcessCreditCardResult i:type="a:ProcessRecurringSaleResponse" xmlns:a="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><Message xmlns="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common">Approved</Message><Result xmlns="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common">0</Result><a:AccountBalanceAmount i:nil="true"/><a:Amount>91.13</a:Amount><a:AutorizationNumber i:nil="true"/><a:CardType>VISA</a:CardType><a:Discount>0</a:Discount><a:DiscountAmount>0</a:DiscountAmount><a:EmvData i:nil="true"/><a:OriginalAmount>91.13</a:OriginalAmount><a:ParameterValidationResultList/><a:PartiallyAuthorizedAmount i:nil="true"/><a:ReferenceNumber>1609996211</a:ReferenceNumber><a:Surcharge>0</a:Surcharge><a:SurchargeAmount>0</a:SurchargeAmount><a:TraceNumber i:nil="true"/><a:ProtectedCardNumber i:nil="true"/><a:RecurringSaleTokenId i:nil="true"/></ProcessCreditCardResult></ProcessCreditCardResponse></s:Body></s:Envelope>

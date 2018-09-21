@@ -181,6 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def truncate(value, max_size)
         return nil unless value
         return value.to_s if CGI.escape(value.to_s).length <= max_size

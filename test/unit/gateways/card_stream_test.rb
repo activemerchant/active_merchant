@@ -196,7 +196,6 @@ class CardStreamTest < Test::Unit::TestCase
   end
 
   def test_purchase_options
-
     # Default
     purchase = stub_comms do
       @gateway.purchase(142, @visacreditcard, @visacredit_options)

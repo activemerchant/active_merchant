@@ -21,12 +21,10 @@ class RemotePayscoutTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
-
     assert_success response
     assert_equal 'The transaction has been approved', response.message
     assert_equal 'N', response.cvv_result['code']
   end
-
 
   def test_approved_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)

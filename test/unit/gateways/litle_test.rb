@@ -396,7 +396,6 @@ class LitleTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
   end
 
-
   private
 
   def successful_purchase_response

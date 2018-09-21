@@ -350,7 +350,6 @@ module ActiveMerchant #:nodoc:
         })
       end
 
-
       def currency_code(currency)
         CURRENCY_CODES[currency]
       end

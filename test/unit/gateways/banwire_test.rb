@@ -89,7 +89,6 @@ class BanwireTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
-
   private
 
   def failed_purchase_response

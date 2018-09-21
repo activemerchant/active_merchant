@@ -26,8 +26,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
     assert_success response
     assert_equal '1355694937', response.authorization
     assert_equal 'auth', response.params['type']
-  end
-  
+  end  
   
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
@@ -69,8 +68,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
 
     assert data = @gateway.send(:post_data, 'auth', params)
     assert_equal post_data_fixture.size, data.size
-  end
-  
+  end  
   
   def test_purchase_meets_minimum_requirements
     params = {:amount => @amount}

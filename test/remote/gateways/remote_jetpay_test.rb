@@ -75,7 +75,6 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
-
   def test_void
     # must void a valid auth
     assert auth = @gateway.authorize(9900, @credit_card, @options)
@@ -83,7 +82,6 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
     assert_not_nil auth.params['approval']
-
 
     assert void = @gateway.void(auth.authorization)
     assert_success void

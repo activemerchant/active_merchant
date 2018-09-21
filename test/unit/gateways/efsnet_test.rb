@@ -22,7 +22,6 @@ class EfsnetTest < Test::Unit::TestCase
     assert response.test?
     assert_equal '100018347764;1.00', response.authorization
     assert_equal 'Approved', response.message
-
   end
 
   def test_unsuccessful_purchase
@@ -92,6 +91,7 @@ class EfsnetTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_purchase_response
     <<-XML
 <?xml version="1.0"?>

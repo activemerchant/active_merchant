@@ -91,6 +91,7 @@ module ActiveMerchant
       end
 
       private
+
       def commit(request)
         response = parse(ssl_post(self.live_url, request))
 

@@ -37,7 +37,6 @@ class RemoteBanwireTest < Test::Unit::TestCase
     assert_success response
   end
 
-
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

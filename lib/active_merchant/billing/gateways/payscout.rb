@@ -41,7 +41,6 @@ module ActiveMerchant #:nodoc:
         commit('capture', money, post)
       end
 
-
       def refund(money, authorization, options = {})
         post = {}
         post[:transactionid] = authorization

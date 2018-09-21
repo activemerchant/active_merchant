@@ -90,6 +90,7 @@ module ActiveMerchant #:nodoc:
           gsub(/(number\\?":\\?")(\d*)/, '\1[FILTERED]').
           gsub(/(cvc\\?":\\?")(\d*)/, '\1[FILTERED]')
       end
+
       private
 
       def add_amount(post, money, options)

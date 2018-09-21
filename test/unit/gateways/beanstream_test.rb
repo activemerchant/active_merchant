@@ -162,7 +162,6 @@ class BeanstreamTest < Test::Unit::TestCase
     assert_equal 'DECLINE', response.message
   end
 
-
   # Testing Non-American countries
 
   def test_german_address_sets_state_to_the_required_dummy_value

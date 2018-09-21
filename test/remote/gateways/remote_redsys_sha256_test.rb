@@ -177,6 +177,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
 
     assert_equal clean_transcript.include?('[BLANK]'), true
   end
+
   private
 
   def generate_order_id

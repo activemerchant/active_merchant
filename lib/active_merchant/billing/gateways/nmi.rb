@@ -214,7 +214,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, params)
-
         params[action == 'add_customer' ? :customer_vault : :type] = action
         params[:username] = @options[:login]
         params[:password] = @options[:password]

@@ -100,7 +100,6 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_not_nil auth.authorization
     assert_not_nil auth.params['approval']
 
-
     assert void = @gateway.void(auth.authorization, @options)
     assert_success void
   end

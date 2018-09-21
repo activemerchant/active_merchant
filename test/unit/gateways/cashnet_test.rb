@@ -147,6 +147,7 @@ class Cashnet < Test::Unit::TestCase
   end
 
   private
+
   def expected_expiration_date
     '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
   end

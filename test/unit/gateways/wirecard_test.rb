@@ -579,7 +579,6 @@ class WirecardTest < Test::Unit::TestCase
     XML
   end
 
-
   # Purchase failure
   def wrong_creditcard_purchase_response
     <<-XML

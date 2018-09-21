@@ -106,7 +106,6 @@ module ActiveMerchant #:nodoc:
         commit('update', nil, post)
       end
 
-
       def delete(vault_id)
         post = {}
         post[:customer_vault] = 'delete_customer'
@@ -128,6 +127,7 @@ module ActiveMerchant #:nodoc:
       alias_method :unstore, :delete
 
       private
+
       def add_customer_data(post, options)
         if options.has_key? :email
           post[:email] = options[:email]
@@ -237,7 +237,6 @@ module ActiveMerchant #:nodoc:
           :cvv_result => response['cvvresponse'],
           :avs_result => { :code => response['avsresponse'] }
         )
-
       end
 
       def expdate(creditcard)
@@ -246,7 +245,6 @@ module ActiveMerchant #:nodoc:
 
         "#{month}#{year[-2..-1]}"
       end
-
 
       def message_from(response)
         case response['responsetext']

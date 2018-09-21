@@ -67,7 +67,6 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     end
   end
 
-
   def test_invalid_response_error
     assert_raises(ActiveMerchant::InvalidResponseError) do
       retry_exceptions do

@@ -80,6 +80,7 @@ module ActiveMerchant
       end
 
       private
+
       def new_post
         {
           order: {},

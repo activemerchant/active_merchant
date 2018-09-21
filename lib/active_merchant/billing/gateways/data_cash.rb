@@ -214,7 +214,6 @@ module ActiveMerchant
       end
 
       def add_credit_card(xml, credit_card, address)
-
         xml.tag! :Card do
           # DataCash calls the CC number 'pan'
           xml.tag! :pan, credit_card.number
@@ -274,7 +273,6 @@ module ActiveMerchant
       end
 
       def parse(body)
-
         response = {}
         xml = REXML::Document.new(body)
         root = REXML::XPath.first(xml, '//Response')

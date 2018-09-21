@@ -2,7 +2,6 @@ require 'test_helper'
 
 class RemoteSoEasyPayTest < Test::Unit::TestCase
 
-
   def setup
     @gateway = SoEasyPayGateway.new(fixtures(:so_easy_pay))
 

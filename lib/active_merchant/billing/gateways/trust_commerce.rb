@@ -304,6 +304,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def add_payment_source(params, source)
         if source.is_a?(String)
           add_billing_id(params, source)

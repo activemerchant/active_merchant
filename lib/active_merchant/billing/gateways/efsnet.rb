@@ -142,7 +142,6 @@ module ActiveMerchant #:nodoc:
         post[:expiration_year]  = sprintf('%.4i', creditcard.year)[-2..-1]
       end
 
-
       def commit(action, parameters)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters), 'Content-Type' => 'text/xml'))
 

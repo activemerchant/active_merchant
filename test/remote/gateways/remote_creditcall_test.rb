@@ -167,6 +167,5 @@ class RemoteCreditcallTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:transaction_key], transcript)
-
   end
 end

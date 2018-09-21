@@ -300,7 +300,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-
   def test_successful_subscription_credit
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message

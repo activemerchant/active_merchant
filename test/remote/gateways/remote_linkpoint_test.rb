@@ -96,7 +96,6 @@ class LinkpointTest < Test::Unit::TestCase
         {:id => '111', :description => 'keychain', :price => '3.00', :quantity => '1'}]})
     assert purchase = @gateway.purchase(1500, @credit_card, @options)
     assert_success purchase
-
   end
 
   def test_successful_recurring_payment

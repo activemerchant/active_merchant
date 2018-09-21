@@ -174,7 +174,6 @@ module QuickpayCommon
     base.supported_countries = ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE']
     base.homepage_url = 'http://quickpay.net/'
     base.display_name = 'QuickPay'
-
   end
     
   def expdate(credit_card)

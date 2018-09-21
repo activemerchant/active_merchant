@@ -470,7 +470,6 @@ DeclineCode=00
 ExpiryDate=0616
 BankAuthCode=999777
   TRANSCRIPT
-
   end
 
   def scrubbed_transcript
@@ -492,6 +491,5 @@ DeclineCode=00
 ExpiryDate=0616
 BankAuthCode=999777
   TRANSCRIPT
-
   end
 end

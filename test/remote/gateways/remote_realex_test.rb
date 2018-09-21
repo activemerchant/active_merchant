@@ -105,7 +105,6 @@ class RemoteRealexTest < Test::Unit::TestCase
       assert_equal '101', response.params['result']
       assert_equal response.params['message'], response.message
     end
-
   end
 
   def test_realex_purchase_with_apple_pay_declined
@@ -141,7 +140,6 @@ class RemoteRealexTest < Test::Unit::TestCase
       assert_equal '103', response.params['result']
       assert_equal RealexGateway::DECLINED, response.message
     end
-
   end
 
   def test_realex_purchase_coms_error
@@ -157,7 +155,6 @@ class RemoteRealexTest < Test::Unit::TestCase
       assert_equal '200', response.params['result']
       assert_equal RealexGateway::BANK_ERROR, response.message
     end
-
   end
 
   def test_realex_expiry_month_error

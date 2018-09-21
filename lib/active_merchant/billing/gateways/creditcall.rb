@@ -214,7 +214,6 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-
         response
       end
 

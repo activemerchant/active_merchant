@@ -324,6 +324,7 @@ class SageGatewayTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_authorization_response
     "\002A911911APPROVED                        00MX001234567890\0341000\0340\034\003"
   end

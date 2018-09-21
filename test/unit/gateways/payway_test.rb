@@ -50,7 +50,6 @@ class PaywayTest < Test::Unit::TestCase
     assert_match '0', response.params['summary_code']
     assert_match '08', response.params['response_code']
     assert_match 'VISA', response.params['card_scheme_name']
-
   end
 
   def test_successful_purchase_master_card

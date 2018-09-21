@@ -76,7 +76,6 @@ module ActiveMerchant #:nodoc:
         post[:email]       = options[:email] || 'unknown@example.com'
         post[:currencyCode]= options[:currency] || currency(money)
         post[:merchAcct]   = options[:merchant]
-
       end
 
       def add_creditcard(params, creditcard)

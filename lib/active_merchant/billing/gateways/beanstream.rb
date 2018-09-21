@@ -205,6 +205,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def build_response(*args)
         Response.new(*args)
       end
