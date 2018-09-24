@@ -122,24 +122,6 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'wow@example.com', response.params['metadata']['email']
   end
 
-  def test_successful_purchase_with_shipping_info
-    custom_options = @options.merge(:shipping_address => address(), :carrier => 'UPS', :tracking_number => '12345')
-    assert response = @gateway.purchase(@amount, @credit_card, custom_options)
-    assert_success response
-    assert_equal 'charge', response.params['object']
-    assert response.params['paid']
-    assert_equal custom_options[:shipping_address][:name], response.params['shipping']['name']
-    assert_equal custom_options[:shipping_address][:address1], response.params['shipping']['address']['line1']
-    assert_equal custom_options[:shipping_address][:address2], response.params['shipping']['address']['line2']
-    assert_equal custom_options[:shipping_address][:city], response.params['shipping']['address']['city']
-    assert_equal custom_options[:shipping_address][:state], response.params['shipping']['address']['state']
-    assert_equal custom_options[:shipping_address][:zip], response.params['shipping']['address']['postal_code']
-    assert_equal custom_options[:shipping_address][:country], response.params['shipping']['address']['country']
-    assert_equal custom_options[:shipping_address][:phone], response.params['shipping']['phone']
-    assert_equal custom_options[:carrier], response.params['shipping']['carrier']
-    assert_equal custom_options[:tracking_number], response.params['shipping']['tracking_number']
-  end
-
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
