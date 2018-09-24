@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.conekta.io/'
 
       self.supported_countries = ['MX']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = [:visa, :master, :american_express, :carnet]
       self.homepage_url = 'https://conekta.io/'
       self.display_name = 'Conekta Gateway'
       self.money_format = :cents
