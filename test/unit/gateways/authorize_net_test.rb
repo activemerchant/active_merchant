@@ -394,6 +394,24 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
   end
 
+  def test_successful_purchase_using_stored_card_and_custom_delimiter
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_using_stored_card_response_with_pipe_delimiter)
+
+    response = @gateway.purchase(@amount, store.authorization, {delimiter: '|', description: 'description, with, commas'})
+    assert_success response
+
+    assert_equal '2235700270#XXXX2224#cim_purchase', response.authorization
+    assert_equal 'Y', response.avs_result['code']
+    assert response.avs_result['street_match']
+    assert response.avs_result['postal_match']
+    assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
+    assert_equal 'description, with, commas', response.params['order_description']
+  end
+
   def test_failed_purchase_using_stored_card
     @gateway.expects(:ssl_post).returns(successful_store_response)
     store = @gateway.store(@credit_card, @options)
@@ -2105,6 +2123,23 @@ class AuthorizeNetTest < Test::Unit::TestCase
           </message>
       </messages>
       <directResponse>1,1,1,This transaction has been approved.,8HUT72,Y,2235700270,1,Store Purchase,1.01,CC,auth_capture,e385c780422f4bd182c4,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,4A20EEAF89018FF075899DDB332E9D35,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def successful_purchase_using_stored_card_response_with_pipe_delimiter
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <refId>1</refId>
+      <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+          <code>I00001</code>
+          <text>Successful.</text>
+          </message>
+      </messages>
+      <directResponse>1|1|1|This transaction has been approved.|8HUT72|Y|2235700270|1|description, with, commas|1.01|CC|auth_capture|e385c780422f4bd182c4|Longbob|Longsen||||n/a|||||||||||||||||||4A20EEAF89018FF075899DDB332E9D35||2|||||||||||XXXX2224|Visa||||||||||||||||</directResponse>
       </createCustomerProfileTransactionResponse>
     eos
   end

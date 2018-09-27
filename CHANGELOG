@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Authorize.Net: Support custom delimiter for cim [curiousepic] [#3001]
 
 == Version 1.84.0 (September 27, 2018)
 * PayU Latam: support partial captures [bpollack] #2974
