@@ -72,8 +72,8 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((Authorization: )[^\\]*)i, '\1[FILTERED]').
-          gsub(%r(("cardNumber\\":\\")\d+), '\1[FILTERED]').
-          gsub(%r(("cvv\\":\\")\d+), '\1[FILTERED]')
+          gsub(%r(("cardNumber\\+":\\+")\d+), '\1[FILTERED]').
+          gsub(%r(("cvv\\+":\\+")\d+), '\1[FILTERED]')
       end
 
       private
@@ -230,11 +230,14 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, authorization = nil)
         begin
-          response = parse(ssl_post(url(action, authorization), post.to_json, headers(action, post, authorization)))
+          raw_response = ssl_post(url(action, authorization), post.to_json, headers(action, post, authorization))
+          response = parse(raw_response)
         rescue ResponseError => e
           if e.response.code.to_i >= 400
             response = parse(e.response.body)
           end
+        rescue JSON::ParserError
+          response = json_error(raw_response)
         end
 
         succeeded = success_from(response)
@@ -246,6 +249,14 @@ module ActiveMerchant #:nodoc:
           error_code: error_code_from(succeeded, response),
           test: test?
         )
+      end
+
+      def json_error(raw_response)
+        {
+          'error_message' => 'Invalid response received from the Ingenico ePayments (formerly GlobalCollect) API.  Please contact Ingenico ePayments if you continue to receive this message.' \
+            "  (The raw response returned by the API was #{raw_response.inspect})",
+          'status' => 'REJECTED'
+        }
       end
 
       def headers(action, post, authorization = nil)
@@ -286,8 +297,10 @@ EOS
         else
           if errors = response['errors']
             errors.first.try(:[], 'message')
-          elsif status = response['status']
-            'Status: ' + status
+          elsif response['error_message']
+            response['error_message']
+          elsif response['status']
+            'Status: ' + response['status']
           else
             'No message available'
           end
@@ -297,8 +310,10 @@ EOS
       def authorization_from(succeeded, response)
         if succeeded
           response['id'] || response['payment']['id'] || response['paymentResult']['payment']['id']
-        else
+        elsif response['errorId']
           response['errorId']
+        else
+          'GATEWAY ERROR'
         end
       end
 

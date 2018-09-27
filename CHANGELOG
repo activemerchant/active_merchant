@@ -2,6 +2,7 @@
 
 == HEAD
 * UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] [#3002]
+* Global Collect: handle internal server errors [molbrown] [#3005]
 
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] [#3001]
