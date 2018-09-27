@@ -322,6 +322,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', response.message
   end
 
+  def test_successful_purchase_using_stored_card_with_delimiter
+    response = @gateway.store(@credit_card, @options.merge(delimiter: '|'))
+    assert_success response
+
+    response = @gateway.purchase(@amount, response.authorization, @options.merge(delimiter: '|', description: 'description, with, commas'))
+    assert_success response
+    assert_equal 'This transaction has been approved.', response.message
+    assert_equal 'description, with, commas', response.params['order_description']
+  end
+
   def test_failed_purchase_using_stored_card
     response = @gateway.store(@declined_card)
     assert_success response
