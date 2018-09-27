@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.84.0 (September 27, 2018)
 * PayU Latam: support partial captures [bpollack] #2974
 * Braintree: Reflect correct test mode in Braintree responses [elfassy] [#2980]
 * FirstPay: Expose error code [curiousepic] #2979
@@ -17,6 +19,7 @@
 * Stripe: support Level 3 transaction fields [bpollack] #2996
 * Conekta: support Carnet cards [bpollack] #2999
 * Openpay: support Carnet cards [bpollack] #2999
+* Adyen: Add support for GooglePay [dtykocki] #2971
 
 == Version 1.83.0 (August 30, 2018)
 * CT Payment: Update How Address is Passed [nfarve] #2960
@@ -31,7 +34,6 @@
 * Adyen: allow overriding card brands [bpollack] #2968
 * Adyen: allow custom routing [bpollack] #2969
 * First Pay: Adds scrubbing [deedeelavinder] #2972
-* Adyen: Add support for GooglePay [dtykocki] #2971
 
 == Version 1.82.0 (August 13, 2018)
 * FirstData: add support for WalletProviderID in v27 gateway [bpollack] #2946
