@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money)
         add_invoice(post, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         unless payment.respond_to?(:track_data) && payment.track_data.present?
           add_address(post, payment, options)
           add_customer_data(post, options)
@@ -195,8 +195,9 @@ module ActiveMerchant #:nodoc:
         post[:description]  = options[:description]
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options={})
         if payment.respond_to?(:routing_number)
+          post[:checkformat] = options[:check_format] if options[:check_format]
           post[:account] = payment.account_number
           post[:routing] = payment.routing_number
           post[:name]    = payment.name unless payment.name.blank?

@@ -53,6 +53,19 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_echeck_and_extra_options
+    response = stub_comms do
+      @gateway.purchase(@amount, @check, @options.merge(check_format: 'ARC'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMcheckformat=ARC/, data)
+    end.respond_with(successful_purchase_response_echeck)
+
+    assert_equal 'Success', response.message
+    assert_equal '133134803', response.authorization
+    assert_success response
+    assert response.test?
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 

@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] [#3002]
+
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] [#3001]
 
