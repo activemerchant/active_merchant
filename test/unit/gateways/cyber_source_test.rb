@@ -19,24 +19,24 @@ class CyberSourceTest < Test::Unit::TestCase
     @check = check()
 
     @options = {
-               :ip => @customer_ip,
-               :order_id => '1000',
-               :line_items => [
-                   {
-                      :declared_value => @amount,
-                      :quantity => 2,
-                      :code => 'default',
-                      :description => 'Giant Walrus',
-                      :sku => 'WA323232323232323'
-                   },
-                   {
-                      :declared_value => @amount,
-                      :quantity => 2,
-                      :description => 'Marble Snowcone',
-                      :sku => 'FAKE1232132113123'
-                   }
-                 ],
-          :currency => 'USD'
+      :ip => @customer_ip,
+      :order_id => '1000',
+      :line_items => [
+        {
+          :declared_value => @amount,
+          :quantity => 2,
+          :code => 'default',
+          :description => 'Giant Walrus',
+          :sku => 'WA323232323232323'
+        },
+        {
+          :declared_value => @amount,
+          :quantity => 2,
+          :description => 'Marble Snowcone',
+          :sku => 'FAKE1232132113123'
+        }
+      ],
+      :currency => 'USD'
     }
 
     @subscription_options = {

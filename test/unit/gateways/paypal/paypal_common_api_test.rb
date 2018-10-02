@@ -23,15 +23,16 @@ class PaypalCommonApiTest < Test::Unit::TestCase
       :pem => 'PEM'
     )
 
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @address = {
+      :address1 => '1234 My Street',
+      :address2 => 'Apt 1',
+      :company => 'Widgets Inc',
+      :city => 'Ottawa',
+      :state => 'ON',
+      :zip => 'K1C2N6',
+      :country => 'Canada',
+      :phone => '(555)555-5555'
+    }
   end
 
   def xml_builder
@@ -135,10 +136,12 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_build_transaction_search_request
-    options = {:start_date => DateTime.new(2012, 2, 21, 0),
+    options = {
+      :start_date => DateTime.new(2012, 2, 21, 0),
       :end_date => DateTime.new(2012, 3, 21, 0),
       :receiver => 'foo@example.com',
-      :first_name => 'Robert'}
+      :first_name => 'Robert'
+    }
     request = REXML::Document.new(@gateway.send(:build_transaction_search, options))
     assert_match %r{^2012-02-21T\d{2}:00:00Z$}, REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/StartDate').text
     assert_match %r{^2012-03-21T\d{2}:00:00Z$}, REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/EndDate').text

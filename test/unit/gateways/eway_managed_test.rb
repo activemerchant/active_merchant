@@ -14,22 +14,23 @@ class EwayManagedTest < Test::Unit::TestCase
 
     @amount = 100
 
-    @options = { :billing_address => {
-                  :address1 => '1234 My Street',
-                  :address2 => 'Apt 1',
-                  :company => 'Widgets Inc',
-                  :city => 'Ottawa',
-                  :state => 'ON',
-                  :zip => 'K1C2N6',
-                  :country => 'au',
-                  :title => 'Mr.',
-                  :phone => '(555)555-5555'
-               },
-               :email => 'someguy1232@fakeemail.net',
-               :order_id => '1000',
-               :customer => 'mycustomerref',
-               :description => 'My Description',
-               :invoice => 'invoice-4567'
+    @options = {
+      :billing_address => {
+        :address1 => '1234 My Street',
+        :address2 => 'Apt 1',
+        :company => 'Widgets Inc',
+        :city => 'Ottawa',
+        :state => 'ON',
+        :zip => 'K1C2N6',
+        :country => 'au',
+        :title => 'Mr.',
+        :phone => '(555)555-5555'
+      },
+      :email => 'someguy1232@fakeemail.net',
+      :order_id => '1000',
+      :customer => 'mycustomerref',
+      :description => 'My Description',
+      :invoice => 'invoice-4567'
     }
   end
 

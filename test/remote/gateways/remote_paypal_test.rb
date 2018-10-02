@@ -10,13 +10,15 @@ class PaypalTest < Test::Unit::TestCase
     @params = {
       :order_id => generate_unique_id,
       :email => 'buyer@jadedpallet.com',
-      :billing_address => { :name => 'Longbob Longsen',
-                    :address1 => '4321 Penny Lane',
-                    :city => 'Jonsetown',
-                    :state => 'NC',
-                    :country => 'US',
-                    :zip => '23456'
-                  } ,
+      :billing_address =>
+        {
+          :name => 'Longbob Longsen',
+          :address1 => '4321 Penny Lane',
+          :city => 'Jonsetown',
+          :state => 'NC',
+          :country => 'US',
+          :zip => '23456'
+        },
       :description => 'Stuff that you purchased, yo!',
       :ip => '10.0.0.1'
     }

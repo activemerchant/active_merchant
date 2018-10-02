@@ -182,9 +182,9 @@ class QuickpayV10Test < Test::Unit::TestCase
           'customer_ip'      =>nil,
           'customer_country' =>nil
        },
-      'created_at' => '2015-03-30T16:56:17Z',
-      'balance'    => 0,
-      'currency'   => 'DKK'
+       'created_at' => '2015-03-30T16:56:17Z',
+       'balance'    => 0,
+       'currency'   => 'DKK'
     }.to_json
   end
 
@@ -226,9 +226,9 @@ class QuickpayV10Test < Test::Unit::TestCase
           'customer_ip'      =>nil,
           'customer_country' =>nil
         },
-        'created_at' =>'2015-03-30T16:56:17Z',
-        'balance'    =>100,
-        'currency'   =>'DKK'
+       'created_at' =>'2015-03-30T16:56:17Z',
+       'balance'    =>100,
+       'currency'   =>'DKK'
       }.to_json
   end
 

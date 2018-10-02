@@ -18,37 +18,37 @@ class RemoteOppTest < Test::Unit::TestCase
       merchant_transaction_id: "active_merchant_test_complete #{time}",
       address: address,
       description: 'Store Purchase - Books',
-        #      riskWorkflow: true,
-        #      testMode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
+      # riskWorkflow: true,
+      # testMode: 'EXTERNAL' # or 'INTERNAL', valid only for test system
 
-        billing_address: {
-           address1: '123 Test Street',
-           city:     'Test',
-           state:    'TE',
-           zip:      'AB12CD',
-           country:  'GB',
-         },
-         shipping_address: {
-           name:     'Muton DeMicelis',
-           address1: 'My Street On Upiter, Apt 3.14/2.78',
-           city:     'Munich',
-           state:    'Bov',
-           zip:      '81675',
-           country:  'DE',
-         },
-         customer: {
-           merchant_customer_id:  'your merchant/customer id',
-           givenName:  'Jane',
-           surname:  'Jones',
-           birthDate:  '1965-05-01',
-           phone:  '(?!?)555-5555',
-           mobile:  '(?!?)234-23423',
-           email:  'jane@jones.com',
-           company_name:  'JJ Ltd.',
-           identification_doctype:  'PASSPORT',
-           identification_docid:  'FakeID2342431234123',
-           ip:  ip,
-         },
+      billing_address: {
+        address1: '123 Test Street',
+        city:     'Test',
+        state:    'TE',
+        zip:      'AB12CD',
+        country:  'GB',
+      },
+      shipping_address: {
+        name:     'Muton DeMicelis',
+        address1: 'My Street On Upiter, Apt 3.14/2.78',
+        city:     'Munich',
+        state:    'Bov',
+        zip:      '81675',
+        country:  'DE',
+      },
+      customer: {
+        merchant_customer_id:  'your merchant/customer id',
+        givenName:  'Jane',
+        surname:  'Jones',
+        birthDate:  '1965-05-01',
+        phone:  '(?!?)555-5555',
+        mobile:  '(?!?)234-23423',
+        email:  'jane@jones.com',
+        company_name:  'JJ Ltd.',
+        identification_doctype:  'PASSPORT',
+        identification_docid:  'FakeID2342431234123',
+        ip:  ip,
+      },
     }
 
     @minimal_request_options = {

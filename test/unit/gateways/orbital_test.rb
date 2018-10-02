@@ -242,7 +242,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1,
-        :billing_address => address_with_invalid_chars)
+                                         :billing_address => address_with_invalid_chars)
     end.check_request do |endpoint, data, headers|
       assert_match(/456 Main Street</, data)
       assert_match(/Apt. Number One</, data)
@@ -289,7 +289,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, card, :order_id => 1,
-        :billing_address => long_address)
+                                  :billing_address => long_address)
     end.check_request do |endpoint, data, headers|
       assert_match(/456 Stréêt Name is Really Lo</, data)
       assert_match(/Apårtmeñt 123456789012345678</, data)
@@ -350,7 +350,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1,
-        :billing_address => billing_address)
+                                         :billing_address => billing_address)
     end.check_request do |endpoint, data, headers|
       assert_match(/<AVSDestzip>90001/, data)
       assert_match(/<AVSDestaddress1>456 Main St./, data)
@@ -366,7 +366,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     # non-AVS country
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1,
-        :billing_address => billing_address.merge(:dest_country => 'BR'))
+                                         :billing_address => billing_address.merge(:dest_country => 'BR'))
     end.check_request do |endpoint, data, headers|
       assert_match(/<AVSDestcountryCode></, data)
     end.respond_with(successful_purchase_response)
@@ -393,10 +393,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
         assert_deprecation_warning do
-          @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => '10-10-2014',
-                  :end_date => '10-10-2015',
-                  :max_dollar_value => 1500,
-                  :max_transactions => 12})
+          @gateway.add_customer_profile(credit_card,
+            :managed_billing => {
+              :start_date => '10-10-2014',
+              :end_date => '10-10-2015',
+              :max_dollar_value => 1500,
+              :max_transactions => 12})
         end
       end
     end.check_request do |endpoint, data, headers|

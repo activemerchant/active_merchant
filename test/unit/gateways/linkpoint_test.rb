@@ -80,7 +80,9 @@ class LinkpointTest < Test::Unit::TestCase
 
   def test_purchase_is_valid_xml
     @gateway.send(
-      :parameters, 1000, @credit_card, :ordertype => 'SALE', :order_id => 1004,
+      :parameters, 1000, @credit_card,
+      :ordertype => 'SALE',
+      :order_id => 1004,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
@@ -95,7 +97,13 @@ class LinkpointTest < Test::Unit::TestCase
 
   def test_recurring_is_valid_xml
     @gateway.send(
-      :parameters, 1000, @credit_card, :ordertype => 'SALE', :action => 'SUBMIT', :installments => 12, :startdate => 'immediate', :periodicity => 'monthly', :order_id => 1006,
+      :parameters, 1000, @credit_card,
+      :ordertype => 'SALE',
+      :action => 'SUBMIT',
+      :installments => 12,
+      :startdate => 'immediate',
+      :periodicity => 'monthly',
+      :order_id => 1006,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
@@ -108,16 +116,42 @@ class LinkpointTest < Test::Unit::TestCase
   end
 
   def test_line_items_are_valid_xml
-    options = {:ordertype => 'SALE', :action => 'SUBMIT', :installments => 12, :startdate => 'immediate', :periodicity => 'monthly', :order_id => 1006,
+    options = {
+      :ordertype => 'SALE',
+      :action => 'SUBMIT',
+      :installments => 12,
+      :startdate => 'immediate',
+      :periodicity => 'monthly',
+      :order_id => 1006,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
         :state => 'CA',
         :zip => '90210'
-      },
-      :line_items => [{:id => '123456', :description => 'Logo T-Shirt', :price =>
-            '12.00', :quantity => '1', :options => [{:name => 'Color', :value =>
-                'Red'}, {:name => 'Size', :value => 'XL'}]},{:id => '111', :description => 'keychain', :price => '3.00', :quantity => '1'}]}
+        },
+      :line_items => [
+        {
+          :id => '123456',
+          :description => 'Logo T-Shirt',
+          :price => '12.00',
+          :quantity => '1',
+          :options => [
+            {
+                :name => 'Color',
+                :value => 'Red'},
+            {
+             :name => 'Size',
+             :value => 'XL'}
+          ]
+        },
+        {
+           :id => '111',
+           :description => 'keychain',
+           :price => '3.00',
+           :quantity => '1'
+        }
+      ]
+    }
 
     assert data = @gateway.send(:post_data, @amount, @credit_card, options)
     assert REXML::Document.new(data)
@@ -127,7 +161,9 @@ class LinkpointTest < Test::Unit::TestCase
     @gateway = LinkpointGateway.new(:login => 123123, :pem => 'PEM')
 
     @gateway.send(
-      :parameters, 1000, @credit_card, :ordertype => 'SALE', :order_id => 1005,
+      :parameters, 1000, @credit_card,
+      :ordertype => 'SALE',
+      :order_id => 1005,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',

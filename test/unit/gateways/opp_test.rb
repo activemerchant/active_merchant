@@ -199,7 +199,7 @@ class OppTest < Test::Unit::TestCase
     OppMockResponse.new(400,
       JSON.generate({'id' => id,'paymentType' => type,'paymentBrand' => 'VISA','result' => {'code' => code,"des
         cription" => 'invalid creditcard, bank account number or bank name'},'card' => {'bin' => '444444','last4Digits' => '4444','holder' => 'Longbob Longsen','expiryMonth' => '05','expiryYear' => '2018'},
-        'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage','timestamp' => '2015-06-20 20:40:26+0000','ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'})
+                     'buildNumber' => '20150618-111601.r185004.opp-tags-20150618_stage','timestamp' => '2015-06-20 20:40:26+0000','ndc' => '8a8294174b7ecb28014b9699220015ca_5200332e7d664412a84ed5f4777b3c7d'})
     )
   end
 

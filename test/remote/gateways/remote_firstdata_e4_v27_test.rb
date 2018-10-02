@@ -160,9 +160,9 @@ class RemoteFirstdataE4V27Test < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = FirstdataE4V27Gateway.new(:login    => 'NotARealUser',
-                                     :password => 'NotARealPassword',
-                                     :key_id   => 'NotARealKey',
-                                     :hmac_key => 'NotARealHMAC' )
+                                        :password => 'NotARealPassword',
+                                        :key_id   => 'NotARealKey',
+                                        :hmac_key => 'NotARealHMAC' )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Unauthorized Request}, response.message
     assert_failure response
