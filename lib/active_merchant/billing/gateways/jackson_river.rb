@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:first_name] = options[:first_name]
         post[:last_name]  = options[:last_name]
-        post[:email]      = options[:email] if options[:email]
+        post[:mail]       = options[:email] if options[:email]
       end
 
       def add_address(post, options)
