@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Bambora formerly Beanstream: Pass card owner when storing tokenized cards [#3006]
+* UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] [#3002]
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228

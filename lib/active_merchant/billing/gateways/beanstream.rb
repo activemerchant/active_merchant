@@ -153,6 +153,8 @@ module ActiveMerchant #:nodoc:
 
       # To match the other stored-value gateways, like TrustCommerce,
       # store and unstore need to be defined
+      #
+      # When passing a single-use token the :name option is required
       def store(payment_method, options = {})
         post = {}
         add_address(post, options)
