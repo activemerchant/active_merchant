@@ -11,7 +11,10 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
     @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
 
-    @options = {order_id: generate_unique_id, email: 'wow@example.com'}
+    @options = {
+      order_id: generate_unique_id,
+      email: 'wow@example.com'
+    }
   end
 
   def test_successful_purchase
@@ -44,8 +47,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'SUCCESS', auth.message
     assert auth.authorization
-    sleep(40)
-    assert capture = @gateway.capture(@amount, auth.authorization)
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
     assert_success capture
   end
 
@@ -53,15 +56,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'SUCCESS', auth.message
-    sleep(40)
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
 
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
     assert reference = auth.authorization
     @options[:order_id] = generate_unique_id
+
     assert auth = @gateway.authorize(@amount, reference, @options)
-    sleep(40)
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
     assert_success capture
   end
 
@@ -69,15 +71,15 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'SUCCESS', auth.message
-    sleep(40)
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
 
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
     assert reference = auth.authorization
+
     @options[:order_id] = generate_unique_id
     assert auth = @gateway.authorize(@amount, reference, @options)
+
     @options[:order_id] = generate_unique_id
-    sleep(40)
     assert capture = @gateway.purchase(@amount, auth.authorization, @options)
     assert_success capture
   end
@@ -87,8 +89,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'SUCCESS', auth.message
     assert auth.authorization
-    sleep(40)
-    assert capture = @gateway.capture(@amount, auth.authorization)
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
     assert_success capture
   end
 
@@ -112,6 +114,52 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     refute first_message.params['cookie'].blank?
     refute first_message.params['session_id'].blank?
   end
+
+  def test_successful_auth_and_capture_with_stored_cred_options
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential_usage: 'FIRST'))
+    assert_success auth
+    assert auth.authorization
+    assert auth.params['scheme_response']
+    assert auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    options = @options.merge(
+      order_id: generate_unique_id,
+      stored_credential_usage: 'USED',
+      stored_credential_initiated_reason: 'UNSCHEDULED',
+      stored_credential_transaction_id: auth.params['transaction_identifier']
+    )
+    assert next_auth = @gateway.authorize(@amount, @credit_card, options)
+    assert next_auth.authorization
+    assert next_auth.params['scheme_response']
+    assert next_auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
+  # Fails currently because the sandbox doesn't actually validate the stored_credential options
+  # def test_failed_authorize_with_bad_stored_cred_options
+  #   assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential_usage: 'FIRST'))
+  #   assert_success auth
+  #   assert auth.authorization
+  #   assert auth.params['scheme_response']
+  #   assert auth.params['transaction_identifier']
+  #
+  #   assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+  #   assert_success capture
+  #
+  #   options = @options.merge(
+  #     order_id: generate_unique_id,
+  #     stored_credential_usage: 'MEH',
+  #     stored_credential_initiated_reason: 'BLAH',
+  #     stored_credential_transaction_id: 'nah'
+  #   )
+  #   assert next_auth = @gateway.authorize(@amount, @credit_card, options)
+  #   assert_failure next_auth
+  # end
 
   def test_failed_authorize_with_3ds
     session_id = generate_unique_id
@@ -153,9 +201,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_void
-    assert_success(response = @gateway.authorize(@amount, @credit_card, @options))
-    sleep(40)
-    assert_success(void = @gateway.void(response.authorization))
+    assert_success response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success void = @gateway.void(response.authorization, authorization_validated: true)
     assert_equal 'SUCCESS', void.message
     assert void.params['cancel_received_order_code']
   end
@@ -243,22 +290,22 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   # Worldpay has a delay between asking for a transaction to be captured and actually marking it as captured
   # These 2 tests work if you get authorizations from a purchase, wait some time and then perform the refund/void operation.
 
-  # def get_authorization
-  #   assert_success(response = @gateway.purchase(@amount, @credit_card, @options))
-  #   assert response.authorization
-  #   puts "auth: " + response.authorization
-  # end
+  def test_get_authorization
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.authorization
+    puts 'auth: ' + response.authorization
+  end
 
-  # def test_refund
-  #   refund = @gateway.refund(@amount, 'replace_with_authorization')
-  #   assert_success refund
-  #   assert_equal "SUCCESS", refund.message
-  # end
-
+  def test_refund
+    refund = @gateway.refund(@amount, '39270fd70be13aab55f84e28be45cad3')
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+  #
   # def test_void_fails_unless_status_is_authorised
   #   response = @gateway.void('replace_with_authorization') # existing transaction in CAPTURED state
   #   assert_failure response
-  #   assert_equal "A transaction status of 'AUTHORISED' is required.", response.message
+  #   assert_equal 'A transaction status of 'AUTHORISED' is required.', response.message
   # end
 
 end

@@ -248,7 +248,18 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
               xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
             end
+            add_stored_credential_options(xml, options) if options[:stored_credential_usage]
           end
+        end
+      end
+
+      def add_stored_credential_options(xml, options={})
+        if options[:stored_credential_initiated_reason]
+          xml.tag! 'storedCredentials', 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
+            xml.tag! 'schemeTransactionIdentifier', options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]
+          end
+        else
+          xml.tag! 'storedCredentials', 'usage' => options[:stored_credential_usage]
         end
       end
 
