@@ -160,7 +160,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def electron?(number)
-          return false unless [16, 19].include?(number.length)
+          return false unless [16, 19].include?(number&.length)
 
           # don't recalculate for each range
           bank_identification_number = first_digits(number).to_i
@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def first_digits(number)
-          number.slice(0,6)
+          number&.slice(0, 6) || ''
         end
 
         def last_digits(number)
@@ -201,10 +201,12 @@ module ActiveMerchant #:nodoc:
         private
 
         def valid_card_number_length?(number) #:nodoc:
+          return false if number.nil?
           number.length >= 12
         end
 
         def valid_card_number_characters?(number) #:nodoc:
+          return false if number.nil?
           !number.match(/\D/)
         end
 
