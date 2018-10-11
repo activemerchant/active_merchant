@@ -79,10 +79,16 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   end
 
   def test_successful_visa_purchase_no_cvv
-    assert response = @gateway.purchase(@amount, @visa_no_cvv, @options)
+    assert response = @gateway.purchase(@amount, @visa_no_cvv, @options.merge(recurring: true))
     assert_success response
     assert_false response.authorization.blank?
     assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_visa_purchase_with_no_cvv
+    assert response = @gateway.purchase(@amount, @visa_no_cvv, @options)
+    assert_failure response
+    assert_equal 'Card CVD is invalid.', response.message
   end
 
   def test_unsuccessful_visa_purchase

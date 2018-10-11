@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_payment(post, options)
-        post[:recurringPayment] = true if options[:recurring].to_s == 'true'
+        post[:recurringPayment] = 1 if options[:recurring].to_s == 'true'
       end
 
       def add_invoice(post, options)
