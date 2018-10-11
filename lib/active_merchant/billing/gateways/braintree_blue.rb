@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email]),
             :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-				      options[:billing_address][:phone]),
+              options[:billing_address][:phone]),
             :credit_card => credit_card_params
           )
           Response.new(result.success?, message_from_result(result),
@@ -233,6 +233,7 @@ module ActiveMerchant #:nodoc:
             :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
 	            options[:billing_address][:phone]),
             :id => options[:customer],
+            :device_data => options[:device_data],
           }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
@@ -256,6 +257,7 @@ module ActiveMerchant #:nodoc:
             cvv: credit_card.verification_value,
             expiration_month: credit_card.month.to_s.rjust(2, '0'),
             expiration_year: credit_card.year.to_s,
+            device_data: options[:device_data],
           }
           parameters[:billing_address] = map_address(options[:billing_address]) if options[:billing_address]
 
