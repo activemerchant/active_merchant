@@ -167,6 +167,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   def test_matching_invalid_card
     assert_nil CreditCard.brand?('XXXXXXXXXXXX0000')
     assert_false CreditCard.valid_number?('XXXXXXXXXXXX0000')
+    assert_false CreditCard.valid_number?(nil)
   end
 
   def test_16_digit_maestro_uk
@@ -212,6 +213,9 @@ class CreditCardMethodsTest < Test::Unit::TestCase
         assert_equal card_number, electron_test.call(card_number)
       end
     end
+
+    # nil check
+    assert_false electron_test.call(nil)
 
     # Visa range
     assert_false electron_test.call('4245180000000000')

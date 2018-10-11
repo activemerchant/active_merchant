@@ -246,6 +246,16 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal '1', ccn.last_digits
   end
 
+  def test_should_return_empty_string_for_first_digits_of_nil_card_number
+    ccn = CreditCard.new
+    assert_equal '', ccn.first_digits
+  end
+
+  def test_should_return_empty_string_for_last_digits_of_nil_card_number
+    ccn = CreditCard.new
+    assert_equal '', ccn.last_digits
+  end
+
   def test_should_return_first_four_digits_of_card_number
     ccn = CreditCard.new(:number => '4779139500118580')
     assert_equal '477913', ccn.first_digits
