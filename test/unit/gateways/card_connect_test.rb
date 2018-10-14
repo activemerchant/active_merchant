@@ -194,6 +194,19 @@ class CardConnectTest < Test::Unit::TestCase
   def test_failed_unstore
   end
 
+  def test_successful_inquire
+    @gateway.expects(:ssl_request).returns(successful_inquire_response)
+    response = @gateway.inquire('valid123456789')
+    assert_equal response.params['setlstat'], 'Queued for Capture'
+    assert_equal response.params['resptext'], 'Approval'
+  end
+
+  def test_failed_inquire
+    @gateway.expects(:ssl_request).returns(failed_inquire_response)
+    response = @gateway.inquire('invalid123456789')
+    assert_equal response.params['resptext'], 'Txn not found'
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
@@ -316,6 +329,14 @@ class CardConnectTest < Test::Unit::TestCase
   def failed_store_response
     # Best-guess based on documentation
     '{"country":"CA","gsacard":"N","address":"456 My Street Apt 1","resptext":"Profile Saved","city":"Ottawa","acctid":"1","respcode":"09","defaultacct":"Y","accttype":"VISA","token":"9477709629051443","respproc":"PPS","phone":"(555)555-555","profileid":"16700875781344019340","name":"Longbob Longsen","auoptout":"N","postal":"K1C2N6","expiry":"0919","region":"ON","respstat":"C"}'
+  end
+
+  def successful_inquire_response
+    '{"amount":"10.00","resptext":"Approval","setlstat":"Queued for Capture","capturedate":"20181014163529","acctid":"1","respcode":"00","batchid":"104","entrymode":"ECommerce","merchid":"496160873888","token":"9427333103314242","respproc":"FNOR","authdate":"20181014","bintype":"","profileid":"12161212402792746633","lastfour":"4242","name":"Hello dude","currency":"USD","retref":"287912159729","respstat":"A","account":"9427333103314242"}'
+  end
+
+  def failed_inquire_response
+    '{"respproc":"PPS", "resptext":"Txn not found", "retref":"invalid123456789", "respcode":"29", "respstat":"C"}'
   end
 
   def failed_unstore_response
