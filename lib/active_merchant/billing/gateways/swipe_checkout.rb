@@ -6,10 +6,7 @@ module ActiveMerchant #:nodoc:
       TRANSACTION_APPROVED_MSG = 'Transaction approved'
       TRANSACTION_DECLINED_MSG = 'Transaction declined'
 
-      LIVE_URLS = {
-        'NZ' => 'https://api.swipehq.com',
-        'CA' => 'https://api.swipehq.ca'
-      }
+      self.live_url = 'https://api.swipehq.com'
       self.test_url = 'https://api.swipehq.com'
 
       TRANSACTION_API = '/createShopifyTransaction.php'
@@ -135,11 +132,11 @@ module ActiveMerchant #:nodoc:
 
         # ssl_post() returns the response body as a string on success,
         # or raises a ResponseError exception on failure
-        JSON.parse(ssl_post(url(@options[:region], api), params.to_query))
+        JSON.parse(ssl_post(url(api), params.to_query))
       end
 
-      def url(region, api)
-        ((test? ? self.test_url : LIVE_URLS[region]) + api)
+      def url(api)
+        (test? ? self.test_url : self.live_url) + api
       end
 
       def build_error_response(message, params={})
