@@ -276,7 +276,7 @@ module ActiveMerchant #:nodoc:
         parameters[:merchid] = @options[:merchant_id]
         url = url(action, path)
 
-        response = parse(ssl_request(verb, url, post_data(parameters, verb), headers))
+        response = parse(ssl_request(verb, url, post_data(verb, parameters), headers))
 
         Response.new(
           success_from(response),
@@ -306,7 +306,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def post_data(parameters = {}, verb)
+      def post_data(verb, parameters = {})
         return nil if verb == :get
         parameters.to_json
       end
