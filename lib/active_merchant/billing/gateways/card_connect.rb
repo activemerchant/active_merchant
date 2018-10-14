@@ -145,6 +145,12 @@ module ActiveMerchant #:nodoc:
           path: "/#{profile_id}/#{account_id}/#{@options[:merchant_id]}")
       end
 
+      def inquire(retref)
+        commit('inquire', {},
+          verb: :get,
+          path: "/#{retref}/#{@options[:merchant_id]}")
+      end
+
       def supports_scrubbing?
         true
       end
@@ -269,7 +275,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters, verb: :put, path: '')
         parameters[:merchid] = @options[:merchant_id]
         url = url(action, path)
-        response = parse(ssl_request(verb, url, post_data(parameters), headers))
+
+        response = parse(ssl_request(verb, url, post_data(parameters, verb), headers))
 
         Response.new(
           success_from(response),
@@ -299,7 +306,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def post_data(parameters = {})
+      def post_data(parameters = {}, verb)
+        return nil if verb == :get
         parameters.to_json
       end
 
