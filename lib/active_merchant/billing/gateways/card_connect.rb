@@ -150,12 +150,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]')
-          .gsub(%r(("cvv2\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r(("merchid\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r((&?"account\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r((&?"token\\":\\")\d*), '\1[FILTERED]')
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("cvv2\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r(("merchid\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r((&?"account\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r((&?"token\\":\\")\d*), '\1[FILTERED]')
       end
 
       private

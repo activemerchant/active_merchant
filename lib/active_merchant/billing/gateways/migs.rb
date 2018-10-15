@@ -314,11 +314,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def calculate_secure_hash(post, secure_hash)
-        input = post
-                .reject { |k| %i[SecureHash SecureHashType].include?(k) }
-                .sort
-                .map { |(k, v)| "vpc_#{k}=#{v}" }
-                .join('&')
+        input = post.
+                reject { |k| %i[SecureHash SecureHashType].include?(k) }.
+                sort.
+                map { |(k, v)| "vpc_#{k}=#{v}" }.
+                join('&')
         OpenSSL::HMAC.hexdigest('SHA256', [secure_hash].pack('H*'), input).upcase
       end
     end

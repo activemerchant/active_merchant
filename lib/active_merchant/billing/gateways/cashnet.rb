@@ -60,10 +60,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r{(password=)[^&]+}, '\1[FILTERED]')
-          .gsub(%r{(cardno=)[^&]+}, '\1[FILTERED]')
-          .gsub(%r{(cid=)[^&]+}, '\1[FILTERED]')
+        transcript.
+          gsub(%r{(password=)[^&]+}, '\1[FILTERED]').
+          gsub(%r{(cardno=)[^&]+}, '\1[FILTERED]').
+          gsub(%r{(cid=)[^&]+}, '\1[FILTERED]')
       end
 
       private

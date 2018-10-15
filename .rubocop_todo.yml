@@ -26,13 +26,6 @@ Layout/CaseIndentation:
 Layout/ClosingHeredocIndentation:
   Enabled: false
 
-# Offense count: 513
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: leading, trailing
-Layout/DotPosition:
-  Enabled: false
-
 # Offense count: 24
 # Cop supports --auto-correct.
 Layout/ElseAlignment:

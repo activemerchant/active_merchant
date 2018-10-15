@@ -119,10 +119,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r{(\\?"number\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
-          .gsub(%r{(\\?"cvc\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
-          .gsub(%r{(Auth-Token: )([A-Za-z0-9=]+)}, '\1[FILTERED]')
+        transcript.
+          gsub(%r{(\\?"number\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"cvc\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(Auth-Token: )([A-Za-z0-9=]+)}, '\1[FILTERED]')
       end
 
       private

@@ -112,12 +112,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2')
-          .gsub(%r((<CVDCode>).+(</CVDCode>)), '\1[FILTERED]\2')
-          .gsub(%r((<Password>).+(</Password>))i, '\1[FILTERED]\2')
-          .gsub(%r((<CAVV>).+(</CAVV>)), '\1[FILTERED]\2')
-          .gsub(%r((CARD NUMBER\s+: )#+\d+), '\1[FILTERED]')
+        transcript.
+          gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2').
+          gsub(%r((<CVDCode>).+(</CVDCode>)), '\1[FILTERED]\2').
+          gsub(%r((<Password>).+(</Password>))i, '\1[FILTERED]\2').
+          gsub(%r((<CAVV>).+(</CAVV>)), '\1[FILTERED]\2').
+          gsub(%r((CARD NUMBER\s+: )#+\d+), '\1[FILTERED]')
       end
 
       def supports_network_tokenization?
