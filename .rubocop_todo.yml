@@ -110,13 +110,6 @@ Layout/IndentationConsistency:
 Layout/IndentationWidth:
   Enabled: false
 
-# Offense count: 2
-# Cop supports --auto-correct.
-Layout/LeadingBlankLines:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/quickpay/quickpay_common.rb'
-    - 'test/unit/gateways/quickpay_test.rb'
-
 # Offense count: 68
 # Cop supports --auto-correct.
 Layout/LeadingCommentSpace:
