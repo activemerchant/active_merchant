@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
 
       @@response_codes = {
         :r100 => 'Successful transaction',
-        :r101 => 'Request is missing one or more required fields' ,
+        :r101 => 'Request is missing one or more required fields',
         :r102 => 'One or more fields contains invalid data',
         :r150 => 'General failure',
         :r151 => 'The request was received but a server time-out occurred',
@@ -432,9 +432,9 @@ module ActiveMerchant #:nodoc:
       def add_merchant_data(xml, options)
         xml.tag! 'merchantID', @options[:login]
         xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
-        xml.tag! 'clientLibrary' ,'Ruby Active Merchant'
+        xml.tag! 'clientLibrary','Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion',  VERSION
-        xml.tag! 'clientEnvironment' , RUBY_PLATFORM
+        xml.tag! 'clientEnvironment', RUBY_PLATFORM
       end
 
       def add_purchase_data(xml, money = 0, include_grand_total = false, options={})

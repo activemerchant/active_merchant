@@ -55,7 +55,7 @@ class CheckoutTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert response = @gateway.capture(100, '||||' , @options)
+    assert response = @gateway.capture(100, '||||', @options)
     assert_failure response
     assert_equal 'EGP00173', response.params['error_code_tag']
     assert response.test?

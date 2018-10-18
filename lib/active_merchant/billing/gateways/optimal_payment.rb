@@ -255,27 +255,27 @@ module ActiveMerchant #:nodoc:
 
       def build_merchant_account(xml)
         xml.tag! 'merchantAccount' do
-          xml.tag! 'accountNum' , @options[:account_number]
-          xml.tag! 'storeID'    , @options[:store_id]
-          xml.tag! 'storePwd'   , @options[:password]
+          xml.tag! 'accountNum', @options[:account_number]
+          xml.tag! 'storeID',    @options[:store_id]
+          xml.tag! 'storePwd',   @options[:password]
         end
       end
 
       def build_card(xml, opts)
         xml.tag! 'card' do
-          xml.tag! 'cardNum'      , @credit_card.number
+          xml.tag! 'cardNum', @credit_card.number
           xml.tag! 'cardExpiry' do
-            xml.tag! 'month'      , @credit_card.month
-            xml.tag! 'year'       , @credit_card.year
+            xml.tag! 'month', @credit_card.month
+            xml.tag! 'year', @credit_card.year
           end
           if brand = card_type(@credit_card.brand)
-            xml.tag! 'cardType'     , brand
+            xml.tag! 'cardType', brand
           end
           if @credit_card.verification_value?
-            xml.tag! 'cvdIndicator' , '1' # Value Provided
-            xml.tag! 'cvd'          , @credit_card.verification_value
+            xml.tag! 'cvdIndicator', '1' # Value Provided
+            xml.tag! 'cvd', @credit_card.verification_value
           else
-            xml.tag! 'cvdIndicator' , '0'
+            xml.tag! 'cvdIndicator', '0'
           end
         end
       end
@@ -299,18 +299,18 @@ module ActiveMerchant #:nodoc:
         if addr[:name]
           first_name, last_name = split_names(addr[:name])
           xml.tag! 'firstName', first_name
-          xml.tag! 'lastName' , last_name
+          xml.tag! 'lastName', last_name
         end
-        xml.tag! 'street' , addr[:address1] if addr[:address1].present?
+        xml.tag! 'street', addr[:address1] if addr[:address1].present?
         xml.tag! 'street2', addr[:address2] if addr[:address2].present?
-        xml.tag! 'city'   , addr[:city]     if addr[:city].present?
+        xml.tag! 'city', addr[:city] if addr[:city].present?
         if addr[:state].present?
           state_tag = %w(US CA).include?(addr[:country]) ? 'state' : 'region'
           xml.tag! state_tag, addr[:state]
         end
-        xml.tag! 'country', addr[:country]  if addr[:country].present?
-        xml.tag! 'zip'    , addr[:zip]      if addr[:zip].present?
-        xml.tag! 'phone'  , addr[:phone]    if addr[:phone].present?
+        xml.tag! 'country', addr[:country] if addr[:country].present?
+        xml.tag! 'zip', addr[:zip] if addr[:zip].present?
+        xml.tag! 'phone', addr[:phone] if addr[:phone].present?
       end
 
       def card_type(key)

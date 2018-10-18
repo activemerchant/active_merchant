@@ -186,24 +186,6 @@ Layout/SpaceAroundOperators:
 Layout/SpaceBeforeBlockBraces:
   Enabled: false
 
-# Offense count: 39
-# Cop supports --auto-correct.
-Layout/SpaceBeforeComma:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/cyber_source.rb'
-    - 'lib/active_merchant/billing/gateways/ideal/ideal_base.rb'
-    - 'lib/active_merchant/billing/gateways/instapay.rb'
-    - 'lib/active_merchant/billing/gateways/net_registry.rb'
-    - 'lib/active_merchant/billing/gateways/optimal_payment.rb'
-    - 'lib/active_merchant/billing/gateways/psigate.rb'
-    - 'lib/active_merchant/billing/gateways/sage_pay.rb'
-    - 'test/remote/gateways/remote_eway_test.rb'
-    - 'test/remote/gateways/remote_payflow_express_test.rb'
-    - 'test/remote/gateways/remote_paypal_express_test.rb'
-    - 'test/remote/gateways/remote_paypal_test.rb'
-    - 'test/unit/gateways/checkout_test.rb'
-    - 'test/unit/gateways/paypal_express_test.rb'
-
 # Offense count: 1
 # Cop supports --auto-correct.
 Layout/SpaceBeforeComment:

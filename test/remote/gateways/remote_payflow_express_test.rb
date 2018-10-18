@@ -65,8 +65,8 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
         {
           :name => 'test4',
           :description => 'test4',
-          :quantity=>2 ,
-          :amount=> 1399 ,
+          :quantity=>2,
+          :amount=> 1399,
           :url=>'http://localhost:3000/products/test4'
         }
       ],
@@ -92,8 +92,8 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
         {
           :name => 'test4',
           :description => 'test4',
-          :quantity=>2 ,
-          :amount=> 1399 ,
+          :quantity=>2,
+          :amount=> 1399,
           :url=>'http://localhost:3000/products/test4'
         }
       ],
@@ -119,8 +119,8 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
         {
           :name => 'test4',
           :description => 'test4',
-          :quantity=>2 ,
-          :amount=> 1399 ,
+          :quantity=>2,
+          :amount=> 1399,
           :url=>'http://localhost:3000/products/test4'
         }
       ],

@@ -52,8 +52,8 @@ module ActiveMerchant #:nodoc:
       OPTIONAL_REQUEST_FIELDS = {
         paypal_callback_url: :PayPalCallbackURL,
         basket: :Basket,
-        gift_aid_payment: :GiftAidPayment ,
-        apply_avscv2: :ApplyAVSCV2 ,
+        gift_aid_payment: :GiftAidPayment,
+        apply_avscv2: :ApplyAVSCV2,
         apply_3d_secure: :Apply3DSecure,
         account_type: :AccountType,
         billing_agreement: :BillingAgreement,
@@ -63,9 +63,9 @@ module ActiveMerchant #:nodoc:
         vendor_data: :VendorData,
         language: :Language,
         website: :Website,
-        recipient_account_number: :FIRecipientAcctNumber ,
-        recipient_surname: :FIRecipientSurname ,
-        recipient_postcode: :FIRecipientPostcode ,
+        recipient_account_number: :FIRecipientAcctNumber,
+        recipient_surname: :FIRecipientSurname,
+        recipient_postcode: :FIRecipientPostcode,
         recipient_dob: :FIRecipientDoB
       }
 

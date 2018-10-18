@@ -17,7 +17,7 @@ class PaypalExpressTest < Test::Unit::TestCase
           :state => 'NC',
           :country => 'US',
           :zip => '23456'
-        } ,
+        },
       :description => 'Stuff that you purchased, yo!',
       :ip => '10.0.0.1',
       :return_url => 'http://example.com/return',

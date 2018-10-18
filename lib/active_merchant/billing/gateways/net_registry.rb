@@ -131,7 +131,7 @@ module ActiveMerchant
       # format for a command.
       def expiry(credit_card)
         month = format(credit_card.month, :two_digits)
-        year  = format(credit_card.year , :two_digits)
+        year  = format(credit_card.year,  :two_digits)
         "#{month}/#{year}"
       end
 
