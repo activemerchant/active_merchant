@@ -169,20 +169,20 @@ class PaypalExpressTest < Test::Unit::TestCase
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {
       :currency => 'GBP',
       :items => [
-                  {
-                    :name => 'item one',
-                    :description => 'item one description',
-                    :amount => 10000,
-                    :number => 1,
-                    :quantity => 3
-                  },
-                  { :name => 'item two',
-                    :description => 'item two description',
-                    :amount => 20000,
-                    :number => 2,
-                    :quantity => 4
-                  }
-                ]
+        {
+          :name => 'item one',
+          :description => 'item one description',
+          :amount => 10000,
+          :number => 1,
+          :quantity => 3
+        },
+        { :name => 'item two',
+          :description => 'item two description',
+          :amount => 20000,
+          :number => 2,
+          :quantity => 4
+        }
+      ]
     }))
 
     assert_equal 'item one', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text

@@ -71,18 +71,6 @@ Layout/ExtraSpacing:
 Layout/FirstParameterIndentation:
   Enabled: false
 
-# Offense count: 13
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentationWidth.
-# SupportedStyles: special_inside_parentheses, consistent, align_brackets
-Layout/IndentArray:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/firstdata_e4.rb'
-    - 'test/remote/gateways/remote_linkpoint_test.rb'
-    - 'test/remote/gateways/remote_payflow_express_test.rb'
-    - 'test/unit/gateways/cyber_source_test.rb'
-    - 'test/unit/gateways/paypal_express_test.rb'
-
 # Offense count: 253
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, IndentationWidth.
