@@ -110,7 +110,6 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, order_id_from(authorization))
         add_amount(post, money, options)
 
-        #commit('Refund', post, options)
         commit('Credit', post, options)
       end
 

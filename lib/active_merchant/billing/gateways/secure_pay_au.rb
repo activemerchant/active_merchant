@@ -238,7 +238,6 @@ module ActiveMerchant #:nodoc:
 
       def commit_periodic(request)
         my_request = build_periodic_request(request)
-        #puts my_request
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
 
         Response.new(success?(response), message_from(response), response,

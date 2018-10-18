@@ -88,7 +88,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_store_with_custom_token
-    token = Time.now.to_i.to_s #hehe
+    token = Time.now.to_i.to_s
     assert response = @gateway.store(@credit_card, :billing_id => token)
     assert_success response
     assert_equal 'The Transaction was approved', response.message

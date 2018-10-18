@@ -23,7 +23,6 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
-    #@gateway.expects(:ssl_post).returns(successful_authorization_response)
     @gateway.expects(:ssl_post).returns(RSP[:approved_auth])
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_instance_of Response, response

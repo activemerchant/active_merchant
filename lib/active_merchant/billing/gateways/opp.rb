@@ -244,7 +244,6 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment, options)
         if options[:registrationId]
-          #post[:recurringType] = 'REPEATED'
           post[:card] = {
             cvv: payment.verification_value,
           }
