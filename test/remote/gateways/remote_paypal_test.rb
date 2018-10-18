@@ -29,8 +29,8 @@ class PaypalTest < Test::Unit::TestCase
     # each auth-id can only be reauthorized and tested once.
     # leave it commented if you don't want to test reauthorization.
     #
-    #@three_days_old_auth_id  = "9J780651TU4465545"
-    #@three_days_old_auth_id2 = "62503445A3738160X"
+    # @three_days_old_auth_id  = "9J780651TU4465545"
+    # @three_days_old_auth_id2 = "62503445A3738160X"
   end
 
   def test_transcript_scrubbing

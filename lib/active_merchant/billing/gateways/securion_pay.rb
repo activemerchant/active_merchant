@@ -73,11 +73,11 @@ module ActiveMerchant #:nodoc:
       def store(credit_card, options = {})
         if options[:customer_id].blank?
           MultiResponse.run() do |r|
-            #create charge object
+            # create charge object
             r.process { authorize(100, credit_card, options) }
-            #create customer and save card
+            # create customer and save card
             r.process { create_customer_add_card(r.authorization, options) }
-            #void the charge
+            # void the charge
             r.process(:ignore_result) { void(r.params['metadata']['chargeId'], options) }
           end
         else

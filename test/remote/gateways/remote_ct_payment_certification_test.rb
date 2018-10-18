@@ -128,7 +128,7 @@ class RemoteCtPaymentCertificationTest < Test::Unit::TestCase
   end
 
   def test20
-    #requires editing the model to run with a 3 digit expiration date
+    # requires editing the model to run with a 3 digit expiration date
     @credit_card = credit_card('4501161107217214', month: '07', year: 2)
     response = @gateway.purchase(@amount, @credit_card, @options)
     print_result(20, response)
@@ -204,7 +204,7 @@ class RemoteCtPaymentCertificationTest < Test::Unit::TestCase
   end
 
   def test33
-    #requires edit to model to make 3 digit expiration date
+    # requires edit to model to make 3 digit expiration date
     @credit_card = credit_card('4501161107217214', month: '07', year: 2)
     response = @gateway.credit(@amount, @credit_card, @options)
     print_result(33, response)

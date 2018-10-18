@@ -167,8 +167,8 @@ module ActiveMerchant #:nodoc:
         commit(post, true)
       end
 
-      #can't actually delete a secure profile with the supplicated API. This function sets the status of the profile to closed (C).
-      #Closed profiles will have to removed manually.
+      # can't actually delete a secure profile with the supplicated API. This function sets the status of the profile to closed (C).
+      # Closed profiles will have to removed manually.
       def delete(vault_id)
         update(vault_id, false, {:status => 'C'})
       end

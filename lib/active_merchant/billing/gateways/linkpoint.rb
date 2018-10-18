@@ -340,7 +340,7 @@ module ActiveMerchant #:nodoc:
             :terminaltype => options[:terminaltype],
             :ip => options[:ip],
             :reference_number => options[:reference_number],
-            :recurring => options[:recurring] || 'NO',  #DO NOT USE if you are using the periodic billing option.
+            :recurring => options[:recurring] || 'NO',  # DO NOT USE if you are using the periodic billing option.
             :tdate => options[:tdate]
           },
           :orderoptions => {

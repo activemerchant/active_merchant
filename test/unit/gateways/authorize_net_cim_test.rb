@@ -420,7 +420,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_should_update_customer_payment_profile_request_with_last_four_digits
-    last_four_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => '4242') #Credit card with only last four digits
+    last_four_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => '4242') # Credit card with only last four digits
 
     response = stub_comms do
       @gateway.update_customer_payment_profile(

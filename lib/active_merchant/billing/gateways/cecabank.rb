@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       CECA_UI_LESS_LANGUAGE = 'XML'
       CECA_UI_LESS_LANGUAGE_REFUND = '1'
       CECA_UI_LESS_REFUND_PAGE = 'anulacion_xml'
-      CECA_ACTION_REFUND   = 'tpvanularparcialmente' #use partial refund's URL to avoid time frame limitations and decision logic on client side
+      CECA_ACTION_REFUND   = 'tpvanularparcialmente' # use partial refund's URL to avoid time frame limitations and decision logic on client side
       CECA_ACTION_PURCHASE = 'tpv'
       CECA_CURRENCIES_DICTIONARY = {'EUR' => 978, 'USD' => 840, 'GBP' => 826}
 

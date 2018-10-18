@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'THB'
       self.money_format     = :cents
 
-      #Country supported by Omise
+      # Country supported by Omise
       # * Thailand
       self.supported_countries = %w( TH JP )
 

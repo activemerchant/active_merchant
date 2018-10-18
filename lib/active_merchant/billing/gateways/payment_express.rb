@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
       def build_token_request(credit_card, options)
         result = new_transaction
         add_credit_card(result, credit_card)
-        add_amount(result, 100, options) #need to make an auth request for $1
+        add_amount(result, 100, options) # need to make an auth request for $1
         add_token_request(result, options)
         add_optional_elements(result, options)
         result

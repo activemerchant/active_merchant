@@ -99,11 +99,11 @@ module ActiveMerchant #:nodoc:
           cc_stored_data_request(money, post)
         when 'ccAuthorizeReversal'
           cc_auth_reversal_request(post)
-        #when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
+        # when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
         #  cc_cancel_request(money, post)
-        #when 'ccPayment'
+        # when 'ccPayment'
         #  cc_payment_request(money, post)
-        #when 'ccAuthenticate'
+        # when 'ccAuthenticate'
         #  cc_authenticate_request(money, post)
         else
           raise 'Unknown Action'

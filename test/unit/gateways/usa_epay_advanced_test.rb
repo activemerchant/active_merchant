@@ -79,7 +79,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     @standard_transaction_options = {
       :method_id => 0,
       :command => 'Sale',
-      :amount => 2000 #20.00
+      :amount => 2000 # 20.00
     }
 
     @get_payment_options = {
@@ -421,7 +421,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   end
 
   # TODO get post_auth response
-  #def test_successful_post_auth
+  # def test_successful_post_auth
   #  @options.merge!(:authorization_code => 'bogus')
   #  @gateway.expects(:ssl_post).returns(successful_post_auth_response)
 
@@ -433,7 +433,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   #  #assert_equal '47568732', response.authorization
 
   #  puts response.inspect
-  #end
+  # end
 
   def test_successful_run_quick_sale
     @options.merge!(@transaction_options)
@@ -495,7 +495,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   end
 
   # TODO get override_transaction response
-  #def test_successful_override_transaction
+  # def test_successful_override_transaction
   #  @gateway.expects(:ssl_post).returns(successful_override_transaction_response)
 
   #  assert response = @gateway.override_transaction(@options)
@@ -504,7 +504,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   #  assert response.test?
 
   #  puts response.inspect
-  #end
+  # end
 
   # Transaction Status ================================================
 

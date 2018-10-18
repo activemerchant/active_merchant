@@ -212,7 +212,7 @@ module ActiveMerchant #:nodoc:
             # Track 1 and 2 have identical end sentinels (ETX) of '?'
             # Tracks may or may not have checksum (LRC) after the ETX
             # If the track has no STX or is corrupt, we send it as track 1, to let Mercury
-            #handle with the validation error as it sees fit.
+            # handle with the validation error as it sees fit.
             # Track 2 requires having the STX and ETX stripped. Track 1 does not.
             # Max-length track 1s require having the STX and ETX stripped. Max is 79 bytes including LRC.
             is_track_2 = credit_card.track_data[0] == ';'

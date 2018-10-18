@@ -46,20 +46,20 @@ module ActiveMerchant
         'USD' => 840
       }
 
-      #The terminal used - only for swipe transactions, so hard coded to 32 for online
+      # The terminal used - only for swipe transactions, so hard coded to 32 for online
       EMV_TERMINAL_TYPE = 32
 
-      #Different Dispatch types
+      # Different Dispatch types
       DISPATCH_LATER  = 'LATER'
       DISPATCH_NOW    = 'NOW'
 
       # Return codes
       APPROVED = '00'
 
-      #Nominal amount to authorize for a 'dispatch later' type
-      #The nominal amount is held straight away, when the goods are ready
-      #to be dispatched, PSL is informed and the full amount is the
-      #taken.
+      # Nominal amount to authorize for a 'dispatch later' type
+      # The nominal amount is held straight away, when the goods are ready
+      # to be dispatched, PSL is informed and the full amount is the
+      # taken.
       NOMINAL_AMOUNT = 101
 
       AVS_CODE = {

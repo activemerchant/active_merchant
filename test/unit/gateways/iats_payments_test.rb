@@ -225,7 +225,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     @gateway = IatsPaymentsGateway.new(
       :agent_code => 'code',
       :password => 'password',
-      :region => 'na' #North america
+      :region => 'na' # North america
     )
 
     response = stub_comms do

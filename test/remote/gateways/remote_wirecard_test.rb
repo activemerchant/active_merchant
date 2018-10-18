@@ -58,7 +58,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert_match %r{THIS IS A DEMO}, auth.message
     assert auth.authorization
 
-    #Capture some of the authorized amount
+    # Capture some of the authorized amount
     assert capture = @gateway.capture(@amount - 10, auth.authorization, @options)
     assert_success capture
   end

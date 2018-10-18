@@ -736,7 +736,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     }
 
     doc = Nokogiri::XML(@gateway.send(:build_setup_request, 'Sale', 10, all_options_enabled))
-    #Strip back to the SetExpressCheckoutRequestDetails element - this is where the base component xsd starts
+    # Strip back to the SetExpressCheckoutRequestDetails element - this is where the base component xsd starts
     xml = doc.xpath('//base:SetExpressCheckoutRequestDetails', 'base' => 'urn:ebay:apis:eBLBaseComponents').first
     sub_doc = Nokogiri::XML::Document.new
     sub_doc.root = xml

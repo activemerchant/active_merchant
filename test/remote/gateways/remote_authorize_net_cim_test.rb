@@ -466,7 +466,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     new_billing_address.update(:first_name => 'Frank', :last_name => 'Brown')
 
     # Initialize credit card with only last 4 digits as the number
-    last_four_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => '4242') #Credit card with only last four digits
+    last_four_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => '4242') # Credit card with only last four digits
 
     # Update only the billing address with a card with the last 4 digits and expiration date
     assert response = @gateway.update_customer_payment_profile(
@@ -515,7 +515,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     )
     new_address.delete(:phone_number)
 
-    #Update the shipping address
+    # Update the shipping address
     assert response = @gateway.update_customer_shipping_address(
       :customer_profile_id => @customer_profile_id,
       :address => new_address

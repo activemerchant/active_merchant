@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'AUD'
 
-      #accepted money format
+      # accepted money format
       self.money_format = :cents
 
       # The homepage URL of the gateway

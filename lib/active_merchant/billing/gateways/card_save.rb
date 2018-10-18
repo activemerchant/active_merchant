@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardSaveGateway < IridiumGateway
-      #CardSave lets you handle failovers on payments by providing 3 gateways in case one happens to be down
-      #URLS = ['https://gw1.cardsaveonlinepayments.com:4430/','https://gw2.cardsaveonlinepayments.com:4430/','https://gw3.cardsaveonlinepayments.com:4430/']      
+      # CardSave lets you handle failovers on payments by providing 3 gateways in case one happens to be down
+      # URLS = ['https://gw1.cardsaveonlinepayments.com:4430/','https://gw2.cardsaveonlinepayments.com:4430/','https://gw3.cardsaveonlinepayments.com:4430/']      
       
       self.money_format = :cents
       self.default_currency = 'GBP'

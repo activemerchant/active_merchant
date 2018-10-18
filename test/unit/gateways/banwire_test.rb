@@ -61,7 +61,7 @@ class BanwireTest < Test::Unit::TestCase
     assert_match %r{Invalid response received from the Banwire API}, response.message
   end
 
-  #American Express requires address and zipcode
+  # American Express requires address and zipcode
   def test_successful_amex_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @amex_credit_card, @amex_options)
@@ -75,7 +75,7 @@ class BanwireTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  #American Express requires address and zipcode
+  # American Express requires address and zipcode
   def test_unsuccessful_amex_request
     @gateway.expects(:ssl_post).returns(failed_purchase_amex_response)
 

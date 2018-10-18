@@ -31,16 +31,16 @@ class RemoteNabTransactTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase_insufficient_funds
-    #Any total not ending in 00/08/11/16
-    failing_amount = 151 #Specifically tests 'Insufficient Funds'
+    # Any total not ending in 00/08/11/16
+    failing_amount = 151 # Specifically tests 'Insufficient Funds'
     assert response = @gateway.purchase(failing_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Insufficient Funds', response.message
   end
 
   def test_unsuccessful_purchase_do_not_honour
-    #Any total not ending in 00/08/11/16
-    failing_amount = 105 #Specifically tests 'do not honour'
+    # Any total not ending in 00/08/11/16
+    failing_amount = 105 # Specifically tests 'do not honour'
     assert response = @gateway.purchase(failing_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Do Not Honour', response.message

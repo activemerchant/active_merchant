@@ -98,11 +98,6 @@ Layout/IndentationConsistency:
 Layout/IndentationWidth:
   Enabled: false
 
-# Offense count: 68
-# Cop supports --auto-correct.
-Layout/LeadingCommentSpace:
-  Enabled: false
-
 # Offense count: 6
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
