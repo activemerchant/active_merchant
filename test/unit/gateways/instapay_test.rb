@@ -11,7 +11,7 @@ class InstapayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card)
-    assert_instance_of  Response, response
+    assert_instance_of Response, response
     assert_success response
     assert_equal '118583850', response.authorization
   end
@@ -29,7 +29,7 @@ class InstapayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.authorize(@amount, @credit_card)
-    assert_instance_of  Response, response
+    assert_instance_of Response, response
     assert_success response
     assert_equal '118583850', response.authorization
   end

@@ -210,21 +210,6 @@ Layout/SpaceBeforeComment:
   Exclude:
     - 'test/remote/gateways/remote_usa_epay_advanced_test.rb'
 
-# Offense count: 16
-# Cop supports --auto-correct.
-# Configuration parameters: AllowForAlignment.
-Layout/SpaceBeforeFirstArg:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/checkout.rb'
-    - 'lib/active_merchant/billing/gateways/cyber_source.rb'
-    - 'lib/active_merchant/billing/gateways/s5.rb'
-    - 'test/remote/gateways/remote_braintree_orange_test.rb'
-    - 'test/remote/gateways/remote_payflow_test.rb'
-    - 'test/unit/gateways/bogus_test.rb'
-    - 'test/unit/gateways/instapay_test.rb'
-    - 'test/unit/gateways/quickpay_v10_test.rb'
-    - 'test/unit/gateways/quickpay_v4to7_test.rb'
-
 # Offense count: 118
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.

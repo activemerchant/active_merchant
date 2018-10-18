@@ -129,7 +129,7 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def test_supported_card_types
     klass = @gateway.class
-    assert_equal  [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ], klass.supported_cardtypes
+    assert_equal [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ], klass.supported_cardtypes
   end
 
   def test_add_testmode_does_not_add_testmode_if_transaction_id_present

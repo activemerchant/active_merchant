@@ -18,7 +18,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_authorize
-    assert  @gateway.authorize(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.authorize(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response = @gateway.authorize(1000, credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
@@ -34,7 +34,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_purchase
-    assert  @gateway.purchase(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.purchase(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response = @gateway.purchase(1000, credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
@@ -56,7 +56,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_credit
-    assert  @gateway.credit(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.credit(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response =  @gateway.credit(1000, credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
@@ -97,7 +97,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_store
-    assert  @gateway.store(credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.store(credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response = @gateway.store(credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
@@ -184,7 +184,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_purchase_emv
-    assert  @gateway.purchase(1000, credit_card('123', {icc_data: 'DEADBEEF'})).success?
+    assert @gateway.purchase(1000, credit_card('123', {icc_data: 'DEADBEEF'})).success?
     response = @gateway.purchase(1005, credit_card('123', {icc_data: 'DEADBEEF'}))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code

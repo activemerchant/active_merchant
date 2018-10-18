@@ -139,7 +139,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert  response.message.match(/Invalid Transaction ID \/ Object ID specified:/)
+    assert response.message.match(/Invalid Transaction ID \/ Object ID specified:/)
   end
 
   def test_authorize_with_three_d_secure_pass_thru

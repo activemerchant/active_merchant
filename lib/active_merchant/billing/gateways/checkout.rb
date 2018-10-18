@@ -125,13 +125,13 @@ module ActiveMerchant #:nodoc:
 
       def add_shipping_info(xml, options)
         if options[:shipping_address]
-          xml.ship_address_   options[:shipping_address][:address1]
-          xml.ship_address2_  options[:shipping_address][:address2]
-          xml.ship_city_    options[:shipping_address][:city]
-          xml.ship_state_   options[:shipping_address][:state]
-          xml.ship_postal_  options[:shipping_address][:zip]
-          xml.ship_country_   options[:shipping_address][:country]
-          xml.ship_phone_   options[:shipping_address][:phone]
+          xml.ship_address_  options[:shipping_address][:address1]
+          xml.ship_address2_ options[:shipping_address][:address2]
+          xml.ship_city_     options[:shipping_address][:city]
+          xml.ship_state_    options[:shipping_address][:state]
+          xml.ship_postal_   options[:shipping_address][:zip]
+          xml.ship_country_  options[:shipping_address][:country]
+          xml.ship_phone_    options[:shipping_address][:phone]
         end
       end
 
@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_fields(xml, options)
-        xml.bill_email_   options[:email]
+        xml.bill_email_ options[:email]
         xml.bill_customerip_ options[:ip]
         xml.merchantcustomerid_ options[:customer]
         xml.descriptor_name options[:descriptor_name]

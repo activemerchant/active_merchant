@@ -213,7 +213,7 @@ class RemotePayflowTest < Test::Unit::TestCase
     SecureRandom.expects(:hex).times(2).returns(request_id)
 
     response1 = @gateway.purchase(100, @credit_card, @options)
-    assert  response1.success?
+    assert response1.success?
     assert_nil response1.params['duplicate']
 
     response2 = @gateway.purchase(100, @credit_card, @options)

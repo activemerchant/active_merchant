@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
             xml.Holder        "#{payment_method.first_name} #{payment_method.last_name}"
             xml.Brand         payment_method.brand
             xml.Expiry(year: payment_method.year, month: payment_method.month)
-            xml.Verification  payment_method.verification_value
+            xml.Verification payment_method.verification_value
           end
         end
       end
