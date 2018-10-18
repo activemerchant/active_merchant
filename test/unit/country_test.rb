@@ -74,7 +74,7 @@ class CountryTest < Test::Unit::TestCase
   end
 
   def test_country_names_are_alphabetized
-    country_names = ActiveMerchant::Country::COUNTRIES.map { | each | each[:name] }
+    country_names = ActiveMerchant::Country::COUNTRIES.map { |each| each[:name] }
     assert_equal(country_names.sort, country_names)
   end
 

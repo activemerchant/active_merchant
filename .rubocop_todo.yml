@@ -151,15 +151,6 @@ Layout/MultilineOperationIndentation:
 Layout/SpaceAfterComma:
   Enabled: false
 
-# Offense count: 3
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyleInsidePipes.
-# SupportedStylesInsidePipes: space, no_space
-Layout/SpaceAroundBlockParameters:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/payscout.rb'
-    - 'test/unit/country_test.rb'
-
 # Offense count: 638
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
