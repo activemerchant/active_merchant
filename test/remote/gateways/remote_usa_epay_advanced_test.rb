@@ -271,7 +271,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     response = @gateway.add_customer(@options.merge(@customer_options))
     customer_number = response.params['add_customer_return']
 
-    response = @gateway.run_customer_transaction(:customer_number => customer_number,# :method_id => 0, # optional
+    response = @gateway.run_customer_transaction(:customer_number => customer_number, # :method_id => 0, # optional
                                                  :command => 'Sale', :amount => 3000)
     assert response.params['run_customer_transaction_return']
   end

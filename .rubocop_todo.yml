@@ -186,12 +186,6 @@ Layout/SpaceAroundOperators:
 Layout/SpaceBeforeBlockBraces:
   Enabled: false
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Layout/SpaceBeforeComment:
-  Exclude:
-    - 'test/remote/gateways/remote_usa_epay_advanced_test.rb'
-
 # Offense count: 118
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.
