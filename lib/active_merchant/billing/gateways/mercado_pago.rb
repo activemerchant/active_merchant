@@ -186,6 +186,12 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         JSON.parse(body)
+      rescue JSON::ParserError
+        {
+          'status' => 'error',
+          'status_detail' => 'json_parse_error',
+          'message' => "A non-JSON response was received from Mercado Pago where one was expected. The raw response was:\n\n#{body}"
+        }
       end
 
       def commit(action, path, parameters)
@@ -207,7 +213,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(action, response)
         if action == 'refund'
-          response['error'].nil?
+          response['status'] != 404 && response['error'].nil?
         else
           ['active', 'approved', 'authorized', 'cancelled', 'in_process'].include?(response['status'])
         end
