@@ -10,11 +10,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Mercado Pago'
       self.money_format = :dollars
 
-      CARD_BRAND = {
-        'american_express' => 'amex',
-        'diners_club' => 'diners'
-      }
-
       def initialize(options={})
         requires!(options, :access_token)
         super
@@ -23,7 +18,6 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
-          options.merge!(card_brand: (CARD_BRAND[payment.brand] || payment.brand))
           options.merge!(card_token: r.authorization.split('|').first)
           r.process { commit('purchase', 'payments', purchase_request(money, payment, options) ) }
         end
@@ -32,7 +26,6 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
-          options.merge!(card_brand: (CARD_BRAND[payment.brand] || payment.brand))
           options.merge!(card_token: r.authorization.split('|').first)
           r.process { commit('authorize', 'payments', authorize_request(money, payment, options) ) }
         end
@@ -181,7 +174,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, options)
         post[:token] = options[:card_token]
-        post[:payment_method_id] = options[:card_brand]
+        post[:issuer_id] = options[:issuer_id] if options[:issuer_id]
+        post[:payment_method_id] = options[:payment_method_id] if options[:payment_method_id]
       end
 
       def parse(body)
