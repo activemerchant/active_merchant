@@ -231,7 +231,7 @@ module ActiveMerchant #:nodoc:
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email]),
             :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-	            options[:billing_address][:phone]),
+              options[:billing_address][:phone]),
             :id => options[:customer],
             :device_data => options[:device_data],
           }.merge credit_card_params
@@ -558,7 +558,7 @@ module ActiveMerchant #:nodoc:
             :id => options[:store] == true ? '' : options[:store],
             :email => scrub_email(options[:email]),
             :phone => options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
-	            options[:billing_address][:phone])
+              options[:billing_address][:phone])
           },
           :options => {
             :store_in_vault => options[:store] ? true : false,

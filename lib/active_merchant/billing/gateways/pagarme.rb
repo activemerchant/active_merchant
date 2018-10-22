@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def json_error(raw_response)
-		  msg = 'Resposta inválida retornada pela API do Pagar.me. Por favor entre em contato com suporte@pagar.me se você continuar recebendo essa mensagem.'
+        msg = 'Resposta inválida retornada pela API do Pagar.me. Por favor entre em contato com suporte@pagar.me se você continuar recebendo essa mensagem.'
         msg += "  (A resposta retornada pela API foi #{raw_response.inspect})"
         {
           'errors' => [{

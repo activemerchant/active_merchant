@@ -40,15 +40,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     }
 
     @test_suite = [
-      {:card => :visa, :AVSzip => 11111, :CVD =>	111,  :amount => 3000},
-      {:card => :visa, :AVSzip => 33333, :CVD =>	nil,  :amount => 3801},
-      {:card => :mc,	 :AVSzip => 44444, :CVD =>	nil,  :amount => 4100},
-      {:card => :mc,	 :AVSzip => 88888, :CVD =>	666,  :amount => 1102},
-      {:card => :amex, :AVSzip => 55555, :CVD =>	nil,  :amount => 105500},
-      {:card => :amex, :AVSzip => 66666, :CVD =>	2222, :amount => 7500},
-      {:card => :ds,	 :AVSzip => 77777, :CVD =>	nil,  :amount => 1000},
-      {:card => :ds, 	 :AVSzip => 88888, :CVD =>	444,  :amount => 6303},
-      {:card => :jcb,  :AVSzip => 33333, :CVD =>	nil,  :amount => 2900}]
+      {:card => :visa, :AVSzip => 11111, :CVD => 111,  :amount => 3000},
+      {:card => :visa, :AVSzip => 33333, :CVD => nil,  :amount => 3801},
+      {:card => :mc,   :AVSzip => 44444, :CVD => nil,  :amount => 4100},
+      {:card => :mc,   :AVSzip => 88888, :CVD => 666,  :amount => 1102},
+      {:card => :amex, :AVSzip => 55555, :CVD => nil,  :amount => 105500},
+      {:card => :amex, :AVSzip => 66666, :CVD => 2222, :amount => 7500},
+      {:card => :ds,   :AVSzip => 77777, :CVD => nil,  :amount => 1000},
+      {:card => :ds,   :AVSzip => 88888, :CVD => 444,  :amount => 6303},
+      {:card => :jcb,  :AVSzip => 33333, :CVD => nil,  :amount => 2900}
+    ]
   end
 
   def test_successful_purchase

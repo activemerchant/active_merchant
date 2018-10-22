@@ -241,17 +241,6 @@ Layout/SpaceInsideStringInterpolation:
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
     - 'test/unit/gateways/worldpay_test.rb'
 
-# Offense count: 27
-# Cop supports --auto-correct.
-# Configuration parameters: IndentationWidth.
-Layout/Tab:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/braintree_blue.rb'
-    - 'lib/active_merchant/billing/gateways/efsnet.rb'
-    - 'lib/active_merchant/billing/gateways/pagarme.rb'
-    - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
-    - 'test/remote/gateways/remote_orbital_test.rb'
-
 # Offense count: 357
 # Cop supports --auto-correct.
 # Configuration parameters: AllowInHeredoc.

@@ -19,10 +19,10 @@ module ActiveMerchant #:nodoc:
     # Next, create a credit card object using a TC approved test card.
     #
     #   creditcard = ActiveMerchant::Billing::CreditCard.new(
-    #	    :number => '4111111111111111',
-    #	    :month => 8,
-    #	    :year => 2006,
-    #	    :first_name => 'Longbob',
+    #     :number => '4111111111111111',
+    #     :month => 8,
+    #     :year => 2006,
+    #     :first_name => 'Longbob',
     #     :last_name => 'Longsen'
     #   )
     #
@@ -353,7 +353,7 @@ module ActiveMerchant #:nodoc:
           params[:shipto_address2] = shipping_address[:address2] unless shipping_address[:address2].blank?
           params[:shipto_city]     = shipping_address[:city]     unless shipping_address[:city].blank?
           params[:shipto_state]    = shipping_address[:state]    unless shipping_address[:state].blank?
-          params[:shipto_zip]	     = shipping_address[:zip]      unless shipping_address[:zip].blank?
+          params[:shipto_zip]      = shipping_address[:zip]      unless shipping_address[:zip].blank?
           params[:shipto_country]  = shipping_address[:country]  unless shipping_address[:country].blank?
         end
       end
