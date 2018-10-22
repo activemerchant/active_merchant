@@ -120,4 +120,3 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
   end
 
 end
-

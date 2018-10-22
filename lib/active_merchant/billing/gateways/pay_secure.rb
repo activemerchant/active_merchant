@@ -109,4 +109,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

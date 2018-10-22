@@ -20,4 +20,3 @@ module ActiveMerchant
     end
   end
 end
-

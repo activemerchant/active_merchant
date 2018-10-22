@@ -213,4 +213,3 @@ class OppTest < Test::Unit::TestCase
   end
 
 end
-

@@ -19,4 +19,3 @@ class QuickpayTest < Test::Unit::TestCase
   end
     
 end
-

@@ -99,4 +99,3 @@ class InstapayTest < Test::Unit::TestCase
     "<html><body><plaintext>\r\nDeclined=DECLINED:1101450002:Post amount exceeds Auth amount:\r\nhistoryid=\r\norderid=\r\nDeclined=DECLINED:1101450002:Post amount exceeds Auth amount:\r\nrcode=1101450002\r\nReason=DECLINED:1101450002:Post amount exceeds Auth amount:\r\nresult=0\r\nStatus=Declined\r\ntransid=0\r\n"
   end
 end
-

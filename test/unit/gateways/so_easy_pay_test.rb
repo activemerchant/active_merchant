@@ -222,4 +222,3 @@ class SoEasyPayTest < Test::Unit::TestCase
   end
 
 end
-

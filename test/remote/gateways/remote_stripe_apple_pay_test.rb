@@ -163,4 +163,3 @@ class RemoteStripeApplePayTest < Test::Unit::TestCase
   end
 
 end
-

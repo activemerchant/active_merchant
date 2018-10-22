@@ -276,4 +276,3 @@ class SkipJackTest < Test::Unit::TestCase
     CSV
   end
 end
-

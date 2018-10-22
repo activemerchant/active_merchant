@@ -67,4 +67,3 @@ class GatewaySupport #:nodoc:
     end
   end
 end
-

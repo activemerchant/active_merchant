@@ -115,4 +115,3 @@ module ActiveMerchant
     Compatibility::Model.send(:include, Rails::Model)
   end
 end
-

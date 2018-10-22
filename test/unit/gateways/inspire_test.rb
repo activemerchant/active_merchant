@@ -140,4 +140,3 @@ class InspireTest < Test::Unit::TestCase
     'response=3&responsetext=Invalid Transaction ID specified REFID:3150951931&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=&type=refund&response_code=300'
   end
 end
-

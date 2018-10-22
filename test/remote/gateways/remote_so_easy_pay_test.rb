@@ -62,4 +62,3 @@ class RemoteSoEasyPayTest < Test::Unit::TestCase
     assert_equal 'Website verification failed, wrong websiteID or password', response.message
   end
 end
-
