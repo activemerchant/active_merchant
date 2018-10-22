@@ -375,11 +375,9 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         results = {}
-        if !body.nil?
-          body.split(/&/).each do |pair|
-            key, val = pair.split(/\=/)
-            results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
-          end
+        body&.split(/&/)&.each do |pair|
+          key, val = pair.split(/\=/)
+          results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
         end
 
         # Clean up the message text if there is any

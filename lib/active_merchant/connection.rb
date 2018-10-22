@@ -61,7 +61,7 @@ module ActiveMerchant
     end
 
     def wiredump_device=(device)
-      raise ArgumentError, "can't wiredump to frozen #{device.class}" if device && device.frozen?
+      raise ArgumentError, "can't wiredump to frozen #{device.class}" if device&.frozen?
       @wiredump_device = device
     end
 
@@ -189,7 +189,7 @@ module ActiveMerchant
 
     def log(level, message, tag)
       message = "[#{tag}] #{message}" if tag
-      logger.send(level, message) if logger
+      logger&.send(level, message)
     end
   end
 end

@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response['errorDescription'] || (response['terminalDisp'].strip if response['terminalDisp'])
+        response['errorDescription'] || response['terminalDisp']&.strip
       end
 
       def authorization_from(response)

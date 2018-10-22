@@ -878,7 +878,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_extra_options(options)
-        options.map{ |k, v| "#{k}=#{v}" }.join('&') unless options.nil?
+        options&.map{ |k, v| "#{k}=#{v}" }&.join('&')
       end
 
       def parse_direct_response(params)

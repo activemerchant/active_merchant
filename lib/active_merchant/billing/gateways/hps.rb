@@ -274,7 +274,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        (@options[:secret_api_key] && @options[:secret_api_key].include?('_cert_'))
+        @options[:secret_api_key]&.include?('_cert_')
       end
 
       ISSUER_MESSAGES = {

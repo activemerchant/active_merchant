@@ -1259,13 +1259,6 @@ Style/RescueStandardError:
   Exclude:
     - 'lib/active_merchant/billing/base.rb'
 
-# Offense count: 33
-# Cop supports --auto-correct.
-# Configuration parameters: ConvertCodeThatCanStartToReturnNil, Whitelist.
-# Whitelist: present?, blank?, presence, try, try!
-Style/SafeNavigation:
-  Enabled: false
-
 # Offense count: 2
 # Cop supports --auto-correct.
 Style/SelfAssignment:

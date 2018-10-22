@@ -395,7 +395,7 @@ module ActiveMerchant #:nodoc:
 
       def lookup_country_code(code)
         country = Country.find(code) rescue nil
-        country && country.code(:alpha3)
+        country&.code(:alpha3)
       end
     end
   end

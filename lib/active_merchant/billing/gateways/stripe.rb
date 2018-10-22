@@ -386,7 +386,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        return unless post[:card] && post[:card].kind_of?(Hash)
+        return unless post[:card]&.kind_of?(Hash)
         if address = options[:billing_address] || options[:address]
           post[:card][:address_line1] = address[:address1] if address[:address1]
           post[:card][:address_line2] = address[:address2] if address[:address2]

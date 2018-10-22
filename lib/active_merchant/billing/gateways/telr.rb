@@ -214,7 +214,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         doc = Nokogiri::XML(xml)
-        doc.root.xpath('*').each do |node|
+        doc.root&.xpath('*')&.each do |node|
           if (node.elements.size == 0)
             response[node.name.downcase.to_sym] = node.text
           else
@@ -223,7 +223,7 @@ module ActiveMerchant #:nodoc:
               response[name.to_sym] = childnode.text
             end
           end
-        end unless doc.root.nil?
+        end
 
         response
       end

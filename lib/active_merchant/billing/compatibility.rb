@@ -75,7 +75,7 @@ module ActiveMerchant
           end
 
           def empty?
-            all?{|k, v| v && v.empty?}
+            all?{|k, v| v&.empty?}
           end
 
           def on(field)

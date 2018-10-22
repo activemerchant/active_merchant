@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
 
       def get_text_from_document(document, node)
         node = REXML::XPath.first(document, node)
-        node && node.text
+        node&.text
       end
 
       def cc_auth_request(money, opts)

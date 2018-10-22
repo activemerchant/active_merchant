@@ -374,7 +374,7 @@ module ActiveMerchant
             response['transaction_id'],
             response['transaction_tag'],
             params[:method],
-            (response['amount'] && response['amount'].to_i)
+            response['amount']&.to_i
           ].join('|')
         end
       end

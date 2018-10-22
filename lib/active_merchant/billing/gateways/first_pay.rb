@@ -119,9 +119,9 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         doc = Nokogiri::XML(xml)
-        doc.root.xpath('//RESPONSE/FIELDS/FIELD').each do |field|
+        doc.root&.xpath('//RESPONSE/FIELDS/FIELD')&.each do |field|
           response[field['KEY']] = field.text
-        end unless doc.root.nil?
+        end
 
         response
       end
@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         # Silly inconsistent gateway. Always make capitalized (but not all caps)
         msg = (response['auth_response'] || response['response1'])
-        msg.downcase.capitalize if msg
+        msg&.downcase&.capitalize
       end
 
       def error_code_from(response)

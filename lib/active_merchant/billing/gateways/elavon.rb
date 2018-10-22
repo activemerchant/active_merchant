@@ -191,10 +191,8 @@ module ActiveMerchant #:nodoc:
         form[:email] = truncate(options[:email], 100) unless empty?(options[:email])
         form[:customer_code] = truncate(options[:customer], 10) unless empty?(options[:customer])
         form[:customer_number] = options[:customer_number] unless empty?(options[:customer_number])
-        if options[:custom_fields]
-          options[:custom_fields].each do |key, value|
-            form[key.to_s] = value
-          end
+        options[:custom_fields]&.each do |key, value|
+          form[key.to_s] = value
         end
       end
 
@@ -283,7 +281,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def custom_field?(field_name, options)
-        return true if options[:custom_fields] && options[:custom_fields].include?(field_name.to_sym)
+        return true if options[:custom_fields]&.include?(field_name.to_sym)
         field_name == :customer_number
       end
 

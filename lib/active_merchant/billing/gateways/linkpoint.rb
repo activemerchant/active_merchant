@@ -434,9 +434,9 @@ module ActiveMerchant #:nodoc:
         response = {:message => 'Global Error Receipt', :complete => false}
 
         xml = REXML::Document.new("<response>#{xml}</response>")
-        xml.root.elements.each do |node|
+        xml.root&.elements&.each do |node|
           response[node.name.downcase.sub(/^r_/, '').to_sym] = normalize(node.text)
-        end unless xml.root.nil?
+        end
 
         response
       end

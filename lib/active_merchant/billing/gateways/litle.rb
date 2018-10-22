@@ -284,7 +284,7 @@ module ActiveMerchant #:nodoc:
             doc.cardholderAuthentication do
               doc.authenticationValue(payment_method.payment_cryptogram)
             end
-          elsif options[:order_source] && options[:order_source].start_with?('3ds')
+          elsif options[:order_source]&.start_with?('3ds')
             doc.cardholderAuthentication do
               doc.authenticationValue(options[:cavv]) if options[:cavv]
               doc.authenticationTransactionId(options[:xid]) if options[:xid]

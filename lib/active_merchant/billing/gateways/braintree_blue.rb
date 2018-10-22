@@ -355,7 +355,7 @@ module ActiveMerchant #:nodoc:
           result.success?,
           message_from_result(result),
           response_hash,
-          authorization: (result.transaction.id if result.transaction),
+          authorization: result.transaction&.id,
           test: test?
         )
       end

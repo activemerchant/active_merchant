@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, payment_object, options = {})
-        if(payment_object && payment_object.kind_of?(String))
+        if payment_object&.kind_of?(String)
           ActiveMerchant.deprecated 'credit should only be used to credit a payment method'
           return refund(money, payment_object, options)
         end

@@ -396,7 +396,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! :AVSphoneNum, (address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil)
           end
 
-          xml.tag! :AVSname, ((creditcard && creditcard.name) ? creditcard.name[0..29] : nil)
+          xml.tag! :AVSname, (creditcard&.name ? creditcard.name[0..29] : nil)
           xml.tag! :AVScountryCode, (avs_supported ? byte_limit(format_address_field(address[:country]), 2) : '')
 
           # Needs to come after AVScountryCode

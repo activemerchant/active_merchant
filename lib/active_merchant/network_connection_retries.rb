@@ -65,7 +65,7 @@ module ActiveMerchant
     def self.log(logger, level, message, tag=nil)
       tag ||= self.class.to_s
       message = "[#{tag}] #{message}"
-      logger.send(level, message) if logger
+      logger&.send(level, message)
     end
 
     private
