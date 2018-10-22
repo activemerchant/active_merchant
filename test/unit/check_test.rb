@@ -25,6 +25,12 @@ class CheckTest < Test::Unit::TestCase
     assert_equal "", check.name
   end
 
+  def test_branch_code
+    branch_code = '1234'
+    check = Check.new(branch_code: branch_code)
+    assert_equal check.branch_code, branch_code
+  end
+
   def test_valid
     assert_valid Check.new(
       :name => 'Fred Bloggs',

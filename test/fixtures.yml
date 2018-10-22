@@ -1078,3 +1078,6 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+go_cardless:
+  access_token: 'sandbox_mYMHPiOhsiBae0usK-_UToceOjJvpeh-B_zHKKw4'
