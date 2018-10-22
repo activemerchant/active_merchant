@@ -231,13 +231,13 @@ module ActiveMerchant #:nodoc:
       def soap_request(arguments, action)
         # eWay demands all fields be sent, but contain an empty string if blank
         post = case action
-                when 'QueryCustomer'
+               when 'QueryCustomer'
                   arguments
-                when 'ProcessPayment'
+               when 'ProcessPayment'
                   default_payment_fields.merge(arguments)
-                when 'CreateCustomer'
+               when 'CreateCustomer'
                   default_customer_fields.merge(arguments)
-                when 'UpdateCustomer'
+               when 'UpdateCustomer'
                   default_customer_fields.merge(arguments)
                end
 

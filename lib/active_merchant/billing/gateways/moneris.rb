@@ -51,11 +51,11 @@ module ActiveMerchant #:nodoc:
         post[:address]    = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         action = if post[:cavv]
-          'cavv_preauth'
-        elsif post[:data_key].blank?
-          'preauth'
-        else
-          'res_preauth_cc'
+                   'cavv_preauth'
+                 elsif post[:data_key].blank?
+                   'preauth'
+                 else
+                   'res_preauth_cc'
         end
         commit(action, post)
       end
@@ -73,11 +73,11 @@ module ActiveMerchant #:nodoc:
         post[:address]    = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         action = if post[:cavv]
-          'cavv_purchase'
-        elsif post[:data_key].blank?
-          'purchase'
-        else
-          'res_purchase_cc'
+                   'cavv_purchase'
+                 elsif post[:data_key].blank?
+                   'purchase'
+                 else
+                   'res_purchase_cc'
         end
         commit(action, post)
       end

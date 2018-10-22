@@ -74,11 +74,11 @@ module ActiveMerchant #:nodoc:
         add_address(post, creditcard_or_datakey, options)
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         action = if creditcard_or_datakey.is_a?(String)
-          'us_res_purchase_cc'
-        elsif card_brand(creditcard_or_datakey) == 'check'
-          'us_ach_debit'
-        elsif post[:data_key].blank?
-          'us_purchase'
+                   'us_res_purchase_cc'
+                 elsif card_brand(creditcard_or_datakey) == 'check'
+                   'us_ach_debit'
+                 elsif post[:data_key].blank?
+                   'us_purchase'
         end
         commit(action, post)
       end

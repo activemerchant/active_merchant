@@ -340,13 +340,13 @@ module ActiveMerchant #:nodoc:
 
       def normalized_client_type(client_type_from_options)
         case client_type_from_options.to_s.downcase
-          when 'web'        then 'Web'
-          when 'ivr'        then 'IVR'
-          when 'moto'       then 'MOTO'
-          when 'unattended' then 'Unattended'
-          when 'internet'   then 'Internet'
-          when 'recurring'  then 'Recurring'
-          else nil
+        when 'web'        then 'Web'
+        when 'ivr'        then 'IVR'
+        when 'moto'       then 'MOTO'
+        when 'unattended' then 'Unattended'
+        when 'internet'   then 'Internet'
+        when 'recurring'  then 'Recurring'
+        else nil
         end
       end
     end

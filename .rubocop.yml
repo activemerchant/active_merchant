@@ -29,3 +29,6 @@ Layout/AlignParameters:
 
 Layout/DotPosition:
   EnforcedStyle: trailing
+
+Layout/CaseIndentation:
+  EnforcedStyle: end

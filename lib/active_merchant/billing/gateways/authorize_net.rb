@@ -133,9 +133,9 @@ module ActiveMerchant
 
       def refund(amount, authorization, options={})
         response = if auth_was_for_cim?(authorization)
-          cim_refund(amount, authorization, options)
-        else
-          normal_refund(amount, authorization, options)
+                     cim_refund(amount, authorization, options)
+                   else
+                     normal_refund(amount, authorization, options)
         end
 
         return response if response.success?
@@ -594,9 +594,9 @@ module ActiveMerchant
 
         xml.send(root_node) do
           first_name, last_name = if address[:name]
-            split_names(address[:name])
-          else
-            [address[:first_name], address[:last_name]]
+                                    split_names(address[:name])
+                                  else
+                                    [address[:first_name], address[:last_name]]
           end
           full_address = "#{address[:address1]} #{address[:address2]}".strip
 

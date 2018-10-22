@@ -14,35 +14,10 @@ Gemspec/OrderedDependencies:
   Exclude:
     - 'activemerchant.gemspec'
 
-# Offense count: 113
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, IndentOneStep, IndentationWidth.
-# SupportedStyles: case, end
-Layout/CaseIndentation:
-  Enabled: false
-
 # Offense count: 426
 # Cop supports --auto-correct.
 Layout/ClosingHeredocIndentation:
   Enabled: false
-
-# Offense count: 24
-# Cop supports --auto-correct.
-Layout/ElseAlignment:
-  Exclude:
-    - 'lib/active_merchant/billing/gateway.rb'
-    - 'lib/active_merchant/billing/gateways/authorize_net.rb'
-    - 'lib/active_merchant/billing/gateways/balanced.rb'
-    - 'lib/active_merchant/billing/gateways/braintree_blue.rb'
-    - 'lib/active_merchant/billing/gateways/card_stream.rb'
-    - 'lib/active_merchant/billing/gateways/clearhaus.rb'
-    - 'lib/active_merchant/billing/gateways/firstdata_e4.rb'
-    - 'lib/active_merchant/billing/gateways/moneris.rb'
-    - 'lib/active_merchant/billing/gateways/moneris_us.rb'
-    - 'lib/active_merchant/billing/gateways/pac_net_raven.rb'
-    - 'lib/active_merchant/billing/gateways/payflow.rb'
-    - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
-    - 'lib/active_merchant/billing/response.rb'
 
 # Offense count: 165
 # Cop supports --auto-correct.

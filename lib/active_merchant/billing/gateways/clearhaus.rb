@@ -54,12 +54,12 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
 
         action = if payment.respond_to?(:number)
-           add_payment(post, payment)
-          '/authorizations'
-        elsif payment.kind_of?(String)
-          "/cards/#{payment}/authorizations"
-        else
-          raise ArgumentError.new("Unknown payment type #{payment.inspect}")
+                   add_payment(post, payment)
+                   '/authorizations'
+                 elsif payment.kind_of?(String)
+                   "/cards/#{payment}/authorizations"
+                 else
+                   raise ArgumentError.new("Unknown payment type #{payment.inspect}")
         end
 
         post[:recurring] = options[:recurring] if options[:recurring]

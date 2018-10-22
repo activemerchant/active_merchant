@@ -204,11 +204,11 @@ module ActiveMerchant #:nodoc:
 
       def normalize(field)
         case field
-          when 'true'   then true
-          when 'false'  then false
-          when ''       then nil
-          when 'null'   then nil
-          else field
+        when 'true'   then true
+        when 'false'  then false
+        when ''       then nil
+        when 'null'   then nil
+        else field
         end
       end
 
@@ -241,10 +241,10 @@ module ActiveMerchant #:nodoc:
       def amount(money)
         return nil if money.nil?
         cents = if money.respond_to?(:cents)
-          ActiveMerchant.deprecated 'Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents'
-          money.cents
-        else
-          money
+                  ActiveMerchant.deprecated 'Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents'
+                  money.cents
+                else
+                  money
         end
 
         if money.is_a?(String)

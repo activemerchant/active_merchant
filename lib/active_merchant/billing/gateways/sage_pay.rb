@@ -380,9 +380,9 @@ module ActiveMerchant #:nodoc:
 
       def build_url(action)
         endpoint = case action
-          when :purchase, :authorization then 'vspdirect-register'
-          when :store then 'directtoken'
-          else TRANSACTIONS[action].downcase
+        when :purchase, :authorization then 'vspdirect-register'
+        when :store then 'directtoken'
+        else TRANSACTIONS[action].downcase
         end
         "#{test? ? self.test_url : self.live_url}/#{endpoint}.vsp"
       end

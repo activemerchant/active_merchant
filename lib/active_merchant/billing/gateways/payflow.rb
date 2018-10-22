@@ -318,20 +318,20 @@ module ActiveMerchant #:nodoc:
       def get_pay_period(options)
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly])
         case options[:periodicity]
-          when :weekly then 'Weekly'
-          when :biweekly then 'Bi-weekly'
-          when :semimonthly then 'Semi-monthly'
-          when :quadweekly then 'Every four weeks'
-          when :monthly then 'Monthly'
-          when :quarterly then 'Quarterly'
-          when :semiyearly then 'Semi-yearly'
-          when :yearly then 'Yearly'
+        when :weekly then 'Weekly'
+        when :biweekly then 'Bi-weekly'
+        when :semimonthly then 'Semi-monthly'
+        when :quadweekly then 'Every four weeks'
+        when :monthly then 'Monthly'
+        when :quarterly then 'Quarterly'
+        when :semiyearly then 'Semi-yearly'
+        when :yearly then 'Yearly'
         end
       end
 
       def format_rp_date(time)
         case time
-          when Time, Date then time.strftime('%m%d%Y')
+        when Time, Date then time.strftime('%m%d%Y')
         else
           time.to_s
         end

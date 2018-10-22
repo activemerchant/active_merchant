@@ -246,12 +246,12 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card_eci(xml, credit_card, options)
         eci = if credit_card.is_a?(NetworkTokenizationCreditCard) && credit_card.source == :apple_pay && card_brand(credit_card) == 'discover'
-          # Discover requires any Apple Pay transaction, regardless of in-app
-          # or web, and regardless of the ECI contained in the PKPaymentToken,
-          # to have an ECI value explicitly of 04.
-          '04'
-        else
-          (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
+                # Discover requires any Apple Pay transaction, regardless of in-app
+                # or web, and regardless of the ECI contained in the PKPaymentToken,
+                # to have an ECI value explicitly of 04.
+                '04'
+              else
+                (credit_card.respond_to?(:eci) ? credit_card.eci : nil) || options[:eci] || DEFAULT_ECI
         end
 
         xml.tag! 'Ecommerce_Flag', eci.to_s =~ /^[0-9]+$/ ? eci.to_s.rjust(2, '0') : eci

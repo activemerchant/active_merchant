@@ -45,10 +45,10 @@ module ActiveMerchant #:nodoc:
 
         MultiResponse.run do |r|
           identifier = if(payment_method.respond_to?(:number))
-            r.process{store(payment_method, options)}
-            r.authorization
-          else
-            payment_method
+                         r.process{store(payment_method, options)}
+                         r.authorization
+                       else
+                         payment_method
           end
           r.process{commit('debits', "cards/#{card_identifier_from(identifier)}/debits", post)}
         end
@@ -62,10 +62,10 @@ module ActiveMerchant #:nodoc:
 
         MultiResponse.run do |r|
           identifier = if(payment_method.respond_to?(:number))
-            r.process{store(payment_method, options)}
-            r.authorization
-          else
-            payment_method
+                         r.process{store(payment_method, options)}
+                         r.authorization
+                       else
+                         payment_method
           end
           r.process{commit('card_holds', "cards/#{card_identifier_from(identifier)}/card_holds", post)}
         end

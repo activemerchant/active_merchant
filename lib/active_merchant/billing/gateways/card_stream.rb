@@ -334,13 +334,13 @@ module ActiveMerchant #:nodoc:
         street_match = AVS_STREET_MATCH[response[:avscv2ResponseCode].to_s[2, 1]]
 
         code = if postal_match == 'Y' && street_match == 'Y'
-          'M'
-        elsif postal_match == 'Y'
-          'P'
-        elsif street_match == 'Y'
-          'A'
-        else
-          'I'
+                 'M'
+               elsif postal_match == 'Y'
+                 'P'
+               elsif street_match == 'Y'
+                 'A'
+               else
+                 'I'
         end
 
         AVSResult.new({

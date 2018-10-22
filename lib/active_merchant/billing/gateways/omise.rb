@@ -246,15 +246,15 @@ module ActiveMerchant #:nodoc:
       def message_to_standard_error_code_from(response)
         message = response['message'] if response['code'] == 'invalid_card'
         case message
-          when /brand not supported/
+        when /brand not supported/
             STANDARD_ERROR_CODE[:invalid_number]
-          when /number is invalid/
+        when /number is invalid/
             STANDARD_ERROR_CODE[:incorrect_number]
-          when /expiration date cannot be in the past/
+        when /expiration date cannot be in the past/
             STANDARD_ERROR_CODE[:expired_card]
-          when /expiration \w+ is invalid/
+        when /expiration \w+ is invalid/
             STANDARD_ERROR_CODE[:invalid_expiry_date]
-          else
+        else
             STANDARD_ERROR_CODE[:processing_error]
         end
       end

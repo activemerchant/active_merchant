@@ -128,9 +128,9 @@ module ActiveMerchant #:nodoc:
       def action_with_token(action, money, payment_method, options)
         options[:money] = money
         case payment_method
-          when String
+        when String
             self.send("#{action}_with_token", money, payment_method, options)
-          else
+        else
             MultiResponse.run do |r|
               r.process { save_card(payment_method, options) }
               r.process { self.send("#{action}_with_token", money, r.authorization, options) }

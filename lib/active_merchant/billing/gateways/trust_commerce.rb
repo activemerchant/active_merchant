@@ -383,9 +383,9 @@ module ActiveMerchant #:nodoc:
         clean_and_stringify_params(parameters)
 
         data = if tclink?
-          TCLink.send(parameters)
-        else
-          parse( ssl_post(self.live_url, post_data(parameters)) )
+                 TCLink.send(parameters)
+               else
+                 parse( ssl_post(self.live_url, post_data(parameters)) )
         end
 
         # to be considered successful, transaction status must be either "approved" or "accepted"
