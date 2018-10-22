@@ -6,18 +6,18 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
 
   def setup
     @gateway = PayboxDirectGateway.new(fixtures(:paybox_direct))
-    
+
     @amount = 100
     @credit_card = credit_card('1111222233334444')
     @declined_card = credit_card('1111222233334445')
-    
-    @options = { 
+
+    @options = {
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
     }
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -39,7 +39,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     assert capture = @gateway.capture(amount, auth.authorization, :order_id => '1')
     assert_success capture
   end
-  
+
   def test_purchase_and_void
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -56,7 +56,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Invalid data', response.message
   end
-  
+
   def test_purchase_and_partial_credit
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -66,7 +66,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
     assert_equal 'The transaction was approved', credit.message
     assert_success credit
   end
-  
+
   def test_successful_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -84,7 +84,7 @@ class RemotePayboxDirectTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    refund = @gateway.refund(@amount, '', order_id: '2') 
+    refund = @gateway.refund(@amount, '', order_id: '2')
     assert_failure refund
     assert_equal 'Invalid data', refund.message
   end

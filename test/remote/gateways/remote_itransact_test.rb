@@ -1,22 +1,21 @@
 require 'test_helper'
 
 class RemoteItransactTest < Test::Unit::TestCase
-  
 
   def setup
     @gateway = ItransactGateway.new(fixtures(:itransact))
-    
+
     @amount = 1065
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
-    
-    @options = { 
+
+    @options = {
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
     }
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

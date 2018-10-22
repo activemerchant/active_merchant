@@ -22,7 +22,7 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
     #  This capture hex says that the payload is a transaction cryptogram (TC) but does not
     # provide the actual cryptogram. This will only work in test mode and would cause real
     # cards to be declined.
-    @capture_options = { icc_data: '9F270140' } 
+    @capture_options = { icc_data: '9F270140' }
   end
 
   # for EMV contact transactions, it's advised to do a separate auth + capture

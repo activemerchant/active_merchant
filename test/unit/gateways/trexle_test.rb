@@ -42,7 +42,7 @@ class TrexleTest < Test::Unit::TestCase
                                       GI GR HK HU ID IE IL IM IN IS IT JO KW LB LI LK LT LU LV MC
                                       MT MU MV MX MY NL NO NZ OM PH PL PT QA RO SA SE SG SI SK SM
                                       TR TT UM US VA VN ZA)
-    assert_equal expected_supported_countries, TrexleGateway.supported_countries 
+    assert_equal expected_supported_countries, TrexleGateway.supported_countries
   end
 
   def test_supported_cardtypes
@@ -302,8 +302,8 @@ class TrexleTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    '{  
-      "response":{  
+    '{
+      "response":{
       "token":"charge_0cfad7ee5ffe75f58222bff214bfa5cc7ad7c367",
       "success":true,
       "captured":true
@@ -312,17 +312,17 @@ class TrexleTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
-    '{  
+    '{
      "error":"Payment failed",
      "detail":"An error occurred while processing your card. Try again in a little bit."
      }'
   end
 
   def successful_store_response
-    '{  
-      "response":{  
+    '{
+      "response":{
       "token":"token_2cb443cf26b6ecdadd8144d1fac8240710aa41f1",
-      "card":{  
+      "card":{
          "token":"token_f974687e4e866d6cca534e1cd42236817d315b3a",
          "primary":true
       }
@@ -331,17 +331,17 @@ class TrexleTest < Test::Unit::TestCase
   end
 
   def failed_store_response
-    '{  
+    '{
      "error":"an error has occured",
      "detail":"invalid token"
    }'
   end
 
   def successful_customer_store_response
-    '{  
-      "response":{  
+    '{
+      "response":{
       "token":"token_940ade441a23d53e04017f53af6c3a1eae9978ae",
-      "card":{  
+      "card":{
          "token":"token_9a3f559962cbf6828e2cc38a02023565b0294548",
          "scheme":"master",
          "display_number":"XXXX-XXXX-XXXX-4444",
@@ -362,15 +362,15 @@ class TrexleTest < Test::Unit::TestCase
   end
 
   def failed_customer_store_response
-    '{  
+    '{
      "error":"an error has occured",
      "detail":"invalid token"
    }'
   end
 
   def successful_refund_response
-    '{  
-      "response":{  
+    '{
+      "response":{
       "token":"refund_7f696a86f9cb136520c51ea90c17f687b8df40b0",
       "success":true,
       "amount":100,
@@ -381,15 +381,15 @@ class TrexleTest < Test::Unit::TestCase
   end
 
   def failed_refund_response
-    '{  
+    '{
      "error":"Refund failed",
      "detail":"invalid token"
    }'
   end
 
   def successful_capture_response
-    '{  
-      "response":{  
+    '{
+      "response":{
       "token":"charge_6e47a330dca67ec7f696e8b650db22fe69bb8499",
       "success":true,
       "captured":true

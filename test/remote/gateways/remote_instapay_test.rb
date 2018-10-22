@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class RemoteInstapayTest < Test::Unit::TestCase
-  
+
   def setup
     @gateway = InstapayGateway.new(fixtures(:instapay))
 
@@ -38,22 +38,22 @@ class RemoteInstapayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount,  @declined_card, @options)
     assert_failure response
   end
-  
+
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-  
+
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
     assert_equal InstapayGateway::SUCCESS_MESSAGE, capture.message
   end
-  
+
   def test_invalid_login
     gateway = InstapayGateway.new(
       :login => 'X',
       :password => 'Y'
     )
-    
+
     assert response = gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal 'Invalid merchant', response.message

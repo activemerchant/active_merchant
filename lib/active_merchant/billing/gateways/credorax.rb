@@ -185,7 +185,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_echo(post, options)
         add_transaction_type(post, options)
-        
+
         commit(:credit, post)
       end
 

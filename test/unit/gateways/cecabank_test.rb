@@ -72,7 +72,7 @@ class CecabankTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
   end
-  
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end

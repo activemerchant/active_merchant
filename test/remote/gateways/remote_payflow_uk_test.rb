@@ -6,7 +6,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
 
     # The default partner is PayPalUk
     @gateway = PayflowUkGateway.new(fixtures(:payflow_uk))
-    
+
     @creditcard = CreditCard.new(
       :number => '5105105105105100',
       :month => 11,
@@ -17,7 +17,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
       :brand => 'master'
     )
 
-    @options = { 
+    @options = {
       :billing_address => {
          :name => 'Cody Fauser',
          :address1 => '1234 Shady Brook Lane',
@@ -30,7 +30,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
       :email => 'cody@example.com'
     }
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(100000, @creditcard, @options)
     assert_equal 'Approved', response.message
@@ -38,14 +38,14 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     assert response.test?
     assert_not_nil response.authorization
   end
-  
+
   def test_declined_purchase
     assert response = @gateway.purchase(210000, @creditcard, @options)
     assert_equal 'Failed merchant rule check', response.message
     assert_failure response
     assert response.test?
   end
-  
+
   def test_successful_purchase_solo
      assert response = @gateway.purchase(100000, @solo, @options)
      assert_equal 'Approved', response.message
@@ -53,16 +53,16 @@ class RemotePayflowUkTest < Test::Unit::TestCase
      assert response.test?
      assert_not_nil response.authorization
   end
-  
+
   def test_no_card_issue_or_card_start_with_switch
     assert response = @gateway.purchase(100000, @switch, @options)
     assert_failure response
-    
+
     assert_equal 'Field format error: CARDSTART or CARDISSUE must be present', response.message
     assert_failure response
     assert response.test?
   end
-  
+
   def test_successful_purchase_switch_with_issue_number
     @switch.issue_number = '01'
     assert response = @gateway.purchase(100000, @switch, @options)
@@ -71,7 +71,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     assert response.test?
     assert_not_nil response.authorization
   end
-  
+
   def test_successful_purchase_switch_with_start_date
     @switch.start_month = 12
     @switch.start_year = 1999
@@ -81,7 +81,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     assert response.test?
     assert_not_nil response.authorization
   end
-  
+
   def test_successful_purchase_switch_with_start_date_and_issue_number
     @switch.issue_number = '05'
     @switch.start_month = 12
@@ -92,7 +92,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     assert response.test?
     assert_not_nil response.authorization
   end
-  
+
   def test_successful_authorization
     assert response = @gateway.authorize(100, @creditcard, @options)
     assert_equal 'Approved', response.message
@@ -110,13 +110,13 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     assert capture = @gateway.capture(amount, auth.authorization)
     assert_success capture
   end
-  
+
   def test_failed_capture
     assert response = @gateway.capture(100, '999')
     assert_failure response
     assert_equal 'Invalid tender', response.message
   end
-  
+
   def test_authorize_and_void
     assert auth = @gateway.authorize(100, @creditcard, @options)
     assert_success auth
@@ -125,7 +125,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     assert void = @gateway.void(auth.authorization)
     assert_success void
   end
-  
+
   def test_invalid_login
     gateway = PayflowGateway.new(
       :login => '',
@@ -135,16 +135,16 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     assert_equal 'Invalid vendor account', response.message
     assert_failure response
   end
-  
+
   def test_duplicate_request_id
     gateway = PayflowUkGateway.new(
       :login => @login,
       :password => @password
     )
-    
+
     request_id = Digest::SHA1.hexdigest(rand.to_s).slice(0,32)
     gateway.expects(:generate_unique_id).times(2).returns(request_id)
-    
+
     response1 = gateway.purchase(100, @creditcard, @options)
     assert_nil response1.params['duplicate']
     response2 = gateway.purchase(100, @creditcard, @options)

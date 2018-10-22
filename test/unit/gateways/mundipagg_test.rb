@@ -712,7 +712,7 @@ class MundipaggTest < Test::Unit::TestCase
   def failed_void_response
     '{"message": "Charge not found."}'
   end
-  
+
   def successful_verify_response
     %(
       {

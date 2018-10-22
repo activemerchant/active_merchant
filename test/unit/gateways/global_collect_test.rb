@@ -216,7 +216,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, @options)
     end.respond_with(invalid_json_response)
-    
+
     assert_failure response
     assert_match %r{^Invalid response received from the Ingenico ePayments}, response.message
   end
@@ -230,7 +230,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@accepted_amount, @credit_card, @options)
     end.respond_with(invalid_json_plus_card_data).message
-    
+
     assert_equal @gateway.scrub(response), scrubbed_invalid_json_plus
   end
 
@@ -393,22 +393,22 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def invalid_json_response
-    '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"> 
-      <html><head> 
-        <title>502 Proxy Error</title> 
-      </head><body> 
-        <h1>Proxy Error</h1> 
-        <p>The proxy server received an invalid 
-            response from an upstream server.<br /> 
-            The proxy server could not handle the request <em><a href="/v1/9040/payments">POST&nbsp;/v1/9040/payments</a></em>.<p> 
-            Reason: <strong>Error reading from remote server</strong></p></p> 
+    '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+      <html><head>
+        <title>502 Proxy Error</title>
+      </head><body>
+        <h1>Proxy Error</h1>
+        <p>The proxy server received an invalid
+            response from an upstream server.<br />
+            The proxy server could not handle the request <em><a href="/v1/9040/payments">POST&nbsp;/v1/9040/payments</a></em>.<p>
+            Reason: <strong>Error reading from remote server</strong></p></p>
       </body></html>'
   end
 
   def invalid_json_plus_card_data
-    %q(<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"> 
-      <html><head> 
-      <title>502 Proxy Error</title> 
+    %q(<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+      <html><head>
+      <title>502 Proxy Error</title>
       </head></html>
       opening connection to api-sandbox.globalcollect.com:443...
       opened
@@ -429,6 +429,6 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   def scrubbed_invalid_json_plus
-    "Invalid response received from the Ingenico ePayments (formerly GlobalCollect) API.  Please contact Ingenico ePayments if you continue to receive this message.  (The raw response returned by the API was \"<!DOCTYPE HTML PUBLIC \\\"-//IETF//DTD HTML 2.0//EN\\\"> \\n      <html><head> \\n      <title>502 Proxy Error</title> \\n      </head></html>\\n      opening connection to api-sandbox.globalcollect.com:443...\\n      opened\\n      starting SSL for api-sandbox.globalcollect.com:443...\\n      SSL established\\n      <- \\\"POST //v1/1428/payments HTTP/1.1\\\\r\\\\nContent-Type: application/json\\\\r\\\\nAuthorization: [FILTERED]\\\\r\\\\nDate: Tue, 15 Mar 2016 14:32:13 GMT\\\\r\\\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\\\r\\\\nAccept: */*\\\\r\\\\nUser-Agent: Ruby\\\\r\\\\nConnection: close\\\\r\\\\nHost: api-sandbox.globalcollect.com\\\\r\\\\nContent-Length: 560\\\\r\\\\n\\\\r\\\\n\\\"\\n      <- \\\"{\\\\\\\"order\\\\\\\":{\\\\\\\"amountOfMoney\\\\\\\":{\\\\\\\"amount\\\\\\\":\\\\\\\"100\\\\\\\",\\\\\\\"currencyCode\\\\\\\":\\\\\\\"USD\\\\\\\"},\\\\\\\"customer\\\\\\\":{\\\\\\\"merchantCustomerId\\\\\\\":null,\\\\\\\"personalInformation\\\\\\\":{\\\\\\\"name\\\\\\\":{\\\\\\\"firstName\\\\\\\":null,\\\\\\\"surname\\\\\\\":null}},\\\\\\\"billingAddress\\\\\\\":{\\\\\\\"street\\\\\\\":\\\\\\\"456 My Street\\\\\\\",\\\\\\\"additionalInfo\\\\\\\":\\\\\\\"Apt 1\\\\\\\",\\\\\\\"zip\\\\\\\":\\\\\\\"K1C2N6\\\\\\\",\\\\\\\"city\\\\\\\":\\\\\\\"Ottawa\\\\\\\",\\\\\\\"state\\\\\\\":\\\\\\\"ON\\\\\\\",\\\\\\\"countryCode\\\\\\\":\\\\\\\"CA\\\\\\\"}},\\\\\\\"contactDetails\\\\\\\":{\\\\\\\"emailAddress\\\\\\\":null}},\\\\\\\"cardPaymentMethodSpecificInput\\\\\\\":{\\\\\\\"paymentProductId\\\\\\\":\\\\\\\"1\\\\\\\",\\\\\\\"skipAuthentication\\\\\\\":\\\\\\\"true\\\\\\\",\\\\\\\"skipFraudService\\\\\\\":\\\\\\\"true\\\\\\\",\\\\\\\"card\\\\\\\":{\\\\\\\"cvv\\\\\\\":\\\\\\\"[FILTERED]\\\\\\\",\\\\\\\"cardNumber\\\\\\\":\\\\\\\"[FILTERED]\\\\\\\",\\\\\\\"expiryDate\\\\\\\":\\\\\\\"0917\\\\\\\",\\\\\\\"cardholderName\\\\\\\":\\\\\\\"Longbob Longsen\\\\\\\"}}}\\\"\\n      -> \\\"HTTP/1.1 201 Created\\\\r\\\\n\\\"\\n      -> \\\"Date: Tue, 15 Mar 2016 18:32:14 GMT\\\\r\\\\n\\\"\\n      -> \\\"Server: Apache/2.4.16 (Unix) OpenSSL/1.0.1p\\\\r\\\\n\\\"\\n      -> \\\"Location: https://api-sandbox.globalcollect.com:443/v1/1428/payments/000000142800000000300000100001\\\\r\\\\n\\\"\\n      -> \\\"X-Powered-By: Servlet/3.0 JSP/2.2\\\\r\\\\n\\\"\\n      -> \\\"Connection: close\\\\r\\\\n\\\"\\n      -> \\\"Transfer-Encoding: chunked\\\\r\\\\n\\\"\\n      -> \\\"Content-Type: application/json\\\\r\\\\n\\\"\\n      -> \\\"\\\\r\\\\n\\\"\\n      -> \\\"457\\\\r\\\\n\\\"\")"
+    "Invalid response received from the Ingenico ePayments (formerly GlobalCollect) API.  Please contact Ingenico ePayments if you continue to receive this message.  (The raw response returned by the API was \"<!DOCTYPE HTML PUBLIC \\\"-//IETF//DTD HTML 2.0//EN\\\">\\n      <html><head>\\n      <title>502 Proxy Error</title>\\n      </head></html>\\n      opening connection to api-sandbox.globalcollect.com:443...\\n      opened\\n      starting SSL for api-sandbox.globalcollect.com:443...\\n      SSL established\\n      <- \\\"POST //v1/1428/payments HTTP/1.1\\\\r\\\\nContent-Type: application/json\\\\r\\\\nAuthorization: [FILTERED]\\\\r\\\\nDate: Tue, 15 Mar 2016 14:32:13 GMT\\\\r\\\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\\\r\\\\nAccept: */*\\\\r\\\\nUser-Agent: Ruby\\\\r\\\\nConnection: close\\\\r\\\\nHost: api-sandbox.globalcollect.com\\\\r\\\\nContent-Length: 560\\\\r\\\\n\\\\r\\\\n\\\"\\n      <- \\\"{\\\\\\\"order\\\\\\\":{\\\\\\\"amountOfMoney\\\\\\\":{\\\\\\\"amount\\\\\\\":\\\\\\\"100\\\\\\\",\\\\\\\"currencyCode\\\\\\\":\\\\\\\"USD\\\\\\\"},\\\\\\\"customer\\\\\\\":{\\\\\\\"merchantCustomerId\\\\\\\":null,\\\\\\\"personalInformation\\\\\\\":{\\\\\\\"name\\\\\\\":{\\\\\\\"firstName\\\\\\\":null,\\\\\\\"surname\\\\\\\":null}},\\\\\\\"billingAddress\\\\\\\":{\\\\\\\"street\\\\\\\":\\\\\\\"456 My Street\\\\\\\",\\\\\\\"additionalInfo\\\\\\\":\\\\\\\"Apt 1\\\\\\\",\\\\\\\"zip\\\\\\\":\\\\\\\"K1C2N6\\\\\\\",\\\\\\\"city\\\\\\\":\\\\\\\"Ottawa\\\\\\\",\\\\\\\"state\\\\\\\":\\\\\\\"ON\\\\\\\",\\\\\\\"countryCode\\\\\\\":\\\\\\\"CA\\\\\\\"}},\\\\\\\"contactDetails\\\\\\\":{\\\\\\\"emailAddress\\\\\\\":null}},\\\\\\\"cardPaymentMethodSpecificInput\\\\\\\":{\\\\\\\"paymentProductId\\\\\\\":\\\\\\\"1\\\\\\\",\\\\\\\"skipAuthentication\\\\\\\":\\\\\\\"true\\\\\\\",\\\\\\\"skipFraudService\\\\\\\":\\\\\\\"true\\\\\\\",\\\\\\\"card\\\\\\\":{\\\\\\\"cvv\\\\\\\":\\\\\\\"[FILTERED]\\\\\\\",\\\\\\\"cardNumber\\\\\\\":\\\\\\\"[FILTERED]\\\\\\\",\\\\\\\"expiryDate\\\\\\\":\\\\\\\"0917\\\\\\\",\\\\\\\"cardholderName\\\\\\\":\\\\\\\"Longbob Longsen\\\\\\\"}}}\\\"\\n      -> \\\"HTTP/1.1 201 Created\\\\r\\\\n\\\"\\n      -> \\\"Date: Tue, 15 Mar 2016 18:32:14 GMT\\\\r\\\\n\\\"\\n      -> \\\"Server: Apache/2.4.16 (Unix) OpenSSL/1.0.1p\\\\r\\\\n\\\"\\n      -> \\\"Location: https://api-sandbox.globalcollect.com:443/v1/1428/payments/000000142800000000300000100001\\\\r\\\\n\\\"\\n      -> \\\"X-Powered-By: Servlet/3.0 JSP/2.2\\\\r\\\\n\\\"\\n      -> \\\"Connection: close\\\\r\\\\n\\\"\\n      -> \\\"Transfer-Encoding: chunked\\\\r\\\\n\\\"\\n      -> \\\"Content-Type: application/json\\\\r\\\\n\\\"\\n      -> \\\"\\\\r\\\\n\\\"\\n      -> \\\"457\\\\r\\\\n\\\"\")"
   end
 end

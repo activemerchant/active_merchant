@@ -241,12 +241,6 @@ Layout/SpaceInsideStringInterpolation:
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
     - 'test/unit/gateways/worldpay_test.rb'
 
-# Offense count: 357
-# Cop supports --auto-correct.
-# Configuration parameters: AllowInHeredoc.
-Layout/TrailingWhitespace:
-  Enabled: false
-
 # Offense count: 4
 Lint/AmbiguousBlockAssociation:
   Exclude:

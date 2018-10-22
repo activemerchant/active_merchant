@@ -45,7 +45,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
     assert_equal 'Street address does not match, but 5-digit postal code matches.', response.avs_result['message']
     assert_equal 'CVV matches', response.cvv_result['message']
   end
- 
+
   def test_successful_purchase_no_avs
     options = @options.dup
     options[:shipping_address] = nil

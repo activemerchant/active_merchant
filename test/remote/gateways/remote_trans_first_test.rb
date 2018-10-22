@@ -78,7 +78,7 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     assert_success void
   end
 
-  # Refunds can only be successfully run on settled transactions which take 24 hours 
+  # Refunds can only be successfully run on settled transactions which take 24 hours
   # def test_successful_refund
   #   assert purchase = @gateway.purchase(@amount, @credit_card, @options)
   #   assert_success purchase

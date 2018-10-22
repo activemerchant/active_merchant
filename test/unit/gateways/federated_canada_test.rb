@@ -11,13 +11,13 @@ class FederatedCanadaTest < Test::Unit::TestCase
     @credit_card.verification_value = '999'
     @amount = 100
 
-    @options = { 
+    @options = {
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
     }
   end
-  
+
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     options = {:billing_address => {:address1 => '888', :address2 => 'apt 13', :country => 'CA', :state => 'SK', :city => 'Big Beaver', :zip => '77777'}}
@@ -26,18 +26,18 @@ class FederatedCanadaTest < Test::Unit::TestCase
     assert_success response
     assert_equal '1355694937', response.authorization
     assert_equal 'auth', response.params['type']
-  end  
-  
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal '1346648416', response.authorization
-    assert_equal 'sale', response.params['type']    
+    assert_equal 'sale', response.params['type']
     assert response.test?
   end
-  
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -51,7 +51,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
     assert_equal ['address1', 'address2', 'city', 'company', 'country', 'phone', 'state', 'zip'], result.stringify_keys.keys.sort
     assert_equal 'SK', result[:state]
     assert_equal '123 Happy Town Road', result[:address1]
-    assert_equal 'apt 13', result[:address2]    
+    assert_equal 'apt 13', result[:address2]
     assert_equal 'CA', result[:country]
   end
 
@@ -61,15 +61,15 @@ class FederatedCanadaTest < Test::Unit::TestCase
     assert_equal '#1001', result[:orderid]
     assert_equal 'This is a great order', result[:orderdescription]
   end
-   
+
   def test_purchase_is_valid_csv
     params = {:amount => @amount}
     @gateway.send(:add_creditcard, params, @credit_card)
 
     assert data = @gateway.send(:post_data, 'auth', params)
     assert_equal post_data_fixture.size, data.size
-  end  
-  
+  end
+
   def test_purchase_meets_minimum_requirements
     params = {:amount => @amount}
     @gateway.send(:add_creditcard, params, @credit_card)
@@ -78,7 +78,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
       assert_not_nil(data.include?(key))
     end
   end
-   
+
   def test_expdate_formatting
     assert_equal '0909', @gateway.send(:expdate, credit_card('4111111111111111', :month => '9', :year => '2009'))
     assert_equal '0711', @gateway.send(:expdate, credit_card('4111111111111111', :month => '7', :year => '2011'))
@@ -103,7 +103,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'M', response.cvv_result['code']
   end
-  
+
   def test_amount
     assert_equal '1.00', @gateway.send(:amount, 100)
     assert_equal '10.00', @gateway.send(:amount, 1000)
@@ -111,17 +111,17 @@ class FederatedCanadaTest < Test::Unit::TestCase
       @gateway.send(:amount, '10.00')
     end
   end
-  
+
   private
-  
+
   def post_data_fixture
     'password=password&type=auth&ccnumber=4111111111111111&username=demo&ccexp=1111&amount=100&cvv=999'
   end
-  
+
   def minimum_requirements
     %w{type username password amount ccnumber ccexp}
   end
-  
+
   # Raw successful authorization response
   def successful_authorization_response
     'response=1&responsetext=SUCCESS&authcode=123456&transactionid=1355694937&avsresponse=Y&cvvresponse=M&orderid=&type=auth&response_code=100'
@@ -131,7 +131,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
   def successful_purchase_response
     'response=1&responsetext=SUCCESS&authcode=123456&transactionid=1346648416&avsresponse=N&cvvresponse=N&orderid=&type=sale&response_code=100'
   end
-  
+
   # Raw failed sale response
   def failed_purchase_response
     'response=2&responsetext=DECLINE&authcode=&transactionid=1346648595&avsresponse=N&cvvresponse=N&orderid=&type=sale&response_code=200'

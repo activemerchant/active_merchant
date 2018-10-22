@@ -1,13 +1,13 @@
 require 'test_helper'
 
 class RemoteBeanstreamInteracTest < Test::Unit::TestCase
-  
+
   def setup
     @gateway = BeanstreamInteracGateway.new(fixtures(:beanstream_interac))
-    
+
     @amount = 100
-    
-    @options = { 
+
+    @options = {
       :order_id => generate_unique_id,
       :billing_address => {
         :name => 'xiaobo zzz',
@@ -27,19 +27,19 @@ class RemoteBeanstreamInteracTest < Test::Unit::TestCase
       :custom => 'reference one'
     }
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @options)
     assert_success response
     assert_equal 'R', response.params['responseType']
     assert_false response.redirect.blank?
   end
-  
+
   def test_failed_confirmation
     assert response = @gateway.confirm('')
     assert_failure response
   end
-  
+
   def test_invalid_login
     gateway = BeanstreamInteracGateway.new(
                 :merchant_id => '',

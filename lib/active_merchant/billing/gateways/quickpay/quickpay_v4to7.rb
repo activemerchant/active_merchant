@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class QuickpayV4to7Gateway < Gateway
       include QuickpayCommon
-      self.live_url = self.test_url = 'https://secure.quickpay.dk/api'    
+      self.live_url = self.test_url = 'https://secure.quickpay.dk/api'
       APPROVED = '000'
 
       # The login is the QuickpayId

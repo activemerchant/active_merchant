@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 module ActiveMerchant
-  module Billing 
+  module Billing
     # Implements the Address Verification System
     # https://www.wellsfargo.com/downloads/pdf/biz/merchant/visa_avs.pdf
     # http://en.wikipedia.org/wiki/Address_Verification_System
@@ -38,7 +38,7 @@ module ActiveMerchant
         'Y' => 'Street address and 5-digit postal code match.',
         'Z' => 'Street address does not match, but 5-digit postal code matches.'
       }
-      
+
       # Map vendor's AVS result code to a postal match code
       POSTAL_MATCH_CODE = {
         'Y' => %w( D H F H J L M P Q V W X Y Z ),
@@ -49,7 +49,7 @@ module ActiveMerchant
         codes.each { |code| map[code] = type }
         map
       end
-      
+
       # Map vendor's AVS result code to a street match code
       STREET_MATCH_CODE = {
         'Y' => %w( A B D H J M O Q T V X Y ),
@@ -60,32 +60,32 @@ module ActiveMerchant
         codes.each { |code| map[code] = type }
         map
       end
-      
+
       attr_reader :code, :message, :street_match, :postal_match
-      
+
       def self.messages
         MESSAGES
       end
-      
+
       def initialize(attrs)
         attrs ||= {}
-        
+
         @code = attrs[:code].upcase unless attrs[:code].blank?
         @message = self.class.messages[code]
-        
+
         if attrs[:street_match].blank?
           @street_match = STREET_MATCH_CODE[code]
-        else  
+        else
           @street_match = attrs[:street_match].upcase
         end
-          
+
         if attrs[:postal_match].blank?
           @postal_match = POSTAL_MATCH_CODE[code]
-        else  
+        else
           @postal_match = attrs[:postal_match].upcase
         end
       end
-    
+
       def to_hash
         { 'code' => code,
           'message' => message,

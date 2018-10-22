@@ -2,11 +2,11 @@ require 'test_helper'
 
 class QuickpayV4to7Test < Test::Unit::TestCase
   include CommStub
-  
+
   def merchant_id
-    '80000000000'  
+    '80000000000'
   end
-  
+
   def setup
     @gateway = QuickpayGateway.new(
       :login => merchant_id,

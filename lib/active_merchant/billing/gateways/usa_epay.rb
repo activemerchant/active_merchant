@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.abstract_class = true
 
       ##
-      # Creates an instance of UsaEpayTransactionGateway by default, but if 
+      # Creates an instance of UsaEpayTransactionGateway by default, but if
       # :software id or :live_url are passed in the options hash it will
       # create an instance of UsaEpayAdvancedGateway.
       #

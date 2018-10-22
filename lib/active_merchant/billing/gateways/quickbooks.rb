@@ -253,7 +253,7 @@ module ActiveMerchant #:nodoc:
 
       def success?(response)
       return FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) if response['errors']
-        
+
       !['DECLINED', 'CANCELLED'].include?(response['status'])
       end
 

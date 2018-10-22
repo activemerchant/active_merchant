@@ -136,9 +136,9 @@ module QuickpayCommon
 
       :chstatus  => %w(protocol msgtype merchant apikey)
     },
-    
+
     10 => {
-      :authorize => %w(mobile_number acquirer autofee customer_id extras 
+      :authorize => %w(mobile_number acquirer autofee customer_id extras
                        zero_auth customer_ip),
       :capture   => %w( extras ),
       :cancel    => %w( extras ),
@@ -148,7 +148,7 @@ module QuickpayCommon
       :recurring => %w(auto_capture autofee zero_auth)
     }
   }
-  
+
   RESPONSE_CODES = {
     200 => 'OK',
     201 => 'Created',
@@ -163,18 +163,18 @@ module QuickpayCommon
     409 => 'Conflict',
     500 => 'Internal Server Error'
   }
-  
+
   def self.included(base)
     base.default_currency = 'DKK'
     base.money_format = :cents
-    
-    base.supported_cardtypes = [:dankort, :forbrugsforeningen, :visa, :master, 
+
+    base.supported_cardtypes = [:dankort, :forbrugsforeningen, :visa, :master,
                                 :american_express, :diners_club, :jcb, :maestro]
     base.supported_countries = ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE']
     base.homepage_url = 'http://quickpay.net/'
     base.display_name = 'QuickPay'
   end
-    
+
   def expdate(credit_card)
     year  = format(credit_card.year, :two_digits)
     month = format(credit_card.month, :two_digits)

@@ -14,14 +14,14 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.creditcall.com'
       self.display_name = 'Creditcall'
-      
+
       CVV_CODE = {
         'matched' => 'M',
         'notmatched' => 'N',
         'notchecked' => 'P',
         'partialmatch' => 'N'
       }
-      
+
       AVS_CODE = {
         'matched;matched' => 'D',
         'matched;notchecked' =>'B',
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         end
 
         merged_params = multi_response.responses.map(&:params).reduce({}, :merge)
-        
+
         Response.new(
           multi_response.primary_response.success?,
           multi_response.primary_response.message,
