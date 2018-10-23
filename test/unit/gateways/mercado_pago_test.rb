@@ -149,14 +149,14 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
-  def test_does_not_send_brand
+  def test_sends_american_express_as_amex
     credit_card = credit_card('378282246310005', brand: 'american_express')
 
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |endpoint, data, headers|
       if endpoint =~ /payments/
-        assert_not_match(%r("payment_method_id":"amex"), data)
+        assert_match(%r("payment_method_id":"amex"), data)
       end
     end.respond_with(successful_purchase_response)
 
@@ -164,14 +164,29 @@ class MercadoPagoTest < Test::Unit::TestCase
     assert_equal '4141491|1.0', response.authorization
   end
 
-  def test_sends_payment_method_id
-    credit_card = credit_card('30569309025904')
+  def test_sends_diners_club_as_diners
+    credit_card = credit_card('30569309025904', brand: 'diners_club')
 
     response = stub_comms do
-      @gateway.purchase(@amount, credit_card, @options.merge(payment_method_id: 'diners'))
+      @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |endpoint, data, headers|
       if endpoint =~ /payments/
         assert_match(%r("payment_method_id":"diners"), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_sends_mastercard_as_master
+    credit_card = credit_card('5555555555554444', brand: 'master')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if endpoint =~ /payments/
+        assert_match(%r("payment_method_id":"master"), data)
       end
     end.respond_with(successful_purchase_response)
 
@@ -200,19 +215,6 @@ class MercadoPagoTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-  end
-
-  def test_includes_issuer_id
-    response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: '1a2b3c4d'))
-    end.check_request do |endpoint, data, headers|
-      if endpoint =~ /payments/
-        assert_match(%r("issuer_id":"1a2b3c4d"), data)
-      end
-    end.respond_with(successful_purchase_response)
-
-    assert_success response
-    assert_equal '4141491|1.0', response.authorization
   end
 
   private
