@@ -474,20 +474,20 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_mass_pay_transfer_recipient_types
-    response = stub_comms do
+    stub_comms do
       @gateway.transfer 1000, 'fred@example.com'
     end.check_request do |endpoint, data, headers|
       assert_no_match %r{ReceiverType}, data
     end.respond_with(successful_purchase_response)
 
-    response = stub_comms do
+    stub_comms do
       @gateway.transfer 1000, 'fred@example.com', :receiver_type => 'EmailAddress'
     end.check_request do |endpoint, data, headers|
       assert_match %r{<ReceiverType>EmailAddress</ReceiverType>}, data
       assert_match %r{<ReceiverEmail>fred@example\.com</ReceiverEmail>}, data
     end.respond_with(successful_purchase_response)
 
-    response = stub_comms do
+    stub_comms do
       @gateway.transfer 1000, 'fred@example.com', :receiver_type => 'UserID'
     end.check_request do |endpoint, data, headers|
       assert_match %r{<ReceiverType>UserID</ReceiverType>}, data

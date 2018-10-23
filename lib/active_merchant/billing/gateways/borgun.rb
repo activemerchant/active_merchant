@@ -130,7 +130,6 @@ module ActiveMerchant #:nodoc:
         post[:Processor] = @options[:processor]
         post[:MerchantID] = @options[:merchant_id]
 
-        url = (test? ? test_url : live_url)
         request = build_request(action, post)
         raw = ssl_post(url(action), request, headers)
         pairs = parse(raw)

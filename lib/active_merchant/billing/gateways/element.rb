@@ -334,9 +334,9 @@ module ActiveMerchant #:nodoc:
 
       def url(action)
         if action == 'PaymentAccountCreate'
-          url = (test? ? SERVICE_TEST_URL : SERVICE_LIVE_URL)
+          test? ? SERVICE_TEST_URL : SERVICE_LIVE_URL
         else
-          url = (test? ? test_url : live_url)
+          test? ? test_url : live_url
         end
       end
 

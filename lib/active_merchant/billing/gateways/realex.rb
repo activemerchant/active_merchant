@@ -286,26 +286,25 @@ module ActiveMerchant
       end
 
       def message_from(response)
-        message = nil
         case response[:result]
         when '00'
-          message = SUCCESS
+          SUCCESS
         when '101'
-          message = response[:message]
+          esponse[:message]
         when '102', '103'
-          message = DECLINED
+          DECLINED
         when /^2[0-9][0-9]/
-          message = BANK_ERROR
+          BANK_ERROR
         when /^3[0-9][0-9]/
-          message = REALEX_ERROR
+          REALEX_ERROR
         when /^5[0-9][0-9]/
-          message = response[:message]
+          response[:message]
         when '600', '601', '603'
-          message = ERROR
+          ERROR
         when '666'
-          message = CLIENT_DEACTIVATED
+          CLIENT_DEACTIVATED
         else
-          message = DECLINED
+          DECLINED
         end
       end
 
