@@ -155,8 +155,8 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /"payment_method_id"/
-        assert_match(%r(amex), data)
+      if endpoint =~ /payments/
+        assert_match(%r("payment_method_id":"amex"), data)
       end
     end.respond_with(successful_purchase_response)
 
@@ -170,8 +170,8 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /"payment_method_id"/
-        assert_match(%r(diners), data)
+      if endpoint =~ /payments/
+        assert_match(%r("payment_method_id":"diners"), data)
       end
     end.respond_with(successful_purchase_response)
 
@@ -185,8 +185,8 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      if data =~ /"payment_method_id"/
-        assert_match(%r(master), data)
+      if endpoint =~ /payments/
+        assert_match(%r("payment_method_id":"master"), data)
       end
     end.respond_with(successful_purchase_response)
 
