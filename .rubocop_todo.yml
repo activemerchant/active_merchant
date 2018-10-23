@@ -299,14 +299,6 @@ Lint/RescueException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/quantum.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-Lint/ScriptPermission:
-  Exclude:
-    - 'lib/active_merchant/billing/avs_result.rb'
-    - 'lib/active_merchant/billing/gateways/skip_jack.rb'
-    - 'test/test_helper.rb'
-
 # Offense count: 11
 # Cop supports --auto-correct.
 Lint/StringConversionInInterpolation:
