@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:amount] = amount(money).to_s # yup Jackson River wants it as a string :(
         post[:currency] = (options[:currency] || currency(money))
-        post[:recurs_monthly] = 'recurs'
+        post[:recurs_monthly] = 'recurs' if options[:recurring]
       end
 
       def add_payment(post, payment)
