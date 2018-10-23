@@ -29,6 +29,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
+    @level_3_options = {
+      ship_from_address: {
+        zip: 'origin27701',
+        country: 'originUS'
+      },
+      summary_commodity_code: 'CODE'
+    }
+
     @additional_options = {
       line_items: [
         {
@@ -44,6 +52,21 @@ class AuthorizeNetTest < Test::Unit::TestCase
           description: 'floral',
           quantity: '200',
           unit_price: '20'
+        }
+      ]
+    }
+
+    @level_3_line_item_options = {
+      line_items: [
+        {
+          item_id: '1',
+          name: 'mug',
+          description: 'coffee',
+          quantity: '100',
+          unit_price: '10',
+          unit_of_measure: 'yards',
+          total_amount: '1000',
+          product_code: 'coupon'
         }
       ]
     }
@@ -326,6 +349,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passes_level_3_options
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, @options.merge(@level_3_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<order>/, data)
+      assert_match(/<summaryCommodityCode>#{@level_3_options[:summary_commodity_code]}<\/summaryCommodityCode>/, data)
+      assert_match(/<\/order>/, data)
+      assert_match(/<shipFrom>/, data)
+      assert_match(/<zip>#{@level_3_options[:ship_from_address][:zip]}<\/zip>/, data)
+      assert_match(/<country>#{@level_3_options[:ship_from_address][:country]}<\/country>/, data)
+      assert_match(/<\/shipFrom>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_passes_line_items
     stub_comms do
       @gateway.purchase(@amount, credit_card, @options.merge(@additional_options))
@@ -343,6 +380,24 @@ class AuthorizeNetTest < Test::Unit::TestCase
       assert_match(/<description>#{@additional_options[:line_items][1][:description]}<\/description>/, data)
       assert_match(/<quantity>#{@additional_options[:line_items][1][:quantity]}<\/quantity>/, data)
       assert_match(/<unitPrice>#{@additional_options[:line_items][1][:unit_price]}<\/unitPrice>/, data)
+      assert_match(/<\/lineItems>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passes_level_3_line_items
+    stub_comms do
+      @gateway.purchase(@amount, credit_card, @options.merge(@level_3_line_item_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<lineItems>/, data)
+      assert_match(/<lineItem>/, data)
+      assert_match(/<itemId>#{@level_3_line_item_options[:line_items][0][:item_id]}<\/itemId>/, data)
+      assert_match(/<name>#{@level_3_line_item_options[:line_items][0][:name]}<\/name>/, data)
+      assert_match(/<description>#{@level_3_line_item_options[:line_items][0][:description]}<\/description>/, data)
+      assert_match(/<quantity>#{@level_3_line_item_options[:line_items][0][:quantity]}<\/quantity>/, data)
+      assert_match(/<unitPrice>#{@level_3_line_item_options[:line_items][0][:unit_price]}<\/unitPrice>/, data)
+      assert_match(/<unitOfMeasure>#{@level_3_line_item_options[:line_items][0][:unit_of_measure]}<\/unitOfMeasure>/, data)
+      assert_match(/<totalAmount>#{@level_3_line_item_options[:line_items][0][:total_amount]}<\/totalAmount>/, data)
+      assert_match(/<productCode>#{@level_3_line_item_options[:line_items][0][:product_code]}<\/productCode>/, data)
       assert_match(/<\/lineItems>/, data)
     end.respond_with(successful_purchase_response)
   end

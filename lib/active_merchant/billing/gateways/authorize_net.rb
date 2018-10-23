@@ -257,6 +257,7 @@ module ActiveMerchant
           add_market_type_device_type(xml, payment, options)
           add_settings(xml, payment, options)
           add_user_fields(xml, amount, options)
+          add_ship_from_address(xml, options)
         end
       end
 
@@ -610,6 +611,16 @@ module ActiveMerchant
         end
       end
 
+      def add_ship_from_address(xml, options, root_node='shipFrom')
+        address = options[:ship_from_address]
+        return unless address
+
+        xml.send(root_node) do
+          xml.zip(truncate(address[:zip], 20)) unless empty?(address[:zip])
+          xml.country(truncate(address[:country], 60)) unless empty?(address[:country])
+        end
+      end
+
       def add_order_id(xml, options)
         xml.refId(truncate(options[:order_id], 20))
       end
@@ -619,6 +630,7 @@ module ActiveMerchant
           xml.invoiceNumber(truncate(options[:order_id], 20))
           xml.description(truncate(options[:description], 255))
           xml.purchaseOrderNumber(options[:po_number]) if options[:po_number] && transaction_type.start_with?('profileTrans')
+          xml.summaryCommodityCode(truncate(options[:summary_commodity_code], 4)) if options[:summary_commodity_code] && !transaction_type.start_with?('profileTrans')
         end
 
         # Authorize.net API requires lineItems to be placed directly after order tag
