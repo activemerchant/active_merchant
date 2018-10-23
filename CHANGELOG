@@ -1,19 +1,20 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] [#3002]
-* Global Collect: handle internal server errors [molbrown] [#3005]
+* UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] #3002
+* Global Collect: handle internal server errors [molbrown] #3005
 * Barclaycard Smartpay: allow third-party payouts for credits [bpollack] #3009
 * RuboCop: AlignHash [nfarve] #3004
 * Beanstream: Switch `recurringPayment` flag from boolean to integer [dtykocki] #3011
-* Payflow Express: Add phone to returned Response [filipebarcos] [#3003]
+* Payflow Express: Add phone to returned Response [filipebarcos] #3003
+* Authorize.Net: Pass some level 3 fields [curiousepic] #3022
 
 == Version 1.85.0 (September 28, 2018)
-* Authorize.Net: Support custom delimiter for cim [curiousepic] [#3001]
+* Authorize.Net: Support custom delimiter for cim [curiousepic] #3001
 
 == Version 1.84.0 (September 27, 2018)
 * PayU Latam: support partial captures [bpollack] #2974
-* Braintree: Reflect correct test mode in Braintree responses [elfassy] [#2980]
+* Braintree: Reflect correct test mode in Braintree responses [elfassy] #2980
 * FirstPay: Expose error code [curiousepic] #2979
 * Barclaycard Smartpay: Pass device_fingerprint when specified [dtykocki] #2981
 * Komoju: remove no-longer-relevant sandbox URL [miyazawadegica] #2987
@@ -39,7 +40,7 @@
 * Gateway generator: fix a typo that would cause the script to crash [bpollack] #2962
 * Clearhaus: use $0 for verify transactions [bpollack] #2964
 * Global Collect: properly handle partial captures [bpollack] #2967
-* Braintree: Add support for GooglePay [dtykocki] [#2966]
+* Braintree: Add support for GooglePay [dtykocki] #2966
 * Adyen: allow overriding card brands [bpollack] #2968
 * Adyen: allow custom routing [bpollack] #2969
 * First Pay: Adds scrubbing [deedeelavinder] #2972

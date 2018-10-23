@@ -36,6 +36,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       tax_exempt: 'false',
       po_number: '123'
     }
+
+    @level_3_options = {
+      ship_from_address: {
+        zip: '27701',
+        country: 'US'
+      },
+      summary_commodity_code: 'CODE'
+    }
+
+    @level_2_and_3_options = @level_2_options.merge(@level_3_options)
   end
 
   def test_successful_purchase
@@ -105,8 +115,31 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
-  def test_successful_purchase_with_level_2_data
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(@level_2_options))
+  def test_successful_purchase_with_level_3_line_item_data
+    additional_options = {
+      email: 'anet@example.com',
+      line_items: [
+        {
+          item_id: '1',
+          name: 'mug',
+          description: 'coffee',
+          quantity: '100',
+          unit_price: '10',
+          unit_of_measure: 'yards',
+          total_amount: '1000',
+          product_code: 'coupon'
+        }
+      ]
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(additional_options))
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_level_2_and_3_data
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@level_2_and_3_options))
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end
@@ -361,11 +394,11 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', response.message
   end
 
-  def test_successful_purchase_with_stored_card_and_level_2_data
+  def test_successful_purchase_with_stored_card_and_level_2_and_3_data
     store_response = @gateway.store(@credit_card, @options)
     assert_success store_response
 
-    response = @gateway.purchase(@amount, store_response.authorization, @options.merge(@level_2_options))
+    response = @gateway.purchase(@amount, store_response.authorization, @options.merge(@level_2_and_3_options))
     assert_success response
     assert_equal 'This transaction has been approved.', response.message
   end
@@ -383,15 +416,15 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', capture.message
   end
 
-  def test_successful_authorize_and_capture_using_stored_card_with_level_2_data
+  def test_successful_authorize_and_capture_using_stored_card_with_level_2_and_3_data
     store = @gateway.store(@credit_card, @options)
     assert_success store
 
-    auth = @gateway.authorize(@amount, store.authorization, @options.merge(@level_2_options))
+    auth = @gateway.authorize(@amount, store.authorization, @options.merge(@level_2_and_3_options))
     assert_success auth
     assert_equal 'This transaction has been approved.', auth.message
 
-    capture = @gateway.capture(@amount, auth.authorization, @options.merge(@level_2_options))
+    capture = @gateway.capture(@amount, auth.authorization, @options.merge(@level_2_and_3_options))
     assert_success capture
     assert_equal 'This transaction has been approved.', capture.message
   end
@@ -467,14 +500,14 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_match %r{does not meet the criteria for issuing a credit}, refund.message, 'Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise.'
   end
 
-  def test_faux_successful_refund_using_stored_card_and_level_2_data
+  def test_faux_successful_refund_using_stored_card_and_level_2_and_3_data
     store = @gateway.store(@credit_card, @options)
     assert_success store
 
-    purchase = @gateway.purchase(@amount, store.authorization, @options.merge(@level_2_options))
+    purchase = @gateway.purchase(@amount, store.authorization, @options.merge(@level_2_and_3_options))
     assert_success purchase
 
-    refund = @gateway.refund(@amount, purchase.authorization, @options.merge(@level_2_options))
+    refund = @gateway.refund(@amount, purchase.authorization, @options.merge(@level_2_and_3_options))
     assert_failure refund
     assert_match %r{does not meet the criteria for issuing a credit}, refund.message, 'Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise.'
   end
