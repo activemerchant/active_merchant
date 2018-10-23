@@ -114,7 +114,7 @@ class PayflowExpressTest < Test::Unit::TestCase
     assert_equal 'CA', address['state']
     assert_equal '95100', address['zip']
     assert_equal 'US', address['country']
-    assert_nil address['phone']
+    assert_equal '555-555-5555', address['phone']
   end
 
   def test_get_express_details_with_ship_to_name
@@ -139,7 +139,7 @@ class PayflowExpressTest < Test::Unit::TestCase
     assert_equal 'CA', address['state']
     assert_equal '95100', address['zip']
     assert_equal 'US', address['country']
-    assert_nil address['phone']
+    assert_equal '555-555-5555', address['phone']
   end
 
   def test_get_express_details_with_invalid_xml
@@ -179,6 +179,7 @@ class PayflowExpressTest < Test::Unit::TestCase
           <FeeAmount>0</FeeAmount>
           <PayerStatus>verified</PayerStatus>
           <Name>Joe</Name>
+          <Phone>555-555-5555</Phone>
           <ShipTo>
             <Address>
               <Street>#{options[:street]}</Street>
@@ -215,6 +216,7 @@ class PayflowExpressTest < Test::Unit::TestCase
           <FeeAmount>0</FeeAmount>
           <PayerStatus>verified</PayerStatus>
           <Name>Joe</Name>
+          <Phone>555-555-5555</Phone>
           <ShipTo>
             <Address>
               <Street>111 Main St.</Street>

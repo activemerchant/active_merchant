@@ -6,6 +6,7 @@
 * Barclaycard Smartpay: allow third-party payouts for credits [bpollack] #3009
 * RuboCop: AlignHash [nfarve] #3004
 * Beanstream: Switch `recurringPayment` flag from boolean to integer [dtykocki] #3011
+* Payflow Express: Add phone to returned Response [filipebarcos] [#3003]
 
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] [#3001]

@@ -22,6 +22,10 @@ module ActiveMerchant #:nodoc:
         address['country']
       end
 
+      def phone
+        @params['phone']
+      end
+
       def address
         {  'name'       => @params['shiptoname'] || full_name,
            'company'    => nil,
@@ -31,7 +35,7 @@ module ActiveMerchant #:nodoc:
            'state'      => @params['state'],
            'country'    => @params['country'],
            'zip'        => @params['zip'],
-           'phone'      => nil
+           'phone'      => phone,
         }
       end
     end
