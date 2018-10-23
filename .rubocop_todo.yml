@@ -278,11 +278,6 @@ Lint/HandleExceptions:
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
 
 # Offense count: 1
-Lint/IneffectiveAccessModifier:
-  Exclude:
-    - 'lib/active_merchant/network_connection_retries.rb'
-
-# Offense count: 1
 Lint/NestedMethodDefinition:
   Exclude:
     - 'test/unit/gateways/blue_pay_test.rb'
