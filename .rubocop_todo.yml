@@ -266,11 +266,6 @@ Lint/DuplicateMethods:
     - 'test/remote/gateways/remote_netaxept_test.rb'
     - 'test/remote/gateways/remote_verifi_test.rb'
 
-# Offense count: 1
-Lint/EmptyWhen:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/usa_epay_advanced.rb'
-
 # Offense count: 3
 Lint/FormatParameterMismatch:
   Exclude:

@@ -1386,7 +1386,8 @@ module ActiveMerchant #:nodoc:
             build_tag soap, v[0], v[1], options[k]
           end
           case
-          when options[:payment_method] == nil
+          when options[:payment_method].nil?
+            nil
           when options[:payment_method].kind_of?(ActiveMerchant::Billing::CreditCard)
             build_credit_card_data soap, options
           when options[:payment_method].kind_of?(ActiveMerchant::Billing::Check)
