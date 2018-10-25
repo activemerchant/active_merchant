@@ -213,7 +213,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_failed_capture_bad_auth_info
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert @gateway.authorize(@amount, @credit_card, @options)
     assert capture = @gateway.capture(@amount, 'a;b;c', @options)
     assert_failure capture
   end

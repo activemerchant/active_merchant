@@ -27,7 +27,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
               :account_holder_type => 'personal',
               :account_type => 'checking'
             )
-    assert response = @gateway.purchase(@amount, @check, @options)
+    assert response = @gateway.purchase(@amount, check, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
   end

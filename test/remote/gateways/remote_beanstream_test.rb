@@ -267,7 +267,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success credit
+    assert_success refund
   end
 
   def test_successful_recurring

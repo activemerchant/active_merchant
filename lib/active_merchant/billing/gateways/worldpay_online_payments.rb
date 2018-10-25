@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
-        rescue JSON::ParserError => e
+        rescue JSON::ParserError
           response = json_error(raw_response)
         end
 

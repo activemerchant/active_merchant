@@ -170,7 +170,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, creditcard, options)
-        billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address]
         if billing_address = options[:billing_address] || options[:address]
           post['order']['customer']['billingAddress'] = {

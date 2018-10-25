@@ -246,7 +246,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
 
     purchase_response = @gateway.purchase(trigger_amount, gateway_id)
 
-    assert gateway_id = purchase_response.params['crn']
+    assert purchase_response.params['crn']
     assert_failure purchase_response
     assert_equal 'Invalid Amount', purchase_response.message
   end

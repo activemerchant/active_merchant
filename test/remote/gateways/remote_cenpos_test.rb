@@ -104,7 +104,7 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded', response.message
 
-    capture = @gateway.capture(@amount, response.authorization)
+    @gateway.capture(@amount, response.authorization)
     capture = @gateway.capture(@amount, response.authorization)
     assert_failure capture
     assert_equal 'Duplicated force transaction.', capture.message
@@ -132,7 +132,7 @@ class RemoteCenposTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    void = @gateway.void(response.authorization)
+    @gateway.void(response.authorization)
     void = @gateway.void(response.authorization)
     assert_failure void
     assert_equal 'Original Transaction not found', void.message

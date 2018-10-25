@@ -523,7 +523,7 @@ module ActiveMerchant #:nodoc:
           xml_signed_fields += data[:ds_cardnumber]
         end
 
-        xml_signed_fields += data[:ds_transactiontype] + data[:ds_securepayment]
+        xml_signed_fields + data[:ds_transactiontype] + data[:ds_securepayment]
       end
 
       def get_key(order_id)

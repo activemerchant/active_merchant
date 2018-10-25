@@ -92,18 +92,6 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
       :payment_method => @check,
       :amount => 2500
     }
-
-    payment_methods = [
-      {
-        :name => 'My Visa', # optional
-        :sort => 2, # optional
-        :method => @credit_card
-      },
-      {
-        :name => 'My Checking',
-        :method => @check
-      }
-    ]
   end
 
   # Standard Gateway ==================================================

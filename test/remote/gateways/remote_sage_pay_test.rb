@@ -350,7 +350,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert response = @gateway.store(@visa)
     assert_success response
     assert !response.authorization.blank?
-    assert purchase = @gateway.purchase(@amount, response.authorization, @options.merge(customer: 1))
+    assert @gateway.purchase(@amount, response.authorization, @options.merge(customer: 1))
     assert purchase = @gateway.purchase(@amount, response.authorization, @options.merge(verification_value: '123', order_id: generate_unique_id))
     assert_success purchase
   end

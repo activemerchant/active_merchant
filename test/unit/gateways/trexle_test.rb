@@ -286,13 +286,13 @@ class TrexleTest < Test::Unit::TestCase
     }
 
     @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, {})
+    assert @gateway.purchase(@amount, @credit_card, {})
 
     expected_headers['X-Partner-Key'] = 'MyPartnerKey'
     expected_headers['X-Safe-Card'] = '1'
 
     @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, partner_key: 'MyPartnerKey', safe_card: '1')
+    assert @gateway.purchase(@amount, @credit_card, partner_key: 'MyPartnerKey', safe_card: '1')
   end
 
   def test_transcript_scrubbing

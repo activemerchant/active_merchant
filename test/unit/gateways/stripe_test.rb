@@ -725,7 +725,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_request_always_uses_live_mode_to_determine_test_request
-    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response(:livemode => true))
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
     assert_success response
@@ -1989,8 +1989,7 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_partially_refunded_response(options = {})
-    options = {:livemode=>false}.merge!(options)
+  def successful_partially_refunded_response
     <<-RESPONSE
     {
       "id": "re_test_refund",

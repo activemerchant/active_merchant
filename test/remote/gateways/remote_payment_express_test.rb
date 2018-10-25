@@ -97,7 +97,6 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_store_invalid_credit_card
-    original_number = @credit_card.number
     @credit_card.number = 2
 
     assert response = @gateway.store(@credit_card)

@@ -101,7 +101,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
   end
 
   def test_failed_capture_bad_auth_info
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert @gateway.authorize(@amount, @credit_card, @options)
     assert capture = @gateway.capture(@amount, 'a;b;c', @options)
     assert_failure capture
   end
@@ -118,7 +118,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
   def test_failed_purchase_by_reference
     assert response = @gateway.authorize(1, @credit_card, @options)
     assert_success response
-    assert(reference = response.authorization)
+    assert response.authorization
 
     assert response = @gateway.purchase(@amount, 'bogusref', {:order_id => generate_unique_id})
     assert_failure response

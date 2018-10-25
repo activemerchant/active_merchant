@@ -206,7 +206,7 @@ class SkipJackTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
 
     @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE&szAmount=1.00").returns(successful_capture_response)
-    response = @gateway.capture(@amount, response.authorization)
+    @gateway.capture(@amount, response.authorization)
   end
 
   def test_successful_partial_capture

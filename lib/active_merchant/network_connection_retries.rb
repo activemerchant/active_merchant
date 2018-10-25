@@ -28,7 +28,7 @@ module ActiveMerchant
         rescue OpenSSL::X509::CertificateError => e
           NetworkConnectionRetries.log(options[:logger], :error, e.message, options[:tag])
           raise ActiveMerchant::ClientCertificateError, 'The remote server did not accept the provided SSL certificate'
-        rescue Zlib::BufError => e
+        rescue Zlib::BufError
           raise ActiveMerchant::InvalidResponseError, 'The remote server replied with an invalid response'
         rescue *connection_errors.keys => e
           raise ActiveMerchant::ConnectionError.new(derived_error_message(connection_errors, e.class), e)

@@ -120,7 +120,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert response = @gateway.void(purchase.authorization)
+    assert @gateway.void(purchase.authorization)
     assert response = @gateway.void(purchase.authorization)
     assert_failure response
     assert_equal 'The transaction ID is invalid for this transaction type', response.message

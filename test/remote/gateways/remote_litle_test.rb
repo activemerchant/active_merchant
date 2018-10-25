@@ -93,7 +93,7 @@ class RemoteLitleTest < Test::Unit::TestCase
       campaign: 'super-awesome-campaign',
       merchant_grouping_id: 'brilliant-group'
     )
-    assert response = @gateway.authorize(10010, @credit_card1, options)
+    assert @gateway.authorize(10010, @credit_card1, options)
   end
 
   def test_successful_authorization_with_echeck

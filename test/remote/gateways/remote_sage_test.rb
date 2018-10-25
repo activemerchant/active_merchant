@@ -165,7 +165,7 @@ class RemoteSageTest < Test::Unit::TestCase
   def test_store_visa
     assert response = @gateway.store(@visa, @options)
     assert_success response
-    assert auth = response.authorization,
+    assert response.authorization,
       'Store card authorization should not be nil'
     assert_not_nil response.message
   end

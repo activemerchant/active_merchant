@@ -9,7 +9,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
     @voucher = credit_card('60607044957644', brand: 'sodexo')
     @options = {
-      billing_address: address(options = { neighborhood: 'Sesame Street' }),
+      billing_address: address({neighborhood: 'Sesame Street'}),
       description: 'Store Purchase'
     }
   end

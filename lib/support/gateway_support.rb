@@ -14,7 +14,7 @@ class GatewaySupport #:nodoc:
       filename = File.basename(f, '.rb')
       gateway_name = filename + '_gateway'
       begin
-        gateway_class = ('ActiveMerchant::Billing::' + gateway_name.camelize).constantize
+        ('ActiveMerchant::Billing::' + gateway_name.camelize).constantize
       rescue NameError
         puts 'Could not load gateway ' + gateway_name.camelize + ' from ' + f + '.'
       end

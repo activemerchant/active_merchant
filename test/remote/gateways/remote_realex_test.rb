@@ -18,14 +18,14 @@ class RemoteRealexTest < Test::Unit::TestCase
     @mastercard_referral_a = card_fixtures(:realex_mastercard_referral_a)
     @mastercard_coms_error = card_fixtures(:realex_mastercard_coms_error)
 
-    @apple_pay = credit_card = network_tokenization_credit_card('4242424242424242',
+    @apple_pay = network_tokenization_credit_card('4242424242424242',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',
       source: :apple_pay
     )
 
-    @declined_apple_pay = credit_card = network_tokenization_credit_card('4000120000001154',
+    @declined_apple_pay = network_tokenization_credit_card('4000120000001154',
       payment_cryptogram: 'EHuWW9PiBkWvqE5juRwDzAUFBAk=',
       verification_value: nil,
       eci: '05',

@@ -109,7 +109,7 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization)
+    assert @gateway.void(auth.authorization)
     # UNSUPPORTED
     #   assert_success void
     #   assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', response.message
@@ -156,7 +156,6 @@ class RemoteWorldNetTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal nil, response.message
-    card_reference = response.authorization
 
     assert response = @gateway.unstore('123456789', @options)
     assert_failure response

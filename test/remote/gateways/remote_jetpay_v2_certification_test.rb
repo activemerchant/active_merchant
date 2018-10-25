@@ -238,7 +238,7 @@ class RemoteJetpayV2CertificationTest < Test::Unit::TestCase
     puts "\n#{@options[:order_id]}: #{@unique_id}"
 
     @options[:order_id] = 'VOID04'
-    transaction_id, approval, amount, token = response.authorization.split(';')
+    transaction_id, approval, _amount, token = response.authorization.split(';')
     amount = 500
     authorization = [transaction_id, approval, amount, token].join(';')
     assert response = @gateway.void(authorization, @options)
@@ -302,7 +302,7 @@ class RemoteJetpayV2CertificationTest < Test::Unit::TestCase
     assert response = @gateway.authorize(amount, visa, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
-    transaction_id, approval, amount, token = response.authorization.split(';')
+    _transaction_id, _approval, _amount, token = response.authorization.split(';')
     assert_equal token, response.params['token']
     @unique_id = response.params['unique_id']
   end
@@ -314,7 +314,7 @@ class RemoteJetpayV2CertificationTest < Test::Unit::TestCase
     assert response = @gateway.purchase(amount, amex, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
-    transaction_id, approval, amount, token = response.authorization.split(';')
+    _transaction_id, _approval, _amount, token = response.authorization.split(';')
     assert_equal token, response.params['token']
     @unique_id = response.params['unique_id']
   end

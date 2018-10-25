@@ -274,7 +274,7 @@ module ActiveMerchant #:nodoc:
       def url_for(action)
         result = test? ? self.test_url : self.live_url
         result += advanced? && action == :authorization ? ADVANCED_PATH : BASIC_PATH
-        result += "?#{ACTIONS[action]}"
+        result + "?#{ACTIONS[action]}"
       end
 
       def add_credentials(params, action)

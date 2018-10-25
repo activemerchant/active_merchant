@@ -290,7 +290,7 @@ module ActiveMerchant
         when '00'
           SUCCESS
         when '101'
-          esponse[:message]
+          response[:message]
         when '102', '103'
           DECLINED
         when /^2[0-9][0-9]/

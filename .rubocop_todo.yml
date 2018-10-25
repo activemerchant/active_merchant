@@ -328,10 +328,6 @@ Lint/UselessAccessModifier:
   Exclude:
     - 'lib/active_merchant/network_connection_retries.rb'
 
-# Offense count: 68
-Lint/UselessAssignment:
-  Enabled: false
-
 # Offense count: 1409
 Metrics/AbcSize:
   Max: 192
