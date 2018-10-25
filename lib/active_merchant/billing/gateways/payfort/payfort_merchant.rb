@@ -72,7 +72,6 @@ module ActiveMerchant #:nodoc:
         request_params[:signature] = ''
         request_params[:token_name] = payfort_token
         request_params[:return_url] = options[:return_url]
-        request_params[:check_3ds] = 'NO'
         commit(request_params.compact)
       end
       # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
