@@ -1,13 +1,17 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+== Version 1.86.0 (October 26, 2018)
 * UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] #3002
 * Global Collect: handle internal server errors [molbrown] #3005
 * Barclaycard Smartpay: allow third-party payouts for credits [bpollack] #3009
 * RuboCop: AlignHash [nfarve] #3004
 * Beanstream: Switch `recurringPayment` flag from boolean to integer [dtykocki] #3011
+* Update Swipe HQ endpoint [bdewater] #3013
+* Braintree: Adds device_data [deedeelavinder] #3012
 * Payflow Express: Add phone to returned Response [filipebarcos] #3003
 * Authorize.Net: Pass some level 3 fields [curiousepic] #3022
+* Add state to the netbanx payload [Girardvjonathan] #3024
 
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] #3001
