@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CredoraxGateway < Gateway
@@ -14,6 +16,14 @@ module ActiveMerchant #:nodoc:
       # Once you have your assigned subdomain, you can override the live URL in your application via:
       # ActiveMerchant::Billing::CredoraxGateway.live_url = "https://assigned-subdomain.credorax.net/crax_gate/service/gateway"
       self.live_url = 'https://assigned-subdomain.credorax.net/crax_gate/service/gateway'
+
+      class_attribute :test_mpi_url, :live_mpi_url
+      self.test_mpi_url = 'https://int3ds.credorax.com/API/'
+
+      # Much like the normal live_url, the MPI server can be overridden, depending on whether you are
+      # in North America, the EU, or another area. As with live_url, this can be done via
+      # ActiveMerchant::Billing::CredoraxGateway.live_mpi_url = "https://..../API"
+      self.live_mpi_url = 'https://na1.3ds.credorax.net/API/'
 
       self.supported_countries = %w(DE GB FR IT ES PL NL BE GR CZ PT SE HU RS AT CH BG DK FI SK NO IE HR BA AL LT MK SI LV EE ME LU MT IS AD MC LI SM)
       self.default_currency = 'EUR'
@@ -122,6 +132,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
+        return execute_3ds(:purchase, amount, payment_method, options) if options[:three_d_secure]
+
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -136,6 +148,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, payment_method, options={})
+        return execute_3ds(:authorize, amount, payment_method, options) if options[:three_d_secure]
+
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
@@ -209,10 +223,79 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((b1=)\d+), '\1[FILTERED]').
-          gsub(%r((b5=)\d+), '\1[FILTERED]')
+          gsub(%r((b5=)\d+), '\1[FILTERED]').
+          gsub(%r((<CardNumber>)\d+(</CardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<Password>).+(</Password>)), '\1[FILTERED]\2')
       end
 
       private
+
+      def execute_3ds(action, amount, payment_method, options)
+        options = options.dup
+        three_d_secure = options.delete(:three_d_secure)
+
+        if three_d_secure[:pa_res]
+          finish_3ds(action, amount, payment_method, three_d_secure, options)
+        else
+          start_3ds(action, amount, payment_method, three_d_secure, options)
+        end
+      end
+
+      def start_3ds(action, amount, payment_method, three_d_secure, options)
+        response = check_3ds_enrollment(amount, payment_method, three_d_secure, options)
+        if response.params['enrolled'] || !response.success?
+          response
+        else
+          send(action, amount, payment_method, options)
+        end
+      end
+
+      def finish_3ds(action, amount, payment_method, three_d_secure, options)
+        response = authorize_3ds_card(three_d_secure[:pa_res])
+        if response.params['status_code'] != '0'
+          response
+        else
+          options[:eci] = response.params['eci']
+          options[:cavv] = response.params['cavv']
+          send(action, amount, payment_method, options)
+        end
+      end
+
+      def check_3ds_enrollment(amount, payment_method, three_d_secure, options)
+        currency = options[:currency_code] || '978'  # EUR
+
+        builder = Nokogiri::XML::Builder.new do |xml|
+          xml.Message do
+            xml.EnrolReq do
+              xml.MerchantID @options[:mpi_merchant_id]
+              xml.MerchantName @options[:mpi_merchant_name]
+              xml.Password @options[:mpi_password]
+              xml.CardNumber payment_method.number
+              xml.ExpYear format(payment_method.year, :four_digits)
+              xml.ExpMonth format(payment_method.month, :two_digits)
+              xml.TotalAmount amount
+              xml.XID options[:xid]
+              xml.Currency currency
+              xml.PurchaseDesc options[:mpi_purchase_desc]
+            end
+          end
+        end
+
+        commit_mpi(builder.to_xml, options)
+      end
+
+      def authorize_3ds_card(pa_res)
+        builder = Nokogiri::XML::Builder.new do |xml|
+          xml.Message do
+            xml.AuthReq do
+              xml.Password @options[:mpi_password]
+              xml.PaRes pa_res
+            end
+          end
+        end
+
+        commit_mpi(builder.to_xml, options)
+      end
 
       def add_invoice(post, money, options)
         currency = options[:currency] || currency(money)
@@ -309,6 +392,21 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def commit_mpi(doc, options = {})
+        raw_response = ssl_post(mpi_url, doc, 'Content-Type' => 'text/xml')
+        response = parse_mpi(raw_response)
+
+        Response.new(
+          mpi_success_from(response),
+          mpi_message_from(response),
+          response,
+          authorization: options[:xid],
+          avs_result: nil,
+          cvv_result: nil,
+          test: test?
+        )
+      end
+
       def sign_request(params)
         params = params.sort
         params.each { |param| param[1].gsub!(/[<>()\\]/, ' ') }
@@ -336,8 +434,35 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
+      def mpi_url
+        test? ? test_mpi_url : live_mpi_url
+      end
+
       def parse(body)
         Hash[CGI::parse(body).map{|k, v| [k.upcase, v.first]}]
+      end
+
+      def parse_mpi(body)
+        xml = Nokogiri::XML(body)
+
+        {
+          enrolled: xml.at_xpath('//enrolled')&.text == 'Y',
+          status_code: xml.at_xpath('//Code').text,
+          error_message: xml.at_xpath('//ErrorMessage')&.text,
+          error_detail: xml.at_xpath('//ErrorDetail')&.text,
+          acs_url: xml.at_xpath('//ACSURL')&.text,
+          pa_req: xml.at_xpath('//PaReq')&.text,
+          eci: xml.at_xpath('//ECI')&.text,
+          cavv: xml.at_xpath('//CAVV')&.text,
+        }
+      end
+
+      def mpi_success_from(response)
+        ['0', '1109'].include?(response[:status_code])
+      end
+
+      def mpi_message_from(response)
+        response[:error_message] ? "#{response[:error_detail]}: #{response[:error_message]}" : ''
       end
 
       def success_from(response)

@@ -223,6 +223,79 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_requests_3ds_with_unenrolled_card_successful
+    options_with_3ds = @options.merge({three_d_secure: {}, xid: '123456678901234567890'})
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, _headers|
+      if /int3ds/ =~ endpoint
+        assert_match(/123456678901234567890/, data)
+      else
+        refute_match(/123456678901234567890/, data)
+      end
+    end.respond_with(successful_mpi_not_enrol_response, successful_purchase_response)
+    assert_success response
+  end
+
+  def test_requests_3ds_with_enrolled_card_successful
+    options_with_3ds = @options.merge({three_d_secure: {}, xid: '123456678901234567890'})
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, _headers|
+      assert_match(/123456678901234567890/, data)
+    end.respond_with(successful_mpi_is_enrol_response)
+    assert_success response
+    assert_equal 'https://acs.demo.url/1234/', response.params['acs_url']
+    assert_equal '0', response.params['status_code']
+  end
+
+  def test_requests_3ds_fail
+    options_with_3ds = @options.merge({three_d_secure: {}, xid: '123456678901234567890'})
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.respond_with(unsuccessful_mpi_enrol_response)
+    assert_failure response
+    assert_equal '5', response.params['status_code']
+    assert_match %r{EnrolReq.XID: }, response.message
+    assert_match %r{Format of one or more elements}, response.message
+  end
+
+  def test_requests_3ds_finalization_successful
+    options_with_3ds = @options.merge({
+      three_d_secure: {pa_res: 'some response value'},
+      xid: '192837465',
+    })
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, _headers|
+      if /int3ds/ =~ endpoint
+        refute_match(/192837465/, data)
+        assert_match(/some response value/, data)
+      else
+        assert_match(%r{#{CGI.escape('02:jPGOxyiTR3b+AREAB2MA5NwjU/0=:192837465')}}, data)
+      end
+    end.respond_with(successful_mpi_auth_response, successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
+  def test_requests_3ds_finalization_failed
+    options_with_3ds = @options.merge({
+      three_d_secure: {pa_res: 'some response value'},
+      xid: '192837465',
+    })
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.respond_with(unsuccessful_mpi_auth_response)
+    assert_failure response
+    assert_equal '5', response.params['status_code']
+    assert_match %r{AuthReq.PaRes: }, response.message
+    assert_match %r{Format of one or more elements}, response.message
+  end
+
   def test_supports_billing_descriptor
     @options[:billing_descriptor] = 'abcdefghijkl'
     stub_comms do
@@ -287,6 +360,98 @@ class CredoraxTest < Test::Unit::TestCase
     )
   end
 
+  def successful_mpi_not_enrol_response
+    '
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Message>
+        <EnrolRes>
+          <Response>
+            <Code>1109</Code>
+            <ErrorCode>1109</ErrorCode>
+            <ErrorMessage>PAN is not enrolled</ErrorMessage>
+            <ErrorDetail>Enrolment status: N</ErrorDetail>
+          </Response>
+          <VERes>
+            <CH>
+              <enrolled>N</enrolled>
+            </CH>
+          </VERes>
+        </EnrolRes>
+      </Message>
+    '
+  end
+
+  def successful_mpi_is_enrol_response
+    '
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Message>
+        <EnrolRes>
+          <Response>
+            <Code>0</Code>
+          </Response>
+          <ACSURL>https://acs.demo.url/1234/</ACSURL>
+          <PaReq>eJxVUttym0AM/RWG93rZC4Z45M2QuBeaMaEJmU4fN8tOTGIuWXBM/PXR2rhp33SONDrSkeByrLfem7F91TZLn84C3zONbsuqeVr6D8W3L7F/KaHYWGNW90bvrJGwNn2vnoxXlUs/V3fmlYaCURrNGY9pGHExFzziNA4uBOMhj3wJeYJlEiYhiTozBuQMsaPVG9UMEpR+vUozGQnOsGBCUBubriQNWEB5IC4i11rEQE48NKo28r7DGcvtu1eYfsDxgRxp0O2uGey7jEUA5AxgZ7dyMwzdgpD9fj/T1pStVeNMtzUQlwTyOVS+c1GPzcaqlFnxi2erh3F9+DNmzynPDi8Hx90WL0sgrgJKNRiJw8aUUu5RsQiCBeNAjjyo2k3hTKC44glA5zSSKeMS/xKAxlu8C27B5rjFGYEZu7YxWIFm/Y2hNL2Wkw3eOk9R2DFAPhe5/uG81gPal3d34aPIfmZvv1OV3N7kX6PtTdR/T5IkcCc4FjmlCo1jIT1JOQDEtSHTccn0Fxj99y8fO/vGqA==</PaReq>
+          <VERes>
+            <CH><enrolled>Y</enrolled></CH>
+          </VERes>
+        </EnrolRes>
+      </Message>
+    '
+  end
+
+  def unsuccessful_mpi_enrol_response
+    '
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Message>
+        <EnrolRes>
+          <Response>
+            <Code>5</Code>
+            <ErrorCode>5</ErrorCode>
+            <ErrorMessage>Format of one or more elements is invalid according to the specification.</ErrorMessage>
+            <ErrorDetail>EnrolReq.XID</ErrorDetail>
+          </Response>
+        </EnrolRes>
+      </Message>
+    '
+  end
+
+  def successful_mpi_auth_response
+    '
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Message>
+        <AuthRes>
+          <Response>
+            <Code>0</Code>
+          </Response>
+          <ECI>02</ECI>
+          <CAVV>jPGOxyiTR3b+AREAB2MA5NwjU/0=</CAVV>
+          <cavvAlgorithm>3</cavvAlgorithm>
+          <PARes>
+            <TX>
+              <status>Y</status>
+            </TX>
+          </PARes>
+        </AuthRes>
+      </Message>
+    '
+  end
+
+  def unsuccessful_mpi_auth_response
+    '
+      <?xml version="1.0" encoding="UTF-8"?>
+      <Message>
+        <AuthRes>
+          <Response>
+            <Code>5</Code>
+            <ErrorCode>5</ErrorCode>
+            <ErrorMessage>Format of one or more elements is invalid according to the specification.</ErrorMessage>
+            <ErrorDetail>AuthReq.PaRes</ErrorDetail>
+          </Response>
+        </AuthRes>
+      </Message>
+    '
+  end
+
   def transcript
     %(
         opening connection to intconsole.credorax.com:443...
@@ -326,6 +491,46 @@ class CredoraxTest < Test::Unit::TestCase
         -> "M=SPREE978&O=1&T=03%2F09%2F2016+03%3A03%3A01&V=413&a1=335ebb08c489e6d361108a7eb7d8b92a&a2=2&a4=100&a9=6&z1=8a829449535154bc01535953dd235043&z13=606944188276&z14=U&z15=100&z2=0&z3=Transaction+has+been+executed+successfully.&z4=006592&z5=0&z6=00&z9=X&K=4061e16f39915297827af1586635015a"
         read 283 bytes
         Conn close
+    )
+  end
+
+  def three_ds_transcript
+    %(
+      opening connection to int3ds.credorax.com:443...
+      opened
+      starting SSL for int3ds.credorax.com:443...
+      SSL established
+      <- "POST /API/ HTTP/1.1\r\nContent-Type: text/xml\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: int3ds.credorax.com\r\nContent-Length: 430\r\n\r\n"
+      <- "<?xml version=\"1.0\"?>\n<Message>\n  <EnrolReq>\n    <MerchantID>90210</MerchantID>\n    <MerchantName>Cow Inc</MerchantName>\n    <Password>icecreamcake</Password>\n    <CardNumber>4111111111111111</CardNumber>\n    <ExpYear>2022</ExpYear>\n    <ExpMonth>12</ExpMonth>\n    <TotalAmount>100</TotalAmount>\n    <XID>12345678901234567890</XID>\n    <Currency>978</Currency>\n    <PurchaseDesc/>\n  </EnrolReq>\n</Message>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "Content-Length: 283\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 283 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Message><EnrolRes><Response><Code>1109</Code><ErrorCode>1109</ErrorCode><ErrorMessage>PAN is not enrolled</ErrorMessage><ErrorDetail>Enrolment status: N</ErrorDetail></Response><VERes><CH><enrolled>N</enrolled></CH></VERes></EnrolRes></Message>"
+      read 283 bytes
+      Conn close
+    )
+  end
+
+  def scrubbed_three_ds_transcript
+    %(
+      opening connection to int3ds.credorax.com:443...
+      opened
+      starting SSL for int3ds.credorax.com:443...
+      SSL established
+      <- "POST /API/ HTTP/1.1\r\nContent-Type: text/xml\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: int3ds.credorax.com\r\nContent-Length: 430\r\n\r\n"
+      <- "<?xml version=\"1.0\"?>\n<Message>\n  <EnrolReq>\n    <MerchantID>90210</MerchantID>\n    <MerchantName>Cow Inc</MerchantName>\n    <Password>[FILTERED]</Password>\n    <CardNumber>[FILTERED]</CardNumber>\n    <ExpYear>2022</ExpYear>\n    <ExpMonth>12</ExpMonth>\n    <TotalAmount>100</TotalAmount>\n    <XID>12345678901234567890</XID>\n    <Currency>978</Currency>\n    <PurchaseDesc/>\n  </EnrolReq>\n</Message>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "Content-Length: 283\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 283 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Message><EnrolRes><Response><Code>1109</Code><ErrorCode>1109</ErrorCode><ErrorMessage>PAN is not enrolled</ErrorMessage><ErrorDetail>Enrolment status: N</ErrorDetail></Response><VERes><CH><enrolled>N</enrolled></CH></VERes></EnrolRes></Message>"
+      read 283 bytes
+      Conn close
     )
   end
 end

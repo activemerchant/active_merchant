@@ -5,7 +5,8 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @gateway = CredoraxGateway.new(fixtures(:credorax))
 
     @amount = 100
-    @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12', year: '2022')
+    @credit_card = credit_card('4176661000001031', verification_value: '681', month: '12', year: '2022')
+    @enrolled_3ds_card = credit_card('4176661000001015', verification_value: '281', month: '12', year: '2025')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12', year: '2022')
     @options = {
       order_id: '1',
@@ -33,6 +34,23 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_success response
     assert_equal '1', response.params['H9']
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_3ds_purchase_for_unenrolled_card
+    xid = (+'').tap { |s| 20.times { s << Random.rand(10).to_s }}
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: {}, xid: xid, purchase_desc: 'yo dawg i like cheese'))
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_3ds_response_for_enrolled_card
+    xid = (+'').tap { |s| 20.times { s << Random.rand(10).to_s }}
+    response = @gateway.purchase(@amount, @enrolled_3ds_card, @options.merge(three_d_secure: {}, xid: xid, purchase_desc: 'yo dawg i like cheese'))
+    assert_success response
+    assert_match %r{https://}, response.params['acs_url']
+    refute response.params['pa_req'].empty?
+    assert_equal '', response.message
   end
 
   def test_failed_purchase
@@ -166,6 +184,17 @@ class RemoteCredoraxTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_3ds_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({three_d_secure: {}, xid: '12345678901234567890'}))
+    end
+    clean_transcript = @gateway.scrub(transcript)
+    puts "!!!!!!\n#{clean_transcript}\n!!!!!"
+
+    assert_scrubbed(@credit_card.number, clean_transcript)
+    assert_scrubbed(@gateway.options[:mpi_password], clean_transcript)
   end
 
   # #########################################################################
