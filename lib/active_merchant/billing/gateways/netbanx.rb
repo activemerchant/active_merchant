@@ -165,9 +165,10 @@ module ActiveMerchant #:nodoc:
         return {} if address.nil?
         country = Country.find(address[:country]) if address[:country]
         mapped = {
-          :street  => address[:address1],
-          :city    => address[:city],
-          :zip     => address[:zip],
+          :street => address[:address1],
+          :city   => address[:city],
+          :zip    => address[:zip],
+          :state  => address[:state],
         }
         mapped.merge!({:country => country.code(:alpha2).value}) unless country.blank?
 
