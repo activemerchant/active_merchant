@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:command</tt> -- (REQUIRED)
       # * <tt>:email</tt> -- Customer email address (REQUIRED)
       # * <tt>:name</tt> -- Customer name (OPTIONAL)
-      # * <tt>:ip</tt> -- Customer IP address (OPTIONAL)
+      # * <tt>:ip</tt> -- Customer IP address (REQUIRED)
       # * <tt>:currency</tt> -- Currency, defaults to AED (OPTIONAL)
       # * <tt>:eci</tt> -- Ecommerce indicator (OPTIONAL)
       # * <tt>:card_security_code</tt> -- security code for the card (OPTIONAL)
@@ -72,7 +72,6 @@ module ActiveMerchant #:nodoc:
         request_params[:signature] = ''
         request_params[:token_name] = payfort_token
         request_params[:return_url] = options[:return_url]
-        request_params[:check_3ds] = 'NO'
         commit(request_params.compact)
       end
       # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
