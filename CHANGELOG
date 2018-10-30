@@ -12,6 +12,7 @@
 * Payflow Express: Add phone to returned Response [filipebarcos] #3003
 * Authorize.Net: Pass some level 3 fields [curiousepic] #3022
 * Add state to the netbanx payload [Girardvjonathan] #3024
+* Barclaycard Smartpay: Improves Error Handling [deedeelavinder] #3026
 
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] #3001

@@ -207,10 +207,11 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '500', :body => failed_capture_response)))
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_capture_response)))
 
     response = @gateway.capture(@amount, '0000000000000000', @options)
     assert_failure response
+    assert_equal('167: Original pspReference required for this operation', response.message)
     assert response.test?
   end
 
@@ -238,10 +239,11 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '500', :body => failed_refund_response)))
+    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '422', :body => failed_refund_response)))
 
     response = @gateway.refund(@amount, '0000000000000000', @options)
     assert_failure response
+    assert_equal('137: Invalid amount specified', response.message)
     assert response.test?
   end
 
@@ -367,6 +369,22 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_proper_error_response_handling
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(configuration_error_response)
+
+    message = "#{response.params['errorCode']}: #{response.params['message']}"
+    assert_equal('905: Payment details are not supported', message)
+
+    response2 = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(validation_error_response)
+
+    message2 = "#{response2.params['errorCode']}: #{response2.params['message']}"
+    assert_equal('702: Internal error', message2)
+  end
+
   private
 
   def successful_authorize_response
@@ -386,7 +404,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def failed_capture_response
-    'validation 100 No amount specified'
+    'errorType=validation&errorCode=167&message=Original+pspReference+required+for+this+operation&status=422'
   end
 
   def successful_refund_response
@@ -394,7 +412,7 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def failed_refund_response
-    'validation 100 No amount specified'
+    'errorType=validation&errorCode=137&message=Invalid+amount+specified&status=422'
   end
 
   def successful_credit_response
@@ -427,6 +445,14 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
 
   def failed_avs_response
     'additionalData.liabilityShift=false&additionalData.authCode=3115&additionalData.avsResult=2+Neither+postal+code+nor+address+match&additionalData.cardHolderName=Longbob+Longsen&additionalData.threeDOffered=false&additionalData.refusalReasonRaw=AUTHORISED&additionalData.issuerCountry=US&additionalData.cvcResult=1+Matches&additionalData.avsResultRaw=2&additionalData.threeDAuthenticated=false&additionalData.cvcResultRaw=1&additionalData.acquirerCode=SmartPayTestPmmAcquirer&additionalData.acquirerReference=7F50RDN2L06&fraudResult.accountScore=170&fraudResult.results.0.accountScore=20&fraudResult.results.0.checkId=2&fraudResult.results.0.name=CardChunkUsage&fraudResult.results.1.accountScore=25&fraudResult.results.1.checkId=4&fraudResult.results.1.name=HolderNameUsage&fraudResult.results.2.accountScore=25&fraudResult.results.2.checkId=8&fraudResult.results.2.name=ShopperEmailUsage&fraudResult.results.3.accountScore=0&fraudResult.results.3.checkId=1&fraudResult.results.3.name=PaymentDetailRefCheck&fraudResult.results.4.accountScore=0&fraudResult.results.4.checkId=13&fraudResult.results.4.name=IssuerRefCheck&fraudResult.results.5.accountScore=0&fraudResult.results.5.checkId=15&fraudResult.results.5.name=IssuingCountryReferral&fraudResult.results.6.accountScore=0&fraudResult.results.6.checkId=26&fraudResult.results.6.name=ShopperEmailRefCheck&fraudResult.results.7.accountScore=0&fraudResult.results.7.checkId=27&fraudResult.results.7.name=PmOwnerRefCheck&fraudResult.results.8.accountScore=0&fraudResult.results.8.checkId=10&fraudResult.results.8.name=HolderNameContainsNumber&fraudResult.results.9.accountScore=0&fraudResult.results.9.checkId=11&fraudResult.results.9.name=HolderNameIsOneWord&fraudResult.results.10.accountScore=0&fraudResult.results.10.checkId=21&fraudResult.results.10.name=EmailDomainValidation&fraudResult.results.11.accountScore=100&fraudResult.results.11.checkId=20&fraudResult.results.11.name=AVSAuthResultCheck&fraudResult.results.12.accountScore=0&fraudResult.results.12.checkId=25&fraudResult.results.12.name=CVCAuthResultCheck&pspReference=8814591938804745&refusalReason=FRAUD-CANCELLED&resultCode=Cancelled&authCode=3115'
+  end
+
+  def validation_error_response
+    'errorType=validation&errorCode=702&message=Internal+error&status=500'
+  end
+
+  def configuration_error_response
+    'errorType=configuration&errorCode=905&message=Payment+details+are+not+supported&pspReference=4315391674762857&status=500'
   end
 
   def transcript

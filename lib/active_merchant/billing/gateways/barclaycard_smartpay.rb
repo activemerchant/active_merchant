@@ -168,11 +168,11 @@ module ActiveMerchant #:nodoc:
           return Response.new(false, 'Invalid credentials', {}, :test => test?)
         when '403'
           return Response.new(false, 'Not allowed', {}, :test => test?)
-        when '422'
-          return Response.new(false, 'Unprocessable Entity', {}, :test => test?)
-        when '500'
-          if e.response.body.split(' ')[0] == 'validation'
-            return Response.new(false, e.response.body.split(' ', 3)[2], {}, :test => test?)
+        when '422', '500'
+          if e.response.body.split(/\W+/).any? { |word| %w(validation configuration security).include?(word) }
+            error_message = e.response.body[/#{Regexp.escape('message=')}(.*?)#{Regexp.escape('&')}/m, 1].tr('+', ' ')
+            error_code = e.response.body[/#{Regexp.escape('errorCode=')}(.*?)#{Regexp.escape('&')}/m, 1]
+            return Response.new(false, error_code + ': ' + error_message, {}, :test => test?)
           end
         end
         raise

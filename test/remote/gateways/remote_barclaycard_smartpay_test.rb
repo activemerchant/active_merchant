@@ -6,6 +6,7 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     BarclaycardSmartpayGateway.ssl_strict = false
 
     @amount = 100
+    @error_amount = 1_000_000_000_000_000_000_000
     @credit_card = credit_card('4111111111111111', :month => 10, :year => 2020, :verification_value => 737)
     @declined_card = credit_card('4000300011112220', :month => 3, :year => 2030, :verification_value => 737)
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
@@ -196,9 +197,16 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_failed_capture
+  def test_failed_capture_with_bad_auth
+    response = @gateway.capture(100, '0000000000000000', @options)
+    assert_failure response
+    assert_equal('167: Original pspReference required for this operation', response.message)
+  end
+
+  def test_failed_capture_with_bad_amount
     response = @gateway.capture(nil, '', @options)
     assert_failure response
+    assert_equal('137: Invalid amount specified', response.message)
   end
 
   def test_successful_refund
@@ -287,9 +295,9 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    response = @gateway.store(credit_card('', :month => '', :year => '', :verification_value => ''), @options)
+    response = @gateway.store(credit_card('4111111111111111', :month => '', :year => '', :verification_value => ''), @options)
     assert_failure response
-    assert_equal 'Unprocessable Entity', response.message
+    assert_equal '129: Expiry Date Invalid', response.message
   end
 
   # AVS must be enabled on the gateway's end for the test account used
@@ -329,5 +337,11 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:password], clean_transcript)
+  end
+
+  def test_proper_error_response_handling
+    response = @gateway.purchase(@error_amount, @credit_card, @options)
+    assert_equal('702: Internal error', response.message)
+    assert_not_equal(response.message, 'Unable to communicate with the payment system.')
   end
 end
