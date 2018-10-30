@@ -168,6 +168,20 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal purchase_response.params['braintree_transaction']['billing_details'], response_billing_details
   end
 
+  def test_successful_store_with_phone_only_billing_address_option
+    billing_address = {
+      :phone => '123-456-7890'
+    }
+    credit_card = credit_card('5105105105105100')
+    assert response = @gateway.store(credit_card, :billing_address => billing_address)
+    assert_success response
+    assert_equal 'OK', response.message
+
+    vault_id = response.params['customer_vault_id']
+    purchase_response = @gateway.purchase(@amount, vault_id)
+    assert_success purchase_response
+  end
+
   def test_successful_store_with_credit_card_token
     credit_card = credit_card('5105105105105100')
     credit_card_token = generate_unique_id

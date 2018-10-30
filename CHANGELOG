@@ -13,6 +13,7 @@
 * Authorize.Net: Pass some level 3 fields [curiousepic] #3022
 * Add state to the netbanx payload [Girardvjonathan] #3024
 * Barclaycard Smartpay: Improves Error Handling [deedeelavinder] #3026
+* Braintree: Fix passing phone-only billing address [curiousepic] #3025
 
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] #3001
