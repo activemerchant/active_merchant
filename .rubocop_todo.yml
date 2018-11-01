@@ -271,17 +271,6 @@ Lint/RescueException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/quantum.rb'
 
-# Offense count: 11
-# Cop supports --auto-correct.
-Lint/StringConversionInInterpolation:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/adyen.rb'
-    - 'lib/active_merchant/billing/gateways/dibs.rb'
-    - 'lib/active_merchant/billing/gateways/pay_junction.rb'
-    - 'lib/active_merchant/billing/gateways/skip_jack.rb'
-    - 'lib/active_merchant/billing/gateways/usa_epay_advanced.rb'
-    - 'test/remote/gateways/remote_authorize_net_cim_test.rb'
-
 # Offense count: 1
 Lint/UnderscorePrefixedVariableName:
   Exclude:

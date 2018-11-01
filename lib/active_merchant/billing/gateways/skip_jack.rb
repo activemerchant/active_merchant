@@ -354,7 +354,7 @@ module ActiveMerchant #:nodoc:
         add_credentials(params, action)
         add_amount(params, action, money)
         sorted_params = params.to_a.sort{|a,b| a.to_s <=> b.to_s}.reverse
-        sorted_params.collect { |key, value| "#{key.to_s}=#{CGI.escape(value.to_s)}" }.join('&')
+        sorted_params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def add_transaction_id(post, transaction_id)

@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         begin
-          raw_response = ssl_post("#{url}/#{action.to_s}", post_data(action, parameters), request_headers)
+          raw_response = ssl_post("#{url}/#{action}", post_data(action, parameters), request_headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body

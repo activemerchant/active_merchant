@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_hmac(post)
-        data = post.sort.collect { |key, value| "#{key}=#{value.to_s}" }.join('&')
+        data = post.sort.collect { |key, value| "#{key}=#{value}" }.join('&')
         digest = OpenSSL::Digest.new('sha256')
         key = [@options[:secret_key]].pack('H*')
         post[:MAC] = OpenSSL::HMAC.hexdigest(digest, key, data)

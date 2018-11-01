@@ -615,7 +615,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :type => :auth_capture,
         :order => {
           :invoice_number => key.to_s,
-          :description => "Test Order Description #{key.to_s}",
+          :description => "Test Order Description #{key}",
           :purchase_order_number => key.to_s
         },
         :amount => @amount
@@ -651,7 +651,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :type => :auth_capture,
         :order => {
           :invoice_number => key.to_s,
-          :description => "Test Order Description #{key.to_s}",
+          :description => "Test Order Description #{key}",
           :purchase_order_number => key.to_s
         },
         :amount => @amount
@@ -821,7 +821,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :type => :auth_capture,
         :order => {
           :invoice_number => key.to_s,
-          :description => "Test Order Description #{key.to_s}",
+          :description => "Test Order Description #{key}",
           :purchase_order_number => key.to_s
         },
         :amount => @amount
@@ -836,7 +836,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'auth_capture', response.params['direct_response']['transaction_type']
     assert_equal '100.00', response.params['direct_response']['amount']
     assert_equal response.params['direct_response']['invoice_number'], key.to_s
-    assert_equal response.params['direct_response']['order_description'], "Test Order Description #{key.to_s}"
+    assert_equal response.params['direct_response']['order_description'], "Test Order Description #{key}"
     assert_equal response.params['direct_response']['purchase_order_number'], key.to_s
     return response
   end
@@ -856,7 +856,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :type => :auth_only,
         :order => {
           :invoice_number => key.to_s,
-          :description => "Test Order Description #{key.to_s}",
+          :description => "Test Order Description #{key}",
           :purchase_order_number => key.to_s
         },
         :amount => @amount

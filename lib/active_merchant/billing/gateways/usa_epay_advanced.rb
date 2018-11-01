@@ -272,8 +272,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
 
         if options[:software_id]
-          self.live_url = "#{LIVE_URL_BASE}#{options[:software_id].to_s}"
-          self.test_url = "#{TEST_URL_BASE}#{options[:software_id].to_s}"
+          self.live_url = "#{LIVE_URL_BASE}#{options[:software_id]}"
+          self.test_url = "#{TEST_URL_BASE}#{options[:software_id]}"
         else
           self.live_url = options[:live_url].to_s
           self.test_url = options[:test_url].to_s if options[:test_url]
