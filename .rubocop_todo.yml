@@ -271,11 +271,6 @@ Lint/RescueException:
   Exclude:
     - 'lib/active_merchant/billing/gateways/quantum.rb'
 
-# Offense count: 1
-Lint/UnderscorePrefixedVariableName:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/ogone.rb'
-
 # Offense count: 1453
 # Cop supports --auto-correct.
 # Configuration parameters: IgnoreEmptyBlocks, AllowUnusedKeywordArguments.

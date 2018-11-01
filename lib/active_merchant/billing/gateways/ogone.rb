@@ -301,8 +301,8 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'ECI', eci.to_s
       end
 
-      def add_alias(post, _alias, alias_operation = nil)
-        add_pair post, 'ALIAS', _alias
+      def add_alias(post, alias_name, alias_operation = nil)
+        add_pair post, 'ALIAS', alias_name
         add_pair post, 'ALIASOPERATION', alias_operation unless alias_operation.nil?
       end
 
