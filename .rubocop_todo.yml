@@ -903,14 +903,6 @@ Style/InverseMethods:
     - 'lib/active_merchant/billing/gateways/ogone.rb'
     - 'lib/active_merchant/billing/gateways/worldpay.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: line_count_dependent, lambda, literal
-Style/Lambda:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-
 # Offense count: 15
 # Cop supports --auto-correct.
 Style/LineEndConcatenation:

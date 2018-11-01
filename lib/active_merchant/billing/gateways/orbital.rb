@@ -531,7 +531,7 @@ module ActiveMerchant #:nodoc:
         headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
         headers.merge!( 'Trace-number' => trace_number.to_s,
                         'Merchant-Id' => @options[:merchant_id] ) if @options[:retry_logic] && trace_number
-        request = lambda{|url| parse(ssl_post(url, order, headers))}
+        request = ->(url){ parse(ssl_post(url, order, headers))}
 
         # Failover URL will be attempted in the event of a connection error
         response = begin
