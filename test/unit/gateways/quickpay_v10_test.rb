@@ -10,7 +10,7 @@ class QuickpayV10Test < Test::Unit::TestCase
     @options = { :order_id => '1', :billing_address => address, :customer_ip => '1.1.1.1' }
   end
 
-  def parse body
+  def parse(body)
     JSON.parse(body)
   end
 

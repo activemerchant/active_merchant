@@ -938,16 +938,6 @@ Style/LineEndConcatenation:
 Style/MethodCallWithoutArgsParentheses:
   Enabled: false
 
-# Offense count: 4
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: require_parentheses, require_no_parentheses, require_no_parentheses_except_multiline
-Style/MethodDefParentheses:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/cyber_source.rb'
-    - 'test/unit/gateways/ideal_rabobank_test.rb'
-    - 'test/unit/gateways/quickpay_v10_test.rb'
-
 # Offense count: 626
 Style/MultilineBlockChain:
   Enabled: false

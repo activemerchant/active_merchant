@@ -410,7 +410,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def extract_option prioritized_options, option_name
+      def extract_option(prioritized_options, option_name)
         options_matching_key = prioritized_options.detect do |options|
           options.has_key? option_name
         end
