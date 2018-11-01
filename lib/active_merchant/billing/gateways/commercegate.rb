@@ -126,8 +126,8 @@ module ActiveMerchant #:nodoc:
         if response['returnText'].present?
           response['returnText']
         else
-          'Invalid response received from the CommerceGate API. ' +
-          'Please contact CommerceGate support if you continue to receive this message. ' +
+          'Invalid response received from the CommerceGate API. ' \
+          'Please contact CommerceGate support if you continue to receive this message. ' \
           "(The raw response returned by the API was #{response.inspect})"
         end
       end

@@ -903,16 +903,6 @@ Style/InverseMethods:
     - 'lib/active_merchant/billing/gateways/ogone.rb'
     - 'lib/active_merchant/billing/gateways/worldpay.rb'
 
-# Offense count: 15
-# Cop supports --auto-correct.
-Style/LineEndConcatenation:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/commercegate.rb'
-    - 'lib/active_merchant/billing/gateways/pay_hub.rb'
-    - 'lib/active_merchant/billing/gateways/swipe_checkout.rb'
-    - 'test/unit/gateways/barclays_epdq_extra_plus_test.rb'
-    - 'test/unit/gateways/ogone_test.rb'
-
 # Offense count: 31
 # Cop supports --auto-correct.
 # Configuration parameters: IgnoredMethods.

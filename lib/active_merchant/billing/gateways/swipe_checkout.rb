@@ -117,8 +117,8 @@ module ActiveMerchant #:nodoc:
           rescue ResponseError => e
             build_error_response("ssl_post() with url #{url} raised ResponseError: #{e}")
           rescue JSON::ParserError => e
-            msg = 'Invalid response received from the Swipe Checkout API. ' +
-                  'Please contact support@optimizerhq.com if you continue to receive this message.' +
+            msg = 'Invalid response received from the Swipe Checkout API. ' \
+                  'Please contact support@optimizerhq.com if you continue to receive this message.' \
                   " (Full error message: #{e})"
             build_error_response(msg)
           end
