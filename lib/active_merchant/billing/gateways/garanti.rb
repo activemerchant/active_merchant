@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       def add_address(xml, address)
         xml.tag! 'Name', normalize(address[:name])
         address_text = address[:address1]
-        address_text << " #{ address[:address2]}" if address[:address2]
+        address_text << " #{address[:address2]}" if address[:address2]
         xml.tag! 'Text', normalize(address_text)
         xml.tag! 'City', normalize(address[:city])
         xml.tag! 'District', normalize(address[:state])

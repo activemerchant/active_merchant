@@ -655,7 +655,7 @@ class WorldpayTest < Test::Unit::TestCase
       <payment>
         <paymentMethod>VISA-SSL</paymentMethod>
         <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
-        <lastEvent>#{ last_event }</lastEvent>
+        <lastEvent>#{last_event}</lastEvent>
         <CVCResultCode description="UNKNOWN"/>
         <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
         <balance accountType="IN_PROCESS_AUTHORISED">

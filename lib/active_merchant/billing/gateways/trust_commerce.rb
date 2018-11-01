@@ -371,7 +371,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters)
-        parameters.collect { |key, value| "#{key}=#{ CGI.escape(value.to_s)}" }.join('&')
+        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def commit(action, parameters)

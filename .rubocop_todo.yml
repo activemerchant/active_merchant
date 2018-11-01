@@ -231,16 +231,6 @@ Layout/SpaceInsideReferenceBrackets:
     - 'test/remote/gateways/remote_ideal_rabobank_test.rb'
     - 'test/remote/gateways/remote_wirecard_test.rb'
 
-# Offense count: 3
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: space, no_space
-Layout/SpaceInsideStringInterpolation:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/garanti.rb'
-    - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
-    - 'test/unit/gateways/worldpay_test.rb'
-
 # Offense count: 148
 # Configuration parameters: AllowSafeAssignment.
 Lint/AssignmentInCondition:
