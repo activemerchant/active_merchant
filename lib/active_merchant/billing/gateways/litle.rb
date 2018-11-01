@@ -268,7 +268,7 @@ module ActiveMerchant #:nodoc:
           end
         elsif check?(payment_method)
           doc.echeck do
-            doc.accType(payment_method.account_type)
+            doc.accType(payment_method.account_type.capitalize)
             doc.accNum(payment_method.account_number)
             doc.routingNum(payment_method.routing_number)
             doc.checkNum(payment_method.number)

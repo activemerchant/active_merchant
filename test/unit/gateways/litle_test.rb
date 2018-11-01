@@ -36,13 +36,13 @@ class LitleTest < Test::Unit::TestCase
       name: 'Tom Black',
       routing_number:  '011075150',
       account_number: '4099999992',
-      account_type: 'Checking'
+      account_type: 'checking'
     )
     @authorize_check = check(
       name: 'John Smith',
       routing_number: '011075150',
       account_number: '1099999999',
-      account_type: 'Checking'
+      account_type: 'checking'
     )
   end
 
