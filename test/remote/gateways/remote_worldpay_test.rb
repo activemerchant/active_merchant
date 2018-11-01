@@ -155,7 +155,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_void
     assert_success(response = @gateway.authorize(@amount, @credit_card, @options))
     sleep(40)
-    assert_success (void = @gateway.void(response.authorization))
+    assert_success(void = @gateway.void(response.authorization))
     assert_equal 'SUCCESS', void.message
     assert void.params['cancel_received_order_code']
   end

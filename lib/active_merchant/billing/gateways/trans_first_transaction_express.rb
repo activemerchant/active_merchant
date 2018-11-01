@@ -539,7 +539,7 @@ module ActiveMerchant #:nodoc:
           if (billing_address = options[:billing_address])
             if billing_address[:phone]
               doc['v1'].phone do
-                doc['v1'].type (options[:phone_number_type] || '4')
+                doc['v1'].type(options[:phone_number_type] || '4')
                 doc['v1'].nr billing_address[:phone].gsub(/\D/, '')
               end
             end

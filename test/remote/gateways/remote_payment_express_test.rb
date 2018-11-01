@@ -107,7 +107,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card)
     assert_success response
     assert_equal 'The Transaction was approved', response.message
-    assert (token = response.authorization)
+    assert(token = response.authorization)
 
     assert purchase = @gateway.purchase( @amount, token)
     assert_equal 'The Transaction was approved', purchase.message
@@ -119,7 +119,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card)
     assert_success response
     assert_equal 'The Transaction was approved', response.message
-    assert (token = response.authorization)
+    assert(token = response.authorization)
 
     assert auth = @gateway.authorize(@amount, token, @options)
     assert_success auth
