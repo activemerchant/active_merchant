@@ -48,7 +48,7 @@ class RemoteEzicTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount+30, auth.authorization)
     assert_failure capture
-    assert_match /Settlement amount cannot exceed authorized amount/, capture.message
+    assert_match(/Settlement amount cannot exceed authorized amount/, capture.message)
   end
 
   def test_successful_refund
@@ -76,7 +76,7 @@ class RemoteEzicTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount + 49, purchase.authorization)
     assert_failure refund
-    assert_match /Amount of refunds exceed original sale/, refund.message
+    assert_match(/Amount of refunds exceed original sale/, refund.message)
   end
 
   def test_failed_void
@@ -114,6 +114,6 @@ class RemoteEzicTest < Test::Unit::TestCase
     gateway = EzicGateway.new(account_id: '11231')
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /Invalid account number/, response.message
+    assert_match(/Invalid account number/, response.message)
   end
 end

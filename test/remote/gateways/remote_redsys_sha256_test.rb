@@ -64,7 +64,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
 
     capture = @gateway.capture(100, authorize.authorization)
     assert_success capture
-    assert_match /Refund.*approved/, capture.message
+    assert_match(/Refund.*approved/, capture.message)
   end
 
   def test_successful_authorise_using_vault_id

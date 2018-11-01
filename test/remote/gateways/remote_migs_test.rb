@@ -41,7 +41,7 @@ class RemoteMigsTest < Test::Unit::TestCase
 
     choice_url = @gateway.purchase_offsite_url(@amount, options)
 
-    assert_response_match /Pay securely .* by clicking on the card logo below/, choice_url
+    assert_response_match(/Pay securely .* by clicking on the card logo below/, choice_url)
 
     responses = {
       'visa'             => /You have chosen .*VISA.*/,

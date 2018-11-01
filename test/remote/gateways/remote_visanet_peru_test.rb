@@ -89,7 +89,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture('900000044')
     assert_failure response
-    assert_match /NUMORDEN 900000044 no se encuentra registrado/, response.message
+    assert_match(/NUMORDEN 900000044 no se encuentra registrado/, response.message)
     assert_equal 400, response.error_code
   end
 
@@ -116,7 +116,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '900000044' )
     assert_failure response
-    assert_match /NUMORDEN 900000044 no se encuentra registrado/, response.message
+    assert_match(/NUMORDEN 900000044 no se encuentra registrado/, response.message)
     assert_equal 400, response.error_code
   end
 
@@ -132,7 +132,7 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('900000044')
     assert_failure response
-    assert_match /NUMORDEN no se encuentra registrado/, response.message
+    assert_match(/NUMORDEN no se encuentra registrado/, response.message)
     assert_equal 400, response.error_code
   end
 

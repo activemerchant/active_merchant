@@ -241,10 +241,6 @@ Layout/SpaceInsideStringInterpolation:
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
     - 'test/unit/gateways/worldpay_test.rb'
 
-# Offense count: 31
-Lint/AmbiguousRegexpLiteral:
-  Enabled: false
-
 # Offense count: 148
 # Configuration parameters: AllowSafeAssignment.
 Lint/AssignmentInCondition:

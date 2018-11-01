@@ -63,7 +63,7 @@ class RemoteGlobalTransportTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(1000, auth.authorization)
     assert_failure capture
-    assert_match /must be less than or equal to the original amount/, capture.message
+    assert_match(/must be less than or equal to the original amount/, capture.message)
   end
 
   def test_successful_refund
@@ -90,7 +90,7 @@ class RemoteGlobalTransportTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(1000, purchase.authorization)
     assert_failure refund
-    assert_match /Refund Exceeds Available Refund Amount/, refund.message
+    assert_match(/Refund Exceeds Available Refund Amount/, refund.message)
   end
 
   def test_successful_void

@@ -82,7 +82,7 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_unsuccessful_authorize_with_invalid_card
     assert response = @gateway.authorize(@amount, @invalid_card, @options)
     assert_failure response
-    assert_match /Rejected test operation/, response.message
+    assert_match(/Rejected test operation/, response.message)
   end
 
   def test_successful_authorize_and_capture

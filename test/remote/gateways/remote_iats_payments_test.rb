@@ -99,7 +99,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     credit_card = credit_card('4111')
     assert store = @gateway.store(credit_card, @options)
     assert_failure store
-    assert_match /Invalid credit card number/, store.message
+    assert_match(/Invalid credit card number/, store.message)
   end
 
   def test_invalid_login

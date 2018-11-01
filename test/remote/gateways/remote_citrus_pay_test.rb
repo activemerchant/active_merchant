@@ -56,7 +56,7 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /FAILURE/, response.message
+    assert_match %r{FAILURE}, response.message
   end
 
   def test_successful_authorize_and_capture
@@ -73,7 +73,7 @@ class RemoteCitrusPayTest < Test::Unit::TestCase
   def test_failed_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /FAILURE/, response.message
+    assert_match(/FAILURE/, response.message)
   end
 
   def test_successful_refund

@@ -47,7 +47,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /Authorization has failed for this transaction/, response.message
+    assert_match(/Authorization has failed for this transaction/, response.message)
     assert_equal '14002', response.error_code
   end
 
@@ -77,7 +77,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /Authorization has failed for this transaction/, response.message
+    assert_match(/Authorization has failed for this transaction/, response.message)
   end
 
   def test_partial_capture_succeeds_even_though_amount_is_ignored_by_gateway
@@ -91,7 +91,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_match /due to missing transaction ID/, response.message
+    assert_match(/due to missing transaction ID/, response.message)
   end
 
   def test_successful_refund
@@ -114,7 +114,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_match /cannot be completed due to missing transaction ID/, response.message
+    assert_match(/cannot be completed due to missing transaction ID/, response.message)
   end
 
   def test_successful_void
@@ -129,7 +129,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_match /cannot be completed due to missing transaction ID/, response.message
+    assert_match(/cannot be completed due to missing transaction ID/, response.message)
   end
 
   def test_successful_verify
@@ -141,7 +141,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match /Authorization has failed for this transaction/, response.message
+    assert_match(/Authorization has failed for this transaction/, response.message)
   end
 
   def test_successful_store
@@ -152,14 +152,14 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert response.authorization
     assert_equal 'I', response.avs_result['code']
     assert_equal 'P', response.cvv_result['code']
-    assert_match /services\/2\/vaulted-shoppers/, response.params['content-location-header']
+    assert_match(/services\/2\/vaulted-shoppers/, response.params['content-location-header'])
   end
 
   def test_failed_store
     assert response = @gateway.store(@declined_card, @options)
 
     assert_failure response
-    assert_match /Transaction failed  because of payment processing failure/, response.message
+    assert_match(/Transaction failed  because of payment processing failure/, response.message)
     assert_equal '14002', response.error_code
   end
 

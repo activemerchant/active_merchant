@@ -165,7 +165,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match /The card was declined/, response.message
+    assert_match(/The card was declined/, response.message)
   end
 
   def test_invalid_login

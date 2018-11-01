@@ -127,7 +127,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_failure response
     assert_match %r{Your card was declined}, response.message
     assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-    assert_match /ch_[a-zA-Z\d]+/, response.authorization
+    assert_match(/ch_[a-zA-Z\d]+/, response.authorization)
   end
 
   def test_unsuccessful_purchase_with_destination_and_amount
@@ -493,8 +493,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     response = @gateway.store(@check, @options)
     assert_success response
     customer_id, bank_account_id = response.authorization.split('|')
-    assert_match /^cus_/, customer_id
-    assert_match /^ba_/, bank_account_id
+    assert_match(/^cus_/, customer_id)
+    assert_match(/^ba_/, bank_account_id)
   end
 
   def test_unsuccessful_purchase_from_stored_but_unverified_bank_account

@@ -232,7 +232,7 @@ class RemoteTransFirstTransactionExpressTest < Test::Unit::TestCase
   def test_successful_refund_with_echeck
     purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
-    assert_match /purchase_echeck/, purchase.authorization
+    assert_match(/purchase_echeck/, purchase.authorization)
 
     refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund

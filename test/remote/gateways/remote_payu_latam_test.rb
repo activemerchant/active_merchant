@@ -290,13 +290,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_match /property: parentTransactionId, message: must not be null/, response.message
+    assert_match(/property: parentTransactionId, message: must not be null/, response.message)
   end
 
   def test_failed_refund_with_specified_language
     response = @gateway.refund(@amount, '', language: 'es')
     assert_failure response
-    assert_match /property: parentTransactionId, message: No puede ser vacio/, response.message
+    assert_match(/property: parentTransactionId, message: No puede ser vacio/, response.message)
   end
 
   # If this test fails, support for void may have been added to the sandbox
@@ -312,13 +312,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_match /property: parentTransactionId, message: must not be null/, response.message
+    assert_match(/property: parentTransactionId, message: must not be null/, response.message)
   end
 
   def test_failed_void_with_specified_language
     response = @gateway.void('', language: 'es')
     assert_failure response
-    assert_match /property: parentTransactionId, message: No puede ser vacio/, response.message
+    assert_match(/property: parentTransactionId, message: No puede ser vacio/, response.message)
   end
 
   # If this test fails, support for captures may have been added to the sandbox
@@ -334,7 +334,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_match /must not be null/, response.message
+    assert_match(/must not be null/, response.message)
   end
 
   def test_verify_credentials
