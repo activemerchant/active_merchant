@@ -97,7 +97,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_capture_response)
 
     assert_success response
-    assert_equal %w(authorize capture), response.responses.collect{|e| e.params['action']}
+    assert_equal(%w(authorize capture), response.responses.collect{|e| e.params['action']})
   end
 
   def test_successful_void

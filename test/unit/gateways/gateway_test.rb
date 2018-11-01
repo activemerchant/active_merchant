@@ -11,10 +11,10 @@ class GatewayTest < Test::Unit::TestCase
 
   def test_should_detect_if_a_card_is_supported
     Gateway.supported_cardtypes = [:visa, :bogus]
-    assert [:visa, :bogus].all? { |supported_cardtype| Gateway.supports?(supported_cardtype) }
+    assert([:visa, :bogus].all? { |supported_cardtype| Gateway.supports?(supported_cardtype) })
 
     Gateway.supported_cardtypes = []
-    assert_false [:visa, :bogus].all? { |invalid_cardtype| Gateway.supports?(invalid_cardtype) }
+    assert_false([:visa, :bogus].all? { |invalid_cardtype| Gateway.supports?(invalid_cardtype) })
   end
 
   def test_should_validate_supported_countries

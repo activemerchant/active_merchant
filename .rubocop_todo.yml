@@ -241,13 +241,6 @@ Layout/SpaceInsideStringInterpolation:
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
     - 'test/unit/gateways/worldpay_test.rb'
 
-# Offense count: 4
-Lint/AmbiguousBlockAssociation:
-  Exclude:
-    - 'test/test_helper.rb'
-    - 'test/unit/gateways/gateway_test.rb'
-    - 'test/unit/gateways/worldpay_test.rb'
-
 # Offense count: 31
 Lint/AmbiguousRegexpLiteral:
   Enabled: false

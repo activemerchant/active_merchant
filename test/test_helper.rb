@@ -131,7 +131,7 @@ module ActiveMerchant
       yield
     rescue AssertionClass => e
       path = File.expand_path(__FILE__)
-      raise AssertionClass, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
+      raise AssertionClass, e.message, (e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ })
     end
   end
 
