@@ -175,12 +175,9 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_message_from
-    def get_msg(query)
-      @gateway.send(:parse, query).message
-    end
-    assert_equal 'CVV does not match', get_msg('STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE')
+    assert_equal 'CVV does not match', @gateway.send(:parse, 'STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE').message
     assert_equal 'Street address matches, but 5-digit and 9-digit postal code do not match.',
-      get_msg('STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE')
+      @gateway.send(:parse, 'STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE').message
   end
 
   # Recurring Billing Unit Tests

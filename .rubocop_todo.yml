@@ -266,11 +266,6 @@ Lint/HandleExceptions:
     - 'lib/active_merchant/billing/gateways/mastercard.rb'
     - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
 
-# Offense count: 1
-Lint/NestedMethodDefinition:
-  Exclude:
-    - 'test/unit/gateways/blue_pay_test.rb'
-
 # Offense count: 4
 Lint/ParenthesesAsGroupedExpression:
   Exclude:
