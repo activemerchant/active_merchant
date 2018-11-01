@@ -74,20 +74,6 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
    assert_equal 'Unable to annul, wrong state', response.message
   end
 
-  def test_successful_amex_purchase
-    credit_card = credit_card('378282246310005', :brand => 'american_express')
-    assert response = @gateway.purchase(@amount, credit_card, @options)
-    assert_success response
-    assert_equal 'OK', response.message
-  end
-
-  def test_successful_master_purchase
-    credit_card = credit_card('5413000000000000', :brand => 'master')
-    assert response = @gateway.purchase(@amount, credit_card, @options)
-    assert_success response
-    assert_equal 'OK', response.message
-  end
-
   def test_error_in_transaction_setup
    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'BOGG'))
    assert_failure response

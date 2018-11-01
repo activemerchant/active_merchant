@@ -34,16 +34,6 @@ class RemoteModernPaymentTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = ModernPaymentsGateway.new(
-                :login => '5000',
-                :password => 'password'
-              )
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal ModernPaymentsCimGateway::FAILURE_MESSAGE, response.message
-  end
-
-  def test_invalid_login
-    gateway = ModernPaymentsGateway.new(
                 :login => '',
                 :password => ''
               )
@@ -52,5 +42,4 @@ class RemoteModernPaymentTest < Test::Unit::TestCase
       gateway.purchase(@amount, @credit_card, @options)
     end
   end
-
 end

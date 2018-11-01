@@ -236,15 +236,6 @@ Layout/SpaceInsideReferenceBrackets:
 Lint/AssignmentInCondition:
   Enabled: false
 
-# Offense count: 8
-Lint/DuplicateMethods:
-  Exclude:
-    - 'test/remote/gateways/remote_litle_certification_test.rb'
-    - 'test/remote/gateways/remote_mercury_certification_test.rb'
-    - 'test/remote/gateways/remote_modern_payments_test.rb'
-    - 'test/remote/gateways/remote_netaxept_test.rb'
-    - 'test/remote/gateways/remote_verifi_test.rb'
-
 # Offense count: 3
 Lint/FormatParameterMismatch:
   Exclude:

@@ -30,30 +30,6 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     assert_equal 'AP', void.params['text_response']
   end
 
-  def test_preauth_capture_and_reversal
-    close_batch(tokenization_gateway)
-
-    cc = credit_card(
-      '4005550000000480',
-      :brand => 'visa',
-      :month => '12',
-      :year => '15',
-      :verification_value => '123'
-    )
-
-    preauth = tokenization_gateway.authorize(106, cc, options('1'))
-    assert_success preauth
-    assert_equal 'AP', preauth.params['text_response']
-
-    capture = tokenization_gateway.capture(106, preauth.authorization, options)
-    assert_success capture
-    assert_equal 'AP', capture.params['text_response']
-
-    reversal = tokenization_gateway.void(capture.authorization, options.merge(:try_reversal => true))
-    assert_success reversal
-    assert_equal 'REVERSED', reversal.params['text_response']
-  end
-
   def test_return
     close_batch(tokenization_gateway)
 
