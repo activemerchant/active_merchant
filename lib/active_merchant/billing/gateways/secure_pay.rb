@@ -183,9 +183,9 @@ module ActiveMerchant #:nodoc:
 
       def message_from(results)
         if results[:response_code] == DECLINED
-          return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
+          return CVVResult.messages[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
           if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[ results[:avs_result_code] ]
+            return AVSResult.messages[results[:avs_result_code]]
           end
         end
 

@@ -140,18 +140,18 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options={})
         post[:firstname] = creditcard.first_name
-        post[:lastname ] = creditcard.last_name
+        post[:lastname]  = creditcard.last_name
 
         return unless options[:billing_address]
 
         address = options[:billing_address]
-        post[:address1 ] = address[:address1]
-        post[:address2 ] = address[:address2]
-        post[:city     ] = address[:city]
-        post[:state    ] = address[:state]
-        post[:zip      ] = address[:zip]
-        post[:country  ] = address[:country]
-        post[:phone    ] = address[:phone]
+        post[:address1] = address[:address1]
+        post[:address2] = address[:address2]
+        post[:city]     = address[:city]
+        post[:state]    = address[:state]
+        post[:zip]      = address[:zip]
+        post[:country]  = address[:country]
+        post[:phone]    = address[:phone]
       end
 
       def add_reference(post, authorization)
@@ -167,8 +167,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         post[:ccnumber] = payment.number
-        post[:ccexp   ] = "#{payment.month.to_s.rjust(2,"0")}#{payment.year.to_s[-2..-1]}"
-        post[:cvv     ] = payment.verification_value
+        post[:ccexp] = "#{payment.month.to_s.rjust(2,"0")}#{payment.year.to_s[-2..-1]}"
+        post[:cvv] = payment.verification_value
       end
 
       def parse(body)

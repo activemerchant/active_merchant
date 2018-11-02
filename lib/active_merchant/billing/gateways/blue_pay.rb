@@ -374,7 +374,7 @@ module ActiveMerchant #:nodoc:
           if CARD_CODE_ERRORS.include?(parsed[:card_code])
             message = CVVResult.messages[parsed[:card_code]]
           elsif AVS_ERRORS.include?(parsed[:avs_result_code])
-            message = AVSResult.messages[ parsed[:avs_result_code] ]
+            message = AVSResult.messages[parsed[:avs_result_code]]
           else
             message = message.chomp('.')
           end

@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
             { status: 'success', id: m[2] } :
             { status: 'failure', message: m[2] }
         else
-          Hash[ status: body ]
+          Hash[status: body]
         end
       end
 

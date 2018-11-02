@@ -214,23 +214,6 @@ Layout/SpaceInsideParens:
 Layout/SpaceInsidePercentLiteralDelimiters:
   Enabled: false
 
-# Offense count: 35
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.
-# SupportedStyles: space, no_space
-# SupportedStylesForEmptyBrackets: space, no_space
-Layout/SpaceInsideReferenceBrackets:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/blue_pay.rb'
-    - 'lib/active_merchant/billing/gateways/cams.rb'
-    - 'lib/active_merchant/billing/gateways/ideal/ideal_base.rb'
-    - 'lib/active_merchant/billing/gateways/metrics_global.rb'
-    - 'lib/active_merchant/billing/gateways/sage_pay.rb'
-    - 'lib/active_merchant/billing/gateways/secure_pay.rb'
-    - 'lib/active_merchant/billing/gateways/transact_pro.rb'
-    - 'test/remote/gateways/remote_ideal_rabobank_test.rb'
-    - 'test/remote/gateways/remote_wirecard_test.rb'
-
 # Offense count: 148
 # Configuration parameters: AllowSafeAssignment.
 Lint/AssignmentInCondition:

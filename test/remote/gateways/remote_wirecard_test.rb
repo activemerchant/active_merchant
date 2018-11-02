@@ -214,7 +214,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert response.test?
     assert_failure response
-    assert response.message[ /Credit card number not allowed in demo mode/ ], 'Got wrong response message'
+    assert response.message[/Credit card number not allowed in demo mode/], 'Got wrong response message'
     assert_equal '24997', response.params['ErrorCode']
   end
 
@@ -222,7 +222,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert response = @gateway.store(@declined_card, @options)
     assert response.test?
     assert_failure response
-    assert response.message[ /Credit card number not allowed in demo mode/ ], 'Got wrong response message'
+    assert response.message[/Credit card number not allowed in demo mode/], 'Got wrong response message'
   end
 
   def test_unauthorized_capture
