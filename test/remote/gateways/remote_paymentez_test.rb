@@ -26,7 +26,8 @@ class RemotePaymentezTest < Test::Unit::TestCase
     options = {
       order_id: '1',
       ip: '127.0.0.1',
-      tax_percentage: 0.07
+      tax_percentage: 0.07,
+      phone: '333 333 3333'
     }
 
     response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
