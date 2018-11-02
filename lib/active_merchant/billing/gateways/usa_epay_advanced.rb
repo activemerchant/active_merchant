@@ -1503,7 +1503,7 @@ module ActiveMerchant #:nodoc:
       def build_field_value_array(soap, tag_name, type, custom_data, fields)
         soap.tag! tag_name, 'SOAP-ENC:arryType' => "xsd:#{type}[#{options.length}]", 'xsi:type' => "ns1:#{type}Array" do
           custom_data.each do |k, v|
-            build_field_value soap, fields[k][1], v, fields[k][0] if fields.keys.include? k
+            build_field_value soap, fields[k][1], v, fields[k][0] if fields.key?(k)
           end
         end
       end
