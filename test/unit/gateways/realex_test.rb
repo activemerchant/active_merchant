@@ -3,7 +3,8 @@ require 'test_helper'
 class RealexTest < Test::Unit::TestCase
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
-    public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request, :build_capture_request
+    public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request,
+      :build_capture_request, :build_verify_request
   end
 
   def setup
@@ -191,6 +192,35 @@ SRC
 SRC
 
     assert_xml_equal valid_void_request_xml, @gateway.build_void_request('1;4321;1234', {})
+  end
+
+  def test_verify_xml
+    options = {
+      :order_id => '1'
+    }
+    @gateway.expects(:new_timestamp).returns('20181026114304')
+
+    valid_verify_request_xml = <<-SRC
+<request timestamp="20181026114304" type="otb">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <card>
+    <number>4263971921001307</number>
+    <expdate>0808</expdate>
+    <chname>Longbob Longsen</chname>
+    <type>VISA</type>
+    <issueno></issueno>
+    <cvn>
+      <number></number>
+      <presind></presind>
+    </cvn>
+  </card>
+  <sha1hash>d53aebf1eaee4c3ff4c30f83f27b80ce99ba5644</sha1hash>
+</request>
+SRC
+
+    assert_xml_equal valid_verify_request_xml, @gateway.build_verify_request(@credit_card, options)
   end
 
   def test_auth_xml

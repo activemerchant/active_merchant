@@ -80,6 +80,13 @@ module ActiveMerchant
         commit(request)
       end
 
+      def verify(credit_card, options = {})
+        requires!(options, :order_id)
+
+        request = build_verify_request(credit_card, options)
+        commit(request)
+      end
+
       def supports_scrubbing
         true
       end
@@ -181,6 +188,20 @@ module ActiveMerchant
           add_transaction_identifiers(xml, authorization, options)
           add_comments(xml, options)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), nil, nil, nil)
+        end
+        xml.target!
+      end
+
+      # Verify initiates an OTB (Open To Buy) request
+      def build_verify_request(credit_card, options)
+        timestamp = new_timestamp
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'otb' do
+          add_merchant_details(xml, options)
+          xml.tag! 'orderid', sanitize_order_id(options[:order_id])
+          add_card(xml, credit_card)
+          add_comments(xml, options)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), credit_card.number)
         end
         xml.target!
       end

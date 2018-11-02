@@ -328,6 +328,32 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_equal 'Successful', rebate_response.message
   end
 
+  def test_realex_verify
+    response = @gateway.verify(@visa,
+      :order_id => generate_unique_id,
+      :description => 'Test Realex verify'
+    )
+
+    assert_not_nil response
+    assert_success response
+    assert response.test?
+    assert response.authorization.length > 0
+    assert_equal 'Successful', response.message
+  end
+
+  def test_realex_verify_declined
+    response = @gateway.verify(@visa_declined,
+      :order_id => generate_unique_id,
+      :description => 'Test Realex verify declined'
+    )
+
+    assert_not_nil response
+    assert_failure response
+    assert response.test?
+    assert_equal '101', response.params['result']
+    assert_match %r{DECLINED}i, response.message
+  end
+
   def test_maps_avs_and_cvv_response_codes
     [ @visa, @mastercard ].each do |card|
       response = @gateway.purchase(@amount, card,
