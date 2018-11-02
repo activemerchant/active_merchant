@@ -186,7 +186,8 @@ module ActiveMerchant #:nodoc:
         else
           post[:singleUseToken] = payment_method
         end
-        options.merge!({:vault_id => vault_id, :operation => secure_profile_action(:modify)})
+        options[:vault_id] = vault_id
+        options[:operation] = secure_profile_action(:modify)
         add_secure_profile_variables(post,options)
         commit(post, true)
       end

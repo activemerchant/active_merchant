@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         trans_id, _ = split_authorization(authorization)
-        options.merge!({trans_id: trans_id})
+        options[:trans_id] = trans_id
 
         request = build_soap_request do |xml|
           xml.CreditCardAuthorizationCompletion(xmlns: 'https://transaction.elementexpress.com') do
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
         trans_id, _ = split_authorization(authorization)
-        options.merge!({trans_id: trans_id})
+        options[:trans_id] = trans_id
 
         request = build_soap_request do |xml|
           xml.CreditCardReturn(xmlns: 'https://transaction.elementexpress.com') do

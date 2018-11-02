@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
           :zip    => address[:zip],
           :state  => address[:state],
         }
-        mapped.merge!({:country => country.code(:alpha2).value}) unless country.blank?
+        mapped[:country] = country.code(:alpha2).value unless country.blank?
 
         mapped
       end

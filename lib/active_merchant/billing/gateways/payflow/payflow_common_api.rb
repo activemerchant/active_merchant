@@ -202,7 +202,7 @@ module ActiveMerchant #:nodoc:
           'X-VPS-Request-ID' => SecureRandom.hex(16)
         }
 
-        headers.merge!('PAYPAL-NVP' => 'Y') if self.use_paypal_nvp
+        headers['PAYPAL-NVP'] = 'Y' if self.use_paypal_nvp
         headers
       end
 

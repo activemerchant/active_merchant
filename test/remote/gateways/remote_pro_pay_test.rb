@@ -34,7 +34,7 @@ class RemoteProPayTest < Test::Unit::TestCase
   end
 
   def test_successful_recurring_purchase_without_cvv
-    @options.merge!({recurring_payment: 'Y'})
+    @options[:recurring_payment] = 'Y'
     response = @gateway.purchase(@amount, @credit_card_without_cvv, @options)
     assert_success response
     assert_equal 'Success', response.message

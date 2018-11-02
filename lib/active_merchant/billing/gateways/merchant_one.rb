@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
-        post.merge!(:transactionid => authorization)
+        post[:transactionid] = authorization
         add_amount(post, money, options)
         commit('capture', money, post)
       end
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-        parameters.merge!({:type => action})
+        parameters[:type] = action
         ret = ''
         for key in parameters.keys
           ret += "#{key}=#{CGI.escape(parameters[key].to_s)}"

@@ -24,7 +24,7 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase_with_shipping_address
-    @options.merge!(:shipping_address => address)
+    @options[:shipping_address] = address
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'no_error', response.message

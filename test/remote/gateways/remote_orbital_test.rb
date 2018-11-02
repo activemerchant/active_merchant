@@ -198,7 +198,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     for suite in @test_suite do
       amount = suite[:amount]
       card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
-      @options[:address].merge!(:zip => suite[:AVSzip])
+      @options[:address][:zip] = suite[:AVSzip]
       assert response = @gateway.authorize(amount, card, @options)
       assert_kind_of Response, response
 
@@ -216,7 +216,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     for suite in @test_suite do
       amount = suite[:amount]
       card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
-      options = @options; options[:address].merge!(:zip => suite[:AVSzip])
+      options = @options; options[:address][:zip] = suite[:AVSzip]
       assert response = @gateway.purchase(amount, card, options)
       assert_kind_of Response, response
 

@@ -25,7 +25,7 @@ class MundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_holder_document
-    @options.merge!(holder_document: 'a1b2c3d4')
+    @options[:holder_document] = 'a1b2c3d4'
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|

@@ -169,10 +169,8 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard_type(post, options[:card_type]) if options[:card_type]
 
-        post.merge!(
-          :Locale => options[:locale] || 'en',
-          :ReturnURL => options[:return_url]
-        )
+        post[:Locale] = options[:locale] || 'en'
+        post[:ReturnURL] = options[:return_url]
 
         add_standard_parameters('pay', post, options[:unique_id])
 

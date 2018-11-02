@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
       def add_fraud_fields(post, options)
         fraud_fields = {}
         fraud_fields.merge!(options[:fraud_fields]) if options[:fraud_fields]
-        fraud_fields.merge!({customerIpAddress: options[:ip]}) if options[:ip]
+        fraud_fields[:customerIpAddress] = options[:ip] if options[:ip]
 
         post['fraudFields'] = fraud_fields unless fraud_fields.empty?
       end

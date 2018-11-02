@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         add_amount(post, money, options)
-        options.merge!(:key => @fee_refund_api_key) if @fee_refund_api_key
+        options[:key] = @fee_refund_api_key if @fee_refund_api_key
         options.delete(:stripe_account)
 
         refund_fee = commit(:post, "application_fees/#{CGI.escape(identification)}/refunds", post, options)
@@ -491,7 +491,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def fetch_application_fee(identification, options = {})
-        options.merge!(:key => @fee_refund_api_key)
+        options[:key] = @fee_refund_api_key
 
         fetch_charge = commit(:get, "charges/#{CGI.escape(identification)}", nil, options)
         application_fee_response!(fetch_charge, "Application fee id could not be retrieved: #{fetch_charge.message}")
@@ -549,8 +549,8 @@ module ActiveMerchant #:nodoc:
           'X-Stripe-Client-User-Agent' => stripe_client_user_agent(options),
           'X-Stripe-Client-User-Metadata' => {:ip => options[:ip]}.to_json
         }
-        headers.merge!('Idempotency-Key' => idempotency_key) if idempotency_key
-        headers.merge!('Stripe-Account' => options[:stripe_account]) if options[:stripe_account]
+        headers['Idempotency-Key'] = idempotency_key if idempotency_key
+        headers['Stripe-Account'] = options[:stripe_account] if options[:stripe_account]
         headers
       end
 

@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
       def store(payment, options = {})
         MultiResponse.run do |r|
           r.process { commit('auth/token', app_token_request(options)) }
-          options.merge!({ app_token: app_token_from(r) })
+          options[:app_token] = app_token_from(r)
 
           if options[:customer_id].present?
             customer_id = check_customer_exists(options)
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_with_credit_card(payment, options = {})
         customer_response = commit('customers', create_customer_request(payment, options), options)
-        options.merge!({customer_id: customer_response.authorization})
+        options[:customer_id] = customer_response.authorization
         commit('tokens', create_token_request(payment, options), options)
       end
 
@@ -257,7 +257,7 @@ module ActiveMerchant #:nodoc:
           'x-api-key' => @options[:api_key]
         }
 
-        headers.merge!({'Authorization' => "Bearer #{options[:app_token]}"}) if options[:app_token]
+        headers['Authorization'] = "Bearer #{options[:app_token]}" if options[:app_token]
         headers
       end
 

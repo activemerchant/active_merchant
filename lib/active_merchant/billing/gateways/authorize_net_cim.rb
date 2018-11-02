@@ -614,7 +614,7 @@ module ActiveMerchant #:nodoc:
 
       def build_create_customer_profile_transaction_request(xml, options)
         options[:extra_options] ||= {}
-        options[:extra_options].merge!('x_delim_char' => @options[:delimiter]) if @options[:delimiter]
+        options[:extra_options]['x_delim_char'] = @options[:delimiter] if @options[:delimiter]
 
         add_transaction(xml, options[:transaction])
         xml.tag!('extraOptions') do

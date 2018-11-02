@@ -153,7 +153,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    @options[:billing_address].merge!(country: nil)
+    @options[:billing_address][:country] = nil
     response = @gateway.store(@credit_card, @options)
     assert_failure response
     assert_equal 'V6044', response.params['Errors']

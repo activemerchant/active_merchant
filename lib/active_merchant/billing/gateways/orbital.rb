@@ -273,13 +273,13 @@ module ActiveMerchant #:nodoc:
       #   'MS'  - Manual Suspend
 
       def add_customer_profile(creditcard, options = {})
-        options.merge!(:customer_profile_action => CREATE)
+        options[:customer_profile_action] = CREATE
         order = build_customer_request_xml(creditcard, options)
         commit(order, :add_customer_profile)
       end
 
       def update_customer_profile(creditcard, options = {})
-        options.merge!(:customer_profile_action => UPDATE)
+        options[:customer_profile_action] = UPDATE
         order = build_customer_request_xml(creditcard, options)
         commit(order, :update_customer_profile)
       end
@@ -529,8 +529,10 @@ module ActiveMerchant #:nodoc:
 
       def commit(order, message_type, trace_number=nil)
         headers = POST_HEADERS.merge('Content-length' => order.size.to_s)
-        headers.merge!( 'Trace-number' => trace_number.to_s,
-                        'Merchant-Id' => @options[:merchant_id] ) if @options[:retry_logic] && trace_number
+        if @options[:retry_logic] && trace_number
+          headers['Trace-number'] = trace_number.to_s
+          headers['Merchant-Id'] = @options[:merchant_id]
+        end
         request = ->(url){ parse(ssl_post(url, order, headers))}
 
         # Failover URL will be attempted in the event of a connection error

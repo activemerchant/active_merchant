@@ -1538,7 +1538,7 @@ module ActiveMerchant #:nodoc:
       def build_response(action, soap)
         response_params, success, message, authorization, avs, cvv = parse(action, soap)
 
-        response_params.merge!('soap_response' => soap) if @options[:soap_response]
+        response_params['soap_response'] = soap if @options[:soap_response]
 
         Response.new(
           success,
@@ -1553,7 +1553,7 @@ module ActiveMerchant #:nodoc:
 
       def avs_from(avs)
         avs_params = { :code => avs }
-        avs_params.merge!(:message => AVS_CUSTOM_MESSAGES[avs]) if AVS_CUSTOM_MESSAGES.key?(avs)
+        avs_params[:message] = AVS_CUSTOM_MESSAGES[avs] if AVS_CUSTOM_MESSAGES.key?(avs)
         avs_params
       end
 

@@ -212,7 +212,7 @@ module ActiveMerchant #:nodoc:
         }
 
         if options[:debit_credit_indicator]
-          amount_hash.merge!('debitCreditIndicator' => options[:debit_credit_indicator])
+          amount_hash['debitCreditIndicator'] = options[:debit_credit_indicator]
         end
 
         xml.tag! 'amount', amount_hash
@@ -339,7 +339,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => encoded_credentials
         }
         if options[:cookie]
-          headers.merge!('Set-Cookie' => options[:cookie]) if options[:cookie]
+          headers['Set-Cookie'] = options[:cookie] if options[:cookie]
         end
         headers
       end

@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
-        post.merge!('captureAmount' => amount(money))
+        post['captureAmount'] = amount(money)
         commit('processCapture', post)
       end
 

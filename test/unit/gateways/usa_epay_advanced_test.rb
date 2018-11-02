@@ -290,7 +290,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   end
 
   def test_successful_update_customer_payment_method
-    @options.merge!(@payment_options).merge!(:method_id => 1)
+    @options.merge!(@payment_options)[:method_id] = 1
     @gateway.expects(:ssl_post).returns(successful_update_customer_payment_method_response)
 
     assert response = @gateway.update_customer_payment_method(@options)

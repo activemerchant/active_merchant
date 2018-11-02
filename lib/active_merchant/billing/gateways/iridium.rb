@@ -278,7 +278,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def build_purchase_request(type, money, creditcard, options)
-        options.merge!(:action => 'CardDetailsTransaction')
+        options[:action] = 'CardDetailsTransaction'
         build_request(options) do |xml|
           add_purchase_data(xml, type, money, options)
           add_creditcard(xml, creditcard)
@@ -287,7 +287,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_reference_request(type, money, authorization, options)
-        options.merge!(:action => 'CrossReferenceTransaction')
+        options[:action] = 'CrossReferenceTransaction'
         order_id, cross_reference, _ = authorization.split(';')
         build_request(options) do |xml|
           if money

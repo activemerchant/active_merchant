@@ -23,8 +23,8 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
-          options.merge!(card_brand: (CARD_BRAND[payment.brand] || payment.brand))
-          options.merge!(card_token: r.authorization.split('|').first)
+          options[:card_brand] = (CARD_BRAND[payment.brand] || payment.brand)
+          options[:card_token] = r.authorization.split('|').first
           r.process { commit('purchase', 'payments', purchase_request(money, payment, options) ) }
         end
       end
@@ -32,8 +32,8 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
-          options.merge!(card_brand: (CARD_BRAND[payment.brand] || payment.brand))
-          options.merge!(card_token: r.authorization.split('|').first)
+          options[:card_brand] = (CARD_BRAND[payment.brand] || payment.brand)
+          options[:card_token] = r.authorization.split('|').first
           r.process { commit('authorize', 'payments', authorize_request(money, payment, options) ) }
         end
       end
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize_request(money, payment, options = {})
         post = purchase_request(money, payment, options)
-        post.merge!(capture: false)
+        post[:capture] = false
         post
       end
 

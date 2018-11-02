@@ -170,21 +170,24 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         action = 'authtx'
 
-        options.merge!(:money => money, :creditcard => creditcard)
+        options[:money] = money
+        options[:creditcard] = creditcard
         commit(action, build_request(action, options))
       end
 
       def capture(money, authorization, options = {})
         action = 'settletx'
 
-        options.merge!(:money => money, :authorization => authorization)
+        options[:money] = money
+        options[:authorization] = authorization
         commit(action, build_request(action, options), authorization)
       end
 
       def refund(money, authorization, options={})
         action = 'refundtx'
 
-        options.merge!(:money => money, :authorization => authorization)
+        options[:money] = money
+        options[:authorization] = authorization
         commit(action, build_request(action, options))
       end
 

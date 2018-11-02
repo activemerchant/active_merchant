@@ -215,7 +215,7 @@ class CredoraxTest < Test::Unit::TestCase
   end
 
   def test_supports_billing_descriptor
-    @options.merge!({ billing_descriptor: 'abcdefghijkl'})
+    @options[:billing_descriptor] = 'abcdefghijkl'
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|

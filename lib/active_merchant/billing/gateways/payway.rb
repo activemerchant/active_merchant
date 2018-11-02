@@ -177,7 +177,7 @@ module ActiveMerchant
       # Creates the request and returns the summarized result
       def commit(action, post)
         add_auth(post)
-        post.merge!('order.type' => TRANSACTIONS[action])
+        post['order.type'] = TRANSACTIONS[action]
 
         request = post.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
         response = ssl_post(self.live_url, request)

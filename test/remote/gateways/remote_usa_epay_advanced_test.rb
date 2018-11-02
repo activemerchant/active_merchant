@@ -312,7 +312,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
   # TODO get offline auth_code?
   def test_post_auth
-    @options.merge!(:authorization_code => 123456)
+    @options[:authorization_code] = 123456
     response = @gateway.post_auth(@options)
     assert response.params['post_auth_return']
   end

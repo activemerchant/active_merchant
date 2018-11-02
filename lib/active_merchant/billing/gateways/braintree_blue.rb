@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
           braintree_credit_card = @braintree_gateway.customer.find(vault_id).credit_cards.detect(&:default?)
           return Response.new(false, 'Braintree::NotFoundError') if braintree_credit_card.nil?
 
-          options.merge!(:update_existing_token => braintree_credit_card.token)
+          options[:update_existing_token] = braintree_credit_card.token
           credit_card_params = merge_credit_card_options({
             :credit_card => {
               :cardholder_name => creditcard.name,
@@ -303,7 +303,7 @@ module ActiveMerchant #:nodoc:
         end
 
         parameters[:credit_card] ||= {}
-        parameters[:credit_card].merge!(:options => valid_options)
+        parameters[:credit_card][:options] = valid_options
         address = options[:billing_address]&.except(:phone)
         return parameters if address.nil? || address.values.compact.empty?
         parameters[:credit_card][:billing_address] = map_address(address)
@@ -569,7 +569,7 @@ module ActiveMerchant #:nodoc:
         }
 
         if options[:skip_advanced_fraud_checking]
-          parameters[:options].merge!({ :skip_advanced_fraud_checking => options[:skip_advanced_fraud_checking] })
+          parameters[:options][:skip_advanced_fraud_checking] = options[:skip_advanced_fraud_checking]
         end
 
         parameters[:custom_fields] = options[:custom_fields]

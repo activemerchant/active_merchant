@@ -25,7 +25,7 @@ class RemoteCardSaveTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase
-    @options.merge!(:billing_address => @addresses[@declined_card.number])
+    @options[:billing_address] = @addresses[@declined_card.number]
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Card declined', response.message
