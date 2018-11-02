@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWareVersionFourGateway.new(fixtures(:merchant_ware_version_four))
-    @amount = rand(1000) + 200
+    @amount = rand(200..1199)
     @credit_card = credit_card('5424180279791732', {:brand => 'master'})
     @declined_card = credit_card('1234567890123')
 

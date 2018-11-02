@@ -1073,19 +1073,6 @@ Style/Proc:
 Style/RaiseArgs:
   Enabled: false
 
-# Offense count: 12
-# Cop supports --auto-correct.
-Style/RandomWithOffset:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/borgun.rb'
-    - 'test/remote/gateways/remote_beanstream_test.rb'
-    - 'test/remote/gateways/remote_braintree_orange_test.rb'
-    - 'test/remote/gateways/remote_inspire_test.rb'
-    - 'test/remote/gateways/remote_merchant_ware_test.rb'
-    - 'test/remote/gateways/remote_merchant_ware_version_four_test.rb'
-    - 'test/remote/gateways/remote_pay_junction_test.rb'
-    - 'test/unit/gateways/beanstream_test.rb'
-
 # Offense count: 87
 # Cop supports --auto-correct.
 # Configuration parameters: AllowMultipleReturnValues.

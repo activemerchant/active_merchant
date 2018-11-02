@@ -138,6 +138,6 @@ class PayJunctionTest < Test::Unit::TestCase
   private
 
   def success_price
-    200 + rand(200)
+    rand(200..399)
   end
 end

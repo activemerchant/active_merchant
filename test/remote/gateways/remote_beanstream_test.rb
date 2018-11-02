@@ -316,7 +316,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   end
 
   def test_add_to_vault_with_custom_vault_id_with_store_method
-    @options[:vault_id] = rand(100000)+10001
+    @options[:vault_id] = rand(10001..110000)
     assert response = @gateway.store(@visa, @options.dup)
     assert_equal 'Operation Successful', response.message
     assert_success response

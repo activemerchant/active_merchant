@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def six_random_digits
-        (0...6).map { (48 + rand(10)).chr }.join
+        (0...6).map { rand(48..57).chr }.join
       end
     end
   end

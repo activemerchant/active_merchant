@@ -139,7 +139,7 @@ class BeanstreamTest < Test::Unit::TestCase
   def test_successful_purchase_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    vault = rand(100000)+10001
+    vault = rand(10001..110000)
 
     assert response = @gateway.purchase(@amount, vault, @options)
     assert_success response

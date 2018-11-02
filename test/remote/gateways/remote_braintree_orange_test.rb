@@ -4,7 +4,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
   def setup
     @gateway = BraintreeGateway.new(fixtures(:braintree_orange))
 
-    @amount = rand(10000) + 1001
+    @amount = rand(1001..11000)
     @credit_card = credit_card('4111111111111111')
     @check = check()
     @declined_amount = rand(99)
@@ -67,7 +67,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
   end
 
   def test_add_to_vault_with_custom_vault_id
-    @options[:store] = rand(100000)+10001
+    @options[:store] = rand(10001..110000)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
@@ -75,7 +75,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
   end
 
   def test_add_to_vault_with_custom_vault_id_with_store_method
-    @options[:billing_id] = rand(100000)+10001
+    @options[:billing_id] = rand(10001..110000)
     assert response = @gateway.store(@credit_card, @options.dup)
     assert_equal 'Customer Added', response.message
     assert_success response
