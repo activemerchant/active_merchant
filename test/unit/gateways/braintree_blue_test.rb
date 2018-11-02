@@ -373,6 +373,34 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.store(credit_card('41111111111111111111'), :billing_address => billing_address)
   end
 
+  def test_store_with_phone_only_non_nil_billing_address_option
+    customer_attributes = {
+      :credit_cards => [stub_everything],
+      :email => 'email',
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :phone => '123-456-7890'
+    }
+    billing_address = {
+      :phone => '123-456-7890',
+      :address1 => nil,
+      :address2 => nil,
+      :city => nil,
+      :state => nil,
+      :zip => nil,
+      :country_name => nil
+    }
+    customer = stub(customer_attributes)
+    customer.stubs(:id).returns('123')
+    result = Braintree::SuccessfulResult.new(:customer => customer)
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
+      assert_nil params[:credit_card][:billing_address]
+      params
+    end.returns(result)
+
+    @gateway.store(credit_card('41111111111111111111'), :billing_address => billing_address)
+  end
+
   def test_store_with_credit_card_token
     customer = stub(
       :email => 'email',
