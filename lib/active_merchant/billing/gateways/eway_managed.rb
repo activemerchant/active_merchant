@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
                 reply[:success]=true
               else
                 if root = REXML::XPath.first(xml, '//UpdateCustomerResult') then
-                  if root.text.downcase == 'true' then
+                  if root.text.casecmp('true').zero? then
                     reply[:message]='OK'
                     reply[:success]=true
                   else

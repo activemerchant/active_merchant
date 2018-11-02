@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_responsible_person(post, payment, options)
         post[:payment][:person_type] = options[:person_type] if options[:person_type]
-        if options[:person_type] && options[:person_type].downcase == 'business'
+        if options[:person_type]&.casecmp('business')&.zero?
           post[:payment][:responsible] = {}
           post[:payment][:responsible][:name] = options[:responsible_name] if options[:responsible_name]
           post[:payment][:responsible][:document] = options[:responsible_document] if options[:responsible_document]

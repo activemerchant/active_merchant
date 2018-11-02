@@ -397,17 +397,6 @@ Naming/VariableNumber:
     - 'test/unit/gateways/orbital_test.rb'
     - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
 
-# Offense count: 6
-# Cop supports --auto-correct.
-Performance/Casecmp:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/ebanx.rb'
-    - 'lib/active_merchant/billing/gateways/eway_managed.rb'
-    - 'lib/active_merchant/billing/gateways/itransact.rb'
-    - 'lib/active_merchant/billing/gateways/paystation.rb'
-    - 'lib/active_merchant/billing/gateways/redsys.rb'
-    - 'lib/active_merchant/country.rb'
-
 # Offense count: 4
 # Cop supports --auto-correct.
 Performance/RedundantMatch:

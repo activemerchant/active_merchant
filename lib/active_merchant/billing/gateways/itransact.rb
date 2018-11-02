@@ -424,7 +424,7 @@ module ActiveMerchant #:nodoc:
 
       def successful?(response)
         # Turns out the PaymentClearing gateway is not consistent...
-        response[:status].downcase =='ok'
+        response[:status].casecmp('ok').zero?
       end
 
       def test_mode?(response)
