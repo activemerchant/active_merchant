@@ -1154,10 +1154,6 @@ Style/SpecialGlobalVars:
 Style/StringLiteralsInInterpolation:
   Enabled: false
 
-Style/StringLiterals:
-  Exclude:
-    - 'test/unit/gateways/global_collect_test.rb'
-
 # Offense count: 307
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, MinSize.
