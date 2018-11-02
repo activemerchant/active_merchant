@@ -408,12 +408,6 @@ Performance/Casecmp:
     - 'lib/active_merchant/billing/gateways/redsys.rb'
     - 'lib/active_merchant/country.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Performance/CompareWithBlock:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/skip_jack.rb'
-
 # Offense count: 8
 # Cop supports --auto-correct.
 Performance/RangeInclude:

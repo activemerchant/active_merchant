@@ -353,7 +353,7 @@ module ActiveMerchant #:nodoc:
       def post_data(action, money, params = {})
         add_credentials(params, action)
         add_amount(params, action, money)
-        sorted_params = params.to_a.sort{|a,b| a.to_s <=> b.to_s}.reverse
+        sorted_params = params.to_a.sort_by(&:to_s).reverse
         sorted_params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
