@@ -229,7 +229,7 @@ Conn close
 
   def assert_metadata(name, location, &block)
     stub_comms(@gateway, :ssl_request) do
-      block.call
+      yield
     end.check_request do |method, endpoint, data, headers|
       metadata_matcher = Regexp.escape(valid_metadata(name, location))
       assert_match %r{#{metadata_matcher}}, data

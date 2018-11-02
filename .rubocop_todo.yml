@@ -420,12 +420,6 @@ Performance/RangeInclude:
     - 'lib/active_merchant/billing/gateways/moneris.rb'
     - 'lib/active_merchant/billing/gateways/moneris_us.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Performance/RedundantBlockCall:
-  Exclude:
-    - 'test/unit/gateways/nab_transact_test.rb'
-
 # Offense count: 4
 # Cop supports --auto-correct.
 Performance/RedundantMatch:
