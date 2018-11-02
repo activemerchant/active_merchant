@@ -170,7 +170,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
   def test_successful_store_with_phone_only_billing_address_option
     billing_address = {
-      :phone => '123-456-7890'
+      :phone => '123-456-7890',
+      :city => nil
     }
     credit_card = credit_card('5105105105105100')
     assert response = @gateway.store(credit_card, :billing_address => billing_address)
