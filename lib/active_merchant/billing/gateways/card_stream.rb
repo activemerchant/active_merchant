@@ -278,7 +278,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_threeds_required(post, options)
-        add_pair(post, :threeDSRequired, (options[:threeds_required] || @threeds_required) ? 'Y' : 'N')
+        add_pair(post, :threeDSRequired, options[:threeds_required] || @threeds_required ? 'Y' : 'N')
       end
 
       def add_remote_address(post, options={})

@@ -193,11 +193,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def void_action(original_transaction_type)
-        (original_transaction_type == TRANSACTIONS[:refund]) ? :void_refund : :void_purchase
+        original_transaction_type == TRANSACTIONS[:refund] ? :void_refund : :void_purchase
       end
 
       def refund_action(type)
-        (type == TRANSACTIONS[:check_purchase]) ? :check_refund : :refund
+        type == TRANSACTIONS[:check_purchase] ? :check_refund : :refund
       end
 
       def secure_profile_action(type)
@@ -412,7 +412,7 @@ module ActiveMerchant #:nodoc:
           :test => test? || response[:authCode] == 'TEST',
           :authorization => authorization_from(response),
           :cvv_result => CVD_CODES[response[:cvdId]],
-          :avs_result => { :code => (AVS_CODES.include? response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
+          :avs_result => { :code => AVS_CODES.include? response[:avsId] ? AVS_CODES[response[:avsId]] : response[:avsId] }
         )
       end
 

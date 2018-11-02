@@ -262,7 +262,7 @@ module ActiveMerchant
 
       def url(action = nil)
         base = test? ? test_url : live_url
-        resource = (action == :store) ? 'vaulted-shoppers' : 'transactions'
+        resource = action == :store ? 'vaulted-shoppers' : 'transactions'
         "#{base}/#{resource}"
       end
 
@@ -288,7 +288,7 @@ module ActiveMerchant
       end
 
       def authorization_from(action, parsed_response)
-        (action == :store) ? vaulted_shopper_id(parsed_response) : parsed_response['transaction-id']
+        action == :store ? vaulted_shopper_id(parsed_response) : parsed_response['transaction-id']
       end
 
       def vaulted_shopper_id(parsed_response)
@@ -307,7 +307,7 @@ module ActiveMerchant
       end
 
       def root_element(action)
-        (action == :store) ? 'vaulted-shopper' : 'card-transaction'
+        action == :store ? 'vaulted-shopper' : 'card-transaction'
       end
 
       def headers

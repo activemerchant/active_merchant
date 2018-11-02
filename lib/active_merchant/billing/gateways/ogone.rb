@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       # Verify and reserve the specified amount on the account, without actually doing the transaction.
       def authorize(money, payment_source, options = {})
         post = {}
-        action = (payment_source.brand == 'mastercard') ? 'PAU' : 'RES'
+        action = payment_source.brand == 'mastercard' ? 'PAU' : 'RES'
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)
         add_address(post, payment_source, options)

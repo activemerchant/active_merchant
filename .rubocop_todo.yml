@@ -1165,24 +1165,6 @@ Style/StringLiterals:
 Style/SymbolArray:
   Enabled: false
 
-# Offense count: 15
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, AllowSafeAssignment.
-# SupportedStyles: require_parentheses, require_no_parentheses, require_parentheses_when_complex
-Style/TernaryParentheses:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/beanstream/beanstream_core.rb'
-    - 'lib/active_merchant/billing/gateways/blue_snap.rb'
-    - 'lib/active_merchant/billing/gateways/borgun.rb'
-    - 'lib/active_merchant/billing/gateways/braintree_blue.rb'
-    - 'lib/active_merchant/billing/gateways/card_stream.rb'
-    - 'lib/active_merchant/billing/gateways/litle.rb'
-    - 'lib/active_merchant/billing/gateways/moneris_us.rb'
-    - 'lib/active_merchant/billing/gateways/ogone.rb'
-    - 'lib/active_merchant/billing/gateways/orbital.rb'
-    - 'lib/active_merchant/billing/gateways/payeezy.rb'
-    - 'lib/active_merchant/billing/gateways/visanet_peru.rb'
-
 # Offense count: 7
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyleForMultiline.

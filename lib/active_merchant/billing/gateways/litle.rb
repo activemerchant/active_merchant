@@ -402,7 +402,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(kind, parsed, money)
-        (kind == :registerToken) ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
+        kind == :registerToken ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
       end
 
       def split_authorization(authorization)

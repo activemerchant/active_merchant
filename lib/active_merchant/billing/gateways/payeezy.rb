@@ -135,7 +135,7 @@ module ActiveMerchant
 
       def add_authorization_info(params, authorization, options = {})
         transaction_id, transaction_tag, method, _ = authorization.split('|')
-        params[:method] = (method == 'token') ? 'credit_card' : method
+        params[:method] = method == 'token' ? 'credit_card' : method
 
         if options[:reversal_id]
           params[:reversal_id] = options[:reversal_id]
