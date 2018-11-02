@@ -279,7 +279,7 @@ module ActiveMerchant
       end
 
       def success_from(action, response)
-        (200...300).include?(response.code.to_i)
+        (200...300).cover?(response.code.to_i)
       end
 
       def message_from(succeeded, parsed_response)

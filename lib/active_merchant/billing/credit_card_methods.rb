@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
         'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
-        'maestro'            => ->(num) { (12..19).include?(num&.size) && in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) },
+        'maestro'            => ->(num) { (12..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) },
         'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
         'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{8}$/ },
         'vr'                 => ->(num) { num =~ /^(627416|637036)\d{8}$/ },
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def valid_expiry_year?(year)
-        (Time.now.year..Time.now.year + 20).include?(year.to_i)
+        (Time.now.year..Time.now.year + 20).cover?(year.to_i)
       end
 
       def valid_start_year?(year)

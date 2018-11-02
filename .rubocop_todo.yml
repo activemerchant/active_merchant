@@ -408,18 +408,6 @@ Performance/Casecmp:
     - 'lib/active_merchant/billing/gateways/redsys.rb'
     - 'lib/active_merchant/country.rb'
 
-# Offense count: 8
-# Cop supports --auto-correct.
-Performance/RangeInclude:
-  Exclude:
-    - 'lib/active_merchant/billing/check.rb'
-    - 'lib/active_merchant/billing/credit_card_methods.rb'
-    - 'lib/active_merchant/billing/gateways/blue_pay.rb'
-    - 'lib/active_merchant/billing/gateways/blue_snap.rb'
-    - 'lib/active_merchant/billing/gateways/cashnet.rb'
-    - 'lib/active_merchant/billing/gateways/moneris.rb'
-    - 'lib/active_merchant/billing/gateways/moneris_us.rb'
-
 # Offense count: 4
 # Cop supports --auto-correct.
 Performance/RedundantMatch:

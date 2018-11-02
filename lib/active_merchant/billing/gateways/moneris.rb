@@ -244,7 +244,7 @@ module ActiveMerchant #:nodoc:
       def successful?(response)
         response[:response_code] &&
         response[:complete] &&
-        (0..49).include?(response[:response_code].to_i)
+        (0..49).cover?(response[:response_code].to_i)
       end
 
       def parse(xml)

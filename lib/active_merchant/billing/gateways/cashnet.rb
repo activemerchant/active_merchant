@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_response(response)
-        if (200...300).include?(response.code.to_i)
+        if (200...300).cover?(response.code.to_i)
           return response.body
         elsif response.code.to_i == 302
           return ssl_get(URI.parse(response['location']))
