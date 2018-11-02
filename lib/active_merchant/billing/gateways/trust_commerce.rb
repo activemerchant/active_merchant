@@ -362,7 +362,7 @@ module ActiveMerchant #:nodoc:
         # TCLink wants us to send a hash with string keys, and activemerchant pushes everything around with
         # symbol keys. Before sending our input to TCLink, we convert all our keys to strings and dump the symbol keys.
         # We also remove any pairs with nil values, as these confuse TCLink.
-        parameters.keys.reverse.each do |key|
+        parameters.keys.reverse_each do |key|
           if parameters[key]
             parameters[key.to_s] = parameters[key]
           end

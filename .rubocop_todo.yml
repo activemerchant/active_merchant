@@ -445,12 +445,6 @@ Performance/RedundantMatch:
 Performance/RedundantMerge:
   Enabled: false
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Performance/ReverseEach:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/trust_commerce.rb'
-
 # Offense count: 12
 # Cop supports --auto-correct.
 Performance/StringReplacement:
