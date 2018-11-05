@@ -373,7 +373,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.store(credit_card('41111111111111111111'), :billing_address => billing_address)
   end
 
-  def test_store_with_phone_only_non_nil_billing_address_option
+  def test_store_with_nil_billing_address_options
     customer_attributes = {
       :credit_cards => [stub_everything],
       :email => 'email',
@@ -382,7 +382,9 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :phone => '123-456-7890'
     }
     billing_address = {
+      :name => 'John Smith',
       :phone => '123-456-7890',
+      :company => nil,
       :address1 => nil,
       :address2 => nil,
       :city => nil,

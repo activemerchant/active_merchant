@@ -168,10 +168,17 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal purchase_response.params['braintree_transaction']['billing_details'], response_billing_details
   end
 
-  def test_successful_store_with_phone_only_billing_address_option
+  def test_successful_store_with_nil_billing_address_options
     billing_address = {
+      :name => 'John Smith',
       :phone => '123-456-7890',
-      :city => nil
+      :company => nil,
+      :address1 => nil,
+      :address2 => nil,
+      :city => nil,
+      :state => nil,
+      :zip => nil,
+      :country_name => nil
     }
     credit_card = credit_card('5105105105105100')
     assert response = @gateway.store(credit_card, :billing_address => billing_address)
