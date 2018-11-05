@@ -304,9 +304,10 @@ module ActiveMerchant #:nodoc:
 
         parameters[:credit_card] ||= {}
         parameters[:credit_card].merge!(:options => valid_options)
-        address = options[:billing_address]&.except(:phone)
-        return parameters if address.nil? || address.values.compact.empty?
-        parameters[:credit_card][:billing_address] = map_address(address)
+        if options[:billing_address]
+          address = map_address(options[:billing_address])
+          parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| v.nil? }
+        end
         parameters
       end
 
