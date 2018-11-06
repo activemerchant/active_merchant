@@ -176,7 +176,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def method(action)
-        %w(authorize refund).include? action ? :post : :put
+        (%w(authorize refund).include? action) ? :post : :put
       end
 
       def authorization_from(params, response, options)
