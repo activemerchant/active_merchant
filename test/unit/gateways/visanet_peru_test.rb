@@ -16,20 +16,20 @@ class VisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_capture_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'OK', response.message
 
     assert_match %r([0-9]{9}|$), response.authorization
-    assert_equal @options[:order_id], response.params['externalTransactionId']
+    assert_equal 'de9dc65c094fb4f1defddc562731af81', response.params['externalTransactionId']
     assert response.test?
   end
 
   def test_failed_purchase
-    @gateway.expects(:ssl_request).returns(failed_authorize_response_bad_card)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(failed_authorize_response_bad_card)
 
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -64,14 +64,14 @@ class VisanetPeruTest < Test::Unit::TestCase
   end
 
   def test_successful_capture
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_capture_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
     capture = @gateway.capture(response.authorization, @options)
     assert_success capture
     assert_equal 'OK', capture.message
     assert_match %r(^[0-9]{9}|$), capture.authorization
-    assert_equal @options[:order_id], capture.params['externalTransactionId']
+    assert_equal 'de9dc65c094fb4f1defddc562731af81', capture.params['externalTransactionId']
     assert capture.test?
   end
 
@@ -90,14 +90,14 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    @gateway.expects(:ssl_request).returns(successful_refund_response)
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(successful_refund_response)
     refund = @gateway.refund(@amount, response.authorization)
     assert_success refund
     assert_equal 'OK', refund.message
   end
 
   def test_failed_refund
-    @gateway.expects(:ssl_request).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(failed_refund_response)
     response = @gateway.refund(@amount, '122333444')
     assert_failure response
     assert_match(/No se realizo la anulacion del deposito/, response.message)
