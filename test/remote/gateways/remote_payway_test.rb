@@ -95,6 +95,17 @@ class PaywayTest < Test::Unit::TestCase
     assert_equal 'Invalid credentials', response.message
   end
 
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @visa, @options)
+    end
+    clean_transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@visa.number, clean_transcript)
+    assert_scrubbed(@visa.verification_value, clean_transcript)
+    assert_scrubbed(@gateway.options[:password], clean_transcript)
+  end
+
   protected
 
   def assert_response_message_prefix(prefix, response)
