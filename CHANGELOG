@@ -19,6 +19,7 @@
 * Realex: Add verify [kheang] #3030
 * Braintree: Actually account for nil address fields [curiousepic] #3032
 * Paymentez: Adds support for user.phone field [molbrown] #3033
+* Paymentez: Does not send nil for empty parameter phone [molbrown] #3036
 
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] #3001
