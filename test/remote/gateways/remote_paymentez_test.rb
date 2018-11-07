@@ -34,18 +34,6 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_purchase_without_phone_option
-    options = {
-      order_id: '1',
-      ip: '127.0.0.1',
-      tax_percentage: 0.07
-    }
-
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
-    assert_success response
-    refute_includes(response.params, 'phone')
-  end
-
   def test_successful_purchase_with_token
     store_response = @gateway.store(@credit_card, @options)
     assert_success store_response
