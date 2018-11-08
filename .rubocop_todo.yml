@@ -569,13 +569,6 @@ Style/DateTime:
     - 'test/unit/gateways/orbital_test.rb'
     - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
 
-# Offense count: 2
-# Cop supports --auto-correct.
-Style/DefWithParentheses:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/latitude19.rb'
-    - 'lib/active_merchant/billing/gateways/pagarme.rb'
-
 # Offense count: 210
 Style/Documentation:
   Enabled: false

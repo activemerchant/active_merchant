@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
         post[:id] = SecureRandom.hex(16)
       end
 
-      def add_timestamp()
+      def add_timestamp
         Time.now.getutc.strftime('%Y%m%d%H%M%S')
       end
 
