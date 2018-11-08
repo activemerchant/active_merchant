@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def setup
     @gateway = BraintreeGateway.new(fixtures(:braintree_blue))
-    @braintree_backend = @gateway.instance_eval{@braintree_gateway}
+    @braintree_backend = @gateway.instance_eval { @braintree_gateway }
 
     @amount = 100
     @declined_amount = 2000_00

@@ -63,10 +63,10 @@ class MigsTest < Test::Unit::TestCase
     assert_success response
 
     tampered_response1 = response_params.gsub('20DE', '20DF')
-    assert_raise(SecurityError){@gateway.purchase_offsite_response(tampered_response1)}
+    assert_raise(SecurityError) { @gateway.purchase_offsite_response(tampered_response1) }
 
     tampered_response2 = response_params.gsub('Locale=en', 'Locale=es')
-    assert_raise(SecurityError){@gateway.purchase_offsite_response(tampered_response2)}
+    assert_raise(SecurityError) { @gateway.purchase_offsite_response(tampered_response2) }
   end
 
   def test_scrub
@@ -93,7 +93,7 @@ class MigsTest < Test::Unit::TestCase
   end
 
   def build_response(options)
-    options.collect { |key, value| "vpc_#{key}=#{CGI.escape(value.to_s)}"}.join('&')
+    options.collect { |key, value| "vpc_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
   end
 
   def pre_scrubbed

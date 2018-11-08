@@ -183,7 +183,7 @@ module ActiveMerchant
         address = options[:billing_address] || options[:address]
         return if address.nil?
 
-        post[:QAAddress] = [:address1, :address2, :city, :state].collect{|a| address[a]}.reject(&:blank?).join(' ')
+        post[:QAAddress] = [:address1, :address2, :city, :state].collect { |a| address[a] }.reject(&:blank?).join(' ')
         post[:QAPostcode] = address[:zip]
       end
 

@@ -277,7 +277,7 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: a)
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
-      clean = proc{|s| Regexp.escape(CGI.escape(s))}
+      clean = proc { |s| Regexp.escape(CGI.escape(s)) }
       assert_match(%r{address\[line1\]=#{clean[a[:address1]]}}, data)
       assert_match(%r{address\[line2\]=#{clean[a[:address2]]}}, data)
       assert_match(%r{address\[city\]=#{clean[a[:city]]}}, data)

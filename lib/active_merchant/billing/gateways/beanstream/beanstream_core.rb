@@ -463,7 +463,7 @@ module ActiveMerchant #:nodoc:
         params[:vbvEnabled] = '0'
         params[:scEnabled] = '0'
 
-        params.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        params.reject { |k, v| v.blank? }.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => response[:numappel].to_s + response[:numtrans].to_s,
           :fraud_review => false,
-          :sent_params => parameters.delete_if{|key, value| ['porteur', 'dateval', 'cvv'].include?(key.to_s)}
+          :sent_params => parameters.delete_if { |key, value| ['porteur', 'dateval', 'cvv'].include?(key.to_s) }
         )
       end
 

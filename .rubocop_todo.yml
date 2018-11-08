@@ -134,14 +134,6 @@ Layout/SpaceAroundKeyword:
 Layout/SpaceAroundOperators:
   Enabled: false
 
-# Offense count: 182
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceBeforeBlockBraces:
-  Enabled: false
-
 # Offense count: 118
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.
@@ -155,14 +147,6 @@ Layout/SpaceInsideArrayLiteralBrackets:
 Layout/SpaceInsideArrayPercentLiteral:
   Exclude:
     - 'lib/active_merchant/billing/gateways/migs/migs_codes.rb'
-
-# Offense count: 345
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SpaceBeforeBlockParameters.
-# SupportedStyles: space, no_space
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideBlockBraces:
-  Enabled: false
 
 # Offense count: 1186
 # Cop supports --auto-correct.

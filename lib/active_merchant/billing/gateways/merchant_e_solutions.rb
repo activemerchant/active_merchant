@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
         post[:profile_key] = @options[:password]
         post[:transaction_type] = action if action
 
-        request = post.merge(parameters).map {|key, value| "#{key}=#{CGI.escape(value.to_s)}"}.join('&')
+        request = post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
     end

@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
         add_login_data(parameters)
         add_action(parameters, action, options)
 
-        post = parameters.collect{|key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        post = parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         parse(ssl_post(url, post), parameters)
       end
 

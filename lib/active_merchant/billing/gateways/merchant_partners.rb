@@ -212,7 +212,7 @@ module ActiveMerchant #:nodoc:
         if node.elements.size == 0
           response[node.name.downcase.underscore.to_sym] = node.text
         else
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         end
       end
 

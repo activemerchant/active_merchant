@@ -321,7 +321,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h, k| raise ArgumentError.new("Unsupported currency: #{k}")}
+      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
       CURRENCY_CODES['USD'] = '840'
 
       def headers

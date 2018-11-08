@@ -307,8 +307,8 @@ module ActiveMerchant #:nodoc:
         tokens = full_address.split(/\s+/)
 
         element = REXML::Element.new('avs_info')
-        element.add_element('avs_street_number').text = tokens.select {|x| x =~ /\d/}.join(' ')
-        element.add_element('avs_street_name').text = tokens.reject {|x| x =~ /\d/}.join(' ')
+        element.add_element('avs_street_number').text = tokens.select { |x| x =~ /\d/ }.join(' ')
+        element.add_element('avs_street_name').text = tokens.reject { |x| x =~ /\d/ }.join(' ')
         element.add_element('avs_zipcode').text = address[:zip]
         element
       end

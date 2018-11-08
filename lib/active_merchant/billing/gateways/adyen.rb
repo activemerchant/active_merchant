@@ -34,8 +34,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         MultiResponse.run do |r|
-          r.process{authorize(money, payment, options)}
-          r.process{capture(money, r.authorization, options)}
+          r.process { authorize(money, payment, options) }
+          r.process { capture(money, r.authorization, options) }
         end
       end
 
@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
           cvc: credit_card.verification_value
         }
 
-        card.delete_if{|k, v| v.blank? }
+        card.delete_if { |k, v| v.blank? }
         card[:holderName] ||= 'Not Provided' if credit_card.is_a?(NetworkTokenizationCreditCard)
         requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
         post[:card] = card

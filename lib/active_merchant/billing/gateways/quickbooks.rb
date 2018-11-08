@@ -224,17 +224,17 @@ module ActiveMerchant #:nodoc:
         }
 
         # prepare components for signature
-        oauth_signature_base_string = [method.to_s.upcase, request_uri.to_s, oauth_parameters.to_param].map{|v| CGI.escape(v) }.join('&')
-        oauth_signing_key = [@options[:consumer_secret], @options[:token_secret]].map{|v| CGI.escape(v)}.join('&')
+        oauth_signature_base_string = [method.to_s.upcase, request_uri.to_s, oauth_parameters.to_param].map { |v| CGI.escape(v) }.join('&')
+        oauth_signing_key = [@options[:consumer_secret], @options[:token_secret]].map { |v| CGI.escape(v) }.join('&')
         hmac_signature = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha1'), oauth_signing_key, oauth_signature_base_string)
 
         # append signature to required OAuth parameters
         oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.gsub(/\n/, ''))
 
         # prepare Authorization header string
-        oauth_parameters = Hash[oauth_parameters.sort_by {|k, _| k}]
+        oauth_parameters = Hash[oauth_parameters.sort_by { |k, _| k }]
         oauth_headers = ["OAuth realm=\"#{@options[:realm]}\""]
-        oauth_headers += oauth_parameters.map {|k, v| "#{k}=\"#{v}\""}
+        oauth_headers += oauth_parameters.map { |k, v| "#{k}=\"#{v}\"" }
 
         {
           'Content-type' => 'application/json',
@@ -258,7 +258,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response['errors'].present? ? response['errors'].map {|error_hash| error_hash['message'] }.join(' ') : response['status']
+        response['errors'].present? ? response['errors'].map { |error_hash| error_hash['message'] }.join(' ') : response['status']
       end
 
       def errors_from(response)

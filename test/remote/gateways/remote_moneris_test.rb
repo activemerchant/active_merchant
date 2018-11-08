@@ -271,7 +271,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_avs_result_nil_when_address_absent
     gateway = MonerisGateway.new(fixtures(:moneris).merge(avs_enabled: true))
 
-    assert response = gateway.purchase(1010, @credit_card, @options.tap {|x| x.delete(:billing_address)})
+    assert response = gateway.purchase(1010, @credit_card, @options.tap { |x| x.delete(:billing_address) })
     assert_success response
     assert_equal(response.avs_result, {
         'code' => nil,

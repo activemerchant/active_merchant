@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
       def add_transaction_details(xml, amount, authorization, type, options={})
         xml.TransactionDetails do
           xml.MessageType type
-          xml.Amount(unit: 'Minor'){ xml.text(amount) } if amount
+          xml.Amount(unit: 'Minor') { xml.text(amount) } if amount
           xml.CardEaseReference authorization if authorization
           xml.VoidReason '01' if type == 'Void'
         end
@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
         xml.TerminalDetails do
           xml.TerminalID @options[:terminal_id]
           xml.TransactionKey @options[:transaction_key]
-          xml.Software(version: 'SoftwareVersion'){ xml.text('SoftwareName') }
+          xml.Software(version: 'SoftwareVersion') { xml.text('SoftwareName') }
         end
       end
 

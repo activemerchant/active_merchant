@@ -878,7 +878,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_extra_options(options)
-        options&.map{ |k, v| "#{k}=#{v}" }&.join('&')
+        options&.map { |k, v| "#{k}=#{v}" }&.join('&')
       end
 
       def parse_direct_response(params)
@@ -952,7 +952,7 @@ module ActiveMerchant #:nodoc:
       def parse_element(node)
         if node.has_elements?
           response = {}
-          node.elements.each{ |e|
+          node.elements.each { |e|
             key = e.name.underscore
             value = parse_element(e)
             if response.has_key?(key)

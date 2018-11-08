@@ -540,6 +540,6 @@ SRC
       assert_equal a1.name, b1.name
       assert_equal a1.value, b1.value
     end
-    a.children.zip(b.children).all?{|a1, b1| assert_xml_equal_recursive(a1, b1)}
+    a.children.zip(b.children).all? { |a1, b1| assert_xml_equal_recursive(a1, b1) }
   end
 end

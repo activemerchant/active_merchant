@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
+      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
       CURRENCY_CODES['ISK'] = '352'
       CURRENCY_CODES['EUR'] = '978'
       CURRENCY_CODES['USD'] = '840'

@@ -32,11 +32,11 @@ module ActiveMerchant #:nodoc:
         add_auth(post)
 
         MultiResponse.run do |r|
-          r.process{commit(url('purchase'), post)}
+          r.process { commit(url('purchase'), post) }
           if(r.params['enrolled'].to_s == '0')
-            r.process{commit(r.params['post_uri'], r.params['form_post_vars'])}
+            r.process { commit(r.params['post_uri'], r.params['form_post_vars']) }
           else
-            r.process{handle_3dsecure(r)}
+            r.process { handle_3dsecure(r) }
           end
         end
       end

@@ -22,7 +22,7 @@ class ExactTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Transaction Normal - VER UNAVAILABLE', response.message
 
-    ExactGateway::SENSITIVE_FIELDS.each{ |f| assert !response.params.has_key?(f.to_s) }
+    ExactGateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
   end
 
   def test_successful_refund

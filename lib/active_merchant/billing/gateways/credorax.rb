@@ -317,11 +317,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, params, reference_action)
-        params.keys.each { |key| params[key] = params[key].to_s}
+        params.keys.each { |key| params[key] = params[key].to_s }
         params[:M] = @options[:merchant_id]
         params[:O] = request_action(action, reference_action)
         params[:K] = sign_request(params)
-        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def request_action(action, reference_action)
@@ -337,7 +337,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map{|k, v| [k.upcase, v.first]}]
+        Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
       end
 
       def success_from(response)

@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
         parameters[:pay_type] = 'C'
         parameters[:tran_type] = TRANSACTIONS[action]
 
-        parameters.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        parameters.reject { |k, v| v.blank? }.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
     end

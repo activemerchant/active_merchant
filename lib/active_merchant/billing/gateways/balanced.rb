@@ -45,12 +45,12 @@ module ActiveMerchant #:nodoc:
 
         MultiResponse.run do |r|
           identifier = if(payment_method.respond_to?(:number))
-                         r.process{store(payment_method, options)}
+                         r.process { store(payment_method, options) }
                          r.authorization
                        else
                          payment_method
           end
-          r.process{commit('debits', "cards/#{card_identifier_from(identifier)}/debits", post)}
+          r.process { commit('debits', "cards/#{card_identifier_from(identifier)}/debits", post) }
         end
       end
 
@@ -62,12 +62,12 @@ module ActiveMerchant #:nodoc:
 
         MultiResponse.run do |r|
           identifier = if(payment_method.respond_to?(:number))
-                         r.process{store(payment_method, options)}
+                         r.process { store(payment_method, options) }
                          r.authorization
                        else
                          payment_method
           end
-          r.process{commit('card_holds', "cards/#{card_identifier_from(identifier)}/card_holds", post)}
+          r.process { commit('card_holds', "cards/#{card_identifier_from(identifier)}/card_holds", post) }
         end
       end
 
@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
         when %r{\|}
           uri = identifier.
                 split('|').
-                detect{|part| part.size > 0}
+                detect { |part| part.size > 0 }
           uri.split('/')[2]
         when %r{\/}
           identifier.split('/')[5]

@@ -158,7 +158,7 @@ class WebpayTest < Test::Unit::TestCase
   end
 
   def test_metadata_header
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['X-Webpay-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
     }.returns(successful_purchase_response)
 

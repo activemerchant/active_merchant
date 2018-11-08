@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         post[:rs] = @options[:terminal]
 
         MultiResponse.run do |r|
-          r.process{commit('init', post)}
+          r.process { commit('init', post) }
           r.process do
             post = PostData.new
             post[:init_transaction_id] = r.authorization
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         post[:rs] = @options[:terminal]
 
         MultiResponse.run do |r|
-          r.process{commit('init_dms', post)}
+          r.process { commit('init_dms', post) }
           r.process do
             post = PostData.new
             post[:init_transaction_id] = r.authorization

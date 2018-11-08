@@ -157,21 +157,21 @@ class PacNetRavenGatewayTest < Test::Unit::TestCase
   end
 
   def test_argument_error_prn
-    exception = assert_raises(ArgumentError){
+    exception = assert_raises(ArgumentError) {
       PacNetRavenGateway.new(:user => 'user', :secret => 'secret')
     }
     assert_equal 'Missing required parameter: prn', exception.message
   end
 
   def test_argument_error_user
-    exception = assert_raises(ArgumentError){
+    exception = assert_raises(ArgumentError) {
       PacNetRavenGateway.new(:secret => 'secret', :prn => 123456)
     }
     assert_equal 'Missing required parameter: user', exception.message
   end
 
   def test_argument_error_secret
-    exception = assert_raises(ArgumentError){
+    exception = assert_raises(ArgumentError) {
       PacNetRavenGateway.new(:user => 'user', :prn => 123456)
     }
     assert_equal 'Missing required parameter: secret', exception.message

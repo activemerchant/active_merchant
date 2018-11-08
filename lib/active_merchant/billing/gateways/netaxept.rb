@@ -31,8 +31,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         MultiResponse.run do |r|
-          r.process{authorize(money, creditcard, options)}
-          r.process{capture(money, r.authorization, options)}
+          r.process { authorize(money, creditcard, options) }
+          r.process { capture(money, r.authorization, options) }
         end
       end
 
@@ -40,9 +40,9 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         MultiResponse.run do |r|
-          r.process{setup_transaction(money, options)}
-          r.process{add_and_auth_credit_card(r.authorization, creditcard, options)}
-          r.process{query_transaction(r.authorization, options)}
+          r.process { setup_transaction(money, options) }
+          r.process { add_and_auth_credit_card(r.authorization, creditcard, options) }
+          r.process { query_transaction(r.authorization, options) }
         end
       end
 
@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def encode(hash)
-        hash.collect{|(k, v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
+        hash.collect { |(k, v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end
   end

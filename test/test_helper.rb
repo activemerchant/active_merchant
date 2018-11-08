@@ -273,7 +273,7 @@ module ActiveMerchant
       return unless hash.is_a?(Hash)
 
       hash.symbolize_keys!
-      hash.each{|k, v| symbolize_keys(v)}
+      hash.each { |k, v| symbolize_keys(v) }
     end
   end
 end

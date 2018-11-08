@@ -199,7 +199,7 @@ module ActiveMerchant
       end
 
       def verify_credentials
-        response = commit(:verify_credentials) { }
+        response = commit(:verify_credentials) {}
         response.success?
       end
 
@@ -394,7 +394,7 @@ module ActiveMerchant
       end
 
       def camel_case_lower(key)
-        String(key).split('_').inject([]){ |buffer, e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
+        String(key).split('_').inject([]) { |buffer, e| buffer.push(buffer.empty? ? e : e.capitalize) }.join
       end
 
       def add_settings(xml, source, options)

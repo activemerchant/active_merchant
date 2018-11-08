@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
       #   (3(d1 + d4 + d7) + 7(d2 + d5 + d8) + 1(d3 + d6 + d9))mod 10 = 0
       # See http://en.wikipedia.org/wiki/Routing_transit_number#Internal_checksums
       def valid_routing_number?
-        digits = routing_number.to_s.split('').map(&:to_i).select{|d| (0..9).cover?(d)}
+        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
         case digits.size
         when 9
           checksum = ((3 * (digits[0] + digits[3] + digits[6])) +
