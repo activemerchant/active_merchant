@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
         doc.remove_namespaces!
         if(header = doc.xpath('//Header').first)
           header.elements.each do |node|
-            if (node.elements.size == 0)
+            if node.elements.size == 0
               response[node.name] = node.text
             else
               node.elements.each do |childnode|

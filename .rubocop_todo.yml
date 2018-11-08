@@ -927,12 +927,6 @@ Style/OrAssignment:
 Style/ParallelAssignment:
   Enabled: false
 
-# Offense count: 29
-# Cop supports --auto-correct.
-# Configuration parameters: AllowSafeAssignment, AllowInMultilineConditions.
-Style/ParenthesesAroundCondition:
-  Enabled: false
-
 # Offense count: 877
 # Cop supports --auto-correct.
 # Configuration parameters: PreferredDelimiters.

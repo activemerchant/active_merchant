@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
         parameters[:CompanyNumber] = @options[:company_number]
         parameters[:MerchantNumber] = @options[:merchant_number]
         parameters = parameters.collect do |key, value|
-          "#{key}=#{value}" unless (value.nil? || value.empty?)
+          "#{key}=#{value}" unless value.nil? || value.empty?
         end.join('&')
         payload = Base64.strict_encode64(parameters)
         "auth-api-key=#{@options[:api_key]}&payload=#{payload}".strip

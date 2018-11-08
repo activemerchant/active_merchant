@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         Nokogiri::XML(CGI.unescapeHTML(xml)).xpath('//response').children.each do |node|
           if node.text?
             next
-          elsif (node.elements.size == 0)
+          elsif node.elements.size == 0
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
