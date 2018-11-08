@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
         post['account.verification'] = credit_card.verification_value
         post['account.email'] = (options[:email] || nil)
         post['presentation.amount3D'] =  (options[:money] || nil)
-        post['presentation.currency3D'] = (options[:currency] || currency( options[:money]))
+        post['presentation.currency3D'] = (options[:currency] || currency(options[:money]))
       end
 
       def headers

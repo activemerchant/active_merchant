@@ -18,7 +18,7 @@ class RemoteStripeConnectTest < Test::Unit::TestCase
   end
 
   def test_application_fee_for_stripe_connect
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:application_fee => 12 ))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:application_fee => 12))
     assert_success response
   end
 

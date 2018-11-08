@@ -242,7 +242,7 @@ module ActiveMerchant
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
+          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
           fields[key] = CGI.unescape(value)
         end
         fields.symbolize_keys
@@ -257,7 +257,7 @@ module ActiveMerchant
       #   - ActiveMerchant::Billing::Response object
       #
       def commit(request)
-        response = parse( ssl_post(self.live_url, post_data(request)) )
+        response = parse(ssl_post(self.live_url, post_data(request)))
 
         Response.new(response[:ResponseCode] == APPROVED, response[:Message], response,
           :test => test?,

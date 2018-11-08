@@ -11,7 +11,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :test => true
     )
 
-    @internal_gateway = @gateway.instance_variable_get( :@braintree_gateway )
+    @internal_gateway = @gateway.instance_variable_get(:@braintree_gateway)
   end
 
   def teardown

@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options[:card_token] = r.authorization.split('|').first
-          r.process { commit('purchase', 'payments', purchase_request(money, payment, options) ) }
+          r.process { commit('purchase', 'payments', purchase_request(money, payment, options)) }
         end
       end
 
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
         MultiResponse.run do |r|
           r.process { commit('tokenize', 'card_tokens', card_token_request(money, payment, options)) }
           options[:card_token] = r.authorization.split('|').first
-          r.process { commit('authorize', 'payments', authorize_request(money, payment, options) ) }
+          r.process { commit('authorize', 'payments', authorize_request(money, payment, options)) }
         end
       end
 

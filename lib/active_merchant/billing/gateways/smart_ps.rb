@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         parameters[:amount]  = localized_amount(money, parameters[:currency] || default_currency) if money
-        response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
+        response = parse(ssl_post(self.live_url, post_data(action, parameters)))
         Response.new(response['response'] == '1', message_from(response), response,
           :authorization => (response['transactionid'] || response['customer_vault_id']),
           :test => test?,

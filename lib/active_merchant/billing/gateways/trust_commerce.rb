@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
       def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily] )
+        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily])
 
         cycle = case options[:periodicity]
         when :monthly
@@ -385,7 +385,7 @@ module ActiveMerchant #:nodoc:
         data = if tclink?
                  TCLink.send(parameters)
                else
-                 parse( ssl_post(self.live_url, post_data(parameters)) )
+                 parse(ssl_post(self.live_url, post_data(parameters)))
         end
 
         # to be considered successful, transaction status must be either "approved" or "accepted"

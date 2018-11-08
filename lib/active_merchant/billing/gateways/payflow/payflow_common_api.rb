@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
           # down as we do everywhere else. RPPaymentResult elements are not contained
           # in an RPPaymentResults element so we'll come here multiple times
           response[node_name] ||= []
-          response[node_name] << ( payment_result_response = {} )
+          response[node_name] << (payment_result_response = {})
           node.xpath('.//*').each{ |e| parse_element(payment_result_response, e) }
         when node.xpath('.//*').to_a.any?
           node.xpath('.//*').each{|e| parse_element(response, e) }

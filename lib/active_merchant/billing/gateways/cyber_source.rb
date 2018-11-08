@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard_or_reference, options = {})
         setup_address_hash(options)
-        commit(build_auth_request(money, creditcard_or_reference, options), :authorize, money, options )
+        commit(build_auth_request(money, creditcard_or_reference, options), :authorize, money, options)
       end
 
       def capture(money, authorization, options = {})

@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
         parameters[:transaction_amount]  = amount(money) if money unless action == 'V'
 
         response = begin
-          parse( ssl_post(url, post_data(action, parameters)) )
+          parse(ssl_post(url, post_data(action, parameters)))
         rescue ActiveMerchant::ResponseError => e
           { 'error_code' => '404',  'auth_response_text' => e.to_s }
         end

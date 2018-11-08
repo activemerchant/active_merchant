@@ -89,7 +89,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   def test_unsuccessful_purchase
     # ask for error 13 response (Amount Error) via dollar amount 5,000 + error
     @amount = 501300
-    assert response = @gateway.purchase(@amount, @credit_card, @options )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction Normal/, response.message)
     assert_failure response
   end
@@ -104,7 +104,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   def test_trans_error
     # ask for error 42 (unable to send trans) as the cents bit...
     @amount = 500042
-    assert response = @gateway.purchase(@amount, @credit_card, @options )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Unable to Send Transaction/, response.message) # 42 is 'unable to send trans'
     assert_failure response
     assert_equal response.error_code, 'processing_error'
@@ -179,7 +179,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = FirstdataE4Gateway.new(:login    => 'NotARealUser',
-                                     :password => 'NotARealPassword' )
+                                     :password => 'NotARealPassword')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Unauthorized Request}, response.message
     assert_failure response

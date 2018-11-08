@@ -171,7 +171,7 @@ module ActiveMerchant #:nodoc:
         success = false
 
         begin
-          raw_response = ssl_post(live_url, post.to_json, {'Content-Type' => 'application/json'} )
+          raw_response = ssl_post(live_url, post.to_json, {'Content-Type' => 'application/json'})
           response = parse(raw_response)
           success = (response['RESPONSE_CODE'] == '00')
         rescue ResponseError => e

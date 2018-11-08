@@ -14,7 +14,7 @@ class PayflowTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @options = { :billing_address => address.merge(:first_name => 'Longbob', :last_name => 'Longsen') }
-    @check = check( :name => 'Jim Smith' )
+    @check = check(:name => 'Jim Smith')
   end
 
   def test_successful_authorization
@@ -360,7 +360,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_recurring_profile_payment_history_inquiry_contains_the_proper_xml
-    request = @gateway.send( :build_recurring_request, :inquiry, nil, :profile_id => 'RT0000000009', :history => true)
+    request = @gateway.send(:build_recurring_request, :inquiry, nil, :profile_id => 'RT0000000009', :history => true)
     assert_match %r(<PaymentHistory>Y</PaymentHistory), request
   end
 

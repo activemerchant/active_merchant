@@ -172,13 +172,6 @@ Layout/SpaceInsideBlockBraces:
 Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
 
-# Offense count: 116
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: space, no_space
-Layout/SpaceInsideParens:
-  Enabled: false
-
 # Offense count: 115
 # Cop supports --auto-correct.
 Layout/SpaceInsidePercentLiteralDelimiters:

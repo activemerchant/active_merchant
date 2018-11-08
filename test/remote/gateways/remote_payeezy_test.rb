@@ -70,7 +70,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_failed_purchase
     @amount = 501300
-    assert response = @gateway.purchase(@amount, @credit_card, @options )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction not approved/, response.message)
     assert_failure response
   end
@@ -262,7 +262,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
   def test_trans_error
     # ask for error 42 (unable to send trans) as the cents bit...
     @amount = 500042
-    assert response = @gateway.purchase(@amount, @credit_card, @options )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Server Error/, response.message) # 42 is 'unable to send trans'
     assert_failure response
     assert_equal '500', response.error_code

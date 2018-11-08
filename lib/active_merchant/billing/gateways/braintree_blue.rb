@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
           :logger            => options[:logger] || logger
         )
 
-        @braintree_gateway = Braintree::Gateway.new( @configuration )
+        @braintree_gateway = Braintree::Gateway.new(@configuration)
       end
 
       def authorize(money, credit_card_or_vault_id, options = {})
