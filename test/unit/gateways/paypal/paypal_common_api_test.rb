@@ -118,13 +118,13 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_build_do_authorize_request
-    request = REXML::Document.new(@gateway.send(:build_do_authorize,123, 100, :currency => 'USD'))
+    request = REXML::Document.new(@gateway.send(:build_do_authorize, 123, 100, :currency => 'USD'))
     assert_equal '123', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/TransactionID').text
     assert_equal '1.00', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/Amount').text
   end
 
   def test_build_manage_pending_transaction_status_request
-    request = REXML::Document.new(@gateway.send(:build_manage_pending_transaction_status,123, 'Accept'))
+    request = REXML::Document.new(@gateway.send(:build_manage_pending_transaction_status, 123, 'Accept'))
     assert_equal '123', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/TransactionID').text
     assert_equal 'Accept', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/Action').text
   end

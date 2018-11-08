@@ -73,12 +73,12 @@ module ActiveMerchant #:nodoc:
         form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
       end
 
-      def add_invoice(form,options)
+      def add_invoice(form, options)
         form[:invoice_number] = (options[:order_id] || options[:invoice]).to_s.slice(0, 10)
         form[:description] = options[:description].to_s.slice(0, 255)
       end
 
-      def add_address(form,options)
+      def add_address(form, options)
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address

@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class CardknoxGateway < Gateway
       self.live_url = 'https://x1.cardknox.com/gateway'
 
-      self.supported_countries = ['US','CA','GB']
+      self.supported_countries = ['US', 'CA', 'GB']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 

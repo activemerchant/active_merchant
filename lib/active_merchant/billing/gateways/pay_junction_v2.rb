@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['response']['message'] if response['response']
 
-        response['errors']&.inject(''){ |message,error| error['message'] + '|' + message }
+        response['errors']&.inject(''){ |message, error| error['message'] + '|' + message }
       end
 
       def authorization_from(response)

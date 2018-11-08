@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:merchant_transid] = options[:order_id].to_s.slice(0,21)
+        post[:merchant_transid] = options[:order_id].to_s.slice(0, 21)
         post[:memnum]           = options[:invoice]
         post[:custnum]          = options[:customer]
         post[:clientdata]       = options[:description]
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
         parameters[:merchant_id]      = @options[:login]
         parameters[:password]         = @options[:password]
 
-        parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')
+        parameters.reject{|k, v| v.blank?}.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

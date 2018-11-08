@@ -222,7 +222,7 @@ Conn close
   end
 
   def valid_metadata(name, location)
-    return <<-XML.gsub(/^\s{4}/,'').gsub(/\n/, '')
+    return <<-XML.gsub(/^\s{4}/, '').gsub(/\n/, '')
     <metadata><meta name="ca_name" value="#{name}"/><meta name="ca_location" value="#{location}"/></metadata>
     XML
   end
@@ -241,7 +241,7 @@ Conn close
   end
 
   def successful_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -284,7 +284,7 @@ Conn close
   end
 
   def failed_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -327,7 +327,7 @@ Conn close
   end
 
   def successful_authorize_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -372,7 +372,7 @@ Conn close
   end
 
   def successful_refund_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -415,7 +415,7 @@ Conn close
   end
 
   def failed_refund_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>

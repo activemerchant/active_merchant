@@ -419,29 +419,29 @@ module ActiveMerchant #:nodoc:
         case node.name
         when 'CrossReferenceTransactionResult'
           reply[:transaction_result] = {}
-          node.attributes.each do |a,b|
+          node.attributes.each do |a, b|
             reply[:transaction_result][a.underscore.to_sym] = b
           end
           node.elements.each{|e| parse_element(reply[:transaction_result], e) } if node.has_elements?
 
         when 'CardDetailsTransactionResult'
           reply[:transaction_result] = {}
-          node.attributes.each do |a,b|
+          node.attributes.each do |a, b|
             reply[:transaction_result][a.underscore.to_sym] = b
           end
           node.elements.each{|e| parse_element(reply[:transaction_result], e) } if node.has_elements?
 
         when 'TransactionOutputData'
           reply[:transaction_output_data] = {}
-          node.attributes.each{|a,b| reply[:transaction_output_data][a.underscore.to_sym] = b }
+          node.attributes.each{|a, b| reply[:transaction_output_data][a.underscore.to_sym] = b }
           node.elements.each{|e| parse_element(reply[:transaction_output_data], e) } if node.has_elements?
         when 'CustomVariables'
           reply[:custom_variables] = {}
-          node.attributes.each{|a,b| reply[:custom_variables][a.underscore.to_sym] = b }
+          node.attributes.each{|a, b| reply[:custom_variables][a.underscore.to_sym] = b }
           node.elements.each{|e| parse_element(reply[:custom_variables], e) } if node.has_elements?
         when 'GatewayEntryPoints'
           reply[:gateway_entry_points] = {}
-          node.attributes.each{|a,b| reply[:gateway_entry_points][a.underscore.to_sym] = b }
+          node.attributes.each{|a, b| reply[:gateway_entry_points][a.underscore.to_sym] = b }
           node.elements.each{|e| parse_element(reply[:gateway_entry_points], e) } if node.has_elements?
         else
           k = node.name.underscore.to_sym
@@ -451,7 +451,7 @@ module ActiveMerchant #:nodoc:
           else
             if node.has_attributes?
               reply[k] = {}
-              node.attributes.each{|a,b| reply[k][a.underscore.to_sym] = b }
+              node.attributes.each{|a, b| reply[k][a.underscore.to_sym] = b }
             else
               reply[k] = node.text
             end

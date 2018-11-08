@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
-        add_payment_source(post, creditcard,options)
+        add_payment_source(post, creditcard, options)
         add_address(post, options[:billing_address] || options[:address])
         add_address(post, options[:shipping_address], 'shipping')
         add_customer_data(post, options)
@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, payment_source, options)
         add_address(post, options[:billing_address] || options[:address])
         add_customer_data(post, options)
-        add_sku(post,options)
+        add_sku(post, options)
         add_currency(post, money, options)
         add_processor(post, options)
         commit('credit', money, post)
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(post, address,prefix='')
+      def add_address(post, address, prefix='')
         prefix +='_' unless prefix.blank?
         unless address.blank? or address.values.blank?
           post[prefix+'address1']    = address[:address1].to_s
@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
         post[:account_type] = check.account_type # The customer's type of ACH account
       end
 
-      def add_sku(post,options)
+      def add_sku(post, options)
         post['product_sku_#'] = options[:sku] || options['product_sku_#']
       end
 
@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(/=/)
+          key, val = pair.split(/=/)
           results[key] = val
         end
 
@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         parameters[:amount]  = localized_amount(money, parameters[:currency] || default_currency) if money
-        response = parse( ssl_post(self.live_url, post_data(action,parameters)) )
+        response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
         Response.new(response['response'] == '1', message_from(response), response,
           :authorization => (response['transactionid'] || response['customer_vault_id']),
           :test => test?,
@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
         post[:password]   = @options[:password]
         post[:type]       = action if action
 
-        request = post.merge(parameters).map {|key,value| "#{key}=#{CGI.escape(value.to_s)}"}.join('&')
+        request = post.merge(parameters).map {|key, value| "#{key}=#{CGI.escape(value.to_s)}"}.join('&')
         request
       end
 

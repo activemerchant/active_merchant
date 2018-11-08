@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
         return unless text
 
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
-          ActiveSupport::Inflector.transliterate(text,'')
+          ActiveSupport::Inflector.transliterate(text, '')
         else
           text.gsub(/[^\x00-\x7F]+/, '')
         end

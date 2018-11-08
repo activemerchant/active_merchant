@@ -337,7 +337,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
+        Hash[CGI::parse(body).map{|k, v| [k.upcase, v.first]}]
       end
 
       def success_from(response)

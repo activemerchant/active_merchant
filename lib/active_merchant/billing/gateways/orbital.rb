@@ -516,7 +516,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        response.delete_if { |k,_| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if { |k, _| SENSITIVE_FIELDS.include?(k) }
       end
 
       def recurring_parse_element(response, node)

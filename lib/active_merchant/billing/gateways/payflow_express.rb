@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Token', options[:token] unless options[:token].blank?
           xml.tag! 'NoShipping', options[:no_shipping] ? '1' : '0'
           xml.tag! 'AddressOverride', options[:address_override] ? '1' : '0'
-          xml.tag! 'ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
+          xml.tag! 'ButtonSource', application_id.to_s.slice(0, 32) unless application_id.blank?
 
           # Customization of the payment page
           xml.tag! 'PageStyle', options[:page_style] unless options[:page_style].blank?

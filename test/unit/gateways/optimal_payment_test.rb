@@ -101,7 +101,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   def test_purchase_with_shipping_address
     @options[:shipping_address] = {:country => 'CA'}
     @gateway.expects(:ssl_post).with do |url, data|
-      xml = data.split('&').detect{|string| string =~ /txnRequest=/}.gsub('txnRequest=','')
+      xml = data.split('&').detect{|string| string =~ /txnRequest=/}.gsub('txnRequest=', '')
       doc = Nokogiri::XML.parse(CGI.unescape(xml))
       doc.xpath('//xmlns:shippingDetails/xmlns:country').first.text == 'CA' && doc.to_s.include?('<shippingDetails>')
     end.returns(successful_purchase_response)
@@ -112,7 +112,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   def test_purchase_without_shipping_address
     @options[:shipping_address] = nil
     @gateway.expects(:ssl_post).with do |url, data|
-      xml = data.split('&').detect{|string| string =~ /txnRequest=/}.gsub('txnRequest=','')
+      xml = data.split('&').detect{|string| string =~ /txnRequest=/}.gsub('txnRequest=', '')
       doc = Nokogiri::XML.parse(CGI.unescape(xml))
       doc.to_s.include?('<shippingDetails>') == false
     end.returns(successful_purchase_response)

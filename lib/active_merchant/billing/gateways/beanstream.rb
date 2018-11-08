@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
         end
         options[:vault_id] = vault_id
         options[:operation] = secure_profile_action(:modify)
-        add_secure_profile_variables(post,options)
+        add_secure_profile_variables(post, options)
         commit(post, true)
       end
 

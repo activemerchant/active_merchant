@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.ctpe.io/payment/ctpe'
       self.live_url = 'https://ctpe.io/payment/ctpe'
 
-      self.supported_countries = ['LI','US']
+      self.supported_countries = ['LI', 'US']
       self.default_currency = 'EUR'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 

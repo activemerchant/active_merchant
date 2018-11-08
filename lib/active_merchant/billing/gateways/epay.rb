@@ -208,7 +208,7 @@ module ActiveMerchant #:nodoc:
         end
 
         result = {}
-        query.each_pair do |k,v|
+        query.each_pair do |k, v|
           result[k] = v.is_a?(Array) && v.size == 1 ? v[0] : v # make values like ['v'] into 'v'
         end
         result

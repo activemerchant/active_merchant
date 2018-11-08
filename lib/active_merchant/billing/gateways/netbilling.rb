@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(/\=/)
+          key, val = pair.split(/\=/)
           results[key.to_sym] = CGI.unescape(val)
         end
         results
@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
         parameters[:pay_type] = 'C'
         parameters[:tran_type] = TRANSACTIONS[action]
 
-        parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        parameters.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
     end

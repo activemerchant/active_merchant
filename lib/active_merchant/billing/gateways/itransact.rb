@@ -336,7 +336,7 @@ module ActiveMerchant #:nodoc:
         xml.AccountInfo {
           xml.CardAccount {
             xml.AccountNumber(creditcard.number.to_s)
-            xml.ExpirationMonth(creditcard.month.to_s.rjust(2,'0'))
+            xml.ExpirationMonth(creditcard.month.to_s.rjust(2, '0'))
             xml.ExpirationYear(creditcard.year.to_s)
             xml.CVVNumber(creditcard.verification_value.to_s) unless creditcard.verification_value.blank?
           }
@@ -372,7 +372,7 @@ module ActiveMerchant #:nodoc:
       def add_vendor_data(xml, options)
         return if options[:vendor_data].blank?
         xml.VendorData {
-          options[:vendor_data].each do |k,v|
+          options[:vendor_data].each do |k, v|
             xml.Element {
               xml.Name(k)
               xml.Key(v)

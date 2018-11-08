@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
+      CURRENCY_CODES = Hash.new{|h, k| raise ArgumentError.new("Unsupported currency: #{k}")}
       CURRENCY_CODES['NZD'] = '554'
 
       def add_invoice(post, money, options)

@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         'PMT-6000' => STANDARD_ERROR_CODE[:processing_error],   # A temporary Issue prevented this request from being processed.
       }
 
-      FRAUD_WARNING_CODES = ['PMT-1000','PMT-1001','PMT-1002','PMT-1003']
+      FRAUD_WARNING_CODES = ['PMT-1000', 'PMT-1001', 'PMT-1002', 'PMT-1003']
 
       def initialize(options = {})
         requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm)

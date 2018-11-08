@@ -116,11 +116,6 @@ Layout/MultilineOperationIndentation:
     - 'test/unit/gateways/ogone_test.rb'
     - 'test/unit/gateways/skip_jack_test.rb'
 
-# Offense count: 315
-# Cop supports --auto-correct.
-Layout/SpaceAfterComma:
-  Enabled: false
-
 # Offense count: 638
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.

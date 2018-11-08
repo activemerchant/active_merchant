@@ -164,7 +164,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(/(Authorization: Basic )\w+/i, '\1[FILTERED]').
           gsub(/(\\"number\\":)\\"\d+\\"/, '\1[FILTERED]').
-          gsub(/(\\"security_code\\":)\\"\d+\\"/,'\1[FILTERED]')
+          gsub(/(\\"security_code\\":)\\"\d+\\"/, '\1[FILTERED]')
       end
 
       private

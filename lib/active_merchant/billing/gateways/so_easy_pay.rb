@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
       def fill_cardholder(soap, card, options)
         ch_info = options[:billing_address] || options[:address]
 
-        soap.tag!('customerIP',options[:ip].to_s)
+        soap.tag!('customerIP', options[:ip].to_s)
         name = card.name || ch_info[:name]
         soap.tag!('cardHolderName', name.to_s)
         address = ch_info[:address1] || ''

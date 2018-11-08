@@ -309,7 +309,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   end
 
   def test_successful_add_to_vault_with_store_method
-    assert response = @gateway.store(@visa,@options)
+    assert response = @gateway.store(@visa, @options)
     assert_equal 'Operation Successful', response.message
     assert_success response
     assert_not_nil response.params['customer_vault_id']

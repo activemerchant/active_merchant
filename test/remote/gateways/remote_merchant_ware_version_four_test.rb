@@ -8,12 +8,12 @@ class RemoteMerchantWareVersionFourTest < Test::Unit::TestCase
     @declined_card = credit_card('1234567890123')
 
     @options = {
-      :order_id => generate_unique_id[0,8],
+      :order_id => generate_unique_id[0, 8],
       :billing_address => address
     }
 
     @reference_purchase_options = {
-      :order_id => generate_unique_id[0,8]
+      :order_id => generate_unique_id[0, 8]
     }
   end
 

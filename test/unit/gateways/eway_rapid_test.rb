@@ -189,7 +189,7 @@ class EwayRapidTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(200, @credit_card, partner_id: partner_string)
     end.check_request do |endpoint, data, headers|
-      assert_match(%r{"PartnerID":"#{partner_string.slice(0,50)}"}, data)
+      assert_match(%r{"PartnerID":"#{partner_string.slice(0, 50)}"}, data)
     end.respond_with(successful_purchase_response)
   end
 

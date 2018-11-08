@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters={})
         parameters['username'] = @options[:username]
         parameters['password'] = @options[:password]
-        parse(ssl_post(BASE_URL,post_data(action, parameters)))
+        parse(ssl_post(BASE_URL, post_data(action, parameters)))
       end
 
       def post_data(action, parameters = {})
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(data)
-        responses =  CGI.parse(data).inject({}){|h,(k, v)| h[k] = v.first; h}
+        responses =  CGI.parse(data).inject({}){|h, (k, v)| h[k] = v.first; h}
         Response.new(
           (responses['response'].to_i == 1),
           responses['responsetext'],

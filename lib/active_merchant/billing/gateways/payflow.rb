@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
-              add_address(xml, 'ShipTo', options[:shipping_address],options) if options[:shipping_address]
+              add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
 
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end

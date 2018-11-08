@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return '' if message.blank?
-        MESSAGES[message[0,2]] || message
+        MESSAGES[message[0, 2]] || message
       end
 
       def purchase_url(cvn)
