@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
         parameters[:type] = action
         parameters[:username] = @options[:login]
         parameters[:password] = @options[:password]
-        parameters.map{|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        parameters.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end
   end

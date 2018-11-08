@@ -755,7 +755,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(reply, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(reply, e) }
+          node.elements.each { |e| parse_element(reply, e) }
         else
           if node.parent.name =~ /item/
             parent = node.parent.name

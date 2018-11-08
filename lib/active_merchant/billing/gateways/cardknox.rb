@@ -276,7 +276,7 @@ module ActiveMerchant #:nodoc:
           amount:            fields['xAuthAmount'],
           masked_card_num:   fields['xMaskedCardNumber'],
           masked_account_number: fields['MaskedAccountNumber']
-        }.delete_if{|k, v| v.nil?}
+        }.delete_if { |k, v| v.nil? }
       end
 
       def commit(action, source_type, parameters)
@@ -320,7 +320,7 @@ module ActiveMerchant #:nodoc:
         initial_parameters[:Hash] = "s/#{seed}/#{hash}/n" unless @options[:pin].blank?
         parameters = initial_parameters.merge(parameters)
 
-        parameters.reject{|k, v| v.blank?}.collect{ |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join('&')
+        parameters.reject { |k, v| v.blank? }.collect { |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

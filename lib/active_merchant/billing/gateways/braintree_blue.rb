@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
         if options[:customer].present?
           MultiResponse.new.tap do |r|
             customer_exists_response = nil
-            r.process{customer_exists_response = check_customer_exists(options[:customer])}
+            r.process { customer_exists_response = check_customer_exists(options[:customer]) }
             r.process do
               if customer_exists_response.params['exists']
                 add_credit_card_to_customer(creditcard, options)

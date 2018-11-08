@@ -272,7 +272,7 @@ module ActiveMerchant #:nodoc:
       def add_options(post, options)
         post[:createRegistration] = options[:create_registration] if options[:create_registration] && !options[:registrationId]
         post[:testMode] = options[:test_mode] if test? && options[:test_mode]
-        options.each {|key, value| post[key] = value if key.to_s.match('customParameters\[[a-zA-Z0-9\._]{3,64}\]') }
+        options.each { |key, value| post[key] = value if key.to_s.match('customParameters\[[a-zA-Z0-9\._]{3,64}\]') }
         post['customParameters[SHOPPER_pluginId]'] = 'activemerchant'
         post['customParameters[custom_disable3DSecure]'] = options[:disable_3d_secure] if options[:disable_3d_secure]
       end

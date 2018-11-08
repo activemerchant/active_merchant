@@ -429,9 +429,9 @@ module ActiveMerchant #:nodoc:
           raise "Unknown signature algorithm #{algorithm}"
         end
 
-        filtered_params = signed_parameters.select{|k, v| !v.blank?}
+        filtered_params = signed_parameters.select { |k, v| !v.blank? }
         sha_encryptor.hexdigest(
-          filtered_params.sort_by{|k, v| k.upcase}.map{|k, v| "#{k.upcase}=#{v}#{secret}"}.join('')
+          filtered_params.sort_by { |k, v| k.upcase }.map { |k, v| "#{k.upcase}=#{v}#{secret}" }.join('')
         ).upcase
       end
 
@@ -446,7 +446,7 @@ module ActiveMerchant #:nodoc:
               PSPID
               Operation
               ALIAS
-            ).map{|key| parameters[key]} +
+            ).map { |key| parameters[key] } +
             [secret]
           ).join('')
         ).upcase

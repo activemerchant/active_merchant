@@ -63,8 +63,8 @@ module ActiveMerchant #:nodoc:
         if payment_method.respond_to?(:number)
           # credit card authorization
           MultiResponse.new.tap do |r|
-            r.process {send_initialize(amount, true, options)}
-            r.process {send_purchasecc(payment_method, r.params['orderref'])}
+            r.process { send_initialize(amount, true, options) }
+            r.process { send_purchasecc(payment_method, r.params['orderref']) }
           end
         else
           # stored authorization
@@ -91,8 +91,8 @@ module ActiveMerchant #:nodoc:
         if payment_method.respond_to?(:number)
           # credit card purchase
           MultiResponse.new.tap do |r|
-            r.process {send_initialize(amount, false, options)}
-            r.process {send_purchasecc(payment_method, r.params['orderref'])}
+            r.process { send_initialize(amount, false, options) }
+            r.process { send_purchasecc(payment_method, r.params['orderref']) }
           end
         else
           # stored purchase
@@ -154,10 +154,10 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
         amount = amount(1) # 1 cent for authorization
         MultiResponse.run(:first) do |r|
-          r.process {send_create_agreement(options)}
-          r.process {send_initialize(amount, true, options.merge({agreement_ref: r.authorization}))}
+          r.process { send_create_agreement(options) }
+          r.process { send_initialize(amount, true, options.merge({agreement_ref: r.authorization})) }
           order_ref = r.params['orderref']
-          r.process {send_purchasecc(creditcard, order_ref)}
+          r.process { send_purchasecc(creditcard, order_ref) }
         end
       end
 

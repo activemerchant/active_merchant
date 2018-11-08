@@ -368,7 +368,7 @@ module ActiveMerchant #:nodoc:
         post[:OrderDescription] = options[:description]
 
         if order_items = options[:items]
-          post[:OrderString] = order_items.collect { |item| "#{item[:sku]}~#{item[:description].tr('~', '-')}~#{item[:declared_value]}~#{item[:quantity]}~#{item[:taxable]}~~~~~~~~#{item[:tax_rate]}~||"}.join
+          post[:OrderString] = order_items.collect { |item| "#{item[:sku]}~#{item[:description].tr('~', '-')}~#{item[:declared_value]}~#{item[:quantity]}~#{item[:taxable]}~~~~~~~~#{item[:tax_rate]}~||" }.join
         else
           post[:OrderString] = '1~None~0.00~0~N~||'
         end

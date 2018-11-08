@@ -82,8 +82,8 @@ module ActiveMerchant
           response[:error_message] = error['ErrorDescription']
           response[:error_codes] = error['ErrorCode']
         elsif error.kind_of?(Array)
-          error_str = error.map { |e| e['ErrorDescription']}.join('. ')
-          error_codes = error.map { |e| e['ErrorCode']}.join(', ')
+          error_str = error.map { |e| e['ErrorDescription'] }.join('. ')
+          error_codes = error.map { |e| e['ErrorCode'] }.join(', ')
           response[:error_message] = "#{error_str}."
           response[:error_codes] = error_codes
         end

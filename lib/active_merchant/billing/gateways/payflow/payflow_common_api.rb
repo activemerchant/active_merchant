@@ -179,9 +179,9 @@ module ActiveMerchant #:nodoc:
           # in an RPPaymentResults element so we'll come here multiple times
           response[node_name] ||= []
           response[node_name] << (payment_result_response = {})
-          node.xpath('.//*').each{ |e| parse_element(payment_result_response, e) }
+          node.xpath('.//*').each { |e| parse_element(payment_result_response, e) }
         when node.xpath('.//*').to_a.any?
-          node.xpath('.//*').each{|e| parse_element(response, e) }
+          node.xpath('.//*').each { |e| parse_element(response, e) }
         when node_name.to_s =~ /amt$/
           # *Amt elements don't put the value in the #text - instead they use a Currency attribute
           response[node_name] = node.attributes['Currency'].to_s

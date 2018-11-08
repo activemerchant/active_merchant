@@ -329,7 +329,7 @@ EOS
       end
 
       def nestable_hash
-        Hash.new {|h, k| h[k] = Hash.new(&h.default_proc) }
+        Hash.new { |h, k| h[k] = Hash.new(&h.default_proc) }
       end
 
       def capture_requested?(response)

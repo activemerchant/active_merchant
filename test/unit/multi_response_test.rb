@@ -12,8 +12,8 @@ class MultiResponseTest < Test::Unit::TestCase
     r1 = Response.new(true, '1', {})
     r2 = Response.new(true, '2', {})
     m = MultiResponse.run do |r|
-      r.process{r1}
-      r.process{r2}
+      r.process { r1 }
+      r.process { r2 }
     end
     assert_equal [r1, r2], m.responses
   end
@@ -22,8 +22,8 @@ class MultiResponseTest < Test::Unit::TestCase
     r1 = Response.new(true, '1', {})
     r2 = Response.new(true, '2', {})
     m = MultiResponse.run do |r|
-      r.process{r1}
-      r.process{r2}
+      r.process { r1 }
+      r.process { r2 }
     end
     assert_equal [r1, r2], m.responses
   end
@@ -42,7 +42,7 @@ class MultiResponseTest < Test::Unit::TestCase
       :error_code => :card_declined,
       :fraud_review => true
     )
-    m.process{r1}
+    m.process { r1 }
     assert_equal({'one' => 1}, m.params)
     assert_equal '1', m.message
     assert m.test
@@ -63,7 +63,7 @@ class MultiResponseTest < Test::Unit::TestCase
       :cvv_result => 'CVV2',
       :fraud_review => false
     )
-    m.process{r2}
+    m.process { r2 }
     assert_equal({'two' => 2}, m.params)
     assert_equal '2', m.message
     assert !m.test
@@ -87,7 +87,7 @@ class MultiResponseTest < Test::Unit::TestCase
       :cvv_result => 'CVV1',
       :fraud_review => true
     )
-    m.process{r1}
+    m.process { r1 }
     assert_equal({'one' => 1}, m.params)
     assert_equal '1', m.message
     assert m.test
@@ -107,7 +107,7 @@ class MultiResponseTest < Test::Unit::TestCase
       :cvv_result => 'CVV2',
       :fraud_review => false
     )
-    m.process{r2}
+    m.process { r2 }
     assert_equal({'one' => 1}, m.params)
     assert_equal '1', m.message
     assert m.test
@@ -124,9 +124,9 @@ class MultiResponseTest < Test::Unit::TestCase
     r1 = Response.new(true, '1', {}, {})
     r2 = Response.new(false, '2', {}, {})
     r3 = Response.new(false, '3', {}, {})
-    m.process{r1}
-    m.process{r2}
-    m.process{r3}
+    m.process { r1 }
+    m.process { r2 }
+    m.process { r3 }
     assert_equal r2, m.primary_response
     assert_equal '2', m.message
   end
@@ -135,8 +135,8 @@ class MultiResponseTest < Test::Unit::TestCase
     r1 = Response.new(false, '1', {})
     r2 = Response.new(true, '2', {})
     m = MultiResponse.run do |r|
-      r.process{r1}
-      r.process{r2}
+      r.process { r1 }
+      r.process { r2 }
     end
     assert !m.success?
     assert_equal [r1], m.responses
@@ -147,12 +147,12 @@ class MultiResponseTest < Test::Unit::TestCase
     r2 = Response.new(true, '2', {})
     r3 = Response.new(true, '3', {})
     m1 = MultiResponse.run do |r|
-      r.process{r1}
-      r.process{r2}
+      r.process { r1 }
+      r.process { r2 }
     end
     m = MultiResponse.run do |r|
-      r.process{m1}
-      r.process{r3}
+      r.process { m1 }
+      r.process { r3 }
     end
     assert_equal [r1, r2, r3], m.responses
   end
@@ -161,12 +161,12 @@ class MultiResponseTest < Test::Unit::TestCase
     m = MultiResponse.new
 
     r1 = Response.new(true, '1')
-    m.process{r1}
+    m.process { r1 }
     assert_equal '1', m.message
     assert_equal [r1], m.responses
 
     r2 = Response.new(false, '2')
-    m.process(:ignore_result){r2}
+    m.process(:ignore_result) { r2 }
     assert_equal '1', m.message
     assert_equal [r1, r2], m.responses
 

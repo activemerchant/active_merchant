@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
           commit_raw(action, parameters)
         else
           MultiResponse.run(true) do |r|
-            r.process { commit_raw(action, parameters)}
+            r.process { commit_raw(action, parameters) }
             r.process {
               split_auth = split_authorization(r.authorization)
               auth =  (action.include?('recur')? split_auth[4] : split_auth[0])

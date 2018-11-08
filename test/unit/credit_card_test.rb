@@ -188,7 +188,7 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal 'visa',             CreditCard.brand?('4242424242424242')
     assert_equal 'american_express', CreditCard.brand?('341111111111111')
     assert_equal 'master', CreditCard.brand?('5105105105105100')
-    (222100..272099).each {|bin| assert_equal 'master', CreditCard.brand?(bin.to_s + '1111111111'), "Failed with BIN #{bin}"}
+    (222100..272099).each { |bin| assert_equal 'master', CreditCard.brand?(bin.to_s + '1111111111'), "Failed with BIN #{bin}" }
     assert_nil CreditCard.brand?('')
   end
 

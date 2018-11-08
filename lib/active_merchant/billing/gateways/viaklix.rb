@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
       # Parse the response message
       def parse(msg)
         resp = {}
-        msg.split(self.delimiter).collect{|li|
+        msg.split(self.delimiter).collect { |li|
           key, value = li.split('=')
           resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
         }

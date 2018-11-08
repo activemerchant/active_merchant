@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['message'] if response['message']
         return 'Success' if success_from(response)
-        response['errors'].map {|error_hash| error_hash['detail'] }.join(', ')
+        response['errors'].map { |error_hash| error_hash['detail'] }.join(', ')
       end
 
       def authorization_from(response)
@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         unless success_from(response)
-          response['errors'].nil? ? response['message'] : response['errors'].map {|error_hash| error_hash['code'] }.join(', ')
+          response['errors'].nil? ? response['message'] : response['errors'].map { |error_hash| error_hash['code'] }.join(', ')
         end
       end
 

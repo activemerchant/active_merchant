@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
         post[:authentication][:password] = @options[:password]
         post[:authentication][:entityId] = @options[:entity_id]
         post[:paymentType] = action
-        dot_flatten_hash(post).map {|key, value| "#{key}=#{CGI.escape(value.to_s)}"}.join('&')
+        dot_flatten_hash(post).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def error_code_from(response)

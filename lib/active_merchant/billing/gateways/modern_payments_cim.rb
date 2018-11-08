@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! action, { 'xmlns' => xmlns(action) } do
               xml.tag! 'clientId', @options[:login]
               xml.tag! 'clientCode', @options[:password]
-              params.each {|key, value| xml.tag! key, value }
+              params.each { |key, value| xml.tag! key, value }
             end
           end
         end
@@ -207,7 +207,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(response, e) }
+          node.elements.each { |e| parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text.to_s.strip
         end

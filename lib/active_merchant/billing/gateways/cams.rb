@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
         parameters[:password] = @options[:password]
         parameters[:username] = @options[:username]
 
-        parameters.collect{|k, v| "#{k}=#{v}" }.join('&')
+        parameters.collect { |k, v| "#{k}=#{v}" }.join('&')
       end
 
       def error_code_from(response)

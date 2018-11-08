@@ -286,7 +286,7 @@ module ActiveMerchant
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(response, e) }
+          node.elements.each { |e| parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
         end

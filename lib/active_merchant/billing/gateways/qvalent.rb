@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h, k| raise ArgumentError.new("Unsupported currency: #{k}")}
+      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
       CURRENCY_CODES['AUD'] = 'AUD'
       CURRENCY_CODES['INR'] = 'INR'
 
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end

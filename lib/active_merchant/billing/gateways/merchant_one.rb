@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(data)
-        responses =  CGI.parse(data).inject({}){|h, (k, v)| h[k] = v.first; h}
+        responses =  CGI.parse(data).inject({}) { |h, (k, v)| h[k] = v.first; h }
         Response.new(
           (responses['response'].to_i == 1),
           responses['responsetext'],

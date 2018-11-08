@@ -345,7 +345,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         # The bp20api has max one value per form field.
-        response_fields = Hash[CGI::parse(body).map{|k, v| [k.upcase, v.first]}]
+        response_fields = Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
 
         if response_fields.include? 'REBILL_ID'
           return parse_recurring(response_fields)

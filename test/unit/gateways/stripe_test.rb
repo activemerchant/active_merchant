@@ -1071,7 +1071,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_metadata_header
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['X-Stripe-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
     }.returns(successful_purchase_response)
 
@@ -1079,7 +1079,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_version_header
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['Stripe-Version'] == '2013-10-29'
     }.returns(successful_purchase_response)
 
@@ -1087,7 +1087,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_idempotency_key_header
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['Idempotency-Key'] == 'test123'
     }.returns(successful_purchase_response)
 
@@ -1096,7 +1096,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_idempotency_on_void
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['Idempotency-Key'] == 'test123'
     }.returns(successful_purchase_response(true))
 
@@ -1119,7 +1119,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_initialize_gateway_with_version
     @gateway = StripeGateway.new(:login => 'login', :version => '2013-12-03')
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['Stripe-Version'] == '2013-12-03'
     }.returns(successful_purchase_response)
 

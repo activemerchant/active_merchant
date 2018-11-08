@@ -216,7 +216,7 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
 
     # You can only include up to 250 recipients
-    recipients = (1..251).collect {|i| [100, "person#{i}@example.com"]}
+    recipients = (1..251).collect { |i| [100, "person#{i}@example.com"] }
     response = @gateway.transfer(*recipients)
     assert_failure response
   end

@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if !node.elements.empty?
-          node.elements.each {|e| parse_element(parsed, e) }
+          node.elements.each { |e| parse_element(parsed, e) }
         else
           parsed[underscore(node.name)] = node.text
         end

@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def encode(hash)
-        hash.collect{|(k, v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
+        hash.collect { |(k, v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def creditcard_brand(brand)

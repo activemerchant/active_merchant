@@ -202,7 +202,7 @@ class SecurionPayTest < Test::Unit::TestCase
     assert response.params['refunded']
     assert_equal 0, response.params['amount']
     assert_equal 1, response.params['refunds'].size
-    assert_equal @amount, response.params['refunds'].map{|r| r['amount']}.sum
+    assert_equal @amount, response.params['refunds'].map { |r| r['amount'] }.sum
     assert_equal 'char_DQca5ZjbewP2Oe0lIsNe4EXP', response.authorization
     assert response.test?
   end
@@ -215,7 +215,7 @@ class SecurionPayTest < Test::Unit::TestCase
     assert_success response
     assert response.params['refunded']
     assert_equal @amount - @refund_amount, response.params['amount']
-    assert_equal @refund_amount, response.params['refunds'].map{|r| r['amount']}.sum
+    assert_equal @refund_amount, response.params['refunds'].map { |r| r['amount'] }.sum
     assert_equal 'char_oVnJ1j6fZqOvnopBBvlnpEuX', response.authorization
     assert response.test?
   end

@@ -230,7 +230,7 @@ module ActiveMerchant
 
       def parse_element(parsed, node)
         if !node.elements.empty?
-          node.elements.each {|e| parse_element(parsed, e) }
+          node.elements.each { |e| parse_element(parsed, e) }
         else
           parsed[node.name.downcase] = node.text
         end

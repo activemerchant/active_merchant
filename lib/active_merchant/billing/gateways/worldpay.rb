@@ -30,8 +30,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment_method, options = {})
         MultiResponse.run do |r|
-          r.process{authorize(money, payment_method, options)}
-          r.process{capture(money, r.authorization, options.merge(:authorization_validated => true))}
+          r.process { authorize(money, payment_method, options) }
+          r.process { capture(money, r.authorization, options.merge(:authorization_validated => true)) }
         end
       end
 
@@ -42,19 +42,19 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, 'AUTHORISED')} unless options[:authorization_validated]
+          r.process { inquire_request(authorization, options, 'AUTHORISED') } unless options[:authorization_validated]
           if r.params
             authorization_currency = r.params['amount_currency_code']
             options = options.merge(:currency => authorization_currency) if authorization_currency.present?
           end
-          r.process{capture_request(money, authorization, options)}
+          r.process { capture_request(money, authorization, options) }
         end
       end
 
       def void(authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, 'AUTHORISED')} unless options[:authorization_validated]
-          r.process{cancel_request(authorization, options)}
+          r.process { inquire_request(authorization, options, 'AUTHORISED') } unless options[:authorization_validated]
+          r.process { cancel_request(authorization, options) }
         end
       end
 
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def order_tag_attributes(options)
-        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject{|_, v| !v}
+        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject { |_, v| !v }
       end
 
       def build_capture_request(money, authorization, options)
@@ -337,7 +337,7 @@ module ActiveMerchant #:nodoc:
         end
         if node.has_elements?
           raw[node.name.underscore.to_sym] = true unless node.name.blank?
-          node.elements.each{|e| parse_element(raw, e) }
+          node.elements.each { |e| parse_element(raw, e) }
         else
           raw[node.name.underscore.to_sym] = node.text unless node.text.nil?
         end
@@ -418,12 +418,12 @@ module ActiveMerchant #:nodoc:
 
       def required_status_message(raw, success_criteria)
         if(!success_criteria.include?(raw[:last_event]))
-          "A transaction status of #{success_criteria.collect{|c| "'#{c}'"}.join(" or ")} is required."
+          "A transaction status of #{success_criteria.collect { |c| "'#{c}'" }.join(" or ")} is required."
         end
       end
 
       def authorization_from(raw)
-        pair = raw.detect{|k, v| k.to_s =~ /_order_code$/}
+        pair = raw.detect { |k, v| k.to_s =~ /_order_code$/ }
         (pair ? pair.last : nil)
       end
 

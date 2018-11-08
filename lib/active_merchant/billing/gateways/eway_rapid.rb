@@ -299,7 +299,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_errors(message)
-        errors = message.split(',').collect{|code| MESSAGES[code.strip]}.flatten.join(',')
+        errors = message.split(',').collect { |code| MESSAGES[code.strip] }.flatten.join(',')
         errors.presence || message
       end
 
