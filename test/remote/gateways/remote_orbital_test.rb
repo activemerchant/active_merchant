@@ -231,7 +231,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   # ==== Section C
   def test_mark_for_capture_transactions
-    [[:visa, 3000],[:mc, 4100],[:amex, 105500],[:ds, 1000],[:jcb, 2900]].each do |suite|
+    [[:visa, 3000], [:mc, 4100], [:amex, 105500], [:ds, 1000], [:jcb, 2900]].each do |suite|
       amount = suite[1]
       card = credit_card(@cards[suite[0]])
       assert auth_response = @gateway.authorize(amount, card, @options)
@@ -247,7 +247,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   # ==== Section D
   def test_refund_transactions
-    [[:visa, 1200],[:mc, 1100],[:amex, 105500],[:ds, 1000],[:jcb, 2900]].each do |suite|
+    [[:visa, 1200], [:mc, 1100], [:amex, 105500], [:ds, 1000], [:jcb, 2900]].each do |suite|
       amount = suite[1]
       card = credit_card(@cards[suite[0]])
       assert purchase_response = @gateway.purchase(amount, card, @options)

@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sanalposprovtest.garanti.com.tr/VPServlet'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US','TR']
+      self.supported_countries = ['US', 'TR']
 
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -195,7 +195,7 @@ module ActiveMerchant #:nodoc:
         return unless text
 
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
-          ActiveSupport::Inflector.transliterate(text,'')
+          ActiveSupport::Inflector.transliterate(text, '')
         else
           text.gsub(/[^\x00-\x7F]+/, '')
         end
@@ -214,7 +214,7 @@ module ActiveMerchant #:nodoc:
         CURRENCY_CODES[currency] || CURRENCY_CODES[default_currency]
       end
 
-      def commit(money,request)
+      def commit(money, request)
         url = test? ? self.test_url : self.live_url
         raw_response = ssl_post(url, 'data=' + request)
         response = parse(raw_response)

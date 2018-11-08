@@ -266,8 +266,8 @@ module ActiveMerchant #:nodoc:
         Response.new(successful?(response), response[:message], response,
           :test => test?,
           :authorization => response[:ordernum],
-          :avs_result => { :code => response[:avs].to_s[2,1] },
-          :cvv_result => response[:avs].to_s[3,1]
+          :avs_result => { :code => response[:avs].to_s[2, 1] },
+          :cvv_result => response[:avs].to_s[3, 1]
         )
       end
 

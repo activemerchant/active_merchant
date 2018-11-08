@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
         {
           :UserName => @options[:user_name],
           :Password => @options[:password]
-        }.merge(post).collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        }.merge(post).collect{|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
       end
     end
   end

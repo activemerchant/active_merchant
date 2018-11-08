@@ -1297,7 +1297,7 @@ module ActiveMerchant #:nodoc:
 
       def build_customer_data(soap, options)
         soap.CustomerData 'xsi:type' => 'ns1:CustomerObject' do
-          CUSTOMER_OPTIONS.each do |k,v|
+          CUSTOMER_OPTIONS.each do |k, v|
             build_tag soap, v[0], v[1], options[k]
           end
           build_billing_address soap, options
@@ -1370,7 +1370,7 @@ module ActiveMerchant #:nodoc:
       def build_customer_transaction(soap, options)
         soap.Parameters 'xsi:type' => 'ns1:CustomerTransactionRequest' do
           build_transaction_detail soap, options
-          CUSTOMER_TRANSACTION_REQUEST_OPTIONS.each do |k,v|
+          CUSTOMER_TRANSACTION_REQUEST_OPTIONS.each do |k, v|
             build_tag soap, v[0], v[1], options[k]
           end
           build_custom_fields soap, options
@@ -1382,7 +1382,7 @@ module ActiveMerchant #:nodoc:
 
       def build_transaction_request_object(soap, options, name='Params')
         soap.tag! name, 'xsi:type' => 'ns1:TransactionRequestObject' do
-          TRANSACTION_REQUEST_OBJECT_OPTIONS.each do |k,v|
+          TRANSACTION_REQUEST_OBJECT_OPTIONS.each do |k, v|
             build_tag soap, v[0], v[1], options[k]
           end
           case
@@ -1406,10 +1406,10 @@ module ActiveMerchant #:nodoc:
 
       def build_transaction_detail(soap, options)
         soap.Details 'xsi:type' => 'ns1:TransactionDetail' do
-          TRANSACTION_DETAIL_OPTIONS.each do |k,v|
+          TRANSACTION_DETAIL_OPTIONS.each do |k, v|
             build_tag soap, v[0], v[1], options[k]
           end
-          TRANSACTION_DETAIL_MONEY_OPTIONS.each do |k,v|
+          TRANSACTION_DETAIL_MONEY_OPTIONS.each do |k, v|
             build_tag soap, v[0], v[1], amount(options[k])
           end
         end
@@ -1425,7 +1425,7 @@ module ActiveMerchant #:nodoc:
           end
           build_tag soap, :string, 'CardCode', options[:payment_method].verification_value
           build_tag soap, :boolean, 'CardPresent', options[:card_present] || false
-          CREDIT_CARD_DATA_OPTIONS.each do |k,v|
+          CREDIT_CARD_DATA_OPTIONS.each do |k, v|
             build_tag soap, v[0], v[1], options[k]
           end
         end
@@ -1445,7 +1445,7 @@ module ActiveMerchant #:nodoc:
           build_tag soap, :string, 'Account', options[:payment_method].account_number
           build_tag soap, :string, 'Routing', options[:payment_method].routing_number
           build_tag soap, :string, 'AccountType', options[:payment_method].account_type.capitalize
-          CHECK_DATA_OPTIONS.each do |k,v|
+          CHECK_DATA_OPTIONS.each do |k, v|
             build_tag soap, v[0], v[1], options[k]
           end
         end
@@ -1457,7 +1457,7 @@ module ActiveMerchant #:nodoc:
             build_tag soap, :double, 'Amount', amount(options[:recurring][:amount])
             build_tag soap, :string, 'Next', options[:recurring][:next].strftime('%Y-%m-%d') if options[:recurring][:next]
             build_tag soap, :string, 'Expire', options[:recurring][:expire].strftime('%Y-%m-%d') if options[:recurring][:expire]
-            RECURRING_BILLING_OPTIONS.each do |k,v|
+            RECURRING_BILLING_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:recurring][k]
             end
           end
@@ -1480,7 +1480,7 @@ module ActiveMerchant #:nodoc:
             options[:billing_address][:first_name], options[:billing_address][:last_name] = split_names(options[:billing_address][:name])
           end
           soap.BillingAddress 'xsi:type' => 'ns1:Address' do
-            ADDRESS_OPTIONS.each do |k,v|
+            ADDRESS_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:billing_address][k]
             end
           end
@@ -1493,7 +1493,7 @@ module ActiveMerchant #:nodoc:
             options[:shipping_address][:first_name], options[:shipping_address][:last_name] = split_names(options[:shipping_address][:name])
           end
           soap.ShippingAddress 'xsi:type' => 'ns1:Address' do
-            ADDRESS_OPTIONS.each do |k,v|
+            ADDRESS_OPTIONS.each do |k, v|
               build_tag soap, v[0], v[1], options[:shipping_address][k]
             end
           end

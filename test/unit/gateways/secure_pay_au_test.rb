@@ -201,7 +201,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   private
 
   def successful_store_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -240,7 +240,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_unstore_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -272,7 +272,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_triggered_payment_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -318,7 +318,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -365,7 +365,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -412,7 +412,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_live_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>

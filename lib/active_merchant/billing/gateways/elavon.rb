@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_invoice(form,options)
+      def add_invoice(form, options)
         form[:invoice_number] = truncate((options[:order_id] || options[:invoice]), 10)
         form[:description] = truncate(options[:description], 255)
       end

@@ -179,9 +179,9 @@ module ActiveMerchant #:nodoc:
 
       def parse_check(data)
         response = {}
-        response[:success]          = data[1,1]
-        response[:code]             = data[2,6].strip
-        response[:message]          = data[8,32].strip
+        response[:success]          = data[1, 1]
+        response[:code]             = data[2, 6].strip
+        response[:message]          = data[8, 32].strip
         response[:risk]             = data[40, 2]
         response[:reference]        = data[42, 10]
 
@@ -194,9 +194,9 @@ module ActiveMerchant #:nodoc:
 
       def parse_credit_card(data)
         response = {}
-        response[:success]          = data[1,1]
-        response[:code]             = data[2,6]
-        response[:message]          = data[8,32].strip
+        response[:success]          = data[1, 1]
+        response[:code]             = data[2, 6]
+        response[:message]          = data[8, 32].strip
         response[:front_end]        = data[40, 2]
         response[:cvv_result]       = data[42, 1]
         response[:avs_result]       = data[43, 1].strip

@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__),'smart_ps.rb')
+require File.join(File.dirname(__FILE__), 'smart_ps.rb')
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

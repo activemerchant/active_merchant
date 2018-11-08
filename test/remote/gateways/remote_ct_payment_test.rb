@@ -10,7 +10,7 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     @options = {
       billing_address: address,
       description: 'Store Purchase',
-      order_id: generate_unique_id[0,11],
+      order_id: generate_unique_id[0, 11],
       email: 'bigbird@sesamestreet.com'
 
     }
@@ -32,7 +32,7 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(order_id: generate_unique_id[0,11]))
+    assert capture = @gateway.capture(@amount, auth.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
     assert_success capture
     assert_equal 'APPROVED', capture.message
   end
@@ -47,7 +47,7 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization, @options.merge(order_id: generate_unique_id[0,11]))
+    assert capture = @gateway.capture(@amount-1, auth.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
     assert_success capture
   end
 
@@ -61,7 +61,7 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization, @options.merge(order_id: generate_unique_id[0,11]))
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
     assert_success refund
     assert_equal 'APPROVED', refund.message
   end
@@ -70,12 +70,12 @@ class RemoteCtPaymentTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options.merge(order_id: generate_unique_id[0,11]))
+    assert refund = @gateway.refund(@amount-1, purchase.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
     assert_success refund
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, '0123456789asd;0123456789asdf;12345678', @options.merge(order_id: generate_unique_id[0,11]))
+    response = @gateway.refund(@amount, '0123456789asd;0123456789asdf;12345678', @options.merge(order_id: generate_unique_id[0, 11]))
     assert_failure response
     assert_equal 'The original transaction number does not match any actual transaction', response.message
   end

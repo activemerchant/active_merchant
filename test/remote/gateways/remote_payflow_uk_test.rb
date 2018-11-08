@@ -142,7 +142,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
       :password => @password
     )
 
-    request_id = Digest::SHA1.hexdigest(rand.to_s).slice(0,32)
+    request_id = Digest::SHA1.hexdigest(rand.to_s).slice(0, 32)
     gateway.expects(:generate_unique_id).times(2).returns(request_id)
 
     response1 = gateway.purchase(100, @creditcard, @options)

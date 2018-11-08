@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_terminal_number(post, options)
         add_operator_id(post, options)
-        add_invoice(post,0, options)
+        add_invoice(post, 0, options)
         add_payment(post, credit_card)
         add_address(post, credit_card, options)
         add_customer_data(post, options)
@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_money(post, money)
-        post[:Amount] = money.to_s.rjust(11,'0')
+        post[:Amount] = money.to_s.rjust(11, '0')
       end
 
       def add_operator_id(post, options)
@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money,  options)
         post[:CurrencyCode] = options[:currency] || (currency(money) if money)
-        post[:InvoiceNumber] = options[:order_id].rjust(12,'0')
+        post[:InvoiceNumber] = options[:order_id].rjust(12, '0')
         post[:InputType] = 'I'
         post[:LanguageCode] = 'E'
       end
@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
           post[:Token] = split_authorization(payment)[3].strip
         else
           post[:CardType] = CARD_BRAND[payment.brand] || ' '
-          post[:CardNumber] = payment.number.rjust(40,' ')
+          post[:CardNumber] = payment.number.rjust(40, ' ')
           post[:ExpirationDate] = expdate(payment)
           post[:Cvv2Cvc2Number] = payment.verification_value
         end

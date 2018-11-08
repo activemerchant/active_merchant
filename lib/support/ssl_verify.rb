@@ -23,7 +23,7 @@ class SSLVerify
       end
 
       uri = URI.parse(g.live_url)
-      result,message = ssl_verify_peer?(uri)
+      result, message = ssl_verify_peer?(uri)
       case result
       when :success
         print '.'

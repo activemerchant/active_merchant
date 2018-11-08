@@ -274,9 +274,9 @@ module ActiveMerchant #:nodoc:
           xml.add_element('ClientType').text = client_type
         end
 
-        xml.add_element('TxnData1').text = options[:txn_data1].to_s.slice(0,255) unless options[:txn_data1].blank?
-        xml.add_element('TxnData2').text = options[:txn_data2].to_s.slice(0,255) unless options[:txn_data2].blank?
-        xml.add_element('TxnData3').text = options[:txn_data3].to_s.slice(0,255) unless options[:txn_data3].blank?
+        xml.add_element('TxnData1').text = options[:txn_data1].to_s.slice(0, 255) unless options[:txn_data1].blank?
+        xml.add_element('TxnData2').text = options[:txn_data2].to_s.slice(0, 255) unless options[:txn_data2].blank?
+        xml.add_element('TxnData3').text = options[:txn_data3].to_s.slice(0, 255) unless options[:txn_data3].blank?
       end
 
       def new_transaction

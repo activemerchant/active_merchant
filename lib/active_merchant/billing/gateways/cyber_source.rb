@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
       # Determines if a card can be used for Pinless Debit Card transactions
       def validate_pinless_debit_card(creditcard, options = {})
         requires!(options, :order_id)
-        commit(build_validate_pinless_debit_request(creditcard,options), :validate_pinless_debit_card, nil, options)
+        commit(build_validate_pinless_debit_request(creditcard, options), :validate_pinless_debit_card, nil, options)
       end
 
       def supports_scrubbing?
@@ -392,7 +392,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_validate_pinless_debit_request(creditcard,options)
+      def build_validate_pinless_debit_request(creditcard, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_creditcard(xml, creditcard)
         add_validate_pinless_debit_service(xml)
@@ -432,7 +432,7 @@ module ActiveMerchant #:nodoc:
       def add_merchant_data(xml, options)
         xml.tag! 'merchantID', @options[:login]
         xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
-        xml.tag! 'clientLibrary','Ruby Active Merchant'
+        xml.tag! 'clientLibrary', 'Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion',  VERSION
         xml.tag! 'clientEnvironment', RUBY_PLATFORM
       end

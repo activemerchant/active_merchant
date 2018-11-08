@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         post[:ccnumber] = payment.number
-        post[:ccexp] = "#{payment.month.to_s.rjust(2,"0")}#{payment.year.to_s[-2..-1]}"
+        post[:ccexp] = "#{payment.month.to_s.rjust(2, "0")}#{payment.year.to_s[-2..-1]}"
         post[:cvv] = payment.verification_value
       end
 
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         kvs = body.split('&')
 
         kvs.inject({}) { |h, kv|
-          k,v = kv.split('=')
+          k, v = kv.split('=')
           h[k] = v
           h
         }
@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
         parameters[:password] = @options[:password]
         parameters[:username] = @options[:username]
 
-        parameters.collect{|k,v| "#{k}=#{v}" }.join('&')
+        parameters.collect{|k, v| "#{k}=#{v}" }.join('&')
       end
 
       def error_code_from(response)

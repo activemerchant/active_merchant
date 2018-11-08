@@ -269,7 +269,7 @@ module ActiveMerchant
       end
 
       def format_date(month, year)
-        "#{format(month,:two_digits)}/#{format(year, :two_digits)}"
+        "#{format(month, :two_digits)}/#{format(year, :two_digits)}"
       end
 
       def parse(body)

@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
 
     def initialize(options = {})
       @name = options.delete(:name)
-      @codes = options.collect{|k,v| CountryCode.new(v)}
+      @codes = options.collect{|k, v| CountryCode.new(v)}
     end
 
     def code(format)

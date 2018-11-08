@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
           parse_elements(response, root)
         end
 
-        response.delete_if{ |k,v| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if{ |k, v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)

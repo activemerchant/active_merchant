@@ -150,7 +150,7 @@ module ActiveMerchant
           post['card.cardHolderName'] = "#{payment_method.first_name} #{payment_method.last_name}"
           post['card.PAN']            = payment_method.number
           post['card.CVN']            = payment_method.verification_value
-          post['card.expiryYear']     = payment_method.year.to_s[-2,2]
+          post['card.expiryYear']     = payment_method.year.to_s[-2, 2]
           post['card.expiryMonth']    = sprintf('%02d', payment_method.month)
         else
           post['customer.customerReferenceNumber'] = payment_method

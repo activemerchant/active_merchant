@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
+          Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, UNSTORE_ERROR_MESSAGE
         end

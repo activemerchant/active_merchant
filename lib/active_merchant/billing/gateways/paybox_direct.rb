@@ -86,8 +86,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_amount(post, money, options)
-        post[:numappel] = authorization[0,10]
-        post[:numtrans] = authorization[10,10]
+        post[:numappel] = authorization[0, 10]
+        post[:numtrans] = authorization[10, 10]
 
         commit('capture', money, post)
       end
@@ -130,8 +130,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, identification)
-        post[:numappel] = identification[0,10]
-        post[:numtrans] = identification[10,10]
+        post[:numappel] = identification[0, 10]
+        post[:numtrans] = identification[10, 10]
       end
 
       def add_amount(post, money, options)
@@ -142,14 +142,14 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(/\=/)
+          key, val = pair.split(/\=/)
           results[key.downcase.to_sym] = CGI.unescape(val) if val
         end
         results
       end
 
       def commit(action, money = nil, parameters = nil)
-        request_data = post_data(action,parameters)
+        request_data = post_data(action, parameters)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request_data))
         response = parse(ssl_post(self.live_url_backup, request_data)) if service_unavailable?(response) && !test?
         Response.new(success?(response), message_from(response), response.merge(
@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => response[:numappel].to_s + response[:numtrans].to_s,
           :fraud_review => false,
-          :sent_params => parameters.delete_if{|key,value| ['porteur','dateval','cvv'].include?(key.to_s)}
+          :sent_params => parameters.delete_if{|key, value| ['porteur', 'dateval', 'cvv'].include?(key.to_s)}
         )
       end
 
@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
           :type => TRANSACTIONS[action.to_sym],
           :dateq => Time.now.strftime('%d%m%Y%H%M%S'),
           :numquestion => unique_id(parameters[:order_id]),
-          :site => @options[:login].to_s[0,7],
+          :site => @options[:login].to_s[0, 7],
           :rang => @options[:rang] || @options[:login].to_s[7..-1],
           :cle => @options[:password],
           :pays => '',

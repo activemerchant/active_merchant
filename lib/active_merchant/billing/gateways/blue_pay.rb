@@ -330,7 +330,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_recurring(response_fields, opts={}) # expected status?
         parsed = {}
-        response_fields.each do |k,v|
+        response_fields.each do |k, v|
           mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
           parsed[mapped_key] = v
         end
@@ -345,14 +345,14 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         # The bp20api has max one value per form field.
-        response_fields = Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
+        response_fields = Hash[CGI::parse(body).map{|k, v| [k.upcase, v.first]}]
 
         if response_fields.include? 'REBILL_ID'
           return parse_recurring(response_fields)
         end
 
         parsed = {}
-        response_fields.each do |k,v|
+        response_fields.each do |k, v|
           mapped_key = FIELD_MAP.include?(k) ? FIELD_MAP[k] : k
           parsed[mapped_key] = v
         end

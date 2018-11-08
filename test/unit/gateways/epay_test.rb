@@ -39,7 +39,7 @@ class EpayTest < Test::Unit::TestCase
   end
 
   def test_failed_response_on_purchase
-    @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400,'Bad Request'))
+    @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400, 'Bad Request'))
 
     assert response = @gateway.authorize(100, @credit_card)
     assert_equal 400, response.params['response_code']

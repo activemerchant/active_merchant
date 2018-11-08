@@ -63,7 +63,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_email_receipt
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'hank@hill.com',:cust_receipt => 'Yes'))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'hank@hill.com', :cust_receipt => 'Yes'))
     assert_equal 'Success', response.message
     assert_success response
   end

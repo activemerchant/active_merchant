@@ -726,12 +726,12 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_solution_id_is_added_to_create_transaction_parameters
-    assert_nil @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'),{})[:channel]
+    assert_nil @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel]
     ActiveMerchant::Billing::BraintreeBlueGateway.application_id = 'ABC123'
-    assert_equal @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'),{})[:channel], 'ABC123'
+    assert_equal @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel], 'ABC123'
 
     gateway = BraintreeBlueGateway.new(:merchant_id => 'test', :public_key => 'test', :private_key => 'test', channel: 'overidden-channel')
-    assert_equal gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'),{})[:channel], 'overidden-channel'
+    assert_equal gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel], 'overidden-channel'
   ensure
     ActiveMerchant::Billing::BraintreeBlueGateway.application_id = nil
   end

@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         commit('CreditSale') do |xml|
           add_amount(xml, money)
           add_allow_dup(xml)
-          add_customer_data(xml, card_or_token,options)
+          add_customer_data(xml, card_or_token, options)
           add_details(xml, options)
           add_descriptor_name(xml, options)
           add_payment(xml, card_or_token, options)
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
           add_amount(xml, money)
           add_allow_dup(xml)
           add_reference(xml, transaction_id)
-          add_customer_data(xml, transaction_id,options)
+          add_customer_data(xml, transaction_id, options)
           add_details(xml, options)
         end
       end

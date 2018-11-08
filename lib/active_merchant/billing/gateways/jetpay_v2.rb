@@ -369,7 +369,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CardExpYear', format_exp(credit_card.year)
 
         if credit_card.first_name || credit_card.last_name
-          xml.tag! 'CardName', [credit_card.first_name,credit_card.last_name].compact.join(' ')
+          xml.tag! 'CardName', [credit_card.first_name, credit_card.last_name].compact.join(' ')
         end
 
         unless credit_card.verification_value.nil? || (credit_card.verification_value.length == 0)

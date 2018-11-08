@@ -189,7 +189,7 @@ module ActiveMerchant
       def parse(body)
         body = CGI.unescape(body)
         results = {}
-        body.split('&').collect { |e| e.split('=') }.each do |key,value|
+        body.split('&').collect { |e| e.split('=') }.each do |key, value|
           results[key.downcase.to_sym] = normalize(value.to_s.strip)
         end
 

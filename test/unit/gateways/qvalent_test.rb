@@ -55,7 +55,7 @@ class QvalentTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal 'Expired card',response.message
+    assert_equal 'Expired card', response.message
     assert response.test?
   end
 
