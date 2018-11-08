@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        response = parse( ssl_post( url_for(action), post_data(action, money, parameters) ), action )
+        response = parse(ssl_post(url_for(action), post_data(action, money, parameters)), action)
 
         # Pass along the original transaction id in the case an update transaction
         Response.new(response[:success], message_from(response, action), response,

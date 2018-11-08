@@ -219,7 +219,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = CyberSourceGateway.new( :login => 'asdf', :password => 'qwer' )
+    gateway = CyberSourceGateway.new(:login => 'asdf', :password => 'qwer')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "wsse:FailedCheck: \nSecurity Data : UsernameToken authentication failed.\n", response.message

@@ -153,7 +153,7 @@ class ClearhausTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.void( @credit_card, @options)
+    response = @gateway.void(@credit_card, @options)
     assert_failure response
 
     assert_equal 40000, response.error_code

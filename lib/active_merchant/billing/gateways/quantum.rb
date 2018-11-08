@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       #
       def authorize(money, creditcard, options = {})
         setup_address_hash(options)
-        commit(build_auth_request(money, creditcard, options), options )
+        commit(build_auth_request(money, creditcard, options), options)
       end
 
       # Capture an authorization that has previously been requested

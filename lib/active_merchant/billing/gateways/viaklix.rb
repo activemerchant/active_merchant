@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = self.actions[action]
 
-        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)) )
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)))
 
         Response.new(response['result'] == APPROVED, message_from(response), response,
           :test => @options[:test] || test?,

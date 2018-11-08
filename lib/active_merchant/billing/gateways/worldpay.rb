@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
         return response if response.success?
         return response unless options[:force_full_refund_if_unsettled]
 
-        void(authorization, options ) if response.params['last_event'] == 'AUTHORISED'
+        void(authorization, options) if response.params['last_event'] == 'AUTHORISED'
       end
 
       # Credits only function on a Merchant ID/login/profile flagged for Payouts

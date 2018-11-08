@@ -234,7 +234,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
+          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
           fields[key] = CGI.unescape(value.to_s)
         end
 

@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         money = amount(money)
         case normalize(paysource)
         when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true )
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
         money = amount(money)
         case normalize(paysource)
         when /1$/, AUTHORIZATION
-          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
+          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION)
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
