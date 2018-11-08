@@ -134,9 +134,6 @@ module ActiveMerchant #:nodoc:
         post[:user][:email] = options[:email]
         post[:user][:ip_address] = options[:ip] if options[:ip]
         post[:user][:fiscal_number] = options[:fiscal_number] if options[:fiscal_number]
-        if phone = options[:phone] || options[:billing_address][:phone]
-          post[:user][:phone] = phone
-        end
       end
 
       def add_invoice(post, money, options)

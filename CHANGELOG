@@ -18,7 +18,6 @@
 * Braintree: Account for nil billing address fields [curiousepic] #3029
 * Realex: Add verify [kheang] #3030
 * Braintree: Actually account for nil address fields [curiousepic] #3032
-* Paymentez: Does not send phone parameter unless it is defined [molbrown] #3037
 
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] #3001

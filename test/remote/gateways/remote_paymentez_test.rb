@@ -5,8 +5,8 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @gateway = PaymentezGateway.new(fixtures(:paymentez))
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111', verification_value: '666')
-    @declined_card = credit_card('4242424242424242', verification_value: '666')
+    @credit_card = credit_card('4111111111111111', verification_value: '555')
+    @declined_card = credit_card('4242424242424242', verification_value: '555')
     @options = {
       billing_address: address,
       description: 'Store Purchase',
@@ -26,22 +26,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
     options = {
       order_id: '1',
       ip: '127.0.0.1',
-      tax_percentage: 0.07,
-      phone: '333 333 3333'
-    }
-
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
-    assert_success response
-  end
-
-  def test_successful_purchase_without_phone_option
-    options = {
-      order_id: '1',
-      ip: '127.0.0.1',
-      tax_percentage: 0.07,
-      billing_address: {
-        phone: nil
-      }
+      tax_percentage: 0.07
     }
 
     response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
