@@ -214,6 +214,15 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_adds_submerchant_id
+    @options[:submerchant_id] = '12345'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/h3=12345/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_supports_billing_descriptor
     @options[:billing_descriptor] = 'abcdefghijkl'
     stub_comms do

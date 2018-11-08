@@ -129,6 +129,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_3d_secure(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
         add_transaction_type(post, options)
 
         commit(:purchase, post)
@@ -142,6 +143,7 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_3d_secure(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
         add_transaction_type(post, options)
 
         commit(:authorize, post)
@@ -153,6 +155,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
 
         commit(:capture, post)
       end
@@ -162,6 +165,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         reference_action = add_reference(post, authorization)
         add_echo(post, options)
+        add_submerchant_id(post, options)
         post[:a1] = generate_unique_id
 
         commit(:void, post, reference_action)
@@ -173,6 +177,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
 
         commit(:refund, post)
       end
@@ -184,6 +189,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_email(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
         add_transaction_type(post, options)
 
         commit(:credit, post)
@@ -266,6 +272,10 @@ module ActiveMerchant #:nodoc:
         # The d2 parameter is used during the certification process
         # See remote tests for full certification test suite
         post[:d2] = options[:echo] unless options[:echo].blank?
+      end
+
+      def add_submerchant_id(post, options)
+        post[:h3] = options[:submerchant_id] if options[:submerchant_id]
       end
 
       def add_transaction_type(post, options)
