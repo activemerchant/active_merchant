@@ -279,10 +279,10 @@ module ActiveMerchant #:nodoc:
 
       def scrub_email(email)
         return nil unless email.present?
-        return nil if (
+        return nil if
           email !~ /^.+@[^\.]+(\.[^\.]+)+[a-z]$/i ||
           email =~ /\.(con|met)$/i
-        )
+
         email
       end
 
@@ -323,7 +323,7 @@ module ActiveMerchant #:nodoc:
           :region => address[:state],
           :postal_code => scrub_zip(address[:zip]),
         }
-        if (address[:country] || address[:country_code_alpha2])
+        if address[:country] || address[:country_code_alpha2]
           mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2])
         elsif address[:country_name]
           mapped[:country_name] = address[:country_name]

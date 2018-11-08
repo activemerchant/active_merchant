@@ -343,7 +343,7 @@ module ActiveMerchant #:nodoc:
           end
 
           status.elements.to_a.each do |node|
-            if (node.elements.size == 0)
+            if node.elements.size == 0
               response[node.name.to_sym] = (node.text || '').strip
             else
               node.elements.each do |childnode|

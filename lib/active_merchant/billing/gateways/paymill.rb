@@ -314,7 +314,7 @@ module ActiveMerchant #:nodoc:
 
       def response_message(parsed_response)
         return parsed_response['error'] if parsed_response['error']
-        return 'Transaction approved.' if (parsed_response['data'] == [])
+        return 'Transaction approved.' if parsed_response['data'] == []
 
         code = parsed_response['data']['response_code'].to_i
         RESPONSE_CODES[code] || code.to_s

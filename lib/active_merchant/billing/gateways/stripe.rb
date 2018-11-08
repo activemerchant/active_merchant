@@ -474,7 +474,7 @@ module ActiveMerchant #:nodoc:
 
       def add_flags(post, options)
         post[:uncaptured] = true if options[:uncaptured]
-        post[:recurring] = true if (options[:eci] == 'recurring' || options[:recurring])
+        post[:recurring] = true if options[:eci] == 'recurring' || options[:recurring]
       end
 
       def add_metadata(post, options = {})

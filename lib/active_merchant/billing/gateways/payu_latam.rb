@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address]
         payer = {}
         payer[:fullName] = payment_method.name.strip
-        payer[:contactPhone] = address[:phone] if (address && address[:phone])
+        payer[:contactPhone] = address[:phone] if address && address[:phone]
         payer[:dniNumber] = options[:dni_number] if options[:dni_number]
         payer[:dniType] = options[:dni_type] if options[:dni_type]
         payer[:emailAddress] = options[:email] if options[:email]

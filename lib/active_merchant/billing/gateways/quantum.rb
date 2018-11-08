@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'CreditCardNumber', creditcard.number
         xml.tag! 'ExpireMonth', format(creditcard.month, :two_digits)
         xml.tag! 'ExpireYear', format(creditcard.year, :four_digits)
-        xml.tag!('CVV2', creditcard.verification_value) unless (@options[:ignore_cvv] || creditcard.verification_value.blank? )
+        xml.tag!('CVV2', creditcard.verification_value) unless @options[:ignore_cvv] || creditcard.verification_value.blank?
       end
 
       # Where we actually build the full SOAP request using builder

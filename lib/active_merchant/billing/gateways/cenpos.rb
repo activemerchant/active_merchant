@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
         doc.remove_namespaces!
         body = doc.xpath('//ProcessCreditCardResult')
         body.children.each do |node|
-          if (node.elements.size == 0)
+          if node.elements.size == 0
             response[node.name.underscore.to_sym] = node.text
           else
             node.elements.each do |childnode|
