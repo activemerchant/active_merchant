@@ -64,6 +64,8 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '#7914775043909934#', response.authorization
+    assert_equal 'R', response.avs_result['code']
+    assert_equal 'M', response.cvv_result['code']
     assert response.test?
   end
 
@@ -418,6 +420,11 @@ class AdyenTest < Test::Unit::TestCase
   def successful_authorize_response
     <<-RESPONSE
     {
+      "additionalData": {
+        "cvcResult": "1 Matches",
+        "avsResult": "0 Unknown",
+        "cvcResultRaw": "M"
+      },
       "pspReference":"7914775043909934",
       "resultCode":"Authorised",
       "authCode":"50055"

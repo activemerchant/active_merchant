@@ -3,6 +3,7 @@
 == HEAD
 * Make behavior of nil CC numbers more consistent [guaguasi] #3010
 * Moneris: Adds Credential on File logic [deedeelavinder] #3042
+* Adyen: Return AVS and CVC Result [nfarve] #3044
 
 == Version 1.86.0 (October 26, 2018)
 * UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] #3002

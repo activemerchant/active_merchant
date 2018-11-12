@@ -103,6 +103,38 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      AVS_MAPPING = {
+        '0'  => 'R',  # Unknown
+        '1'  => 'A',	# Address matches, postal code doesn't
+        '2'  => 'N',	# Neither postal code nor address match
+        '3'  => 'R',	# AVS unavailable
+        '4'  => 'E',	# AVS not supported for this card type
+        '5'  => 'U',	# No AVS data provided
+        '6'  => 'Z',	# Postal code matches, address doesn't match
+        '7'  => 'D',	# Both postal code and address match
+        '8'  => 'U',	# Address not checked, postal code unknown
+        '9'  => 'B',	# Address matches, postal code unknown
+        '10' => 'N',	# Address doesn't match, postal code unknown
+        '11' => 'U',	# Postal code not checked, address unknown
+        '12' => 'B',	# Address matches, postal code not checked
+        '13' => 'U',	# Address doesn't match, postal code not checked
+        '14' => 'P',	# Postal code matches, address unknown
+        '15' => 'P',	# Postal code matches, address not checked
+        '16' => 'N',	# Postal code doesn't match, address unknown
+        '17' => 'U',  # Postal code doesn't match, address not checked
+        '18' => 'I'	  # Neither postal code nor address were checked
+      }
+
+      CVC_MAPPING = {
+        '0' => 'P', # Unknown
+        '1' => 'M', # Matches
+        '2' => 'N', # Does not match
+        '3' => 'P', # Not checked
+        '4' => 'S', # No CVC/CVV provided, but was required
+        '5' => 'U', # Issuer not certifed by CVC/CVV
+        '6' => 'P'  # No CVC/CVV provided
+      }
+
       NETWORK_TOKENIZATION_CARD_SOURCE = {
         'apple_pay' => 'applepay',
         'android_pay' => 'androidpay',
@@ -239,7 +271,6 @@ module ActiveMerchant #:nodoc:
           raw_response = e.response.body
           response = parse(raw_response)
         end
-
         success = success_from(action, response)
         Response.new(
           success,
@@ -247,8 +278,18 @@ module ActiveMerchant #:nodoc:
           response,
           authorization: authorization_from(action, parameters, response),
           test: test?,
-          error_code: success ? nil : error_code_from(response)
+          error_code: success ? nil : error_code_from(response),
+          avs_result: AVSResult.new(:code => avs_code_from(response)),
+          cvv_result: CVVResult.new(cvv_result_from(response))
         )
+      end
+
+      def avs_code_from(response)
+        AVS_MAPPING[response['additionalData']['avsResult'][0..1].strip] if response.dig('additionalData', 'avsResult')
+      end
+
+      def cvv_result_from(response)
+        CVC_MAPPING[response['additionalData']['cvcResult'][0]] if response.dig('additionalData', 'cvcResult')
       end
 
       def url
