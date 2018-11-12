@@ -289,7 +289,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   # Worldpay has a delay between asking for a transaction to be captured and actually marking it as captured
   # These 2 tests work if you get authorizations from a purchase, wait some time and then perform the refund/void operation.
-  # 
+  #
   # def test_get_authorization
   #   response = @gateway.purchase(@amount, @credit_card, @options)
   #   assert response.authorization
