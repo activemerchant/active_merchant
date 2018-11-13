@@ -259,8 +259,12 @@ module ActiveMerchant #:nodoc:
 
         externalPlatform = {
             "externalPlatform": {
-            name: 'Shopify',
-            version: "#{ActiveMerchant::VERSION}"
+                name: 'Shopify',
+                version: "#{ActiveMerchant::VERSION}"
+            },
+            "adyenPaymentSource": {
+                "name": "adyen-shopify",
+                "version": "#{ActiveMerchant::VERSION}"
             }
         }
 
