@@ -88,6 +88,7 @@ For more in-depth documentation and tutorials, see [GettingStarted.md](GettingSt
 
 The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis) contains a [table of features supported by each gateway](http://github.com/activemerchant/active_merchant/wikis/gatewayfeaturematrix).
 
+* [Adyen](https://www.adyen.com/) - AT, AU, BE, BG, BR, CH, CY, CZ, DE, DK, EE, ES, FI, FR, GB, GI, GR, HK, HU, IE, IS, IT, LI, LT, LU, LV, MC, MT, MX, NL, NO, PL, PT, RO, SE, SG, SK, SI, US
 * [Authorize.Net CIM](http://www.authorize.net/) - US
 * [Authorize.Net](http://www.authorize.net/) - AD, AT, AU, BE, BG, CA, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GB, GI, GR, HU, IE, IT, LI, LU, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, SM, TR, US, VA
 * [Axcess MS](http://www.axcessms.com/) - AD, AT, BE, BG, BR, CA, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HR, HU, IE, IL, IM, IS, IT, LI, LT, LU, LV, MC, MT, MX, NL, NO, PL, PT, RO, RU, SE, SI, SK, TR, US, VA

@@ -5,8 +5,8 @@ class AdyenTest < Test::Unit::TestCase
 
   def setup
     @gateway = AdyenGateway.new(
-      username: 'ws@adyenmerchant.com',
-      password: 'password',
+      api_key: 'ApiKey',
+      live_endpoint_url_prefix: '1797a841fbb37ca7-ShopifyDemo',
       merchant_account: 'merchantAccount'
     )
 
