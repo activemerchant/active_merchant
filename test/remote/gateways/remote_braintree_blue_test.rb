@@ -38,6 +38,27 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'authorized', response.params['braintree_transaction']['status']
   end
 
+  def test_successful_authorize_with_nil_billing_address_options
+    credit_card = credit_card('5105105105105100')
+    options = {
+      :billing_address => {
+        :name => 'John Smith',
+        :phone => '123-456-7890',
+        :company => nil,
+        :address1 => nil,
+        :address2 => nil,
+        :city => nil,
+        :state => nil,
+        :zip => nil,
+        :country_name => nil
+      }
+    }
+    assert response = @gateway.authorize(@amount, credit_card, options)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'authorized', response.params['braintree_transaction']['status']
+  end
+
   def test_masked_card_number
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal('510510******5100', response.params['braintree_transaction']['credit_card_details']['masked_number'])
@@ -217,6 +238,35 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 1, @braintree_backend.customer.find(customer_id).credit_cards.size
 
     assert response = @gateway.store(credit_card, customer: customer_id)
+    assert_success response
+    assert_equal 2, @braintree_backend.customer.find(customer_id).credit_cards.size
+    assert_equal customer_id, response.params['customer_vault_id']
+    assert_equal customer_id, response.authorization
+    assert_not_nil response.params['credit_card_token']
+  end
+
+  def test_successful_store_with_existing_customer_id_and_nil_billing_address_options
+    credit_card = credit_card('5105105105105100')
+    customer_id = generate_unique_id
+    options = {
+      :customer => customer_id,
+      :billing_address => {
+        :name => 'John Smith',
+        :phone => '123-456-7890',
+        :company => nil,
+        :address1 => nil,
+        :address2 => nil,
+        :city => nil,
+        :state => nil,
+        :zip => nil,
+        :country_name => nil
+      }
+    }
+    assert response = @gateway.store(credit_card, options)
+    assert_success response
+    assert_equal 1, @braintree_backend.customer.find(customer_id).credit_cards.size
+
+    assert response = @gateway.store(credit_card, options)
     assert_success response
     assert_equal 2, @braintree_backend.customer.find(customer_id).credit_cards.size
     assert_equal customer_id, response.params['customer_vault_id']
