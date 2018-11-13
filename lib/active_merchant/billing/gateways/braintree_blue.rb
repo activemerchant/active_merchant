@@ -259,7 +259,10 @@ module ActiveMerchant #:nodoc:
             expiration_year: credit_card.year.to_s,
             device_data: options[:device_data],
           }
-          parameters[:billing_address] = map_address(options[:billing_address]) if options[:billing_address]
+          if options[:billing_address]
+            address = map_address(options[:billing_address])
+            parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| v.nil? }
+          end
 
           result = @braintree_gateway.credit_card.create(parameters)
           ActiveMerchant::Billing::Response.new(
