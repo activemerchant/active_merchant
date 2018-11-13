@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
         add_shopper_interaction(post, payment, options)
         add_address(post, options)
         add_installments(post, options) if options[:installments]
+        add_application_info(post)
         commit('payments', post)
       end
 
@@ -51,6 +52,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
+        add_application_info(post)
         commit('capture', post)
       end
 
@@ -58,12 +60,14 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_original_reference(post, authorization, options)
+        add_application_info(post)
         commit('refund', post)
       end
 
       def void(authorization, options = {})
         post = init_post(options)
         add_reference(post, authorization, options)
+        add_application_info(post)
         commit('cancel', post)
       end
 
@@ -75,6 +79,7 @@ module ActiveMerchant #:nodoc:
         add_extra_data(post, credit_card, options)
         add_recurring_contract(post)
         add_address(post, options)
+        add_application_info(post)
         commit('authorise', post)
       end
 
@@ -248,6 +253,18 @@ module ActiveMerchant #:nodoc:
         post[:installments] = {
             value: options[:installments]
         }
+      end
+
+      def add_application_info(post)
+
+        externalPlatform = {
+            "externalPlatform": {
+            name: 'Shopify',
+            version: "#{ActiveMerchant::VERSION}"
+            }
+        }
+
+        post[:applicationInfo] = externalPlatform
       end
 
       def parse(body)
