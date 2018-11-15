@@ -199,7 +199,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [QuickBooks Merchant Services](http://payments.intuit.com/) - US
 * [QuickBooks Payments](http://payments.intuit.com/) - US
 * [Quantum Gateway](http://www.quantumgateway.com) - US
-* [QuickPay](http://quickpay.net/) - DE, DK, ES, FI, FR, FO, GB, IS, NO, SE
+* [QuickPay](http://quickpay.net/) - AT, BE, BG, CY, CZ, DE, DK, EE, ES, FI, FR, GB, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE SI, SK
 * [Qvalent](https://www.qvalent.com/) - AU
 * [Raven](http://www.deepcovelabs.com/raven) - AI, AN, AT, AU, BE, BG, BS, BZ, CA, CH, CR, CY, CZ, DE, DK, DM, DO, EE, EL, ES, FI, FR, GB, GG, GI, HK, HR, HU, IE, IL, IM, IN, IT, JE, KN, LI, LT, LU, LV, MH, MT, MY, NL, NO, NZ, PA, PE, PH, PL, PT, RO, RS, SC, SE, SG, SI, SK, UK, US, VG, ZA
 * [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
