@@ -12,8 +12,8 @@
 #
 
 adyen:
-  username: ''
-  password: ''
+  api_key: ''
+  live_endpoint_url_prefix: ''
   merchant_account: ''
 
 allied_wallet:

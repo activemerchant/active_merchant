@@ -236,16 +236,16 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_add_address
-    post = {:card => {:billingAddress => {}}}
+    post = {:billingAddress => {}}
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
     @gateway.send(:add_address, post, @options)
-    assert_equal 'N/A', post[:card][:billingAddress][:street]
-    assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
-    assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
-    assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
-    assert_equal @options[:billing_address][:state], post[:card][:billingAddress][:stateOrProvince]
-    assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
+    assert_equal 'N/A', post[:billingAddress][:street]
+    assert_equal 'N/A', post[:billingAddress][:houseNumberOrName]
+    assert_equal @options[:billing_address][:zip], post[:billingAddress][:postalCode]
+    assert_equal @options[:billing_address][:city], post[:billingAddress][:city]
+    assert_equal @options[:billing_address][:state], post[:billingAddress][:stateOrProvince]
+    assert_equal @options[:billing_address][:country], post[:billingAddress][:country]
   end
 
   def test_authorize_with_network_tokenization_credit_card_no_name
@@ -254,7 +254,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @apple_pay_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_equal 'Not Provided', JSON.parse(data)['card']['holderName']
+      assert_equal 'Not Provided', JSON.parse(data)['paymentMethod']['holderName']
     end.respond_with(successful_authorize_response)
     assert_success response
   end

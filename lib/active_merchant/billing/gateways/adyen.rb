@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         add_recurring_contract(post)
         add_address(post, options)
         add_application_info(post)
-        commit('authorise', post)
+        commit('payments', post)
       end
 
       def verify(credit_card, options = {})
@@ -341,7 +341,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(action, response)
-        return authorize_message_from(response) if action.to_s == 'authorise'
+        return authorize_message_from(response) if action.to_s == 'payments'
         response['response'] || response['message']
       end
 
