@@ -293,7 +293,7 @@ module ActiveMerchant #:nodoc:
           when :cvd_info
             transaction.add_element(cvd_element(parameters[:cvd_value])) if @cvv_enabled
           when :cof_info
-            transaction.add_element(credential_on_file(parameters)) if @cof_enabled
+            transaction.add_element(credential_on_file(parameters)) if @cof_enabled && cof_details_present?(parameters)
           else
             transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
           end
@@ -324,10 +324,14 @@ module ActiveMerchant #:nodoc:
         element
       end
 
+      def cof_details_present?(parameters)
+        parameters[:issuer_id] && parameters[:payment_indicator] && parameters[:payment_information]
+      end
+
       def credential_on_file(parameters)
-        issuer_id = parameters[:issuer_id] || ''
-        payment_indicator = parameters[:payment_indicator] if parameters[:payment_indicator]
-        payment_information = parameters[:payment_information] if parameters[:payment_information]
+        issuer_id = parameters[:issuer_id]
+        payment_indicator = parameters[:payment_indicator]
+        payment_information = parameters[:payment_information]
 
         cof_info = REXML::Element.new('cof_info')
         cof_info.add_element('issuer_id').text = issuer_id
