@@ -51,6 +51,12 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
     assert_equal 'no_error', response.message
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'no_error', response.message
+  end
+
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

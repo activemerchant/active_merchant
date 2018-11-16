@@ -5,6 +5,7 @@
 * Moneris: Adds Credential on File logic [deedeelavinder] #3042
 * Adyen: Return AVS and CVC Result [nfarve] #3044
 * Braintree: Account for nil address with existing customer [curiousepic] #3047
+* Optimal Payment: Add verify capabilities #3052
 
 == Version 1.86.0 (October 26, 2018)
 * UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] #3002
