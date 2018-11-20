@@ -56,7 +56,7 @@ class ClearhausTest < Test::Unit::TestCase
       assert_success response
       assert response.test?
     end.check_request do |endpoint, data, headers|
-      expr = { threed_secure: { pares: '123' } }.to_query
+      expr = { card: { pares: '123' } }.to_query
       assert_match expr, data
     end.respond_with(successful_authorize_response)
   end
@@ -225,7 +225,7 @@ class ClearhausTest < Test::Unit::TestCase
     end.check_request do |method, endpoint, data, headers|
       assert headers['Signature']
       assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers['Signature']
-      assert_match %r{02f56ed1f6c60cdefd$}, headers['Signature']
+      assert_match %r{25f8283c3cc43911d7$}, headers['Signature']
     end.respond_with(successful_authorize_response)
   end
 
@@ -244,7 +244,7 @@ class ClearhausTest < Test::Unit::TestCase
     end.check_request do |method, endpoint, data, headers|
       assert headers['Signature']
       assert_match %r{7e51b92e-ca7e-48e3-8a96-7d66cf1f2da2 RS256-hex}, headers['Signature']
-      assert_match %r{02f56ed1f6c60cdefd$}, headers['Signature']
+      assert_match %r{25f8283c3cc43911d7$}, headers['Signature']
     end.respond_with(successful_authorize_response)
   end
 
@@ -275,7 +275,7 @@ opened
 starting SSL for gateway.test.clearhaus.com:443...
 SSL established
 <- "POST /authorizations HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic NTI2Y2Y1NjQtMTE5Yy00YmI2LTljZjgtMDAxNWVhYzdlNGY2Og==\r\nUser-Agent: Clearhaus ActiveMerchantBindings/1.54.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: gateway.test.clearhaus.com\r\nContent-Length: 128\r\n\r\n"
-<- "amount=100&card%5Bcsc%5D=123&card%5Bexpire_month%5D=09&card%5Bexpire_year%5D=2016&card%5Bnumber%5D=4111111111111111&currency=EUR"
+<- "amount=100&card%5Bcsc%5D=123&card%5Bexpire_month%5D=09&card%5Bexpire_year%5D=2016&card%5Bpan%5D=4111111111111111&currency=EUR"
 -> "HTTP/1.1 201 Created\r\n"
 -> "Content-Type: application/vnd.clearhaus-gateway.hal+json; version=0.9.0; charset=utf-8\r\n"
 -> "Date: Wed, 28 Oct 2015 18:56:11 GMT\r\n"
@@ -318,7 +318,7 @@ opened
 starting SSL for gateway.test.clearhaus.com:443...
 SSL established
 <- "POST /authorizations HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Clearhaus ActiveMerchantBindings/1.54.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: gateway.test.clearhaus.com\r\nContent-Length: 128\r\n\r\n"
-<- "amount=100&card%5Bcsc%5D=[FILTERED]&card%5Bexpire_month%5D=09&card%5Bexpire_year%5D=2016&card%5Bnumber%5D=[FILTERED]&currency=EUR"
+<- "amount=100&card%5Bcsc%5D=[FILTERED]&card%5Bexpire_month%5D=09&card%5Bexpire_year%5D=2016&card%5Bpan%5D=[FILTERED]&currency=EUR"
 -> "HTTP/1.1 201 Created\r\n"
 -> "Content-Type: application/vnd.clearhaus-gateway.hal+json; version=0.9.0; charset=utf-8\r\n"
 -> "Date: Wed, 28 Oct 2015 18:56:11 GMT\r\n"
