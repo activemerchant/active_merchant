@@ -4,7 +4,8 @@
 * Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068
 * QuickPay: update supported countries [ta] #3049
 * WorldPay: set cardholder name to "3D" for 3DS transactions [bpollack] #3071
-* Authorize.Net: Support refunds for bank accounts [nfarve]  #3063
+* Authorize.Net: Support refunds for bank accounts [nfarve] #3063
+* Stripe: support specifying a reason for refunds [yosukehasumi] #3056
 
 == Version 1.88.0 (November 30, 2018)
 * Added ActiveSupport/Rails master support [Edouard-chin] #3065

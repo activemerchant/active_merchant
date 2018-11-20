@@ -596,6 +596,15 @@ class StripeTest < Test::Unit::TestCase
     assert_equal 're_test_refund', response.authorization
   end
 
+  def test_successful_refund_with_reason
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', reason: 'fraudulent')
+    assert_success response
+
+    assert_equal 're_test_refund', response.authorization
+  end
+
   def test_unsuccessful_refund
     @gateway.expects(:ssl_request).returns(generic_error_response)
 
