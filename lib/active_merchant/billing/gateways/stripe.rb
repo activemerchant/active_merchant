@@ -147,6 +147,7 @@ module ActiveMerchant #:nodoc:
         post[:refund_application_fee] = true if options[:refund_application_fee]
         post[:reverse_transfer] = options[:reverse_transfer] if options[:reverse_transfer]
         post[:metadata] = options[:metadata] if options[:metadata]
+        post[:reason] = options[:reason] if options[:reason]
         post[:expand] = [:charge]
 
         MultiResponse.run(:first) do |r|

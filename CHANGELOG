@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Stripe: support a reason for refunding a transaction [#3056]
 * UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] [#3002]
 
 == Version 1.85.0 (September 28, 2018)

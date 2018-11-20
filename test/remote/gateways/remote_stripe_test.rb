@@ -254,6 +254,19 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success refund
   end
 
+  def test_successful_refund_with_reason
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    assert refund = @gateway.refund(@amount - 20, response.authorization, reason: 'fraudulent')
+    assert refund.test?
+    refund_id = refund.params['id']
+    assert_equal refund.authorization, refund_id
+    assert_success refund
+    assert_equal 'fraudulent', refund.params['reason']
+  end
+
   def test_successful_refund_on_verified_bank_account
     customer_id = @verified_bank_account[:customer_id]
     bank_account_id = @verified_bank_account[:bank_account_id]
