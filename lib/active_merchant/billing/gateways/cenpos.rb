@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
       self.live_url = 'https://ww3.cenpos.net/6/transact.asmx'
 
-      self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IN IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
+      self.supported_countries = %w(AD AI AG AR AU AT BS BB BE BZ BM BR BN BG CA HR CY CZ DK DM EE FI FR DE GR GD GY HK HU IS IL IT JP LV LI LT LU MY MT MX MC MS NL PA PL PT KN LC MF VC SM SG SK SI ZA ES SR SE CH TR GB US UY)
       self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
