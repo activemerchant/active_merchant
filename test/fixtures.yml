@@ -239,6 +239,12 @@ cyber_source:
   login: X
   password: Y
 
+# Working credentials, no need to replace
+d_local:
+  login: aeaf9bbfa1
+  trans_key: 9de3769b7e
+  secret_key: ae132899f56162a669b38dab5927862f3
+
 data_cash:
   login: X
   password: Y
