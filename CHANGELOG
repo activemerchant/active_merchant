@@ -10,6 +10,7 @@
 * Cenpos: update supported countries [bpollack] #3055
 * CyberSource: update supported countries [bpollack] #3055
 * MiGS: update supported countries [bpollack] #3055
+* Forte: Allow void on capture #3059
 
 == Version 1.86.0 (October 26, 2018)
 * UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] #3002
