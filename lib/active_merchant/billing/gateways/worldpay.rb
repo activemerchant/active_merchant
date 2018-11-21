@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def order_tag_attributes(options)
-        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id] }.reject{|_,v| !v}
+        { 'orderCode' => options[:order_id], 'installationId' => options[:inst_id] || @options[:inst_id], 'shopperLanguageCode' => options[:language_code] }.reject{|_,v| !v}
       end
 
       def build_capture_request(money, authorization, options)
