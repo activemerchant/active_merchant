@@ -218,7 +218,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = AdyenGateway.new(username: '', password: '', merchant_account: '')
+    gateway = AdyenGateway.new(api_key: '', live_endpoint_url_prefix: '', merchant_account: '')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

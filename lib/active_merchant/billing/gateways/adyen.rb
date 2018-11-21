@@ -308,15 +308,15 @@ module ActiveMerchant #:nodoc:
       def url(action)
         if (action == 'payments')
           if test?
-            "https://checkout-test.adyen.com/checkout/v32/#{action}"
+            "https://checkout-test.adyen.com/checkout/v40/#{action}"
           else
-            "https://#{@options[:live_endpoint_url_prefix]}-checkout-live.adyenpayments.com/checkout/v32/#{action}"
+            "https://#{@options[:live_endpoint_url_prefix]}-checkout-live.adyenpayments.com/checkout/v40/#{action}"
           end
         else
           if test?
             "https://pal-test.adyen.com/pal/servlet/Payment/#{action}"
           else
-            "https://#{@options[:live_endpoint_url_prefix]}-pal-live.adyenpayments.com/pal/servlet/Payment/#{action}"
+            "https://#{@options[:live_endpoint_url_prefix]}-pal-live.adyenpayments.com/pal/servlet/Payment/v40#{action}"
           end
         end
       end

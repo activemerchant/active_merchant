@@ -41,16 +41,15 @@ class AdyenTest < Test::Unit::TestCase
   # Subdomains are only valid for production gateways, so the test_url check must be manually bypassed for this test to pass.
   # def test_subdomain_specification
   #   gateway = AdyenGateway.new(
-  #     username: 'ws@adyenmerchant.com',
-  #     password: 'password',
-  #     merchant_account: 'merchantAccount',
-  #     subdomain: '123-subdomain'
+  #     api_key: 'ApiKey',
+  #     live_endpoint_url_prefix: '1797a841fbb37ca7-ShopifyDemo',
+  #     merchant_account: 'merchantAccount'
   #   )
   #
   #   response = stub_comms(gateway) do
   #     gateway.authorize(@amount, @credit_card, @options)
   #   end.check_request do |endpoint, data, headers|
-  #     assert_match("https://123-subdomain-pal-live.adyenpayments.com/pal/servlet/Payment/v18/authorise", endpoint)
+  #     assert_match("https://1797a841fbb37ca7-ShopifyDemo-pal-live.adyenpayments.com/pal/servlet/Payment/v18/authorise", endpoint)
   #   end.respond_with(successful_authorize_response)
   #
   #   assert response
