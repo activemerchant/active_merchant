@@ -6,7 +6,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @amount = 100
 
-    @credit_card = credit_card('4111111111111111',
+    @credit_card = credit_card(
+      '4111111111111111',
       :month => 10,
       :year => 2020,
       :first_name => 'John',
@@ -15,7 +16,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
-    @declined_card = credit_card('4000300011112220')
+    @declined_card = credit_card(
+      '4111111111111111',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'DECLINED',
+      :last_name => '',
+      :verification_value => '737'
+    )
 
     @improperly_branded_maestro = credit_card(
       '5500000000000004',
@@ -27,19 +35,21 @@ class RemoteAdyenTest < Test::Unit::TestCase
       brand: 'mastercard'
     )
 
-    @apple_pay_card = network_tokenization_credit_card('4111111111111111',
+    @apple_pay_card = network_tokenization_credit_card(
+      '4111111111111111',
       :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
-      :month              => '08',
-      :year               => '2018',
-      :source             => :apple_pay,
+      :month => '08',
+      :year => '2018',
+      :source => :apple_pay,
       :verification_value => nil
     )
 
-    @google_pay_card = network_tokenization_credit_card('4111111111111111',
+    @google_pay_card = network_tokenization_credit_card(
+      '4111111111111111',
       :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
-      :month              => '08',
-      :year               => '2018',
-      :source             => :google_pay,
+      :month => '08',
+      :year => '2018',
+      :source => :google_pay,
       :verification_value => nil
     )
 
@@ -47,7 +57,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       reference: '345123',
       shopper_email: 'john.smith@test.com',
       shopper_ip: '77.110.174.153',
-      shopper_reference: 'John Smith',
+      customer_id: '12345',
       billing_address: address(),
       order_id: '123',
       recurring_processing_model: 'CardOnFile'
@@ -94,7 +104,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_succesful_purchase_with_brand_override
-    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({overwrite_brand: true, selected_brand: 'maestro'}))
+    response = @gateway.purchase(@amount, @improperly_branded_maestro, @options.merge({ overwrite_brand: true, selected_brand: 'maestro' }))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
@@ -124,7 +134,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
   end
 
@@ -147,7 +157,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
     assert_success refund
   end
 
@@ -190,7 +200,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_successful_purchase_using_stored_card
     assert store_response = @gateway.store(@credit_card, @options)
     assert_success store_response
-
     response = @gateway.purchase(@amount, store_response.authorization, @options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -232,7 +241,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
   end
 
   def test_transcript_scrubbing_network_tokenization_card
@@ -243,7 +251,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     assert_scrubbed(@apple_pay_card.number, transcript)
     assert_scrubbed(@apple_pay_card.payment_cryptogram, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
   end
 
   def test_incorrect_number_for_purchase

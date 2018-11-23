@@ -31,7 +31,7 @@ class AdyenTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address(),
-      shopper_reference: 'John Smith',
+      shopper_reference: 'John Smith', #need to be customer_id check impact!!!
       order_id: '345123',
       installments: 2,
       recurring_processing_model: 'CardOnFile'

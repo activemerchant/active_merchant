@@ -13,13 +13,13 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Adyen'
 
       STANDARD_ERROR_CODE_MAPPING = {
-          '101' => STANDARD_ERROR_CODE[:incorrect_number],
-          '103' => STANDARD_ERROR_CODE[:invalid_cvc],
-          '131' => STANDARD_ERROR_CODE[:incorrect_address],
-          '132' => STANDARD_ERROR_CODE[:incorrect_address],
-          '133' => STANDARD_ERROR_CODE[:incorrect_address],
-          '134' => STANDARD_ERROR_CODE[:incorrect_address],
-          '135' => STANDARD_ERROR_CODE[:incorrect_address],
+        '101' => STANDARD_ERROR_CODE[:incorrect_number],
+        '103' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '131' => STANDARD_ERROR_CODE[:incorrect_address],
+        '132' => STANDARD_ERROR_CODE[:incorrect_address],
+        '133' => STANDARD_ERROR_CODE[:incorrect_address],
+        '134' => STANDARD_ERROR_CODE[:incorrect_address],
+        '135' => STANDARD_ERROR_CODE[:incorrect_address],
       }
 
       def initialize(options = {})
@@ -30,8 +30,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         MultiResponse.run do |r|
-          r.process {authorize(money, payment, options)}
-          r.process {capture(money, r.authorization, options)}
+          r.process { authorize(money, payment, options) }
+          r.process { capture(money, r.authorization, options) }
         end
       end
 
@@ -43,6 +43,7 @@ module ActiveMerchant #:nodoc:
         add_extra_data(post, payment, options)
         add_shopper_interaction(post, payment, options)
         add_address(post, options)
+        add_shopperName(post, options)
         add_installments(post, options) if options[:installments]
         add_application_info(post)
         commit('payments', post)
@@ -85,8 +86,8 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process {authorize(0, credit_card, options)}
-          r.process(:ignore_result) {void(r.authorization, options)}
+          r.process { authorize(0, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
@@ -96,56 +97,56 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-            gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
-            gsub(%r(("number\\?":\\?")[^"]*)i, '\1[FILTERED]').
-            gsub(%r(("cvc\\?":\\?")[^"]*)i, '\1[FILTERED]').
-            gsub(%r(("cavv\\?":\\?")[^"]*)i, '\1[FILTERED]')
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("number\\?":\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cvc\\?":\\?")[^"]*)i, '\1[FILTERED]').
+          gsub(%r(("cavv\\?":\\?")[^"]*)i, '\1[FILTERED]')
       end
 
       private
 
       AVS_MAPPING = {
-          '0' => 'R', # Unknown
-          '1' => 'A', # Address matches, postal code doesn't
-          '2' => 'N', # Neither postal code nor address match
-          '3' => 'R', # AVS unavailable
-          '4' => 'E', # AVS not supported for this card type
-          '5' => 'U', # No AVS data provided
-          '6' => 'Z', # Postal code matches, address doesn't match
-          '7' => 'D', # Both postal code and address match
-          '8' => 'U', # Address not checked, postal code unknown
-          '9' => 'B', # Address matches, postal code unknown
-          '10' => 'N', # Address doesn't match, postal code unknown
-          '11' => 'U', # Postal code not checked, address unknown
-          '12' => 'B', # Address matches, postal code not checked
-          '13' => 'U', # Address doesn't match, postal code not checked
-          '14' => 'P', # Postal code matches, address unknown
-          '15' => 'P', # Postal code matches, address not checked
-          '16' => 'N', # Postal code doesn't match, address unknown
-          '17' => 'U', # Postal code doesn't match, address not checked
-          '18' => 'I' # Neither postal code nor address were checked
+        '0' => 'R', # Unknown
+        '1' => 'A', # Address matches, postal code doesn't
+        '2' => 'N', # Neither postal code nor address match
+        '3' => 'R', # AVS unavailable
+        '4' => 'E', # AVS not supported for this card type
+        '5' => 'U', # No AVS data provided
+        '6' => 'Z', # Postal code matches, address doesn't match
+        '7' => 'D', # Both postal code and address match
+        '8' => 'U', # Address not checked, postal code unknown
+        '9' => 'B', # Address matches, postal code unknown
+        '10' => 'N', # Address doesn't match, postal code unknown
+        '11' => 'U', # Postal code not checked, address unknown
+        '12' => 'B', # Address matches, postal code not checked
+        '13' => 'U', # Address doesn't match, postal code not checked
+        '14' => 'P', # Postal code matches, address unknown
+        '15' => 'P', # Postal code matches, address not checked
+        '16' => 'N', # Postal code doesn't match, address unknown
+        '17' => 'U', # Postal code doesn't match, address not checked
+        '18' => 'I' # Neither postal code nor address were checked
       }
 
       CVC_MAPPING = {
-          '0' => 'P', # Unknown
-          '1' => 'M', # Matches
-          '2' => 'N', # Does not match
-          '3' => 'P', # Not checked
-          '4' => 'S', # No CVC/CVV provided, but was required
-          '5' => 'U', # Issuer not certifed by CVC/CVV
-          '6' => 'P' # No CVC/CVV provided
+        '0' => 'P', # Unknown
+        '1' => 'M', # Matches
+        '2' => 'N', # Does not match
+        '3' => 'P', # Not checked
+        '4' => 'S', # No CVC/CVV provided, but was required
+        '5' => 'U', # Issuer not certifed by CVC/CVV
+        '6' => 'P' # No CVC/CVV provided
       }
 
       NETWORK_TOKENIZATION_CARD_SOURCE = {
-          'apple_pay' => 'applepay',
-          'android_pay' => 'androidpay',
-          'google_pay' => 'paywithgoogle'
+        'apple_pay' => 'applepay',
+        'android_pay' => 'androidpay',
+        'google_pay' => 'paywithgoogle'
       }
 
       def add_extra_data(post, payment, options)
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
-        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
-        post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
+        post[:shopperIP] = options[:ip] if options[:ip]
+        post[:shopperReference] = options[:customer_id] || options[:customer]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
@@ -155,6 +156,8 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
         post[:additionalData]['paymentdatasource.type'] = NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        post[:telephoneNumber] = options[:phone] || (options[:billing_address][:phone] if options[:billing_address] &&
+          options[:billing_address][:phone])
       end
 
       def add_shopper_interaction(post, payment, options = {})
@@ -167,11 +170,12 @@ module ActiveMerchant #:nodoc:
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
       end
 
+
       def add_address(post, options)
         if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:billingAddress] = {}
           post[:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
+          post[:billingAddress][:houseNumberOrName] = address[:address2] || ''
           post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
           post[:billingAddress][:city] = address[:city] || 'N/A'
           post[:billingAddress][:stateOrProvince] = address[:state] if address[:state]
@@ -179,10 +183,47 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+
+      def add_billing_address(post, options)
+        address = options[:billing_address] || options[:address]
+        if (address && address[:country])
+          billing_address = construct_address(address)
+          post[:billingAddress] = billing_address
+        end
+      end
+
+      def add_delivery_address(post, options)
+        address = options[:shipping_address] || options[:address]
+        if (address && address[:country])
+          delivery_address = construct_address(address)
+          post[:deliveryAddress] = delivery_address
+        end
+      end
+
+      def construct_address(address)
+        return {
+          street: address[:address1] || 'N/A',
+          houseNumberOrName: address[:address2] || 'N/A',
+          postalCode: address[:zip],
+          city: address[:city] || 'N/A',
+          stateOrProvince: address[:state],
+          country: address[:country]
+        }
+      end
+
+      def add_shopperName(post, options)
+        if (address = options[:billing_address] || options[:address]) && address[:first_name] && address[:last_name]
+          post[:shopperName] = {}
+          post[:shopperName][:firstname] = options[:billing_address][:first_name]
+          post[:shopperName][:lastname] = options[:billing_address][:last_name]
+          post[:shopperName][:gender] = 'UNKNOWN'
+        end
+      end
+
       def add_invoice(post, money, options)
         amount = {
-            value: amount(money),
-            currency: options[:currency] || currency(money)
+          value: amount(money),
+          currency: options[:currency] || currency(money)
         }
         post[:amount] = amount
         post[:recurringProcessingModel] = options[:recurring_processing_model] if options[:recurring_processing_model]
@@ -190,8 +231,8 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice_for_modification(post, money, options)
         amount = {
-            value: amount(money),
-            currency: options[:currency] || currency(money)
+          value: amount(money),
+          currency: options[:currency] || currency(money)
         }
         post[:modificationAmount] = amount
       end
@@ -199,8 +240,10 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment)
         if payment.is_a?(String)
           _, _, recurring_detail_reference = payment.split('#')
-          post[:selectedRecurringDetailReference] = recurring_detail_reference
-          add_recurring_contract(post)
+
+          post[:paymentMethod] = {
+            recurringDetailReference: recurring_detail_reference,
+          }
         else
           add_mpi_data_for_network_tokenization_card(post, payment) if payment.is_a?(NetworkTokenizationCreditCard)
           add_card(post, payment)
@@ -209,15 +252,15 @@ module ActiveMerchant #:nodoc:
 
       def add_card(post, credit_card)
         card = {
-            type: 'scheme',
-            expiryMonth: credit_card.month,
-            expiryYear: credit_card.year,
-            holderName: credit_card.name,
-            number: credit_card.number,
-            cvc: credit_card.verification_value
+          type: 'scheme',
+          expiryMonth: credit_card.month,
+          expiryYear: credit_card.year,
+          holderName: credit_card.name,
+          number: credit_card.number,
+          cvc: credit_card.verification_value
         }
 
-        card.delete_if {|k, v| v.blank?}
+        card.delete_if { |k, v| v.blank? }
         card[:holderName] ||= 'Not Provided' if credit_card.is_a?(NetworkTokenizationCreditCard)
         requires!(card, :type, :expiryMonth, :expiryYear, :holderName, :number)
         post[:paymentMethod] = card
@@ -251,21 +294,21 @@ module ActiveMerchant #:nodoc:
 
       def add_installments(post, options)
         post[:installments] = {
-            value: options[:installments]
+          value: options[:installments]
         }
       end
 
       def add_application_info(post)
 
         externalPlatform = {
-            "externalPlatform": {
-                name: 'Shopify',
-                version: "#{ActiveMerchant::VERSION}"
-            },
-            "adyenPaymentSource": {
-                "name": "adyen-shopify",
-                "version": "#{ActiveMerchant::VERSION}"
-            }
+          "externalPlatform": {
+            name: "Shopify",
+            version: "#{ActiveMerchant::VERSION}"
+          },
+          "adyenPaymentSource": {
+            "name": "adyen-shopify",
+            "version": "#{ActiveMerchant::VERSION}"
+          }
         }
 
         post[:applicationInfo] = externalPlatform
@@ -286,14 +329,14 @@ module ActiveMerchant #:nodoc:
         end
         success = success_from(action, response)
         Response.new(
-            success,
-            message_from(action, response),
-            response,
-            authorization: authorization_from(action, parameters, response),
-            test: test?,
-            error_code: success ? nil : error_code_from(response),
-            avs_result: AVSResult.new(:code => avs_code_from(response)),
-            cvv_result: CVVResult.new(cvv_result_from(response))
+          success,
+          message_from(action, response),
+          response,
+          authorization: authorization_from(action, parameters, response),
+          test: test?,
+          error_code: success ? nil : error_code_from(response),
+          avs_result: AVSResult.new(:code => avs_code_from(response)),
+          cvv_result: CVVResult.new(cvv_result_from(response))
         )
       end
 
@@ -324,8 +367,8 @@ module ActiveMerchant #:nodoc:
 
       def request_headers
         {
-            'Content-Type' => 'application/json',
-            'x-api-key' => "#{@api_key}"
+          'Content-Type' => 'application/json',
+          'x-api-key' => "#{@api_key}"
         }
       end
 
