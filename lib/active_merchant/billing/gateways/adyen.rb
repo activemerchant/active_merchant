@@ -42,7 +42,8 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_extra_data(post, payment, options)
         add_shopper_interaction(post, payment, options)
-        add_address(post, options)
+        add_billing_address(post, options)
+        add_delivery_address(post, options)
         add_shopperName(post, options)
         add_installments(post, options) if options[:installments]
         add_application_info(post)
@@ -79,7 +80,8 @@ module ActiveMerchant #:nodoc:
         add_payment(post, credit_card)
         add_extra_data(post, credit_card, options)
         add_recurring_contract(post)
-        add_address(post, options)
+        add_billing_address(post, options)
+        add_delivery_address(post, options)
         add_application_info(post)
         commit('payments', post)
       end
@@ -170,20 +172,6 @@ module ActiveMerchant #:nodoc:
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
       end
 
-
-      def add_address(post, options)
-        if (address = options[:billing_address] || options[:address]) && address[:country]
-          post[:billingAddress] = {}
-          post[:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:billingAddress][:houseNumberOrName] = address[:address2] || ''
-          post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:billingAddress][:city] = address[:city] || 'N/A'
-          post[:billingAddress][:stateOrProvince] = address[:state] if address[:state]
-          post[:billingAddress][:country] = address[:country] if address[:country]
-        end
-      end
-
-
       def add_billing_address(post, options)
         address = options[:billing_address] || options[:address]
         if (address && address[:country])
@@ -203,7 +191,7 @@ module ActiveMerchant #:nodoc:
       def construct_address(address)
         return {
           street: address[:address1] || 'N/A',
-          houseNumberOrName: address[:address2] || 'N/A',
+          houseNumberOrName: address[:address2] || '',
           postalCode: address[:zip],
           city: address[:city] || 'N/A',
           stateOrProvince: address[:state],
