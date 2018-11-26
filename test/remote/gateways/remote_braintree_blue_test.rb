@@ -46,7 +46,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
         :phone => '123-456-7890',
         :company => nil,
         :address1 => nil,
-        :address2 => nil,
+        :address2 => '',
         :city => nil,
         :state => nil,
         :zip => nil,

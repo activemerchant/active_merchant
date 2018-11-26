@@ -39,6 +39,7 @@ module ActiveMerchant #:nodoc:
     #
     class BraintreeBlueGateway < Gateway
       include BraintreeCommon
+      include Empty
 
       self.display_name = 'Braintree (Blue Platform)'
 
@@ -261,7 +262,7 @@ module ActiveMerchant #:nodoc:
           }
           if options[:billing_address]
             address = map_address(options[:billing_address])
-            parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| v.nil? }
+            parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| empty?(v) }
           end
 
           result = @braintree_gateway.credit_card.create(parameters)
@@ -309,7 +310,7 @@ module ActiveMerchant #:nodoc:
         parameters[:credit_card][:options] = valid_options
         if options[:billing_address]
           address = map_address(options[:billing_address])
-          parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| v.nil? }
+          parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| empty?(v) }
         end
         parameters
       end
