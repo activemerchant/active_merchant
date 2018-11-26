@@ -32,7 +32,7 @@ class AdyenTest < Test::Unit::TestCase
     @options = {
       billing_address: address(:address1 => '', :address2 => ''),
       shipping_address: address(),
-      shopper_reference: 'John Smith', #need to be customer_id check impact!!!
+      shopper_reference: 'John Smith', # need to be customer_id check impact!!!
       order_id: '345123',
       installments: 2,
       recurring_processing_model: 'CardOnFile'
@@ -254,7 +254,6 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:shipping_address][:city], post[:deliveryAddress][:city]
     assert_equal @options[:shipping_address][:state], post[:deliveryAddress][:stateOrProvince]
     assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
-
   end
 
   def test_authorize_with_network_tokenization_credit_card_no_name

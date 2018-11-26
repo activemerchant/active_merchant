@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         add_shopper_interaction(post, payment, options)
         add_billing_address(post, options)
         add_delivery_address(post, options)
-        add_shopperName(post, options)
+        add_shopper_name(post, options)
         add_installments(post, options) if options[:installments]
         add_application_info(post)
         commit('payments', post)
@@ -82,6 +82,7 @@ module ActiveMerchant #:nodoc:
         add_recurring_contract(post)
         add_billing_address(post, options)
         add_delivery_address(post, options)
+        add_shopper_name(post, options)
         add_application_info(post)
         commit('payments', post)
       end
@@ -174,7 +175,7 @@ module ActiveMerchant #:nodoc:
 
       def add_billing_address(post, options)
         address = options[:billing_address] || options[:address]
-        if (address && address[:country])
+        if address && address[:country]
           billing_address = construct_address(address)
           post[:billingAddress] = billing_address
         end
@@ -182,7 +183,7 @@ module ActiveMerchant #:nodoc:
 
       def add_delivery_address(post, options)
         address = options[:shipping_address] || options[:address]
-        if (address && address[:country])
+        if address && address[:country]
           delivery_address = construct_address(address)
           post[:deliveryAddress] = delivery_address
         end
@@ -199,7 +200,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_shopperName(post, options)
+      def add_shopper_name(post, options)
         if (address = options[:billing_address] || options[:address]) && address[:first_name] && address[:last_name]
           post[:shopperName] = {}
           post[:shopperName][:firstname] = options[:billing_address][:first_name]
@@ -287,19 +288,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_application_info(post)
-
-        externalPlatform = {
+        external_platform = {
           "externalPlatform": {
-            name: "Shopify",
-            version: "#{ActiveMerchant::VERSION}"
+            name: 'Shopify',
+            version: ActiveMerchant::VERSION.to_s
           },
           "adyenPaymentSource": {
-            "name": "adyen-shopify",
-            "version": "#{ActiveMerchant::VERSION}"
+            "name": 'adyen-shopify',
+            "version": ActiveMerchant::VERSION.to_s
           }
         }
 
-        post[:applicationInfo] = externalPlatform
+        post[:applicationInfo] = external_platform
       end
 
       def parse(body)
@@ -309,7 +309,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         begin
-          raw_response = ssl_post("#{url(action)}", post_data(parameters), request_headers)
+          raw_response = ssl_post(url(action).to_s, post_data(parameters), request_headers)
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -337,26 +337,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action)
-        if (action == 'payments')
-          if test?
-            "https://checkout-test.adyen.com/checkout/v40/#{action}"
-          else
-            "https://#{@options[:live_endpoint_url_prefix]}-checkout-live.adyenpayments.com/checkout/v40/#{action}"
-          end
+        if action == 'payments' && test?
+          "https://checkout-test.adyen.com/checkout/v40/#{action}"
+        elsif action == 'payments'
+          "https://#{@options[:live_endpoint_url_prefix]}-checkout-live.adyenpayments.com/checkout/v40/#{action}"
+        elsif test?
+          "https://pal-test.adyen.com/pal/servlet/Payment/#{action}"
         else
-          if test?
-            "https://pal-test.adyen.com/pal/servlet/Payment/#{action}"
-          else
-            "https://#{@options[:live_endpoint_url_prefix]}-pal-live.adyenpayments.com/pal/servlet/Payment/v40#{action}"
-          end
+          "https://#{@options[:live_endpoint_url_prefix]}-pal-live.adyenpayments.com/pal/servlet/Payment/v40#{action}"
         end
       end
-
 
       def request_headers
         {
           'Content-Type' => 'application/json',
-          'x-api-key' => "#{@api_key}"
+          'x-api-key' => @api_key.to_s
         }
       end
 
