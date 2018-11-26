@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def clean_description(description)
-        description.to_s.slice(0,32).encode('US-ASCII', invalid: :replace, undef: :replace, replace: '?')
+        description.to_s.slice(0, 32).encode('US-ASCII', invalid: :replace, undef: :replace, replace: '?')
       end
 
       def prepare_options_hash(options)
@@ -343,7 +343,7 @@ module ActiveMerchant #:nodoc:
           end
 
           status.elements.to_a.each do |node|
-            if (node.elements.size == 0)
+            if node.elements.size == 0
               response[node.name.to_sym] = (node.text || '').strip
             else
               node.elements.each do |childnode|

@@ -51,7 +51,7 @@ class BluePayTest < Test::Unit::TestCase
   def test_add_address_outsite_north_america
     result = {}
 
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'DE', :state => ''} )
+    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'DE', :state => ''})
     assert_equal ['ADDR1', 'ADDR2', 'CITY', 'COMPANY_NAME', 'COUNTRY', 'PHONE', 'STATE', 'ZIP'], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:STATE]
     assert_equal '123 Test St.', result[:ADDR1]
@@ -61,7 +61,7 @@ class BluePayTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'} )
+    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'})
 
     assert_equal ['ADDR1', 'ADDR2', 'CITY', 'COMPANY_NAME', 'COUNTRY', 'PHONE', 'STATE', 'ZIP'], result.stringify_keys.keys.sort
     assert_equal 'AK', result[:STATE]
@@ -73,7 +73,7 @@ class BluePayTest < Test::Unit::TestCase
     result = {}
 
     @gateway.send(:add_creditcard, result, @credit_card)
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'} )
+    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Test St.', :address2 => '5F', :city => 'Testville', :company => 'Test Company', :country => 'US', :state => 'AK'})
 
     assert_equal @credit_card.first_name, result[:NAME1]
     assert_equal @credit_card.last_name, result[:NAME2]

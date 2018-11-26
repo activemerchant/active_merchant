@@ -73,12 +73,12 @@ module ActiveMerchant #:nodoc:
         form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
       end
 
-      def add_invoice(form,options)
+      def add_invoice(form, options)
         form[:invoice_number] = (options[:order_id] || options[:invoice]).to_s.slice(0, 10)
         form[:description] = options[:description].to_s.slice(0, 255)
       end
 
-      def add_address(form,options)
+      def add_address(form, options)
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
@@ -138,7 +138,7 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = self.actions[action]
 
-        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)) )
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)))
 
         Response.new(response['result'] == APPROVED, message_from(response), response,
           :test => @options[:test] || test?,
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
       # Parse the response message
       def parse(msg)
         resp = {}
-        msg.split(self.delimiter).collect{|li|
+        msg.split(self.delimiter).collect { |li|
           key, value = li.split('=')
           resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
         }

@@ -90,7 +90,7 @@ class HpsTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    refund = @gateway.refund(@amount,'transaction_id')
+    refund = @gateway.refund(@amount, 'transaction_id')
     assert_instance_of Response, refund
     assert_success refund
     assert_equal '0', refund.params['GatewayRspCode']
@@ -99,7 +99,7 @@ class HpsTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    refund = @gateway.refund(@amount,'169054')
+    refund = @gateway.refund(@amount, '169054')
     assert_instance_of Response, refund
     assert_failure refund
   end
@@ -124,7 +124,7 @@ class HpsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
 
     @credit_card.track_data = '%B547888879888877776?;5473500000000014=25121019999888877776?'
-    response = @gateway.purchase(@amount,@credit_card,@options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -133,7 +133,7 @@ class HpsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_swipe_purchase_response)
 
     @credit_card.track_data = '%B547888879888877776?;?'
-    response = @gateway.purchase(@amount,@credit_card,@options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_failure response
     assert_equal 'Transaction was rejected because the track data could not be read.', response.message
@@ -144,7 +144,7 @@ class HpsTest < Test::Unit::TestCase
 
     @options[:encryption_type] = '01'
     @credit_card.track_data = '&lt;E1052711%B5473501000000014^MC TEST CARD^251200000000000000000000000000000000?|GVEY/MKaKXuqqjKRRueIdCHPPoj1gMccgNOtHC41ymz7bIvyJJVdD3LW8BbwvwoenI+|+++++++C4cI2zjMp|11;5473501000000014=25120000000000000000?|8XqYkQGMdGeiIsgM0pzdCbEGUDP|+++++++C4cI2zjMp|00|||/wECAQECAoFGAgEH2wYcShV78RZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0PX50qfj4dt0lu9oFBESQQNkpoxEVpCW3ZKmoIV3T93zphPS3XKP4+DiVlM8VIOOmAuRrpzxNi0TN/DWXWSjUC8m/PI2dACGdl/hVJ/imfqIs68wYDnp8j0ZfgvM26MlnDbTVRrSx68Nzj2QAgpBCHcaBb/FZm9T7pfMr2Mlh2YcAt6gGG1i2bJgiEJn8IiSDX5M2ybzqRT86PCbKle/XCTwFFe1X|&gt;'
-    response = @gateway.purchase(@amount,@credit_card,@options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
     assert_equal 'Success', response.message
@@ -157,7 +157,7 @@ class HpsTest < Test::Unit::TestCase
     @options[:encrypted_track_number] = 2
     @options[:ktb] = '/wECAQECAoFGAgEH3QgVTDT6jRZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0Nkt08KRSPigRYcr1HVgjRFEvtUBy+VcCKlOGA3871r3SOkqDvH2+30insdLHmhTLCc4sC2IhlobvWnutAfylKk2GLspH/pfEnVKPvBv0hBnF4413+QIRlAuGX6+qZjna2aMl0kIsjEY4N6qoVq2j5/e5I+41+a2pbm61blv2PEMAmyuCcAbN3/At/1kRZNwN6LSUg9VmJO83kOglWBe1CbdFtncq'
     @credit_card.track_data = '7SV2BK6ESQPrq01iig27E74SxMg'
-    response = @gateway.purchase(@amount,@credit_card,@options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
     assert_equal 'Success', response.message

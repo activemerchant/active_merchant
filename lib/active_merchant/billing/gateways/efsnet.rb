@@ -99,16 +99,16 @@ module ActiveMerchant #:nodoc:
           :client_ip_address => options[:ip]
 
         }
-        add_creditcard(post,creditcard)
-        add_address(post,options)
+        add_creditcard(post, creditcard)
+        add_address(post, options)
         post
       end
 
       def format_reference_number(number)
-        number.to_s.slice(0,12)
+        number.to_s.slice(0, 12)
       end
 
-      def add_address(post,options)
+      def add_address(post, options)
         if address = options[:billing_address] || options[:address]
           if address[:address2]
             post[:billing_address]    = address[:address1].to_s << ' ' <<  address[:address2].to_s

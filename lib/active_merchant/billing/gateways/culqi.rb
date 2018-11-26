@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, params)
-        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def url

@@ -24,14 +24,14 @@ class GatewaySupport #:nodoc:
   end
 
   def each_gateway
-    @gateways.each{|g| yield g }
+    @gateways.each { |g| yield g }
   end
 
   def features
     width = 15
 
     print 'Name'.center(width + 20)
-    ACTIONS.each{|f| print f.to_s.capitalize.center(width) }
+    ACTIONS.each { |f| print f.to_s.capitalize.center(width) }
     puts
 
     each_gateway do |g|

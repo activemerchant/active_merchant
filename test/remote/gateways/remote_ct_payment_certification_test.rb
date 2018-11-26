@@ -10,7 +10,7 @@ class RemoteCtPaymentCertificationTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase',
       merchant_terminal_number: '     ',
-      order_id: generate_unique_id[0,11]
+      order_id: generate_unique_id[0, 11]
     }
   end
 
@@ -59,7 +59,7 @@ class RemoteCtPaymentCertificationTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     print_result(7, response)
 
-    capture_response = @gateway.capture(@amount, response.authorization, @options.merge(order_id: generate_unique_id[0,11]))
+    capture_response = @gateway.capture(@amount, response.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
     print_result(10, capture_response)
   end
 
@@ -69,14 +69,14 @@ class RemoteCtPaymentCertificationTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     print_result(8, response)
 
-    capture_response = @gateway.capture(@amount, response.authorization, @options.merge(order_id: generate_unique_id[0,11]))
+    capture_response = @gateway.capture(@amount, response.authorization, @options.merge(order_id: generate_unique_id[0, 11]))
     print_result(11, capture_response)
   end
 
   def test9
     @credit_card = credit_card('341400000000000', month: '07', year: 2025, verification_value: '1234')
     @credit_card.brand = 'american_express'
-    response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: generate_unique_id[0,11]))
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(order_id: generate_unique_id[0, 11]))
     print_result(9, response)
 
     capture_response = @gateway.capture(@amount, response.authorization, @options)

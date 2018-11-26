@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def requires_address!(options)
-        raise ArgumentError.new('Missing eWay required parameters: address or billing_address') unless (options.has_key?(:address) or options.has_key?(:billing_address))
+        raise ArgumentError.new('Missing eWay required parameters: address or billing_address') unless options.has_key?(:address) or options.has_key?(:billing_address)
       end
 
       def add_creditcard(post, creditcard)
@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(message)
         return '' if message.blank?
-        MESSAGES[message[0,2]] || message
+        MESSAGES[message[0, 2]] || message
       end
 
       def purchase_url(cvn)

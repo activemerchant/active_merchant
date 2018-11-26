@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       # MiGS is supported throughout Asia Pacific, Middle East and Africa
       # MiGS is used in Australia (AU) by ANZ (eGate), CBA (CommWeb) and more
       # Source of Country List: http://www.scribd.com/doc/17811923
-      self.supported_countries = %w(AU AE BD BN EG HK ID IN JO KW LB LK MU MV MY NZ OM PH QA SA SG TT VN)
+      self.supported_countries = %w(AU AE BD BN EG HK ID JO KW LB LK MU MV MY NZ OM PH QA SA SG TT VN)
 
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard_type(post, card_type)
         post[:Gateway]  = 'ssl'
-        post[:card] = CARD_TYPES.detect{|ct| ct.am_code == card_type}.migs_long_code
+        post[:card] = CARD_TYPES.detect { |ct| ct.am_code == card_type }.migs_long_code
       end
 
       def parse(body)

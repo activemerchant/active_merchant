@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
+      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency: #{k}") }
       CURRENCY_CODES['USD'] = 840
       CURRENCY_CODES['PEN'] = 604
 
@@ -166,9 +166,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def url(action, params, options={})
-        if (action == 'authorize')
+        if action == 'authorize'
           "#{base_url}/#{@options[:merchant_id]}"
-        elsif (action == 'refund')
+        elsif action == 'refund'
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{options[:transaction_id]}"
         else
           "#{base_url}/#{@options[:merchant_id]}/#{action}/#{params[:purchaseNumber]}"

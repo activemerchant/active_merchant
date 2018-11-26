@@ -106,7 +106,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert refund.params['refunded']
     assert_equal 0, refund.params['amount']
     assert_equal 1, refund.params['refunds'].size
-    assert_equal @amount, refund.params['refunds'].map{|r| r['amount']}.sum
+    assert_equal @amount, refund.params['refunds'].map { |r| r['amount'] }.sum
 
     assert refund.authorization
   end
@@ -124,7 +124,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert second_refund.params['refunded']
     assert_equal @amount - 2 * @refund_amount, second_refund.params['amount']
     assert_equal 2, second_refund.params['refunds'].size
-    assert_equal 2 * @refund_amount, second_refund.params['refunds'].map{|r| r['amount']}.sum
+    assert_equal 2 * @refund_amount, second_refund.params['refunds'].map { |r| r['amount'] }.sum
     assert second_refund.authorization
   end
 
@@ -154,7 +154,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert void.params['refunded']
     assert_equal 0, void.params['amount']
     assert_equal 1, void.params['refunds'].size
-    assert_equal @amount, void.params['refunds'].map{|r| r['amount']}.sum
+    assert_equal @amount, void.params['refunds'].map { |r| r['amount'] }.sum
     assert void.authorization
   end
 

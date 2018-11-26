@@ -334,7 +334,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         url = test? ? self.test_url : self.live_url
 
-        response = parse( ssl_post(url, post_data(action, parameters)) )
+        response = parse(ssl_post(url, post_data(action, parameters)))
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
@@ -366,7 +366,7 @@ module ActiveMerchant #:nodoc:
         params[:version] = API_VERSION
         params[:transaction_type] = action
 
-        params.reject{|k,v| v.blank?}.collect{ |k, v| "dc_#{k}=#{CGI.escape(v.to_s)}" }.join('&')
+        params.reject { |k, v| v.blank? }.collect { |k, v| "dc_#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def parse(body)

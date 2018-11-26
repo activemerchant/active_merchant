@@ -223,7 +223,7 @@ module ActiveMerchant #:nodoc:
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,
           :avs_result    => { :code => response[:avs_result_code] },
-          :cvv_result    => response[:cvd_result_code] && response[:cvd_result_code][-1,1],
+          :cvv_result    => response[:cvd_result_code] && response[:cvd_result_code][-1, 1],
           :authorization => authorization_from(response)
         )
       end
@@ -291,8 +291,8 @@ module ActiveMerchant #:nodoc:
         tokens = full_address.split(/\s+/)
 
         element = REXML::Element.new('avs_info')
-        element.add_element('avs_street_number').text = tokens.select{|x| x =~ /\d/}.join(' ')
-        element.add_element('avs_street_name').text = tokens.reject{|x| x =~ /\d/}.join(' ')
+        element.add_element('avs_street_number').text = tokens.select { |x| x =~ /\d/ }.join(' ')
+        element.add_element('avs_street_name').text = tokens.reject { |x| x =~ /\d/ }.join(' ')
         element.add_element('avs_zipcode').text = address[:zip]
         element
       end

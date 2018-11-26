@@ -938,8 +938,8 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:description => 'a test customer',:ip => '127.127.127.127', :user_agent => 'some browser', :order_id => '42', :email => 'foo@wonderfullyfakedomain.com', :receipt_email => 'receipt-receiver@wonderfullyfakedomain.com', :referrer =>'http://www.shopify.com'})
-      @gateway.purchase(@amount,@credit_card,updated_options)
+      updated_options = @options.merge({:description => 'a test customer', :ip => '127.127.127.127', :user_agent => 'some browser', :order_id => '42', :email => 'foo@wonderfullyfakedomain.com', :receipt_email => 'receipt-receiver@wonderfullyfakedomain.com', :referrer =>'http://www.shopify.com'})
+      @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
@@ -955,8 +955,8 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase_without_email_or_order
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:description => 'a test customer',:ip => '127.127.127.127', :user_agent => 'some browser', :referrer =>'http://www.shopify.com'})
-      @gateway.purchase(@amount,@credit_card,updated_options)
+      updated_options = @options.merge({:description => 'a test customer', :ip => '127.127.127.127', :user_agent => 'some browser', :referrer =>'http://www.shopify.com'})
+      @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
@@ -970,7 +970,7 @@ class StripeTest < Test::Unit::TestCase
   def test_client_data_submitted_with_metadata_in_options
     stub_comms(@gateway, :ssl_request) do
       updated_options = @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => '42', :email => 'foo@wonderfullyfakedomain.com'})
-      @gateway.purchase(@amount,@credit_card,updated_options)
+      @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
       assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
@@ -1071,7 +1071,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_metadata_header
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['X-Stripe-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
     }.returns(successful_purchase_response)
 
@@ -1079,7 +1079,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_version_header
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['Stripe-Version'] == '2013-10-29'
     }.returns(successful_purchase_response)
 
@@ -1087,7 +1087,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_idempotency_key_header
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['Idempotency-Key'] == 'test123'
     }.returns(successful_purchase_response)
 
@@ -1096,7 +1096,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_optional_idempotency_on_void
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['Idempotency-Key'] == 'test123'
     }.returns(successful_purchase_response(true))
 
@@ -1119,7 +1119,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_initialize_gateway_with_version
     @gateway = StripeGateway.new(:login => 'login', :version => '2013-12-03')
-    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+    @gateway.expects(:ssl_request).once.with { |method, url, post, headers|
       headers && headers['Stripe-Version'] == '2013-12-03'
     }.returns(successful_purchase_response)
 

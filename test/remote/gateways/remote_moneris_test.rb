@@ -30,6 +30,23 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_not_empty response.params['issuer_id']
   end
 
+  def test_successful_purchase_with_cof_enabled_and_no_cof_options
+    gateway = MonerisGateway.new(fixtures(:moneris).merge(cof_enabled: true))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+  end
+
+  def test_successful_non_cof_purchase_with_cof_enabled_and_only_issuer_id_sent
+    gateway = MonerisGateway.new(fixtures(:moneris).merge(cof_enabled: true))
+    assert response = gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: ''))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_false response.authorization.blank?
+    assert_nil response.params['issuer_id']
+  end
+
   def test_successful_subsequent_purchase_with_credential_on_file
     gateway = MonerisGateway.new(fixtures(:moneris).merge(cof_enabled: true))
     assert response = gateway.authorize(
@@ -254,7 +271,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def test_avs_result_nil_when_address_absent
     gateway = MonerisGateway.new(fixtures(:moneris).merge(avs_enabled: true))
 
-    assert response = gateway.purchase(1010, @credit_card, @options.tap {|x| x.delete(:billing_address)})
+    assert response = gateway.purchase(1010, @credit_card, @options.tap { |x| x.delete(:billing_address) })
     assert_success response
     assert_equal(response.avs_result, {
         'code' => nil,

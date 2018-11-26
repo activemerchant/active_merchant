@@ -60,6 +60,11 @@ module ActiveMerchant #:nodoc:
         commit('ccSettlement', money, options)
       end
 
+      def verify(credit_card, options = {})
+        parse_card_or_auth(credit_card, options)
+        commit('ccVerification', 0, options)
+      end
+
       def supports_scrubbing?
         true
       end

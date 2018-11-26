@@ -174,7 +174,7 @@ module ActiveMerchant
       private
 
       def commit(action, post)
-        response = parse( ssl_post(self.live_url, post_data(action, post)) )
+        response = parse(ssl_post(self.live_url, post_data(action, post)))
         success = SUCCESS_CODES.include?(response[:finalstatus])
         message = success ? 'Success' : message_from(response)
 
@@ -189,7 +189,7 @@ module ActiveMerchant
       def parse(body)
         body = CGI.unescape(body)
         results = {}
-        body.split('&').collect { |e| e.split('=') }.each do |key,value|
+        body.split('&').collect { |e| e.split('=') }.each do |key, value|
           results[key.downcase.to_sym] = normalize(value.to_s.strip)
         end
 

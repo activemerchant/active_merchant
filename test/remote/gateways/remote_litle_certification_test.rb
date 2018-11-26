@@ -854,7 +854,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_success store_response
     assert_equal '445711', store_response.params['bin']
     assert_equal 'VI', store_response.params['type']
-    assert_equal '0123', store_response.params['litleToken'][-4,4]
+    assert_equal '0123', store_response.params['litleToken'][-4, 4]
     assert_equal '801', store_response.params['response']
     assert_equal 'Account number was successfully registered', store_response.message
     puts "Test #{options[:order_id]}: #{txn_id(response)}"
@@ -889,7 +889,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal '445711', store_response.params['bin']
     assert_equal 'VI', store_response.params['type']
     assert_equal '802', store_response.params['response']
-    assert_equal '0123', store_response.params['litleToken'][-4,4]
+    assert_equal '0123', store_response.params['litleToken'][-4, 4]
     puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
   end
 
@@ -944,7 +944,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(15000, credit_card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal '0196', response.params['tokenResponse_litleToken'][-4,4]
+    assert_equal '0196', response.params['tokenResponse_litleToken'][-4, 4]
     assert %w(801 802).include? response.params['tokenResponse_tokenResponseCode']
     assert_equal 'MC', response.params['tokenResponse_type']
     assert_equal '543510', response.params['tokenResponse_bin']
@@ -984,7 +984,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal '0196', response.params['tokenResponse_litleToken'][-4,4]
+    assert_equal '0196', response.params['tokenResponse_litleToken'][-4, 4]
     assert %w(801 802).include? response.params['tokenResponse_tokenResponseCode']
     assert_equal 'MC', response.params['tokenResponse_type']
     assert_equal '543510', response.params['tokenResponse_bin']

@@ -11,7 +11,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :test => true
     )
 
-    @internal_gateway = @gateway.instance_variable_get( :@braintree_gateway )
+    @internal_gateway = @gateway.instance_variable_get(:@braintree_gateway)
   end
 
   def teardown
@@ -473,6 +473,42 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'cctoken', response.params['credit_card_token']
   end
 
+  def test_store_with_existing_customer_id_and_nil_billing_address_options
+    credit_card = stub(
+      customer_id: 'customerid',
+      token: 'cctoken'
+    )
+    options = {
+      :customer => 'customerid',
+      :billing_address => {
+        :name => 'John Smith',
+        :phone => '123-456-7890',
+        :company => nil,
+        :address1 => nil,
+        :address2 => nil,
+        :city => nil,
+        :state => nil,
+        :zip => nil,
+        :country_name => nil
+      }
+    }
+
+    result = Braintree::SuccessfulResult.new(credit_card: credit_card)
+    Braintree::CustomerGateway.any_instance.expects(:find).with('customerid')
+    Braintree::CreditCardGateway.any_instance.expects(:create).with do |params|
+      assert_equal 'customerid', params[:customer_id]
+      assert_equal '41111111111111111111', params[:number]
+      assert_equal 'Longbob Longsen', params[:cardholder_name]
+      params
+    end.returns(result)
+
+    response = @gateway.store(credit_card('41111111111111111111'), options)
+    assert_success response
+    assert_nil response.params['braintree_customer']
+    assert_equal 'customerid', response.params['customer_vault_id']
+    assert_equal 'cctoken', response.params['credit_card_token']
+  end
+
   def test_update_with_cvv
     stored_credit_card = mock(:token => 'token', :default? => true)
     customer = mock(:credit_cards => [stored_credit_card], :id => '123')
@@ -690,12 +726,12 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_solution_id_is_added_to_create_transaction_parameters
-    assert_nil @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'),{})[:channel]
+    assert_nil @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel]
     ActiveMerchant::Billing::BraintreeBlueGateway.application_id = 'ABC123'
-    assert_equal @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'),{})[:channel], 'ABC123'
+    assert_equal @gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel], 'ABC123'
 
     gateway = BraintreeBlueGateway.new(:merchant_id => 'test', :public_key => 'test', :private_key => 'test', channel: 'overidden-channel')
-    assert_equal gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'),{})[:channel], 'overidden-channel'
+    assert_equal gateway.send(:create_transaction_parameters, 100, credit_card('41111111111111111111'), {})[:channel], 'overidden-channel'
   ensure
     ActiveMerchant::Billing::BraintreeBlueGateway.application_id = nil
   end

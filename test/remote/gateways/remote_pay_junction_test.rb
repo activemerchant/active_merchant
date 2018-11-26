@@ -55,7 +55,7 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    assert response = @gateway.authorize( AMOUNT, @credit_card, @options)
+    assert response = @gateway.authorize(AMOUNT, @credit_card, @options)
 
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'hold', response.params['posture'], 'Should be a held charge'
@@ -102,7 +102,7 @@ class PayJunctionTest < Test::Unit::TestCase
     # transaction can be executed if you have the transaction ID of a
     # previous successful transaction.
 
-    purchase = @gateway.purchase( AMOUNT, @credit_card, @options)
+    purchase = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_success purchase
 
     assert response = @gateway.purchase(AMOUNT, purchase.authorization, :order_id => generate_unique_id)

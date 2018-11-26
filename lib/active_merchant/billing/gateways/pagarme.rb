@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def test?()
+      def test?
         @api_key.start_with?('ak_test')
       end
 

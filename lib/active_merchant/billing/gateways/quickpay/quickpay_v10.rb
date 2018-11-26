@@ -78,7 +78,7 @@ module ActiveMerchant
       def store(credit_card, options = {})
         MultiResponse.run do |r|
           r.process { create_store(options) }
-          r.process { authorize_store(r.authorization, credit_card, options)}
+          r.process { authorize_store(r.authorization, credit_card, options) }
         end
       end
 

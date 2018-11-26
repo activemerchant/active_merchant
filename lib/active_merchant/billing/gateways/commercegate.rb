@@ -111,7 +111,7 @@ module ActiveMerchant #:nodoc:
         results = {}
 
         body.split(/\&/).each do |pair|
-          key,val = pair.split(%r{=})
+          key, val = pair.split(%r{=})
           results[key] = CGI.unescape(val)
         end
 

@@ -87,11 +87,11 @@ class DataCashTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_missing_order_id_option
-    assert_raise(ArgumentError){ @gateway.purchase(100, @credit_card, {}) }
+    assert_raise(ArgumentError) { @gateway.purchase(100, @credit_card, {}) }
   end
 
   def test_authorize_with_missing_order_id_option
-    assert_raise(ArgumentError){ @gateway.authorize(100, @credit_card, {}) }
+    assert_raise(ArgumentError) { @gateway.authorize(100, @credit_card, {}) }
   end
 
   def test_purchase_does_not_raise_exception_with_missing_billing_address

@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_invoice(form,options)
+      def add_invoice(form, options)
         form[:invoice_number] = truncate((options[:order_id] || options[:invoice]), 10)
         form[:description] = truncate(options[:description], 255)
       end
@@ -256,7 +256,7 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = self.actions[action]
 
-        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)) )
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)))
 
         Response.new(response['result'] == '0', message_from(response), response,
           :test => @options[:test] || test?,
@@ -299,7 +299,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(msg)
         resp = {}
-        msg.split(self.delimiter).collect{|li|
+        msg.split(self.delimiter).collect { |li|
           key, value = li.split('=')
           resp[key.to_s.strip.gsub(/^ssl_/, '')] = value.to_s.strip
         }

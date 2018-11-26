@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         end
 
         post[:recurring] = options[:recurring] if options[:recurring]
-        post[:threed_secure] = {pares: options[:pares]} if options[:pares]
+        post[:card][:pares] = options[:pares] if options[:pares]
 
         commit(action, post)
       end
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )[\w=]+), '\1[FILTERED]').
           gsub(%r((&?card(?:\[|%5B)csc(?:\]|%5D)=)[^&]*)i, '\1[FILTERED]').
-          gsub(%r((&?card(?:\[|%5B)number(?:\]|%5D)=)[^&]*)i, '\1[FILTERED]')
+          gsub(%r((&?card(?:\[|%5B)pan(?:\]|%5D)=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -126,12 +126,12 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(post, payment)
         card = {}
-        card[:number]       = payment.number
+        card[:pan]          = payment.number
         card[:expire_month] = '%02d'% payment.month
         card[:expire_year]  = payment.year
 
         if payment.verification_value?
-          card[:csc]  = payment.verification_value
+          card[:csc] = payment.verification_value
         end
 
         post[:card] = card if card.any?
@@ -139,8 +139,8 @@ module ActiveMerchant #:nodoc:
 
       def headers(api_key)
         {
-          'Authorization'  => 'Basic ' + Base64.strict_encode64("#{api_key}:"),
-          'User-Agent'     => "Clearhaus ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
+          'Authorization' => 'Basic ' + Base64.strict_encode64("#{api_key}:"),
+          'User-Agent'    => "Clearhaus ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
       end
 

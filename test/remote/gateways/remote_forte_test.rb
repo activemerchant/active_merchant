@@ -82,6 +82,22 @@ class RemoteForteTest < Test::Unit::TestCase
     assert_equal 'APPROVED', capture.message
   end
 
+  def test_successful_authorize_capture_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    wait_for_authorization_to_clear
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+    assert_match auth.authorization.split('#')[0], capture.authorization
+    assert_match auth.authorization.split('#')[1], capture.authorization
+    assert_equal 'APPROVED', capture.message
+
+    void = @gateway.void(capture.authorization)
+    assert_success void
+  end
+
   def test_failed_authorize
     @amount = 1985
     response = @gateway.authorize(@amount, @declined_card, @options)

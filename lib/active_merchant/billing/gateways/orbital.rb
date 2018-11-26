@@ -516,12 +516,12 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        response.delete_if { |k,_| SENSITIVE_FIELDS.include?(k) }
+        response.delete_if { |k, _| SENSITIVE_FIELDS.include?(k) }
       end
 
       def recurring_parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| recurring_parse_element(response, e) }
+          node.elements.each { |e| recurring_parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -533,7 +533,7 @@ module ActiveMerchant #:nodoc:
           headers['Trace-number'] = trace_number.to_s
           headers['Merchant-Id'] = @options[:merchant_id]
         end
-        request = ->(url){ parse(ssl_post(url, order, headers))}
+        request = ->(url) { parse(ssl_post(url, order, headers)) }
 
         # Failover URL will be attempted in the event of a connection error
         response = begin

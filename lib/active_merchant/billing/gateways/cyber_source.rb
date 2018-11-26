@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       XSD_VERSION = '1.121'
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
-      self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG LB)
+      self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB)
 
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(JPY)
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard_or_reference, options = {})
         setup_address_hash(options)
-        commit(build_auth_request(money, creditcard_or_reference, options), :authorize, money, options )
+        commit(build_auth_request(money, creditcard_or_reference, options), :authorize, money, options)
       end
 
       def capture(money, authorization, options = {})
@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
       # Determines if a card can be used for Pinless Debit Card transactions
       def validate_pinless_debit_card(creditcard, options = {})
         requires!(options, :order_id)
-        commit(build_validate_pinless_debit_request(creditcard,options), :validate_pinless_debit_card, nil, options)
+        commit(build_validate_pinless_debit_request(creditcard, options), :validate_pinless_debit_card, nil, options)
       end
 
       def supports_scrubbing?
@@ -392,7 +392,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_validate_pinless_debit_request(creditcard,options)
+      def build_validate_pinless_debit_request(creditcard, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_creditcard(xml, creditcard)
         add_validate_pinless_debit_service(xml)
@@ -432,7 +432,7 @@ module ActiveMerchant #:nodoc:
       def add_merchant_data(xml, options)
         xml.tag! 'merchantID', @options[:login]
         xml.tag! 'merchantReferenceCode', options[:order_id] || generate_unique_id
-        xml.tag! 'clientLibrary','Ruby Active Merchant'
+        xml.tag! 'clientLibrary', 'Ruby Active Merchant'
         xml.tag! 'clientLibraryVersion',  VERSION
         xml.tag! 'clientEnvironment', RUBY_PLATFORM
       end
@@ -469,7 +469,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'accountNumber', creditcard.number
           xml.tag! 'expirationMonth', format(creditcard.month, :two_digits)
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
-          xml.tag!('cvNumber', creditcard.verification_value) unless (@options[:ignore_cvv] || creditcard.verification_value.blank? )
+          xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv] || creditcard.verification_value.blank?
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
         end
       end
@@ -755,7 +755,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(reply, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(reply, e) }
+          node.elements.each { |e| parse_element(reply, e) }
         else
           if node.parent.name =~ /item/
             parent = node.parent.name

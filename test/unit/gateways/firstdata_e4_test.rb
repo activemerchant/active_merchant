@@ -38,7 +38,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
 
-    FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
+    FirstdataE4Gateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
   end
 
   def test_successful_purchase_with_specified_currency
@@ -51,7 +51,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
     assert_equal 'GBP', response.params['currency']
 
-    FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
+    FirstdataE4Gateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
   end
 
   def test_successful_purchase_with_token

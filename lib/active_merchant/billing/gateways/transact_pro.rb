@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         post[:rs] = @options[:terminal]
 
         MultiResponse.run do |r|
-          r.process{commit('init', post)}
+          r.process { commit('init', post) }
           r.process do
             post = PostData.new
             post[:init_transaction_id] = r.authorization
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         post[:rs] = @options[:terminal]
 
         MultiResponse.run do |r|
-          r.process{commit('init_dms', post)}
+          r.process { commit('init_dms', post) }
           r.process do
             post = PostData.new
             post[:init_transaction_id] = r.authorization
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         if body =~ /^ID:/
-          body.split('~').reduce(Hash.new) { |h,v|
+          body.split('~').reduce(Hash.new) { |h, v|
             m = v.match('(.*?):(.*)')
             h.merge!(m[1].underscore.to_sym => m[2])
           }
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters, amount=nil)
         url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url, post_data(action,parameters)))
+        response = parse(ssl_post(url, post_data(action, parameters)))
 
         Response.new(
           success_from(response),

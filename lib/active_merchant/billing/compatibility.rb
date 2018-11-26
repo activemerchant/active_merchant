@@ -61,7 +61,7 @@ module ActiveMerchant
 
         class Errors < Hash
           def initialize
-            super(){|h, k| h[k] = []}
+            super() { |h, k| h[k] = [] }
           end
 
           alias count size
@@ -75,7 +75,7 @@ module ActiveMerchant
           end
 
           def empty?
-            all?{|k, v| v&.empty?}
+            all? { |k, v| v&.empty? }
           end
 
           def on(field)
@@ -91,7 +91,7 @@ module ActiveMerchant
           end
 
           def each_full
-            full_messages.each{|msg| yield msg}
+            full_messages.each { |msg| yield msg }
           end
 
           def full_messages

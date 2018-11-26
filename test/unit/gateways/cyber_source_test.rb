@@ -231,7 +231,7 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def test_requires_error_on_tax_calculation_without_line_items
-    assert_raise(ArgumentError){ @gateway.calculate_tax(@credit_card, @options.delete_if{|key, val| key == :line_items})}
+    assert_raise(ArgumentError) { @gateway.calculate_tax(@credit_card, @options.delete_if { |key, val| key == :line_items }) }
   end
 
   def test_default_currency

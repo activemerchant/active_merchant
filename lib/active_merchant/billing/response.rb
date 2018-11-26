@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
 
       def <<(response)
         if response.is_a?(MultiResponse)
-          response.responses.each{|r| @responses << r}
+          response.responses.each { |r| @responses << r }
         else
           @responses << response
         end

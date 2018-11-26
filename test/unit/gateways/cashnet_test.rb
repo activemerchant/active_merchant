@@ -76,7 +76,7 @@ class Cashnet < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', zip: '12345', state: 'AK'} )
+    @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', zip: '12345', state: 'AK'})
 
     assert_equal ['addr_g', 'city_g', 'state_g', 'zip_g'], result.stringify_keys.keys.sort
     assert_equal '123 Test St.,5F', result[:addr_g]

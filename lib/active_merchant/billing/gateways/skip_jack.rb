@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        response = parse( ssl_post( url_for(action), post_data(action, money, parameters) ), action )
+        response = parse(ssl_post(url_for(action), post_data(action, money, parameters)), action)
 
         # Pass along the original transaction id in the case an update transaction
         Response.new(response[:success], message_from(response, action), response,
@@ -368,7 +368,7 @@ module ActiveMerchant #:nodoc:
         post[:OrderDescription] = options[:description]
 
         if order_items = options[:items]
-          post[:OrderString] = order_items.collect { |item| "#{item[:sku]}~#{item[:description].tr('~','-')}~#{item[:declared_value]}~#{item[:quantity]}~#{item[:taxable]}~~~~~~~~#{item[:tax_rate]}~||"}.join
+          post[:OrderString] = order_items.collect { |item| "#{item[:sku]}~#{item[:description].tr('~', '-')}~#{item[:declared_value]}~#{item[:quantity]}~#{item[:taxable]}~~~~~~~~#{item[:tax_rate]}~||" }.join
         else
           post[:OrderString] = '1~None~0.00~0~N~||'
         end

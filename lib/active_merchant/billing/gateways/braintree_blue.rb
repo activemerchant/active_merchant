@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
           :logger            => options[:logger] || logger
         )
 
-        @braintree_gateway = Braintree::Gateway.new( @configuration )
+        @braintree_gateway = Braintree::Gateway.new(@configuration)
       end
 
       def authorize(money, credit_card_or_vault_id, options = {})
@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
         if options[:customer].present?
           MultiResponse.new.tap do |r|
             customer_exists_response = nil
-            r.process{customer_exists_response = check_customer_exists(options[:customer])}
+            r.process { customer_exists_response = check_customer_exists(options[:customer]) }
             r.process do
               if customer_exists_response.params['exists']
                 add_credit_card_to_customer(creditcard, options)
@@ -259,7 +259,10 @@ module ActiveMerchant #:nodoc:
             expiration_year: credit_card.year.to_s,
             device_data: options[:device_data],
           }
-          parameters[:billing_address] = map_address(options[:billing_address]) if options[:billing_address]
+          if options[:billing_address]
+            address = map_address(options[:billing_address])
+            parameters[:credit_card][:billing_address] = address unless address.all? { |_k, v| v.nil? }
+          end
 
           result = @braintree_gateway.credit_card.create(parameters)
           ActiveMerchant::Billing::Response.new(
@@ -276,10 +279,10 @@ module ActiveMerchant #:nodoc:
 
       def scrub_email(email)
         return nil unless email.present?
-        return nil if (
+        return nil if
           email !~ /^.+@[^\.]+(\.[^\.]+)+[a-z]$/i ||
           email =~ /\.(con|met)$/i
-        )
+
         email
       end
 
@@ -320,7 +323,7 @@ module ActiveMerchant #:nodoc:
           :region => address[:state],
           :postal_code => scrub_zip(address[:zip]),
         }
-        if (address[:country] || address[:country_code_alpha2])
+        if address[:country] || address[:country_code_alpha2]
           mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2])
         elsif address[:country_name]
           mapped[:country_name] = address[:country_name]

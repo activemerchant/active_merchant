@@ -116,11 +116,6 @@ Layout/MultilineOperationIndentation:
     - 'test/unit/gateways/ogone_test.rb'
     - 'test/unit/gateways/skip_jack_test.rb'
 
-# Offense count: 315
-# Cop supports --auto-correct.
-Layout/SpaceAfterComma:
-  Enabled: false
-
 # Offense count: 638
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle.
@@ -139,14 +134,6 @@ Layout/SpaceAroundKeyword:
 Layout/SpaceAroundOperators:
   Enabled: false
 
-# Offense count: 182
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceBeforeBlockBraces:
-  Enabled: false
-
 # Offense count: 118
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBrackets.
@@ -161,27 +148,12 @@ Layout/SpaceInsideArrayPercentLiteral:
   Exclude:
     - 'lib/active_merchant/billing/gateways/migs/migs_codes.rb'
 
-# Offense count: 345
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SpaceBeforeBlockParameters.
-# SupportedStyles: space, no_space
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideBlockBraces:
-  Enabled: false
-
 # Offense count: 1186
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
 # SupportedStyles: space, no_space, compact
 # SupportedStylesForEmptyBraces: space, no_space
 Layout/SpaceInsideHashLiteralBraces:
-  Enabled: false
-
-# Offense count: 116
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: space, no_space
-Layout/SpaceInsideParens:
   Enabled: false
 
 # Offense count: 115
@@ -574,13 +546,6 @@ Style/DateTime:
     - 'test/unit/gateways/orbital_test.rb'
     - 'test/unit/gateways/paypal/paypal_common_api_test.rb'
 
-# Offense count: 2
-# Cop supports --auto-correct.
-Style/DefWithParentheses:
-  Exclude:
-    - 'lib/active_merchant/billing/gateways/latitude19.rb'
-    - 'lib/active_merchant/billing/gateways/pagarme.rb'
-
 # Offense count: 210
 Style/Documentation:
   Enabled: false
@@ -930,12 +895,6 @@ Style/OrAssignment:
 # Offense count: 24
 # Cop supports --auto-correct.
 Style/ParallelAssignment:
-  Enabled: false
-
-# Offense count: 29
-# Cop supports --auto-correct.
-# Configuration parameters: AllowSafeAssignment, AllowInMultilineConditions.
-Style/ParenthesesAroundCondition:
   Enabled: false
 
 # Offense count: 877

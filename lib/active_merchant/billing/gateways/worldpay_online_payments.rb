@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
 
           raw_response = ssl_request(method, self.live_url + url, json, headers(options))
 
-          if (raw_response != '')
+          if raw_response != ''
             response = parse(raw_response)
             if type == 'token'
               success = response.key?('token')

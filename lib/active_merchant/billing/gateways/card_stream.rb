@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :shared_secret)
         @threeds_required = false
-        if (options[:threeDSRequired])
+        if options[:threeDSRequired]
           ActiveMerchant.deprecated(THREEDSECURE_REQUIRED_DEPRECATION_MESSAGE)
           @threeds_required = options[:threeDSRequired]
         end

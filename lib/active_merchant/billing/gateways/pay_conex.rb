@@ -231,7 +231,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, params)
         params[:transaction_type] = action
-        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def unparsable_response(raw_response)

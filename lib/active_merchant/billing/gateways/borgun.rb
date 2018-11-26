@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
+      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
       CURRENCY_CODES['ISK'] = '352'
       CURRENCY_CODES['EUR'] = '978'
       CURRENCY_CODES['USD'] = '840'
@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
         body.children.each do |node|
           if node.text?
             next
-          elsif (node.elements.size == 0)
+          elsif node.elements.size == 0
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
           end
         end
         inner = CGI.escapeHTML(xml.target!)
-        envelope(mode).sub(/{{ :body }}/,inner)
+        envelope(mode).sub(/{{ :body }}/, inner)
       end
 
       def envelope(mode)

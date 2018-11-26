@@ -246,7 +246,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, params)
-        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def url
@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map { |k,v| [k.intern, v.first] }]
+        Hash[CGI::parse(body).map { |k, v| [k.intern, v.first] }]
       end
 
       def success_from(response)

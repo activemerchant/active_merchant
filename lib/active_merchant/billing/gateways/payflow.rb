@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       def recurring_inquiry(profile_id, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:inquiry, nil, options.update( :profile_id => profile_id ))
+        request = build_recurring_request(:inquiry, nil, options.update(:profile_id => profile_id))
         commit(request, options.merge(:request_type => :recurring))
       end
 
@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
-              add_address(xml, 'ShipTo', options[:shipping_address],options) if options[:shipping_address]
+              add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
 
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
@@ -289,7 +289,7 @@ module ActiveMerchant #:nodoc:
                   end
 
                   if action == :add
-                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1)
                   else
                     xml.tag! 'Start', format_rp_date(options[:starting_at]) unless options[:starting_at].nil?
                   end
@@ -308,7 +308,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'ProfileID', options[:profile_id]
               end
               if action == :inquiry
-                xml.tag! 'PaymentHistory', ( options[:history] ? 'Y' : 'N' )
+                xml.tag! 'PaymentHistory', (options[:history] ? 'Y' : 'N')
               end
             end
           end

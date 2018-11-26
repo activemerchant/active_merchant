@@ -424,8 +424,8 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     end
     clean_transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed( @visacreditcard.number, clean_transcript)
-    assert_scrubbed( @visacreditcard.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@visacreditcard.number, clean_transcript)
+    assert_scrubbed(@visacreditcard.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:shared_secret], clean_transcript)
   end
 end

@@ -87,7 +87,7 @@ class SecurionPayTest < Test::Unit::TestCase
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
       updated_options = @options.merge({ description: 'test charge', ip: '127.127.127.127', user_agent: 'browser XXX', referrer: 'http://www.foobar.com', email: 'foo@bar.com' })
-      @gateway.purchase(@amount,@credit_card,updated_options)
+      @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=test\+charge/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
@@ -100,7 +100,7 @@ class SecurionPayTest < Test::Unit::TestCase
   def test_client_data_submitted_with_purchase_without_email_or_order
     stub_comms(@gateway, :ssl_request) do
       updated_options = @options.merge({ description: 'test charge', ip: '127.127.127.127', user_agent: 'browser XXX', referrer: 'http://www.foobar.com' })
-      @gateway.purchase(@amount,@credit_card,updated_options)
+      @gateway.purchase(@amount, @credit_card, updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=test\+charge/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
@@ -202,7 +202,7 @@ class SecurionPayTest < Test::Unit::TestCase
     assert response.params['refunded']
     assert_equal 0, response.params['amount']
     assert_equal 1, response.params['refunds'].size
-    assert_equal @amount, response.params['refunds'].map{|r| r['amount']}.sum
+    assert_equal @amount, response.params['refunds'].map { |r| r['amount'] }.sum
     assert_equal 'char_DQca5ZjbewP2Oe0lIsNe4EXP', response.authorization
     assert response.test?
   end
@@ -215,7 +215,7 @@ class SecurionPayTest < Test::Unit::TestCase
     assert_success response
     assert response.params['refunded']
     assert_equal @amount - @refund_amount, response.params['amount']
-    assert_equal @refund_amount, response.params['refunds'].map{|r| r['amount']}.sum
+    assert_equal @refund_amount, response.params['refunds'].map { |r| r['amount'] }.sum
     assert_equal 'char_oVnJ1j6fZqOvnopBBvlnpEuX', response.authorization
     assert response.test?
   end

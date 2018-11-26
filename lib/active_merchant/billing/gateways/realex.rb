@@ -118,7 +118,7 @@ module ActiveMerchant
 
         doc = Nokogiri::XML(xml)
         doc.xpath('//response/*').each do |node|
-          if (node.elements.size == 0)
+          if node.elements.size == 0
             response[node.name.downcase.to_sym] = normalize(node.text)
           else
             node.elements.each do |childnode|
@@ -279,14 +279,14 @@ module ActiveMerchant
         end
         xml.tag! 'supplementarydata' do
           xml.tag! 'item', 'type' => 'mobile' do
-            xml.tag! 'field01', payment.source.to_s.gsub('_','-')
+            xml.tag! 'field01', payment.source.to_s.gsub('_', '-')
           end
         end
       end
 
       def format_address_code(address)
         code = [address[:zip].to_s, address[:address1].to_s + address[:address2].to_s]
-        code.collect{|e| e.gsub(/\D/, '')}.reject(&:empty?).join('|')
+        code.collect { |e| e.gsub(/\D/, '') }.reject(&:empty?).join('|')
       end
 
       def new_timestamp

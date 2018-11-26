@@ -666,9 +666,9 @@ module ActiveMerchant #:nodoc:
             # The amount to be billed to the customer
             case transaction[:type]
             when :void
-                tag_unless_blank(xml,'customerProfileId', transaction[:customer_profile_id])
-                tag_unless_blank(xml,'customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                tag_unless_blank(xml,'customerShippingAddressId', transaction[:customer_shipping_address_id])
+                tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
+                tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+                tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
                 xml.tag!('transId', transaction[:trans_id])
             when :refund
                 xml.tag!('amount', transaction[:amount])
@@ -698,7 +698,7 @@ module ActiveMerchant #:nodoc:
             if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])
               xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
             end
-            unless [:void,:refund,:prior_auth_capture].include?(transaction[:type])
+            unless [:void, :refund, :prior_auth_capture].include?(transaction[:type])
               tag_unless_blank(xml, 'cardCode', transaction[:card_code])
             end
           end
@@ -878,7 +878,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_extra_options(options)
-        options&.map{ |k, v| "#{k}=#{v}" }&.join('&')
+        options&.map { |k, v| "#{k}=#{v}" }&.join('&')
       end
 
       def parse_direct_response(params)
@@ -952,7 +952,7 @@ module ActiveMerchant #:nodoc:
       def parse_element(node)
         if node.has_elements?
           response = {}
-          node.elements.each{ |e|
+          node.elements.each { |e|
             key = e.name.underscore
             value = parse_element(e)
             if response.has_key?(key)

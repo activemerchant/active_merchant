@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(response, parameters),
           avs_result: AVSResult.new(code: response['response']['avs_result']),
           cvv_result: CVVResult.new(response['response']['cvv_code']),
           test: test?
@@ -219,8 +219,12 @@ module ActiveMerchant #:nodoc:
         response['response']['response_desc']
       end
 
-      def authorization_from(response)
-        [response.try(:[], 'transaction_id'), response.try(:[], 'response').try(:[], 'authorization_code')].join('#')
+      def authorization_from(response, parameters)
+        if parameters[:action] == 'capture'
+          [response['transaction_id'], response.dig('response', 'authorization_code'), parameters[:transaction_id], parameters[:authorization_code]].join('#')
+        else
+          [response['transaction_id'], response.dig('response', 'authorization_code')].join('#')
+        end
       end
 
       def endpoint
@@ -253,13 +257,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_code_from(authorization)
-        _, authorization_code = split_authorization(authorization)
-        authorization_code
+        _, authorization_code, _, original_auth_authorization_code = split_authorization(authorization)
+        original_auth_authorization_code.present? ? original_auth_authorization_code : authorization_code
       end
 
       def transaction_id_from(authorization)
-        transaction_id, _ = split_authorization(authorization)
-        transaction_id
+        transaction_id, _, original_auth_transaction_id, _= split_authorization(authorization)
+        original_auth_transaction_id.present? ? original_auth_transaction_id : transaction_id
       end
     end
   end

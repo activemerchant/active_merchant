@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
+      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
       CURRENCY_CODES['AED'] = '784'
       CURRENCY_CODES['AUD'] = '036'
       CURRENCY_CODES['CAD'] = '124'
@@ -113,7 +113,7 @@ EOA
         doc.children.each do |node|
           if node.text?
             next
-          elsif (node.elements.size == 0)
+          elsif node.elements.size == 0
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|

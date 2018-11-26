@@ -79,7 +79,7 @@ class CardConnectTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount,'363168161558', @options)
+    response = @gateway.capture(@amount, '363168161558', @options)
     assert_success response
 
     assert_equal '363168161558', response.authorization
