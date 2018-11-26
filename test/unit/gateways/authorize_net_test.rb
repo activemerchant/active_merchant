@@ -877,6 +877,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '2214602071#2224#refund', refund.authorization
   end
 
+  def test_successful_bank_refund
+    response = stub_comms do
+      @gateway.refund(50, '12345667', account_type: 'checking', routing_number: '123450987', account_number: '12345667', first_name: 'Louise', last_name: 'Belcher')
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal 'checking', doc.at_xpath('//transactionRequest/payment/bankAccount/accountType').content
+        assert_equal '123450987', doc.at_xpath('//transactionRequest/payment/bankAccount/routingNumber').content
+        assert_equal '12345667', doc.at_xpath('//transactionRequest/payment/bankAccount/accountNumber').content
+        assert_equal 'Louise Belcher', doc.at_xpath('//transactionRequest/payment/bankAccount/nameOnAccount').content
+      end
+    end.respond_with(successful_refund_response)
+    assert_success response
+  end
+
   def test_refund_passing_extra_info
     response = stub_comms do
       @gateway.refund(50, '123456789', card_number: @credit_card.number, first_name: 'Bob', last_name: 'Smith', zip: '12345', order_id: '1', description: 'Refund for order 1')

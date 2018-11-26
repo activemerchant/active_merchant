@@ -339,9 +339,18 @@ module ActiveMerchant
             xml.transactionType('refundTransaction')
             xml.amount(amount.nil? ? 0 : amount(amount))
             xml.payment do
-              xml.creditCard do
-                xml.cardNumber(card_number || options[:card_number])
-                xml.expirationDate('XXXX')
+              if options[:routing_number]
+                xml.bankAccount do
+                  xml.accountType(options[:account_type])
+                  xml.routingNumber(options[:routing_number])
+                  xml.accountNumber(options[:account_number])
+                  xml.nameOnAccount("#{options[:first_name]} #{options[:last_name]}")
+                end
+              else
+                xml.creditCard do
+                  xml.cardNumber(card_number || options[:card_number])
+                  xml.expirationDate('XXXX')
+                end
               end
             end
             xml.refTransId(transaction_id)
