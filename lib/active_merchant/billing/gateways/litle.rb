@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-       check?(payment_method) ? commit(:echeckSales, request, money) : commit(:sale, request, money)
+        check?(payment_method) ? commit(:echeckSales, request, money) : commit(:sale, request, money)
       end
 
       def authorize(money, payment_method, options={})

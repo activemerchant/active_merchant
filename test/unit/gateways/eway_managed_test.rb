@@ -372,9 +372,9 @@ class EwayManagedTest < Test::Unit::TestCase
     XML
   end
 
-    # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=CreateCustomer
-    def expected_purchase_request
-      <<-XML
+  # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=CreateCustomer
+  def expected_purchase_request
+    <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
   <soap12:Header>
@@ -393,8 +393,8 @@ class EwayManagedTest < Test::Unit::TestCase
     </ProcessPayment>
   </soap12:Body>
 </soap12:Envelope>
-      XML
-    end
+    XML
+  end
 
   # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=QueryCustomer
   def expected_retrieve_request
@@ -416,5 +416,4 @@ class EwayManagedTest < Test::Unit::TestCase
   </soap12:Envelope>
     XML
   end
-
 end

@@ -146,9 +146,9 @@ class NetbanxTest < Test::Unit::TestCase
      assert_success response
      assert response.test?
 
-    response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015')
-    assert_success response
-    assert response.test?
+     response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015')
+     assert_success response
+     assert response.test?
   end
 
   def test_scrub

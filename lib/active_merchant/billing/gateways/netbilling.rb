@@ -143,14 +143,14 @@ module ActiveMerchant #:nodoc:
           post[:bill_state]      = billing_address[:state]
         end
 
-       if shipping_address = options[:shipping_address]
-         post[:ship_name1], post[:ship_name2] = split_names(shipping_address[:name])
-         post[:ship_street]     = shipping_address[:address1]
-         post[:ship_zip]        = shipping_address[:zip]
-         post[:ship_city]       = shipping_address[:city]
-         post[:ship_country]    = shipping_address[:country]
-         post[:ship_state]      = shipping_address[:state]
-       end
+        if shipping_address = options[:shipping_address]
+          post[:ship_name1], post[:ship_name2] = split_names(shipping_address[:name])
+          post[:ship_street]     = shipping_address[:address1]
+          post[:ship_zip]        = shipping_address[:zip]
+          post[:ship_city]       = shipping_address[:city]
+          post[:ship_country]    = shipping_address[:country]
+          post[:ship_state]      = shipping_address[:state]
+        end
       end
 
       def add_invoice(post, options)

@@ -37,7 +37,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
       }
     }
 
-     @options = {}
+    @options = {}
   end
 
   def test_successful_credit_card_purchase

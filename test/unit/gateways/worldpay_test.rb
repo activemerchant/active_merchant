@@ -9,9 +9,9 @@ class WorldpayTest < Test::Unit::TestCase
       :password => 'testpassword'
     )
 
-    @amount = 100
-    @credit_card = credit_card('4242424242424242')
-    @options = {:order_id => 1}
+   @amount = 100
+   @credit_card = credit_card('4242424242424242')
+   @options = {:order_id => 1}
   end
 
   def test_successful_authorize

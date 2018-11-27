@@ -100,101 +100,101 @@ module ActiveMerchant #:nodoc:
 
       private
 
-        def new_request
-          {
-            :pi    => @options[:paystation_id], # paystation account id
-            :gi    => @options[:gateway_id],    # paystation gateway id
-            '2p'   => 't',                      # two-party transaction type
-            :nr    => 't',                      # -- redirect??
-            :df    => 'yymm'                    # date format: optional sometimes, required others
-          }
+      def new_request
+        {
+          :pi    => @options[:paystation_id], # paystation account id
+          :gi    => @options[:gateway_id],    # paystation gateway id
+          '2p'   => 't',                      # two-party transaction type
+          :nr    => 't',                      # -- redirect??
+          :df    => 'yymm'                    # date format: optional sometimes, required others
+        }
+      end
+
+      def add_customer_data(post, options)
+        post[:mc] = options[:customer]
+      end
+
+      def add_invoice(post, options)
+        post[:ms] = generate_unique_id
+        post[:mo] = options[:description]
+        post[:mr] = options[:order_id]
+      end
+
+      def add_credit_card(post, credit_card)
+        post[:cn] = credit_card.number
+        post[:ct] = credit_card.brand
+        post[:ex] = format_date(credit_card.month, credit_card.year)
+        post[:cc] = credit_card.verification_value if credit_card.verification_value?
+      end
+
+      def add_token(post, token)
+        post[:fp] = 't'    # turn on "future payments" - what paystation calls Token Billing
+        post[:ft] = token
+      end
+
+      def store_credit_card(post, options)
+        post[:fp] = 't'                                # turn on "future payments" - what paystation calls Token Billing
+        post[:fs] = 't'                                # tells paystation to store right now, not bill
+        post[:ft] = options[:token] if options[:token] # specify a token to use that, or let Paystation generate one
+      end
+
+      def add_authorize_flag(post, options)
+        post[:pa] = 't' # tells Paystation that this is a pre-auth authorisation payment (account must be in pre-auth mode)
+      end
+
+      def add_refund_specific_fields(post, authorization)
+        post[:rc] = 't'
+        post[:rt] = authorization
+      end
+
+      def add_authorization_token(post, auth_token, verification_value = nil)
+        post[:cp] = 't' # Capture Payment flag – tells Paystation this transaction should be treated as a capture payment
+        post[:cx] = auth_token
+        post[:cc] = verification_value
+      end
+
+      def add_amount(post, money, options)
+        post[:am] = amount(money)
+        post[:cu] = options[:currency] || currency(money)
+      end
+
+      def parse(xml_response)
+        response = {}
+
+        xml = REXML::Document.new(xml_response)
+
+        xml.elements.each("#{xml.root.name}/*") do |element|
+          response[element.name.underscore.to_sym] = element.text
         end
 
-        def add_customer_data(post, options)
-          post[:mc] = options[:customer]
-        end
+        response
+      end
 
-        def add_invoice(post, options)
-          post[:ms] = generate_unique_id
-          post[:mo] = options[:description]
-          post[:mr] = options[:order_id]
-        end
+      def commit(post)
+        post[:tm] = 'T' if test?
+        pstn_prefix_params = post.collect { |key, value| "pstn_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
 
-        def add_credit_card(post, credit_card)
-          post[:cn] = credit_card.number
-          post[:ct] = credit_card.brand
-          post[:ex] = format_date(credit_card.month, credit_card.year)
-          post[:cc] = credit_card.verification_value if credit_card.verification_value?
-        end
+        data     = ssl_post(self.live_url, "#{pstn_prefix_params}&paystation=_empty")
+        response = parse(data)
+        message  = message_from(response)
 
-        def add_token(post, token)
-          post[:fp] = 't'    # turn on "future payments" - what paystation calls Token Billing
-          post[:ft] = token
-        end
+        PaystationResponse.new(success?(response), message, response,
+          :test          => (response[:tm]&.casecmp('t')&.zero?),
+          :authorization => response[:paystation_transaction_id]
+        )
+      end
 
-        def store_credit_card(post, options)
-          post[:fp] = 't'                                # turn on "future payments" - what paystation calls Token Billing
-          post[:fs] = 't'                                # tells paystation to store right now, not bill
-          post[:ft] = options[:token] if options[:token] # specify a token to use that, or let Paystation generate one
-        end
+      def success?(response)
+        (response[:ec] == SUCCESSFUL_RESPONSE_CODE) || (response[:ec] == SUCCESSFUL_FUTURE_PAYMENT)
+      end
 
-        def add_authorize_flag(post, options)
-          post[:pa] = 't' # tells Paystation that this is a pre-auth authorisation payment (account must be in pre-auth mode)
-        end
+      def message_from(response)
+        response[:em]
+      end
 
-        def add_refund_specific_fields(post, authorization)
-          post[:rc] = 't'
-          post[:rt] = authorization
-        end
-
-        def add_authorization_token(post, auth_token, verification_value = nil)
-          post[:cp] = 't' # Capture Payment flag – tells Paystation this transaction should be treated as a capture payment
-          post[:cx] = auth_token
-          post[:cc] = verification_value
-        end
-
-        def add_amount(post, money, options)
-          post[:am] = amount(money)
-          post[:cu] = options[:currency] || currency(money)
-        end
-
-        def parse(xml_response)
-          response = {}
-
-          xml = REXML::Document.new(xml_response)
-
-          xml.elements.each("#{xml.root.name}/*") do |element|
-            response[element.name.underscore.to_sym] = element.text
-          end
-
-          response
-        end
-
-        def commit(post)
-          post[:tm] = 'T' if test?
-          pstn_prefix_params = post.collect { |key, value| "pstn_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
-
-          data     = ssl_post(self.live_url, "#{pstn_prefix_params}&paystation=_empty")
-          response = parse(data)
-          message  = message_from(response)
-
-          PaystationResponse.new(success?(response), message, response,
-            :test          => (response[:tm]&.casecmp('t')&.zero?),
-            :authorization => response[:paystation_transaction_id]
-          )
-        end
-
-        def success?(response)
-          (response[:ec] == SUCCESSFUL_RESPONSE_CODE) || (response[:ec] == SUCCESSFUL_FUTURE_PAYMENT)
-        end
-
-        def message_from(response)
-          response[:em]
-        end
-
-        def format_date(month, year)
-          "#{format(year, :two_digits)}#{format(month, :two_digits)}"
-        end
+      def format_date(month, year)
+        "#{format(year, :two_digits)}#{format(month, :two_digits)}"
+      end
 
     end
 

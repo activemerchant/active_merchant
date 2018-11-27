@@ -252,17 +252,17 @@ module ActiveMerchant #:nodoc:
       def xml_builder(params, soap_call)
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!
-          xml.tag! 'soap:Envelope', { 'xmlns:xsi' => 'http://schemas.xmlsoap.org/soap/envelope/',
-                                      'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-                                      'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
-            xml.tag! 'soap:Body' do
-              xml.tag! soap_call, { 'xmlns' => "#{self.live_url}remote/payment" } do
-                xml.tag! 'merchantnumber', @options[:login]
-                xml.tag! 'transactionid', params[:transaction]
-                xml.tag! 'amount', params[:amount].to_s if soap_call != 'delete'
-              end
+        xml.tag! 'soap:Envelope', { 'xmlns:xsi' => 'http://schemas.xmlsoap.org/soap/envelope/',
+                                    'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+                                    'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
+          xml.tag! 'soap:Body' do
+            xml.tag! soap_call, { 'xmlns' => "#{self.live_url}remote/payment" } do
+              xml.tag! 'merchantnumber', @options[:login]
+              xml.tag! 'transactionid', params[:transaction]
+              xml.tag! 'amount', params[:amount].to_s if soap_call != 'delete'
             end
           end
+        end
         xml.target!
       end
 

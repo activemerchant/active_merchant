@@ -219,40 +219,40 @@ class PaywayTest < Test::Unit::TestCase
 
   private
 
-    def successful_response_store
-      'response.responseCode=00'
-    end
+  def successful_response_store
+    'response.responseCode=00'
+  end
 
-    def successful_response_visa
-      'response.summaryCode=0&response.responseCode=08&response.cardSchemeName=VISA'
-    end
+  def successful_response_visa
+    'response.summaryCode=0&response.responseCode=08&response.cardSchemeName=VISA'
+  end
 
-    def successful_response_master_card
-      'response.summaryCode=0&response.responseCode=08&response.cardSchemeName=MASTERCARD'
-    end
+  def successful_response_master_card
+    'response.summaryCode=0&response.responseCode=08&response.cardSchemeName=MASTERCARD'
+  end
 
-    def purchase_with_invalid_credit_card_response
-      'response.summaryCode=1&response.responseCode=14'
-    end
+  def purchase_with_invalid_credit_card_response
+    'response.summaryCode=1&response.responseCode=14'
+  end
 
-    def purchase_with_expired_credit_card_response
-      'response.summaryCode=1&response.responseCode=54'
-    end
+  def purchase_with_expired_credit_card_response
+    'response.summaryCode=1&response.responseCode=54'
+  end
 
-    def purchase_with_invalid_month_response
-      'response.summaryCode=3&response.responseCode=QA'
-    end
+  def purchase_with_invalid_month_response
+    'response.summaryCode=3&response.responseCode=QA'
+  end
 
-    def bad_login_response
-      'response.summaryCode=3&response.responseCode=QH'
-    end
+  def bad_login_response
+    'response.summaryCode=3&response.responseCode=QH'
+  end
 
-    def bad_merchant_response
-      'response.summaryCode=3&response.responseCode=QK'
-    end
+  def bad_merchant_response
+    'response.summaryCode=3&response.responseCode=QK'
+  end
 
-    def certificate
-      '------BEGIN CERTIFICATE-----
+  def certificate
+    '------BEGIN CERTIFICATE-----
  -MIIDeDCCAmCgAwIBAgIBATANBgkqhkiG9w0BAQUFADBBMRMwEQYDVQQDDApjb2R5
  -ZmF1c2VyMRUwEwYKCZImiZPyLGQBGRYFZ21haWwxEzARBgoJkiaJk/IsZAEZFgNj
  -b20wHhcNMTMxMTEzMTk1NjE2WhcNMTQxMTEzMTk1NjE2WjBBMRMwEQYDVQQDDApj
@@ -273,5 +273,5 @@ class PaywayTest < Test::Unit::TestCase
  -ZJB9YPQZG+vWBdDSca3sUMtvFxpLUFwdKF5APSPOVnhbFJ3vSXY1ulP/R6XW9vnw
  -6kkQi2fHhU20ugMzp881Eixr+TjC0RvUerLG7g==
  ------END CERTIFICATE-----'
-    end
+  end
 end

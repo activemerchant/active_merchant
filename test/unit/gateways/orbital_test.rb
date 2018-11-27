@@ -219,12 +219,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_truncates_zip
    long_zip = '1234567890123'
 
-    response = stub_comms do
-      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:zip => long_zip))
-    end.check_request do |endpoint, data, headers|
-      assert_match(/1234567890</, data)
-    end.respond_with(successful_purchase_response)
-    assert_success response
+   response = stub_comms do
+     @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:zip => long_zip))
+   end.check_request do |endpoint, data, headers|
+     assert_match(/1234567890</, data)
+   end.respond_with(successful_purchase_response)
+   assert_success response
   end
 
   def test_address_format

@@ -282,14 +282,14 @@ module ActiveMerchant #:nodoc:
       def commit(action, source_type, parameters)
         response = parse(ssl_post(live_url, post_data(COMMANDS[source_type][action], parameters)))
 
-       Response.new(
-         (response[:status] == 'Approved'),
-         message_from(response),
-         response,
-         authorization: authorization_from(response, source_type),
-         avs_result: { code: response[:avs_result_code] },
-         cvv_result: response[:cvv_result_code]
-       )
+        Response.new(
+          (response[:status] == 'Approved'),
+          message_from(response),
+          response,
+          authorization: authorization_from(response, source_type),
+          avs_result: { code: response[:avs_result_code] },
+          cvv_result: response[:cvv_result_code]
+        )
       end
 
       def message_from(response)
