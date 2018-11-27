@@ -140,15 +140,15 @@ class NetbanxTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-     @gateway.expects(:ssl_request).twice.returns(successful_unstore_response)
+    @gateway.expects(:ssl_request).twice.returns(successful_unstore_response)
 
-     response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015|e4a3cd5a-56db-4d9b-97d3-fdd9ab3bd0f4')
-     assert_success response
-     assert response.test?
+    response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015|e4a3cd5a-56db-4d9b-97d3-fdd9ab3bd0f4')
+    assert_success response
+    assert response.test?
 
-     response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015')
-     assert_success response
-     assert response.test?
+    response = @gateway.unstore('2f840ab3-0e71-4387-bad3-4705e6f4b015')
+    assert_success response
+    assert response.test?
   end
 
   def test_scrub

@@ -540,7 +540,7 @@ Conn close
   end
 
   def start_date_error_recurring_response
-      <<-XML
+    <<-XML
   <ResponseData>
     <Result>0</Result>
     <Message>Field format error: START or NEXTPAYMENTDATE older than last payment date</Message>
@@ -553,7 +553,7 @@ Conn close
   end
 
   def start_date_missing_recurring_response
-      <<-XML
+    <<-XML
   <ResponseData>
     <Result>0</Result>
     <Message>Field format error: START field missing</Message>

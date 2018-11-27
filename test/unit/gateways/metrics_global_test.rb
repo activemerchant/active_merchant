@@ -90,12 +90,12 @@ class MetricsGlobalTest < Test::Unit::TestCase
   end
 
   def test_purchase_is_valid_csv
-   params = { :amount => '1.01' }
+    params = { :amount => '1.01' }
 
-   @gateway.send(:add_creditcard, params, @credit_card)
+    @gateway.send(:add_creditcard, params, @credit_card)
 
-   assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
-   assert_equal post_data_fixture.size, data.size
+    assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
+    assert_equal post_data_fixture.size, data.size
   end
 
   def test_purchase_meets_minimum_requirements

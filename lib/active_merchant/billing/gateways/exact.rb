@@ -160,14 +160,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-         response = parse(ssl_post(self.live_url, build_request(action, request), POST_HEADERS))
+        response = parse(ssl_post(self.live_url, build_request(action, request), POST_HEADERS))
 
-         Response.new(successful?(response), message_from(response), response,
-           :test => test?,
-           :authorization => authorization_from(response),
-           :avs_result => { :code => response[:avs] },
-           :cvv_result => response[:cvv2]
-         )
+        Response.new(successful?(response), message_from(response), response,
+          :test => test?,
+          :authorization => authorization_from(response),
+          :avs_result => { :code => response[:avs] },
+          :cvv_result => response[:cvv2]
+        )
       rescue ResponseError => e
         case e.response.code
         when '401'
@@ -183,9 +183,9 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         if response[:authorization_num] && response[:transaction_tag]
-           "#{response[:authorization_num]};#{response[:transaction_tag]}"
+          "#{response[:authorization_num]};#{response[:transaction_tag]}"
         else
-           ''
+          ''
         end
       end
 

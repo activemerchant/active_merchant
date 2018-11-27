@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_response(success, message, response, options = {})
-         Response.new(success, message, response, options)
+        Response.new(success, message, response, options)
       end
     end
   end

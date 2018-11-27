@@ -61,7 +61,7 @@ class VerifiTest < Test::Unit::TestCase
     assert_equal '10.34', @gateway.send(:amount, 1034)
 
     assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
+      @gateway.send(:amount, '10.34')
     end
   end
 

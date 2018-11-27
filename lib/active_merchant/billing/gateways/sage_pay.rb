@@ -361,11 +361,11 @@ module ActiveMerchant #:nodoc:
         when :store
           response['Token']
         else
-         [ params[:VendorTxCode],
-           response['VPSTxId'] || params[:VPSTxId],
-           response['TxAuthNo'],
-           response['SecurityKey'] || params[:SecurityKey],
-           action ].join(';')
+          [ params[:VendorTxCode],
+            response['VPSTxId'] || params[:VPSTxId],
+            response['TxAuthNo'],
+            response['SecurityKey'] || params[:SecurityKey],
+            action ].join(';')
         end
       end
 

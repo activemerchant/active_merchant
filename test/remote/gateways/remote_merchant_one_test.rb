@@ -48,8 +48,8 @@ class RemoteMerchantOneTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-   assert response = @gateway.capture(@amount, '')
-   assert_failure response
+    assert response = @gateway.capture(@amount, '')
+    assert_failure response
   end
 
   def test_invalid_login

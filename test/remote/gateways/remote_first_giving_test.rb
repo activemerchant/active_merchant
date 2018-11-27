@@ -32,11 +32,11 @@ class RemoteFirstGivingTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-   assert purchase = @gateway.purchase(@amount, @credit_card, @options)
-   assert_success purchase
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
-   assert response = @gateway.refund(@amount, purchase.authorization)
-   assert_equal 'REFUND_REQUESTED_AWAITING_REFUND', response.message
+    assert response = @gateway.refund(@amount, purchase.authorization)
+    assert_equal 'REFUND_REQUESTED_AWAITING_REFUND', response.message
   end
 
   def test_failed_refund

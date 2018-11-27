@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_authentication(post)
-          post[:authentication] = { entityId: @options[:entity_id], password: @options[:password], userId: @options[:user_id]}
+        post[:authentication] = { entityId: @options[:entity_id], password: @options[:password], userId: @options[:user_id]}
       end
 
       def add_customer_data(post, payment, options)

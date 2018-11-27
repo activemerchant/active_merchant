@@ -163,7 +163,7 @@ module ActiveMerchant
         if response['token']
           response['token'].to_s
         else
-           response['id'].to_s
+          response['id'].to_s
         end
       end
 

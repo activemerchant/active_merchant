@@ -380,18 +380,18 @@ module ActiveMerchant #:nodoc:
         requires!(options[:transaction], :type)
         case options[:transaction][:type]
         when :void
-            requires!(options[:transaction], :trans_id)
+          requires!(options[:transaction], :trans_id)
         when :refund
-            requires!(options[:transaction], :trans_id) &&
-              (
-                (options[:transaction][:customer_profile_id] && options[:transaction][:customer_payment_profile_id]) ||
-                options[:transaction][:credit_card_number_masked] ||
-                (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
-              )
+          requires!(options[:transaction], :trans_id) &&
+            (
+              (options[:transaction][:customer_profile_id] && options[:transaction][:customer_payment_profile_id]) ||
+              options[:transaction][:credit_card_number_masked] ||
+              (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
+            )
         when :prior_auth_capture
-            requires!(options[:transaction], :amount, :trans_id)
+          requires!(options[:transaction], :amount, :trans_id)
         else
-            requires!(options[:transaction], :amount, :customer_profile_id, :customer_payment_profile_id)
+          requires!(options[:transaction], :amount, :customer_profile_id, :customer_payment_profile_id)
         end
         request = build_request(:create_customer_profile_transaction, options)
         commit(:create_customer_profile_transaction, request)
@@ -666,33 +666,33 @@ module ActiveMerchant #:nodoc:
             # The amount to be billed to the customer
             case transaction[:type]
             when :void
-                tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
-                tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
-                xml.tag!('transId', transaction[:trans_id])
+              tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
+              tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
+              xml.tag!('transId', transaction[:trans_id])
             when :refund
-                xml.tag!('amount', transaction[:amount])
-                tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
-                tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
-                tag_unless_blank(xml, 'creditCardNumberMasked', transaction[:credit_card_number_masked])
-                tag_unless_blank(xml, 'bankRoutingNumberMasked', transaction[:bank_routing_number_masked])
-                tag_unless_blank(xml, 'bankAccountNumberMasked', transaction[:bank_account_number_masked])
-                add_order(xml, transaction[:order]) if transaction[:order].present?
-                xml.tag!('transId', transaction[:trans_id])
-                add_tax(xml, transaction[:tax]) if transaction[:tax]
-                add_duty(xml, transaction[:duty]) if transaction[:duty]
-                add_shipping(xml, transaction[:shipping]) if transaction[:shipping]
+              xml.tag!('amount', transaction[:amount])
+              tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
+              tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
+              tag_unless_blank(xml, 'creditCardNumberMasked', transaction[:credit_card_number_masked])
+              tag_unless_blank(xml, 'bankRoutingNumberMasked', transaction[:bank_routing_number_masked])
+              tag_unless_blank(xml, 'bankAccountNumberMasked', transaction[:bank_account_number_masked])
+              add_order(xml, transaction[:order]) if transaction[:order].present?
+              xml.tag!('transId', transaction[:trans_id])
+              add_tax(xml, transaction[:tax]) if transaction[:tax]
+              add_duty(xml, transaction[:duty]) if transaction[:duty]
+              add_shipping(xml, transaction[:shipping]) if transaction[:shipping]
             when :prior_auth_capture
-                xml.tag!('amount', transaction[:amount])
-                add_order(xml, transaction[:order]) if transaction[:order].present?
-                xml.tag!('transId', transaction[:trans_id])
+              xml.tag!('amount', transaction[:amount])
+              add_order(xml, transaction[:order]) if transaction[:order].present?
+              xml.tag!('transId', transaction[:trans_id])
             else
-                xml.tag!('amount', transaction[:amount])
-                xml.tag!('customerProfileId', transaction[:customer_profile_id])
-                xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
-                add_order(xml, transaction[:order]) if transaction[:order].present?
+              xml.tag!('amount', transaction[:amount])
+              xml.tag!('customerProfileId', transaction[:customer_profile_id])
+              xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+              add_order(xml, transaction[:order]) if transaction[:order].present?
 
             end
             if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])

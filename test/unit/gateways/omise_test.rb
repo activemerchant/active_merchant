@@ -39,8 +39,8 @@ class OmiseTest < Test::Unit::TestCase
   end
 
   def test_gateway_url
-     assert_equal 'https://api.omise.co/', OmiseGateway::API_URL
-     assert_equal 'https://vault.omise.co/', OmiseGateway::VAULT_URL
+    assert_equal 'https://api.omise.co/', OmiseGateway::API_URL
+    assert_equal 'https://vault.omise.co/', OmiseGateway::VAULT_URL
   end
 
   def test_request_headers

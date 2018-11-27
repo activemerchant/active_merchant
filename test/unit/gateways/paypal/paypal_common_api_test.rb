@@ -86,7 +86,7 @@ class PaypalCommonApiTest < Test::Unit::TestCase
 
   def test_build_request_wrapper_with_request_details
     result = @gateway.send(:build_request_wrapper, 'Action', :request_details => true) do |xml|
-       xml.tag! 'n2:TransactionID', 'baz'
+      xml.tag! 'n2:TransactionID', 'baz'
     end
     assert_equal 'baz', REXML::XPath.first(REXML::Document.new(result), '//ActionReq/ActionRequest/n2:ActionRequestDetails/n2:TransactionID').text
   end

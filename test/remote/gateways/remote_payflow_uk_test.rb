@@ -47,11 +47,11 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_solo
-     assert response = @gateway.purchase(100000, @solo, @options)
-     assert_equal 'Approved', response.message
-     assert_success response
-     assert response.test?
-     assert_not_nil response.authorization
+    assert response = @gateway.purchase(100000, @solo, @options)
+    assert_equal 'Approved', response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
   end
 
   def test_no_card_issue_or_card_start_with_switch

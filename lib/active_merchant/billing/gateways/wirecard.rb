@@ -202,11 +202,11 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'WIRECARD_BXML' do
           xml.tag! 'W_REQUEST' do
             xml.tag! 'W_JOB' do
-               xml.tag! 'JobID', ''
-               # UserID for this transaction
-               xml.tag! 'BusinessCaseSignature', options[:signature] || options[:login]
-               # Create the whole rest of the message
-               add_transaction_data(xml, money, options)
+              xml.tag! 'JobID', ''
+              # UserID for this transaction
+              xml.tag! 'BusinessCaseSignature', options[:signature] || options[:login]
+              # Create the whole rest of the message
+              add_transaction_data(xml, money, options)
             end
           end
         end

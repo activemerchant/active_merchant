@@ -299,7 +299,7 @@ class VisanetPeruTest < Test::Unit::TestCase
   end
 
   def successful_capture_response
-   '{"errorCode":0,"errorMessage":"OK","transactionUUID":"8517cf68-4820-4224-959b-01c8117385e0","externalTransactionId":"de9dc65c094fb4f1defddc562731af81","transactionDateTime":1519937673906,"transactionDuration":0,"merchantId":"543025501","userTokenId":null,"aliasName":null,"data":{"FECHAYHORA_TX":null,"DSC_ECI":null,"DSC_COD_ACCION":null,"NOM_EMISOR":null,"ESTADO":"Depositado","RESPUESTA":"1","ID_UNICO":null,"NUMORDEN":null,"CODACCION":null,"ETICKET":null,"IMP_AUTORIZADO":null,"DECISIONCS":null,"COD_AUTORIZA":null,"CODTIENDA":"543025501","PAN":null,"ORI_TARJETA":null}}'
+    '{"errorCode":0,"errorMessage":"OK","transactionUUID":"8517cf68-4820-4224-959b-01c8117385e0","externalTransactionId":"de9dc65c094fb4f1defddc562731af81","transactionDateTime":1519937673906,"transactionDuration":0,"merchantId":"543025501","userTokenId":null,"aliasName":null,"data":{"FECHAYHORA_TX":null,"DSC_ECI":null,"DSC_COD_ACCION":null,"NOM_EMISOR":null,"ESTADO":"Depositado","RESPUESTA":"1","ID_UNICO":null,"NUMORDEN":null,"CODACCION":null,"ETICKET":null,"IMP_AUTORIZADO":null,"DECISIONCS":null,"COD_AUTORIZA":null,"CODTIENDA":"543025501","PAN":null,"ORI_TARJETA":null}}'
   end
 
   def failed_capture_response

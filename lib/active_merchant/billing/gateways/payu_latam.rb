@@ -365,7 +365,7 @@ module ActiveMerchant #:nodoc:
         when 'verify_credentials'
           response['code'] == 'SUCCESS'
         when 'refund', 'void'
-        response['code'] == 'SUCCESS' && response['transactionResponse'] && (response['transactionResponse']['state'] == 'PENDING' || response['transactionResponse']['state'] == 'APPROVED')
+          response['code'] == 'SUCCESS' && response['transactionResponse'] && (response['transactionResponse']['state'] == 'PENDING' || response['transactionResponse']['state'] == 'APPROVED')
         else
           response['code'] == 'SUCCESS' && response['transactionResponse'] && (response['transactionResponse']['state'] == 'APPROVED')
         end

@@ -408,8 +408,8 @@ module ActiveMerchant #:nodoc:
 
       def add_signature(parameters)
         if @options[:signature].blank?
-           ActiveMerchant.deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) unless(@options[:signature_encryptor] == 'none')
-           return
+          ActiveMerchant.deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) unless(@options[:signature_encryptor] == 'none')
+          return
         end
 
         add_pair parameters, 'SHASign', calculate_signature(parameters, @options[:signature_encryptor], @options[:signature])

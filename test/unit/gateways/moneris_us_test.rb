@@ -90,53 +90,53 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, 1034)
+    assert_equal '10.34', @gateway.send(:amount, 1034)
 
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
+    assert_raise(ArgumentError) do
+      @gateway.send(:amount, '10.34')
+    end
   end
 
   def test_preauth_is_valid_xml
-   params = {
-     :order_id => 'order1',
-     :amount => '1.01',
-     :pan => '4242424242424242',
-     :expdate => '0303',
-     :crypt_type => 7,
-   }
+    params = {
+      :order_id => 'order1',
+      :amount => '1.01',
+      :pan => '4242424242424242',
+      :expdate => '0303',
+      :crypt_type => 7,
+    }
 
-   assert data = @gateway.send(:post_data, 'us_preauth', params)
-   assert REXML::Document.new(data)
-   assert_equal xml_capture_fixture.size, data.size
+    assert data = @gateway.send(:post_data, 'us_preauth', params)
+    assert REXML::Document.new(data)
+    assert_equal xml_capture_fixture.size, data.size
   end
 
   def test_purchase_is_valid_xml
-   params = {
-     :order_id => 'order1',
-     :amount => '1.01',
-     :pan => '4242424242424242',
-     :expdate => '0303',
-     :crypt_type => 7,
-   }
+    params = {
+      :order_id => 'order1',
+      :amount => '1.01',
+      :pan => '4242424242424242',
+      :expdate => '0303',
+      :crypt_type => 7,
+    }
 
-   assert data = @gateway.send(:post_data, 'us_purchase', params)
-   assert REXML::Document.new(data)
-   assert_equal xml_purchase_fixture.size, data.size
+    assert data = @gateway.send(:post_data, 'us_purchase', params)
+    assert REXML::Document.new(data)
+    assert_equal xml_purchase_fixture.size, data.size
   end
 
   def test_capture_is_valid_xml
-   params = {
-     :order_id => 'order1',
-     :amount => '1.01',
-     :pan => '4242424242424242',
-     :expdate => '0303',
-     :crypt_type => 7,
-   }
+    params = {
+      :order_id => 'order1',
+      :amount => '1.01',
+      :pan => '4242424242424242',
+      :expdate => '0303',
+      :crypt_type => 7,
+    }
 
-   assert data = @gateway.send(:post_data, 'us_preauth', params)
-   assert REXML::Document.new(data)
-   assert_equal xml_capture_fixture.size, data.size
+    assert data = @gateway.send(:post_data, 'us_preauth', params)
+    assert REXML::Document.new(data)
+    assert_equal xml_capture_fixture.size, data.size
   end
 
   def test_supported_countries
@@ -591,11 +591,11 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def xml_purchase_fixture
-   '<request><store_id>monusqa002</store_id><api_token>qatoken</api_token><us_purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></us_purchase></request>'
+    '<request><store_id>monusqa002</store_id><api_token>qatoken</api_token><us_purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></us_purchase></request>'
   end
 
   def xml_capture_fixture
-   '<request><store_id>monusqa002</store_id><api_token>qatoken</api_token><us_preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></us_preauth></request>'
+    '<request><store_id>monusqa002</store_id><api_token>qatoken</api_token><us_preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></us_preauth></request>'
   end
 
   def pre_scrub

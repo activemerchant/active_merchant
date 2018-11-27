@@ -837,7 +837,7 @@ module ActiveMerchant
         response = {action: action}
 
         response[:response_code] = if(element = doc.at_xpath('//transactionResponse/responseCode'))
-          (empty?(element.content) ? nil : element.content.to_i)
+                                     (empty?(element.content) ? nil : element.content.to_i)
         end
 
         if(element = doc.at_xpath('//errors/error'))
@@ -855,35 +855,35 @@ module ActiveMerchant
         end
 
         response[:avs_result_code] = if(element = doc.at_xpath('//avsResultCode'))
-          (empty?(element.content) ? nil : element.content)
+                                       (empty?(element.content) ? nil : element.content)
         end
 
         response[:transaction_id] = if(element = doc.at_xpath('//transId'))
-          (empty?(element.content) ? nil : element.content)
+                                      (empty?(element.content) ? nil : element.content)
         end
 
         response[:card_code] = if(element = doc.at_xpath('//cvvResultCode'))
-          (empty?(element.content) ? nil : element.content)
+                                 (empty?(element.content) ? nil : element.content)
         end
 
         response[:authorization_code] = if(element = doc.at_xpath('//authCode'))
-          (empty?(element.content) ? nil : element.content)
+                                          (empty?(element.content) ? nil : element.content)
         end
 
         response[:cardholder_authentication_code] = if(element = doc.at_xpath('//cavvResultCode'))
-          (empty?(element.content) ? nil : element.content)
+                                                      (empty?(element.content) ? nil : element.content)
         end
 
         response[:account_number] = if(element = doc.at_xpath('//accountNumber'))
-          (empty?(element.content) ? nil : element.content[-4..-1])
+                                      (empty?(element.content) ? nil : element.content[-4..-1])
         end
 
         response[:test_request] = if(element = doc.at_xpath('//testRequest'))
-          (empty?(element.content) ? nil : element.content)
+                                    (empty?(element.content) ? nil : element.content)
         end
 
         response[:full_response_code] = if(element = doc.at_xpath('//messages/message/code'))
-          (empty?(element.content) ? nil : element.content)
+                                          (empty?(element.content) ? nil : element.content)
         end
 
         response
@@ -900,28 +900,28 @@ module ActiveMerchant
         end
 
         response[:result_code] = if(element = doc.at_xpath('//messages/resultCode'))
-          (empty?(element.content) ? nil : element.content)
+                                   (empty?(element.content) ? nil : element.content)
         end
 
         response[:test_request] = if(element = doc.at_xpath('//testRequest'))
-          (empty?(element.content) ? nil : element.content)
+                                    (empty?(element.content) ? nil : element.content)
         end
 
         response[:customer_profile_id] = if(element = doc.at_xpath('//customerProfileId'))
-          (empty?(element.content) ? nil : element.content)
+                                           (empty?(element.content) ? nil : element.content)
         end
 
         response[:customer_payment_profile_id] = if(element = doc.at_xpath('//customerPaymentProfileIdList/numericString'))
-          (empty?(element.content) ? nil : element.content)
+                                                   (empty?(element.content) ? nil : element.content)
         end
 
         response[:customer_payment_profile_id] = if(element = doc.at_xpath('//customerPaymentProfileIdList/numericString') ||
                                                               doc.at_xpath('//customerPaymentProfileId'))
-          (empty?(element.content) ? nil : element.content)
+                                                   (empty?(element.content) ? nil : element.content)
         end
 
         response[:direct_response] = if(element = doc.at_xpath('//directResponse'))
-          (empty?(element.content) ? nil : element.content)
+                                       (empty?(element.content) ? nil : element.content)
         end
 
         response.merge!(parse_direct_response_elements(response, options))

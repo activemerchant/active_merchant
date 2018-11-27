@@ -44,10 +44,10 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_manual_entry
-   @credit_card.manual_entry = true
-   assert response = @gateway.purchase(@amount, @credit_card, @options)
-   assert_equal 'Success', response.message
-   assert_success response
+    @credit_card.manual_entry = true
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Success', response.message
+    assert_success response
   end
 
   def test_successful_purchase_with_extra_details

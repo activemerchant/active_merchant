@@ -70,11 +70,11 @@ class EwayTest < Test::Unit::TestCase
   end
 
   def test_amount_style
-   assert_equal '1034', @gateway.send(:amount, 1034)
+    assert_equal '1034', @gateway.send(:amount, 1034)
 
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
+    assert_raise(ArgumentError) do
+      @gateway.send(:amount, '10.34')
+    end
   end
 
   def test_ensure_does_not_respond_to_authorize

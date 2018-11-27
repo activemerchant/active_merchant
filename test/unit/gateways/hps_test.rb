@@ -270,7 +270,7 @@ class HpsTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-   <<-RESPONSE
+    <<-RESPONSE
 <?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <soap:Body>

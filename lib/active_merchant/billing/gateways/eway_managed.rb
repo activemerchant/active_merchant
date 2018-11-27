@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
         reply = {}
         xml = REXML::Document.new(body)
         if root = REXML::XPath.first(xml, '//soap:Fault') then
-           reply=parse_fault(root)
+          reply=parse_fault(root)
         else
           if root = REXML::XPath.first(xml, '//ProcessPaymentResponse/ewayResponse') then
             # Successful payment
@@ -232,13 +232,13 @@ module ActiveMerchant #:nodoc:
         # eWay demands all fields be sent, but contain an empty string if blank
         post = case action
                when 'QueryCustomer'
-                  arguments
+                 arguments
                when 'ProcessPayment'
-                  default_payment_fields.merge(arguments)
+                 default_payment_fields.merge(arguments)
                when 'CreateCustomer'
-                  default_customer_fields.merge(arguments)
+                 default_customer_fields.merge(arguments)
                when 'UpdateCustomer'
-                  default_customer_fields.merge(arguments)
+                 default_customer_fields.merge(arguments)
                end
 
         xml = Builder::XmlMarkup.new :indent => 2

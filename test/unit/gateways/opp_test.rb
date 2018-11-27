@@ -179,11 +179,11 @@ class OppTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-      'paymentType=DB&amount=1.00&currency=EUR&paymentBrand=VISA&card.holder=Longbob+Longsen&card.number=4200000000000000&card.expiryMonth=05&card.expiryYear=2018&      card.cvv=123&billing.street1=456+My+Street&billing.street2=Apt+1&billing.city=Ottawa&billing.state=ON&billing.postcode=K1C2N6&billing.country=CA&authentication.entityId=8a8294174b7ecb28014b9699220015ca&authentication.password=sy6KJsT8&authentication.userId=8a8294174b7ecb28014b9699220015cc'
+    'paymentType=DB&amount=1.00&currency=EUR&paymentBrand=VISA&card.holder=Longbob+Longsen&card.number=4200000000000000&card.expiryMonth=05&card.expiryYear=2018&      card.cvv=123&billing.street1=456+My+Street&billing.street2=Apt+1&billing.city=Ottawa&billing.state=ON&billing.postcode=K1C2N6&billing.country=CA&authentication.entityId=8a8294174b7ecb28014b9699220015ca&authentication.password=sy6KJsT8&authentication.userId=8a8294174b7ecb28014b9699220015cc'
   end
 
   def post_scrubbed
-      'paymentType=DB&amount=1.00&currency=EUR&paymentBrand=VISA&card.holder=Longbob+Longsen&card.number=[FILTERED]&card.expiryMonth=05&card.expiryYear=2018&      card.cvv=[FILTERED]&billing.street1=456+My+Street&billing.street2=Apt+1&billing.city=Ottawa&billing.state=ON&billing.postcode=K1C2N6&billing.country=CA&authentication.entityId=8a8294174b7ecb28014b9699220015ca&authentication.password=[FILTERED]&authentication.userId=8a8294174b7ecb28014b9699220015cc'
+    'paymentType=DB&amount=1.00&currency=EUR&paymentBrand=VISA&card.holder=Longbob+Longsen&card.number=[FILTERED]&card.expiryMonth=05&card.expiryYear=2018&      card.cvv=[FILTERED]&billing.street1=456+My+Street&billing.street2=Apt+1&billing.city=Ottawa&billing.state=ON&billing.postcode=K1C2N6&billing.country=CA&authentication.entityId=8a8294174b7ecb28014b9699220015ca&authentication.password=[FILTERED]&authentication.userId=8a8294174b7ecb28014b9699220015cc'
   end
 
   def successful_response(type, id)

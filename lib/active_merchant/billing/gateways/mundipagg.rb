@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
         when 'capture'
           "#{url}/charges/#{auth}/capture/"
         else
-         "#{url}/charges/"
+          "#{url}/charges/"
         end
       end
 

@@ -46,11 +46,11 @@ class GatewayTest < Test::Unit::TestCase
   end
 
   def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, 1034)
+    assert_equal '10.34', @gateway.send(:amount, 1034)
 
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
+    assert_raise(ArgumentError) do
+      @gateway.send(:amount, '10.34')
+    end
   end
 
   def test_card_brand
