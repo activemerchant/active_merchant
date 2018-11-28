@@ -12,12 +12,18 @@ gemfile:
 - gemfiles/Gemfile.rails51
 - gemfiles/Gemfile.rails50
 - gemfiles/Gemfile.rails42
+- gemfiles/Gemfile.rails_master
 
 jobs:
   include:
       rvm: 2.5
       gemfile: Gemfile
       script: bundle exec rubocop --parallel
+
+matrix:
+  exclude:
+    - rvm: 2.3
+      gemfile: 'gemfiles/Gemfile.rails_master'
 
 notifications:
   email:
