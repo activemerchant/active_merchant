@@ -1,15 +1,26 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Clearhaus: update submission data format [bpollack] #3053
+* Barclaycard Smartpay: Improves Error Handling [deedeelavinder] #3026
+* Braintree: Fix passing phone-only billing address [curiousepic] #3025
+* Litle: Capitalize check account type [curiousepic] #3028
+* Braintree: Account for nil billing address fields [curiousepic] #3029
+* Realex: Add verify [kheang] #3030
+* Braintree: Actually account for nil address fields [curiousepic] #3032
+* Mercado Pago: do not infer card type [bpollack] #3038
+* Credorax: allow sending submerchant ID (h3 parameter) [bpollack] #3040
+* Worldpay: Pass stored credential option fields [curiousepic] #3041
 * Make behavior of nil CC numbers more consistent [guaguasi] #3010
 * Moneris: Adds Credential on File logic [deedeelavinder] #3042
 * Adyen: Return AVS and CVC Result [nfarve] #3044
+* Paymentez: Supports phone field, does not send if empty [molbrown] #3043
 * Braintree: Account for nil address with existing customer [curiousepic] #3047
 * Optimal Payment: Add verify capabilities #3052
+* Moneris: Allows cof_enabled gateway to process non-cof transactions [deedeelavinder] #3051
 * Cenpos: update supported countries [bpollack] #3055
 * CyberSource: update supported countries [bpollack] #3055
 * MiGS: update supported countries [bpollack] #3055
+* Clearhaus: update submission data format [bpollack] #3053
 * Forte: Allow void on capture #3059
 
 == Version 1.86.0 (October 26, 2018)
@@ -23,15 +34,6 @@
 * Payflow Express: Add phone to returned Response [filipebarcos] #3003
 * Authorize.Net: Pass some level 3 fields [curiousepic] #3022
 * Add state to the netbanx payload [Girardvjonathan] #3024
-* Barclaycard Smartpay: Improves Error Handling [deedeelavinder] #3026
-* Braintree: Fix passing phone-only billing address [curiousepic] #3025
-* Litle: Capitalize check account type [curiousepic] #3028
-* Braintree: Account for nil billing address fields [curiousepic] #3029
-* Realex: Add verify [kheang] #3030
-* Braintree: Actually account for nil address fields [curiousepic] #3032
-* Credorax: allow sending submerchant ID (h3 parameter) [bpollack] #3040
-* Worldpay: Pass stored credential option fields [curiousepic] #3041
-* Paymentez: Supports phone field, does not send if empty [molbrown] #3043
 
 == Version 1.85.0 (September 28, 2018)
 * Authorize.Net: Support custom delimiter for cim [curiousepic] #3001
