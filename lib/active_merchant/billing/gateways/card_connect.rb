@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardConnectGateway < Gateway
+      include TreeCopy
+
       self.test_url = 'https://fts.cardconnect.com:6443/cardconnect/rest/'
       self.live_url = 'https://fts.cardconnect.com:8443/cardconnect/rest/'
 
@@ -166,13 +168,16 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:address] = address[:address1] if address[:address1]
-          post[:address].concat(" #{address[:address2]}") if address[:address2]
-          post[:city] = address[:city] if address[:city]
-          post[:region] = address[:state] if address[:state]
-          post[:country] = address[:country] if address[:country]
-          post[:postal] = address[:zip] if address[:zip]
-          post[:phone] = address[:phone] if address[:phone]
+          copy_paths(address, post, [
+                       tree_path([:address]),
+                       tree_path([:city]),
+                       tree_path([:state], [:region]),
+                       tree_path([:country]),
+                       tree_path([:zip], [:postal]),
+                       tree_path([:phone])
+                     ])
+
+          post[:address].concat(" #{address[:address2]}") if post[:address] && address[:address2]
         end
       end
 

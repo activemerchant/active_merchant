@@ -1,6 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AdyenGateway < Gateway
+      include TreeCopy
 
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
@@ -142,14 +143,17 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_extra_data(post, payment, options)
-        post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
-        post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
-        post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
-        post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
-        post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
+        copy_snake_paths(options, post, [
+                           [:shopperEmail],
+                           [:shopperIP],
+                           [:shopperReference],
+                           [:fraudOffset],
+                           [:deliveryDate],
+                           [:selectedBrand],
+                           [:merchantOrderReference]
+                         ])
+
         post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
-        post[:deliveryDate] = options[:delivery_date] if options[:delivery_date]
-        post[:merchantOrderReference] = options[:merchant_order_reference] if options[:merchant_order_reference]
         post[:additionalData] ||= {}
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
@@ -170,12 +174,14 @@ module ActiveMerchant #:nodoc:
         return unless post[:card]&.kind_of?(Hash)
         if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:card][:billingAddress] = {}
-          post[:card][:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
-          post[:card][:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:card][:billingAddress][:city] = address[:city] || 'N/A'
-          post[:card][:billingAddress][:stateOrProvince] = address[:state] if address[:state]
-          post[:card][:billingAddress][:country] = address[:country] if address[:country]
+          copy_paths(address, post[:card][:billingAddress], [
+                       tree_path([:address1], [:street], default: 'N/A'),
+                       tree_path([:address2], [:houseNumberOrName], default: 'N/A'),
+                       tree_path([:zip], [:postalCode]),
+                       tree_path([:city], default: 'N/A'),
+                       tree_path([:state], [:stateOrProvince]),
+                       tree_path([:country])
+                     ])
         end
       end
 

@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BarclaycardSmartpayGateway < Gateway
+      include TreeCopy
+
       self.test_url = 'https://pal-test.barclaycardsmartpay.com/pal/servlet'
       self.live_url = 'https://pal-live.barclaycardsmartpay.com/pal/servlet'
 
@@ -63,10 +65,9 @@ module ActiveMerchant #:nodoc:
         post = payment_request(money, options)
         post[:amount] = amount_hash(money, options[:currency])
         post[:card] = credit_card_hash(creditcard)
-        post[:dateOfBirth] = options[:date_of_birth] if options[:date_of_birth]
-        post[:entityType]  = options[:entity_type] if options[:entity_type]
-        post[:nationality] = options[:nationality] if options[:nationality]
-        post[:shopperName] = options[:shopper_name] if options[:shopper_name]
+        copy_snake_paths(options, post, [
+                           [:dateOfBirth], [:entityType], [:nationality], [:shopperName]
+                         ])
 
         if options[:third_party_payout]
           post[:recurring] = options[:recurring_contract] || {contract: 'PAYOUT'}
@@ -286,10 +287,12 @@ module ActiveMerchant #:nodoc:
         hash = {}
         hash[:houseNumberOrName] = house
         hash[:street]            = street
-        hash[:city]              = address[:city]
-        hash[:stateOrProvince]   = address[:state]
-        hash[:postalCode]        = address[:zip]
-        hash[:country]           = address[:country]
+        copy_paths(address, hash, [
+                     tree_path([:city]),
+                     tree_path([:state], [:stateOfProvince]),
+                     tree_path([:zip], [:postcalCode]),
+                     tree_path([:country])
+                   ])
         hash.keep_if { |_, v| v }
       end
 

@@ -3,6 +3,8 @@ require 'active_support/core_ext/hash/slice'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class StripeGateway < Gateway
+      include TreeCopy
+
       self.live_url = 'https://api.stripe.com/v1/'
 
       AVS_CODE_TRANSLATOR = {
@@ -353,12 +355,15 @@ module ActiveMerchant #:nodoc:
       def add_level_three(post, options)
         level_three = {}
 
-        copy_when_present(level_three, [:merchant_reference], options)
-        copy_when_present(level_three, [:customer_reference], options)
-        copy_when_present(level_three, [:shipping_address_zip], options)
-        copy_when_present(level_three, [:shipping_from_zip], options)
-        copy_when_present(level_three, [:shipping_amount], options)
-        copy_when_present(level_three, [:line_items], options)
+        copy_paths(options, level_three, [
+                     tree_path([:merchant_reference]),
+                     tree_path([:merchant_reference]),
+                     tree_path([:customer_reference]),
+                     tree_path([:shipping_address_zip]),
+                     tree_path([:shipping_from_zip]),
+                     tree_path([:shipping_amount]),
+                     tree_path([:line_items])
+                   ])
 
         unless level_three.empty?
           post[:level3] = level_three
@@ -710,22 +715,6 @@ module ActiveMerchant #:nodoc:
       def auth_minimum_amount(options)
         return 100 unless options[:currency]
         return MINIMUM_AUTHORIZE_AMOUNTS[options[:currency].upcase] || 100
-      end
-
-      def copy_when_present(dest, dest_path, source, source_path = nil)
-        source_path ||= dest_path
-        source_path.each do |key|
-          return nil unless source[key]
-          source = source[key]
-        end
-
-        if source
-          dest_path.first(dest_path.size - 1).each do |key|
-            dest[key] ||= {}
-            dest = dest[key]
-          end
-          dest[dest_path.last] = source
-        end
       end
     end
   end

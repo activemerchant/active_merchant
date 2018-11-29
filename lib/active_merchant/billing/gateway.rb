@@ -1,6 +1,7 @@
 require 'net/http'
 require 'net/https'
 require 'active_merchant/billing/response'
+require 'active_merchant/tree_copy'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

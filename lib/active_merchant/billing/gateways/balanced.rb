@@ -17,6 +17,8 @@ module ActiveMerchant #:nodoc:
     #    live" button on the Balanced dashboard and fill in your marketplace
     #    details.
     class BalancedGateway < Gateway
+      include TreeCopy
+
       VERSION = '2.0.0'
 
       self.live_url = 'https://api.balancedpayments.com'
@@ -139,12 +141,14 @@ module ActiveMerchant #:nodoc:
         address = (options[:billing_address] || options[:address])
         if(address && address[:zip].present?)
           post[:address] = {}
-          post[:address][:line1] = address[:address1] if address[:address1]
-          post[:address][:line2] = address[:address2] if address[:address2]
-          post[:address][:city] = address[:city] if address[:city]
-          post[:address][:state] = address[:state] if address[:state]
-          post[:address][:postal_code] = address[:zip] if address[:zip]
-          post[:address][:country_code] = address[:country] if address[:country]
+          copy_paths(address, post[:address], [
+                       tree_path([:address1], [:line1]),
+                       tree_path([:address2], [:line2]),
+                       tree_path([:city]),
+                       tree_path([:state]),
+                       tree_path([:zip], [:postal_code]),
+                       tree_path([:country], [:country_code])
+                     ])
         end
       end
 
