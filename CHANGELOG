@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.87.0 (November 29, 2018)
 * Barclaycard Smartpay: Improves Error Handling [deedeelavinder] #3026
 * Braintree: Fix passing phone-only billing address [curiousepic] #3025
 * Litle: Capitalize check account type [curiousepic] #3028
