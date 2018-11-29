@@ -4,6 +4,8 @@ require 'digest'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaymentezGateway < Gateway #:nodoc:
+      include TreeCopy
+
       self.test_url = 'https://ccapi-stg.paymentez.com/v2/'
       self.live_url = 'https://ccapi.paymentez.com/v2/'
 
@@ -130,10 +132,13 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         requires!(options, :user_id, :email)
         post[:user] ||= {}
-        post[:user][:id] = options[:user_id]
-        post[:user][:email] = options[:email]
-        post[:user][:ip_address] = options[:ip] if options[:ip]
-        post[:user][:fiscal_number] = options[:fiscal_number] if options[:fiscal_number]
+        copy_paths(options, post[:user], [
+                     tree_path([:user_id], [:id]),
+                     tree_path([:email]),
+                     tree_path([:ip], [:ip_address]),
+                     tree_path([:fiscal_number])
+                   ])
+
         if phone = options[:phone] || options.dig(:billing_address, :phone)
           post[:user][:phone] = phone
         end
@@ -144,14 +149,16 @@ module ActiveMerchant #:nodoc:
 
         post[:order] ||= {}
         post[:order][:amount] = amount(money).to_f
-        post[:order][:vat] = options[:vat] if options[:vat]
-        post[:order][:dev_reference] = options[:dev_reference] if options[:dev_reference]
-        post[:order][:description] = options[:description] if options[:description]
-        post[:order][:discount] = options[:discount] if options[:discount]
-        post[:order][:installments] = options[:installments] if options[:installments]
-        post[:order][:installments_type] = options[:installments_type] if options[:installments_type]
-        post[:order][:taxable_amount] = options[:taxable_amount] if options[:taxable_amount]
-        post[:order][:tax_percentage] = options[:tax_percentage] if options[:tax_percentage]
+        copy_paths(options, post[:order], [
+                     tree_path([:vat]),
+                     tree_path([:dev_reference]),
+                     tree_path([:description]),
+                     tree_path([:discount]),
+                     tree_path([:installments]),
+                     tree_path([:installments_type]),
+                     tree_path([:taxable_amount]),
+                     tree_path([:tax_percentage])
+                   ])
       end
 
       def add_payment(post, payment)
