@@ -271,8 +271,15 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_match %r{REFUSED}, response.message
   end
 
-  def test_successful_credit_on_cft_gateway
+  def test_successful_visa_credit_on_cft_gateway
     credit = @cftgateway.credit(@amount, @credit_card, @options)
+    assert_success credit
+    assert_equal 'SUCCESS', credit.message
+  end
+
+  def test_successful_mastercard_credit_on_cft_gateway
+    cc = credit_card('5555555555554444')
+    credit = @cftgateway.credit(@amount, cc, @options)
     assert_success credit
     assert_equal 'SUCCESS', credit.message
   end

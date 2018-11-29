@@ -179,14 +179,24 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_credit
+  def test_successful_visa_credit
     response = stub_comms do
       @gateway.credit(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/<paymentDetails action="REFUND">/, data)
-    end.respond_with(successful_credit_response)
+    end.respond_with(successful_visa_credit_response)
     assert_success response
     assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
+  def test_successful_mastercard_credit
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<paymentDetails action="REFUND">/, data)
+    end.respond_with(successful_mastercard_credit_response)
+    assert_success response
+    assert_equal 'f25257d251b81fb1fd9c210973c941ff', response.authorization
   end
 
   def test_description
@@ -748,7 +758,7 @@ class WorldpayTest < Test::Unit::TestCase
     REQUEST
   end
 
-  def successful_credit_response
+  def successful_visa_credit_response
     <<-RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
@@ -762,6 +772,29 @@ class WorldpayTest < Test::Unit::TestCase
           </ok>
         </reply>
       </paymentService>
+    RESPONSE
+  end
+
+  def successful_mastercard_credit_response
+    <<~RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                    "http://dtd.worldpay.com/paymentService_v1.dtd">
+    <paymentService version="1.4" merchantCode="YOUR_MERCHANT_CODE">
+      <reply>
+        <orderStatus orderCode="f25257d251b81fb1fd9c210973c941ff\">
+          <payment>
+            <paymentMethod>ECMC_DEBIT-SSL</paymentMethod>
+            <amount value="1110" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+            <lastEvent>SENT_FOR_REFUND</lastEvent>
+            <AuthorisationId id="987654"/>
+            <balance accountType="IN_PROCESS_CAPTURED">
+              <amount value="1110" currencyCode="GBP" exponent="2" debitCreditIndicator="debit"/>
+            </balance>
+          </payment>
+        </orderStatus>
+      </reply>
+    </paymentService>
     RESPONSE
   end
 

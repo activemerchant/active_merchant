@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068
 
 == Version 1.88.0 (November 30, 2018)
 * Added ActiveSupport/Rails master support [Edouard-chin] #3065

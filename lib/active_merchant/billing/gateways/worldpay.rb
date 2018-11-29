@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit_request(money, payment_method, options)
-        commit('credit', build_authorization_request(money, payment_method, options), :ok, options)
+        commit('credit', build_authorization_request(money, payment_method, options), :ok, 'SENT_FOR_REFUND', options)
       end
 
       def build_request
