@@ -267,25 +267,18 @@ module ActiveMerchant #:nodoc:
       def add_line_items(post, options)
         return unless options[:line_items].is_a?(Array)
         options[:line_items].each_with_index do |line_item, index|
-          post["line#{index}productrefnum"]  = line_item[:product_ref_num] if line_item.has_key?(:product_ref_num)
-
-          %w(sku name description taxable).each do |key|
-            post["line#{index}#{key}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
+          %w(product_ref_num sku name description taxable, tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
+            post["line#{index}#{key.gsub('_', '')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
           end
 
           {
             quantity: 'qty',
-            tax_rate: 'taxrate',
-            tax_amount: 'taxamount',
             unit: 'um',
-            commodity_code: 'commoditycode',
-            discount_rate: 'discountrate',
-            discount_amount: 'discountamount'
           }.each do |key, umkey|
             post["line#{index}#{umkey}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
           end
 
-          post["line#{index}cost"]           = amount(line_item[:cost])
+          post["line#{index}cost"] = amount(line_item[:cost])
         end
       end
 
