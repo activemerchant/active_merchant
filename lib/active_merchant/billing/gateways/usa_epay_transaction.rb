@@ -54,6 +54,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
+        add_recurring_fields(post, options)
         add_custom_fields(post, options)
         add_line_items(post, options)
         add_test_mode(post, options)
@@ -72,6 +73,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
+        add_recurring_fields(post, options)
         add_custom_fields(post, options)
         add_line_items(post, options)
         add_test_mode(post, options)
@@ -234,6 +236,23 @@ module ActiveMerchant #:nodoc:
 
         # When blank it's 'Stop'. 'Continue' is another one
         post['onError'] = options[:on_error] || 'Void'
+      end
+
+      def add_recurring_fields(post, options)
+        return unless options[:recurring_fields].is_a?(Hash)
+        options[:recurring_fields].each do |key, value|
+          if value == true
+            value = 'yes'
+          elsif value == false
+            next
+          end
+
+          if key == :bill_amount
+            value = amount(value)
+          end
+
+          post[key.to_s.delete('_')] = value
+        end
       end
 
       # see: https://wiki.usaepay.com/developer/transactionapi#merchant_defined_custom_fields
