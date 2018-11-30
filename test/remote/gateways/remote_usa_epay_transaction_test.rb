@@ -30,7 +30,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_echeck_and_extra_options
-    extra_options = @options.merge(check_format: 'ARC')
+    extra_options = @options.merge(check_format: 'ARC', account_type: 'savings')
     assert response = @gateway.purchase(@amount, @check, extra_options)
     assert_equal 'Success', response.message
     assert_success response
