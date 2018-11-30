@@ -244,14 +244,14 @@ module ActiveMerchant #:nodoc:
           if value == true
             value = 'yes'
           elsif value == false
-            next 
+            next
           end
 
           if key == :bill_amount
             value = amount(value)
           end
 
-          post[key.to_s.gsub('_', '')] = value
+          post[key.to_s.delete('_')] = value
         end
       end
 
@@ -267,8 +267,8 @@ module ActiveMerchant #:nodoc:
       def add_line_items(post, options)
         return unless options[:line_items].is_a?(Array)
         options[:line_items].each_with_index do |line_item, index|
-          %w(product_ref_num sku name description taxable, tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
-            post["line#{index}#{key.gsub('_', '')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
+          %w(product_ref_num sku name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
+            post["line#{index}#{key.delete('_')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
           end
 
           {
