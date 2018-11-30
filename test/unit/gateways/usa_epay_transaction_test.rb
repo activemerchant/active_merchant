@@ -143,6 +143,44 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_custom_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :custom_fields => {
+          1 => 'diablo',
+          2 => 'mephisto',
+          3 => 'baal'
+        }
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{UMcustom1=diablo},   data
+      assert_match %r{UMcustom2=mephisto}, data
+      assert_match %r{UMcustom3=baal},     data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_line_items
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :line_items => [
+          { :sku=> 'abc123', :cost => 119, :quantity => 1 },
+          { :sku => 'def456', :cost => 200, :quantity => 2, :name => 'an item' },
+        ]
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{UMline0sku=abc123},    data
+      assert_match %r{UMline0cost=1.19},     data
+      assert_match %r{UMline0qty=1},         data
+
+      assert_match %r{UMline1sku=def456},    data
+      assert_match %r{UMline1cost=2.00},     data
+      assert_match %r{UMline1qty=2},         data
+      assert_match %r{UMline1name=an\+item}, data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_successful_authorize_request
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
