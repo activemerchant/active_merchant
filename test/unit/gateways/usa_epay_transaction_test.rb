@@ -143,6 +143,31 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_recurring_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :recurring_fields => {
+          add_customer: true,
+          schedule: 'quarterly',
+          bill_source_key: 'bill source key',
+          bill_amount: 123,
+          num_left: 5,
+          start: '20501212',
+          recurring_receipt: true
+        }
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{UMaddcustomer=yes},                 data
+      assert_match %r{UMschedule=quarterly},              data
+      assert_match %r{UMbillsourcekey=bill\+source\+key}, data
+      assert_match %r{UMbillamount=1.23},                 data
+      assert_match %r{UMnumleft=5},                       data
+      assert_match %r{UMstart=20501212},                  data
+      assert_match %r{UMrecurringreceipt=yes},            data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_successful_purchase_custom_fields
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(
