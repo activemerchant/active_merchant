@@ -198,6 +198,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment, options={})
         if payment.respond_to?(:routing_number)
           post[:checkformat] = options[:check_format] if options[:check_format]
+          post[:accounttype] = options[:account_type] if options[:account_type]
           post[:account] = payment.account_number
           post[:routing] = payment.routing_number
           post[:name]    = payment.name unless payment.name.blank?
