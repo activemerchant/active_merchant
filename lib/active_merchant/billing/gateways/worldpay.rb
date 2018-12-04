@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'date', 'month' => format(payment_method.month, :two_digits), 'year' => format(payment_method.year, :four_digits)
               end
 
-              xml.tag! 'cardHolderName', payment_method.name
+              xml.tag! 'cardHolderName', options[:execute_threed] ? '3D' : payment_method.name
               xml.tag! 'cvc', payment_method.verification_value
 
               add_address(xml, (options[:billing_address] || options[:address]))
