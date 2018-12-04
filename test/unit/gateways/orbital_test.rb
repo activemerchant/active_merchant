@@ -153,6 +153,21 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_numeric_merchant_id_for_caputre
+    gateway = ActiveMerchant::Billing::OrbitalGateway.new(
+      :login => 'login',
+      :password => 'password',
+      :merchant_id => 700000123456
+    )
+
+    response = stub_comms(gateway) do
+      gateway.capture(101, '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MerchantID>700000123456<\/MerchantID>/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_expiry_date
     year = (DateTime.now + 1.year).strftime('%y')
     assert_equal "09#{year}", @gateway.send(:expiry_date, credit_card)
