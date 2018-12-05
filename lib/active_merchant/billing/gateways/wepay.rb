@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       def void(identifier, options = {})
         post = {}
         post[:checkout_id] = split_authorization(identifier).first
-        post[:cancel_reason] = (options[:description] || "Void")
+        post[:cancel_reason] = (options[:description] || 'Void')
         commit('/checkout/cancel', post, options)
       end
 
@@ -69,17 +69,17 @@ module ActiveMerchant #:nodoc:
         if(money && (original_amount != amount(money)))
           post[:amount] = amount(money)
         end
-        post[:refund_reason] = (options[:description] || "Refund")
+        post[:refund_reason] = (options[:description] || 'Refund')
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
         post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]
-        commit("/checkout/refund", post, options)
+        commit('/checkout/refund', post, options)
       end
 
       def store(creditcard, options = {})
         post = {}
         post[:client_id] = @options[:client_id]
         post[:user_name] = "#{creditcard.first_name} #{creditcard.last_name}"
-        post[:email] = options[:email] || "unspecified@example.com"
+        post[:email] = options[:email] || 'unspecified@example.com'
         post[:cc_number] = creditcard.number
         post[:cvv] = creditcard.verification_value unless options[:recurring]
         post[:expiration_month] = creditcard.month
@@ -87,11 +87,11 @@ module ActiveMerchant #:nodoc:
 
         if(billing_address = (options[:billing_address] || options[:address]))
           post[:address] = {}
-          post[:address]["address1"] = billing_address[:address1] if billing_address[:address1]
-          post[:address]["city"]     = billing_address[:city] if billing_address[:city]
-          post[:address]["country"]  = billing_address[:country]  if billing_address[:country]
-          post[:address]["region"]   = billing_address[:state]  if billing_address[:state]
-          post[:address]["postal_code"] = billing_address[:zip]
+          post[:address]['address1'] = billing_address[:address1] if billing_address[:address1]
+          post[:address]['city']     = billing_address[:city] if billing_address[:city]
+          post[:address]['country']  = billing_address[:country]  if billing_address[:country]
+          post[:address]['region']   = billing_address[:state]  if billing_address[:state]
+          post[:address]['postal_code'] = billing_address[:zip]
         end
 
         if options[:recurring] == true
@@ -126,8 +126,8 @@ module ActiveMerchant #:nodoc:
       def add_product_data(post, money, options)
         post[:account_id] = @options[:account_id]
         post[:amount] = amount(money)
-        post[:short_description] = (options[:description] || "Purchase")
-        post[:type] = (options[:type] || "goods")
+        post[:short_description] = (options[:description] || 'Purchase')
+        post[:type] = (options[:type] || 'goods')
         post[:currency] = (options[:currency] || currency(money))
         post[:long_description] = options[:long_description] if options[:long_description]
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
 
       def add_token(post, token)
         payment_method = {}
-        payment_method[:type] = "credit_card"
+        payment_method[:type] = 'credit_card'
         payment_method[:credit_card] = {
           id: token,
           auto_capture: false
@@ -190,46 +190,45 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response, params),
           test: test?
         )
-
       rescue JSON::ParserError
         return unparsable_response(response)
       end
 
       def success_from(response)
-        (!response["error"])
+        (!response['error'])
       end
 
       def message_from(response)
-        (response["error"] ? response["error_description"] : "Success")
+        (response['error'] ? response['error_description'] : 'Success')
       end
 
       def authorization_from(response, params)
-        return response["credit_card_id"].to_s if response["credit_card_id"]
+        return response['credit_card_id'].to_s if response['credit_card_id']
 
-        original_amount = response["amount"].nil? ? nil : sprintf("%0.02f", response["amount"])
-        [response["checkout_id"], original_amount].join('|')
+        original_amount = response['amount'].nil? ? nil : sprintf('%0.02f', response['amount'])
+        [response['checkout_id'], original_amount].join('|')
       end
 
       def split_authorization(authorization)
-        auth, original_amount = authorization.to_s.split("|")
+        auth, original_amount = authorization.to_s.split('|')
         [auth, original_amount]
       end
 
       def unparsable_response(raw_response)
-        message = "Invalid JSON response received from WePay. Please contact WePay support if you continue to receive this message."
+        message = 'Invalid JSON response received from WePay. Please contact WePay support if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
 
       def headers(options)
         headers = {
-          "Content-Type"      => "application/json",
-          "User-Agent"        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "Authorization"     => "Bearer #{@options[:access_token]}"
+          'Content-Type'      => 'application/json',
+          'User-Agent'        => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'Authorization'     => "Bearer #{@options[:access_token]}"
         }
-        headers["Api-Version"] = options[:version] if options[:version]
-        headers["Client-IP"] = options[:ip] if options[:ip]
-        headers["WePay-Risk-Token"] = options[:risk_token] if options[:risk_token]
+        headers['Api-Version'] = options[:version] if options[:version]
+        headers['Client-IP'] = options[:ip] if options[:ip]
+        headers['WePay-Risk-Token'] = options[:risk_token] if options[:risk_token]
 
         headers
       end

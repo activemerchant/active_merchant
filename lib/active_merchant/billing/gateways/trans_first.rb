@@ -1,5 +1,4 @@
 module ActiveMerchant #:nodoc:
-
   module Billing #:nodoc:
     class TransFirstGateway < Gateway
       self.test_url = 'https://ws.cert.transfirst.com'
@@ -15,19 +14,19 @@ module ActiveMerchant #:nodoc:
       DECLINED = 'The transaction was declined'
 
       ACTIONS = {
-        purchase: "CCSale",
-        purchase_echeck: "ACHDebit",
-        refund: "CreditCardCredit",
-        refund_echeck: "ACHVoidTransaction",
-        void: "CreditCardAutoRefundorVoid",
+        purchase: 'CCSale',
+        purchase_echeck: 'ACHDebit',
+        refund: 'CreditCardCredit',
+        refund_echeck: 'ACHVoidTransaction',
+        void: 'CreditCardAutoRefundorVoid',
       }
 
       ENDPOINTS = {
-        purchase: "creditcard.asmx",
-        purchase_echeck: "checkverifyws/checkverifyws.asmx",
-        refund: "creditcard.asmx",
-        refund_echeck: "checkverifyws/checkverifyws.asmx",
-        void: "creditcard.asmx"
+        purchase: 'creditcard.asmx',
+        purchase_echeck: 'checkverifyws/checkverifyws.asmx',
+        refund: 'creditcard.asmx',
+        refund_echeck: 'checkverifyws/checkverifyws.asmx',
+        void: 'creditcard.asmx'
       }
 
       def initialize(options = {})
@@ -55,7 +54,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :TransID, transaction_id)
         add_pair(post, :RefID, options[:order_id], required: true)
 
-        commit((payment_type == "check" ? :refund_echeck : :refund), post)
+        commit((payment_type == 'check' ? :refund_echeck : :refund), post)
       end
 
       def void(authorization, options={})
@@ -93,8 +92,8 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :Address, address[:address1], required: true)
           add_pair(post, :ZipCode, address[:zip], required: true)
         else
-          add_pair(post, :Address, "", required: true)
-          add_pair(post, :ZipCode, "", required: true)
+          add_pair(post, :Address, '', required: true)
+          add_pair(post, :ZipCode, '', required: true)
         end
       end
 
@@ -103,8 +102,8 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :PONumber, options[:invoice], required: true)
         add_pair(post, :SaleTaxAmount, amount(options[:tax] || 0))
         add_pair(post, :TaxIndicator, 0)
-        add_pair(post, :PaymentDesc, options[:description] || "", required: true)
-        add_pair(post, :CompanyName, options[:company_name] || "", required: true)
+        add_pair(post, :PaymentDesc, options[:description] || '', required: true)
+        add_pair(post, :CompanyName, options[:company_name] || '', required: true)
       end
 
       def add_payment(post, payment)
@@ -125,11 +124,11 @@ module ActiveMerchant #:nodoc:
       def add_echeck(post, payment)
         add_pair(post, :TransRoute, payment.routing_number, required: true)
         add_pair(post, :BankAccountNo, payment.account_number, required: true)
-        add_pair(post, :BankAccountType, add_or_use_default(payment.account_type, "Checking"), required: true)
-        add_pair(post, :CheckType, add_or_use_default(payment.account_holder_type, "Personal"), required: true)
+        add_pair(post, :BankAccountType, add_or_use_default(payment.account_type, 'Checking'), required: true)
+        add_pair(post, :CheckType, add_or_use_default(payment.account_holder_type, 'Personal'), required: true)
         add_pair(post, :Name, payment.name, required: true)
-        add_pair(post, :ProcessDate, Time.now.strftime("%m%d%y"), required: true)
-        add_pair(post, :Description, "", required: true)
+        add_pair(post, :ProcessDate, Time.now.strftime('%m%d%y'), required: true)
+        add_pair(post, :Description, '', required: true)
       end
 
       def add_or_use_default(payment_data, default_value)
@@ -141,7 +140,7 @@ module ActiveMerchant #:nodoc:
         return unless action == :purchase
 
         UNUSED_CREDIT_CARD_FIELDS.each do |f|
-          post[f] = ""
+          post[f] = ''
         end
       end
 
@@ -156,7 +155,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         xml = REXML::Document.new(data)
-        root = REXML::XPath.first(xml, "*")
+        root = REXML::XPath.first(xml, '*')
 
         if root.nil?
           response[:message] = data.to_s.strip
@@ -183,7 +182,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        if response[:status] == "APPROVED"
+        if response[:status] == 'APPROVED'
           "#{response[:trans_id]}|check"
         else
           "#{response[:trans_id]}|creditcard"
@@ -192,13 +191,13 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         case response[:status]
-        when "Authorized"
+        when 'Authorized'
           true
-        when "Voided"
+        when 'Voided'
           true
-        when "APPROVED"
+        when 'APPROVED'
           true
-        when "VOIDED"
+        when 'VOIDED'
           true
         else
           false
@@ -219,7 +218,7 @@ module ActiveMerchant #:nodoc:
         params[:MerchantID] = @options[:login]
         params[:RegKey] = @options[:password]
 
-        request = params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
 
@@ -233,7 +232,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
     end
   end

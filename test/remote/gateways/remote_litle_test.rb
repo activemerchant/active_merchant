@@ -29,51 +29,51 @@ class RemoteLitleTest < Test::Unit::TestCase
     @credit_card1 = CreditCard.new(@credit_card_hash)
 
     @credit_card2 = CreditCard.new(
-      first_name: "Joe",
-      last_name: "Green",
-      month: "06",
-      year: "2012",
-      brand: "visa",
-      number: "4457010100000008",
-      verification_value: "992"
+      first_name: 'Joe',
+      last_name: 'Green',
+      month: '06',
+      year: '2012',
+      brand: 'visa',
+      number: '4457010100000008',
+      verification_value: '992'
     )
     @credit_card_nsf = CreditCard.new(
-      first_name: "Joe",
-      last_name: "Green",
-      month: "06",
-      year: "2012",
-      brand: "visa",
-      number: "4488282659650110",
-      verification_value: "992"
+      first_name: 'Joe',
+      last_name: 'Green',
+      month: '06',
+      year: '2012',
+      brand: 'visa',
+      number: '4488282659650110',
+      verification_value: '992'
     )
     @decrypted_apple_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
         month: '01',
         year: '2012',
-        brand: "visa",
-        number:  "44444444400009",
-        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+        brand: 'visa',
+        number:  '44444444400009',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       })
     @decrypted_android_pay = ActiveMerchant::Billing::NetworkTokenizationCreditCard.new(
       {
         source: :android_pay,
         month: '01',
         year: '2021',
-        brand: "visa",
-        number:  "4457000300000007",
-        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       })
     @check = check(
       name: 'Tom Black',
       routing_number:  '011075150',
       account_number: '4099999992',
-      account_type: 'Checking'
+      account_type: 'checking'
     )
     @authorize_check = check(
       name: 'John Smith',
       routing_number: '011075150',
       account_number: '1099999999',
-      account_type: 'Checking'
+      account_type: 'checking'
     )
     @store_check = check(
       routing_number: '011100012',
@@ -93,7 +93,7 @@ class RemoteLitleTest < Test::Unit::TestCase
       campaign: 'super-awesome-campaign',
       merchant_grouping_id: 'brilliant-group'
     )
-    assert response = @gateway.authorize(10010, @credit_card1, options)
+    assert @gateway.authorize(10010, @credit_card1, options)
   end
 
   def test_successful_authorization_with_echeck
@@ -108,8 +108,8 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_avs_and_cvv_result
     assert response = @gateway.authorize(10010, @credit_card1, @options)
-    assert_equal "X", response.avs_result["code"]
-    assert_equal "M", response.cvv_result["code"]
+    assert_equal 'X', response.avs_result['code']
+    assert_equal 'M', response.cvv_result['code']
   end
 
   def test_unsuccessful_authorization
@@ -199,17 +199,16 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(60060, @credit_card2, {
-        :order_id=>'6',
-        :billing_address=>{
-          :name      => 'Joe Green',
-          :address1  => '6 Main St.',
-          :city      => 'Derry',
-          :state     => 'NH',
-          :zip       => '03038',
-          :country   => 'US'
-        },
-      }
-    )
+      :order_id=>'6',
+      :billing_address=>{
+        :name      => 'Joe Green',
+        :address1  => '6 Main St.',
+        :city      => 'Derry',
+        :state     => 'NH',
+        :zip       => '03038',
+        :country   => 'US'
+      },
+    })
     assert_failure response
     assert_equal 'Insufficient Funds', response.message
   end
@@ -253,7 +252,7 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_void
-    assert void = @gateway.void("123456789012345360;authorization;100")
+    assert void = @gateway.void('123456789012345360;authorization;100')
     assert_failure void
     assert_equal 'No transaction found with specified litleTxnId', void.message
   end
@@ -339,7 +338,7 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_store_with_paypage_registration_id_successful
-    paypage_registration_id = "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg="
+    paypage_registration_id = 'cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg='
     assert store_response = @gateway.store(paypage_registration_id, :order_id => '50')
 
     assert_success store_response
@@ -387,7 +386,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert response = @gateway.verify(@credit_card1, @options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_success response.responses.last, "The void should succeed"
+    assert_success response.responses.last, 'The void should succeed'
   end
 
   def test_unsuccessful_verify
@@ -398,8 +397,8 @@ class RemoteLitleTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_dynamic_descriptors
     assert response = @gateway.purchase(10010, @credit_card1, @options.merge(
-      descriptor_name: "SuperCompany",
-      descriptor_phone: "9193341121",
+      descriptor_name: 'SuperCompany',
+      descriptor_phone: '9193341121'
     ))
     assert_success response
     assert_equal 'Approved', response.message

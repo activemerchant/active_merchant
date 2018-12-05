@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
-        post.merge!('captureAmount' => amount(money))
+        post['captureAmount'] = amount(money)
         commit('processCapture', post)
       end
 
@@ -66,6 +66,18 @@ module ActiveMerchant #:nodoc:
           'cardExpiryYear'  => format(creditcard.year, :two_digits)
         }
         commit('addCard', post)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?paymentCardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((CardNumber=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?paymentCardCSC=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?apiKey=)[^&]*)i, '\1[FILTERED]')
       end
 
       private
@@ -107,7 +119,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         post['paymentCardNumber'] = creditcard.number
         post['paymentCardName'] = scrub_name(creditcard.name)
-        post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime("%m%y")
+        post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime('%m%y')
         post['paymentCardCSC'] = creditcard.verification_value if creditcard.verification_value?
       end
 
@@ -146,7 +158,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element)}
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -176,14 +188,14 @@ module ActiveMerchant #:nodoc:
 
       def url_for(action, post)
         if token?(post)
-          [(test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL), action].join("/")
+          [(test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL), action].join('/')
         else
           (test? ? POST_TEST_URL : POST_LIVE_URL)
         end
       end
 
       def token?(post)
-        (post["cardID"] || post["cardName"])
+        (post['cardID'] || post['cardName'])
       end
 
       def success?(response)
@@ -191,7 +203,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(post)
-        post.collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+        post.collect { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
     end
   end

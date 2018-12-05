@@ -28,7 +28,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "353583515|252889136", response.authorization
+    assert_equal '353583515|252889136', response.authorization
     assert response.test?
   end
 
@@ -46,7 +46,7 @@ class WorldpayUsTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "421414035|306588394", response.authorization
+    assert_equal '421414035|306588394', response.authorization
     assert response.test?
   end
 
@@ -63,7 +63,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "354275517|253394390", response.authorization
+    assert_equal '354275517|253394390', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -80,7 +80,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "353583515|252889136", response.authorization
+    assert_equal '353583515|252889136', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -98,7 +98,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "353583515|252889136", response.authorization
+    assert_equal '353583515|252889136', response.authorization
 
     refund = stub_comms do
       @gateway.void(response.authorization)
@@ -122,7 +122,7 @@ class WorldpayUsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_unsuccessful_verify
@@ -172,7 +172,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     end.respond_with(empty_purchase_response)
 
     assert_failure response
-    assert_equal "Unable to read error message", response.message
+    assert_equal 'Unable to read error message', response.message
   end
 
   def test_backup_url

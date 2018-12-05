@@ -31,14 +31,14 @@ class PagarmeTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 427312, response.authorization
-    assert_equal @amount, response.params["amount"]
+    assert_equal @amount, response.params['amount']
 
-    assert_equal @credit_card.name, response.params["card"]["holder_name"]
-    assert_equal @credit_card.last_digits, response.params["card"]["last_digits"]
-    assert_equal @credit_card.brand, response.params["card"]["brand"]
+    assert_equal @credit_card.name, response.params['card']['holder_name']
+    assert_equal @credit_card.last_digits, response.params['card']['last_digits']
+    assert_equal @credit_card.brand, response.params['card']['brand']
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'paid', response.params["status"]
+    assert_equal 'credit_card', response.params['payment_method']
+    assert_equal 'paid', response.params['status']
     assert_equal 'Transação aprovada', response.message
     assert response.test?
   end
@@ -50,7 +50,7 @@ class PagarmeTest < Test::Unit::TestCase
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
 
-    assert_equal 'refused', response.params["status"]
+    assert_equal 'refused', response.params['status']
     assert_equal 'Transação recusada', response.message
   end
 
@@ -62,14 +62,14 @@ class PagarmeTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 429356, response.authorization
-    assert_equal @amount, response.params["amount"]
+    assert_equal @amount, response.params['amount']
 
-    assert_equal @credit_card.name, response.params["card"]["holder_name"]
-    assert_equal @credit_card.last_digits, response.params["card"]["last_digits"]
-    assert_equal @credit_card.brand, response.params["card"]["brand"]
+    assert_equal @credit_card.name, response.params['card']['holder_name']
+    assert_equal @credit_card.last_digits, response.params['card']['last_digits']
+    assert_equal @credit_card.brand, response.params['card']['brand']
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'authorized', response.params["status"]
+    assert_equal 'credit_card', response.params['payment_method']
+    assert_equal 'authorized', response.params['status']
     assert_equal 'Transação autorizada', response.message
     assert response.test?
   end
@@ -81,7 +81,7 @@ class PagarmeTest < Test::Unit::TestCase
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
 
-    assert_equal 'refused', response.params["status"]
+    assert_equal 'refused', response.params['status']
     assert_equal 'Transação recusada', response.message
   end
 
@@ -93,14 +93,14 @@ class PagarmeTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 429356, response.authorization
-    assert_equal @amount, response.params["amount"]
+    assert_equal @amount, response.params['amount']
 
-    assert_equal @credit_card.name, response.params["card"]["holder_name"]
-    assert_equal @credit_card.last_digits, response.params["card"]["last_digits"]
-    assert_equal @credit_card.brand, response.params["card"]["brand"]
+    assert_equal @credit_card.name, response.params['card']['holder_name']
+    assert_equal @credit_card.last_digits, response.params['card']['last_digits']
+    assert_equal @credit_card.brand, response.params['card']['brand']
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'paid', response.params["status"]
+    assert_equal 'credit_card', response.params['payment_method']
+    assert_equal 'paid', response.params['status']
     assert_equal 'Transação aprovada', response.message
     assert response.test?
   end
@@ -124,8 +124,8 @@ class PagarmeTest < Test::Unit::TestCase
 
     assert_equal 429356, response.authorization
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'refunded', response.params["status"]
+    assert_equal 'credit_card', response.params['payment_method']
+    assert_equal 'refunded', response.params['status']
     assert_equal 'Transação estornada', response.message
     assert response.test?
   end
@@ -149,8 +149,8 @@ class PagarmeTest < Test::Unit::TestCase
 
     assert_equal 472218, response.authorization
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'refunded', response.params["status"]
+    assert_equal 'credit_card', response.params['payment_method']
+    assert_equal 'refunded', response.params['status']
     assert_equal 'Transação estornada', response.message
     assert response.test?
   end
@@ -166,7 +166,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_verify_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(successful_verify_void_response).in_sequence(s)
 
@@ -174,25 +174,25 @@ class PagarmeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 127, response.params["amount"]
+    assert_equal 127, response.params['amount']
 
-    assert_equal @credit_card.name, response.params["card"]["holder_name"]
-    assert_equal @credit_card.last_digits, response.params["card"]["last_digits"]
-    assert_equal @credit_card.brand, response.params["card"]["brand"]
+    assert_equal @credit_card.name, response.params['card']['holder_name']
+    assert_equal @credit_card.last_digits, response.params['card']['last_digits']
+    assert_equal @credit_card.brand, response.params['card']['brand']
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'authorized', response.params["status"]
+    assert_equal 'credit_card', response.params['payment_method']
+    assert_equal 'authorized', response.params['status']
     assert_equal 'Transação autorizada', response.message
 
     assert_success response.responses[1]
-    assert_equal 'refunded', response.responses[1].params["status"]
+    assert_equal 'refunded', response.responses[1].params['status']
     assert_equal 'Transação estornada', response.responses[1].message
 
     assert response.test?
   end
 
   def test_successful_verify_with_failed_void
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_verify_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(failed_void_response).in_sequence(s)
 
@@ -200,14 +200,14 @@ class PagarmeTest < Test::Unit::TestCase
     assert_instance_of MultiResponse, response
     assert_success response
 
-    assert_equal 127, response.params["amount"]
+    assert_equal 127, response.params['amount']
 
-    assert_equal @credit_card.name, response.params["card"]["holder_name"]
-    assert_equal @credit_card.last_digits, response.params["card"]["last_digits"]
-    assert_equal @credit_card.brand, response.params["card"]["brand"]
+    assert_equal @credit_card.name, response.params['card']['holder_name']
+    assert_equal @credit_card.last_digits, response.params['card']['last_digits']
+    assert_equal @credit_card.brand, response.params['card']['brand']
 
-    assert_equal 'credit_card', response.params["payment_method"]
-    assert_equal 'authorized', response.params["status"]
+    assert_equal 'credit_card', response.params['payment_method']
+    assert_equal 'authorized', response.params['status']
     assert_equal 'Transação autorizada', response.message
 
     assert_failure response.responses[1]
@@ -222,8 +222,8 @@ class PagarmeTest < Test::Unit::TestCase
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
 
-    assert_equal 127, response.params["amount"]
-    assert_equal 'refused', response.params["status"]
+    assert_equal 127, response.params['amount']
+    assert_equal 'refused', response.params['status']
     assert_equal 'Transação recusada', response.message
   end
 
@@ -243,7 +243,7 @@ class PagarmeTest < Test::Unit::TestCase
     assert_failure response
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
 
-    assert response.message.start_with?("Resposta inválida")
+    assert response.message.start_with?('Resposta inválida')
   end
 
   def test_scrub
@@ -614,7 +614,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def failed_capture_response
-  <<-FAILED_RESPONSE
+    <<-FAILED_RESPONSE
     {
       "errors": [
         {
@@ -630,7 +630,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       "acquirer_name": "development",
       "acquirer_response_code": "00",
@@ -688,7 +688,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def failed_refund_response
-  <<-FAILED_RESPONSE
+    <<-FAILED_RESPONSE
     {
       "errors": [
         {
@@ -704,7 +704,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def successful_void_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       "acquirer_name": "pagarme",
       "acquirer_response_code": "00",
@@ -762,7 +762,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def failed_void_response
-  <<-FAILED_RESPONSE
+    <<-FAILED_RESPONSE
     {
       "errors": [
         {
@@ -778,7 +778,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def successful_verify_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       "acquirer_name": "pagarme",
       "acquirer_response_code": "00",
@@ -836,7 +836,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def successful_verify_void_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       "acquirer_name": "pagarme",
       "acquirer_response_code": "00",
@@ -894,7 +894,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def failed_verify_response
-  <<-FAILED_RESPONSE
+    <<-FAILED_RESPONSE
     {
       "acquirer_name": "pagarme",
       "acquirer_response_code": "88",
@@ -968,7 +968,7 @@ class PagarmeTest < Test::Unit::TestCase
   end
 
   def failed_json_response
-  <<-SUCCESS_RESPONSE
+    <<-SUCCESS_RESPONSE
     {
       foo: bar
     }

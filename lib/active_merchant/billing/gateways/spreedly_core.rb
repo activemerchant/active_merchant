@@ -88,7 +88,6 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/void.xml", '')
       end
 
-
       # Public: Determine whether a credit card is chargeable card and available for purchases.
       #
       # payment_method - The CreditCard or the Spreedly payment method token.
@@ -152,7 +151,7 @@ module ActiveMerchant #:nodoc:
           doc.retained(true) if retain
         end
 
-        commit("payment_methods.xml", request, :post, :payment_method_token)
+        commit('payment_methods.xml', request, :post, :payment_method_token)
       end
 
       def purchase_with_token(money, payment_method_token, options)
@@ -231,7 +230,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.root.xpath('*').each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|

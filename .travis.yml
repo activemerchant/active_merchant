@@ -1,28 +1,29 @@
 language: ruby
-script: "bundle exec rake test:units"
 sudo: false
 cache: bundler
-before_install:
-  # https://github.com/travis-ci/travis-ci/issues/8978#issuecomment-354036443
-  - gem update --system
-  - gem install bundler
 
 rvm:
 - 2.5
 - 2.4
 - 2.3
-- 2.2
 
 gemfile:
-- Gemfile.rails52
-- Gemfile.rails51
-- Gemfile.rails50
-- Gemfile.rails42
+- gemfiles/Gemfile.rails52
+- gemfiles/Gemfile.rails51
+- gemfiles/Gemfile.rails50
+- gemfiles/Gemfile.rails42
+- gemfiles/Gemfile.rails_master
+
+jobs:
+  include:
+      rvm: 2.5
+      gemfile: Gemfile
+      script: bundle exec rubocop --parallel
 
 matrix:
-  include:
-    - rvm: 2.1
-      gemfile: Gemfile.rails42
+  exclude:
+    - rvm: 2.3
+      gemfile: 'gemfiles/Gemfile.rails_master'
 
 notifications:
   email:

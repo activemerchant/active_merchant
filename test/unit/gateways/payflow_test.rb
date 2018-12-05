@@ -13,18 +13,18 @@ class PayflowTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :billing_address => address.merge(:first_name => "Longbob", :last_name => "Longsen") }
-    @check = check( :name => 'Jim Smith' )
+    @options = { :billing_address => address.merge(:first_name => 'Longbob', :last_name => 'Longsen') }
+    @check = check(:name => 'Jim Smith')
   end
 
   def test_successful_authorization
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_success response
     assert response.test?
-    assert_equal "VUJN1A6E11D9", response.authorization
+    assert_equal 'VUJN1A6E11D9', response.authorization
     refute response.fraud_review?
   end
 
@@ -32,7 +32,7 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(failed_authorization_response)
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
     assert_failure response
     assert response.test?
   end
@@ -43,21 +43,21 @@ class PayflowTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path
     end.respond_with(successful_authorization_response)
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_success response
     assert response.test?
-    assert_equal "VUJN1A6E11D9", response.authorization
+    assert_equal 'VUJN1A6E11D9', response.authorization
     refute response.fraud_review?
   end
 
   def test_successful_authorization_with_more_options
     options = @options.merge(
       {
-        order_id: "123",
-        description: "Description string",
-        order_desc: "OrderDesc string",
-        comment: "Comment string",
-        comment2: "Comment2 string"
+        order_id: '123',
+        description: 'Description string',
+        order_desc: 'OrderDesc string',
+        comment: 'Comment string',
+        comment2: 'Comment2 string'
       }
     )
 
@@ -70,10 +70,10 @@ class PayflowTest < Test::Unit::TestCase
       assert_match %r(<Comment>Comment string</Comment>), data
       assert_match %r(<ExtData Name=\"COMMENT2\" Value=\"Comment2 string\"/>), data
     end.respond_with(successful_authorization_response)
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_success response
     assert response.test?
-    assert_equal "VUJN1A6E11D9", response.authorization
+    assert_equal 'VUJN1A6E11D9', response.authorization
     refute response.fraud_review?
   end
 
@@ -82,7 +82,7 @@ class PayflowTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "126", response.params["result"]
+    assert_equal '126', response.params['result']
     assert response.fraud_review?
   end
 
@@ -93,28 +93,28 @@ class PayflowTest < Test::Unit::TestCase
       assert_three_d_secure REXML::Document.new(data), purchase_buyer_auth_result_path
     end.respond_with(successful_purchase_with_fraud_review_response)
     assert_success response
-    assert_equal "126", response.params["result"]
+    assert_equal '126', response.params['result']
     assert response.fraud_review?
   end
 
   def test_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<CardNum>#{@credit_card.number}<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<CardNum>#{@credit_card.number}<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<PNRef>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<PNRef>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", @options)
+      @gateway.credit(@amount, 'transaction_id', @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<PNRef>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<PNRef>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.refund(@amount, "transaction_id", @options)
+    @gateway.refund(@amount, 'transaction_id', @options)
   end
 
   def test_avs_result
@@ -143,13 +143,13 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_ach_purchase
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<AcctNum>#{@check.account_number}<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<AcctNum>#{@check.account_number}<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     @gateway.purchase(@amount, @check)
   end
 
   def test_ach_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<AcctNum>#{@check.account_number}<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<AcctNum>#{@check.account_number}<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     @gateway.credit(@amount, @check)
   end
@@ -235,7 +235,7 @@ class PayflowTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorization_response)
     assert_failure response
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
   end
 
   def test_initial_recurring_transaction_missing_parameters
@@ -287,42 +287,42 @@ class PayflowTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'RT0000000009', response.profile_id
     assert response.test?
-    assert_equal "R7960E739F80", response.authorization
+    assert_equal 'R7960E739F80', response.authorization
   end
 
   def test_successful_recurring_modify_action
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :periodicity => :monthly)
+      @gateway.recurring(@amount, nil, :profile_id => 'RT0000000009', :periodicity => :monthly)
     end
 
     assert_instance_of PayflowResponse, response
     assert_success response
     assert_equal 'RT0000000009', response.profile_id
     assert response.test?
-    assert_equal "R7960E739F80", response.authorization
+    assert_equal 'R7960E739F80', response.authorization
   end
 
   def test_successful_recurring_modify_action_with_retry_num_days
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :retry_num_days => 3, :periodicity => :monthly)
+      @gateway.recurring(@amount, nil, :profile_id => 'RT0000000009', :retry_num_days => 3, :periodicity => :monthly)
     end
 
     assert_instance_of PayflowResponse, response
     assert_success response
     assert_equal 'RT0000000009', response.profile_id
     assert response.test?
-    assert_equal "R7960E739F80", response.authorization
+    assert_equal 'R7960E739F80', response.authorization
   end
 
   def test_falied_recurring_modify_action_with_starting_at_in_the_past
     @gateway.stubs(:ssl_post).returns(start_date_error_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :starting_at => Date.yesterday, :periodicity => :monthly)
+      @gateway.recurring(@amount, nil, :profile_id => 'RT0000000009', :starting_at => Date.yesterday, :periodicity => :monthly)
     end
 
     assert_instance_of PayflowResponse, response
@@ -330,14 +330,14 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal 'RT0000000009', response.profile_id
     assert_equal 'Field format error: START or NEXTPAYMENTDATE older than last payment date', response.message
     assert response.test?
-    assert_equal "R7960E739F80", response.authorization
+    assert_equal 'R7960E739F80', response.authorization
   end
 
   def test_falied_recurring_modify_action_with_starting_at_missing_and_changed_periodicity
     @gateway.stubs(:ssl_post).returns(start_date_missing_recurring_response)
 
     response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
-      @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :periodicity => :yearly)
+      @gateway.recurring(@amount, nil, :profile_id => 'RT0000000009', :periodicity => :yearly)
     end
 
     assert_instance_of PayflowResponse, response
@@ -345,7 +345,7 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal 'RT0000000009', response.profile_id
     assert_equal 'Field format error: START field missing', response.message
     assert response.test?
-    assert_equal "R7960E739F80", response.authorization
+    assert_equal 'R7960E739F80', response.authorization
   end
 
   def test_recurring_profile_payment_history_inquiry
@@ -360,28 +360,15 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_recurring_profile_payment_history_inquiry_contains_the_proper_xml
-    request = @gateway.send( :build_recurring_request, :inquiry, nil, :profile_id => 'RT0000000009', :history => true)
+    request = @gateway.send(:build_recurring_request, :inquiry, nil, :profile_id => 'RT0000000009', :history => true)
     assert_match %r(<PaymentHistory>Y</PaymentHistory), request
-  end
-
-  def test_format_issue_number
-    xml = Builder::XmlMarkup.new
-    credit_card = credit_card("5641820000000005",
-      :brand         => "switch",
-      :issue_number  => 1
-    )
-
-    @gateway.send(:add_credit_card, xml, credit_card)
-    doc = REXML::Document.new(xml.target!)
-    node = REXML::XPath.first(doc, '/Card/ExtData')
-    assert_equal '01', node.attributes['Value']
   end
 
   def test_add_credit_card_with_three_d_secure
     xml = Builder::XmlMarkup.new
-    credit_card = credit_card("5641820000000005",
-                              :brand => "switch",
-                              :issue_number => 1
+    credit_card = credit_card(
+      '5641820000000005',
+      :brand => 'maestro'
     )
 
     @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option))
@@ -553,7 +540,7 @@ Conn close
   end
 
   def start_date_error_recurring_response
-      <<-XML
+    <<-XML
   <ResponseData>
     <Result>0</Result>
     <Message>Field format error: START or NEXTPAYMENTDATE older than last payment date</Message>
@@ -566,7 +553,7 @@ Conn close
   end
 
   def start_date_missing_recurring_response
-      <<-XML
+    <<-XML
   <ResponseData>
     <Result>0</Result>
     <Message>Field format error: START field missing</Message>

@@ -68,21 +68,27 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_visa_purchase_with_recurring
     assert response = @gateway.purchase(@amount, @visa, @options.merge(recurring: true))
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_visa_purchase_no_cvv
-    assert response = @gateway.purchase(@amount, @visa_no_cvv, @options)
+    assert response = @gateway.purchase(@amount, @visa_no_cvv, @options.merge(recurring: true))
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
+  end
+
+  def test_unsuccessful_visa_purchase_with_no_cvv
+    assert response = @gateway.purchase(@amount, @visa_no_cvv, @options)
+    assert_failure response
+    assert_equal 'Card CVD is invalid.', response.message
   end
 
   def test_unsuccessful_visa_purchase
@@ -95,14 +101,14 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @mastercard, @options)
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_mastercard_purchase_with_recurring
     assert response = @gateway.purchase(@amount, @mastercard, @options.merge(recurring: true))
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_unsuccessful_mastercard_purchase
@@ -115,14 +121,14 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @amex, @options)
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_amex_purchase_with_recurring
     assert response = @gateway.purchase(@amount, @amex, @options.merge(recurring: true))
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_unsuccessful_amex_purchase
@@ -135,7 +141,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @visa, @options.merge(billing_address: address, shipping_address: address))
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_purchase_with_only_email
@@ -148,7 +154,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @visa, options)
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_purchase_with_no_addresses
@@ -157,18 +163,18 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
     assert_false response.authorization.blank?
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_purchase_due_to_invalid_billing_state
-    @options[:billing_address][:state] = "Invalid"
+    @options[:billing_address][:state] = 'Invalid'
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_failure response
     assert_match %r{province does not match country}, response.message
   end
 
   def test_failed_purchase_due_to_invalid_shipping_state
-    @options[:shipping_address][:state] = "North"
+    @options[:shipping_address][:state] = 'North'
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_failure response
     assert_match %r{Invalid shipping province}, response.message
@@ -184,7 +190,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
-    assert_equal "Approved", auth.message
+    assert_equal 'Approved', auth.message
     assert_false auth.authorization.blank?
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -195,7 +201,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   def test_authorize_and_capture_with_recurring
     assert auth = @gateway.authorize(@amount, @visa, @options.merge(recurring: true))
     assert_success auth
-    assert_equal "Approved", auth.message
+    assert_equal 'Approved', auth.message
     assert_false auth.authorization.blank?
 
     assert capture = @gateway.capture(@amount, auth.authorization, recurring: true)
@@ -206,7 +212,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@visa, @options)
     assert_success response
-    assert_match "Approved", response.message
+    assert_match 'Approved', response.message
   end
 
   def test_failed_verify
@@ -218,7 +224,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_no_match %r{You are not authorized}, response.message, "You need to enable username/password validation"
+    assert_no_match %r{You are not authorized}, response.message, 'You need to enable username/password validation'
     assert_match %r{Missing or invalid adjustment id.}, response.message
   end
 
@@ -261,7 +267,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_success purchase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success credit
+    assert_success refund
   end
 
   def test_successful_recurring
@@ -277,7 +283,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response.test?
     assert_false response.authorization.blank?
 
-    assert response = @gateway.update_recurring(@amount + 500, @visa, @recurring_options.merge(:account_id => response.params["rbAccountId"]))
+    assert response = @gateway.update_recurring(@amount + 500, @visa, @recurring_options.merge(:account_id => response.params['rbAccountId']))
     assert_success response
   end
 
@@ -287,7 +293,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert response.test?
     assert_false response.authorization.blank?
 
-    assert response = @gateway.cancel_recurring(:account_id => response.params["rbAccountId"])
+    assert response = @gateway.cancel_recurring(:account_id => response.params['rbAccountId'])
     assert_success response
   end
 
@@ -303,25 +309,25 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   end
 
   def test_successful_add_to_vault_with_store_method
-    assert response = @gateway.store(@visa,@options)
+    assert response = @gateway.store(@visa, @options)
     assert_equal 'Operation Successful', response.message
     assert_success response
-    assert_not_nil response.params["customer_vault_id"]
+    assert_not_nil response.params['customer_vault_id']
   end
 
   def test_add_to_vault_with_custom_vault_id_with_store_method
-    @options[:vault_id] = rand(100000)+10001
+    @options[:vault_id] = rand(10001..110000)
     assert response = @gateway.store(@visa, @options.dup)
     assert_equal 'Operation Successful', response.message
     assert_success response
-    assert_equal @options[:vault_id], response.params["customer_vault_id"].to_i
+    assert_equal @options[:vault_id], response.params['customer_vault_id'].to_i
   end
 
   def test_successful_add_to_vault_with_single_use_token
     assert response = @gateway.store(generate_single_use_token(@visa))
     assert_equal 'Operation Successful', response.message, response.inspect
     assert_success response
-    assert_not_nil response.params["customer_vault_id"]
+    assert_not_nil response.params['customer_vault_id']
   end
 
   def test_update_vault
@@ -384,6 +390,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_scrubbed(@visa.number, clean_transcript)
     assert_scrubbed(@visa.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:password], clean_transcript)
+    assert_scrubbed(@gateway.options[:api_key], clean_transcript)
   end
 
   private
@@ -395,15 +402,15 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
     request = Net::HTTP::Post.new(uri.path)
-    request.content_type = "application/json"
+    request.content_type = 'application/json'
     request.body = {
-      "number"       => credit_card.number,
-      "expiry_month" => "01",
-      "expiry_year"  => (Time.now.year + 1) % 100,
-      "cvd"          => credit_card.verification_value,
+      'number'       => credit_card.number,
+      'expiry_month' => '01',
+      'expiry_year'  => (Time.now.year + 1) % 100,
+      'cvd'          => credit_card.verification_value,
     }.to_json
 
     response = http.request(request)
-    JSON.parse(response.body)["token"]
+    JSON.parse(response.body)['token']
   end
 end

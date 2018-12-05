@@ -9,7 +9,7 @@ class QuickBooksTest < Test::Unit::TestCase
       consumer_secret: 'consumer_secret',
       access_token: 'access_token',
       token_secret: 'token_secret',
-      realm: 'realm_ID',
+      realm: 'realm_ID'
     )
 
     @credit_card = credit_card
@@ -21,7 +21,7 @@ class QuickBooksTest < Test::Unit::TestCase
       description: 'Store Purchase'
     }
 
-    @authorization = "ECZ7U0SO423E"
+    @authorization = 'ECZ7U0SO423E'
   end
 
   def test_successful_purchase
@@ -29,7 +29,7 @@ class QuickBooksTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "EF1IQ9GGXS2D", response.authorization
+    assert_equal 'EF1IQ9GGXS2D', response.authorization
     assert response.test?
   end
 

@@ -25,37 +25,35 @@ module ActiveMerchant #:nodoc:
       }
 
       CREDIT_CARDS = {
-        :visa => "VISA",
-        :master => "MC",
-        :delta => "DELTA",
-        :solo => "SOLO",
-        :switch => "MAESTRO",
-        :maestro => "MAESTRO",
-        :american_express => "AMEX",
-        :electron => "UKE",
-        :diners_club => "DC",
-        :jcb => "JCB"
+        :visa => 'VISA',
+        :master => 'MC',
+        :delta => 'DELTA',
+        :maestro => 'MAESTRO',
+        :american_express => 'AMEX',
+        :electron => 'UKE',
+        :diners_club => 'DC',
+        :jcb => 'JCB'
       }
 
       AVS_CODE = {
-        "NOTPROVIDED" => nil,
-        "NOTCHECKED" => 'X',
-        "MATCHED" => 'Y',
-        "NOTMATCHED" => 'N'
+        'NOTPROVIDED' => nil,
+        'NOTCHECKED' => 'X',
+        'MATCHED' => 'Y',
+        'NOTMATCHED' => 'N'
       }
 
       CVV_CODE = {
-        "NOTPROVIDED" => 'S',
-        "NOTCHECKED" => 'X',
-        "MATCHED" => 'M',
-        "NOTMATCHED" => 'N'
+        'NOTPROVIDED' => 'S',
+        'NOTCHECKED' => 'X',
+        'MATCHED' => 'M',
+        'NOTMATCHED' => 'N'
       }
 
       OPTIONAL_REQUEST_FIELDS = {
         paypal_callback_url: :PayPalCallbackURL,
         basket: :Basket,
-        gift_aid_payment: :GiftAidPayment ,
-        apply_avscv2: :ApplyAVSCV2 ,
+        gift_aid_payment: :GiftAidPayment,
+        apply_avscv2: :ApplyAVSCV2,
         apply_3d_secure: :Apply3DSecure,
         account_type: :AccountType,
         billing_agreement: :BillingAgreement,
@@ -65,13 +63,13 @@ module ActiveMerchant #:nodoc:
         vendor_data: :VendorData,
         language: :Language,
         website: :Website,
-        recipient_account_number: :FIRecipientAcctNumber ,
-        recipient_surname: :FIRecipientSurname ,
-        recipient_postcode: :FIRecipientPostcode ,
+        recipient_account_number: :FIRecipientAcctNumber,
+        recipient_surname: :FIRecipientSurname,
+        recipient_postcode: :FIRecipientPostcode,
         recipient_dob: :FIRecipientDoB
       }
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :switch, :solo, :maestro, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :diners_club]
       self.supported_countries = ['GB', 'IE']
       self.default_currency = 'GBP'
 
@@ -183,6 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def truncate(value, max_size)
         return nil unless value
         return value.to_s if CGI.escape(value.to_s).length <= max_size
@@ -291,11 +290,6 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :CardNumber, credit_card.number, :required => true)
 
         add_pair(post, :ExpiryDate, format_date(credit_card.month, credit_card.year), :required => true)
-
-        if requires_start_date_or_issue_number?(credit_card)
-          add_pair(post, :StartDate, format_date(credit_card.start_month, credit_card.start_year))
-          add_pair(post, :IssueNumber, credit_card.issue_number)
-        end
         add_pair(post, :CardType, map_card_type(credit_card))
 
         add_pair(post, :CV2, credit_card.verification_value)
@@ -327,7 +321,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def map_card_type(credit_card)
-        raise ArgumentError, "The credit card type must be provided" if card_brand(credit_card).blank?
+        raise ArgumentError, 'The credit card type must be provided' if card_brand(credit_card).blank?
 
         card_type = card_brand(credit_card).to_sym
 
@@ -342,23 +336,23 @@ module ActiveMerchant #:nodoc:
       def format_date(month, year)
         return nil if year.blank? || month.blank?
 
-        year  = sprintf("%.4i", year)
-        month = sprintf("%.2i", month)
+        year  = sprintf('%.4i', year)
+        month = sprintf('%.2i', month)
 
         "#{month}#{year[-2..-1]}"
       end
 
       def commit(action, parameters)
-        response = parse( ssl_post(url_for(action), post_data(action, parameters)) )
+        response = parse(ssl_post(url_for(action), post_data(action, parameters)))
 
-        Response.new(response["Status"] == APPROVED, message_from(response), response,
+        Response.new(response['Status'] == APPROVED, message_from(response), response,
           :test => test?,
           :authorization => authorization_from(response, parameters, action),
           :avs_result => {
-            :street_match => AVS_CODE[ response["AddressResult"] ],
-            :postal_match => AVS_CODE[ response["PostCodeResult"] ],
+            :street_match => AVS_CODE[response['AddressResult']],
+            :postal_match => AVS_CODE[response['PostCodeResult']],
           },
-          :cvv_result => CVV_CODE[ response["CV2Result"] ]
+          :cvv_result => CVV_CODE[response['CV2Result']]
         )
       end
 
@@ -367,11 +361,11 @@ module ActiveMerchant #:nodoc:
         when :store
           response['Token']
         else
-         [ params[:VendorTxCode],
-           response["VPSTxId"] || params[:VPSTxId],
-           response["TxAuthNo"],
-           response["SecurityKey"] || params[:SecurityKey],
-           action ].join(";")
+          [ params[:VendorTxCode],
+            response['VPSTxId'] || params[:VPSTxId],
+            response['TxAuthNo'],
+            response['SecurityKey'] || params[:SecurityKey],
+            action ].join(';')
         end
       end
 
@@ -386,15 +380,15 @@ module ActiveMerchant #:nodoc:
 
       def build_url(action)
         endpoint = case action
-          when :purchase, :authorization then "vspdirect-register"
-          when :store then 'directtoken'
-          else TRANSACTIONS[action].downcase
+        when :purchase, :authorization then 'vspdirect-register'
+        when :store then 'directtoken'
+        else TRANSACTIONS[action].downcase
         end
         "#{test? ? self.test_url : self.live_url}/#{endpoint}.vsp"
       end
 
       def build_simulator_url(action)
-        endpoint = [ :purchase, :authorization ].include?(action) ? "VSPDirectGateway.asp" : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
+        endpoint = [ :purchase, :authorization ].include?(action) ? 'VSPDirectGateway.asp' : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
         "#{self.simulator_url}/#{endpoint}"
       end
 
@@ -413,7 +407,7 @@ module ActiveMerchant #:nodoc:
           parameters.update(:ReferrerID => application_id)
         end
 
-        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       # SagePay returns data in the following format
@@ -436,6 +430,5 @@ module ActiveMerchant #:nodoc:
         payment_method.split(';').last == 'purchase'
       end
     end
-
   end
 end

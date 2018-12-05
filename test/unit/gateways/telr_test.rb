@@ -1,12 +1,12 @@
-require "test_helper"
+require 'test_helper'
 
 class TelrTest < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = TelrGateway.new(
-      merchant_id: "login",
-      api_key: "password"
+      merchant_id: 'login',
+      api_key: 'password'
     )
 
     @credit_card = credit_card
@@ -20,7 +20,7 @@ class TelrTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "029724176180|100|AED", response.authorization
+    assert_equal '029724176180|100|AED', response.authorization
     assert response.test?
   end
 
@@ -30,7 +30,7 @@ class TelrTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Not authorised", response.message
+    assert_equal 'Not authorised', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -56,12 +56,12 @@ class TelrTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Not authorised", response.message
+    assert_equal 'Not authorised', response.message
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "")
+      @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -73,7 +73,7 @@ class TelrTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "029894296182|100|AED", response.authorization
+    assert_equal '029894296182|100|AED', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -86,7 +86,7 @@ class TelrTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("5d53a33d960c46d00f5dc061947d998c")
+      @gateway.void('5d53a33d960c46d00f5dc061947d998c')
     end.check_request do |endpoint, data, headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
@@ -100,7 +100,7 @@ class TelrTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "029724176180|100|AED", response.authorization
+    assert_equal '029724176180|100|AED', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -113,7 +113,7 @@ class TelrTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -124,7 +124,7 @@ class TelrTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
@@ -132,7 +132,7 @@ class TelrTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "Not authorised", response.message
+    assert_equal 'Not authorised', response.message
   end
 
   def test_successful_reference_purchase

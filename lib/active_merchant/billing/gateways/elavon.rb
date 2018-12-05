@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://api.convergepay.com/VirtualMerchant/process.do'
 
       self.display_name = 'Elavon MyVirtualMerchant'
-      self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL)
+      self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL MX)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.elavon.com/'
 
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, creditcard, options = {})
         if creditcard.is_a?(String)
-          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card or use the #refund method."
+          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
         end
 
         form = {}
@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_invoice(form,options)
+      def add_invoice(form, options)
         form[:invoice_number] = truncate((options[:order_id] || options[:invoice]), 10)
         form[:description] = truncate(options[:description], 255)
       end
@@ -191,10 +191,8 @@ module ActiveMerchant #:nodoc:
         form[:email] = truncate(options[:email], 100) unless empty?(options[:email])
         form[:customer_code] = truncate(options[:customer], 10) unless empty?(options[:customer])
         form[:customer_number] = options[:customer_number] unless empty?(options[:customer_number])
-        if options[:custom_fields]
-          options[:custom_fields].each do |key, value|
-            form[key.to_s] = value
-          end
+        options[:custom_fields]&.each do |key, value|
+          form[key.to_s] = value
         end
       end
 
@@ -258,7 +256,7 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = self.actions[action]
 
-        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)) )
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)))
 
         Response.new(response['result'] == '0', message_from(response), response,
           :test => @options[:test] || test?,
@@ -271,7 +269,7 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters, options)
         result = preamble
         result.merge!(parameters)
-        result.collect { |key, value| post_data_string(key, value, options) }.join("&")
+        result.collect { |key, value| post_data_string(key, value, options) }.join('&')
       end
 
       def post_data_string(key, value, options)
@@ -283,7 +281,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def custom_field?(field_name, options)
-        return true if options[:custom_fields] && options[:custom_fields].include?(field_name.to_sym)
+        return true if options[:custom_fields]&.include?(field_name.to_sym)
         field_name == :customer_number
       end
 
@@ -301,10 +299,10 @@ module ActiveMerchant #:nodoc:
 
       def parse(msg)
         resp = {}
-        msg.split(self.delimiter).collect{|li|
-            key, value = li.split("=")
-            resp[key.to_s.strip.gsub(/^ssl_/, '')] = value.to_s.strip
-          }
+        msg.split(self.delimiter).collect { |li|
+          key, value = li.split('=')
+          resp[key.to_s.strip.gsub(/^ssl_/, '')] = value.to_s.strip
+        }
         resp
       end
 

@@ -9,12 +9,19 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
     @voucher = credit_card('60607044957644', brand: 'sodexo')
     @options = {
-      billing_address: address(options = { neighborhood: 'Sesame Street' }),
+      billing_address: address({neighborhood: 'Sesame Street'}),
       description: 'Store Purchase'
     }
   end
 
   def test_successful_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+  end
+
+  def test_successful_purchase_no_address
+    @options.delete(:billing_address)
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message

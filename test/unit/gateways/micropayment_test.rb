@@ -5,7 +5,7 @@ class MicropaymentTest < Test::Unit::TestCase
 
   def setup
     @gateway = MicropaymentGateway.new(
-      access_key: "key"
+      access_key: 'key'
     )
 
     @credit_card = credit_card
@@ -23,7 +23,7 @@ class MicropaymentTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "CCadc2b593ca98bfd730c383582de00faed995b0|www.spreedly.com-IDhm7nyju168", response.authorization
+    assert_equal 'CCadc2b593ca98bfd730c383582de00faed995b0|www.spreedly.com-IDhm7nyju168', response.authorization
     assert response.test?
   end
 
@@ -33,7 +33,7 @@ class MicropaymentTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "AS stellt falsches Routing fest", response.message
+    assert_equal 'AS stellt falsches Routing fest', response.message
     assert response.test?
   end
 
@@ -48,7 +48,7 @@ class MicropaymentTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "CC747358d9598614c3ba1e9a7b82a28318cd81bc|www.spreedly.com-IDhngtaj81a1", response.authorization
+    assert_equal 'CC747358d9598614c3ba1e9a7b82a28318cd81bc|www.spreedly.com-IDhngtaj81a1', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -68,13 +68,13 @@ class MicropaymentTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "AS stellt falsches Routing fest", response.message
+    assert_equal 'AS stellt falsches Routing fest', response.message
     assert response.test?
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "")
+      @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -100,7 +100,7 @@ class MicropaymentTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("")
+      @gateway.void('')
     end.respond_with(failed_void_response)
 
     assert_failure response
@@ -127,7 +127,7 @@ class MicropaymentTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -138,7 +138,7 @@ class MicropaymentTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
@@ -146,7 +146,7 @@ class MicropaymentTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "AS stellt falsches Routing fest", response.message
+    assert_equal 'AS stellt falsches Routing fest', response.message
   end
 
   def test_transcript_scrubbing

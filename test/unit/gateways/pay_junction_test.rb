@@ -8,8 +8,8 @@ class PayJunctionTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = PayJunctionGateway.new(
-                 :login      => "pj-ql-01",
-                 :password   => "pj-ql-01p"
+                 :login      => 'pj-ql-01',
+                 :password   => 'pj-ql-01p'
                )
 
     @credit_card = credit_card
@@ -20,19 +20,18 @@ class PayJunctionTest < Test::Unit::TestCase
     @amount = 100
   end
 
-
   def test_detect_test_credentials_when_in_production
     Base.mode = :production
 
     live_gw  = PayJunctionGateway.new(
-                 :login      => "l",
-                 :password   => "p"
+                 :login      => 'l',
+                 :password   => 'p'
                )
     assert_false live_gw.test?
 
     test_gw = PayJunctionGateway.new(
-                :login      => "pj-ql-01",
-                :password   => "pj-ql-01p"
+                :login      => 'pj-ql-01',
+                :password   => 'pj-ql-01p'
               )
     assert test_gw.test?
   end
@@ -53,7 +52,7 @@ class PayJunctionTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    response = @gateway.refund(@amount, "123")
+    response = @gateway.refund(@amount, '123')
     assert_success response
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
   end
@@ -61,7 +60,7 @@ class PayJunctionTest < Test::Unit::TestCase
   def test_successful_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      response = @gateway.credit(@amount, "123")
+      response = @gateway.credit(@amount, '123')
       assert_success response
       assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     end
@@ -82,11 +81,11 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_add_creditcard_with_track_data
-    @credit_card.track_data = "Tracking data"
+    @credit_card.track_data = 'Tracking data'
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match "dc_track=Tracking+data", data
+      assert_match 'dc_track=Tracking+data', data
       assert_no_match(/dc_name=/, data)
       assert_no_match(/dc_number=/, data)
       assert_no_match(/dc_expiration_month=/, data)
@@ -95,8 +94,8 @@ class PayJunctionTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
-
   private
+
   def successful_authorization_response
     <<-RESPONSE
 dc_merchant_name=PayJunction - (demo)dc_merchant_address=3 W. Carrillodc_merchant_city=Santa Barbaradc_merchant_state=CAdc_merchant_zip=93101dc_merchant_phone=800-601-0230dc_device_id=1174dc_transaction_date=2007-11-28 19:22:33.791634dc_transaction_action=chargedc_approval_code=TAS193dc_response_code=00dc_response_message=APPROVAL TAS193 dc_transaction_id=3144302dc_posture=holddc_invoice_number=9f76c4e4bd66a36dc5aeb4bd7b3a02fadc_notes=--START QUICK-LINK DEBUG--

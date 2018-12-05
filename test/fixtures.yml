@@ -67,6 +67,7 @@ beanstream:
   password: password
   secure_profile_api_key: API Access Passcode
   recurring_api_key: API Access Passcode
+  api_key: API KEY
 
 beanstream_interac:
   login: merchant id
@@ -219,6 +220,11 @@ credorax:
   merchant_id: 'merchant_id'
   cipher_key: 'cipher_key'
 
+ct_payment:
+  api_key: SOMECREDENTIAL
+  company_number: '12345'
+  merchant_number: '12345678'
+
 # Culqi does not provide public testing data
 culqi:
   merchant_id: MERCHANT
@@ -331,6 +337,12 @@ firstdata_e4:
   login: SD8821-67
   password: T6bxSywbcccbJ19eDXNIGaCDOBg1W7T8
 
+firstdata_e4_v27:
+  login: ALOGIN
+  password: APASSWORD
+  key_id: ANINTEGER
+  hmac_key: AMAGICALKEY
+
 flo2cash:
   username: SOMECREDENTIAL
   password: ANOTHERCREDENTIAL
@@ -375,15 +387,6 @@ iats_payments:
   agent_code: TEST88
   password: TEST88
   region: na
-
-# login: merchant number
-# password: password for the PEM secret key
-# pem: public certificate and PEM secret key
-ideal_rabobank:
-  login: LOGIN
-  password: PASSWORD
-  pem: |
-    PASTE YOUR PEM FILE HERE
 
 inspire:
   login: demo
@@ -508,9 +511,6 @@ modern_payments:
   login: login
   password: password
 
-mollie_ideal:
-  api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'
-
 # Working credentials, no need to replace
 monei:
   sender_id: 8a829417488d34c401489a5cd1350977
@@ -520,7 +520,7 @@ monei:
 
 # Working credentials, no need to replace
 moneris:
-  login: store1
+  login: store3
   password: yesguy
 
 moneris_us:
@@ -1216,9 +1216,10 @@ viaklix:
 
 # test credentails
 visanet_peru:
-  access_key_id: "AKIAJPOQZ7BAXJZ5K35A"
-  secret_access_key: "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"
-  merchant_id: "101266802"
+  access_key_id: "AKIAJLJTVQYHO4P76YYA"
+  secret_access_key: "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"
+  merchant_id: "543025501"
+  ruc: '20341198217'
 
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"

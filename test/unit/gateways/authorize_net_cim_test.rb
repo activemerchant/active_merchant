@@ -46,8 +46,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_expdate_formatting
-    assert_equal '2009-09', @gateway.send(:expdate, credit_card('4111111111111111', :month => "9", :year => "2009"))
-    assert_equal '2013-11', @gateway.send(:expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
+    assert_equal '2009-09', @gateway.send(:expdate, credit_card('4111111111111111', :month => '9', :year => '2009'))
+    assert_equal '2013-11', @gateway.send(:expdate, credit_card('4111111111111111', :month => '11', :year => '2013'))
     assert_equal 'XXXX', @gateway.send(:expdate, credit_card('XXXX1234', :month => nil, :year => nil))
   end
 
@@ -58,7 +58,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal @customer_profile_id, response.authorization
-    assert_equal "Successful.", response.message
+    assert_equal 'Successful.', response.message
   end
 
   def test_should_create_customer_payment_profile_request
@@ -76,7 +76,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal @customer_payment_profile_id, response.params['customer_payment_profile_id']
-    assert_equal "This output is only present if the ValidationMode input parameter is passed with a value of testMode or liveMode", response.params['validation_direct_response']
+    assert_equal 'This output is only present if the ValidationMode input parameter is passed with a value of testMode or liveMode', response.params['validation_direct_response']
   end
 
   def test_should_create_customer_shipping_address_request
@@ -420,15 +420,15 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   def test_should_update_customer_payment_profile_request_with_last_four_digits
-    last_four_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => "4242") #Credit card with only last four digits
+    last_four_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => '4242') # Credit card with only last four digits
 
     response = stub_comms do
       @gateway.update_customer_payment_profile(
         :customer_profile_id => @customer_profile_id,
         :payment_profile => {
           :customer_payment_profile_id => @customer_payment_profile_id,
-          :bill_to => address(:address1 => "345 Avenue B",
-                              :address2 => "Apt 101"),
+          :bill_to => address(:address1 => '345 Avenue B',
+                              :address2 => 'Apt 101'),
           :payment => {
             :credit_card => last_four_credit_card
           }
@@ -510,7 +510,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The referenced transaction does not meet the criteria for issuing a credit.', response.params['direct_response']['message']
     assert_equal 'The transaction was unsuccessful.', response.message
-    assert_equal "E00027", response.error_code
+    assert_equal 'E00027', response.error_code
     return response
   end
 
@@ -575,8 +575,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response = @gateway.create_customer_profile_transaction_for_refund(
       :transaction => {
         :trans_id => 1,
-        :amount => "1.00",
-        :credit_card_number_masked => "XXXX1234"
+        :amount => '1.00',
+        :credit_card_number_masked => 'XXXX1234'
         }
     )
     assert_instance_of Response, response

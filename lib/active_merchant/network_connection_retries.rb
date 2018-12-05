@@ -4,13 +4,13 @@ module ActiveMerchant
   module NetworkConnectionRetries
     DEFAULT_RETRIES = 3
     DEFAULT_CONNECTION_ERRORS = {
-      EOFError               => "The remote server dropped the connection",
-      Errno::ECONNRESET      => "The remote server reset the connection",
-      Timeout::Error         => "The connection to the remote server timed out",
-      Errno::ETIMEDOUT       => "The connection to the remote server timed out",
-      SocketError            => "The connection to the remote server could not be established",
-      Errno::EHOSTUNREACH    => "The connection to the remote server could not be established",
-      OpenSSL::SSL::SSLError => "The SSL connection to the remote server could not be established"
+      EOFError               => 'The remote server dropped the connection',
+      Errno::ECONNRESET      => 'The remote server reset the connection',
+      Timeout::Error         => 'The connection to the remote server timed out',
+      Errno::ETIMEDOUT       => 'The connection to the remote server timed out',
+      SocketError            => 'The connection to the remote server could not be established',
+      Errno::EHOSTUNREACH    => 'The connection to the remote server could not be established',
+      OpenSSL::SSL::SSLError => 'The SSL connection to the remote server could not be established'
     }
 
     def self.included(base)
@@ -24,16 +24,22 @@ module ActiveMerchant
         begin
           yield
         rescue Errno::ECONNREFUSED => e
-          raise ActiveMerchant::RetriableConnectionError.new("The remote server refused the connection", e)
+          raise ActiveMerchant::RetriableConnectionError.new('The remote server refused the connection', e)
         rescue OpenSSL::X509::CertificateError => e
           NetworkConnectionRetries.log(options[:logger], :error, e.message, options[:tag])
-          raise ActiveMerchant::ClientCertificateError, "The remote server did not accept the provided SSL certificate"
-        rescue Zlib::BufError => e
-          raise ActiveMerchant::InvalidResponseError, "The remote server replied with an invalid response"
+          raise ActiveMerchant::ClientCertificateError, 'The remote server did not accept the provided SSL certificate'
+        rescue Zlib::BufError
+          raise ActiveMerchant::InvalidResponseError, 'The remote server replied with an invalid response'
         rescue *connection_errors.keys => e
           raise ActiveMerchant::ConnectionError.new(derived_error_message(connection_errors, e.class), e)
         end
       end
+    end
+
+    def self.log(logger, level, message, tag=nil)
+      tag ||= self.class.to_s
+      message = "[#{tag}] #{message}"
+      logger&.send(level, message)
     end
 
     private
@@ -46,7 +52,7 @@ module ActiveMerchant
       begin
         request_start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         result = yield
-        log_with_retry_details(options[:logger], initial_retries-retries + 1, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, "success", options[:tag])
+        log_with_retry_details(options[:logger], initial_retries-retries + 1, Process.clock_gettime(Process::CLOCK_MONOTONIC) - request_start, 'success', options[:tag])
         result
       rescue ActiveMerchant::RetriableConnectionError => e
         retries -= 1
@@ -62,15 +68,8 @@ module ActiveMerchant
       end
     end
 
-    def self.log(logger, level, message, tag=nil)
-      tag ||= self.class.to_s
-      message = "[#{tag}] #{message}"
-      logger.send(level, message) if logger
-    end
-
-    private
     def log_with_retry_details(logger, attempts, time, message, tag)
-      NetworkConnectionRetries.log(logger, :info, "connection_attempt=%d connection_request_time=%.4fs connection_msg=\"%s\"" % [attempts, time, message], tag)
+      NetworkConnectionRetries.log(logger, :info, 'connection_attempt=%d connection_request_time=%.4fs connection_msg="%s"' % [attempts, time, message], tag)
     end
 
     def derived_error_message(errors, klass)

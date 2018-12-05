@@ -61,28 +61,26 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_invoice(post, money, options)
+        add_payment(post, payment)
         add_customer_data(post, options)
 
-        if payment.is_a?(String)
-          post[:card] = { token: payment }
-          commit_transaction('authorize', post)
-        else
-          MultiResponse.run do |r|
-            r.process { store(payment, options) }
-            post[:card] = { token: r.authorization }
-            r.process { commit_transaction('authorize', post) }
-          end
-        end
+        commit_transaction('authorize', post)
       end
 
-      def capture(_money, authorization, _options = {})
-        post = { transaction: { id: authorization } }
+      def capture(money, authorization, _options = {})
+        post = {
+            transaction: { id: authorization }
+        }
+        post[:order] = {amount: amount(money).to_f} if money
 
         commit_transaction('capture', post)
       end
 
-      def refund(_money, authorization, options = {})
-        void(authorization, options)
+      def refund(money, authorization, options = {})
+        post = {transaction: {id: authorization}}
+        post[:order] = {amount: amount(money).to_f} if money
+
+        commit_transaction('refund', post)
       end
 
       def void(authorization, _options = {})
@@ -121,10 +119,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r{(\\?"number\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
-          .gsub(%r{(\\?"cvc\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]')
-          .gsub(%r{(Auth-Token: )([A-Za-z0-9=]+)}, '\1[FILTERED]')
+        transcript.
+          gsub(%r{(\\?"number\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(\\?"cvc\\?":)(\\?"[^"]+\\?")}, '\1[FILTERED]').
+          gsub(%r{(Auth-Token: )([A-Za-z0-9=]+)}, '\1[FILTERED]')
       end
 
       private
@@ -136,6 +134,9 @@ module ActiveMerchant #:nodoc:
         post[:user][:email] = options[:email]
         post[:user][:ip_address] = options[:ip] if options[:ip]
         post[:user][:fiscal_number] = options[:fiscal_number] if options[:fiscal_number]
+        if phone = options[:phone] || options.dig(:billing_address, :phone)
+          post[:user][:phone] = phone
+        end
       end
 
       def add_invoice(post, money, options)
@@ -179,7 +180,12 @@ module ActiveMerchant #:nodoc:
         rescue ResponseError => e
           raw_response = e.response.body
         end
-        parse(raw_response)
+
+        begin
+          parse(raw_response)
+        rescue JSON::ParserError
+          {'status' => 'Internal server error'}
+        end
       end
 
       def commit_transaction(action, parameters)
@@ -224,10 +230,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if success_from(response)
-          response['transaction'] && response['transaction']['message']
-        else
+        if !success_from(response) && response['error']
           response['error'] && response['error']['type']
+        else
+          response['transaction'] && response['transaction']['message']
         end
       end
 

@@ -56,8 +56,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify_credentials
-        response = void("0")
-        response.params["result"] != "26"
+        response = void('0')
+        response.params['result'] != '26'
       end
 
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       def recurring_inquiry(profile_id, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:inquiry, nil, options.update( :profile_id => profile_id ))
+        request = build_recurring_request(:inquiry, nil, options.update(:profile_id => profile_id))
         commit(request, options.merge(:request_type => :recurring))
       end
 
@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
-              add_address(xml, 'ShipTo', options[:shipping_address],options) if options[:shipping_address]
+              add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
 
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
@@ -237,10 +237,6 @@ module ActiveMerchant #:nodoc:
             end
           end
 
-          if requires_start_date_or_issue_number?(credit_card)
-            xml.tag!('ExtData', 'Name' => 'CardStart', 'Value' => startdate(credit_card)) unless credit_card.start_month.blank? || credit_card.start_year.blank?
-            xml.tag!('ExtData', 'Name' => 'CardIssue', 'Value' => format(credit_card.issue_number, :two_digits)) unless credit_card.issue_number.blank?
-          end
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
         end
       end
@@ -252,8 +248,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year.to_s.sub(/^0+/, ''))
-        month = sprintf("%.2i", creditcard.month.to_s.sub(/^0+/, ''))
+        year  = sprintf('%.4i', creditcard.year.to_s.sub(/^0+/, ''))
+        month = sprintf('%.2i', creditcard.month.to_s.sub(/^0+/, ''))
 
         "#{year}#{month}"
       end
@@ -293,7 +289,7 @@ module ActiveMerchant #:nodoc:
                   end
 
                   if action == :add
-                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1)
                   else
                     xml.tag! 'Start', format_rp_date(options[:starting_at]) unless options[:starting_at].nil?
                   end
@@ -309,10 +305,10 @@ module ActiveMerchant #:nodoc:
                 end
               end
               if action != :add
-                xml.tag! "ProfileID", options[:profile_id]
+                xml.tag! 'ProfileID', options[:profile_id]
               end
               if action == :inquiry
-                xml.tag! "PaymentHistory", ( options[:history] ? 'Y' : 'N' )
+                xml.tag! 'PaymentHistory', (options[:history] ? 'Y' : 'N')
               end
             end
           end
@@ -322,20 +318,20 @@ module ActiveMerchant #:nodoc:
       def get_pay_period(options)
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly])
         case options[:periodicity]
-          when :weekly then 'Weekly'
-          when :biweekly then 'Bi-weekly'
-          when :semimonthly then 'Semi-monthly'
-          when :quadweekly then 'Every four weeks'
-          when :monthly then 'Monthly'
-          when :quarterly then 'Quarterly'
-          when :semiyearly then 'Semi-yearly'
-          when :yearly then 'Yearly'
+        when :weekly then 'Weekly'
+        when :biweekly then 'Bi-weekly'
+        when :semimonthly then 'Semi-monthly'
+        when :quadweekly then 'Every four weeks'
+        when :monthly then 'Monthly'
+        when :quarterly then 'Quarterly'
+        when :semiyearly then 'Semi-yearly'
+        when :yearly then 'Yearly'
         end
       end
 
       def format_rp_date(time)
         case time
-          when Time, Date then time.strftime("%m%d%Y")
+        when Time, Date then time.strftime('%m%d%Y')
         else
           time.to_s
         end

@@ -53,6 +53,19 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_echeck_and_extra_options
+    response = stub_comms do
+      @gateway.purchase(@amount, @check, @options.merge(check_format: 'ARC'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMcheckformat=ARC/, data)
+    end.respond_with(successful_purchase_response_echeck)
+
+    assert_equal 'Success', response.message
+    assert_equal '133134803', response.authorization
+    assert_success response
+    assert response.test?
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
@@ -64,7 +77,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_passing_extra_info
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => "1337", :description => "socool"))
+      @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => '1337', :description => 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
@@ -78,6 +91,17 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(:test_mode => true))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMtestmode=1/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_email_receipt
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'bobby@hill.com', :cust_receipt => 'Yes', :cust_receipt_name => 'socool'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/UMcustreceipt=Yes/, data)
+      assert_match(/UMcustreceiptname=socool/, data)
+      assert_match(/UMtestmode=0/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -129,7 +153,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_authorize_passing_extra_info
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => "1337", :description => "socool"))
+      @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => '1337', :description => 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
@@ -324,11 +348,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, 1034)
+    assert_equal '10.34', @gateway.send(:amount, 1034)
 
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
+    assert_raise(ArgumentError) do
+      @gateway.send(:amount, '10.34')
+    end
   end
 
   def test_supported_countries
@@ -356,10 +380,10 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_add_track_data_with_creditcard
-    @credit_card.track_data = "data"
+    @credit_card.track_data = 'data'
 
     @gateway.expects(:ssl_post).with do |_, body|
-      body.include?("UMmagstripe=data")
+      body.include?('UMmagstripe=data')
     end.returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -367,11 +391,11 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_add_track_data_with_empty_data
-    ["", nil].each do |data|
+    ['', nil].each do |data|
       @credit_card.track_data = data
 
       @gateway.expects(:ssl_post).with do |_, body|
-        refute body.include? "UMmagstripe="
+        refute body.include? 'UMmagstripe='
         body
       end.returns(successful_purchase_response)
 
@@ -385,17 +409,15 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-
       assert_match %r{UMcard=4242424242424242},  data
       assert_match %r{UMcardpresent=true},       data
-
     end.respond_with(successful_purchase_response)
 
     assert_success response
   end
 
   def test_does_not_raise_error_on_missing_values
-    @gateway.expects(:ssl_post).returns("status")
+    @gateway.expects(:ssl_post).returns('status')
     assert_nothing_raised do
       response = @gateway.purchase(@amount, @credit_card, @options)
       assert_failure response
@@ -409,7 +431,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed_echeck), post_scrubbed_echeck
   end
 
-private
+  private
 
   def assert_address(type, post, expected_first_name = nil, expected_last_name = nil)
     prefix = key_prefix(type)
@@ -449,41 +471,40 @@ private
   end
 
   def successful_purchase_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled'
   end
 
   def unsuccessful_purchase_response
-    "UMversion=2.9&UMstatus=Declined&UMauthCode=000000&UMrefNum=55076060&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Not%20Processed&UMcvv2ResultCode=P&UMvpasResultCode=&UMresult=D&UMerror=Card%20Declined&UMerrorcode=10127&UMbatch=596&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Declined&UMauthCode=000000&UMrefNum=55076060&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Not%20Processed&UMcvv2ResultCode=P&UMvpasResultCode=&UMresult=D&UMerror=Card%20Declined&UMerrorcode=10127&UMbatch=596&UMfiller=filled'
   end
 
   def successful_authorize_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=Y&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled'
   end
 
   def successful_capture_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=65074409&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
   end
 
   def successful_refund_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=63813138&UMavsResult=Unmapped%20AVS%20response%20%28%20%20%20%29&UMavsResultCode=%20%20%20&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=1.00&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=101716&UMrefNum=63813138&UMavsResult=Unmapped%20AVS%20response%20%28%20%20%20%29&UMavsResultCode=%20%20%20&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=1.00&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
   end
 
   def successful_void_response
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=&UMrefNum=63812270&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Transaction%20Voided%20Successfully&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=&UMrefNum=63812270&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=Transaction%20Voided%20Successfully&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
   end
 
   def successful_purchase_response_echeck
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=TMEC4D&UMrefNum=133134803&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=180316&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=18031621233065&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=TMEC4D&UMrefNum=133134803&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=180316&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=18031621233065&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
   end
 
   def successful_refund_response_echeck
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=TM1E74&UMrefNum=133134926&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=TM1E74&UMrefNum=133134926&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
   end
 
   def successful_void_response_echeck
-    "UMversion=2.9&UMstatus=Approved&UMauthCode=TM80A5&UMrefNum=133134971&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled"
+    'UMversion=2.9&UMstatus=Approved&UMauthCode=TM80A5&UMrefNum=133134971&UMavsResult=No%20AVS%20response%20%28Typically%20no%20AVS%20data%20sent%20or%20swiped%20transaction%29&UMavsResultCode=&UMcvv2Result=No%20CVV2%2FCVC%20data%20available%20for%20transaction.&UMcvv2ResultCode=&UMresult=A&UMvpasResultCode=&UMerror=&UMerrorcode=00000&UMcustnum=&UMbatch=&UMbatchRefNum=&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMprocRefNum=&UMcardLevelResult=&UMauthAmount=&UMfiller=filled'
   end
-
 
   def pre_scrubbed
     <<-EOS

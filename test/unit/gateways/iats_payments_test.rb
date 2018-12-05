@@ -119,7 +119,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def test_successful_check_refund
     response = stub_comms do
-      @gateway.refund(@amount, "ref|check", @options)
+      @gateway.refund(@amount, 'ref|check', @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/<ProcessACHEFTRefundWithTransactionIdV1/, data)
       assert_match(/<agentCode>login<\/agentCode>/, data)
@@ -140,7 +140,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def test_failed_check_refund
     response = stub_comms do
-      @gateway.refund(@amount, "ref|check", @options)
+      @gateway.refund(@amount, 'ref|check', @options)
     end.respond_with(failed_check_refund_response)
 
     assert response
@@ -192,7 +192,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def test_successful_unstore
     response = stub_comms do
-      @gateway.unstore("TheAuthorization", @options)
+      @gateway.unstore('TheAuthorization', @options)
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<customerCode>TheAuthorization</customerCode>}, data)
     end.respond_with(successful_unstore_response)
@@ -225,7 +225,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
     @gateway = IatsPaymentsGateway.new(
       :agent_code => 'code',
       :password => 'password',
-      :region => 'na' #North america
+      :region => 'na' # North america
     )
 
     response = stub_comms do

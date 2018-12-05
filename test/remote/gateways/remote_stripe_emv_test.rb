@@ -14,7 +14,7 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
     }
 
     @options = {
-      :currency => "USD",
+      :currency => 'USD',
       :description => 'ActiveMerchant Test Purchase',
       :email => 'wow@example.com'
     }
@@ -22,7 +22,7 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
     #  This capture hex says that the payload is a transaction cryptogram (TC) but does not
     # provide the actual cryptogram. This will only work in test mode and would cause real
     # cards to be declined.
-    @capture_options = { icc_data: "9F270140" } 
+    @capture_options = { icc_data: '9F270140' }
   end
 
   # for EMV contact transactions, it's advised to do a separate auth + capture
@@ -31,8 +31,8 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
   def test_successful_purchase_with_emv_credit_card_in_uk
     assert response = @gateway.purchase(@amount, @emv_credit_cards[:uk], @options)
     assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["paid"]
+    assert_equal 'charge', response.params['object']
+    assert response.params['paid']
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
@@ -41,8 +41,8 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
   def test_successful_purchase_with_emv_credit_card_in_us
     assert response = @gateway.purchase(@amount, @emv_credit_cards[:us], @options)
     assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["paid"]
+    assert_equal 'charge', response.params['object']
+    assert response.params['paid']
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
@@ -51,9 +51,9 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
     credit_card.read_method = 'contact_quickchip'
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["captured"]
-    assert response.params["paid"]
+    assert_equal 'charge', response.params['object']
+    assert response.params['captured']
+    assert response.params['paid']
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
@@ -64,53 +64,53 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
     emv_credit_card.read_method = 'contactless'
     assert response = @gateway.purchase(@amount, emv_credit_card, @options)
     assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["paid"]
+    assert_equal 'charge', response.params['object']
+    assert response.params['paid']
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
   def test_authorization_and_capture_with_emv_credit_card_in_uk
     assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
     assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    refute authorization.params["captured"]
+    assert authorization.emv_authorization, 'Authorization should contain emv_authorization containing the EMV ARPC'
+    refute authorization.params['captured']
 
     assert capture = @gateway.capture(@amount, authorization.authorization, @capture_options)
     assert_success capture
-    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
+    assert capture.emv_authorization, 'Capture should contain emv_authorization containing the EMV TC'
   end
 
   def test_authorization_and_capture_with_emv_credit_card_in_us
     assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
     assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    refute authorization.params["captured"]
+    assert authorization.emv_authorization, 'Authorization should contain emv_authorization containing the EMV ARPC'
+    refute authorization.params['captured']
 
     assert capture = @gateway.capture(@amount, authorization.authorization, @capture_options)
     assert_success capture
-    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
+    assert capture.emv_authorization, 'Capture should contain emv_authorization containing the EMV TC'
   end
 
   def test_authorization_and_capture_of_online_pin_with_emv_credit_card_in_us
     emv_credit_card = @emv_credit_cards[:us]
-    emv_credit_card.encrypted_pin_cryptogram = "8b68af72199529b8"
-    emv_credit_card.encrypted_pin_ksn = "ffff0102628d12000001"
+    emv_credit_card.encrypted_pin_cryptogram = '8b68af72199529b8'
+    emv_credit_card.encrypted_pin_ksn = 'ffff0102628d12000001'
 
     assert authorization = @gateway.authorize(@amount, emv_credit_card, @options)
     assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    refute authorization.params["captured"]
+    assert authorization.emv_authorization, 'Authorization should contain emv_authorization containing the EMV ARPC'
+    refute authorization.params['captured']
 
     assert capture = @gateway.capture(@amount, authorization.authorization, @capture_options)
     assert_success capture
-    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
+    assert capture.emv_authorization, 'Capture should contain emv_authorization containing the EMV TC'
   end
 
   def test_authorization_and_void_with_emv_credit_card_in_us
     assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
     assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    refute authorization.params["captured"]
+    assert authorization.emv_authorization, 'Authorization should contain emv_authorization containing the EMV ARPC'
+    refute authorization.params['captured']
 
     assert void = @gateway.void(authorization.authorization)
     assert_success void
@@ -119,8 +119,8 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
   def test_authorization_and_void_with_emv_credit_card_in_uk
     assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
     assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    refute authorization.params["captured"]
+    assert authorization.emv_authorization, 'Authorization should contain emv_authorization containing the EMV ARPC'
+    refute authorization.params['captured']
 
     assert void = @gateway.void(authorization.authorization)
     assert_success void
@@ -131,16 +131,16 @@ class RemoteStripeEmvTest < Test::Unit::TestCase
     emv_credit_card.read_method = 'contactless'
     assert purchase = @gateway.purchase(@amount, emv_credit_card, @options)
     assert_success purchase
-    assert purchase.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    assert purchase.params["captured"]
-    assert purchase.params["paid"]
+    assert purchase.emv_authorization, 'Authorization should contain emv_authorization containing the EMV ARPC'
+    assert purchase.params['captured']
+    assert purchase.params['paid']
 
     assert void = @gateway.void(purchase.authorization)
     assert_success void
   end
 
   def test_authorization_emv_credit_card_in_us_with_metadata
-    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => "42", :email => "foo@wonderfullyfakedomain.com"}))
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => '42', :email => 'foo@wonderfullyfakedomain.com'}))
     assert_success authorization
   end
 end

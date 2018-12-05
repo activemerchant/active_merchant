@@ -10,7 +10,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
     @options = {
       :order_id => rand(100000).to_s,
-      :ip => "1.2.3.4"
+      :ip => '1.2.3.4'
     }
   end
 
@@ -30,7 +30,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_unsuccessful_multi_currency_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'XYZ'))
     assert_failure response
-    assert_match /Currency XYZ is not valid for this merchant/, response.message
+    assert_match(/Currency XYZ is not valid for this merchant/, response.message)
   end
 
   def test_successful_purchase_sans_cvv

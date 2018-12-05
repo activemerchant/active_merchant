@@ -7,34 +7,34 @@ class PayuLatamTest < Test::Unit::TestCase
     @gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'AR')
 
     @amount = 4000
-    @credit_card = credit_card("4097440000000004", verification_value: "444", first_name: "APPROVED", last_name: "")
-    @declined_card = credit_card("4097440000000004", verification_value: "333", first_name: "REJECTED", last_name: "")
-    @pending_card = credit_card("4097440000000004", verification_value: "222", first_name: "PENDING", last_name: "")
-    @no_cvv_visa_card = credit_card("4097440000000004", verification_value: " ")
-    @no_cvv_amex_card = credit_card("4097440000000004", verification_value: " ", brand: "american_express")
+    @credit_card = credit_card('4097440000000004', verification_value: '444', first_name: 'APPROVED', last_name: '')
+    @declined_card = credit_card('4097440000000004', verification_value: '333', first_name: 'REJECTED', last_name: '')
+    @pending_card = credit_card('4097440000000004', verification_value: '222', first_name: 'PENDING', last_name: '')
+    @no_cvv_visa_card = credit_card('4097440000000004', verification_value: ' ')
+    @no_cvv_amex_card = credit_card('4097440000000004', verification_value: ' ', brand: 'american_express')
 
     @options = {
       dni_number: '5415668464654',
       dni_type: 'TI',
-      currency: "ARS",
+      currency: 'ARS',
       order_id: generate_unique_id,
-      description: "Active Merchant Transaction",
+      description: 'Active Merchant Transaction',
       installments_number: 1,
       tax: 0,
       tax_return_base: 0,
-      email: "username@domain.com",
-      ip: "127.0.0.1",
+      email: 'username@domain.com',
+      ip: '127.0.0.1',
       device_session_id: 'vghs6tvkcle931686k1900o6e1',
       cookie: 'pt1t38347bs6jc9ruv2ecpv7o2',
       user_agent: 'Mozilla/5.0 (Windows NT 5.1; rv:18.0) Gecko/20100101 Firefox/18.0',
       billing_address: address(
-        address1: "Viamonte",
-        address2: "1366",
-        city: "Plata",
-        state: "Buenos Aires",
-        country: "AR",
-        zip: "64000",
-        phone: "7563126"
+        address1: 'Viamonte',
+        address2: '1366',
+        city: 'Plata',
+        state: 'Buenos Aires',
+        country: 'AR',
+        zip: '64000',
+        phone: '7563126'
       )
     }
   end
@@ -44,7 +44,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
@@ -61,8 +61,8 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "ANTIFRAUD_REJECTED", response.message
-    assert_equal "DECLINED", response.params["transactionResponse"]["state"]
+    assert_equal 'ANTIFRAUD_REJECTED', response.message
+    assert_equal 'DECLINED', response.params['transactionResponse']['state']
   end
 
   def test_successful_authorize
@@ -70,7 +70,7 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert_match %r(^\d+\|(\w|-)+$), response.authorization
   end
 
@@ -87,21 +87,21 @@ class PayuLatamTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @pending_card, @options)
     assert_failure response
-    assert_equal "PENDING_TRANSACTION_REVIEW", response.message
-    assert_equal "PENDING", response.params["transactionResponse"]["state"]
+    assert_equal 'PENDING_TRANSACTION_REVIEW', response.message
+    assert_equal 'PENDING', response.params['transactionResponse']['state']
   end
 
   def test_pending_refund
     @gateway.expects(:ssl_post).returns(pending_refund_response)
 
-    response = @gateway.refund(@amount, "7edbaf68-8f3a-4ae7-b9c7-d1e27e314999")
+    response = @gateway.refund(@amount, '7edbaf68-8f3a-4ae7-b9c7-d1e27e314999')
     assert_success response
-    assert_equal "PENDING", response.params["transactionResponse"]["state"]
+    assert_equal 'PENDING', response.params['transactionResponse']['state']
   end
 
   def test_pending_refund_with_specified_language
     stub_comms do
-      @gateway.refund(@amount, "7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options.merge(language: 'es'))
+      @gateway.refund(@amount, '7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(language: 'es'))
     end.check_request do |endpoint, data, headers|
       assert_match(/"language":"es"/, data)
     end.respond_with(pending_refund_response)
@@ -110,22 +110,22 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "")
+    response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+    assert_equal 'property: order.id, message: must not be null property: parentTransactionId, message: must not be null', response.message
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    response = @gateway.void("7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options)
+    response = @gateway.void('7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options)
     assert_success response
-    assert_equal "PENDING_REVIEW", response.message
+    assert_equal 'PENDING_REVIEW', response.message
   end
 
   def test_successful_void_with_specified_language
     stub_comms do
-      @gateway.void("7edbaf68-8f3a-4ae7-b9c7-d1e27e314999", @options.merge(language: 'es'))
+      @gateway.void('7edbaf68-8f3a-4ae7-b9c7-d1e27e314999', @options.merge(language: 'es'))
     end.check_request do |endpoint, data, headers|
       assert_match(/"language":"es"/, data)
     end.respond_with(successful_void_response)
@@ -134,9 +134,9 @@ class PayuLatamTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.void("")
+    response = @gateway.void('')
     assert_failure response
-    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+    assert_equal 'property: order.id, message: must not be null property: parentTransactionId, message: must not be null', response.message
   end
 
   def test_successful_purchase_with_dni_number
@@ -164,7 +164,7 @@ class PayuLatamTest < Test::Unit::TestCase
     }.returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @no_cvv_visa_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
@@ -175,7 +175,7 @@ class PayuLatamTest < Test::Unit::TestCase
     }.returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @no_cvv_amex_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
@@ -184,47 +184,55 @@ class PayuLatamTest < Test::Unit::TestCase
       body.match '"securityCode":"777"'
       !body.match '"processWithoutCvv2"'
     }.returns(successful_purchase_response)
-    options = @options.merge(cvv: "777")
+    options = @options.merge(cvv: '777')
     response = @gateway.purchase(@amount, @no_cvv_visa_card, options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "4000|authorization", @options)
+    response = @gateway.capture(@amount, '4000|authorization', @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
   end
 
   def test_successful_capture_with_specified_language
     stub_comms do
-      @gateway.capture(@amount, "4000|authorization", @options.merge(language: 'es'))
+      @gateway.capture(@amount, '4000|authorization', @options.merge(language: 'es'))
     end.check_request do |endpoint, data, headers|
       assert_match(/"language":"es"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_partial_capture
+    stub_comms do
+      @gateway.capture(@amount - 1, '4000|authorization', @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal '39.99', JSON.parse(data)['transaction']['additionalValues']['TX_VALUE']['value']
     end.respond_with(successful_purchase_response)
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.capture(@amount, "")
+    response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal "property: order.id, message: must not be null property: parentTransactionId, message: must not be null", response.message
+    assert_equal 'property: order.id, message: must not be null property: parentTransactionId, message: must not be null', response.message
   end
 
   def test_partial_buyer_hash_info
     options_buyer = {
       shipping_address: address(
-        address1: "Calle 200",
-        address2: "N107",
-        city: "Sao Paulo",
-        state: "SP",
-        country: "BR",
-        zip: "01019-030",
-        phone: "(11)756312345"
+        address1: 'Calle 200',
+        address2: 'N107',
+        city: 'Sao Paulo',
+        state: 'SP',
+        country: 'BR',
+        zip: '01019-030',
+        phone: '(11)756312345'
       ),
       buyer: {
         name: 'Jorge Borges',
@@ -252,27 +260,27 @@ class PayuLatamTest < Test::Unit::TestCase
     gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'BR')
 
     options_brazil = {
-      currency: "BRL",
+      currency: 'BRL',
       billing_address: address(
-        address1: "Calle 100",
-        address2: "BL4",
-        city: "Sao Paulo",
-        state: "SP",
-        country: "BR",
-        zip: "09210710",
-        phone: "(11)756312633"
+        address1: 'Calle 100',
+        address2: 'BL4',
+        city: 'Sao Paulo',
+        state: 'SP',
+        country: 'BR',
+        zip: '09210710',
+        phone: '(11)756312633'
       ),
       shipping_address: address(
-        address1: "Calle 200",
-        address2: "N107",
-        city: "Sao Paulo",
-        state: "SP",
-        country: "BR",
-        zip: "01019-030",
-        phone: "(11)756312633"
+        address1: 'Calle 200',
+        address2: 'N107',
+        city: 'Sao Paulo',
+        state: 'SP',
+        country: 'BR',
+        zip: '01019-030',
+        phone: '(11)756312633'
       ),
       buyer: {
-        cnpj: "32593371000110"
+        cnpj: '32593371000110'
       }
     }
 
@@ -287,24 +295,24 @@ class PayuLatamTest < Test::Unit::TestCase
     gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'CO')
 
     options_colombia = {
-      currency: "COP",
+      currency: 'COP',
       billing_address: address(
-        address1: "Calle 100",
-        address2: "BL4",
-        city: "Bogota",
-        state: "Bogota DC",
-        country: "CO",
-        zip: "09210710",
-        phone: "(11)756312633"
+        address1: 'Calle 100',
+        address2: 'BL4',
+        city: 'Bogota',
+        state: 'Bogota DC',
+        country: 'CO',
+        zip: '09210710',
+        phone: '(11)756312633'
       ),
       shipping_address: address(
-        address1: "Calle 200",
-        address2: "N107",
-        city: "Bogota",
-        state: "Bogota DC",
-        country: "CO",
-        zip: "01019-030",
-        phone: "(11)756312633"
+        address1: 'Calle 200',
+        address2: 'N107',
+        city: 'Bogota',
+        state: 'Bogota DC',
+        country: 'CO',
+        zip: '01019-030',
+        phone: '(11)756312633'
       ),
       tx_tax: '3193',
       tx_tax_return_base: '16806'
@@ -321,24 +329,24 @@ class PayuLatamTest < Test::Unit::TestCase
     gateway = PayuLatamGateway.new(merchant_id: 'merchant_id', account_id: 'account_id', api_login: 'api_login', api_key: 'api_key', payment_country: 'MX')
 
     options_mexico = {
-      currency: "MXN",
+      currency: 'MXN',
       billing_address: address(
-        address1: "Calle 100",
-        address2: "BL4",
-        city: "Guadalajara",
-        state: "Jalisco",
-        country: "MX",
-        zip: "09210710",
-        phone: "(11)756312633"
+        address1: 'Calle 100',
+        address2: 'BL4',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'MX',
+        zip: '09210710',
+        phone: '(11)756312633'
       ),
       shipping_address: address(
-        address1: "Calle 200",
-        address2: "N107",
-        city: "Guadalajara",
-        state: "Jalisco",
-        country: "MX",
-        zip: "01019-030",
-        phone: "(11)756312633"
+        address1: 'Calle 200',
+        address2: 'N107',
+        city: 'Guadalajara',
+        state: 'Jalisco',
+        country: 'MX',
+        zip: '01019-030',
+        phone: '(11)756312633'
       ),
       birth_date: '1985-05-25'
     }

@@ -130,17 +130,32 @@ module ActiveMerchant #:nodoc:
         authorize(0, credit_card, options)
       end
 
+      def store(payment, options = {})
+        post = {}
+        add_payment(post, payment)
+        add_address(post, options)
+        add_customer_data(post, options)
+        commit('profile', post)
+      end
+
+      def unstore(authorization, options = {})
+        account_id, profile_id = authorization.split('|')
+        commit('profile', {},
+          verb: :delete,
+          path: "/#{profile_id}/#{account_id}/#{@options[:merchant_id]}")
+      end
+
       def supports_scrubbing?
         true
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]')
-          .gsub(%r(("cvv2\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r(("merchid\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r((&?"account\\":\\")\d*), '\1[FILTERED]')
-          .gsub(%r((&?"token\\":\\")\d*), '\1[FILTERED]')
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r(("cvv2\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r(("merchid\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r((&?"account\\":\\")\d*), '\1[FILTERED]').
+          gsub(%r((&?"token\\":\\")\d*), '\1[FILTERED]')
       end
 
       private
@@ -175,13 +190,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
-        post[:name] = payment.name
-        if card_brand(payment) == 'check'
-          add_echeck(post, payment)
+        if payment.is_a?(String)
+          account_id, profile_id = payment.split('|')
+          post[:profile] = profile_id
+          post[:acctid] = account_id
         else
-          post[:account] = payment.number
-          post[:expiry] = expdate(payment)
-          post[:cvv2] = payment.verification_value
+          post[:name] = payment.name
+          if card_brand(payment) == 'check'
+            add_echeck(post, payment)
+          else
+            post[:account] = payment.number
+            post[:expiry] = expdate(payment)
+            post[:cvv2] = payment.verification_value
+          end
         end
       end
 
@@ -237,18 +258,18 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def url(action)
+      def url(action, path)
         if test?
-          test_url + action
+          test_url + action + path
         else
-          (@options[:domain] ? @options[:domain] : live_url) + action
+          (@options[:domain] || live_url) + action + path
         end
       end
 
-      def commit(action, parameters)
+      def commit(action, parameters, verb: :put, path: '')
         parameters[:merchid] = @options[:merchant_id]
-        url = url(action)
-        response = parse(ssl_request(:put, url, post_data(parameters), headers))
+        url = url(action, path)
+        response = parse(ssl_request(verb, url, post_data(parameters), headers))
 
         Response.new(
           success_from(response),
@@ -271,7 +292,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response['retref']
+        if response['profileid']
+          "#{response['acctid']}|#{response['profileid']}"
+        else
+          response['retref']
+        end
       end
 
       def post_data(parameters = {})

@@ -42,8 +42,8 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @amex_options = {
       :billing_address => {
         :address1 => 'The Hunts Way',
-        :city => "",
-        :state => "Leicester",
+        :city => '',
+        :state => 'Leicester',
         :zip => 'SO18 1GW',
         :country => 'GB'
       },
@@ -54,10 +54,10 @@ class RemoteCardStreamTest < Test::Unit::TestCase
 
     @visacredit_options = {
       :billing_address => {
-        :address1 => "Flat 6, Primrose Rise",
-        :address2 => "347 Lavender Road",
-        :city => "",
-        :state => "Northampton",
+        :address1 => 'Flat 6, Primrose Rise',
+        :address2 => '347 Lavender Road',
+        :city => '',
+        :state => 'Northampton',
         :zip => 'NN17 8YG',
         :country => 'GB'
       },
@@ -68,10 +68,10 @@ class RemoteCardStreamTest < Test::Unit::TestCase
 
     @visacredit_descriptor_options = {
       :billing_address => {
-        :address1 => "Flat 6, Primrose Rise",
-        :address2 => "347 Lavender Road",
-        :city => "",
-        :state => "Northampton",
+        :address1 => 'Flat 6, Primrose Rise',
+        :address2 => '347 Lavender Road',
+        :city => '',
+        :state => 'Northampton',
         :zip => 'NN17 8YG',
         :country => 'GB'
       },
@@ -89,10 +89,10 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @visadebit_options = {
       :billing_address => {
         :address1 => 'Unit 5, Pickwick Walk',
-        :address2 => "120 Uxbridge Road",
-        :city => "Hatch End",
-        :state => "Middlesex",
-        :zip => "HA6 7HJ",
+        :address2 => '120 Uxbridge Road',
+        :city => 'Hatch End',
+        :state => 'Middlesex',
+        :zip => 'HA6 7HJ',
         :country => 'GB'
       },
       :order_id => generate_unique_id,
@@ -103,8 +103,8 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @mastercard_options = {
       :billing_address => {
         :address1 => '25 The Larches',
-        :city => "Narborough",
-        :state => "Leicester",
+        :city => 'Narborough',
+        :state => 'Leicester',
         :zip => 'LE10 2RT',
         :country => 'GB'
       },
@@ -333,12 +333,12 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_purchase_no_currency_specified_defaults_to_GBP
     assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: nil))
     assert_success response
-    assert_equal "826", response.params["currencyCode"]
+    assert_equal '826', response.params['currencyCode']
     assert_equal 'APPROVED', response.message
   end
 
   def test_failed_purchase_non_existent_currency
-    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: "CEO"))
+    assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options.merge(currency: 'CEO'))
     assert_failure response
     assert_match %r{MISSING_CURRENCYCODE}, response.message
   end
@@ -399,23 +399,23 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_successful_3dsecure_purchase
     assert response = @gateway.purchase(1202, @three_ds_enrolled_card, @mastercard_options.merge(threeds_required: true))
     assert_equal '3DS AUTHENTICATION REQUIRED', response.message
-    assert_equal "65802", response.params["responseCode"]
+    assert_equal '65802', response.params['responseCode']
     assert response.test?
     assert !response.authorization.blank?
-    assert !response.params["threeDSACSURL"].blank?
-    assert !response.params["threeDSMD"].blank?
-    assert !response.params["threeDSPaReq"].blank?
+    assert !response.params['threeDSACSURL'].blank?
+    assert !response.params['threeDSMD'].blank?
+    assert !response.params['threeDSPaReq'].blank?
   end
 
   def test_successful_3dsecure_auth
     assert response = @gateway.authorize(1202, @three_ds_enrolled_card, @mastercard_options.merge(threeds_required: true))
     assert_equal '3DS AUTHENTICATION REQUIRED', response.message
-    assert_equal "65802", response.params["responseCode"]
+    assert_equal '65802', response.params['responseCode']
     assert response.test?
     assert !response.authorization.blank?
-    assert !response.params["threeDSACSURL"].blank?
-    assert !response.params["threeDSMD"].blank?
-    assert !response.params["threeDSPaReq"].blank?
+    assert !response.params['threeDSACSURL'].blank?
+    assert !response.params['threeDSMD'].blank?
+    assert !response.params['threeDSPaReq'].blank?
   end
 
   def test_transcript_scrubbing
@@ -424,8 +424,8 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     end
     clean_transcript = @gateway.scrub(transcript)
 
-    assert_scrubbed( @visacreditcard.number, clean_transcript)
-    assert_scrubbed( @visacreditcard.verification_value.to_s, clean_transcript)
+    assert_scrubbed(@visacreditcard.number, clean_transcript)
+    assert_scrubbed(@visacreditcard.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:shared_secret], clean_transcript)
   end
 end

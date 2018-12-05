@@ -23,10 +23,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
-        action = payment.is_a?(Check) ? "CheckSale" : "CreditCardSale"
+        action = payment.is_a?(Check) ? 'CheckSale' : 'CreditCardSale'
 
         request = build_soap_request do |xml|
-          xml.send(action, xmlns: "https://transaction.elementexpress.com") do
+          xml.send(action, xmlns: 'https://transaction.elementexpress.com') do
             add_credentials(xml)
             add_payment_method(xml, payment)
             add_transaction(xml, money, options)
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options={})
         request = build_soap_request do |xml|
-          xml.CreditCardAuthorization(xmlns: "https://transaction.elementexpress.com") do
+          xml.CreditCardAuthorization(xmlns: 'https://transaction.elementexpress.com') do
             add_credentials(xml)
             add_payment_method(xml, payment)
             add_transaction(xml, money, options)
@@ -54,10 +54,10 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options={})
         trans_id, _ = split_authorization(authorization)
-        options.merge!({trans_id: trans_id})
+        options[:trans_id] = trans_id
 
         request = build_soap_request do |xml|
-          xml.CreditCardAuthorizationCompletion(xmlns: "https://transaction.elementexpress.com") do
+          xml.CreditCardAuthorizationCompletion(xmlns: 'https://transaction.elementexpress.com') do
             add_credentials(xml)
             add_transaction(xml, money, options)
             add_terminal(xml, options)
@@ -69,10 +69,10 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options={})
         trans_id, _ = split_authorization(authorization)
-        options.merge!({trans_id: trans_id})
+        options[:trans_id] = trans_id
 
         request = build_soap_request do |xml|
-          xml.CreditCardReturn(xmlns: "https://transaction.elementexpress.com") do
+          xml.CreditCardReturn(xmlns: 'https://transaction.elementexpress.com') do
             add_credentials(xml)
             add_transaction(xml, money, options)
             add_terminal(xml, options)
@@ -84,10 +84,10 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         trans_id, trans_amount = split_authorization(authorization)
-        options.merge!({trans_id: trans_id, trans_amount: trans_amount, reversal_type: "Full"})
+        options.merge!({trans_id: trans_id, trans_amount: trans_amount, reversal_type: 'Full'})
 
         request = build_soap_request do |xml|
-          xml.CreditCardReversal(xmlns: "https://transaction.elementexpress.com") do
+          xml.CreditCardReversal(xmlns: 'https://transaction.elementexpress.com') do
             add_credentials(xml)
             add_transaction(xml, trans_amount, options)
             add_terminal(xml, options)
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
 
       def store(payment, options = {})
         request = build_soap_request do |xml|
-          xml.PaymentAccountCreate(xmlns: "https://services.elementexpress.com") do
+          xml.PaymentAccountCreate(xmlns: 'https://services.elementexpress.com') do
             add_credentials(xml)
             add_payment_method(xml, payment)
             add_payment_account(xml, payment, options[:payment_account_reference_number] || SecureRandom.hex(20))
@@ -165,8 +165,8 @@ module ActiveMerchant #:nodoc:
       def add_payment_account_id(xml, payment)
         xml.extendedParameters do
           xml.ExtendedParameters do
-            xml.Key "PaymentAccount"
-            xml.Value("xsi:type" => "PaymentAccount") do
+            xml.Key 'PaymentAccount'
+            xml.Value('xsi:type' => 'PaymentAccount') do
               xml.PaymentAccountID payment
             end
           end
@@ -178,21 +178,21 @@ module ActiveMerchant #:nodoc:
           xml.ReversalType options[:reversal_type] if options[:reversal_type]
           xml.TransactionID options[:trans_id] if options[:trans_id]
           xml.TransactionAmount amount(money.to_i) if money
-          xml.MarketCode "Default" if money
+          xml.MarketCode 'Default' if money
           xml.ReferenceNumber options[:order_id] || SecureRandom.hex(20)
         end
       end
 
       def add_terminal(xml, options)
         xml.terminal do
-          xml.TerminalID "01"
-          xml.CardPresentCode "UseDefault"
-          xml.CardholderPresentCode "UseDefault"
-          xml.CardInputCode "UseDefault"
-          xml.CVVPresenceCode "UseDefault"
-          xml.TerminalCapabilityCode "UseDefault"
-          xml.TerminalEnvironmentCode "UseDefault"
-          xml.MotoECICode "NonAuthenticatedSecureECommerceTransaction"
+          xml.TerminalID '01'
+          xml.CardPresentCode 'UseDefault'
+          xml.CardholderPresentCode 'UseDefault'
+          xml.CardInputCode 'UseDefault'
+          xml.CVVPresenceCode 'UseDefault'
+          xml.TerminalCapabilityCode 'UseDefault'
+          xml.TerminalEnvironmentCode 'UseDefault'
+          xml.MotoECICode 'NonAuthenticatedSecureECommerceTransaction'
         end
       end
 
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
           xml.CardNumber payment.number
           xml.ExpirationMonth format(payment.month, :two_digits)
           xml.ExpirationYear format(payment.year, :two_digits)
-          xml.CardholderName payment.first_name + " " + payment.last_name
+          xml.CardholderName payment.first_name + ' ' + payment.last_name
           xml.CVV payment.verification_value
         end
       end
@@ -244,14 +244,14 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.remove_namespaces!
-        root = doc.root.xpath("//response/*")
+        root = doc.root.xpath('//response/*')
 
         if root.empty?
-          root = doc.root.xpath("//Response/*")
+          root = doc.root.xpath('//Response/*')
         end
 
         root.each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             response[node.name.downcase] = node.text
           else
             node_name = node.name.downcase
@@ -281,31 +281,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, response, amount)
-        if action == "PaymentAccountCreate"
-          response["paymentaccount"]["paymentaccountid"]
+        if action == 'PaymentAccountCreate'
+          response['paymentaccount']['paymentaccountid']
         else
           "#{response['transaction']['transactionid']}|#{amount}" if response['transaction']
         end
       end
 
       def success_from(response)
-        response["expressresponsecode"] == "0"
+        response['expressresponsecode'] == '0'
       end
 
       def message_from(response)
-        response["expressresponsemessage"]
+        response['expressresponsemessage']
       end
 
       def avs_from(response)
-        AVSResult.new(code: response["card"]["avsresponsecode"]) if response["card"]
+        AVSResult.new(code: response['card']['avsresponsecode']) if response['card']
       end
 
       def cvv_from(response)
-        CVVResult.new(response["card"]["cvvresponsecode"]) if response["card"]
+        CVVResult.new(response['card']['cvvresponsecode']) if response['card']
       end
 
       def split_authorization(authorization)
-        authorization.split("|")
+        authorization.split('|')
       end
 
       def build_soap_request
@@ -327,28 +327,28 @@ module ActiveMerchant #:nodoc:
         if payment.is_a?(Check)
           payment_account_type = payment.account_type
         else
-          payment_account_type = "CreditCard"
+          payment_account_type = 'CreditCard'
         end
         payment_account_type
       end
 
       def url(action)
-        if action == "PaymentAccountCreate"
-          url = (test? ? SERVICE_TEST_URL : SERVICE_LIVE_URL)
+        if action == 'PaymentAccountCreate'
+          test? ? SERVICE_TEST_URL : SERVICE_LIVE_URL
         else
-          url = (test? ? test_url : live_url)
+          test? ? test_url : live_url
         end
       end
 
       def interface(action)
-        return "transaction" if action != "PaymentAccountCreate"
-        return "services" if action == "PaymentAccountCreate"
+        return 'transaction' if action != 'PaymentAccountCreate'
+        return 'services' if action == 'PaymentAccountCreate'
       end
 
       def headers(action)
         {
-          "Content-Type" => "text/xml; charset=utf-8",
-          "SOAPAction" => "https://#{interface(action)}.elementexpress.com/#{action}"
+          'Content-Type' => 'text/xml; charset=utf-8',
+          'SOAPAction' => "https://#{interface(action)}.elementexpress.com/#{action}"
         }
       end
     end

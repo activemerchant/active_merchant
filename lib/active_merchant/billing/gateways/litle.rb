@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-       check?(payment_method) ? commit(:echeckSales, request, money) : commit(:sale, request, money)
+        check?(payment_method) ? commit(:echeckSales, request, money) : commit(:sale, request, money)
       end
 
       def authorize(money, payment_method, options={})
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
           add_descriptor(doc, options)
           doc.send(refund_type(payment), transaction_attributes(options)) do
             if payment.is_a?(String)
-              transaction_id, kind, _ = split_authorization(payment)
+              transaction_id, _, _ = split_authorization(payment)
               doc.litleTxnId(transaction_id)
               doc.amount(money) if money
             elsif check?(payment)
@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund_type(payment)
-        transaction_id, kind, _ = split_authorization(payment)
+        _, kind, _ = split_authorization(payment)
         if check?(payment) || kind  == 'echeckSales'
           :echeckCredit
         else
@@ -268,7 +268,7 @@ module ActiveMerchant #:nodoc:
           end
         elsif check?(payment_method)
           doc.echeck do
-            doc.accType(payment_method.account_type)
+            doc.accType(payment_method.account_type.capitalize)
             doc.accNum(payment_method.account_number)
             doc.routingNum(payment_method.routing_number)
             doc.checkNum(payment_method.number)
@@ -284,7 +284,7 @@ module ActiveMerchant #:nodoc:
             doc.cardholderAuthentication do
               doc.authenticationValue(payment_method.payment_cryptogram)
             end
-          elsif options[:order_source] && options[:order_source].start_with?('3ds')
+          elsif options[:order_source]&.start_with?('3ds')
             doc.cardholderAuthentication do
               doc.authenticationValue(options[:cavv]) if options[:cavv]
               doc.authenticationTransactionId(options[:xid]) if options[:xid]
@@ -364,7 +364,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml).remove_namespaces!
         doc.xpath("//litleOnlineResponse/#{kind}Response/*").each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             parsed[node.name.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -376,7 +376,7 @@ module ActiveMerchant #:nodoc:
 
         if parsed.empty?
           %w(response message).each do |attribute|
-            parsed[attribute.to_sym] = doc.xpath("//litleOnlineResponse").attribute(attribute).value
+            parsed[attribute.to_sym] = doc.xpath('//litleOnlineResponse').attribute(attribute).value
           end
         end
 
@@ -402,7 +402,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(kind, parsed, money)
-        (kind == :registerToken) ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
+        kind == :registerToken ? parsed[:litleToken] : "#{parsed[:litleTxnId]};#{kind};#{money}"
       end
 
       def split_authorization(authorization)
@@ -423,7 +423,7 @@ module ActiveMerchant #:nodoc:
         {
           merchantId: @options[:merchant_id],
           version: SCHEMA_VERSION,
-          xmlns: "http://www.litle.com/schema"
+          xmlns: 'http://www.litle.com/schema'
         }
       end
 

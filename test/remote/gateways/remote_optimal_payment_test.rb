@@ -24,15 +24,15 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase_with_shipping_address
-    @options.merge!(:shipping_address => address)
+    @options[:shipping_address] = address
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'no_error', response.message
   end
 
   def test_successful_great_britain
-    @options[:billing_address][:country] = "GB"
-    @options[:billing_address][:state] = "North West England"
+    @options[:billing_address][:country] = 'GB'
+    @options[:billing_address][:state] = 'North West England'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'no_error', response.message
@@ -47,6 +47,12 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
   def test_purchase_with_no_cvv
     @credit_card.verification_value = ''
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'no_error', response.message
+  end
+
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
     assert_success response
     assert_equal 'no_error', response.message
   end

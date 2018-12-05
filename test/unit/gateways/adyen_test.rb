@@ -19,12 +19,22 @@ class AdyenTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
+    @apple_pay_card = network_tokenization_credit_card('4111111111111111',
+      :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
+      :month              => '08',
+      :year               => '2018',
+      :source             => :apple_pay,
+      :verification_value => nil
+    )
+
     @amount = 100
 
     @options = {
       billing_address: address(),
-      shopper_reference: "John Smith",
-      order_id: '345123'
+      shopper_reference: 'John Smith',
+      order_id: '345123',
+      installments: 2,
+      recurring_processing_model: 'CardOnFile'
     }
   end
 
@@ -54,6 +64,8 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '#7914775043909934#', response.authorization
+    assert_equal 'R', response.avs_result['code']
+    assert_equal 'M', response.cvv_result['code']
     assert response.test?
   end
 
@@ -88,6 +100,36 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
     assert_equal '7914775043909934#8814775564188305#', response.authorization
     assert response.test?
+  end
+
+  def test_successful_maestro_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({selected_brand: 'maestro', overwrite_brand: 'true'}))
+    end.check_request do |endpoint, data, headers|
+      if endpoint =~ /authorise/
+        assert_match(/"overwriteBrand":true/, data)
+        assert_match(/"selectedBrand":"maestro"/, data)
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+    assert_equal '7914775043909934#8814775564188305#', response.authorization
+    assert response.test?
+  end
+
+  def test_installments_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 2, JSON.parse(data)['installments']['value']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_custom_routing_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({custom_routing_flag: 'abcdefg'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'abcdefg', JSON.parse(data)['additionalData']['customRoutingFlag']
+    end.respond_with(successful_authorize_response)
   end
 
   def test_failed_purchase
@@ -139,10 +181,13 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:ssl_post).returns(successful_store_response)
-    response = @gateway.store(@credit_card, @options)
+    response = stub_comms do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'CardOnFile', JSON.parse(data)['recurringProcessingModel']
+    end.respond_with(successful_store_response)
     assert_success response
-    assert_equal "#8835205392522157#8315202663743702", response.authorization
+    assert_equal '#8835205392522157#8315202663743702', response.authorization
   end
 
   def test_failed_store
@@ -185,6 +230,11 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_scrub_network_tokenization_card
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   def test_add_address
     post = {:card => {:billingAddress => {}}}
     @options[:billing_address].delete(:address1)
@@ -196,6 +246,29 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
     assert_equal @options[:billing_address][:state], post[:card][:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
+  end
+
+  def test_authorize_with_network_tokenization_credit_card_no_name
+    @apple_pay_card.first_name = nil
+    @apple_pay_card.last_name = nil
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_pay_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'Not Provided', JSON.parse(data)['card']['holderName']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_authorize_with_network_tokenization_credit_card
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_pay_card, @options)
+    end.check_request do |endpoint, data, headers|
+      parsed = JSON.parse(data)
+      assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
+      assert_equal '07', parsed['mpiData']['eci']
+      assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   private
@@ -264,6 +337,74 @@ class AdyenTest < Test::Unit::TestCase
     POST_SCRUBBED
   end
 
+  def pre_scrubbed_network_tokenization_card
+    <<-PRE_SCRUBBED
+      opening connection to pal-test.adyen.com:443...
+      opened
+      starting SSL for pal-test.adyen.com:443...
+      SSL established
+      I, [2018-06-18T11:53:47.394267 #25363]  INFO -- : [ActiveMerchant::Billing::AdyenGateway] connection_ssl_version=TLSv1.2 connection_ssl_cipher=ECDHE-RSA-AES128-GCM-SHA256
+      D, [2018-06-18T11:53:47.394346 #25363] DEBUG -- : {"merchantAccount":"SpreedlyCOM294","reference":"123","amount":{"value":"100","currency":"USD"},"mpiData":{"authenticationResponse":"Y","cavv":"YwAAAAAABaYcCMX/OhNRQAAAAAA=","directoryResponse":"Y","eci":"07"},"card":{"expiryMonth":8,"expiryYear":2018,"holderName":"Longbob Longsen","number":"4111111111111111","billingAddress":{"street":"456 My Street","houseNumberOrName":"Apt 1","postalCode":"K1C2N6","city":"Ottawa","stateOrProvince":"ON","country":"CA"}},"shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith","selectedBrand":"applepay","shopperInteraction":"Ecommerce"}
+      <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic d3NAQ29tcGFueS5TcHJlZWRseTQ3MTo3c3d6U0p2R1VWViUvP3Q0Uy9bOVtoc0hF\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: pal-test.adyen.com\r\nContent-Length: 618\r\n\r\n"
+      <- "{\"merchantAccount\":\"SpreedlyCOM294\",\"reference\":\"123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"mpiData\":{\"authenticationResponse\":\"Y\",\"cavv\":\"YwAAAAAABaYcCMX/OhNRQAAAAAA=\",\"directoryResponse\":\"Y\",\"eci\":\"07\"},\"card\":{\"expiryMonth\":8,\"expiryYear\":2018,\"holderName\":\"Longbob Longsen\",\"number\":\"4111111111111111\",\"billingAddress\":{\"street\":\"456 My Street\",\"houseNumberOrName\":\"Apt 1\",\"postalCode\":\"K1C2N6\",\"city\":\"Ottawa\",\"stateOrProvince\":\"ON\",\"country\":\"CA\"}},\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\",\"selectedBrand\":\"applepay\",\"shopperInteraction\":\"Ecommerce\"}"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 18 Jun 2018 15:53:47 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "Set-Cookie: JSESSIONID=06EE78291B761A33ED9E21E46BA54649.test104e; Path=/pal; Secure; HttpOnly\r\n"
+      -> "pspReference: 8835293372276408\r\n"
+      -> "Connection: close\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "Content-Type: application/json;charset=utf-8\r\n"
+      -> "\r\n"
+      -> "50\r\n"
+      reading 80 bytes...
+      -> ""
+      -> "{\"pspReference\":\"8835293372276408\",\"resultCode\":\"Authorised\",\"authCode\":\"26056\"}"
+      read 80 bytes
+      reading 2 bytes...
+      -> ""
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed_network_tokenization_card
+    <<-POST_SCRUBBED
+      opening connection to pal-test.adyen.com:443...
+      opened
+      starting SSL for pal-test.adyen.com:443...
+      SSL established
+      I, [2018-06-18T11:53:47.394267 #25363]  INFO -- : [ActiveMerchant::Billing::AdyenGateway] connection_ssl_version=TLSv1.2 connection_ssl_cipher=ECDHE-RSA-AES128-GCM-SHA256
+      D, [2018-06-18T11:53:47.394346 #25363] DEBUG -- : {"merchantAccount":"SpreedlyCOM294","reference":"123","amount":{"value":"100","currency":"USD"},"mpiData":{"authenticationResponse":"Y","cavv":"[FILTERED]","directoryResponse":"Y","eci":"07"},"card":{"expiryMonth":8,"expiryYear":2018,"holderName":"Longbob Longsen","number":"[FILTERED]","billingAddress":{"street":"456 My Street","houseNumberOrName":"Apt 1","postalCode":"K1C2N6","city":"Ottawa","stateOrProvince":"ON","country":"CA"}},"shopperEmail":"john.smith@test.com","shopperIP":"77.110.174.153","shopperReference":"John Smith","selectedBrand":"applepay","shopperInteraction":"Ecommerce"}
+      <- "POST /pal/servlet/Payment/v18/authorise HTTP/1.1\r\nContent-Type: application/json\r\nAuthorization: Basic [FILTERED]\r\nConnection: close\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nHost: pal-test.adyen.com\r\nContent-Length: 618\r\n\r\n"
+      <- "{\"merchantAccount\":\"SpreedlyCOM294\",\"reference\":\"123\",\"amount\":{\"value\":\"100\",\"currency\":\"USD\"},\"mpiData\":{\"authenticationResponse\":\"Y\",\"cavv\":\"[FILTERED]\",\"directoryResponse\":\"Y\",\"eci\":\"07\"},\"card\":{\"expiryMonth\":8,\"expiryYear\":2018,\"holderName\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"billingAddress\":{\"street\":\"456 My Street\",\"houseNumberOrName\":\"Apt 1\",\"postalCode\":\"K1C2N6\",\"city\":\"Ottawa\",\"stateOrProvince\":\"ON\",\"country\":\"CA\"}},\"shopperEmail\":\"john.smith@test.com\",\"shopperIP\":\"77.110.174.153\",\"shopperReference\":\"John Smith\",\"selectedBrand\":\"applepay\",\"shopperInteraction\":\"Ecommerce\"}"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 18 Jun 2018 15:53:47 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "Set-Cookie: JSESSIONID=06EE78291B761A33ED9E21E46BA54649.test104e; Path=/pal; Secure; HttpOnly\r\n"
+      -> "pspReference: 8835293372276408\r\n"
+      -> "Connection: close\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "Content-Type: application/json;charset=utf-8\r\n"
+      -> "\r\n"
+      -> "50\r\n"
+      reading 80 bytes...
+      -> ""
+      -> "{\"pspReference\":\"8835293372276408\",\"resultCode\":\"Authorised\",\"authCode\":\"26056\"}"
+      read 80 bytes
+      reading 2 bytes...
+      -> ""
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    POST_SCRUBBED
+  end
+
   def failed_purchase_response
     <<-RESPONSE
     {
@@ -279,6 +420,11 @@ class AdyenTest < Test::Unit::TestCase
   def successful_authorize_response
     <<-RESPONSE
     {
+      "additionalData": {
+        "cvcResult": "1 Matches",
+        "avsResult": "0 Unknown",
+        "cvcResultRaw": "M"
+      },
       "pspReference":"7914775043909934",
       "resultCode":"Authorised",
       "authCode":"50055"

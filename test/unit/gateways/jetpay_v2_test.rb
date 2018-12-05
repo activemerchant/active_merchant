@@ -27,7 +27,7 @@ class JetpayV2Test < Test::Unit::TestCase
     assert_success response
 
     assert_equal '8afa688fd002821362;TEST97;100;KKLIHOJKKNKKHJKONJHOLHOL', response.authorization
-    assert_equal('TEST97', response.params["approval"])
+    assert_equal('TEST97', response.params['approval'])
     assert response.test?
   end
 
@@ -47,18 +47,18 @@ class JetpayV2Test < Test::Unit::TestCase
     assert_success response
 
     assert_equal('cbf902091334a0b1aa;TEST01;100;KKLIHOJKKNKKHJKONOHCLOIO', response.authorization)
-    assert_equal('TEST01', response.params["approval"])
+    assert_equal('TEST01', response.params['approval'])
     assert response.test?
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(1111, "010327153017T10018;502F7B;1111", @options)
+    assert response = @gateway.capture(1111, '010327153017T10018;502F7B;1111', @options)
     assert_success response
 
     assert_equal('010327153017T10018;502F6B;1111;', response.authorization)
-    assert_equal('502F6B', response.params["approval"])
+    assert_equal('502F6B', response.params['approval'])
     assert response.test?
   end
 
@@ -77,7 +77,7 @@ class JetpayV2Test < Test::Unit::TestCase
     assert_success response
 
     assert_equal('010327153x17T10418;502F7B;500;', response.authorization)
-    assert_equal('502F7B', response.params["approval"])
+    assert_equal('502F7B', response.params['approval'])
     assert response.test?
   end
 
@@ -163,11 +163,11 @@ class JetpayV2Test < Test::Unit::TestCase
 
   def test_purchase_sends_additional_options
     @gateway.expects(:ssl_post).
-    with(anything, regexp_matches(/<TaxAmount ExemptInd=\"false\">777<\/TaxAmount>/)).
-    with(anything, regexp_matches(/<UDField1>Value1<\/UDField1>/)).
-    with(anything, regexp_matches(/<UDField2>Value2<\/UDField2>/)).
-    with(anything, regexp_matches(/<UDField3>Value3<\/UDField3>/)).
-    returns(successful_purchase_response)
+      with(anything, regexp_matches(/<TaxAmount ExemptInd=\"false\">777<\/TaxAmount>/)).
+      with(anything, regexp_matches(/<UDField1>Value1<\/UDField1>/)).
+      with(anything, regexp_matches(/<UDField2>Value2<\/UDField2>/)).
+      with(anything, regexp_matches(/<UDField3>Value3<\/UDField3>/)).
+      returns(successful_purchase_response)
 
     @gateway.purchase(@amount, @credit_card, {:tax => '777', :ud_field_1 => 'Value1', :ud_field_2 => 'Value2', :ud_field_3 => 'Value3'})
   end

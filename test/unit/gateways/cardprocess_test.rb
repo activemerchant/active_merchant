@@ -239,7 +239,7 @@ Conn close
   end
 
   def failed_purchase_response
-    "{\"id\":\"8a82944a5fe827040160030a3308412d\",\"paymentType\":\"DB\",\"paymentBrand\":\"VISA\",\"result\":{\"code\":\"100.100.101\",\"description\":\"invalid creditcard, bank account number or bank name\"},\"card\":{\"bin\":\"420000\",\"last4Digits\":\"0001\",\"holder\":\"Longbob Longsen\",\"expiryMonth\":\"09\",\"expiryYear\":\"2018\"},\"billing\":{\"street1\":\"456 My Street\",\"street2\":\"Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"postcode\":\"K1C2N6\",\"country\":\"CA\"},\"buildNumber\":\"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000\",\"timestamp\":\"2017-11-28 14:31:28+0000\",\"ndc\":\"8a8294174e735d0c014e78beb6b9154b_43d463600f8d429ea6ac09cf25fd9f24\"}"
+    '{"id":"8a82944a5fe827040160030a3308412d","paymentType":"DB","paymentBrand":"VISA","result":{"code":"100.100.101","description":"invalid creditcard, bank account number or bank name"},"card":{"bin":"420000","last4Digits":"0001","holder":"Longbob Longsen","expiryMonth":"09","expiryYear":"2018"},"billing":{"street1":"456 My Street","street2":"Apt 1","city":"Ottawa","state":"ON","postcode":"K1C2N6","country":"CA"},"buildNumber":"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000","timestamp":"2017-11-28 14:31:28+0000","ndc":"8a8294174e735d0c014e78beb6b9154b_43d463600f8d429ea6ac09cf25fd9f24"}'
   end
 
   def successful_authorize_response
@@ -247,7 +247,7 @@ Conn close
   end
 
   def failed_authorize_response
-    "{\"paymentType\":\"PA\",\"paymentBrand\":\"VISA\",\"result\":{\"code\":\"800.100.151\",\"description\":\"transaction declined (invalid card)\"},\"card\":{\"bin\":\"420000\",\"last4Digits\":\"0000\",\"holder\":\"Longbob Longsen\",\"expiryMonth\":\"09\",\"expiryYear\":\"2018\"},\"billing\":{\"street1\":\"456 My Street\",\"street2\":\"Apt 1\",\"city\":\"Ottawa\",\"state\":\"ON\",\"postcode\":\"K1C2N6\",\"country\":\"CA\"},\"customParameters\":{\"forceResultCode\":\"800.100.151\"},\"buildNumber\":\"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000\",\"timestamp\":\"2017-11-28 13:50:31+0000\",\"ndc\":\"8a8294174e735d0c014e78beb6b9154b_1077c67bc41048ff887da9ab9ee8b89d\"}"
+    '{"paymentType":"PA","paymentBrand":"VISA","result":{"code":"800.100.151","description":"transaction declined (invalid card)"},"card":{"bin":"420000","last4Digits":"0000","holder":"Longbob Longsen","expiryMonth":"09","expiryYear":"2018"},"billing":{"street1":"456 My Street","street2":"Apt 1","city":"Ottawa","state":"ON","postcode":"K1C2N6","country":"CA"},"customParameters":{"forceResultCode":"800.100.151"},"buildNumber":"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000","timestamp":"2017-11-28 13:50:31+0000","ndc":"8a8294174e735d0c014e78beb6b9154b_1077c67bc41048ff887da9ab9ee8b89d"}'
   end
 
   def successful_capture_response
@@ -255,7 +255,7 @@ Conn close
   end
 
   def failed_capture_response
-    "{\"id\":\"8a82944a5fe8270401600313d3965bca\",\"paymentType\":\"CP\",\"result\":{\"code\":\"700.400.510\",\"description\":\"capture needs at least one successful transaction of type (PA)\"},\"risk\":{\"score\":\"0\"},\"buildNumber\":\"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000\",\"timestamp\":\"2017-11-28 14:41:59+0000\",\"ndc\":\"8a8294174e735d0c014e78beb6b9154b_8abfd898a6cd406f94181d9096607aea\"}"
+    '{"id":"8a82944a5fe8270401600313d3965bca","paymentType":"CP","result":{"code":"700.400.510","description":"capture needs at least one successful transaction of type (PA)"},"risk":{"score":"0"},"buildNumber":"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000","timestamp":"2017-11-28 14:41:59+0000","ndc":"8a8294174e735d0c014e78beb6b9154b_8abfd898a6cd406f94181d9096607aea"}'
   end
 
   def successful_refund_response
@@ -263,7 +263,7 @@ Conn close
   end
 
   def failed_refund_response
-    "{\"result\":{\"code\":\"200.300.404\",\"description\":\"invalid or missing parameter\",\"parameterErrors\":[{\"name\":\"paymentType\",\"value\":\"RF\",\"message\":\"must be one of [PA, DB, CD, PA.CP]\"},{\"name\":\"paymentBrand\",\"value\":null,\"message\":\"card properties must be set\"}]},\"buildNumber\":\"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000\",\"timestamp\":\"2017-11-28 14:33:31+0000\",\"ndc\":\"8a8294174e735d0c014e78beb6b9154b_febee8f6863b4392b064b23602f3f382\"}"
+    '{"result":{"code":"200.300.404","description":"invalid or missing parameter","parameterErrors":[{"name":"paymentType","value":"RF","message":"must be one of [PA, DB, CD, PA.CP]"},{"name":"paymentBrand","value":null,"message":"card properties must be set"}]},"buildNumber":"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000","timestamp":"2017-11-28 14:33:31+0000","ndc":"8a8294174e735d0c014e78beb6b9154b_febee8f6863b4392b064b23602f3f382"}'
   end
 
   def successful_void_response
@@ -271,7 +271,7 @@ Conn close
   end
 
   def failed_void_response
-    "{\"result\":{\"code\":\"200.300.404\",\"description\":\"invalid or missing parameter\",\"parameterErrors\":[{\"name\":\"paymentBrand\",\"value\":null,\"message\":\"card properties must be set\"},{\"name\":\"paymentType\",\"value\":\"RV\",\"message\":\"must be one of [PA, DB, CD, PA.CP]\"},{\"name\":\"amount\",\"value\":null,\"message\":\"may not be empty\"},{\"name\":\"currency\",\"value\":null,\"message\":\"may not be empty\"}]},\"buildNumber\":\"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000\",\"timestamp\":\"2017-11-28 14:34:50+0000\",\"ndc\":\"8a8294174e735d0c014e78beb6b9154b_4a909e0b99214eb9b155b46a2c67df30\"}"
+    '{"result":{"code":"200.300.404","description":"invalid or missing parameter","parameterErrors":[{"name":"paymentBrand","value":null,"message":"card properties must be set"},{"name":"paymentType","value":"RV","message":"must be one of [PA, DB, CD, PA.CP]"},{"name":"amount","value":null,"message":"may not be empty"},{"name":"currency","value":null,"message":"may not be empty"}]},"buildNumber":"a89317e58e01406de09ff75de6c962f2365f66e9@2017-11-27 15:38:09 +0000","timestamp":"2017-11-28 14:34:50+0000","ndc":"8a8294174e735d0c014e78beb6b9154b_4a909e0b99214eb9b155b46a2c67df30"}'
   end
 
   def successful_credit_response

@@ -43,9 +43,9 @@ module ActiveMerchant #:nodoc:
       }
 
       PERIODIC_ACTIONS = {
-        :add_triggered    => "add",
-        :remove_triggered => "delete",
-        :trigger          => "trigger"
+        :add_triggered    => 'add',
+        :remove_triggered => 'delete',
+        :trigger          => 'trigger'
       }
 
       PERIODIC_TYPES = {
@@ -167,8 +167,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Payment'
           xml.tag! 'Payment' do
-            xml.tag! 'TxnList', "count" => 1 do
-              xml.tag! 'Txn', "ID" => 1 do
+            xml.tag! 'TxnList', 'count' => 1 do
+              xml.tag! 'Txn', 'ID' => 1 do
                 xml.tag! 'txnType', TRANSACTIONS[action]
                 xml.tag! 'txnSource', 23
                 xml << body
@@ -226,8 +226,8 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'RequestType', 'Periodic'
           xml.tag! 'Periodic' do
-            xml.tag! 'PeriodicList', "count" => 1 do
-              xml.tag! 'PeriodicItem', "ID" => 1 do
+            xml.tag! 'PeriodicList', 'count' => 1 do
+              xml.tag! 'PeriodicItem', 'ID' => 1 do
                 xml << body
               end
             end
@@ -238,7 +238,6 @@ module ActiveMerchant #:nodoc:
 
       def commit_periodic(request)
         my_request = build_periodic_request(request)
-        #puts my_request
         response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
 
         Response.new(success?(response), message_from(response), response,
@@ -277,7 +276,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|element| parse_element(response, element) }
+          node.elements.each { |element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
         end

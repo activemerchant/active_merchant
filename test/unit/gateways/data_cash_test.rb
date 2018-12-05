@@ -48,14 +48,14 @@ class DataCashTest < Test::Unit::TestCase
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", @options)
+      @gateway.credit(@amount, 'transaction_id', @options)
     end
   end
 
   def test_refund
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
 
-    @gateway.refund(@amount, "transaction_id", @options)
+    @gateway.refund(@amount, 'transaction_id', @options)
   end
 
   def test_unsuccessful_purchase
@@ -83,15 +83,15 @@ class DataCashTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :switch, :solo, :laser ], DataCashGateway.supported_cardtypes
+    assert_equal [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro ], DataCashGateway.supported_cardtypes
   end
 
   def test_purchase_with_missing_order_id_option
-    assert_raise(ArgumentError){ @gateway.purchase(100, @credit_card, {}) }
+    assert_raise(ArgumentError) { @gateway.purchase(100, @credit_card, {}) }
   end
 
   def test_authorize_with_missing_order_id_option
-    assert_raise(ArgumentError){ @gateway.authorize(100, @credit_card, {}) }
+    assert_raise(ArgumentError) { @gateway.authorize(100, @credit_card, {}) }
   end
 
   def test_purchase_does_not_raise_exception_with_missing_billing_address
@@ -101,7 +101,7 @@ class DataCashTest < Test::Unit::TestCase
 
   def test_continuous_authority_purchase_with_missing_continuous_authority_reference
     assert_raise(ArgumentError) do
-      @gateway.authorize(100, "a;b;", @options)
+      @gateway.authorize(100, 'a;b;', @options)
     end
   end
 
@@ -122,6 +122,7 @@ class DataCashTest < Test::Unit::TestCase
   end
 
   private
+
   def failed_purchase_response
     <<-XML
 <Response>

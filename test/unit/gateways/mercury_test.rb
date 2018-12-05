@@ -9,7 +9,7 @@ class MercuryTest < Test::Unit::TestCase
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
     @amount = 100
-    @credit_card = credit_card("5499990123456781", :brand => "master")
+    @credit_card = credit_card('5499990123456781', :brand => 'master')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -64,7 +64,7 @@ class MercuryTest < Test::Unit::TestCase
   end
 
   def test_card_present_with_track_1_data
-    track_data = "%B4003000123456781^LONGSEN/L. ^15121200000000000000123?"
+    track_data = '%B4003000123456781^LONGSEN/L. ^15121200000000000000123?'
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -77,8 +77,8 @@ class MercuryTest < Test::Unit::TestCase
   end
 
   def test_card_present_with_track_2_data
-    track_data = ";5413330089010608=2512101097750213?"
-    stripped_track_data = "5413330089010608=2512101097750213"
+    track_data = ';5413330089010608=2512101097750213?'
+    stripped_track_data = '5413330089010608=2512101097750213'
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -91,8 +91,8 @@ class MercuryTest < Test::Unit::TestCase
   end
 
   def test_card_present_with_max_length_track_1_data
-    track_data    = "%B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567?"
-    stripped_data =  "B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567"
+    track_data    = '%B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567?'
+    stripped_data =  'B373953192351004^CARDUSER/JOHN^200910100000019301000000877000000930001234567'
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -105,7 +105,7 @@ class MercuryTest < Test::Unit::TestCase
   end
 
   def test_card_present_with_invalid_data
-    track_data = "this is not valid track data"
+    track_data = 'this is not valid track data'
     @credit_card.track_data = track_data
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)

@@ -76,9 +76,9 @@ class Cashnet < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', zip: '12345', state: 'AK'} )
+    @gateway.send(:add_address, result, billing_address: {address1: '123 Test St.', address2: '5F', city: 'Testville', zip: '12345', state: 'AK'})
 
-    assert_equal ["addr_g", "city_g", "state_g", "zip_g"], result.stringify_keys.keys.sort
+    assert_equal ['addr_g', 'city_g', 'state_g', 'zip_g'], result.stringify_keys.keys.sort
     assert_equal '123 Test St.,5F', result[:addr_g]
     assert_equal 'Testville', result[:city_g]
     assert_equal 'AK', result[:state_g]
@@ -93,7 +93,7 @@ class Cashnet < Test::Unit::TestCase
 
   def test_action_meets_minimum_requirements
     params = {
-      amount: "1.01",
+      amount: '1.01',
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
@@ -124,7 +124,7 @@ class Cashnet < Test::Unit::TestCase
   end
 
   def test_passes_custcode_from_credentials
-    gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: "TheCustCode")
+    gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: 'TheCustCode')
     stub_comms(gateway, :ssl_request) do
       gateway.purchase(@amount, @credit_card, {})
     end.check_request do |method, endpoint, data, headers|
@@ -133,9 +133,9 @@ class Cashnet < Test::Unit::TestCase
   end
 
   def test_allows_custcode_override
-    gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: "TheCustCode")
+    gateway = CashnetGateway.new(merchant: 'X', operator: 'X', password: 'test123', merchant_gateway_name: 'X', custcode: 'TheCustCode')
     stub_comms(gateway, :ssl_request) do
-      gateway.purchase(@amount, @credit_card, custcode: "OveriddenCustCode")
+      gateway.purchase(@amount, @credit_card, custcode: 'OveriddenCustCode')
     end.check_request do |method, endpoint, data, headers|
       assert_match(/custcode=OveriddenCustCode/, data)
     end.respond_with(successful_purchase_response)
@@ -147,6 +147,7 @@ class Cashnet < Test::Unit::TestCase
   end
 
   private
+
   def expected_expiration_date
     '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
   end
@@ -156,23 +157,23 @@ class Cashnet < Test::Unit::TestCase
   end
 
   def successful_refund_response
-    "<cngateway>result=0&respmessage=Success&tx=1234</cngateway>"
+    '<cngateway>result=0&respmessage=Success&tx=1234</cngateway>'
   end
 
   def failed_refund_response
-    "<cngateway>result=305&respmessage=Failed</cngateway>"
+    '<cngateway>result=305&respmessage=Failed</cngateway>'
   end
 
   def successful_purchase_response
-    "<cngateway>result=0&respmessage=Success&tx=1234</cngateway>"
+    '<cngateway>result=0&respmessage=Success&tx=1234</cngateway>'
   end
 
   def failed_purchase_response
-    "<cngateway>result=7&respmessage=Failed</cngateway>"
+    '<cngateway>result=7&respmessage=Failed</cngateway>'
   end
 
   def invalid_response
-    "A String without a cngateway tag"
+    'A String without a cngateway tag'
   end
 
   def pre_scrubbed

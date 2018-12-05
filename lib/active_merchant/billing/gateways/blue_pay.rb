@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of parameters.
       def refund(money, identification, options = {})
         if(identification && !identification.kind_of?(String))
-          ActiveMerchant.deprecated "refund should only be used to refund a referenced transaction"
+          ActiveMerchant.deprecated 'refund should only be used to refund a referenced transaction'
           return credit(money, identification, options)
         end
 
@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
         post[:PAYMENT_ACCOUNT] = ''
         post[:MASTER_ID]  = identification
         post[:TRANS_TYPE] = 'REFUND'
-        post[:NAME1] = (options[:first_name] ? options[:first_name] : "")
+        post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
         post[:ZIP] = options[:zip] if options[:zip]
         add_invoice(post, options)
@@ -173,8 +173,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, payment_object, options = {})
-        if(payment_object && payment_object.kind_of?(String))
-          ActiveMerchant.deprecated "credit should only be used to credit a payment method"
+        if payment_object&.kind_of?(String)
+          ActiveMerchant.deprecated 'credit should only be used to credit a payment method'
           return refund(money, payment_object, options)
         end
 
@@ -183,7 +183,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_object)
         post[:TRANS_TYPE] = 'CREDIT'
 
-        post[:NAME1] = (options[:first_name] ? options[:first_name] : "")
+        post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
         post[:ZIP] = options[:zip] if options[:zip]
         add_invoice(post, options)
@@ -330,7 +330,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_recurring(response_fields, opts={}) # expected status?
         parsed = {}
-        response_fields.each do |k,v|
+        response_fields.each do |k, v|
           mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
           parsed[mapped_key] = v
         end
@@ -345,14 +345,14 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         # The bp20api has max one value per form field.
-        response_fields = Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
+        response_fields = Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
 
-        if response_fields.include? "REBILL_ID"
+        if response_fields.include? 'REBILL_ID'
           return parse_recurring(response_fields)
         end
 
         parsed = {}
-        response_fields.each do |k,v|
+        response_fields.each do |k, v|
           mapped_key = FIELD_MAP.include?(k) ? FIELD_MAP[k] : k
           parsed[mapped_key] = v
         end
@@ -374,16 +374,16 @@ module ActiveMerchant #:nodoc:
           if CARD_CODE_ERRORS.include?(parsed[:card_code])
             message = CVVResult.messages[parsed[:card_code]]
           elsif AVS_ERRORS.include?(parsed[:avs_result_code])
-            message = AVSResult.messages[ parsed[:avs_result_code] ]
+            message = AVSResult.messages[parsed[:avs_result_code]]
           else
             message = message.chomp('.')
           end
-        elsif message == "Missing ACCOUNT_ID"
-          message = "The merchant login ID or password is invalid"
+        elsif message == 'Missing ACCOUNT_ID'
+          message = 'The merchant login ID or password is invalid'
         elsif message =~ /Approved/
-          message = "This transaction has been approved"
+          message = 'This transaction has been approved'
         elsif message =~  /Expired/
-          message =  "The credit card has expired"
+          message =  'The credit card has expired'
         end
         message
       end
@@ -418,13 +418,13 @@ module ActiveMerchant #:nodoc:
       end
 
       CHECK_ACCOUNT_TYPES = {
-        "checking" => "C",
-        "savings" => "S"
+        'checking' => 'C',
+        'savings' => 'S'
       }
 
       def add_check(post, check)
         post[:PAYMENT_TYPE]     = 'ACH'
-        post[:PAYMENT_ACCOUNT]  = [CHECK_ACCOUNT_TYPES[check.account_type], check.routing_number, check.account_number].join(":")
+        post[:PAYMENT_ACCOUNT]  = [CHECK_ACCOUNT_TYPES[check.account_type], check.routing_number, check.account_number].join(':')
         post[:NAME1]            = check.first_name
         post[:NAME2]            = check.last_name
       end
@@ -465,15 +465,15 @@ module ActiveMerchant #:nodoc:
         post[:version]        = '1'
         post[:login]          = ''
         post[:tran_key]       = ''
-        post[:relay_response] = "FALSE"
+        post[:relay_response] = 'FALSE'
         post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
+        post[:delim_data]     = 'TRUE'
+        post[:delim_char]     = ','
+        post[:encap_char]     = '$'
         post[:card_num]       = '4111111111111111'
         post[:exp_date]       = '1212'
         post[:solution_ID]    = application_id if application_id
-        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def expdate(creditcard)
@@ -494,7 +494,7 @@ module ActiveMerchant #:nodoc:
             post[:MASTER_ID],
             post[:NAME1],
             post[:PAYMENT_ACCOUNT]
-          ].join("")
+          ].join('')
         )
       end
 
@@ -505,12 +505,12 @@ module ActiveMerchant #:nodoc:
             @options[:login],
             post[:TRANS_TYPE],
             post[:REBILL_ID]
-          ].join("")
+          ].join('')
         )
       end
 
       def handle_response(response)
-        if ignore_http_status || (200...300).include?(response.code.to_i)
+        if ignore_http_status || (200...300).cover?(response.code.to_i)
           return response.body
         end
         raise ResponseError.new(response)

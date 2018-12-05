@@ -1,6 +1,5 @@
 module ActiveMerchant #:nodoc:
   module PostsData  #:nodoc:
-
     def self.included(base)
       base.class_attribute :ssl_strict
       base.ssl_strict = true
@@ -9,10 +8,10 @@ module ActiveMerchant #:nodoc:
       base.ssl_version = nil
 
       base.class_attribute :min_version
-      base.min_version = nil
+      base.min_version = Connection::MIN_VERSION
 
       base.class_attribute :max_version
-      base.min_version = nil
+      base.max_version = nil
 
       base.class_attribute :retry_safe
       base.retry_safe = false
@@ -46,8 +45,8 @@ module ActiveMerchant #:nodoc:
     end
 
     def raw_ssl_request(method, endpoint, data, headers = {})
-      logger.warn "#{self.class} using ssl_strict=false, which is insecure" if logger unless ssl_strict
-      logger.warn "#{self.class} posting to plaintext endpoint, which is insecure" if logger unless endpoint.to_s =~ /^https:/
+      logger&.warn "#{self.class} using ssl_strict=false, which is insecure" unless ssl_strict
+      logger&.warn "#{self.class} posting to plaintext endpoint, which is insecure" unless endpoint.to_s =~ /^https:/
 
       connection = new_connection(endpoint)
       connection.open_timeout = open_timeout
@@ -89,6 +88,5 @@ module ActiveMerchant #:nodoc:
         raise ResponseError.new(response)
       end
     end
-
   end
 end

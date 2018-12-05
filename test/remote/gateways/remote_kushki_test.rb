@@ -4,7 +4,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
   def setup
     @gateway = KushkiGateway.new(fixtures(:kushki))
     @amount = 100
-    @credit_card = credit_card('4000100011112224', verification_value: "777")
+    @credit_card = credit_card('4000100011112224', verification_value: '777')
     @declined_card = credit_card('4000300011112220')
   end
 
@@ -17,12 +17,12 @@ class RemoteKushkiTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_options
     options = {
-      currency: "USD",
+      currency: 'USD',
       amount: {
-        subtotal_iva_0: "4.95",
-        subtotal_iva: "10",
-        iva: "1.54",
-        ice: "3.50"
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50'
       }
     }
 
@@ -42,7 +42,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
   def test_failed_purchase
     options = {
       amount: {
-        subtotal_iva: "200"
+        subtotal_iva: '200'
       }
     }
 
@@ -79,7 +79,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = @gateway.void("000")
+    response = @gateway.void('000')
     assert_failure response
     assert_equal 'El monto de la transacción es requerido', response.message
   end

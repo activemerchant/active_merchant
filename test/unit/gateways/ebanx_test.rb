@@ -28,7 +28,7 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "NOK", response.error_code
+    assert_equal 'NOK', response.error_code
   end
 
   def test_successful_authorize
@@ -46,13 +46,13 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "NOK", response.error_code
+    assert_equal 'NOK', response.error_code
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "authorization", @options)
+    response = @gateway.capture(@amount, 'authorization', @options)
     assert_success response
 
     assert_equal 'Sandbox - Test credit card, transaction captured', response.message
@@ -62,15 +62,15 @@ class EbanxTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "", @options)
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
-    assert_equal "BP-CAP-1", response.error_code
+    assert_equal 'BP-CAP-1', response.error_code
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, "authorization", @options)
+    response = @gateway.refund(@amount, 'authorization', @options)
     assert_success response
 
     assert_equal '59306246f2a0c5f327a15dd6492687e197aca7eda179da08', response.authorization
@@ -80,15 +80,15 @@ class EbanxTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_request).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "", @options)
+    response = @gateway.refund(@amount, '', @options)
     assert_failure response
-    assert_equal "BP-REF-CAN-2", response.error_code
+    assert_equal 'BP-REF-CAN-2', response.error_code
   end
 
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_void_response)
 
-    response = @gateway.void("authorization", @options)
+    response = @gateway.void('authorization', @options)
     assert_success response
 
     assert_equal '5930629dde0899dc53b3557ea9887aa8f3d264a91d115d40', response.authorization
@@ -98,9 +98,9 @@ class EbanxTest < Test::Unit::TestCase
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void("", @options)
+    response = @gateway.void('', @options)
     assert_failure response
-    assert_equal "BP-CAN-1", response.error_code
+    assert_equal 'BP-CAN-1', response.error_code
   end
 
   def test_successful_verify
@@ -124,7 +124,7 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal "NOK", response.error_code
+    assert_equal 'NOK', response.error_code
   end
 
   def test_successful_store_and_purchase
@@ -138,6 +138,14 @@ class EbanxTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, store.authorization, @options)
     assert_success response
+  end
+
+  def test_error_response_with_invalid_creds
+    @gateway.expects(:ssl_request).returns(invalid_cred_response)
+
+    response = @gateway.store(@credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid integration key', response.message
   end
 
   def test_scrub
@@ -228,6 +236,12 @@ class EbanxTest < Test::Unit::TestCase
   def successful_purchase_with_stored_card_response
     %(
       {"payment":{"hash":"59d3e2955021c5e2b180e1ea9670e2d9675c15453a2ab346","pin":"252076123","merchant_payment_code":"a942f8a68836e888fa8e8af1e8ca4bf2","order_number":null,"status":"CO","status_date":"2017-10-03 19:18:45","open_date":"2017-10-03 19:18:44","confirm_date":"2017-10-03 19:18:45","transfer_date":null,"amount_br":"3.31","amount_ext":"1.00","amount_iof":"0.01","currency_rate":"3.3000","currency_ext":"USD","due_date":"2017-10-06","instalments":"1","payment_type_code":"visa","details":{"billing_descriptor":""},"transaction_status":{"acquirer":"EBANX","code":"OK","description":"Accepted"},"pre_approved":true,"capture_available":false,"customer":{"document":"85351346893","email":"unspecified@example.com","name":"NOT PROVIDED","birth_date":null}},"status":"SUCCESS"}
+    )
+  end
+
+  def invalid_cred_response
+    %(
+      {"status":"ERROR","status_code":"DA-1","status_message":"Invalid integration key"}
     )
   end
 end

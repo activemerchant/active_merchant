@@ -62,69 +62,69 @@ module ActiveMerchant #:nodoc:
       }
 
       STATES = {
-        "ALBERTA" => "AB",
-        "BRITISH COLUMBIA" => "BC",
-        "MANITOBA" => "MB",
-        "NEW BRUNSWICK" => "NB",
-        "NEWFOUNDLAND AND LABRADOR" => "NL",
-        "NOVA SCOTIA" => "NS",
-        "ONTARIO" => "ON",
-        "PRINCE EDWARD ISLAND" => "PE",
-        "QUEBEC" => "QC",
-        "SASKATCHEWAN" => "SK",
-        "NORTHWEST TERRITORIES" => "NT",
-        "NUNAVUT" => "NU",
-        "YUKON" => "YT",
-        "ALABAMA" => "AL",
-        "ALASKA" => "AK",
-        "ARIZONA" => "AZ",
-        "ARKANSAS" => "AR",
-        "CALIFORNIA" => "CA",
-        "COLORADO" => "CO",
-        "CONNECTICUT" => "CT",
-        "DELAWARE" => "DE",
-        "FLORIDA" => "FL",
-        "GEORGIA" => "GA",
-        "HAWAII" => "HI",
-        "IDAHO" => "ID",
-        "ILLINOIS" => "IL",
-        "INDIANA" => "IN",
-        "IOWA" => "IA",
-        "KANSAS" => "KS",
-        "KENTUCKY" => "KY",
-        "LOUISIANA" => "LA",
-        "MAINE" => "ME",
-        "MARYLAND" => "MD",
-        "MASSACHUSETTS" => "MA",
-        "MICHIGAN" => "MI",
-        "MINNESOTA" => "MN",
-        "MISSISSIPPI" => "MS",
-        "MISSOURI" => "MO",
-        "MONTANA" => "MT",
-        "NEBRASKA" => "NE",
-        "NEVADA" => "NV",
-        "NEW HAMPSHIRE" => "NH",
-        "NEW JERSEY" => "NJ",
-        "NEW MEXICO" => "NM",
-        "NEW YORK" => "NY",
-        "NORTH CAROLINA" => "NC",
-        "NORTH DAKOTA" => "ND",
-        "OHIO" => "OH",
-        "OKLAHOMA" => "OK",
-        "OREGON" => "OR",
-        "PENNSYLVANIA" => "PA",
-        "RHODE ISLAND" => "RI",
-        "SOUTH CAROLINA" => "SC",
-        "SOUTH DAKOTA" => "SD",
-        "TENNESSEE" => "TN",
-        "TEXAS" => "TX",
-        "UTAH" => "UT",
-        "VERMONT" => "VT",
-        "VIRGINIA" => "VA",
-        "WASHINGTON" => "WA",
-        "WEST VIRGINIA" => "WV",
-        "WISCONSIN" => "WI",
-        "WYOMING" => "WY"
+        'ALBERTA' => 'AB',
+        'BRITISH COLUMBIA' => 'BC',
+        'MANITOBA' => 'MB',
+        'NEW BRUNSWICK' => 'NB',
+        'NEWFOUNDLAND AND LABRADOR' => 'NL',
+        'NOVA SCOTIA' => 'NS',
+        'ONTARIO' => 'ON',
+        'PRINCE EDWARD ISLAND' => 'PE',
+        'QUEBEC' => 'QC',
+        'SASKATCHEWAN' => 'SK',
+        'NORTHWEST TERRITORIES' => 'NT',
+        'NUNAVUT' => 'NU',
+        'YUKON' => 'YT',
+        'ALABAMA' => 'AL',
+        'ALASKA' => 'AK',
+        'ARIZONA' => 'AZ',
+        'ARKANSAS' => 'AR',
+        'CALIFORNIA' => 'CA',
+        'COLORADO' => 'CO',
+        'CONNECTICUT' => 'CT',
+        'DELAWARE' => 'DE',
+        'FLORIDA' => 'FL',
+        'GEORGIA' => 'GA',
+        'HAWAII' => 'HI',
+        'IDAHO' => 'ID',
+        'ILLINOIS' => 'IL',
+        'INDIANA' => 'IN',
+        'IOWA' => 'IA',
+        'KANSAS' => 'KS',
+        'KENTUCKY' => 'KY',
+        'LOUISIANA' => 'LA',
+        'MAINE' => 'ME',
+        'MARYLAND' => 'MD',
+        'MASSACHUSETTS' => 'MA',
+        'MICHIGAN' => 'MI',
+        'MINNESOTA' => 'MN',
+        'MISSISSIPPI' => 'MS',
+        'MISSOURI' => 'MO',
+        'MONTANA' => 'MT',
+        'NEBRASKA' => 'NE',
+        'NEVADA' => 'NV',
+        'NEW HAMPSHIRE' => 'NH',
+        'NEW JERSEY' => 'NJ',
+        'NEW MEXICO' => 'NM',
+        'NEW YORK' => 'NY',
+        'NORTH CAROLINA' => 'NC',
+        'NORTH DAKOTA' => 'ND',
+        'OHIO' => 'OH',
+        'OKLAHOMA' => 'OK',
+        'OREGON' => 'OR',
+        'PENNSYLVANIA' => 'PA',
+        'RHODE ISLAND' => 'RI',
+        'SOUTH CAROLINA' => 'SC',
+        'SOUTH DAKOTA' => 'SD',
+        'TENNESSEE' => 'TN',
+        'TEXAS' => 'TX',
+        'UTAH' => 'UT',
+        'VERMONT' => 'VT',
+        'VIRGINIA' => 'VA',
+        'WASHINGTON' => 'WA',
+        'WEST VIRGINIA' => 'WV',
+        'WISCONSIN' => 'WI',
+        'WYOMING' => 'WY'
       }
 
       def self.included(base)
@@ -156,7 +156,6 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         reference, _, _ = split_auth(authorization)
-
         post = {}
         add_amount(post, money)
         add_reference(post, reference)
@@ -194,11 +193,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def void_action(original_transaction_type)
-        (original_transaction_type == TRANSACTIONS[:refund]) ? :void_refund : :void_purchase
+        original_transaction_type == TRANSACTIONS[:refund] ? :void_refund : :void_purchase
       end
 
       def refund_action(type)
-        (type == TRANSACTIONS[:check_purchase]) ? :check_refund : :refund
+        type == TRANSACTIONS[:check_purchase] ? :check_refund : :refund
       end
 
       def secure_profile_action(type)
@@ -206,7 +205,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_auth(string)
-        string.split(";")
+        string.split(';')
       end
 
       def add_amount(post, money)
@@ -267,7 +266,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_recurring_payment(post, options)
-        post[:recurringPayment] = true if options[:recurring].to_s == 'true'
+        post[:recurringPayment] = 1 if options[:recurring].to_s == 'true'
       end
 
       def add_invoice(post, options)
@@ -313,7 +312,6 @@ module ActiveMerchant #:nodoc:
         post[:serviceVersion] = SP_SERVICE_VERSION
         post[:responseFormat] = 'QS'
         post[:cardValidation] = (options[:cardValidation].to_i == 1) || '0'
-
         post[:operationType] = options[:operationType] || options[:operation] || secure_profile_action(:new)
         post[:customerCode] = options[:billing_id] || options[:vault_id] || false
         post[:status] = options[:status]
@@ -377,17 +375,15 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         results = {}
-        if !body.nil?
-          body.split(/&/).each do |pair|
-            key, val = pair.split(/\=/)
-            results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
-          end
+        body&.split(/&/)&.each do |pair|
+          key, val = pair.split(/\=/)
+          results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
         end
 
         # Clean up the message text if there is any
         if results[:messageText]
-          results[:messageText].gsub!(/<LI>/, "")
-          results[:messageText].gsub!(/(\.)?<br>/, ". ")
+          results[:messageText].gsub!(/<LI>/, '')
+          results[:messageText].gsub!(/(\.)?<br>/, '. ')
           results[:messageText].strip!
         end
 
@@ -402,7 +398,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(params, use_profile_api = false)
-        post(post_data(params,use_profile_api),use_profile_api)
+        post(post_data(params, use_profile_api), use_profile_api)
       end
 
       def recurring_commit(params)
@@ -413,10 +409,10 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post((use_profile_api ? SECURE_PROFILE_URL : self.live_url), data))
         response[:customer_vault_id] = response[:customerCode] if response[:customerCode]
         build_response(success?(response), message_from(response), response,
-          :test => test? || response[:authCode] == "TEST",
+          :test => test? || response[:authCode] == 'TEST',
           :authorization => authorization_from(response),
           :cvv_result => CVD_CODES[response[:cvdId]],
-          :avs_result => { :code => (AVS_CODES.include? response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
+          :avs_result => { :code => AVS_CODES.include?(response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
         )
       end
 
@@ -445,7 +441,7 @@ module ActiveMerchant #:nodoc:
         if source.is_a?(String) or source.is_a?(Integer)
           post[:customerCode] = source
         else
-          card_brand(source) == "check" ? add_check(post, source) : add_credit_card(post, source)
+          card_brand(source) == 'check' ? add_check(post, source) : add_credit_card(post, source)
         end
       end
 
@@ -462,13 +458,13 @@ module ActiveMerchant #:nodoc:
           params[:username] = @options[:user] if @options[:user]
           params[:password] = @options[:password] if @options[:password]
           params[:merchant_id] = @options[:login]
+          params[:passcode] = @options[:api_key]
         end
         params[:vbvEnabled] = '0'
         params[:scEnabled] = '0'
 
-        params.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        params.reject { |k, v| v.blank? }.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
-
     end
   end
 end

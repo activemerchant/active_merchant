@@ -130,7 +130,7 @@ class SecureNetTest < Test::Unit::TestCase
   end
 
   def test_passes_optional_fields
-    options = { description: "Good Stuff", invoice_description: "Sweet Invoice", invoice_number: "48" }
+    options = { description: 'Good Stuff', invoice_description: 'Sweet Invoice', invoice_number: '48' }
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|

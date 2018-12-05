@@ -27,12 +27,12 @@ class MerchantWareTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '4706382;1', response.authorization
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert response.test?
   end
 
   def test_soap_fault_during_authorization
-    response_500 = stub(:code => "500", :message => "Internal Server Error", :body => fault_authorization_response)
+    response_500 = stub(:code => '500', :message => 'Internal Server Error', :body => fault_authorization_response)
     @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_500))
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
@@ -41,9 +41,9 @@ class MerchantWareTest < Test::Unit::TestCase
     assert response.test?
 
     assert_nil response.authorization
-    assert_equal "Server was unable to process request. ---> strPAN should be at least 13 to at most 19 characters in size. Parameter name: strPAN", response.message
-    assert_equal response_500.code, response.params["http_code"]
-    assert_equal response_500.message, response.params["http_message"]
+    assert_equal 'Server was unable to process request. ---> strPAN should be at least 13 to at most 19 characters in size. Parameter name: strPAN', response.message
+    assert_equal response_500.code, response.params['http_code']
+    assert_equal response_500.message, response.params['http_message']
   end
 
   def test_failed_authorization
@@ -55,43 +55,43 @@ class MerchantWareTest < Test::Unit::TestCase
     assert response.test?
 
     assert_nil response.authorization
-    assert_equal "transaction type not supported by version", response.message
-    assert_equal "FAILED", response.params["status"]
-    assert_equal "1014", response.params["failure_code"]
+    assert_equal 'transaction type not supported by version', response.message
+    assert_equal 'FAILED', response.params['status']
+    assert_equal '1014', response.params['failure_code']
   end
 
   def test_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strPAN>#{@credit_card.number}<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strPAN>#{@credit_card.number}<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", @options)
+      @gateway.credit(@amount, 'transaction_id', @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.refund(@amount, "transaction_id", @options)
+    @gateway.refund(@amount, 'transaction_id', @options)
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    assert response = @gateway.void("1")
+    assert response = @gateway.void('1')
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
 
     assert_nil response.authorization
-    assert_equal "decline", response.message
-    assert_equal "DECLINED", response.params["status"]
-    assert_equal "1012", response.params["failure_code"]
+    assert_equal 'decline', response.message
+    assert_equal 'DECLINED', response.params['status']
+    assert_equal '1012', response.params['failure_code']
   end
 
   def test_avs_result
@@ -109,12 +109,12 @@ class MerchantWareTest < Test::Unit::TestCase
   end
 
   def test_add_swipe_data_with_creditcard
-    @credit_card.track_data = "Track Data"
+    @credit_card.track_data = 'Track Data'
     options = {:order_id => '1'}
     stub_comms do
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
-      assert_match "<trackData>Track Data</trackData>", data
+      assert_match '<trackData>Track Data</trackData>', data
     end.respond_with(successful_authorization_response)
   end
 

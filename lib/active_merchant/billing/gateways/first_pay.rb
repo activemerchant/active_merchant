@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_address(post, payment, options)
         add_customer_data(post, options)
 
@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         add_address(post, payment, options)
         add_customer_data(post, options)
 
@@ -54,6 +54,17 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_reference(post, 'void', nil, authorization)
         commit('void', post)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((gateway_id)[^<]*(</FIELD>))i, '\1[FILTERED]\2').
+          gsub(%r((card_number)[^<]*(</FIELD>))i, '\1[FILTERED]\2').
+          gsub(%r((cvv2)[^<]*(</FIELD>))i, '\1[FILTERED]\2')
       end
 
       private
@@ -87,11 +98,15 @@ module ActiveMerchant #:nodoc:
         post[:total] = amount(money)
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options)
         post[:card_name] = payment.brand # Unclear if need to map to known names or open text field??
         post[:card_number] = payment.number
         post[:card_exp] = expdate(payment)
         post[:cvv2] = payment.verification_value
+        post[:recurring] = options[:recurring] if options[:recurring]
+        post[:recurring_start_date] = options[:recurring_start_date] if options[:recurring_start_date]
+        post[:recurring_end_date] = options[:recurring_end_date] if options[:recurring_end_date]
+        post[:recurring_type] = options[:recurring_type] if options[:recurring_type]
       end
 
       def add_reference(post, action, money, authorization)
@@ -104,9 +119,9 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         doc = Nokogiri::XML(xml)
-        doc.root.xpath("//RESPONSE/FIELDS/FIELD").each do |field|
+        doc.root&.xpath('//RESPONSE/FIELDS/FIELD')&.each do |field|
           response[field['KEY']] = field.text
-        end unless doc.root.nil?
+        end
 
         response
       end
@@ -119,6 +134,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response),
+          error_code: error_code_from(response),
           test: test?
         )
       end
@@ -133,7 +149,11 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         # Silly inconsistent gateway. Always make capitalized (but not all caps)
         msg = (response['auth_response'] || response['response1'])
-        msg.downcase.capitalize if msg
+        msg&.downcase&.capitalize
+      end
+
+      def error_code_from(response)
+        response['error']
       end
 
       def authorization_from(response)

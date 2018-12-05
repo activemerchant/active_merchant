@@ -11,6 +11,7 @@ end
 
 require 'rake'
 require 'rake/testtask'
+require 'rubocop/rake_task'
 require 'support/gateway_support'
 require 'support/ssl_verify'
 require 'support/ssl_version'
@@ -19,12 +20,14 @@ require 'bundler/gem_tasks'
 
 task :tag_release do
   system "git tag 'v#{ActiveMerchant::VERSION}'"
-  system "git push --tags"
+  system 'git push --tags'
 end
 
-desc "Run the unit test suite"
+desc 'Run the unit test suite'
 task :default => 'test:units'
 task :test => 'test:units'
+
+RuboCop::RakeTask.new
 
 namespace :test do
   Rake::TestTask.new(:units) do |t|
@@ -32,6 +35,9 @@ namespace :test do
     t.libs << 'test'
     t.verbose = true
   end
+
+  desc 'Run all tests that do not require network access'
+  task :local => ['test:units', 'rubocop']
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'
@@ -83,7 +89,7 @@ namespace :gateways do
 
     unless invalid_lines.empty?
       puts
-      puts "Unable to parse:"
+      puts 'Unable to parse:'
       invalid_lines.each do |line|
         puts line
       end

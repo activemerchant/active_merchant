@@ -6,8 +6,9 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     BarclaycardSmartpayGateway.ssl_strict = false
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111', :month => 8, :year => 2018, :verification_value => 737)
-    @declined_card = credit_card('4000300011112220', :month => 8, :year => 2018, :verification_value => 737)
+    @error_amount = 1_000_000_000_000_000_000_000
+    @credit_card = credit_card('4111111111111111', :month => 10, :year => 2020, :verification_value => 737)
+    @declined_card = credit_card('4000300011112220', :month => 3, :year => 2030, :verification_value => 737)
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @options = {
@@ -97,9 +98,9 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     }
 
     @avs_credit_card = credit_card('4400000000000008',
-                                    :month => 8,
-                                    :year => 2018,
-                                    :verification_value => 737)
+      :month => 8,
+      :year => 2018,
+      :verification_value => 737)
 
     @avs_address = @options.clone
     @avs_address.update(billing_address: {
@@ -131,24 +132,36 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_unusual_address
     response = @gateway.purchase(@amount,
-                                 @credit_card,
-                                 @options_with_alternate_address)
+      @credit_card,
+      @options_with_alternate_address)
     assert_success response
     assert_equal '[capture-received]', response.message
   end
 
   def test_successful_purchase_with_house_number_and_street
     response = @gateway.purchase(@amount,
-                                 @credit_card,
-                                 @options.merge(street: 'Top Level Drive', house_number: '100'))
+      @credit_card,
+      @options.merge(street: 'Top Level Drive', house_number: '100'))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
 
   def test_successful_purchase_with_no_address
     response = @gateway.purchase(@amount,
-                                 @credit_card,
-                                 @options_with_no_address)
+      @credit_card,
+      @options_with_no_address)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_shopper_interaction
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(shopper_interaction: 'ContAuth'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_device_fingerprint
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(device_fingerprint: 'abcde1123'))
     assert_success response
     assert_equal '[capture-received]', response.message
   end
@@ -184,9 +197,16 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_failed_capture
+  def test_failed_capture_with_bad_auth
+    response = @gateway.capture(100, '0000000000000000', @options)
+    assert_failure response
+    assert_equal('167: Original pspReference required for this operation', response.message)
+  end
+
+  def test_failed_capture_with_bad_amount
     response = @gateway.capture(nil, '', @options)
     assert_failure response
+    assert_equal('137: Invalid amount specified', response.message)
   end
 
   def test_successful_refund
@@ -226,6 +246,11 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     # assert_failure response
   end
 
+  def test_successful_third_party_payout
+    response = @gateway.credit(@amount, @credit_card, @options_with_credit_fields.merge({third_party_payout: true}))
+    assert_success response
+  end
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -243,21 +268,21 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response
 
-    assert_equal "Authorised", response.message
+    assert_equal 'Authorised', response.message
     assert response.authorization
   end
 
   def test_unsuccessful_verify
     assert response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal "Refused", response.message
+    assert_equal 'Refused', response.message
   end
 
   def test_invalid_login
     gateway = BarclaycardSmartpayGateway.new(
-    company: '',
-    merchant: '',
-    password: ''
+      company: '',
+      merchant: '',
+      password: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -266,13 +291,13 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
   def test_successful_store
     response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
   end
 
   def test_failed_store
-    response = @gateway.store(credit_card('', :month => '', :year => '', :verification_value => ''), @options)
+    response = @gateway.store(credit_card('4111111111111111', :month => '', :year => '', :verification_value => ''), @options)
     assert_failure response
-    assert_equal "Unprocessable Entity", response.message
+    assert_equal '129: Expiry Date Invalid', response.message
   end
 
   # AVS must be enabled on the gateway's end for the test account used
@@ -312,5 +337,11 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
     assert_scrubbed(@gateway.options[:password], clean_transcript)
+  end
+
+  def test_proper_error_response_handling
+    response = @gateway.purchase(@error_amount, @credit_card, @options)
+    assert_equal('702: Internal error', response.message)
+    assert_not_equal(response.message, 'Unable to communicate with the payment system.')
   end
 end

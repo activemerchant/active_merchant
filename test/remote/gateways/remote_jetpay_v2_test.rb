@@ -25,31 +25,31 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount_approved, @credit_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert_not_nil response.authorization
-    assert_not_nil response.params["approval"]
+    assert_not_nil response.params['approval']
   end
 
   def test_failed_purchase
     assert response = @gateway.purchase(@amount_declined, @credit_card, @options)
     assert_failure response
-    assert_equal "Do not honor.", response.message
+    assert_equal 'Do not honor.', response.message
   end
 
   def test_successful_purchase_with_minimal_options
     assert response = @gateway.purchase(@amount_approved, @credit_card, {:device => 'spreedly', :application => 'spreedly'})
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert_not_nil response.authorization
-    assert_not_nil response.params["approval"]
+    assert_not_nil response.params['approval']
   end
 
   def test_successful_purchase_with_additional_options
     options = @options.merge(
-      ud_field_1: "Value1",
-      ud_field_2: "Value2",
-      ud_field_3: "Value3"
-      )
+      ud_field_1: 'Value1',
+      ud_field_2: 'Value2',
+      ud_field_3: 'Value3'
+    )
     assert response = @gateway.purchase(@amount_approved, @credit_card, options)
     assert_success response
   end
@@ -59,7 +59,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_success auth
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
-    assert_not_nil auth.params["approval"]
+    assert_not_nil auth.params['approval']
 
     assert capture = @gateway.capture(@amount_approved, auth.authorization, @options)
     assert_success capture
@@ -70,7 +70,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_success auth
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
-    assert_not_nil auth.params["approval"]
+    assert_not_nil auth.params['approval']
 
     assert capture = @gateway.capture(@amount_approved, auth.authorization, @options.merge(:tax_amount => '990', :purchase_order => 'ABC12345'))
     assert_success capture
@@ -81,7 +81,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_success auth
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
-    assert_not_nil auth.params["approval"]
+    assert_not_nil auth.params['approval']
 
     assert capture = @gateway.capture(4400, auth.authorization, @options)
     assert_success capture
@@ -98,8 +98,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_success auth
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
-    assert_not_nil auth.params["approval"]
-
+    assert_not_nil auth.params['approval']
 
     assert void = @gateway.void(auth.authorization, @options)
     assert_success void
@@ -113,15 +112,15 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
   def test_successful_purchase_refund
     assert response = @gateway.purchase(@amount_approved, @credit_card, @options)
     assert_success response
-    assert_equal "APPROVED", response.message
+    assert_equal 'APPROVED', response.message
     assert_not_nil response.authorization
-    assert_not_nil response.params["approval"]
+    assert_not_nil response.params['approval']
 
     assert refund = @gateway.refund(@amount_approved, response.authorization, @options)
     assert_success refund
     assert_not_nil(refund.authorization)
-    assert_not_nil(response.params["approval"])
-    assert_equal [response.params['transaction_id'], response.params["approval"], @amount_approved, response.params["token"]].join(";"), response.authorization
+    assert_not_nil(response.params['approval'])
+    assert_equal [response.params['transaction_id'], response.params['approval'], @amount_approved, response.params['token']].join(';'), response.authorization
   end
 
   def test_successful_capture_refund
@@ -129,17 +128,17 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert_success auth
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
-    assert_not_nil auth.params["approval"]
-    assert_equal [auth.params['transaction_id'], auth.params["approval"], @amount_approved, auth.params["token"]].join(";"), auth.authorization
+    assert_not_nil auth.params['approval']
+    assert_equal [auth.params['transaction_id'], auth.params['approval'], @amount_approved, auth.params['token']].join(';'), auth.authorization
 
     assert capture = @gateway.capture(@amount_approved, auth.authorization, @options)
     assert_success capture
-    assert_equal [capture.params['transaction_id'], capture.params["approval"], @amount_approved, auth.params["token"]].join(";"), capture.authorization
+    assert_equal [capture.params['transaction_id'], capture.params['approval'], @amount_approved, auth.params['token']].join(';'), capture.authorization
 
     assert refund = @gateway.refund(@amount_approved, capture.authorization, @options)
     assert_success refund
     assert_not_nil(refund.authorization)
-    assert_not_nil(refund.params["approval"])
+    assert_not_nil(refund.params['approval'])
   end
 
   def test_failed_refund
@@ -153,7 +152,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
     assert credit = @gateway.credit(@amount_approved, card, @options)
     assert_success credit
     assert_not_nil(credit.authorization)
-    assert_not_nil(credit.params["approval"])
+    assert_not_nil(credit.params['approval'])
   end
 
   def test_failed_credit
@@ -194,7 +193,7 @@ class RemoteJetpayV2Test < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    @credit_card.verification_value = "421"
+    @credit_card.verification_value = '421'
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount_approved, @credit_card, @options)
     end

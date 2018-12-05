@@ -5,10 +5,12 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['CA', 'US', 'GB']
+      self.supported_countries = ['CA', 'US', 'GB', 'AU', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK',
+                                  'EE', 'FI', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT',
+                                  'NL', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH']
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :solo] # :switch?
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.optimalpayments.com/'
@@ -17,7 +19,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Optimal Payments'
 
       def initialize(options = {})
-
         if(options[:login])
           ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'store_id' and will be removed in a future version.")
           options[:store_id] = options[:login]
@@ -59,6 +60,11 @@ module ActiveMerchant #:nodoc:
         commit('ccSettlement', money, options)
       end
 
+      def verify(credit_card, options = {})
+        parse_card_or_auth(credit_card, options)
+        commit('ccVerification', 0, options)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -75,10 +81,10 @@ module ActiveMerchant #:nodoc:
       def parse_card_or_auth(card_or_auth, options)
         if card_or_auth.respond_to?(:number)
           @credit_card = card_or_auth
-          @stored_data = ""
+          @stored_data = ''
         else
           options[:confirmationNumber] = card_or_auth
-          @stored_data = "StoredData"
+          @stored_data = 'StoredData'
         end
       end
 
@@ -98,11 +104,11 @@ module ActiveMerchant #:nodoc:
           cc_stored_data_request(money, post)
         when 'ccAuthorizeReversal'
           cc_auth_reversal_request(post)
-        #when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
+        # when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
         #  cc_cancel_request(money, post)
-        #when 'ccPayment'
+        # when 'ccPayment'
         #  cc_payment_request(money, post)
-        #when 'ccAuthenticate'
+        # when 'ccAuthenticate'
         #  cc_authenticate_request(money, post)
         else
           raise 'Unknown Action'
@@ -177,7 +183,7 @@ module ActiveMerchant #:nodoc:
 
       def get_text_from_document(document, node)
         node = REXML::XPath.first(document, node)
-        node && node.text
+        node&.text
       end
 
       def cc_auth_request(money, opts)
@@ -254,27 +260,27 @@ module ActiveMerchant #:nodoc:
 
       def build_merchant_account(xml)
         xml.tag! 'merchantAccount' do
-          xml.tag! 'accountNum' , @options[:account_number]
-          xml.tag! 'storeID'    , @options[:store_id]
-          xml.tag! 'storePwd'   , @options[:password]
+          xml.tag! 'accountNum', @options[:account_number]
+          xml.tag! 'storeID',    @options[:store_id]
+          xml.tag! 'storePwd',   @options[:password]
         end
       end
 
       def build_card(xml, opts)
         xml.tag! 'card' do
-          xml.tag! 'cardNum'      , @credit_card.number
+          xml.tag! 'cardNum', @credit_card.number
           xml.tag! 'cardExpiry' do
-            xml.tag! 'month'      , @credit_card.month
-            xml.tag! 'year'       , @credit_card.year
+            xml.tag! 'month', @credit_card.month
+            xml.tag! 'year', @credit_card.year
           end
           if brand = card_type(@credit_card.brand)
-            xml.tag! 'cardType'     , brand
+            xml.tag! 'cardType', brand
           end
           if @credit_card.verification_value?
-            xml.tag! 'cvdIndicator' , '1' # Value Provided
-            xml.tag! 'cvd'          , @credit_card.verification_value
+            xml.tag! 'cvdIndicator', '1' # Value Provided
+            xml.tag! 'cvd', @credit_card.verification_value
           else
-            xml.tag! 'cvdIndicator' , '0'
+            xml.tag! 'cvdIndicator', '0'
           end
         end
       end
@@ -298,18 +304,18 @@ module ActiveMerchant #:nodoc:
         if addr[:name]
           first_name, last_name = split_names(addr[:name])
           xml.tag! 'firstName', first_name
-          xml.tag! 'lastName' , last_name
+          xml.tag! 'lastName', last_name
         end
-        xml.tag! 'street' , addr[:address1] if addr[:address1].present?
+        xml.tag! 'street', addr[:address1] if addr[:address1].present?
         xml.tag! 'street2', addr[:address2] if addr[:address2].present?
-        xml.tag! 'city'   , addr[:city]     if addr[:city].present?
+        xml.tag! 'city', addr[:city] if addr[:city].present?
         if addr[:state].present?
           state_tag = %w(US CA).include?(addr[:country]) ? 'state' : 'region'
           xml.tag! state_tag, addr[:state]
         end
-        xml.tag! 'country', addr[:country]  if addr[:country].present?
-        xml.tag! 'zip'    , addr[:zip]      if addr[:zip].present?
-        xml.tag! 'phone'  , addr[:phone]    if addr[:phone].present?
+        xml.tag! 'country', addr[:country] if addr[:country].present?
+        xml.tag! 'zip', addr[:zip] if addr[:zip].present?
+        xml.tag! 'phone', addr[:phone] if addr[:phone].present?
       end
 
       def card_type(key)
@@ -318,8 +324,6 @@ module ActiveMerchant #:nodoc:
           'american_express'=> 'AM',
           'discover'        => 'DI',
           'diners_club'     => 'DC',
-          #'switch'          => '',
-          'solo'            => 'SO'
         }[key]
       end
 

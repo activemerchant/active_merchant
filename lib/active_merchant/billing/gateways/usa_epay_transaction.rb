@@ -1,6 +1,5 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
     class UsaEpayTransactionGateway < Gateway
       self.live_url = 'https://www.usaepay.com/gate'
       self.test_url = 'https://sandbox.usaepay.com/gate'
@@ -65,7 +64,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money)
         add_invoice(post, options)
-        add_payment(post, payment)
+        add_payment(post, payment, options)
         unless payment.respond_to?(:track_data) && payment.track_data.present?
           add_address(post, payment, options)
           add_customer_data(post, options)
@@ -120,7 +119,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((&?UMkey=)[^&]*)i, '\1[FILTERED]')
       end
 
-    private
+      private
 
       def add_amount(post, money)
         post[:amount] = amount(money)
@@ -140,7 +139,12 @@ module ActiveMerchant #:nodoc:
 
         if options.has_key? :email
           post[:custemail] = options[:email]
-          post[:custreceipt] = 'No'
+          if options[:cust_receipt]
+            post[:custreceipt] = options[:cust_receipt]
+            post[:custreceiptname] = options[:cust_receipt_name] if options[:cust_receipt_name]
+          else
+            post[:custreceipt] = 'No'
+          end
         end
 
         if options.has_key? :customer
@@ -191,8 +195,9 @@ module ActiveMerchant #:nodoc:
         post[:description]  = options[:description]
       end
 
-      def add_payment(post, payment)
+      def add_payment(post, payment, options={})
         if payment.respond_to?(:routing_number)
+          post[:checkformat] = options[:check_format] if options[:check_format]
           post[:account] = payment.account_number
           post[:routing] = payment.routing_number
           post[:name]    = payment.name unless payment.name.blank?
@@ -229,7 +234,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
+          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
           fields[key] = CGI.unescape(value.to_s)
         end
 
@@ -248,7 +253,7 @@ module ActiveMerchant #:nodoc:
           :error_code       => fields['UMerrorcode'],
           :acs_url          => fields['UMacsurl'],
           :payload          => fields['UMpayload']
-        }.delete_if{|k, v| v.nil?}
+        }.delete_if { |k, v| v.nil? }
       end
 
       def commit(action, parameters)
@@ -264,7 +269,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response[:status] == "Approved"
+        if response[:status] == 'Approved'
           return 'Success'
         else
           return 'Unspecified error' if response[:error].blank?
@@ -281,7 +286,7 @@ module ActiveMerchant #:nodoc:
         hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
         parameters[:hash] = "s/#{seed}/#{hash}/n"
 
-        parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

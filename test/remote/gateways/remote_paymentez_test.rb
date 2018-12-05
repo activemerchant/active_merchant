@@ -5,8 +5,8 @@ class RemotePaymentezTest < Test::Unit::TestCase
     @gateway = PaymentezGateway.new(fixtures(:paymentez))
 
     @amount = 100
-    @credit_card = credit_card('4111111111111111', verification_value: '555')
-    @declined_card = credit_card('4242424242424242', verification_value: '555')
+    @credit_card = credit_card('4111111111111111', verification_value: '666')
+    @declined_card = credit_card('4242424242424242', verification_value: '666')
     @options = {
       billing_address: address,
       description: 'Store Purchase',
@@ -23,6 +23,32 @@ class RemotePaymentezTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
+    options = {
+      order_id: '1',
+      ip: '127.0.0.1',
+      tax_percentage: 0.07,
+      phone: '333 333 3333'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
+    assert_success response
+  end
+
+  def test_successful_purchase_without_phone_billing_address_option
+    options = {
+      order_id: '1',
+      ip: '127.0.0.1',
+      tax_percentage: 0.07,
+      billing_address: {
+        phone: nil
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
+    assert_success response
+  end
+
+  def test_successful_purchase_without_phone_option
     options = {
       order_id: '1',
       ip: '127.0.0.1',
@@ -47,6 +73,14 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
+  def test_successful_refund
+    auth = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert refund = @gateway.refund(@amount, @credit_card, @options)
+    assert_success refund
+  end
+
   def test_successful_void
     auth = @gateway.purchase(@amount, @credit_card, @options)
     assert_success auth
@@ -67,7 +101,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success auth
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Operation Successful', capture.message
+    assert_equal 'Response by mock', capture.message
   end
 
   def test_successful_authorize_and_capture_with_token
@@ -78,26 +112,34 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success auth
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Operation Successful', capture.message
+    assert_equal 'Response by mock', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_different_amount
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert capture = @gateway.capture(@amount + 100, auth.authorization)
+    assert_success capture
+    assert_equal 'Response by mock', capture.message
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Not Authorized', response.message
+    assert_equal 'Response by mock', response.message
   end
 
   def test_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert capture = @gateway.capture(@amount - 1, auth.authorization)
-    assert_success capture
+    assert_failure capture # Paymentez explicitly does not support partial capture; only GREATER than auth capture
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'The capture method is not supported by carrier', response.message
+    assert_equal 'The modification of the amount is not supported by carrier', response.message
   end
 
   def test_store

@@ -99,10 +99,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r{(authentication\.[^=]+=)[^&]+}, '\1[FILTERED]')
-          .gsub(%r{(card\.number=)\d+}, '\1[FILTERED]')
-          .gsub(%r{(cvv=)\d{3,4}}, '\1[FILTERED]\2')
+        transcript.
+          gsub(%r{(authentication\.[^=]+=)[^&]+}, '\1[FILTERED]').
+          gsub(%r{(card\.number=)\d+}, '\1[FILTERED]').
+          gsub(%r{(cvv=)\d{3,4}}, '\1[FILTERED]\2')
       end
 
       private
@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
         post[:authentication][:password] = @options[:password]
         post[:authentication][:entityId] = @options[:entity_id]
         post[:paymentType] = action
-        dot_flatten_hash(post).map {|key, value| "#{key}=#{CGI.escape(value.to_s)}"}.join("&")
+        dot_flatten_hash(post).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def error_code_from(response)

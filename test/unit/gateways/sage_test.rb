@@ -38,19 +38,19 @@ class SageGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal "APPROVED", response.message
-    assert_equal "1234567890;bankcard", response.authorization
+    assert_equal 'APPROVED', response.message
+    assert_equal '1234567890;bankcard', response.authorization
 
-    assert_equal "A",                  response.params["success"]
-    assert_equal "911911",             response.params["code"]
-    assert_equal "APPROVED",           response.params["message"]
-    assert_equal "00",                 response.params["front_end"]
-    assert_equal "M",                  response.params["cvv_result"]
-    assert_equal "X",                  response.params["avs_result"]
-    assert_equal "00",                 response.params["risk"]
-    assert_equal "1234567890",         response.params["reference"]
-    assert_equal "1000",               response.params["order_number"]
-    assert_equal "0",                  response.params["recurring"]
+    assert_equal 'A',                  response.params['success']
+    assert_equal '911911',             response.params['code']
+    assert_equal 'APPROVED',           response.params['message']
+    assert_equal '00',                 response.params['front_end']
+    assert_equal 'M',                  response.params['cvv_result']
+    assert_equal 'X',                  response.params['avs_result']
+    assert_equal '00',                 response.params['risk']
+    assert_equal '1234567890',         response.params['reference']
+    assert_equal '1000',               response.params['order_number']
+    assert_equal '0',                  response.params['recurring']
   end
 
   def test_successful_purchase
@@ -60,19 +60,19 @@ class SageGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal "APPROVED 000001", response.message
-    assert_equal "B5O89VPdf0;bankcard", response.authorization
+    assert_equal 'APPROVED 000001', response.message
+    assert_equal 'B5O89VPdf0;bankcard', response.authorization
 
-    assert_equal "A",                    response.params["success"]
-    assert_equal "000001",               response.params["code"]
-    assert_equal "APPROVED 000001",      response.params["message"]
-    assert_equal "10",                   response.params["front_end"]
-    assert_equal "M",                    response.params["cvv_result"]
-    assert_equal "",                     response.params["avs_result"]
-    assert_equal "00",                   response.params["risk"]
-    assert_equal "B5O89VPdf0",           response.params["reference"]
-    assert_equal "e81cab9e6144a160da82", response.params["order_number"]
-    assert_equal "0",                    response.params["recurring"]
+    assert_equal 'A',                    response.params['success']
+    assert_equal '000001',               response.params['code']
+    assert_equal 'APPROVED 000001',      response.params['message']
+    assert_equal '10',                   response.params['front_end']
+    assert_equal 'M',                    response.params['cvv_result']
+    assert_equal '',                     response.params['avs_result']
+    assert_equal '00',                   response.params['risk']
+    assert_equal 'B5O89VPdf0',           response.params['reference']
+    assert_equal 'e81cab9e6144a160da82', response.params['order_number']
+    assert_equal '0',                    response.params['recurring']
   end
 
   def test_declined_purchase
@@ -81,57 +81,57 @@ class SageGatewayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
-    assert_equal "DECLINED", response.message
-    assert_equal "A5O89kkix0;bankcard", response.authorization
+    assert_equal 'DECLINED', response.message
+    assert_equal 'A5O89kkix0;bankcard', response.authorization
 
-    assert_equal "E",                    response.params["success"]
-    assert_equal "000002",               response.params["code"]
-    assert_equal "DECLINED",             response.params["message"]
-    assert_equal "10",                   response.params["front_end"]
-    assert_equal "N",                    response.params["cvv_result"]
-    assert_equal "",                     response.params["avs_result"]
-    assert_equal "00",                   response.params["risk"]
-    assert_equal "A5O89kkix0",           response.params["reference"]
-    assert_equal "3443d6426188f8256b8f", response.params["order_number"]
-    assert_equal "0",                    response.params["recurring"]
+    assert_equal 'E',                    response.params['success']
+    assert_equal '000002',               response.params['code']
+    assert_equal 'DECLINED',             response.params['message']
+    assert_equal '10',                   response.params['front_end']
+    assert_equal 'N',                    response.params['cvv_result']
+    assert_equal '',                     response.params['avs_result']
+    assert_equal '00',                   response.params['risk']
+    assert_equal 'A5O89kkix0',           response.params['reference']
+    assert_equal '3443d6426188f8256b8f', response.params['order_number']
+    assert_equal '0',                    response.params['recurring']
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, "A5O89kkix0")
+    assert response = @gateway.capture(@amount, 'A5O89kkix0')
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal "APPROVED 000001", response.message
-    assert_equal "B5O8AdFhu0;bankcard", response.authorization
+    assert_equal 'APPROVED 000001', response.message
+    assert_equal 'B5O8AdFhu0;bankcard', response.authorization
 
-    assert_equal "A",                    response.params["success"]
-    assert_equal "000001",               response.params["code"]
-    assert_equal "APPROVED 000001",      response.params["message"]
-    assert_equal "10",                   response.params["front_end"]
-    assert_equal "P",                    response.params["cvv_result"]
-    assert_equal "",                     response.params["avs_result"]
-    assert_equal "00",                   response.params["risk"]
-    assert_equal "B5O8AdFhu0",           response.params["reference"]
-    assert_equal "ID5O8AdFhw",           response.params["order_number"]
-    assert_equal "0",                    response.params["recurring"]
+    assert_equal 'A',                    response.params['success']
+    assert_equal '000001',               response.params['code']
+    assert_equal 'APPROVED 000001',      response.params['message']
+    assert_equal '10',                   response.params['front_end']
+    assert_equal 'P',                    response.params['cvv_result']
+    assert_equal '',                     response.params['avs_result']
+    assert_equal '00',                   response.params['risk']
+    assert_equal 'B5O8AdFhu0',           response.params['reference']
+    assert_equal 'ID5O8AdFhw',           response.params['order_number']
+    assert_equal '0',                    response.params['recurring']
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    response = @gateway.refund(@amount, "Authorization")
+    response = @gateway.refund(@amount, 'Authorization')
     assert_success response
-    assert_equal "G68FCU2c60;bankcard", response.authorization
-    assert_equal "APPROVED", response.message
+    assert_equal 'G68FCU2c60;bankcard', response.authorization
+    assert_equal 'APPROVED', response.message
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "Authorization")
+    response = @gateway.refund(@amount, 'Authorization')
     assert_failure response
-    assert_equal "INVALID T_REFERENCE", response.message
+    assert_equal 'INVALID T_REFERENCE', response.message
   end
 
   def test_invalid_login
@@ -140,24 +140,24 @@ class SageGatewayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
-    assert_equal "SECURITY VIOLATION", response.message
-    assert_equal "0000000000;bankcard", response.authorization
+    assert_equal 'SECURITY VIOLATION', response.message
+    assert_equal '0000000000;bankcard', response.authorization
 
-    assert_equal "X",                  response.params["success"]
-    assert_equal "911911",             response.params["code"]
-    assert_equal "SECURITY VIOLATION", response.params["message"]
-    assert_equal "00",                 response.params["front_end"]
-    assert_equal "P",                  response.params["cvv_result"]
-    assert_equal "",                   response.params["avs_result"]
-    assert_equal "00",                 response.params["risk"]
-    assert_equal "0000000000",         response.params["reference"]
-    assert_equal "",                   response.params["order_number"]
-    assert_equal "0",                  response.params["recurring"]
+    assert_equal 'X',                  response.params['success']
+    assert_equal '911911',             response.params['code']
+    assert_equal 'SECURITY VIOLATION', response.params['message']
+    assert_equal '00',                 response.params['front_end']
+    assert_equal 'P',                  response.params['cvv_result']
+    assert_equal '',                   response.params['avs_result']
+    assert_equal '00',                 response.params['risk']
+    assert_equal '0000000000',         response.params['reference']
+    assert_equal '',                   response.params['order_number']
+    assert_equal '0',                  response.params['recurring']
   end
 
   def test_include_customer_number_for_numeric_values
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({:customer => "123"}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({:customer => '123'}))
     end.check_request do |method, data|
       assert data =~ /T_customer_number=123/
     end.respond_with(successful_authorization_response)
@@ -165,7 +165,7 @@ class SageGatewayTest < Test::Unit::TestCase
 
   def test_dont_include_customer_number_for_numeric_values
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge({:customer => "bob@test.com"}))
+      @gateway.purchase(@amount, @credit_card, @options.merge({:customer => 'bob@test.com'}))
     end.check_request do |method, data|
       assert data !~ /T_customer_number/
     end.respond_with(successful_authorization_response)
@@ -188,23 +188,23 @@ class SageGatewayTest < Test::Unit::TestCase
   def test_address_with_state
     post = {}
     options = {
-      :billing_address => { :country => "US", :state => "CA"}
+      :billing_address => { :country => 'US', :state => 'CA'}
     }
     @gateway.send(:add_addresses, post, options)
 
-    assert_equal "US", post[:C_country]
-    assert_equal "CA", post[:C_state]
+    assert_equal 'US', post[:C_country]
+    assert_equal 'CA', post[:C_state]
   end
 
   def test_address_without_state
     post = {}
     options = {
-      :billing_address => { :country => "NZ", :state => ""}
+      :billing_address => { :country => 'NZ', :state => ''}
     }
     @gateway.send(:add_addresses, post, options)
 
-    assert_equal "NZ", post[:C_country]
-    assert_equal "Outside of US", post[:C_state]
+    assert_equal 'NZ', post[:C_country]
+    assert_equal 'Outside of US', post[:C_state]
   end
 
   def test_successful_check_purchase
@@ -214,17 +214,17 @@ class SageGatewayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal "ACCEPTED", response.message
-    assert_equal "C5O8NUdNt0;virtual_check", response.authorization
+    assert_equal 'ACCEPTED', response.message
+    assert_equal 'C5O8NUdNt0;virtual_check', response.authorization
 
-    assert_equal "A",                    response.params["success"]
-    assert_equal "",                     response.params["code"]
-    assert_equal "ACCEPTED",             response.params["message"]
-    assert_equal "00",                   response.params["risk"]
-    assert_equal "C5O8NUdNt0",           response.params["reference"]
-    assert_equal "89be635e663b05eca587", response.params["order_number"]
-    assert_equal  "0",                   response.params["authentication_indicator"]
-    assert_equal  "NONE",                response.params["authentication_disclosure"]
+    assert_equal 'A',                    response.params['success']
+    assert_equal '',                     response.params['code']
+    assert_equal 'ACCEPTED',             response.params['message']
+    assert_equal '00',                   response.params['risk']
+    assert_equal 'C5O8NUdNt0',           response.params['reference']
+    assert_equal '89be635e663b05eca587', response.params['order_number']
+    assert_equal  '0',                   response.params['authentication_indicator']
+    assert_equal  'NONE',                response.params['authentication_disclosure']
   end
 
   def test_declined_check_purchase
@@ -233,17 +233,17 @@ class SageGatewayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @check, @check_options)
     assert_failure response
     assert response.test?
-    assert_equal "INVALID C_RTE", response.message
-    assert_equal "C5O8NR6Nr0;virtual_check", response.authorization
+    assert_equal 'INVALID C_RTE', response.message
+    assert_equal 'C5O8NR6Nr0;virtual_check', response.authorization
 
-    assert_equal "X",                    response.params["success"]
-    assert_equal "900016",               response.params["code"]
-    assert_equal "INVALID C_RTE",        response.params["message"]
-    assert_equal "00",                   response.params["risk"]
-    assert_equal "C5O8NR6Nr0",           response.params["reference"]
-    assert_equal "d98cf50f7a2430fe04ad", response.params["order_number"]
-    assert_equal  "0",                    response.params["authentication_indicator"]
-    assert_equal  nil,                    response.params["authentication_disclosure"]
+    assert_equal 'X',                    response.params['success']
+    assert_equal '900016',               response.params['code']
+    assert_equal 'INVALID C_RTE',        response.params['message']
+    assert_equal '00',                   response.params['risk']
+    assert_equal 'C5O8NR6Nr0',           response.params['reference']
+    assert_equal 'd98cf50f7a2430fe04ad', response.params['order_number']
+    assert_equal  '0',                    response.params['authentication_indicator']
+    assert_equal  nil,                    response.params['authentication_disclosure']
   end
 
   def test_successful_store
@@ -324,6 +324,7 @@ class SageGatewayTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_authorization_response
     "\002A911911APPROVED                        00MX001234567890\0341000\0340\034\003"
   end

@@ -1,5 +1,5 @@
-require "active_merchant"
-require "support/gateway_support"
+require 'active_merchant'
+require 'support/gateway_support'
 
 class SSLVersion
   attr_accessor :success, :failed, :missing, :errored
@@ -10,7 +10,7 @@ class SSLVersion
   end
 
   def test_gateways(min_version = :TLS1_1)
-    raise "Requires Ruby 2.5 or better" unless Net::HTTP.instance_methods.include?(:min_version=)
+    raise 'Requires Ruby 2.5 or better' unless Net::HTTP.instance_methods.include?(:min_version=)
 
     puts "Verifying #{@gateways.count} gateways for SSL min_version=#{min_version}\n\n"
 
@@ -25,13 +25,13 @@ class SSLVersion
 
       case result
       when :success
-        print "."
+        print '.'
         success << g
       when :fail
-        print "F"
+        print 'F'
         failed << {:gateway => g, :message => message}
       when :error
-        print "E"
+        print 'E'
         errored << {:gateway => g, :message => message}
       end
     end
@@ -70,7 +70,7 @@ class SSLVersion
     http.open_timeout = 10
     http.read_timeout = 10
 
-    http.post("/", "")
+    http.post('/', '')
 
     return :success
   rescue Net::HTTPBadResponse

@@ -26,7 +26,7 @@ class RemotePayGateXmlTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
   end
 
   def test_authorize_and_capture

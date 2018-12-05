@@ -60,7 +60,7 @@ class SkipJackTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "9802853155172.022", response.authorization
+    assert_equal '9802853155172.022', response.authorization
   end
 
   def test_purchase_failure
@@ -131,49 +131,49 @@ class SkipJackTest < Test::Unit::TestCase
   def test_basic_test_url
     @gateway.stubs(:test?).returns(true)
     @gateway.stubs(:advanced?).returns(false)
-    assert_equal "https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+    assert_equal 'https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', @gateway.send(:url_for, :authorization)
   end
 
   def test_basic_test_url_non_authorization
     @gateway.stubs(:test?).returns(true)
     @gateway.stubs(:advanced?).returns(false)
-    assert_equal "https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest", @gateway.send(:url_for, :change_status)
+    assert_equal 'https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', @gateway.send(:url_for, :change_status)
   end
 
   def test_advanced_test_url
     @gateway.stubs(:test?).returns(true)
     @gateway.stubs(:advanced?).returns(true)
-    assert_equal "https://developer.skipjackic.com/evolvcc/evolvcc.aspx?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+    assert_equal 'https://developer.skipjackic.com/evolvcc/evolvcc.aspx?AuthorizeAPI', @gateway.send(:url_for, :authorization)
   end
 
   def test_advanced_test_url_non_authorization
     @gateway.stubs(:test?).returns(true)
     @gateway.stubs(:advanced?).returns(true)
-    assert_equal "https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest", @gateway.send(:url_for, :change_status)
+    assert_equal 'https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', @gateway.send(:url_for, :change_status)
   end
 
   def test_basic_live_url
     @gateway.stubs(:test?).returns(false)
     @gateway.stubs(:advanced?).returns(false)
-    assert_equal "https://www.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+    assert_equal 'https://www.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', @gateway.send(:url_for, :authorization)
   end
 
   def test_basic_live_url_non_authorization
     @gateway.stubs(:test?).returns(false)
     @gateway.stubs(:advanced?).returns(false)
-    assert_equal "https://www.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest", @gateway.send(:url_for, :change_status)
+    assert_equal 'https://www.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', @gateway.send(:url_for, :change_status)
   end
 
   def test_advanced_live_url
     @gateway.stubs(:test?).returns(false)
     @gateway.stubs(:advanced?).returns(true)
-    assert_equal "https://www.skipjackic.com/evolvcc/evolvcc.aspx?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+    assert_equal 'https://www.skipjackic.com/evolvcc/evolvcc.aspx?AuthorizeAPI', @gateway.send(:url_for, :authorization)
   end
 
   def test_advanced_live_url_non_authorization
     @gateway.stubs(:test?).returns(false)
     @gateway.stubs(:advanced?).returns(true)
-    assert_equal "https://www.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest", @gateway.send(:url_for, :change_status)
+    assert_equal 'https://www.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', @gateway.send(:url_for, :change_status)
   end
 
   def test_paymentech_authorization_success
@@ -193,7 +193,6 @@ class SkipJackTest < Test::Unit::TestCase
     assert_failure response
   end
 
-
   def test_serial_number_is_added_before_developer_serial_number_for_authorization
     expected ="Year=#{Time.now.year + 1}&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1~None~0.00~0~N~%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242"
     expected = expected.gsub('~', '%7E') if RUBY_VERSION < '2.5.0'
@@ -207,7 +206,7 @@ class SkipJackTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
 
     @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE&szAmount=1.00").returns(successful_capture_response)
-    response = @gateway.capture(@amount, response.authorization)
+    @gateway.capture(@amount, response.authorization)
   end
 
   def test_successful_partial_capture
@@ -217,7 +216,7 @@ class SkipJackTest < Test::Unit::TestCase
 
     @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE&szAmount=1.00").returns(successful_capture_response)
     response = @gateway.capture(@amount/2, response.authorization)
-    assert_equal "1.0000", response.params["TransactionAmount"]
+    assert_equal '1.0000', response.params['TransactionAmount']
   end
 
   def test_dont_send_blank_state
@@ -235,6 +234,7 @@ class SkipJackTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_authorization_response
     <<-CSV
 "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
@@ -276,4 +276,3 @@ class SkipJackTest < Test::Unit::TestCase
     CSV
   end
 end
-

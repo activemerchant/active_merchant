@@ -7,6 +7,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
     @bad_credit_card = credit_card('4111111111111113')
     @check = check
     @amount = 100
+    @reversal_id = "REV-#{SecureRandom.random_number(1000000)}"
     @options = {
       :billing_address => address,
       :merchant_ref => 'Store Purchase',
@@ -14,15 +15,15 @@ class RemotePayeezyTest < Test::Unit::TestCase
     }
     @options_mdd = {
       soft_descriptors: {
-        dba_name: "Caddyshack",
-        street: "1234 Any Street",
-        city: "Durham",
-        region: "North Carolina",
-        mid: "mid_1234",
-        mcc: "mcc_5678",
-        postal_code: "27701",
-        country_code: "US",
-        merchant_contact_info: "8885551212"
+        dba_name: 'Caddyshack',
+        street: '1234 Any Street',
+        city: 'Durham',
+        region: 'North Carolina',
+        mid: 'mid_1234',
+        mcc: 'mcc_5678',
+        postal_code: '27701',
+        country_code: 'US',
+        merchant_contact_info: '8885551212'
       }
     }
   end
@@ -55,7 +56,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_echeck
-    options = @options.merge({customer_id_type: "1", customer_id_number: "1", client_email: "test@example.com"})
+    options = @options.merge({customer_id_type: '1', customer_id_number: '1', client_email: 'test@example.com'})
     assert response = @gateway.purchase(@amount, @check, options)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
@@ -69,7 +70,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_failed_purchase
     @amount = 501300
-    assert response = @gateway.purchase(@amount, @credit_card, @options )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction not approved/, response.message)
     assert_failure response
   end
@@ -163,7 +164,7 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_match(/Transaction Normal/, purchase.message)
     assert_success purchase
 
-    assert response = @gateway.refund(50, "bad-authorization")
+    assert response = @gateway.refund(50, 'bad-authorization')
     assert_failure response
     assert_match(/The transaction tag is not provided/, response.message)
     assert response.authorization
@@ -174,6 +175,36 @@ class RemotePayeezyTest < Test::Unit::TestCase
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'Transaction Normal - Approved', void.message
+  end
+
+  def test_successful_auth_void_with_reversal_id
+    auth = @gateway.authorize(@amount, @credit_card, @options.merge(reversal_id: @reversal_id))
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization, reversal_id: @reversal_id)
+    assert_success void
+    assert_equal 'Transaction Normal - Approved', void.message
+  end
+
+  def test_successful_void_purchase_with_reversal_id
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(reversal_id: @reversal_id))
+    assert_success response
+
+    assert void = @gateway.void(response.authorization, reversal_id: @reversal_id)
+    assert_success void
+    assert_equal 'Transaction Normal - Approved', void.message
+  end
+
+  def test_successful_void_with_stored_card_and_reversal_id
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+
+    auth = @gateway.authorize(@amount, response.authorization, @options.merge(reversal_id: @reversal_id))
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization, reversal_id: @reversal_id)
     assert_success void
     assert_equal 'Transaction Normal - Approved', void.message
   end
@@ -211,11 +242,11 @@ class RemotePayeezyTest < Test::Unit::TestCase
   def test_bad_creditcard_number
     assert response = @gateway.purchase(@amount, @bad_credit_card, @options)
     assert_failure response
-    assert_equal response.error_code, "invalid_card_number"
+    assert_equal response.error_code, 'invalid_card_number'
   end
 
   def test_invalid_login
-    gateway = PayeezyGateway.new(apikey: "NotARealUser", apisecret: "NotARealPassword", token: "token")
+    gateway = PayeezyGateway.new(apikey: 'NotARealUser', apisecret: 'NotARealPassword', token: 'token')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Invalid Api Key}, response.message
     assert_failure response
@@ -224,17 +255,17 @@ class RemotePayeezyTest < Test::Unit::TestCase
   def test_response_contains_cvv_and_avs_results
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'M', response.cvv_result["code"]
-    assert_equal '4', response.avs_result["code"]
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal '4', response.avs_result['code']
   end
 
   def test_trans_error
     # ask for error 42 (unable to send trans) as the cents bit...
     @amount = 500042
-    assert response = @gateway.purchase(@amount, @credit_card, @options )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Server Error/, response.message) # 42 is 'unable to send trans'
     assert_failure response
-    assert_equal "500", response.error_code
+    assert_equal '500', response.error_code
   end
 
   def test_transcript_scrubbing_store

@@ -40,6 +40,7 @@ require 'socket'
 require 'openssl'
 
 require 'active_merchant/network_connection_retries'
+require 'active_merchant/net_http_ssl_connection'
 require 'active_merchant/connection'
 require 'active_merchant/post_data'
 require 'active_merchant/posts_data'
@@ -50,7 +51,7 @@ require 'active_merchant/country'
 
 module ActiveMerchant
   def self.deprecated(message, caller=Kernel.caller[1])
-    warning = caller + ": " + message
+    warning = caller + ': ' + message
     if(respond_to?(:logger) && logger.present?)
       logger.warn(warning)
     else

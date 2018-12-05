@@ -379,19 +379,19 @@ module ActiveMerchant #:nodoc:
         requires!(options, :transaction)
         requires!(options[:transaction], :type)
         case options[:transaction][:type]
-          when :void
-            requires!(options[:transaction], :trans_id)
-          when :refund
-            requires!(options[:transaction], :trans_id) &&
-              (
-                (options[:transaction][:customer_profile_id] && options[:transaction][:customer_payment_profile_id]) ||
-                options[:transaction][:credit_card_number_masked] ||
-                (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
-              )
-          when :prior_auth_capture
-            requires!(options[:transaction], :amount, :trans_id)
-          else
-            requires!(options[:transaction], :amount, :customer_profile_id, :customer_payment_profile_id)
+        when :void
+          requires!(options[:transaction], :trans_id)
+        when :refund
+          requires!(options[:transaction], :trans_id) &&
+            (
+              (options[:transaction][:customer_profile_id] && options[:transaction][:customer_payment_profile_id]) ||
+              options[:transaction][:credit_card_number_masked] ||
+              (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
+            )
+        when :prior_auth_capture
+          requires!(options[:transaction], :amount, :trans_id)
+        else
+          requires!(options[:transaction], :amount, :customer_profile_id, :customer_payment_profile_id)
         end
         request = build_request(:create_customer_profile_transaction, options)
         commit(:create_customer_profile_transaction, request)
@@ -614,7 +614,7 @@ module ActiveMerchant #:nodoc:
 
       def build_create_customer_profile_transaction_request(xml, options)
         options[:extra_options] ||= {}
-        options[:extra_options].merge!('x_delim_char' => @options[:delimiter]) if @options[:delimiter]
+        options[:extra_options]['x_delim_char'] = @options[:delimiter] if @options[:delimiter]
 
         add_transaction(xml, options[:transaction])
         xml.tag!('extraOptions') do
@@ -665,41 +665,40 @@ module ActiveMerchant #:nodoc:
           xml.tag!(CIM_TRANSACTION_TYPES[transaction[:type]]) do
             # The amount to be billed to the customer
             case transaction[:type]
-              when :void
-                tag_unless_blank(xml,'customerProfileId', transaction[:customer_profile_id])
-                tag_unless_blank(xml,'customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                tag_unless_blank(xml,'customerShippingAddressId', transaction[:customer_shipping_address_id])
-                xml.tag!('transId', transaction[:trans_id])
-              when :refund
-                #TODO - add lineItems field
-                xml.tag!('amount', transaction[:amount])
-                tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
-                tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
-                tag_unless_blank(xml, 'creditCardNumberMasked', transaction[:credit_card_number_masked])
-                tag_unless_blank(xml, 'bankRoutingNumberMasked', transaction[:bank_routing_number_masked])
-                tag_unless_blank(xml, 'bankAccountNumberMasked', transaction[:bank_account_number_masked])
-                add_order(xml, transaction[:order]) if transaction[:order].present?
-                xml.tag!('transId', transaction[:trans_id])
-                add_tax(xml, transaction[:tax]) if transaction[:tax]
-                add_duty(xml, transaction[:duty]) if transaction[:duty]
-                add_shipping(xml, transaction[:shipping]) if transaction[:shipping]
-              when :prior_auth_capture
-                xml.tag!('amount', transaction[:amount])
-                add_order(xml, transaction[:order]) if transaction[:order].present?
-                xml.tag!('transId', transaction[:trans_id])
-              else
-                xml.tag!('amount', transaction[:amount])
-                xml.tag!('customerProfileId', transaction[:customer_profile_id])
-                xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
-                xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
-                add_order(xml, transaction[:order]) if transaction[:order].present?
+            when :void
+              tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
+              tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
+              xml.tag!('transId', transaction[:trans_id])
+            when :refund
+              xml.tag!('amount', transaction[:amount])
+              tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
+              tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
+              tag_unless_blank(xml, 'creditCardNumberMasked', transaction[:credit_card_number_masked])
+              tag_unless_blank(xml, 'bankRoutingNumberMasked', transaction[:bank_routing_number_masked])
+              tag_unless_blank(xml, 'bankAccountNumberMasked', transaction[:bank_account_number_masked])
+              add_order(xml, transaction[:order]) if transaction[:order].present?
+              xml.tag!('transId', transaction[:trans_id])
+              add_tax(xml, transaction[:tax]) if transaction[:tax]
+              add_duty(xml, transaction[:duty]) if transaction[:duty]
+              add_shipping(xml, transaction[:shipping]) if transaction[:shipping]
+            when :prior_auth_capture
+              xml.tag!('amount', transaction[:amount])
+              add_order(xml, transaction[:order]) if transaction[:order].present?
+              xml.tag!('transId', transaction[:trans_id])
+            else
+              xml.tag!('amount', transaction[:amount])
+              xml.tag!('customerProfileId', transaction[:customer_profile_id])
+              xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
+              xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+              add_order(xml, transaction[:order]) if transaction[:order].present?
 
             end
             if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])
               xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
             end
-            unless [:void,:refund,:prior_auth_capture].include?(transaction[:type])
+            unless [:void, :refund, :prior_auth_capture].include?(transaction[:type])
               tag_unless_blank(xml, 'cardCode', transaction[:card_code])
             end
           end
@@ -854,11 +853,11 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, request)
         url = test? ? test_url : live_url
-        xml = ssl_post(url, request, "Content-Type" => "text/xml")
+        xml = ssl_post(url, request, 'Content-Type' => 'text/xml')
 
         response_params = parse(action, xml)
 
-        message_element= response_params["messages"]["message"]
+        message_element= response_params['messages']['message']
         first_error = message_element.is_a?(Array) ? message_element.first : message_element
         message = first_error['text']
         test_mode = @options[:test_requests] || message =~ /Test Mode/
@@ -879,7 +878,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def format_extra_options(options)
-        options.map{ |k, v| "#{k}=#{v}" }.join('&') unless options.nil?
+        options&.map { |k, v| "#{k}=#{v}" }&.join('&')
       end
 
       def parse_direct_response(params)
@@ -942,7 +941,7 @@ module ActiveMerchant #:nodoc:
       def parse(action, xml)
         xml = REXML::Document.new(xml)
         root = REXML::XPath.first(xml, "//#{CIM_ACTIONS[action]}Response") ||
-               REXML::XPath.first(xml, "//ErrorResponse")
+               REXML::XPath.first(xml, '//ErrorResponse')
         if root
           response = parse_element(root)
         end
@@ -953,7 +952,7 @@ module ActiveMerchant #:nodoc:
       def parse_element(node)
         if node.has_elements?
           response = {}
-          node.elements.each{ |e|
+          node.elements.each { |e|
             key = e.name.underscore
             value = parse_element(e)
             if response.has_key?(key)

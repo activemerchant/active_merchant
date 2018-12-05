@@ -66,31 +66,42 @@ class QbmsTest < Test::Unit::TestCase
   end
 
   def test_invalid_ticket
-    gateway = QbmsGateway.new(@gateway_options.merge(:ticket => "test123"))
+    gateway = QbmsGateway.new(@gateway_options.merge(:ticket => 'test123'))
 
     assert response = gateway.authorize(@amount, @card, @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "Application agent not found test123", response.message
+    assert_equal 'Application agent not found test123', response.message
   end
 
   def test_invalid_card_number
     assert response = @gateway.authorize(@amount, error_card('10301_ccinvalid'), @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "This credit card number is invalid.", response.message
+    assert_equal 'This credit card number is invalid.', response.message
   end
 
   def test_decline
     assert response = @gateway.authorize(@amount, error_card('10401_decline'), @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "The request to process this transaction has been declined.", response.message
+    assert_equal 'The request to process this transaction has been declined.', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:ticket], transcript)
   end
 
   private
 
   def error_card(config_id)
-    credit_card('4111111111111111', :first_name => "configid=#{config_id}", :last_name => "")
+    credit_card('4111111111111111', :first_name => "configid=#{config_id}", :last_name => '')
   end
 end

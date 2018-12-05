@@ -12,7 +12,7 @@ class RemoteWepayTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address,
-      email: "test@example.com"
+      email: 'test@example.com'
     }
   end
 
@@ -53,7 +53,7 @@ class RemoteWepayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_few_options
-    options = { address: { zip: "27701" }, email: "test@example.com" }
+    options = { address: { zip: '27701' }, email: 'test@example.com' }
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Success', response.message
@@ -66,12 +66,12 @@ class RemoteWepayTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_token
-    response = @gateway.purchase(@amount, "12345", @options)
+    response = @gateway.purchase(@amount, '12345', @options)
     assert_failure response
   end
 
   def test_successful_purchase_with_fee
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(application_fee: 3, fee_payer: "payee"))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(application_fee: 3, fee_payer: 'payee'))
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -83,7 +83,7 @@ class RemoteWepayTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_ip_and_risk_token
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: "100.166.99.123", risk_token: "123e4567-e89b-12d3-a456-426655440000"))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(ip: '100.166.99.123', risk_token: '123e4567-e89b-12d3-a456-426655440000'))
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -178,7 +178,7 @@ class RemoteWepayTest < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
-    void = @gateway.void(authorize.authorization, cancel_reason: "Cancel")
+    void = @gateway.void(authorize.authorization, cancel_reason: 'Cancel')
     assert_success void
   end
 

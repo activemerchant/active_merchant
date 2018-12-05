@@ -10,7 +10,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @options = {
       billing_address: address,
       shipping_address: address,
-      email: "user+br@example.com",
+      email: 'user+br@example.com',
       description: 'Store Purchase'
     }
   end
@@ -39,7 +39,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "rejected", response.error_code
+    assert_equal 'rejected', response.error_code
     assert_equal 'cc_rejected_other_reason', response.message
   end
 
@@ -71,7 +71,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'Method not allowed', response.message
+    assert_equal 'json_parse_error', response.message
   end
 
   def test_successful_refund
@@ -94,7 +94,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal 'Resource /payments/refunds not found.', response.message
+    assert_equal 'Not Found', response.message
   end
 
   def test_successful_void
@@ -109,7 +109,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'Method not allowed', response.message
+    assert_equal 'json_parse_error', response.message
   end
 
   def test_successful_verify

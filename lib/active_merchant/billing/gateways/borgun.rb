@@ -1,9 +1,9 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BorgunGateway < Gateway
-      self.display_name = "Borgun"
+      self.display_name = 'Borgun'
       self.homepage_url = 'http://www.borgun.com'
 
       self.test_url = 'https://gatewaytest.borgun.is/ws/Heimir.pub.ws:Authorization'
@@ -76,10 +76,10 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
-      CURRENCY_CODES["ISK"] = "352"
-      CURRENCY_CODES["EUR"] = "978"
-      CURRENCY_CODES["USD"] = "840"
+      CURRENCY_CODES = Hash.new { |h, k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}") }
+      CURRENCY_CODES['ISK'] = '352'
+      CURRENCY_CODES['EUR'] = '978'
+      CURRENCY_CODES['USD'] = '840'
 
       def add_invoice(post, money, options)
         post[:TrAmount] = amount(money)
@@ -91,12 +91,12 @@ module ActiveMerchant #:nodoc:
         post[:PAN] = payment_method.number
         post[:ExpDate] = format(payment_method.year, :two_digits) + format(payment_method.month, :two_digits)
         post[:CVC2] = payment_method.verification_value
-        post[:DateAndTime] = Time.now.strftime("%y%m%d%H%M%S")
+        post[:DateAndTime] = Time.now.strftime('%y%m%d%H%M%S')
         post[:RRN] = 'AMRCNT' + six_random_digits
       end
 
       def add_reference(post, authorization)
-        dateandtime, batch, transaction, rrn, authcode, _, _, _ = split_authorization(authorization)
+        dateandtime, _batch, transaction, rrn, authcode, _, _, _ = split_authorization(authorization)
         post[:DateAndTime] = dateandtime
         post[:Transaction] = transaction
         post[:RRN] = rrn
@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
         body.children.each do |node|
           if node.text?
             next
-          elsif (node.elements.size == 0)
+          elsif node.elements.size == 0
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -130,7 +130,6 @@ module ActiveMerchant #:nodoc:
         post[:Processor] = @options[:processor]
         post[:MerchantID] = @options[:merchant_id]
 
-        url = (test? ? test_url : live_url)
         request = build_request(action, post)
         raw = ssl_post(url(action), request, headers)
         pairs = parse(raw)
@@ -151,7 +150,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
           response[:message] || "Error with ActionCode=#{response[:actioncode]}"
         end
@@ -167,11 +166,11 @@ module ActiveMerchant #:nodoc:
           response[:transtype],
           response[:tramount],
           response[:trcurrency]
-        ].join("|")
+        ].join('|')
       end
 
       def split_authorization(authorization)
-        dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency = authorization.split("|")
+        dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency = authorization.split('|')
         [dateandtime, batch, transaction, rrn, authcode, transtype, tramount, currency]
       end
 
@@ -182,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action, post)
-        mode = (action == 'void') ? 'cancel' : 'get'
+        mode = action == 'void' ? 'cancel' : 'get'
         xml = Builder::XmlMarkup.new :indent => 18
         xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
         xml.tag!("#{mode}Authorization") do
@@ -191,7 +190,7 @@ module ActiveMerchant #:nodoc:
           end
         end
         inner = CGI.escapeHTML(xml.target!)
-        envelope(mode).sub(/{{ :body }}/,inner)
+        envelope(mode).sub(/{{ :body }}/, inner)
       end
 
       def envelope(mode)
@@ -214,7 +213,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def six_random_digits
-        (0...6).map { (48 + rand(10)).chr }.join
+        (0...6).map { rand(48..57).chr }.join
       end
     end
   end

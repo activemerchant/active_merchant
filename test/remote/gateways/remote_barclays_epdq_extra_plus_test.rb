@@ -1,4 +1,5 @@
 # coding: utf-8
+
 require 'test_helper'
 
 class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
@@ -6,7 +7,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     @gateway = BarclaysEpdqExtraPlusGateway.new(fixtures(:barclays_epdq_extra_plus))
     @amount = 100
     @credit_card     = credit_card('4000100011112224', :verification_value => '987')
-    @mastercard      = credit_card('5399999999999999', :brand => "mastercard")
+    @mastercard      = credit_card('5399999999999999', :brand => 'mastercard')
     @declined_card   = credit_card('1111111111111111')
     @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
     @options = {
@@ -21,7 +22,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
-    assert_equal @options[:currency], response.params["currency"]
+    assert_equal @options[:currency], response.params['currency']
     assert_equal @options[:order_id], response.order_id
   end
 
@@ -31,18 +32,18 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
-    assert_equal @options[:currency], response.params["currency"]
+    assert_equal @options[:currency], response.params['currency']
     assert_equal @options[:order_id], response.order_id
   end
 
   def test_successful_purchase_with_utf8_encoding_1
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "Rémy", :last_name => "Fröåïør"), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => 'Rémy', :last_name => 'Fröåïør'), @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
   end
 
   def test_successful_purchase_with_utf8_encoding_2
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "ワタシ", :last_name => "ёжзийклмнопрсуфхцч"), @options)
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => 'ワタシ', :last_name => 'ёжзийклмнопрсуфхцч'), @options)
     assert_success response
     assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
   end
@@ -218,7 +219,7 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
                 :login => '',
                 :user => '',
                 :password => '',
-                :signature_encryptor => "none"
+                :signature_encryptor => 'none'
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
