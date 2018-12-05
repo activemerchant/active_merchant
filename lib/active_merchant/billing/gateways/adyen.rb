@@ -33,6 +33,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
+        if options[:execute_threed]
+          authorize(money, payment, options)
+        end
         MultiResponse.run do |r|
           r.process { authorize(money, payment, options) }
           r.process { capture(money, r.authorization, options) }
@@ -48,6 +51,7 @@ module ActiveMerchant #:nodoc:
         add_shopper_interaction(post, payment, options)
         add_address(post, options)
         add_installments(post, options) if options[:installments]
+        add_3ds(post, options) if options[:execute_threed]
         commit('authorise', post)
       end
 
@@ -258,6 +262,11 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      def add_3ds(post, options)
+        post[:additionalData] = { executeThreeD: 'true' }
+        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+      end
+
       def parse(body)
         return {} if body.blank?
         JSON.parse(body)
@@ -315,7 +324,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(action, response)
         case action.to_s
-        when 'authorise'
+        when 'authorise', 'authorise3d'
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
         when 'capture', 'refund', 'cancel'
           response['response'] == "[#{action}-received]"

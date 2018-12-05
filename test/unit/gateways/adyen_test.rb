@@ -19,6 +19,8 @@ class AdyenTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
+    @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
+
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
       :payment_cryptogram => 'YwAAAAAABaYcCMX/OhNRQAAAAAA=',
       :month              => '08',
@@ -67,6 +69,19 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal 'R', response.avs_result['code']
     assert_equal 'M', response.cvv_result['code']
     assert response.test?
+  end
+
+  def test_successful_authorize_with_3ds
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
+
+    response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: true))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal '#8835440446784145#', response.authorization
+    assert_equal response.params['resultCode'], 'RedirectShopper'
+    refute response.params['issuerUrl'].blank?
+    refute response.params['md'].blank?
+    refute response.params['paRequest'].blank?
   end
 
   def test_failed_authorize
@@ -430,6 +445,10 @@ class AdyenTest < Test::Unit::TestCase
       "authCode":"50055"
     }
     RESPONSE
+  end
+
+  def successful_authorize_with_3ds_response
+    '{"pspReference":"8835440446784145","resultCode":"RedirectShopper","issuerUrl":"https:\\/\\/test.adyen.com\\/hpp\\/3d\\/validate.shtml","md":"djIhcWk3MUhlVFlyQ1h2UC9NWmhpVm10Zz09IfIxi5eDMZgG72AUXy7PEU86esY68wr2cunaFo5VRyNPuWg3ZSvEIFuielSuoYol5WhjCH+R6EJTjVqY8eCTt+0wiqHd5btd82NstIc8idJuvg5OCu2j8dYo0Pg7nYxW\\/2vXV9Wy\\/RYvwR8tFfyZVC\\/U2028JuWtP2WxrBTqJ6nV2mDoX2chqMRSmX8xrL6VgiLoEfzCC\\/c+14r77+whHP0Mz96IGFf4BIA2Qo8wi2vrTlccH\\/zkLb5hevvV6QH3s9h0\\/JibcUrpoXH6M903ulGuikTr8oqVjEB9w8\\/WlUuxukHmqqXqAeOPA6gScehs6SpRm45PLpLysCfUricEIDhpPN1QCjjgw8+qVf3Ja1SzwfjCVocU","paRequest":"eNpVUctuwjAQ\\/BXaD2Dt4JCHFkspqVQOBChwriJnBanIAyepoF9fG5LS+jQz612PZ3F31ETxllSnSeKSmiY90CjPZs+h709cIZgQU88XXLjPEtfRO50lfpFu8qqUfMzGDsJATbtWx7RsJabq\\/LJIJHcmwp0i9BQL0otY7qhp10URqXOXa9IIdxnLtCC5jz6i+VO4rY2v7HSdr5ZOIBBuNVRVV7b6Kn3BEAaCnT7JY9vWIUDTt41VVSDYAsLD1bqzqDGDLnkmV\\/HhO9lt2DLesORTiSR+ZckmsmeGYG9glrYkHcZ97jB35PCQe6HrI9x0TAvrQO638cgkYRz1Atb2nehOuC38FdBEralUwy8GhnSpq5LMDRPpL0Z4mJ6\\/2WBVa7ISzj1azw+YQZ6N+FawU3ITCg9YcBtjCYJthX570G\\/ZoH\\/b\\/wFlSqpp"}'
   end
 
   def failed_authorize_response
