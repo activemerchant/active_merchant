@@ -299,6 +299,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_equal 'Visa', @gateway.send(:card_type, 'visa')
     assert_equal 'Mastercard', @gateway.send(:card_type, 'master')
     assert_equal 'Mastercard', @gateway.send(:card_type, 'mastercard')
+    assert_equal 'American Express', @gateway.send(:card_type, 'american express')
     assert_equal 'American Express', @gateway.send(:card_type, 'american_express')
     assert_equal 'JCB', @gateway.send(:card_type, 'jcb')
     assert_equal 'Discover', @gateway.send(:card_type, 'discover')

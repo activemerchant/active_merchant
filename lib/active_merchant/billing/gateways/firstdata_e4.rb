@@ -341,7 +341,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_type(credit_card_brand)
-        E4_BRANDS[credit_card_brand.to_sym] if credit_card_brand
+        E4_BRANDS[credit_card_brand.sub(' ', '_').to_sym] if credit_card_brand
       end
 
       def commit(action, request, credit_card = nil)
