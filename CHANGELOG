@@ -6,6 +6,7 @@
 * WorldPay: set cardholder name to "3D" for 3DS transactions [bpollack] #3071
 * Authorize.Net: Support refunds for bank accounts [nfarve] #3063
 * Stripe: support specifying a reason for refunds [yosukehasumi] #3056
+* TrustCommerce: Add ACH Ability [nfarve] #3073
 
 == Version 1.88.0 (November 30, 2018)
 * Added ActiveSupport/Rails master support [Edouard-chin] #3065
@@ -31,7 +32,7 @@
 * CyberSource: update supported countries [bpollack] #3055
 * MiGS: update supported countries [bpollack] #3055
 * Clearhaus: update submission data format [bpollack] #3053
-* Forte: Allow void on capture #3059
+* Forte: Allow void on capture [nfarve] #3059
 
 == Version 1.86.0 (October 26, 2018)
 * UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] #3002

@@ -1,15 +1,18 @@
 require 'test_helper'
 
 class TrustCommerceTest < Test::Unit::TestCase
+  include CommStub
   def setup
     @gateway = TrustCommerceGateway.new(
       :login => 'TestMerchant',
-      :password => 'password'
+      :password => 'password',
+      :aggregator_id => 'abc123'
     )
     # Force SSL post
     @gateway.stubs(:tclink?).returns(false)
 
     @amount = 100
+    @check = check
     @credit_card = credit_card('4111111111111111')
   end
 
@@ -26,6 +29,14 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_instance_of Response, response
     assert_failure response
+  end
+
+  def test_succesful_purchase_with_check
+    stub_comms do
+      @gateway.purchase(@amount, @check)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{aggregator1}, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_amount_style

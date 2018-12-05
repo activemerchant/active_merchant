@@ -1183,6 +1183,7 @@ trexle:
 trust_commerce:
   login: 'TestMerchant'
   password: 'password'
+  aggregator_id: 'abc123'
 
 # Working credentials, no need to replace
 usa_epay:

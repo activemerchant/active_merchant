@@ -153,6 +153,7 @@ module ActiveMerchant #:nodoc:
         }
 
         add_order_id(parameters, options)
+        add_aggregator(parameters, options)
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
@@ -167,6 +168,7 @@ module ActiveMerchant #:nodoc:
         }
 
         add_order_id(parameters, options)
+        add_aggregator(parameters, options)
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
@@ -181,6 +183,7 @@ module ActiveMerchant #:nodoc:
           :amount => amount(money),
           :transid => authorization,
         }
+        add_aggregator(parameters, options)
 
         commit('postauth', parameters)
       end
@@ -192,6 +195,7 @@ module ActiveMerchant #:nodoc:
           :amount => amount(money),
           :transid => identification
         }
+        add_aggregator(parameters, options)
 
         commit('credit', parameters)
       end
@@ -219,6 +223,7 @@ module ActiveMerchant #:nodoc:
         parameters = {
           :transid => authorization,
         }
+        add_aggregator(parameters, options)
 
         commit('reversal', parameters)
       end
@@ -305,12 +310,28 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_aggregator(params, options)
+        if @options[:aggregator_id]
+          params[:aggregators] = 1
+          params[:aggregator1] = @options[:aggregator_id]
+        end
+      end
+
       def add_payment_source(params, source)
         if source.is_a?(String)
           add_billing_id(params, source)
+        elsif card_brand(source) == 'check'
+          add_check(params, source)
         else
           add_creditcard(params, source)
         end
+      end
+
+      def add_check(params, check)
+        params[:media] = 'ach'
+        params[:routing] = check.routing_number
+        params[:account] = check.account_number
+        params[:savings] = 'y' if check.account_type == 'savings'
       end
 
       def add_creditcard(params, creditcard)
