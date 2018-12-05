@@ -68,8 +68,8 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_fields_with_recurring_fields
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(recurring_fields: {
+  def test_successful_purchase_with_recurring_fields
+    recurring_fields = [
       add_customer: true,
       schedule: 'quarterly',
       bill_source_key: 'bill source key',
@@ -77,27 +77,33 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
       num_left: 5,
       start: '20501212',
       recurring_receipt: true
-    }))
+    ]
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(recurring_fields: recurring_fields))
     assert_equal 'Success', response.message
     assert_success response
   end
 
   def test_successful_purchase_with_custom_fields
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: {
+    custom_fields = {
       1 => 'multi',
       2 => 'pass',
       3 => 'korben',
       4 => 'dallas'
-    }))
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(custom_fields: custom_fields))
     assert_equal 'Success', response.message
     assert_success response
   end
 
   def test_successful_purchase_with_line_items
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(line_items: [
-      { :sku=> 'abc123', :cost => 119, :quantity => 1 },
-      { :sku => 'def456', :cost => 200, :quantity => 2, :name => 'an item' }
-    ]))
+    line_items = [
+      {sku:  'abc123', cost: 119, quantity: 1},
+      {sku: 'def456', cost: 200, quantity: 2, name: 'an item' }
+    ]
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(line_items: line_items))
     assert_equal 'Success', response.message
     assert_success response
   end
