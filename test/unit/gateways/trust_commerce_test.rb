@@ -111,7 +111,7 @@ action=sale&demo=y&password=password&custid=TestMerchant&shipto_zip=90001&shipto
 
   def scrubbed_transcript
     <<-TRANSCRIPT
-action=sale&demo=y&password=password&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=[FILTERED]&exp=0916&cc=[FILTERED]&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
+action=sale&demo=y&password=[FILTERED]&custid=TestMerchant&shipto_zip=90001&shipto_state=CA&shipto_city=Somewhere&shipto_address1=123+Test+St.&avs=n&zip=90001&state=CA&city=Somewhere&address1=123+Test+St.&cvv=[FILTERED]&exp=0916&cc=[FILTERED]&name=Longbob+Longsen&media=cc&ip=10.10.10.10&email=cody%40example.com&ticket=%231000.1&amount=100
     TRANSCRIPT
   end
 end

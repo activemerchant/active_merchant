@@ -305,6 +305,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((&?cc=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?password=)[^&]+(&?)), '\1[FILTERED]\2').
           gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2')
       end
 
