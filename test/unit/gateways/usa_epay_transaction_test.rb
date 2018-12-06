@@ -55,9 +55,10 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_echeck_and_extra_options
     response = stub_comms do
-      @gateway.purchase(@amount, @check, @options.merge(check_format: 'ARC'))
+      @gateway.purchase(@amount, @check, @options.merge(check_format: 'ARC', account_type: 'savings'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMcheckformat=ARC/, data)
+      assert_match(/UMaccounttype=savings/, data)
     end.respond_with(successful_purchase_response_echeck)
 
     assert_equal 'Success', response.message
@@ -138,6 +139,69 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       ))
     end.check_request do |endpoint, data, headers|
       assert_match %r{UMonError=Continue}, data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_recurring_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :recurring_fields => {
+          add_customer: true,
+          schedule: 'quarterly',
+          bill_source_key: 'bill source key',
+          bill_amount: 123,
+          num_left: 5,
+          start: '20501212',
+          recurring_receipt: true
+        }
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{UMaddcustomer=yes},                 data
+      assert_match %r{UMschedule=quarterly},              data
+      assert_match %r{UMbillsourcekey=bill\+source\+key}, data
+      assert_match %r{UMbillamount=1.23},                 data
+      assert_match %r{UMnumleft=5},                       data
+      assert_match %r{UMstart=20501212},                  data
+      assert_match %r{UMrecurringreceipt=yes},            data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_custom_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :custom_fields => {
+          1 => 'diablo',
+          2 => 'mephisto',
+          3 => 'baal'
+        }
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{UMcustom1=diablo},   data
+      assert_match %r{UMcustom2=mephisto}, data
+      assert_match %r{UMcustom3=baal},     data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_successful_purchase_line_items
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :line_items => [
+          { :sku=> 'abc123', :cost => 119, :quantity => 1 },
+          { :sku => 'def456', :cost => 200, :quantity => 2, :name => 'an item' },
+        ]
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{UMline0sku=abc123},    data
+      assert_match %r{UMline0cost=1.19},     data
+      assert_match %r{UMline0qty=1},         data
+
+      assert_match %r{UMline1sku=def456},    data
+      assert_match %r{UMline1cost=2.00},     data
+      assert_match %r{UMline1qty=2},         data
+      assert_match %r{UMline1name=an\+item}, data
     end.respond_with(successful_purchase_response)
     assert_success response
   end

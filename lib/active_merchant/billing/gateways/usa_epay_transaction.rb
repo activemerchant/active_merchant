@@ -54,6 +54,9 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
+        add_recurring_fields(post, options)
+        add_custom_fields(post, options)
+        add_line_items(post, options)
         add_test_mode(post, options)
 
         commit(:authorization, post)
@@ -70,6 +73,9 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
         end
         add_split_payments(post, options)
+        add_recurring_fields(post, options)
+        add_custom_fields(post, options)
+        add_line_items(post, options)
         add_test_mode(post, options)
 
         payment.respond_to?(:routing_number) ? commit(:check_purchase, post) : commit(:purchase, post)
@@ -198,6 +204,7 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment, options={})
         if payment.respond_to?(:routing_number)
           post[:checkformat] = options[:check_format] if options[:check_format]
+          post[:accounttype] = options[:account_type] if options[:account_type]
           post[:account] = payment.account_number
           post[:routing] = payment.routing_number
           post[:name]    = payment.name unless payment.name.blank?
@@ -229,6 +236,50 @@ module ActiveMerchant #:nodoc:
 
         # When blank it's 'Stop'. 'Continue' is another one
         post['onError'] = options[:on_error] || 'Void'
+      end
+
+      def add_recurring_fields(post, options)
+        return unless options[:recurring_fields].is_a?(Hash)
+        options[:recurring_fields].each do |key, value|
+          if value == true
+            value = 'yes'
+          elsif value == false
+            next
+          end
+
+          if key == :bill_amount
+            value = amount(value)
+          end
+
+          post[key.to_s.delete('_')] = value
+        end
+      end
+
+      # see: https://wiki.usaepay.com/developer/transactionapi#merchant_defined_custom_fields
+      def add_custom_fields(post, options)
+        return unless options[:custom_fields].is_a?(Hash)
+        options[:custom_fields].each do |index, custom|
+          post["custom#{index}"] = custom
+        end
+      end
+
+      # see: https://wiki.usaepay.com/developer/transactionapi#line_item_details
+      def add_line_items(post, options)
+        return unless options[:line_items].is_a?(Array)
+        options[:line_items].each_with_index do |line_item, index|
+          %w(product_ref_num sku name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
+            post["line#{index}#{key.delete('_')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
+          end
+
+          {
+            quantity: 'qty',
+            unit: 'um',
+          }.each do |key, umkey|
+            post["line#{index}#{umkey}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
+          end
+
+          post["line#{index}cost"] = amount(line_item[:cost])
+        end
       end
 
       def parse(body)
