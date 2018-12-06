@@ -5,8 +5,8 @@ class AdyenTest < Test::Unit::TestCase
 
   def setup
     @gateway = AdyenGateway.new(
-      username: 'ws@adyenmerchant.com',
-      password: 'password',
+      api_key: 'ApiKey',
+      live_endpoint_url_prefix: '1797a841fbb37ca7-ShopifyDemo',
       merchant_account: 'merchantAccount'
     )
 
@@ -30,8 +30,9 @@ class AdyenTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      billing_address: address(),
-      shopper_reference: 'John Smith',
+      billing_address: address(:address1 => '', :address2 => ''),
+      shipping_address: address(),
+      shopper_reference: 'John Smith', # need to be customer_id check impact!!!
       order_id: '345123',
       installments: 2,
       recurring_processing_model: 'CardOnFile'
@@ -41,16 +42,15 @@ class AdyenTest < Test::Unit::TestCase
   # Subdomains are only valid for production gateways, so the test_url check must be manually bypassed for this test to pass.
   # def test_subdomain_specification
   #   gateway = AdyenGateway.new(
-  #     username: 'ws@adyenmerchant.com',
-  #     password: 'password',
-  #     merchant_account: 'merchantAccount',
-  #     subdomain: '123-subdomain'
+  #     api_key: 'ApiKey',
+  #     live_endpoint_url_prefix: '1797a841fbb37ca7-ShopifyDemo',
+  #     merchant_account: 'merchantAccount'
   #   )
   #
   #   response = stub_comms(gateway) do
   #     gateway.authorize(@amount, @credit_card, @options)
   #   end.check_request do |endpoint, data, headers|
-  #     assert_match("https://123-subdomain-pal-live.adyenpayments.com/pal/servlet/Payment/v18/authorise", endpoint)
+  #     assert_match("https://1797a841fbb37ca7-ShopifyDemo-pal-live.adyenpayments.com/pal/servlet/Payment/v18/authorise", endpoint)
   #   end.respond_with(successful_authorize_response)
   #
   #   assert response
@@ -236,16 +236,24 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_add_address
-    post = {:card => {:billingAddress => {}}}
+    post = {:billingAddress => {}}
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
-    @gateway.send(:add_address, post, @options)
-    assert_equal 'N/A', post[:card][:billingAddress][:street]
-    assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
-    assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
-    assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
-    assert_equal @options[:billing_address][:state], post[:card][:billingAddress][:stateOrProvince]
-    assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
+    @gateway.send(:add_billing_address, post, @options)
+    assert_equal 'N/A', post[:billingAddress][:street]
+    assert_equal '', post[:billingAddress][:houseNumberOrName]
+    assert_equal @options[:billing_address][:zip], post[:billingAddress][:postalCode]
+    assert_equal @options[:billing_address][:city], post[:billingAddress][:city]
+    assert_equal @options[:billing_address][:state], post[:billingAddress][:stateOrProvince]
+    assert_equal @options[:billing_address][:country], post[:billingAddress][:country]
+
+    @gateway.send(:add_delivery_address, post, @options)
+    assert_equal '456 My Street', post[:deliveryAddress][:street]
+    assert_equal 'Apt 1', post[:deliveryAddress][:houseNumberOrName]
+    assert_equal @options[:shipping_address][:zip], post[:deliveryAddress][:postalCode]
+    assert_equal @options[:shipping_address][:city], post[:deliveryAddress][:city]
+    assert_equal @options[:shipping_address][:state], post[:deliveryAddress][:stateOrProvince]
+    assert_equal @options[:shipping_address][:country], post[:deliveryAddress][:country]
   end
 
   def test_authorize_with_network_tokenization_credit_card_no_name
@@ -254,7 +262,7 @@ class AdyenTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(@amount, @apple_pay_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_equal 'Not Provided', JSON.parse(data)['card']['holderName']
+      assert_equal 'Not Provided', JSON.parse(data)['paymentMethod']['holderName']
     end.respond_with(successful_authorize_response)
     assert_success response
   end
