@@ -53,6 +53,21 @@ class GoCardlessTest < Test::Unit::TestCase
     assert_equal 1000, response.params['payments']['amount']
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_request)
+       .with(:post, 'https://api-sandbox.gocardless.com/refunds', anything, anything)
+      .returns(successful_refund_response)
+
+    @gateway.expects(:ssl_request)
+       .with(:get, 'https://api-sandbox.gocardless.com/refunds?payment=PM000C7A086NA7', anything, anything)
+       .returns(successful_refunds_response)
+
+    assert response = @gateway.refund(@amount, 'PM000C7A086NA7', @options)
+    assert_instance_of MultiResponse, response
+    assert_success response
+    assert response.test?
+  end
+
   private
 
   def mock_bank_account
@@ -62,6 +77,7 @@ class GoCardlessTest < Test::Unit::TestCase
       bank_account_mock.expects(:last_name).returns('Doe')
       bank_account_mock.expects(:account_number).returns('0500013M026')
       bank_account_mock.expects(:routing_number).returns('20041')
+      bank_account_mock.expects(:branch_code).returns('01005')
     end
   end
 
@@ -135,6 +151,33 @@ class GoCardlessTest < Test::Unit::TestCase
         "customer_bank_accounts": {
           "id":"BA0004687N7GD5"
         }
+      }
+    RESPONSE
+  end
+
+  def successful_refund_response
+    <<~RESPONSE
+      {
+        "refunds": {
+          "id": "RF00001YXDDTBJ",
+          "amount":1000,
+          "created_at":"2018-11-14T09:34:51.899Z",
+          "reference":"TESTOWA-7NFMZDD6DK",
+          "metadata":{},
+          "currency":"EUR",
+          "links": {
+            "payment": "PM000C7A086NA7",
+            "mandate":"MD00048KV3PRCX"
+          }
+        }
+      }
+    RESPONSE
+  end
+
+  def successful_refunds_response
+    <<~RESPONSE
+      {
+        "refunds": []
       }
     RESPONSE
   end

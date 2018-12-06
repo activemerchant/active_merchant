@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class RemoteWepayTest < Test::Unit::TestCase
+class RemoteGoCardlessTest < Test::Unit::TestCase
   def setup
     @gateway = GoCardlessGateway.new(fixtures(:go_cardless))
 

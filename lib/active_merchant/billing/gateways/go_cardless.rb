@@ -55,6 +55,40 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def refund(money, identification, options = {})
+        res = nil
+        money_in_cents = money.respond_to?(:cents) ? money.cents : money.to_i
+        total_amount_confirmation = money_in_cents
+
+        MultiResponse.run do |r|
+          r.process { res = commit(:get, "/refunds?payment=#{identification}", nil, options) }
+
+          if res.success?
+            res.params['refunds'].each do |refund|
+              r.process { res = commit(:get, "/refunds/#{refund['id']}", nil, options) }
+
+              if res.success?
+                total_amount_confirmation += res.params['refunds']['amount']
+              end
+            end
+
+            r.process do
+              refund_params = {
+                refunds: {
+                  amount: money_in_cents,
+                  total_amount_confirmation: total_amount_confirmation,
+                  links: {
+                    payment: identification
+                  }
+                }
+              }
+
+              commit(:post, '/refunds', refund_params, options)
+            end
+          end
+        end
+      end
+
       def supports_scrubbing?
         false
       end
@@ -79,7 +113,7 @@ module ActiveMerchant #:nodoc:
             ssl_request(
               method,
               (url + action),
-              params.to_json,
+              params ? params.to_json : nil,
               headers(options)
             )
           )
