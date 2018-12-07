@@ -404,6 +404,48 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_instance_of TrueClass, @gateway.supports_network_tokenization?
   end
 
+  def test_successful_stored_check_request
+    @gateway.stubs(:ssl_post).returns(successful_store_check_response, successful_stored_check_purchase_response)
+
+    check_details = {
+      :first_name => 'Sharona',
+      :last_name => 'Fleming' ,
+      :bank_name =>  'First Bank of New Jersery',
+      :routing_number => '121042882',
+      :account_number => '4100',
+      :account_holder_type => 'personal',
+      :account_type => 'checking',
+    }
+
+    the_check = check(check_details)
+
+    subscription_options = {
+      :order_id => generate_unique_id,
+      :billing_address => {
+        :name => "Sharona Fleming",
+        :address1 => "123 Main Street",
+        :address2 => "",
+        :city => "Princeton",
+        :state => "NJ",
+        :zip => "08540",
+        :country => "US"
+      },
+      :email => "s@fleming.com",
+      :currency => "USD",
+     }
+
+    purchase_options = {
+      :order_id => generate_unique_id,
+      :description => "Sharona Fleming - Pro: Renewal payment",
+      :currency => "USD",
+      :source_type => "check"
+    }
+
+    assert_success(response = @gateway.store(the_check, subscription_options))
+    assert_success(@gateway.purchase(@amount, response.authorization, purchase_options))
+    assert response.test?
+  end
+
   private
 
   def pre_scrubbed
@@ -553,6 +595,86 @@ class CyberSourceTest < Test::Unit::TestCase
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-190204278"><wsu:Created>2013-05-13T13:52:57.159Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.69"><c:merchantReferenceCode>6427013</c:merchantReferenceCode><c:requestID>3684531771310176056442</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>AhijbwSRj3pM2QqPs2j0Ip+xoJXIsAMPYZNJMq6PSbs5ATAA6z42</c:requestToken><c:pinlessDebitValidateReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2013-05-13T13:52:57Z</c:requestDateTime><c:status>Y</c:status></c:pinlessDebitValidateReply></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def successful_store_check_response
+    <<-XML
+   <?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Header>
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+            <wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1573766200">
+                <wsu:Created>2018-12-07T20:25:07.788Z</wsu:Created>
+            </wsu:Timestamp>
+        </wsse:Security>
+    </soap:Header>
+    <soap:Body>
+        <c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.121">
+            <c:merchantReferenceCode>201812072025073053028051</c:merchantReferenceCode>
+            <c:requestID>5442143076016152204007</c:requestID>
+            <c:decision>ACCEPT</c:decision>
+            <c:reasonCode>100</c:reasonCode>
+            <c:requestToken>Ahj/7wSTJwToJe1KaVLnESDdq1ZNHDVw2nyYbJjZiqNPtB8oyAVGn2g+UZaQAglYZNJMt0gOG+xgTkycE6CXtSmlS5wAIz6I</c:requestToken>
+            <c:purchaseTotals>
+                <c:currency>USD</c:currency>
+            </c:purchaseTotals>
+            <c:ccAuthReply>
+                <c:reasonCode>100</c:reasonCode>
+                <c:amount>0.00</c:amount>
+                <c:authorizationCode>888888</c:authorizationCode>
+                <c:avsCode>X</c:avsCode>
+                <c:avsCodeRaw>I1</c:avsCodeRaw>
+                <c:authorizedDateTime>2018-12-07T20:25:07Z</c:authorizedDateTime>
+                <c:processorResponse>100</c:processorResponse>
+                <c:reconciliationID>755248586OIC21YE</c:reconciliationID>
+                <c:paymentNetworkTransactionID>123456789000000</c:paymentNetworkTransactionID>
+            </c:ccAuthReply>
+            <c:paySubscriptionCreateReply>
+                <c:reasonCode>100</c:reasonCode>
+                <c:subscriptionID>5442143076016152204007</c:subscriptionID>
+            </c:paySubscriptionCreateReply>
+        </c:replyMessage>
+    </soap:Body>
+</soap:Envelope>
+    XML
+  end
+
+  def successful_stored_check_purchase_response
+    <<-XML
+     <?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Header>
+        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+            <wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-419233212">
+                <wsu:Created>2018-12-07T20:44:07.393Z</wsu:Created>
+            </wsu:Timestamp>
+        </wsse:Security>
+    </soap:Header>
+    <soap:Body>
+        <c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.121">
+            <c:merchantReferenceCode>ham-2018120720271312</c:merchantReferenceCode>
+            <c:requestID>5442154471776379104012</c:requestID>
+            <c:decision>ACCEPT</c:decision>
+            <c:reasonCode>100</c:reasonCode>
+            <c:requestToken>Ahjr7wSTJwUQok96rmsMEVGn2hBo+KNPtCDR80gdOIQSsMmkmW6QHDfYgCyZOCiFEnvVc1hgrDpT</c:requestToken>
+            <c:purchaseTotals>
+                <c:currency>USD</c:currency>
+            </c:purchaseTotals>
+            <c:ecDebitReply>
+                <c:reasonCode>100</c:reasonCode>
+                <c:settlementMethod>B</c:settlementMethod>
+                <c:requestDateTime>2018-12-07T20:44:07Z</c:requestDateTime>
+                <c:amount>100.00</c:amount>
+                <c:verificationLevel>1</c:verificationLevel>
+                <c:reconciliationID>OL8X72FGJOIBH86I</c:reconciliationID>
+                <c:processorResponse>123456</c:processorResponse>
+                <c:avsCode>1</c:avsCode>
+                <c:ownerMerchantID>chargify</c:ownerMerchantID>
+            </c:ecDebitReply>
+        </c:replyMessage>
+    </soap:Body>
+</soap:Envelope>
     XML
   end
 end

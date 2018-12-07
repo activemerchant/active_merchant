@@ -108,6 +108,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'One or more fields contains invalid data', auth_reversal.message
   end
 
+  # Requires setup on cybersource side to work
   def test_successful_tax_calculation
     assert response = @gateway.calculate_tax(@credit_card, @options)
     assert_equal 'Successful transaction', response.message
@@ -345,6 +346,46 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert response = @gateway.retrieve(response.authorization, :order_id => generate_unique_id)
     assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_stored_check_request
+       check_details = {
+      :first_name => 'Sharona',
+      :last_name => 'Fleming' ,
+      :bank_name =>  'First Bank of New Jersery',
+      :routing_number => '121042882',
+      :account_number => '4100',
+      :account_holder_type => 'personal',
+      :account_type => 'checking',
+    }
+
+    the_check = check(check_details)
+
+    subscription_options = {
+      :order_id => generate_unique_id,
+      :billing_address => {
+        :name => "Sharona Fleming",
+        :address1 => "123 Main Street",
+        :address2 => "",
+        :city => "Princeton",
+        :state => "NJ",
+        :zip => "08540",
+        :country => "US"
+      },
+      :email => "s@fleming.com",
+      :currency => "USD",
+    }
+
+    purchase_options = {
+      :order_id => generate_unique_id,
+      :description => "Sharona Fleming - Pro: Renewal payment",
+      :currency => "USD",
+      :source_type => "check"
+    }
+
+    assert_success(response = @gateway.store(the_check, subscription_options))
+    assert_success(@gateway.purchase(@amount, response.authorization, purchase_options))
     assert response.test?
   end
 end

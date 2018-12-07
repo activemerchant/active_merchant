@@ -137,6 +137,7 @@ module ActiveMerchant #:nodoc:
       # Purchase is an auth followed by a capture
       # You must supply an order_id in the options hash
       # options[:pinless_debit_card] => true # attempts to process as pinless debit card
+      # options[:source_type] => 'check' for stored ACH purchases
       def purchase(money, payment_method_or_reference, options = {})
         setup_address_hash(options)
         commit(build_purchase_request(money, payment_method_or_reference, options), options)
@@ -298,7 +299,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
-        if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
+        if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check' || options[:source_type] == 'check'
           add_check_service(xml)
         else
           add_purchase_service(xml, payment_method_or_reference, options)
@@ -707,6 +708,11 @@ module ActiveMerchant #:nodoc:
         # CyberSource sometimes returns a REJECT with reason_code 100.
         # Set message to 'Failure' instead of 'Successful transaction' in that case.
         message = (!success && response_code == :r100) ? "Failure" : @@response_codes[response_code] rescue response[:message]
+
+        # if a soupFault is thrown there wont be a reasonCode
+        if !success && @@response_codes[response_code].nil?
+          message = response[:message]
+        end
 
         authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken] ].compact.join(";") : nil
 
