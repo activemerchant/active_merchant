@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'dLocal'
 
       def initialize(options={})
-        requires!(options, :login, :trans_key)
+        requires!(options, :login, :trans_key, :secret_key)
         super
       end
 
