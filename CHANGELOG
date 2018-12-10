@@ -12,6 +12,7 @@
 * Add dLocal gateway [curiousepic] #3709
 * dLocal: Require secret_key [curiousepic] #3080
 * Adyen: Implement 3DS [nfarve] #3076
+* Adyen: Add 3DS Fix [nfarve] #3081
 
 == Version 1.88.0 (November 30, 2018)
 * Added ActiveSupport/Rails master support [Edouard-chin] #3065

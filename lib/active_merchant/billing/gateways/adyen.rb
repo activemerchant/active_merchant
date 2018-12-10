@@ -35,10 +35,11 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         if options[:execute_threed]
           authorize(money, payment, options)
-        end
-        MultiResponse.run do |r|
-          r.process { authorize(money, payment, options) }
-          r.process { capture(money, r.authorization, options) }
+        else
+          MultiResponse.run do |r|
+            r.process { authorize(money, payment, options) }
+            r.process { capture(money, r.authorization, options) }
+          end
         end
       end
 
