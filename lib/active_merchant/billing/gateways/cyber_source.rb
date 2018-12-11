@@ -709,7 +709,7 @@ module ActiveMerchant #:nodoc:
         # Set message to 'Failure' instead of 'Successful transaction' in that case.
         message = (!success && response_code == :r100) ? "Failure" : @@response_codes[response_code] rescue response[:message]
 
-        # if a soupFault is thrown there wont be a reasonCode
+        # if a <soap::Fault> is in the return xml there wont be a reasonCode
         if !success && @@response_codes[response_code].nil?
           message = response[:message]
         end

@@ -350,7 +350,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_stored_check_request
-       check_details = {
+    check_details = {
       :first_name => 'Sharona',
       :last_name => 'Fleming' ,
       :bank_name =>  'First Bank of New Jersery',
