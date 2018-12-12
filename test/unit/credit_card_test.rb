@@ -36,6 +36,11 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid @maestro
   end
 
+  def test_should_be_a_valid_maestro_card_when_require_cvv_is_true
+    CreditCard.require_verification_value = true
+    assert_valid @maestro
+  end
+
   def test_cards_with_empty_names_should_not_be_valid
     @visa.first_name = ''
     @visa.last_name  = ''
