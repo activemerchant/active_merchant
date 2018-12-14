@@ -39,6 +39,7 @@ module ActiveMerchant
         add_address(params, options)
         add_amount(params, amount, options)
         add_soft_descriptors(params, options)
+        add_stored_credentials(params, options)
 
         commit(params, options)
       end
@@ -52,6 +53,7 @@ module ActiveMerchant
         add_address(params, options)
         add_amount(params, amount, options)
         add_soft_descriptors(params, options)
+        add_stored_credentials(params, options)
 
         commit(params, options)
       end
@@ -242,6 +244,17 @@ module ActiveMerchant
 
       def add_soft_descriptors(params, options)
         params[:soft_descriptors] = options[:soft_descriptors] if options[:soft_descriptors]
+      end
+
+      def add_stored_credentials(params, options)
+        if options[:sequence]
+          params[:stored_credentials] = {}
+          params[:stored_credentials][:cardbrand_original_transaction_id] = options[:cardbrand_original_transaction_id] if options[:cardbrand_original_transaction_id]
+          params[:stored_credentials][:sequence] = options[:sequence]
+          params[:stored_credentials][:initiator] = options[:initiator] if options[:initiator]
+          params[:stored_credentials][:is_scheduled] = options[:is_scheduled]
+          params[:stored_credentials][:auth_type_override] = options[:auth_type_override] if options[:auth_type_override]
+        end
       end
 
       def commit(params, options)

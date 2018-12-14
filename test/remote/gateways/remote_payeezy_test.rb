@@ -26,6 +26,13 @@ class RemotePayeezyTest < Test::Unit::TestCase
         merchant_contact_info: '8885551212'
       }
     }
+    @options_stored_credentials = {
+      cardbrand_original_transaction_id: 'abc123',
+      sequence: 'FIRST',
+      is_scheduled: true,
+      initiator: 'MERCHANT',
+      auth_type_override: 'A'
+    }
   end
 
   def test_successful_store
@@ -64,6 +71,12 @@ class RemotePayeezyTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_soft_descriptors
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_mdd))
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_stored_credentials
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(@options_stored_credentials))
     assert_match(/Transaction Normal/, response.message)
     assert_success response
   end
