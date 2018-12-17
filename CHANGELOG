@@ -1,11 +1,14 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.89.0 (December 17, 2018)
 * Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068
 * QuickPay: update supported countries [ta] #3049
 * WorldPay: set cardholder name to "3D" for 3DS transactions [bpollack] #3071
 * Authorize.Net: Support refunds for bank accounts [nfarve] #3063
 * Stripe: support specifying a reason for refunds [yosukehasumi] #3056
+* Paybox Direct: add support for XPF currency [adam-stead] #2938
 * TrustCommerce: Add ACH Ability [nfarve] #3073
 * Payeezy: Support $0 for verify transactions [molbrown] #3074
 * USA ePay: add support for recurring transactions, custom fields, and line items [lancecarlson] #3069
@@ -13,7 +16,8 @@
 * dLocal: Require secret_key [curiousepic] #3080
 * Adyen: Implement 3DS [nfarve] #3076
 * Adyen: Add 3DS Fix [nfarve] #3081
-* Payeezy: Add `stored_credentials` [nfarve] #3083)
+* Payeezy: Add `stored_credentials` [nfarve] #3083
+* Fix CVC validation for 0 length CVC [filipebarcos] #3082
 
 == Version 1.88.0 (November 30, 2018)
 * Added ActiveSupport/Rails master support [Edouard-chin] #3065
