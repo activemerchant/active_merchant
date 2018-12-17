@@ -86,6 +86,19 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal 'DECLINE', response.message
   end
 
+  def test_successful_purchase_with_additional_options
+    options = @options.merge({
+      customer_id: '234',
+      vendor_id: '456',
+      recurring: true,
+    })
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert response.test?
+    assert_equal 'Succeeded', response.message
+    assert response.authorization
+  end
+
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response

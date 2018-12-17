@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
 
         commit('sale', post)
@@ -42,6 +43,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
 
         commit('auth', post)
@@ -78,6 +80,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_vendor_data(post, options)
 
         commit('credit', post)
       end
@@ -86,6 +89,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
 
         commit('validate', post)
@@ -96,6 +100,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, nil, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
 
         commit('add_customer', post)
@@ -190,6 +195,11 @@ module ActiveMerchant #:nodoc:
           post[:shipping_zip]    = shipping_address[:zip]
           post[:shipping_phone] = shipping_address[:phone]
         end
+      end
+
+      def add_vendor_data(post, options)
+        post[:vendor_id] = options[:vendor_id] if options[:vendor_id]
+        post[:processor_id] = options[:processor_id] if options[:processor_id]
       end
 
       def add_merchant_defined_fields(post, options)
