@@ -40,13 +40,13 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer_data(post, options)
-        post[:first_name]   = options[:first_name]
-        post[:last_name]    = options[:last_name]
-        post[:mail]         = options[:email]         if options[:email]
-        post[:salutation]   = options[:salutation]    if options[:salutation]
-        post[:date]         = options[:dob]           if options[:dob]
-        post[:home_phone]   = options[:home_phone]    if options[:home_phone]
-        post[:mobile_phone] = options[:mobile_phone]  if options[:mobile_phone]
+        post[:first_name]    = options[:first_name]
+        post[:last_name]     = options[:last_name]
+        post[:mail]          = options[:email]         if options[:email]
+        post[:salutation]    = options[:salutation]    if options[:salutation]
+        post[:date_of_birth] = options[:date_of_birth] if options[:date_of_birth]
+        post[:home_phone]    = options[:home_phone]    if options[:home_phone]
+        post[:mobile_phone]  = options[:mobile_phone]  if options[:mobile_phone]
       end
 
       def add_address(post, options)
