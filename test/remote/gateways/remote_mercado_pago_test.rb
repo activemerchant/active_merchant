@@ -13,6 +13,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
       email: 'user+br@example.com',
       description: 'Store Purchase'
     }
+    @processing_options = {
+      binary_mode: false,
+      processing_mode: 'gateway',
+      merchant_account_id: fixtures(:mercado_pago)[:merchant_account_id],
+      fraud_scoring: true,
+      fraud_manual_review: true
+    }
   end
 
   def test_successful_purchase
@@ -23,7 +30,14 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_binary_false
     @options.update(binary_mode: false)
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'pending_capture', response.message
+  end
+
+  # Requires setup on merchant account
+  def test_successful_purchase_with_processing_mode_gateway
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@processing_options))
     assert_success response
     assert_equal 'accredited', response.message
   end
@@ -60,10 +74,10 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_partial_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
+    auth = @gateway.authorize(@amount+1, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'accredited', capture.message
   end
