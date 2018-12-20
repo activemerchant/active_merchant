@@ -95,6 +95,7 @@ module ActiveMerchant #:nodoc:
         add_additional_data(post, options)
         add_customer_data(post, payment, options)
         add_address(post, options)
+        add_processing_mode(post, options)
         post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
         post
       end
@@ -103,6 +104,21 @@ module ActiveMerchant #:nodoc:
         post = purchase_request(money, payment, options)
         post[:capture] = false
         post
+      end
+
+      def add_processing_mode(post, options)
+        return unless options[:processing_mode]
+        post[:processing_mode] = options[:processing_mode]
+        post[:merchant_account_id] = options[:merchant_account_id] if options[:merchant_account_id]
+        add_merchant_services(post, options)
+      end
+
+      def add_merchant_services(post, options)
+        return unless options[:fraud_scoring] || options[:fraud_manual_review]
+        merchant_services = {}
+        merchant_services[:fraud_scoring] = options[:fraud_scoring] if options[:fraud_scoring]
+        merchant_services[:fraud_manual_review] = options[:fraud_manual_review] if options[:fraud_manual_review]
+        post[:merchant_services] = merchant_services
       end
 
       def add_additional_data(post, options)
