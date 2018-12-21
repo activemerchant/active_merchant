@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Testing a Travis failure
 
 == Version 1.89.0 (December 17, 2018)
 * Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068
