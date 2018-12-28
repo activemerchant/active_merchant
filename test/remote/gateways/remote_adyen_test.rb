@@ -99,6 +99,21 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_risk_data
+    options = @options.merge(
+      risk_data:
+      {
+        'operatingSystem' => 'HAL9000',
+        'destinationLatitude' => '77.641423',
+        'destinationLongitude' => '12.9503376'
+      }
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_successful_purchase_with_apple_pay
     response = @gateway.purchase(@amount, @apple_pay_card, @options)
     assert_success response

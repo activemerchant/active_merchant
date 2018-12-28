@@ -159,6 +159,14 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
         post[:additionalData]['paymentdatasource.type'] = NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        add_risk_data(post, options)
+      end
+
+      def add_risk_data(post, options)
+        risk_data = {}
+        risk_data.merge!(options[:risk_data]) if options[:risk_data]
+
+        post[:additionalData][:riskData] = risk_data unless risk_data.empty?
       end
 
       def add_shopper_interaction(post, payment, options={})

@@ -147,6 +147,14 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_risk_data_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: {'operatingSystem' => 'HAL9000'}}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'HAL9000', JSON.parse(data)['additionalData']['riskData']['operatingSystem']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
