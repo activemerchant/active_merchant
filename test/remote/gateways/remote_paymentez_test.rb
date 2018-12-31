@@ -59,6 +59,18 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_extra_params
+    options = {
+      extra_params: {
+        configuration1: 'value1',
+        configuration2: 'value2',
+        configuration3: 'value3'
+      }}
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
+    assert_success response
+  end
+
   def test_successful_purchase_with_token
     store_response = @gateway.store(@credit_card, @options)
     assert_success store_response
