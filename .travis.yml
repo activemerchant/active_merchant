@@ -24,6 +24,8 @@ matrix:
   exclude:
     - rvm: 2.3
       gemfile: 'gemfiles/Gemfile.rails_master'
+    - rvm: 2.4
+      gemfile: 'gemfiles/Gemfile.rails_master'
 
 notifications:
   email:
