@@ -6,6 +6,7 @@
 * Adyen: Pass arbitrary riskData fields [curiousepic] #3089
 * Worldpay: Fix cookie header name [curiousepic] #3099
 * Paymentez: Adds support for extra_params optional field [molbrown] #3095
+* Braintree Blue: Support Level 2 and 3 data fields [curiousepic] #3094
 
 == Version 1.89.0 (December 17, 2018)
 * Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068

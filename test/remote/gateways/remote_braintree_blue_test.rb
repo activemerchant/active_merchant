@@ -122,6 +122,51 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
   end
 
+  def test_successful_purchase_with_level_2_data
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:tax_amount => '20', :purchase_order_number => '6789'))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+  end
+
+  def test_successful_purchase_with_level_2_and_3_data
+    options = {
+      :tax_amount => '20',
+      :purchase_order_number => '6789',
+      :shipping_amount => '300',
+      :discount_amount => '150',
+      :ships_from_postal_code => '90210',
+      :line_items => [
+        {
+          :name => 'Product Name',
+          :kind => 'debit',
+          :quantity => '10.0000',
+          :unit_amount => '9.5000',
+          :unit_of_measure => 'unit',
+          :total_amount => '95.00',
+          :tax_amount => '5.00',
+          :discount_amount => '0.00',
+          :product_code => '54321',
+          :commodity_code => '98765'
+        },
+        {
+          :name => 'Other Product Name',
+          :kind => 'debit',
+          :quantity => '1.0000',
+          :unit_amount => '2.5000',
+          :unit_of_measure => 'unit',
+          :total_amount => '90.00',
+          :tax_amount => '2.00',
+          :discount_amount => '1.00',
+          :product_code => '54322',
+          :commodity_code => '98766'
+        }
+      ]
+    }
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+  end
+
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response

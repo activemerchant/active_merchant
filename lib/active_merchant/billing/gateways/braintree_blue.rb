@@ -445,6 +445,7 @@ module ActiveMerchant #:nodoc:
 
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
+
         commit do
           result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
@@ -588,6 +589,54 @@ module ActiveMerchant #:nodoc:
           parameters[:recurring] = true
         end
 
+        add_payment_method(parameters, credit_card_or_vault_id, options)
+
+        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
+        parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
+
+        channel = @options[:channel] || application_id
+        parameters[:channel] = channel if channel
+
+        if options[:descriptor_name] || options[:descriptor_phone] || options[:descriptor_url]
+          parameters[:descriptor] = {
+            name: options[:descriptor_name],
+            phone: options[:descriptor_phone],
+            url: options[:descriptor_url]
+          }
+        end
+
+        if options[:three_d_secure]
+          parameters[:three_d_secure_pass_thru] = {
+            cavv: options[:three_d_secure][:cavv],
+            eci_flag: options[:three_d_secure][:eci],
+            xid: options[:three_d_secure][:xid],
+          }
+        end
+
+        parameters[:tax_amount] = options[:tax_amount] if options[:tax_amount]
+        parameters[:tax_exempt] = options[:tax_exempt] if options[:tax_exempt]
+        parameters[:purchase_order_number] = options[:purchase_order_number] if options[:purchase_order_number]
+
+        parameters[:shipping_amount] = options[:shipping_amount] if options[:shipping_amount]
+        parameters[:discount_amount] = options[:discount_amount] if options[:discount_amount]
+        parameters[:ships_from_postal_code] = options[:ships_from_postal_code] if options[:ships_from_postal_code]
+
+        if options[:line_items]
+          items = []
+          options[:line_items].each do |line_item|
+            item = {}
+            line_item.each do |key, value|
+              item[key.to_sym] = value
+            end
+            items << item
+          end
+          parameters[:line_items] = items
+        end
+
+        parameters
+      end
+
+      def add_payment_method(parameters, credit_card_or_vault_id, options)
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
           if options[:payment_method_token]
             parameters[:payment_method_token] = credit_card_or_vault_id
@@ -634,29 +683,6 @@ module ActiveMerchant #:nodoc:
             }
           end
         end
-        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
-        parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
-
-        channel = @options[:channel] || application_id
-        parameters[:channel] = channel if channel
-
-        if options[:descriptor_name] || options[:descriptor_phone] || options[:descriptor_url]
-          parameters[:descriptor] = {
-            name: options[:descriptor_name],
-            phone: options[:descriptor_phone],
-            url: options[:descriptor_url]
-          }
-        end
-
-        if options[:three_d_secure]
-          parameters[:three_d_secure_pass_thru] = {
-            cavv: options[:three_d_secure][:cavv],
-            eci_flag: options[:three_d_secure][:eci],
-            xid: options[:three_d_secure][:xid],
-          }
-        end
-
-        parameters
       end
     end
   end
