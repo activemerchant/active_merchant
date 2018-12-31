@@ -52,6 +52,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_customer_data(post, options)
+        add_extra_params(post, options)
         action = payment.is_a?(String) ? 'debit' : 'debit_cc'
 
         commit_transaction(action, post)
@@ -63,6 +64,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_customer_data(post, options)
+        add_extra_params(post, options)
 
         commit_transaction('authorize', post)
       end
@@ -165,6 +167,18 @@ module ActiveMerchant #:nodoc:
           post[:card][:expiry_year] = payment.year
           post[:card][:cvc] = payment.verification_value
           post[:card][:type] = CARD_MAPPING[payment.brand]
+        end
+      end
+
+      def add_extra_params(post, options)
+        if options[:extra_params]
+          items = {}
+          options[:extra_params].each do |param|
+            param.each do |key, value|
+              items[key.to_sym] = value
+            end
+          end
+          post[:extra_params] = items
         end
       end
 
