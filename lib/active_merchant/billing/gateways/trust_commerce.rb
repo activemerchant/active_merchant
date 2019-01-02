@@ -312,9 +312,9 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_aggregator(params, options)
-        if @options[:aggregator_id]
+        if @options[:aggregator_id] || application_id != Gateway.application_id
           params[:aggregators] = 1
-          params[:aggregator1] = @options[:aggregator_id]
+          params[:aggregator1] = @options[:aggregator_id] || application_id
         end
       end
 

@@ -32,6 +32,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
 
   def test_succesful_purchase_with_check
+    ActiveMerchant::Billing::TrustCommerceGateway.application_id = 'abc123'
     stub_comms do
       @gateway.purchase(@amount, @check)
     end.check_request do |endpoint, data, headers|
