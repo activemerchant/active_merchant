@@ -78,7 +78,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_passing_extra_info
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:order_id => '1337', :description => 'socool'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(:invoice => '1337', :description => 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
@@ -217,7 +217,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_authorize_passing_extra_info
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => '1337', :description => 'socool'))
+      @gateway.authorize(@amount, @credit_card, @options.merge(:invoice => '1337', :description => 'socool'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMinvoice=1337/, data)
       assert_match(/UMdescription=socool/, data)
