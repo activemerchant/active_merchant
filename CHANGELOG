@@ -4,6 +4,7 @@
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087
 * Braintree: Update gem to latest version [curiousepic] #3091
 * Adyen: Pass arbitrary riskData fields [curiousepic] #3089
+* Worldpay: Fix cookie header name [curiousepic] #3099
 
 == Version 1.89.0 (December 17, 2018)
 * Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068
