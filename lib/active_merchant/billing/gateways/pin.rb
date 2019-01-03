@@ -1,14 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PinGateway < Gateway
-      self.test_url = 'https://test-api.pin.net.au/1'
-      self.live_url = 'https://api.pin.net.au/1'
+      self.test_url = 'https://test-api.pinpayments.com/1'
+      self.live_url = 'https://api.pinpayments.com/1'
 
       self.default_currency = 'AUD'
       self.money_format = :cents
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express]
-      self.homepage_url = 'http://www.pin.net.au/'
+      self.homepage_url = 'http://www.pinpayments.com/'
       self.display_name = 'Pin Payments'
 
       def initialize(options = {})
@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unparsable_response(raw_response)
-        message = 'Invalid JSON response received from Pin Payments. Please contact support@pin.net.au if you continue to receive this message.'
+        message = 'Invalid JSON response received from Pin Payments. Please contact support@pinpayments.com if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end

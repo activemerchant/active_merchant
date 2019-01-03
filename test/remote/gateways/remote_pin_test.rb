@@ -10,7 +10,7 @@ class RemotePinTest < Test::Unit::TestCase
     @declined_card = credit_card('4100000000000001')
 
     @options = {
-      :email => 'roland@pin.net.au',
+      :email => 'roland@pinpayments.com',
       :ip => '203.59.39.62',
       :order_id => '1',
       :billing_address => address,

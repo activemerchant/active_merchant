@@ -193,7 +193,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [Paystation](http://paystation.co.nz) - NZ
 * [Pay Way](http://www.payway.com.au) - AU
 * [PayU India](https://www.payu.in/) - IN
-* [Pin Payments](http://www.pin.net.au/) - AU
+* [Pin Payments](http://www.pinpayments.com/) - AU
 * [Plug'n Pay](http://www.plugnpay.com/) - US
 * [Psigate](http://www.psigate.com/) - CA
 * [PSL Payment Solutions](http://www.paymentsolutionsltd.com/) - GB
