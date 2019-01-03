@@ -55,10 +55,10 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_echeck_and_extra_options
     response = stub_comms do
-      @gateway.purchase(@amount, @check, @options.merge(check_format: 'ARC', account_type: 'savings'))
+      @gateway.purchase(@amount, check(account_type: 'savings'), @options.merge(check_format: 'ARC'))
     end.check_request do |endpoint, data, headers|
       assert_match(/UMcheckformat=ARC/, data)
-      assert_match(/UMaccounttype=savings/, data)
+      assert_match(/UMaccounttype=Savings/, data)
     end.respond_with(successful_purchase_response_echeck)
 
     assert_equal 'Success', response.message
