@@ -621,17 +621,7 @@ module ActiveMerchant #:nodoc:
         parameters[:discount_amount] = options[:discount_amount] if options[:discount_amount]
         parameters[:ships_from_postal_code] = options[:ships_from_postal_code] if options[:ships_from_postal_code]
 
-        if options[:line_items]
-          items = []
-          options[:line_items].each do |line_item|
-            item = {}
-            line_item.each do |key, value|
-              item[key.to_sym] = value
-            end
-            items << item
-          end
-          parameters[:line_items] = items
-        end
+        parameters[:line_items] = options[:line_items] if options[:line_items]
 
         parameters
       end
