@@ -350,7 +350,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => encoded_credentials
         }
         if options[:cookie]
-          headers['Set-Cookie'] = options[:cookie] if options[:cookie]
+          headers['Cookie'] = options[:cookie] if options[:cookie]
         end
         headers
       end
