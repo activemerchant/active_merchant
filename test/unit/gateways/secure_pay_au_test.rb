@@ -27,7 +27,6 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_equal [:visa, :master, :american_express, :diners_club, :jcb], SecurePayAuGateway.supported_cardtypes
   end
 
-
   def test_successful_purchase_with_live_data
     @gateway.expects(:ssl_post).returns(successful_live_purchase_response)
 
@@ -71,13 +70,13 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    assert_equal "CARD EXPIRED", response.message
+    assert_equal 'CARD EXPIRED', response.message
   end
 
   def test_purchase_with_stored_id_calls_commit_periodic
     @gateway.expects(:commit_periodic)
 
-    @gateway.purchase(@amount, "123", @options)
+    @gateway.purchase(@amount, '123', @options)
   end
 
   def test_purchase_with_creditcard_calls_commit_with_purchase
@@ -100,59 +99,59 @@ class SecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Insufficient Funds", response.message
+    assert_equal 'Insufficient Funds', response.message
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, "crazy*reference*thingy*100", {})
+    assert response = @gateway.capture(@amount, 'crazy*reference*thingy*100', {})
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert response = @gateway.capture(@amount, "crazy*reference*thingy*100")
+    assert response = @gateway.capture(@amount, 'crazy*reference*thingy*100')
     assert_failure response
-    assert_equal "Preauth was done for smaller amount", response.message
+    assert_equal 'Preauth was done for smaller amount', response.message
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert_success @gateway.refund(@amount, "crazy*reference*thingy*100", {})
+    assert_success @gateway.refund(@amount, 'crazy*reference*thingy*100', {})
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert response = @gateway.refund(@amount, "crazy*reference*thingy*100")
+    assert response = @gateway.refund(@amount, 'crazy*reference*thingy*100')
     assert_failure response
-    assert_equal "Only $1.00 available for refund", response.message
+    assert_equal 'Only $1.00 available for refund', response.message
   end
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      assert_success @gateway.credit(@amount, "crazy*reference*thingy*100", {})
+      assert_success @gateway.credit(@amount, 'crazy*reference*thingy*100', {})
     end
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    assert response = @gateway.void("crazy*reference*thingy*100", {})
+    assert response = @gateway.void('crazy*reference*thingy*100', {})
     assert_success response
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    assert response = @gateway.void("crazy*reference*thingy*100")
+    assert response = @gateway.void('crazy*reference*thingy*100')
     assert_failure response
-    assert_equal "Transaction was done for different amount", response.message
+    assert_equal 'Transaction was done for different amount', response.message
   end
 
   def test_failed_login
@@ -161,7 +160,7 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "Invalid merchant ID", response.message
+    assert_equal 'Invalid merchant ID', response.message
   end
 
   def test_successful_store
@@ -169,7 +168,7 @@ class SecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.store(@credit_card, {:billing_id => 'test3', :amount => 123})
     assert_instance_of Response, response
-    assert_equal "Successful", response.message
+    assert_equal 'Successful', response.message
     assert_equal 'test3', response.params['client_id']
   end
 
@@ -178,7 +177,7 @@ class SecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.unstore('test2')
     assert_instance_of Response, response
-    assert_equal "Successful", response.message
+    assert_equal 'Successful', response.message
     assert_equal 'test2', response.params['client_id']
   end
 
@@ -187,14 +186,22 @@ class SecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, 'test3', @options)
     assert_instance_of Response, response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
     assert_equal 'test3', response.params['client_id']
+  end
+
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
   end
 
   private
 
   def successful_store_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -233,7 +240,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_unstore_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -265,7 +272,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_triggered_payment_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -311,7 +318,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -358,7 +365,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -405,7 +412,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   end
 
   def successful_live_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <SecurePayMessage>
       <MessageInfo>
@@ -481,5 +488,51 @@ class SecurePayAuTest < Test::Unit::TestCase
 
   def failed_refund_response
     %(<?xml version="1.0" encoding="UTF-8" standalone="no"?><SecurePayMessage><MessageInfo><messageID>6bacab2b7ae1200d8099e0873e25bc</messageID><messageTimestamp>20102807071248484000+600</messageTimestamp><apiVersion>xml-4.2</apiVersion></MessageInfo><RequestType>Payment</RequestType><MerchantInfo><merchantID>CAX0001</merchantID></MerchantInfo><Status><statusCode>000</statusCode><statusDescription>Normal</statusDescription></Status><Payment><TxnList count="1"><Txn ID="1"><txnType>4</txnType><txnSource>23</txnSource><amount>101</amount><currency>AUD</currency><purchaseOrderNo>269061</purchaseOrderNo><approved>No</approved><responseCode>134</responseCode><responseText>Only $1.00 available for refund</responseText><thinlinkResponseCode>300</thinlinkResponseCode><thinlinkResponseText>000</thinlinkResponseText><thinlinkEventStatusCode>999</thinlinkEventStatusCode><thinlinkEventStatusText>Error - Transaction Already Fully Refunded/Only $x.xx Available for Refund</thinlinkEventStatusText><settlementDate/><txnID/><CreditCardInfo><pan>444433...111</pan><expiryDate>09/11</expiryDate><cardType>6</cardType><cardDescription>Visa</cardDescription></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>)
+  end
+
+  def pre_scrub
+    <<-XML
+    opening connection to api.securepay.com.au:443...
+    opened
+    starting SSL for api.securepay.com.au:443...
+    SSL established
+    <- "POST /test/payment HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.securepay.com.au\r\nContent-Length: 710\r\n\r\n"
+    <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811005228628453+000</messageTimestamp><timeoutValue>60</timeoutValue><apiVersion>xml-4.2</apiVersion></MessageInfo><MerchantInfo><merchantID>ABC0030</merchantID><password>abc123</password></MerchantInfo><RequestType>Payment</RequestType><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><CreditCardInfo><cardNumber>4242424242424242</cardNumber><expiryDate>09/15</expiryDate><cvv>123</cvv></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Content-Type: text/xml;charset=ISO-8859-1\r\n"
+    -> "Content-Length: 1148\r\n"
+    -> "Date: Tue, 08 Nov 2016 00:52:30 GMT\r\n"
+    -> "Connection: close\r\n"
+    -> "Server: Apache\r\n"
+    -> "Set-Cookie: ltm_api.securepay.com.au=1073719488.36895.0000; path=/\r\n"
+    -> "\r\n"
+    reading 1148 bytes...
+    -> "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811115230823000+660</messageTimestamp><apiVersion>xml-4.2</apiVersion></MessageInfo><RequestType>Payment</RequestType><MerchantInfo><merchantID>ABC0030</merchantID></MerchantInfo><Status><statusCode>000</statusCode><statusDescription>Normal</statusDescription></Status><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><approved>Yes</approved><responseCode>00</responseCode><responseText>Approved</responseText><thinlinkResponseCode>100</thinlinkResponseCode><thinlinkResponseText>000</thinlinkResponseText><thinlinkEventStatusCode>000</thinlinkEventStatusCode><thinlinkEventStatusText>Normal</thinlinkEventStatusText><settlementDate>20161108</settlementDate><txnID>123822</txnID><CreditCardInfo><pan>424242...242</pan><expiryDate>09/15</expiryDate><cardType>6</cardType><cardDescription>Visa</cardDescription></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
+    read 1148 bytes
+    Conn close
+    XML
+  end
+
+  def post_scrub
+    <<-XML
+    opening connection to api.securepay.com.au:443...
+    opened
+    starting SSL for api.securepay.com.au:443...
+    SSL established
+    <- "POST /test/payment HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.securepay.com.au\r\nContent-Length: 710\r\n\r\n"
+    <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811005228628453+000</messageTimestamp><timeoutValue>60</timeoutValue><apiVersion>xml-4.2</apiVersion></MessageInfo><MerchantInfo><merchantID>[FILTERED]</merchantID><password>[FILTERED]</password></MerchantInfo><RequestType>Payment</RequestType><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><CreditCardInfo><cardNumber>[FILTERED]</cardNumber><expiryDate>09/15</expiryDate><cvv>[FILTERED]</cvv></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
+    -> "HTTP/1.1 200 OK\r\n"
+    -> "Content-Type: text/xml;charset=ISO-8859-1\r\n"
+    -> "Content-Length: 1148\r\n"
+    -> "Date: Tue, 08 Nov 2016 00:52:30 GMT\r\n"
+    -> "Connection: close\r\n"
+    -> "Server: Apache\r\n"
+    -> "Set-Cookie: ltm_api.securepay.com.au=1073719488.36895.0000; path=/\r\n"
+    -> "\r\n"
+    reading 1148 bytes...
+    -> "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><SecurePayMessage><MessageInfo><messageID>0223a57aff3e71b22fc526a0b9f692</messageID><messageTimestamp>20160811115230823000+660</messageTimestamp><apiVersion>xml-4.2</apiVersion></MessageInfo><RequestType>Payment</RequestType><MerchantInfo><merchantID>[FILTERED]</merchantID></MerchantInfo><Status><statusCode>000</statusCode><statusDescription>Normal</statusDescription></Status><Payment><TxnList count=\"1\"><Txn ID=\"1\"><txnType>0</txnType><txnSource>23</txnSource><amount>100</amount><currency>AUD</currency><purchaseOrderNo>2</purchaseOrderNo><approved>Yes</approved><responseCode>00</responseCode><responseText>Approved</responseText><thinlinkResponseCode>100</thinlinkResponseCode><thinlinkResponseText>000</thinlinkResponseText><thinlinkEventStatusCode>000</thinlinkEventStatusCode><thinlinkEventStatusText>Normal</thinlinkEventStatusText><settlementDate>20161108</settlementDate><txnID>123822</txnID><CreditCardInfo><pan>424242...242</pan><expiryDate>09/15</expiryDate><cardType>6</cardType><cardDescription>Visa</cardDescription></CreditCardInfo></Txn></TxnList></Payment></SecurePayMessage>"
+    read 1148 bytes
+    Conn close
+    XML
   end
 end

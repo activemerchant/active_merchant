@@ -19,54 +19,54 @@ class RemoteMoneyMoversTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Transaction Approved", response.message
+    assert_equal 'Transaction Approved', response.message
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Transaction Declined", response.message
+    assert_equal 'Transaction Declined', response.message
   end
 
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Transaction Approved", response.message
+    assert_equal 'Transaction Approved', response.message
   end
 
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal "Error in transaction data or system error", response.message
+    assert_equal 'Error in transaction data or system error', response.message
   end
 
   def test_purchase_and_refund
     assert auth = @gateway.purchase(@amount, @credit_card, @options)
     assert_success auth
-    assert_equal "Transaction Approved", auth.message
+    assert_equal 'Transaction Approved', auth.message
     assert auth.authorization
     assert capture = @gateway.refund(@amount, auth.authorization)
-    assert_equal "Transaction Approved", capture.message
+    assert_equal 'Transaction Approved', capture.message
     assert_success capture
   end
 
   def test_authorize_and_void
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    assert_equal "Transaction Approved", auth.message
+    assert_equal 'Transaction Approved', auth.message
     assert auth.authorization
     assert capture = @gateway.void(auth.authorization)
-    assert_equal "Transaction Approved", capture.message
+    assert_equal 'Transaction Approved', capture.message
     assert_success capture
   end
 
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    assert_equal "Transaction Approved", auth.message
+    assert_equal 'Transaction Approved', auth.message
     assert auth.authorization
     assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_equal "Transaction Approved", capture.message
+    assert_equal 'Transaction Approved', capture.message
     assert_success capture
   end
 
@@ -77,6 +77,6 @@ class RemoteMoneyMoversTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Error in transaction data or system error", response.message
+    assert_equal 'Error in transaction data or system error', response.message
   end
 end

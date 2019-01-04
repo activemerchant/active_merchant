@@ -48,7 +48,6 @@ class SecurePayTest < Test::Unit::TestCase
     assert response.authorization
   end
 
-
   def test_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 

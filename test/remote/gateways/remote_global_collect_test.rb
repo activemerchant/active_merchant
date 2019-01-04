@@ -10,6 +10,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     @accepted_amount = 4005
     @rejected_amount = 2997
     @options = {
+      email: 'example@example.com',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -21,14 +22,43 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
-  def test_successful_purchase_with_more_options
+  def test_successful_purchase_with_fraud_fields
     options = @options.merge(
-      order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com"
+      fraud_fields:
+      {
+        'website' => 'www.example.com',
+        'giftMessage' => 'Happy Day!'
+      }
     )
 
     response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_more_options
+    options = @options.merge(
+      order_id: '1',
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      sdk_identifier: 'Channel',
+      sdk_creator: 'Bob',
+      integrator: 'Bill',
+      creator: 'Super',
+      name: 'Cala',
+      version: '1.0',
+      extension_ID: '5555555'
+    )
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_very_long_name
+    credit_card = credit_card('4567350000427977', { first_name: 'thisisaverylongfirstname'})
+
+    response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -58,14 +88,15 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
     assert_success capture
+    assert_equal 99, capture.params['payment']['paymentOutput']['amountOfMoney']['amount']
   end
 
   def test_failed_capture
     response = @gateway.capture(@amount, '123', @options)
     assert_failure response
-    assert_equal 'INVALID_PAYMENT_ID', response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   # Because payments are not fully authorized immediately, refunds can only be
@@ -89,7 +120,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '123')
     assert_failure response
-    assert_equal 'INVALID_PAYMENT_ID', response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   def test_successful_void
@@ -104,7 +135,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('123')
     assert_failure response
-    assert_equal 'INVALID_PAYMENT_ID', response.message
+    assert_match %r{UNKNOWN_PAYMENT_ID}, response.message
   end
 
   def test_successful_verify
@@ -124,7 +155,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{MISSING_OR_INVALID_AUTHORIZATION}, response.message
+    assert_match %r{UNKNOWN_SERVER_ERROR}, response.message
   end
 
   def test_transcript_scrubbing

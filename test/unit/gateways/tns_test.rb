@@ -19,9 +19,7 @@ class TnsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    # Need to reverse the order, apparently.
-    @gateway.expects(:ssl_request).returns(successful_capture_response)
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).twice.returns(successful_authorize_response).then.returns(successful_capture_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -93,7 +91,7 @@ class TnsTest < Test::Unit::TestCase
 
   def test_passing_alpha3_country_code
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => {country: "US"})
+      @gateway.authorize(@amount, @credit_card, :billing_address => {country: 'US'})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/USA/, data)
     end.respond_with(successful_authorize_response)
@@ -101,7 +99,7 @@ class TnsTest < Test::Unit::TestCase
 
   def test_non_existent_country
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => {country: "Blah"})
+      @gateway.authorize(@amount, @credit_card, :billing_address => {country: 'Blah'})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/"country":null/, data)
     end.respond_with(successful_authorize_response)
@@ -140,7 +138,7 @@ class TnsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
-    assert_equal "91debbeb-d88f-42e9-a6ce-9b62c99d656b", response.params['order']['id']
+    assert_equal '91debbeb-d88f-42e9-a6ce-9b62c99d656b', response.params['order']['id']
   end
 
   def test_successful_verify_with_failed_void
@@ -148,7 +146,7 @@ class TnsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_unsuccessful_verify
@@ -156,7 +154,7 @@ class TnsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "FAILURE - DECLINED", response.message
+    assert_equal 'FAILURE - DECLINED', response.message
   end
 
   def test_north_america_region_url
@@ -191,7 +189,28 @@ class TnsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
+
+  def pre_scrubbed
+    %q[
+      D, {"provided":{"card":{"expiry":{"year":"17","month":"09"},"number":"5123456789012346","securityCode":"123"}},"type":"CARD"}
+      <- transaction/1 HTTP/1.1\r\nAuthorization: Basic bWVyY2hhbnQuVEVTVFNQUkVFRExZMDE6M2YzNGZlNTAzMzRmYmU2Y2JlMDRjMjgzNDExYTU4NjA=\r\nContent-Type:
+      <- {\"order\":{\"amount\":\"1.00\",\"currency\":\"USD\"},\"sourceOfFunds\":{\"provided\":{\"card\":{\"expiry\":{\"year\":\"17\",\"month\":\"09\"},\"number\":\"5123456789012346\",\"securityCode\":\"123\"}},\"type\":\"CARD\"}
+    ]
+  end
+
+  def post_scrubbed
+    %q[
+      D, {"provided":{"card":{"expiry":{"year":"17","month":"09"},"number":"[FILTERED]","securityCode":"[FILTERED]"}},"type":"CARD"}
+      <- transaction/1 HTTP/1.1\r\nAuthorization: Basic [FILTERED]Content-Type:
+      <- {\"order\":{\"amount\":\"1.00\",\"currency\":\"USD\"},\"sourceOfFunds\":{\"provided\":{\"card\":{\"expiry\":{\"year\":\"17\",\"month\":\"09\"},\"number\":\"[FILTERED]\",\"securityCode\":\"[FILTERED]\"}},\"type\":\"CARD\"}
+    ]
+  end
 
   def successful_authorize_response
     %(

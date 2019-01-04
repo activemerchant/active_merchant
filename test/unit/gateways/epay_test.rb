@@ -26,7 +26,7 @@ class EpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @credit_card)
     assert_failure response
     assert_equal 'The payment was declined. Try again in a moment or try with another credit card.',
-                 response.message
+      response.message
   end
 
   def test_invalid_characters_in_response
@@ -35,11 +35,11 @@ class EpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @credit_card)
     assert_failure response
     assert_equal 'The payment was declined of unknown reasons. For more information contact the bank. E.g. try with another credit card.<br />Denied - Call your bank for information',
-                 response.message
+      response.message
   end
 
   def test_failed_response_on_purchase
-    @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400,'Bad Request'))
+    @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400, 'Bad Request'))
 
     assert response = @gateway.authorize(100, @credit_card)
     assert_equal 400, response.params['response_code']

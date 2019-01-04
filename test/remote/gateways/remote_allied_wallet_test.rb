@@ -6,7 +6,7 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card
-    @declined_card = credit_card('4242424242424242', verification_value: "555")
+    @declined_card = credit_card('4242424242424242', verification_value: '555')
 
     @options = {
       billing_address: address,
@@ -16,13 +16,13 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "The test operation was declined.", response.message
+    assert_equal 'The test operation was declined.', response.message
   end
 
   def test_failed_purchase_no_address
@@ -34,32 +34,32 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     response = @gateway.purchase(@amount, @credit_card, @options.merge(
       order_id: generate_unique_id,
-      ip: "127.0.0.1",
-      email: "jim_smith@example.com"
+      ip: '127.0.0.1',
+      email: 'jim_smith@example.com'
     ))
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_authorize_and_capture
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
     assert response.authorization
 
     capture = @gateway.capture(@amount, response.authorization)
     assert_success capture
-    assert_equal "Succeeded", capture.message
+    assert_equal 'Succeeded', capture.message
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "The test operation was declined.", response.message
+    assert_equal 'The test operation was declined.', response.message
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, "")
+    response = @gateway.capture(@amount, '')
     assert_failure response
     assert_equal "'Authorize Transaction Id' should not be empty.", response.message
   end
@@ -70,11 +70,11 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
 
     void = @gateway.void(response.authorization)
     assert_success void
-    assert_equal "Succeeded", void.message
+    assert_equal 'Succeeded', void.message
   end
 
   def test_failed_void
-    response = @gateway.void("")
+    response = @gateway.void('')
     assert_failure response
     assert_equal "'Authorize Transaction Id' should not be empty.", response.message
   end
@@ -85,11 +85,11 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
 
     refund = @gateway.refund(@amount, response.authorization)
     assert_success refund
-    assert_equal "Succeeded", refund.message
+    assert_equal 'Succeeded', refund.message
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, "UnknownAuthorization")
+    response = @gateway.refund(@amount, 'UnknownAuthorization')
     assert_failure response
     assert_match(/An internal exception has occurred/, response.message)
   end
@@ -103,7 +103,7 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_equal "The test operation was declined.", response.message
+    assert_equal 'The test operation was declined.', response.message
   end
 
   def test_transcript_scrubbing
@@ -128,7 +128,7 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   end
 
   def test_empty_string_cvv_transcript_scrubbing
-    @credit_card.verification_value = ""
+    @credit_card.verification_value = ''
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end
@@ -138,7 +138,7 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   end
 
   def test_whitespace_string_cvv_transcript_scrubbing
-    @credit_card.verification_value = "    "
+    @credit_card.verification_value = '    '
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
     end

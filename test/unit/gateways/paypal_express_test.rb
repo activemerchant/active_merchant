@@ -19,15 +19,16 @@ class PaypalExpressTest < Test::Unit::TestCase
       :pem => 'PEM'
     )
 
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @address = {
+      :address1 => '1234 My Street',
+      :address2 => 'Apt 1',
+      :company => 'Widgets Inc',
+      :city => 'Ottawa',
+      :state => 'ON',
+      :zip => 'K1C2N6',
+      :country => 'Canada',
+      :phone => '(555)555-5555'
+    }
 
     Base.mode = :test
   end
@@ -104,7 +105,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_express_response_missing_address
-    response = PaypalExpressResponse.new(true, "ok")
+    response = PaypalExpressResponse.new(true, 'ok')
     assert_nil response.address['address1']
   end
 
@@ -165,10 +166,24 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_items_are_included_if_specified_in_build_setup_request
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:currency => 'GBP', :items => [
-                                            {:name => 'item one', :description => 'item one description', :amount => 10000, :number => 1, :quantity => 3},
-                                            {:name => 'item two', :description => 'item two description', :amount => 20000, :number => 2, :quantity => 4}
-    ]}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {
+      :currency => 'GBP',
+      :items => [
+        {
+          :name => 'item one',
+          :description => 'item one description',
+          :amount => 10000,
+          :number => 1,
+          :quantity => 3
+        },
+        { :name => 'item two',
+          :description => 'item two description',
+          :amount => 20000,
+          :number => 2,
+          :quantity => 4
+        }
+      ]
+    }))
 
     assert_equal 'item one', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
     assert_equal 'item one description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description').text
@@ -192,7 +207,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_callback_url_is_included_if_specified_in_build_setup_request
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_url => "http://example.com/update_callback"}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_url => 'http://example.com/update_callback'}))
 
     assert_equal 'http://example.com/update_callback', REXML::XPath.first(xml, '//n2:CallbackURL').text
   end
@@ -228,16 +243,22 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_flatrate_shipping_options_are_included_if_specified_in_build_setup_request
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:currency => 'AUD', :shipping_options => [
-            {:default => true,
-             :name => "first one",
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0,
+      {
+        :currency => 'AUD',
+        :shipping_options => [
+          {
+             :default => true,
+             :name => 'first one',
              :amount => 1000
-            },
-            {:default => false,
-             :name => "second one",
-             :amount => 2000
-            }
-    ]}))
+          },
+          {
+            :default => false,
+            :name => 'second one',
+            :amount => 2000
+          }
+        ]
+    }))
 
     assert_equal 'true', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionIsDefault').text
     assert_equal 'first one', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionName').text
@@ -251,14 +272,18 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_address_is_included_if_specified
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'Sale', 0, {:currency => 'GBP', :address => {
-      :name     => "John Doe",
-      :address1 => "123 somewhere",
-      :city     => "Townville",
-      :country  => "Canada",
-      :zip      => "k1l4p2",
-      :phone    => "1231231231"
-    }}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'Sale', 0,
+      {
+        :currency => 'GBP',
+        :address => {
+            :name     => 'John Doe',
+            :address1 => '123 somewhere',
+            :city     => 'Townville',
+            :country  => 'Canada',
+            :zip      => 'k1l4p2',
+            :phone    => '1231231231'
+          }
+      }))
 
     assert_equal 'John Doe', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Name').text
     assert_equal '123 somewhere', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Street1').text
@@ -287,10 +312,30 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_fractional_discounts_are_correctly_calculated_with_jpy_currency
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14250, { :items =>
-                            [{:name => 'item one', :description => 'description', :amount => 15000, :number => 1, :quantity => 1},
-                             {:name => 'Discount', :description => 'Discount', :amount => -750, :number => 2, :quantity => 1}],
-                             :subtotal => 14250, :currency => 'JPY', :shipping => 0, :handling => 0, :tax => 0 }))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14250,
+      {
+        :items => [
+          {
+            :name => 'item one',
+            :description => 'description',
+            :amount => 15000,
+            :number => 1,
+            :quantity => 1
+          },
+          {
+            :name => 'Discount',
+            :description => 'Discount',
+            :amount => -750,
+            :number => 2,
+            :quantity => 1
+          }
+        ],
+        :subtotal => 14250,
+        :currency => 'JPY',
+        :shipping => 0,
+        :handling => 0,
+        :tax => 0
+    }))
 
     assert_equal '142', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '142', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -300,10 +345,30 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_non_fractional_discounts_are_correctly_calculated_with_jpy_currency
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14300, { :items =>
-                            [{:name => 'item one', :description => 'description', :amount => 15000, :number => 1, :quantity => 1},
-                             {:name => 'Discount', :description => 'Discount', :amount => -700, :number => 2, :quantity => 1}],
-                             :subtotal => 14300, :currency => 'JPY', :shipping => 0, :handling => 0, :tax => 0 }))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14300,
+      {
+        :items => [
+          {
+            :name => 'item one',
+            :description => 'description',
+            :amount => 15000,
+            :number => 1,
+            :quantity => 1
+          },
+          {
+            :name => 'Discount',
+            :description => 'Discount',
+            :amount => -700,
+            :number => 2,
+            :quantity => 1
+          }
+        ],
+        :subtotal => 14300,
+        :currency => 'JPY',
+        :shipping => 0,
+        :handling => 0,
+        :tax => 0
+    }))
 
     assert_equal '143', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '143', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -313,10 +378,30 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_fractional_discounts_are_correctly_calculated_with_usd_currency
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14250, { :items =>
-                            [{:name => 'item one', :description => 'description', :amount => 15000, :number => 1, :quantity => 1},
-                             {:name => 'Discount', :description => 'Discount', :amount => -750, :number => 2, :quantity => 1}],
-                             :subtotal => 14250, :currency => 'USD', :shipping => 0, :handling => 0, :tax => 0 }))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 14250,
+      {
+      :items => [
+        {
+          :name => 'item one',
+          :description => 'description',
+          :amount => 15000,
+          :number => 1,
+          :quantity => 1
+        },
+        {
+          :name => 'Discount',
+          :description => 'Discount',
+          :amount => -750,
+          :number => 2,
+          :quantity => 1
+        }
+      ],
+      :subtotal => 14250,
+      :currency => 'USD',
+      :shipping => 0,
+      :handling => 0,
+      :tax => 0
+    }))
 
     assert_equal '142.50', REXML::XPath.first(xml, '//n2:OrderTotal').text
     assert_equal '142.50', REXML::XPath.first(xml, '//n2:ItemTotal').text
@@ -369,11 +454,25 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_items_are_included_if_specified_in_build_sale_or_authorization_request
-    xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Sale', 100, {:items => [
-                                            {:name => 'item one', :description => 'item one description', :amount => 10000, :number => 1, :quantity => 3},
-                                            {:name => 'item two', :description => 'item two description', :amount => 20000, :number => 2, :quantity => 4}
-    ]}))
-
+    xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Sale', 100,
+      {
+        :items => [
+          {
+            :name => 'item one',
+            :description => 'item one description',
+            :amount => 10000,
+            :number => 1,
+            :quantity => 3
+          },
+          {
+            :name => 'item two',
+            :description => 'item two description',
+            :amount => 20000,
+            :number => 2,
+            :quantity => 4
+          }
+        ]
+    }))
 
     assert_equal 'item one', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
     assert_equal 'item one description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description').text
@@ -390,7 +489,7 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_build_create_billing_agreement
     PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
-    xml = REXML::Document.new(@gateway.send(:build_create_billing_agreement_request, "ref_id"))
+    xml = REXML::Document.new(@gateway.send(:build_create_billing_agreement_request, 'ref_id'))
 
     assert_equal 'ref_id', REXML::XPath.first(xml, '//CreateBillingAgreementReq/CreateBillingAgreementRequest/Token').text
   end
@@ -398,64 +497,65 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_store
     @gateway.expects(:ssl_post).returns(successful_create_billing_agreement_response)
 
-    response = @gateway.store("ref_id")
+    response = @gateway.store('ref_id')
 
-    assert_equal "Success", response.params['ack']
-    assert_equal "Success", response.message
-    assert_equal "B-3R788221G4476823M", response.params["billing_agreement_id"]
+    assert_equal 'Success', response.params['ack']
+    assert_equal 'Success', response.message
+    assert_equal 'B-3R788221G4476823M', response.params['billing_agreement_id']
   end
 
   def test_unstore_successful
     @gateway.expects(:ssl_post).returns(successful_cancel_billing_agreement_response)
-    response = @gateway.unstore("B-3RU433629T663020S")
+    response = @gateway.unstore('B-3RU433629T663020S')
 
     assert response.success?
-    assert_equal "Success", response.params['ack']
-    assert_equal "Success", response.message
-    assert_equal "B-3RU433629T663020S", response.params["billing_agreement_id"]
-    assert_equal "Canceled", response.params["billing_agreement_status"]
+    assert_equal 'Success', response.params['ack']
+    assert_equal 'Success', response.message
+    assert_equal 'B-3RU433629T663020S', response.params['billing_agreement_id']
+    assert_equal 'Canceled', response.params['billing_agreement_status']
   end
 
   def test_unstore_failed
     @gateway.expects(:ssl_post).returns(failed_cancel_billing_agreement_response)
-    response = @gateway.unstore("B-3RU433629T663020S")
+    response = @gateway.unstore('B-3RU433629T663020S')
 
     assert !response.success?
-    assert_equal "Failure", response.params['ack']
-    assert_equal "Billing Agreement was cancelled", response.message
-    assert_equal "10201", response.params["error_codes"]
+    assert_equal 'Failure', response.params['ack']
+    assert_equal 'Billing Agreement was cancelled', response.message
+    assert_equal '10201', response.params['error_codes']
   end
 
   def test_agreement_details_successful
     @gateway.expects(:ssl_post).returns(successful_billing_agreement_details_response)
-    response = @gateway.agreement_details("B-6VE21702A47915521")
+    response = @gateway.agreement_details('B-6VE21702A47915521')
 
     assert response.success?
-    assert_equal "Success", response.params['ack']
-    assert_equal "Success", response.message
-    assert_equal "B-6VE21702A47915521", response.params["billing_agreement_id"]
-    assert_equal "Active", response.params["billing_agreement_status"]
+    assert_equal 'Success', response.params['ack']
+    assert_equal 'Success', response.message
+    assert_equal 'B-6VE21702A47915521', response.params['billing_agreement_id']
+    assert_equal 'Active', response.params['billing_agreement_status']
   end
 
   def test_agreement_details_failure
     @gateway.expects(:ssl_post).returns(failure_billing_agreement_details_response)
-    response = @gateway.agreement_details("bad_reference_id")
+    response = @gateway.agreement_details('bad_reference_id')
 
     assert !response.success?
-    assert_equal "Failure", response.params['ack']
-    assert_equal "Billing Agreement Id or transaction Id is not valid", response.message
-    assert_equal "11451", response.params["error_codes"]
+    assert_equal 'Failure', response.params['ack']
+    assert_equal 'Billing Agreement Id or transaction Id is not valid', response.message
+    assert_equal '11451', response.params['error_codes']
   end
-
 
   def test_build_reference_transaction_test
     PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
-    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000, {
-      :reference_id => "ref_id",
-      :payment_type => 'Any',
-      :invoice_id   => 'invoice_id',
-      :description  => 'Description',
-      :ip           => '127.0.0.1' }))
+    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000,
+      {
+        :reference_id => 'ref_id',
+        :payment_type => 'Any',
+        :invoice_id   => 'invoice_id',
+        :description  => 'Description',
+        :ip           => '127.0.0.1'
+      }))
 
     assert_equal '124', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:Version').text
     assert_equal 'ref_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
@@ -477,26 +577,27 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_authorize_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_authorize_reference_transaction_response)
 
-    response = @gateway.authorize_reference_transaction(2000,  {
-      :reference_id => "ref_id",
-      :payment_type => 'Any',
-      :invoice_id   => 'invoice_id',
-      :description  => 'Description',
-      :ip           => '127.0.0.1' })
+    response = @gateway.authorize_reference_transaction(2000,
+      {
+        :reference_id => 'ref_id',
+        :payment_type => 'Any',
+        :invoice_id   => 'invoice_id',
+        :description  => 'Description',
+        :ip           => '127.0.0.1' })
 
-    assert_equal "Success", response.params['ack']
-    assert_equal "Success", response.message
-    assert_equal "9R43552341412482K", response.authorization
+    assert_equal 'Success', response.params['ack']
+    assert_equal 'Success', response.message
+    assert_equal '9R43552341412482K', response.authorization
   end
 
   def test_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_reference_transaction_response)
 
-    response = @gateway.reference_transaction(2000,  { :reference_id => "ref_id" })
+    response = @gateway.reference_transaction(2000,  { :reference_id => 'ref_id' })
 
-    assert_equal "Success", response.params['ack']
-    assert_equal "Success", response.message
-    assert_equal "9R43552341412482K", response.authorization
+    assert_equal 'Success', response.params['ack']
+    assert_equal 'Success', response.message
+    assert_equal '9R43552341412482K', response.authorization
   end
 
   def test_reference_transaction_requires_fields
@@ -508,30 +609,30 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_error_code_for_single_error
     @gateway.expects(:ssl_post).returns(response_with_error)
     response = @gateway.setup_authorization(100,
-                 :return_url => 'http://example.com',
-                 :cancel_return_url => 'http://example.com'
-               )
-    assert_equal "10736", response.params['error_codes']
+      :return_url => 'http://example.com',
+      :cancel_return_url => 'http://example.com'
+    )
+    assert_equal '10736', response.params['error_codes']
   end
 
   def test_ensure_only_unique_error_codes
     @gateway.expects(:ssl_post).returns(response_with_duplicate_errors)
     response = @gateway.setup_authorization(100,
-                 :return_url => 'http://example.com',
-                 :cancel_return_url => 'http://example.com'
-               )
+      :return_url => 'http://example.com',
+      :cancel_return_url => 'http://example.com'
+    )
 
-    assert_equal "10736" , response.params['error_codes']
+    assert_equal '10736', response.params['error_codes']
   end
 
   def test_error_codes_for_multiple_errors
     @gateway.expects(:ssl_post).returns(response_with_errors)
     response = @gateway.setup_authorization(100,
-                 :return_url => 'http://example.com',
-                 :cancel_return_url => 'http://example.com'
-               )
+      :return_url => 'http://example.com',
+      :cancel_return_url => 'http://example.com'
+    )
 
-    assert_equal ["10736", "10002"] , response.params['error_codes'].split(',')
+    assert_equal ['10736', '10002'], response.params['error_codes'].split(',')
   end
 
   def test_allow_guest_checkout
@@ -600,31 +701,42 @@ class PaypalExpressTest < Test::Unit::TestCase
         :handling => 0,
         :tax => 5,
         :total_type => 'EstimatedTotal',
-        :items => [{:name => 'item one',
-                    :number => 'number 1',
-                    :quantity => 3,
-                    :amount => 35,
-                    :description => 'one description',
-                    :url => 'http://example.com/number_1'}],
-        :address => {:name => 'John Doe',
-                     :address1 => 'Apartment 1',
-                     :address2 => '1 Road St',
-                     :city => 'First City',
-                     :state => 'NSW',
-                     :country => 'AU',
-                     :zip => '2000',
-                     :phone => '555 5555'},
-        :callback_url => "http://example.com/update_callback",
+        :items => [
+          {
+            :name => 'item one',
+            :number => 'number 1',
+            :quantity => 3,
+            :amount => 35,
+            :description => 'one description',
+            :url => 'http://example.com/number_1'
+          }
+        ],
+        :address =>
+          {
+            :name => 'John Doe',
+            :address1 => 'Apartment 1',
+            :address2 => '1 Road St',
+            :city => 'First City',
+            :state => 'NSW',
+            :country => 'AU',
+            :zip => '2000',
+            :phone => '555 5555'
+          },
+        :callback_url => 'http://example.com/update_callback',
         :callback_timeout => 2,
         :callback_version => '53.0',
         :funding_sources => {:source => 'BML'},
-        :shipping_options => [{:default => true,
-                               :name => "first one",
-                               :amount => 10}]
+        :shipping_options => [
+          {
+            :default => true,
+            :name => 'first one',
+            :amount => 10
+          }
+        ]
     }
 
     doc = Nokogiri::XML(@gateway.send(:build_setup_request, 'Sale', 10, all_options_enabled))
-    #Strip back to the SetExpressCheckoutRequestDetails element - this is where the base component xsd starts
+    # Strip back to the SetExpressCheckoutRequestDetails element - this is where the base component xsd starts
     xml = doc.xpath('//base:SetExpressCheckoutRequestDetails', 'base' => 'urn:ebay:apis:eBLBaseComponents').first
     sub_doc = Nokogiri::XML::Document.new
     sub_doc.root = xml
@@ -666,9 +778,8 @@ class PaypalExpressTest < Test::Unit::TestCase
     RESPONSE
   end
 
-
   def successful_authorize_reference_transaction_response
-  <<-RESPONSE
+    <<-RESPONSE
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
   <SOAP-ENV:Header>
@@ -762,7 +873,6 @@ class PaypalExpressTest < Test::Unit::TestCase
 	</SOAP-ENV:Envelope>
     RESPONSE
   end
-
 
   def successful_details_response
     <<-RESPONSE
@@ -946,8 +1056,8 @@ class PaypalExpressTest < Test::Unit::TestCase
     RESPONSE
   end
 
-    def response_with_errors
-      <<-RESPONSE
+  def response_with_errors
+    <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>
   <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:market="urn:ebay:apis:Market" xmlns:auction="urn:ebay:apis:Auction" xmlns:sizeship="urn:ebay:api:PayPalAPI/sizeship.xsd" xmlns:ship="urn:ebay:apis:ship" xmlns:skype="urn:ebay:apis:skype" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
     <SOAP-ENV:Header>
@@ -983,10 +1093,10 @@ class PaypalExpressTest < Test::Unit::TestCase
     </SOAP-ENV:Body>
   </SOAP-ENV:Envelope>
       RESPONSE
-    end
+  end
 
-    def response_with_duplicate_errors
-      <<-RESPONSE
+  def response_with_duplicate_errors
+    <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>
   <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:market="urn:ebay:apis:Market" xmlns:auction="urn:ebay:apis:Auction" xmlns:sizeship="urn:ebay:api:PayPalAPI/sizeship.xsd" xmlns:ship="urn:ebay:apis:ship" xmlns:skype="urn:ebay:apis:skype" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
     <SOAP-ENV:Header>
@@ -1022,10 +1132,10 @@ class PaypalExpressTest < Test::Unit::TestCase
     </SOAP-ENV:Body>
   </SOAP-ENV:Envelope>
       RESPONSE
-    end
+  end
 
-    def successful_cancel_billing_agreement_response
-      <<-RESPONSE
+  def successful_cancel_billing_agreement_response
+    <<-RESPONSE
         <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes"
         xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
@@ -1049,10 +1159,10 @@ class PaypalExpressTest < Test::Unit::TestCase
         xsi:type="xs:string"></ExternalAddressID><AddressStatus
         xsi:type="ebl:AddressStatusCodeType">None</AddressStatus></Address></PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
       RESPONSE
-    end
+  end
 
-    def failed_cancel_billing_agreement_response
-      <<-RESPONSE
+  def failed_cancel_billing_agreement_response
+    <<-RESPONSE
         <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes"
         xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
@@ -1075,10 +1185,10 @@ class PaypalExpressTest < Test::Unit::TestCase
         xsi:type="xs:string"></AddressID><AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner><ExternalAddressID xsi:type="xs:string"></ExternalAddressID><AddressStatus
         xsi:type="ebl:AddressStatusCodeType">None</AddressStatus></Address></PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
       RESPONSE
-    end
+  end
 
-    def successful_billing_agreement_details_response
-      <<-RESPONSE
+  def successful_billing_agreement_details_response
+    <<-RESPONSE
         <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
         xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes"
@@ -1108,10 +1218,10 @@ class PaypalExpressTest < Test::Unit::TestCase
         <ExternalAddressID xsi:type="xs:string"></ExternalAddressID><AddressStatus xsi:type="ebl:AddressStatusCodeType">None</AddressStatus>
         </Address></PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
       RESPONSE
-    end
+  end
 
-    def failure_billing_agreement_details_response
-      <<-RESPONSE
+  def failure_billing_agreement_details_response
+    <<-RESPONSE
       <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
       xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes"
@@ -1140,5 +1250,57 @@ class PaypalExpressTest < Test::Unit::TestCase
       <ExternalAddressID xsi:type="xs:string"></ExternalAddressID><AddressStatus xsi:type="ebl:AddressStatusCodeType">None</AddressStatus></Address>
       </PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
       RESPONSE
-    end
+  end
+
+  def pre_scrubbed
+    <<-TRANSCRIPT
+<?xml version=\"1.0\" encoding=\"UTF-8\"?><env:Envelope xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><env:Header><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xmlns:n1=\"urn:ebay:apis:eBLBaseComponents\" env:mustUnderstand=\"0\"><n1:Credentials><n1:Username>activemerchant-cert-test_api1.example.com</n1:Username><n1:Password>ERDD3JRFU5H5DQXS</n1:Password><n1:Subject/></n1:Credentials></RequesterCredentials></env:Header><env:Body><SetExpressCheckoutReq xmlns=\"urn:ebay:api:PayPalAPI\">
+  <SetExpressCheckoutRequest xmlns:n2=\"urn:ebay:apis:eBLBaseComponents\">
+    <n2:Version>124</n2:Version>
+    <n2:SetExpressCheckoutRequestDetails>
+      <n2:ReturnURL>http://example.com/return</n2:ReturnURL>
+      <n2:CancelURL>http://example.com/cancel</n2:CancelURL>
+      <n2:ReqBillingAddress>0</n2:ReqBillingAddress>
+      <n2:NoShipping>0</n2:NoShipping>
+      <n2:AddressOverride>0</n2:AddressOverride>
+      <n2:BuyerEmail>buyer@jadedpallet.com</n2:BuyerEmail>
+      <n2:PaymentDetails>
+        <n2:OrderTotal currencyID=\"USD\">5.00</n2:OrderTotal>
+        <n2:OrderDescription>Stuff that you purchased, yo!</n2:OrderDescription>
+        <n2:InvoiceID>230000</n2:InvoiceID>
+        <n2:PaymentAction>Authorization</n2:PaymentAction>
+      </n2:PaymentDetails>
+    </n2:SetExpressCheckoutRequestDetails>
+  </SetExpressCheckoutRequest>
+</SetExpressCheckoutReq>
+</env:Body></env:Envelope>
+<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:cc=\"urn:ebay:apis:CoreComponentTypes\" xmlns:wsu=\"http://schemas.xmlsoap.org/ws/2002/07/utility\" xmlns:saml=\"urn:oasis:names:tc:SAML:1.0:assertion\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:ed=\"urn:ebay:apis:EnhancedDataTypes\" xmlns:ebl=\"urn:ebay:apis:eBLBaseComponents\" xmlns:ns=\"urn:ebay:api:PayPalAPI\"><SOAP-ENV:Header><Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xsi:type=\"wsse:SecurityType\"></Security><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xsi:type=\"ebl:CustomSecurityHeaderType\"><Credentials xmlns=\"urn:ebay:apis:eBLBaseComponents\" xsi:type=\"ebl:UserIdPasswordType\"><Username xsi:type=\"xs:string\"></Username><Password xsi:type=\"xs:string\"></Password><Signature xsi:type=\"xs:string\"></Signature><Subject xsi:type=\"xs:string\"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id=\"_0\"><SetExpressCheckoutResponse xmlns=\"urn:ebay:api:PayPalAPI\"><Timestamp xmlns=\"urn:ebay:apis:eBLBaseComponents\">2018-05-24T20:23:54Z</Timestamp><Ack xmlns=\"urn:ebay:apis:eBLBaseComponents\">Success</Ack><CorrelationID xmlns=\"urn:ebay:apis:eBLBaseComponents\">b6dd2a043921b</CorrelationID><Version xmlns=\"urn:ebay:apis:eBLBaseComponents\">124</Version><Build xmlns=\"urn:ebay:apis:eBLBaseComponents\">46549960</Build><Token xsi:type=\"ebl:ExpressCheckoutTokenType\">EC-7KR85820NC734104L</Token></SetExpressCheckoutResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+      TRANSCRIPT
+  end
+
+  def post_scrubbed
+    <<-TRANSCRIPT
+<?xml version=\"1.0\" encoding=\"UTF-8\"?><env:Envelope xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><env:Header><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xmlns:n1=\"urn:ebay:apis:eBLBaseComponents\" env:mustUnderstand=\"0\"><n1:Credentials><n1:Username>[FILTERED]</n1:Username><n1:Password>[FILTERED]</n1:Password><n1:Subject/></n1:Credentials></RequesterCredentials></env:Header><env:Body><SetExpressCheckoutReq xmlns=\"urn:ebay:api:PayPalAPI\">
+  <SetExpressCheckoutRequest xmlns:n2=\"urn:ebay:apis:eBLBaseComponents\">
+    <n2:Version>124</n2:Version>
+    <n2:SetExpressCheckoutRequestDetails>
+      <n2:ReturnURL>http://example.com/return</n2:ReturnURL>
+      <n2:CancelURL>http://example.com/cancel</n2:CancelURL>
+      <n2:ReqBillingAddress>0</n2:ReqBillingAddress>
+      <n2:NoShipping>0</n2:NoShipping>
+      <n2:AddressOverride>0</n2:AddressOverride>
+      <n2:BuyerEmail>buyer@jadedpallet.com</n2:BuyerEmail>
+      <n2:PaymentDetails>
+        <n2:OrderTotal currencyID=\"USD\">5.00</n2:OrderTotal>
+        <n2:OrderDescription>Stuff that you purchased, yo!</n2:OrderDescription>
+        <n2:InvoiceID>230000</n2:InvoiceID>
+        <n2:PaymentAction>Authorization</n2:PaymentAction>
+      </n2:PaymentDetails>
+    </n2:SetExpressCheckoutRequestDetails>
+  </SetExpressCheckoutRequest>
+</SetExpressCheckoutReq>
+</env:Body></env:Envelope>
+<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:cc=\"urn:ebay:apis:CoreComponentTypes\" xmlns:wsu=\"http://schemas.xmlsoap.org/ws/2002/07/utility\" xmlns:saml=\"urn:oasis:names:tc:SAML:1.0:assertion\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:ed=\"urn:ebay:apis:EnhancedDataTypes\" xmlns:ebl=\"urn:ebay:apis:eBLBaseComponents\" xmlns:ns=\"urn:ebay:api:PayPalAPI\"><SOAP-ENV:Header><Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xsi:type=\"wsse:SecurityType\"></Security><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xsi:type=\"ebl:CustomSecurityHeaderType\"><Credentials xmlns=\"urn:ebay:apis:eBLBaseComponents\" xsi:type=\"ebl:UserIdPasswordType\"><Username xsi:type=\"xs:string\"></Username><Password xsi:type=\"xs:string\"></Password><Signature xsi:type=\"xs:string\"></Signature><Subject xsi:type=\"xs:string\"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id=\"_0\"><SetExpressCheckoutResponse xmlns=\"urn:ebay:api:PayPalAPI\"><Timestamp xmlns=\"urn:ebay:apis:eBLBaseComponents\">2018-05-24T20:23:54Z</Timestamp><Ack xmlns=\"urn:ebay:apis:eBLBaseComponents\">Success</Ack><CorrelationID xmlns=\"urn:ebay:apis:eBLBaseComponents\">b6dd2a043921b</CorrelationID><Version xmlns=\"urn:ebay:apis:eBLBaseComponents\">124</Version><Build xmlns=\"urn:ebay:apis:eBLBaseComponents\">46549960</Build><Token xsi:type=\"ebl:ExpressCheckoutTokenType\">EC-7KR85820NC734104L</Token></SetExpressCheckoutResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+      TRANSCRIPT
+  end
 end

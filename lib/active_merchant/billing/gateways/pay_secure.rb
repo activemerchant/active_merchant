@@ -39,9 +39,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       # Used for capturing, which is currently not supported.
       def add_reference(post, identification)
-        auth, trans_id = identification.split(";")
+        auth, trans_id = identification.split(';')
         post[:authnum]    = auth
         post[:transid] = trans_id
       end
@@ -51,7 +52,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:merchant_transid] = options[:order_id].to_s.slice(0,21)
+        post[:merchant_transid] = options[:order_id].to_s.slice(0, 21)
         post[:memnum]           = options[:invoice]
         post[:custnum]          = options[:customer]
         post[:clientdata]       = options[:description]
@@ -65,13 +66,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
+        response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
         Response.new(successful?(response), message_from(response), response,
           :test => test_response?(response),
           :authorization => authorization_from(response)
         )
-
       end
 
       def successful?(response)
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        [ response[:authnum], response[:transid] ].compact.join(";")
+        [ response[:authnum], response[:transid] ].compact.join(';')
       end
 
       def test_response?(response)
@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         response = {}
         body.to_s.each_line do |l|
-          key, value = l.split(":", 2)
+          key, value = l.split(':', 2)
           response[key.to_s.downcase.to_sym] = value.strip
         end
         response
@@ -104,9 +104,8 @@ module ActiveMerchant #:nodoc:
         parameters[:merchant_id]      = @options[:login]
         parameters[:password]         = @options[:password]
 
-        parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.reject { |k, v| v.blank? }.collect { |key, value| "#{key.to_s.upcase}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end
 end
-

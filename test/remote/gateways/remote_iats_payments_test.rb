@@ -75,31 +75,31 @@ class IatsPaymentsTest < Test::Unit::TestCase
     # the original purchase hadn't yet cleared. No way to test immediate failure
     # due to the delay in original tx processing, even for text txs.
     assert_failure refund
-    assert_equal "REJECT: 3", refund.message
+    assert_equal 'REJECT: 3', refund.message
   end
 
   def test_failed_check_refund
-    assert refund = @gateway.refund(@amount, "invalidref")
+    assert refund = @gateway.refund(@amount, 'invalidref')
     assert_failure refund
-    assert_equal "REJECT: 39", refund.message
+    assert_equal 'REJECT: 39', refund.message
   end
 
   def test_successful_store_and_unstore
     assert store = @gateway.store(@credit_card, @options)
     assert_success store
     assert store.authorization
-    assert_equal "Success", store.message
+    assert_equal 'Success', store.message
 
     assert unstore = @gateway.unstore(store.authorization, @options)
     assert_success unstore
-    assert_equal "Success", unstore.message
+    assert_equal 'Success', unstore.message
   end
 
   def test_failed_store
     credit_card = credit_card('4111')
     assert store = @gateway.store(credit_card, @options)
     assert_failure store
-    assert_match /Invalid credit card number/, store.message
+    assert_match(/Invalid credit card number/, store.message)
   end
 
   def test_invalid_login
@@ -112,4 +112,29 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
     assert_failure response
   end
+
+  def test_purchase_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(credit_card.number, transcript)
+    assert_scrubbed(credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:agent_code], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
+  def test_check_purchase_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.routing_number, transcript)
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@gateway.options[:agent_code], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
 end

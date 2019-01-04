@@ -46,7 +46,7 @@ class BpointTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
   end
 
   def test_successful_authorize
@@ -399,23 +399,23 @@ class BpointTest < Test::Unit::TestCase
   end
 
   def successful_store_response
-   %(
-    <?xml version="1.0" encoding="UTF-8"?>
-    <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <soap:Body>
-        <AddTokenResponse xmlns="urn:Eve_1_4_4">
-          <AddTokenResult>
-            <Token>5999992142370790</Token>
-            <MaskedCardNumber>498765...769</MaskedCardNumber>
-            <CardType>VC</CardType>
-          </AddTokenResult>
-          <response>
-            <ResponseCode>SUCCESS</ResponseCode>
-          </response>
-        </AddTokenResponse>
-      </soap:Body>
-    </soap:Envelope>
-   )
+    %(
+     <?xml version="1.0" encoding="UTF-8"?>
+     <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+       <soap:Body>
+         <AddTokenResponse xmlns="urn:Eve_1_4_4">
+           <AddTokenResult>
+             <Token>5999992142370790</Token>
+             <MaskedCardNumber>498765...769</MaskedCardNumber>
+             <CardType>VC</CardType>
+           </AddTokenResult>
+           <response>
+             <ResponseCode>SUCCESS</ResponseCode>
+           </response>
+         </AddTokenResponse>
+       </soap:Body>
+     </soap:Envelope>
+    )
   end
 
   def failed_store_response

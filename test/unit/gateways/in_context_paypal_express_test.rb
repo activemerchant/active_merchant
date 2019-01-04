@@ -40,4 +40,3 @@ class InContextPaypalExpressTest < Test::Unit::TestCase
     assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', review: false)
   end
 end
-

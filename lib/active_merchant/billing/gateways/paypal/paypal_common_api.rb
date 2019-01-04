@@ -269,7 +269,21 @@ module ActiveMerchant #:nodoc:
         commit 'ManagePendingTransactionStatus', build_manage_pending_transaction_status(transaction_id, action)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<n1:Password>).+(</n1:Password>)), '\1[FILTERED]\2').
+          gsub(%r((<n1:Username>).+(</n1:Username>)), '\1[FILTERED]\2').
+          gsub(%r((<n1:Signature>).+(</n1:Signature>)), '\1[FILTERED]\2').
+          gsub(%r((<n2:CreditCardNumber>).+(</n2:CreditCardNumber)), '\1[FILTERED]\2').
+          gsub(%r((<n2:CVV2>)\d+(</n2:CVV2)), '\1[FILTERED]\2')
+      end
+
       private
+
       def build_request_wrapper(action, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! action + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
@@ -620,7 +634,7 @@ module ActiveMerchant #:nodoc:
         add_optional_fields(xml,
                             %w{n2:NoteText          n2:PaymentAction
                                n2:TransactionId     n2:AllowedPaymentMethod
-                               n2:PaymentRequestID  },
+                               n2:PaymentRequestID  n2:SoftDescriptor  },
                             options)
       end
 

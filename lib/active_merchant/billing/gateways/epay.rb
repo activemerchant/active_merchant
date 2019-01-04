@@ -120,7 +120,6 @@ module ActiveMerchant #:nodoc:
           gsub(%r((&?cvc=)\d*(&?)), '\1[FILTERED]\2')
       end
 
-
       private
 
       def add_amount(post, money, options)
@@ -164,16 +163,16 @@ module ActiveMerchant #:nodoc:
 
         if action == :authorize
           Response.new response['accept'].to_i == 1,
-                       response['errortext'],
-                       response,
-                       :test => test?,
-                       :authorization => response['tid']
+            response['errortext'],
+            response,
+            :test => test?,
+            :authorization => response['tid']
         else
           Response.new response['result'] == 'true',
-                       messages(response['epay'], response['pbs']),
-                       response,
-                       :test => test?,
-                       :authorization => params[:transaction]
+            messages(response['epay'], response['pbs']),
+            response,
+            :test => test?,
+            :authorization => params[:transaction]
         end
       end
 
@@ -191,7 +190,7 @@ module ActiveMerchant #:nodoc:
 
       def do_authorize(params)
         headers = {}
-        headers['Referer'] = (options[:password] || "activemerchant.org")
+        headers['Referer'] = (options[:password] || 'activemerchant.org')
 
         response = raw_ssl_request(:post, live_url + 'auth/default.aspx', authorize_post_data(params), headers)
 
@@ -209,7 +208,7 @@ module ActiveMerchant #:nodoc:
         end
 
         result = {}
-        query.each_pair do |k,v|
+        query.each_pair do |k, v|
           result[k] = v.is_a?(Array) && v.size == 1 ? v[0] : v # make values like ['v'] into 'v'
         end
         result
@@ -244,7 +243,7 @@ module ActiveMerchant #:nodoc:
       def make_headers(data, soap_call)
         {
           'Content-Type' => 'text/xml; charset=utf-8',
-          'Host' => "ssl.ditonlinebetalingssystem.dk",
+          'Host' => 'ssl.ditonlinebetalingssystem.dk',
           'Content-Length' => data.size.to_s,
           'SOAPAction' => self.live_url + 'remote/payment/' + soap_call
         }
@@ -253,17 +252,17 @@ module ActiveMerchant #:nodoc:
       def xml_builder(params, soap_call)
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!
-          xml.tag! 'soap:Envelope', { 'xmlns:xsi' => 'http://schemas.xmlsoap.org/soap/envelope/',
-                                      'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-                                      'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
-            xml.tag! 'soap:Body' do
-              xml.tag! soap_call, { 'xmlns' => "#{self.live_url}remote/payment" } do
-                xml.tag! 'merchantnumber', @options[:login]
-                xml.tag! 'transactionid', params[:transaction]
-                xml.tag! 'amount', params[:amount].to_s if soap_call != 'delete'
-              end
+        xml.tag! 'soap:Envelope', { 'xmlns:xsi' => 'http://schemas.xmlsoap.org/soap/envelope/',
+                                    'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
+                                    'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
+          xml.tag! 'soap:Body' do
+            xml.tag! soap_call, { 'xmlns' => "#{self.live_url}remote/payment" } do
+              xml.tag! 'merchantnumber', @options[:login]
+              xml.tag! 'transactionid', params[:transaction]
+              xml.tag! 'amount', params[:amount].to_s if soap_call != 'delete'
             end
           end
+        end
         xml.target!
       end
 
@@ -274,12 +273,12 @@ module ActiveMerchant #:nodoc:
         params[:declineurl] = live_url + 'auth/default.aspx?decline=1'
         params[:merchantnumber] = @options[:login]
 
-        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       # Limited to 20 digits max
       def format_order_number(number)
-        number.to_s.gsub(/[^\w]/, '').rjust(4, "0")[0...20]
+        number.to_s.gsub(/[^\w]/, '').rjust(4, '0')[0...20]
       end
     end
   end

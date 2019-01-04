@@ -1,18 +1,18 @@
-require "test_helper"
+require 'test_helper'
 
 class TransFirstTransactionExpressTest < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = TransFirstTransactionExpressGateway.new(
-      gateway_id: "gateway_id",
-      reg_key: "reg_key"
+      gateway_id: 'gateway_id',
+      reg_key: 'reg_key'
     )
 
     @credit_card = credit_card
+    @check = check
     @amount = 100
     @declined_amount = 21
-    @partial_amount = 1110
   end
 
   def test_successful_purchase
@@ -22,17 +22,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "purchase|000015212561", response.authorization
-    assert response.test?
-  end
-
-  def test_partial_purchase
-    response = stub_comms do
-      @gateway.purchase(@partial_amount, @credit_card)
-    end.respond_with(partial_purchase_response)
-
-    assert_success response
-    assert_equal "000000000555", response.params["amt"]
+    assert_equal 'purchase|000015212561', response.authorization
     assert response.test?
   end
 
@@ -42,9 +32,25 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
-    assert_equal "51", response.error_code
+    assert_equal 'Not sufficient funds', response.message
+    assert_equal '51', response.error_code
     assert response.test?
+  end
+
+  def test_successful_purchase_with_echeck
+    @gateway.stubs(:ssl_post).returns(successful_purchase_echeck_response)
+    response = @gateway.purchase(@amount, @check)
+
+    assert_success response
+    assert_equal 'purchase_echeck|000028705491', response.authorization
+  end
+
+  def test_failed_purchase_with_echeck
+    @gateway.stubs(:ssl_post).returns(failed_purchase_echeck_response)
+    response = @gateway.purchase(@amount, @check)
+
+    assert_failure response
+    assert_equal 'Error. Bank routing number validation negative (ABA).', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -53,7 +59,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "authorize|000015377801", response.authorization
+    assert_equal 'authorize|000015377801', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -70,14 +76,14 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
-    assert_equal "51", response.error_code
+    assert_equal 'Not sufficient funds', response.message
+    assert_equal '51', response.error_code
     assert response.test?
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "")
+      @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -89,7 +95,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "purchase|000015212561", response.authorization
+    assert_equal 'purchase|000015212561', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -102,13 +108,13 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("purchase|5d53a33d960c46d00f5dc061947d998c")
+      @gateway.void('purchase|5d53a33d960c46d00f5dc061947d998c')
     end.check_request do |endpoint, data, headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
 
     assert_failure response
-    assert_equal "50011", response.error_code
+    assert_equal '50011', response.error_code
   end
 
   def test_successful_refund
@@ -117,7 +123,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "purchase|000015212561", response.authorization
+    assert_equal 'purchase|000015212561', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -130,11 +136,37 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
-    assert_equal "50011", response.error_code
+    assert_equal '50011', response.error_code
+  end
+
+  def test_successful_refund_with_echeck
+    response = stub_comms do
+      @gateway.purchase(@amount, @check)
+    end.respond_with(successful_purchase_echeck_response)
+
+    assert_success response
+    assert_equal 'purchase_echeck|000028705491', response.authorization
+
+    refund = stub_comms do
+      @gateway.refund(@amount, response.authorization)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/000028705491/, data)
+    end.respond_with(successful_refund_echeck_response)
+
+    assert_success refund
+  end
+
+  def test_failed_refund_with_echeck
+    response = stub_comms do
+      @gateway.refund(@amount, 'purchase_echeck|000028706091')
+    end.respond_with(failed_refund_response)
+
+    assert_failure response
+    assert_equal '50011', response.error_code
   end
 
   def test_successful_credit
@@ -144,7 +176,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "credit|000001677461", response.authorization
+    assert_equal 'credit|000001677461', response.authorization
     assert response.test?
   end
 
@@ -154,8 +186,8 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_credit_response)
 
     assert_failure response
-    assert_equal "Validation Error", response.message
-    assert_equal "51334", response.error_code
+    assert_equal 'Validation Error', response.message
+    assert_equal '51334', response.error_code
     assert response.test?
   end
 
@@ -164,7 +196,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
@@ -172,7 +204,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "Not sufficient funds", response.message
+    assert_equal 'Not sufficient funds', response.message
   end
 
   def test_successful_store
@@ -182,8 +214,8 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "Succeeded", response.message
-    assert_equal "store|1453495229881170023", response.authorization
+    assert_equal 'Succeeded', response.message
+    assert_equal 'store|1453495229881170023', response.authorization
     assert response.test?
   end
 
@@ -193,7 +225,7 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
     end.respond_with(failed_store_response)
 
     assert_failure response
-    assert_equal "Validation Failure", response.message
+    assert_equal 'Validation Failure', response.message
     assert response.test?
   end
 
@@ -214,10 +246,6 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><ns2:SendTranResponse xmlns="http://postilion/realtime/portal/soa/xsd/Faults/2009/01" xmlns:ns2="http://postilion/realtime/merchantframework/xsd/v1/"><ns2:rspCode>00</ns2:rspCode><ns2:authRsp><ns2:aci>Y</ns2:aci></ns2:authRsp><ns2:tranData><ns2:swchKey>0A1009331525B2A2DBFAF771E2E62B</ns2:swchKey><ns2:tranNr>000015212561</ns2:tranNr><ns2:dtTm>2016-01-19T10:33:57.000-08:00</ns2:dtTm><ns2:amt>000000000100</ns2:amt><ns2:stan>305156</ns2:stan><ns2:auth>Lexc05</ns2:auth></ns2:tranData><ns2:cardType>0</ns2:cardType><ns2:mapCaid>300979940268000</ns2:mapCaid></ns2:SendTranResponse></S:Body></S:Envelope>)
-  end
-
-  def partial_purchase_response
-    %(<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\"><S:Body><ns2:SendTranResponse xmlns=\"http://postilion/realtime/portal/soa/xsd/Faults/2009/01\" xmlns:ns2=\"http://postilion/realtime/merchantframework/xsd/v1/\"><ns2:rspCode>10</ns2:rspCode><ns2:authRsp><ns2:secRslt>M</ns2:secRslt><ns2:avsRslt>Z</ns2:avsRslt><ns2:aci>Y</ns2:aci></ns2:authRsp><ns2:tranData><ns2:swchKey>0A10092D15279AD062097039A74A15</ns2:swchKey><ns2:tranNr>000015526161</ns2:tranNr><ns2:dtTm>2016-01-25T08:45:28.000-08:00</ns2:dtTm><ns2:amt>000000000555</ns2:amt><ns2:stan>332604</ns2:stan><ns2:auth>Lexc05</ns2:auth></ns2:tranData><ns2:cardType>0</ns2:cardType><ns2:mapCaid>300979940268000</ns2:mapCaid><ns2:additionalAmount><ns2:accountType>00</ns2:accountType><ns2:amountType>57</ns2:amountType><ns2:currencyCode>840</ns2:currencyCode><ns2:amountSign>C</ns2:amountSign><ns2:amount>000000001110</ns2:amount></ns2:additionalAmount></ns2:SendTranResponse></S:Body></S:Envelope>)
   end
 
   def failed_purchase_response
@@ -270,6 +298,22 @@ class TransFirstTransactionExpressTest < Test::Unit::TestCase
 
   def failed_store_response
     %(<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\"><S:Body><S:Fault xmlns:ns4=\"http://www.w3.org/2003/05/soap-envelope\"><faultcode>S:Server</faultcode><faultstring>Validation Failure</faultstring><detail><SystemFault:SystemFault xmlns:SystemFault=\"http://postilion/realtime/portal/soa/xsd/Faults/2009/01\" xmlns=\"http://postilion/realtime/portal/soa/xsd/Faults/2009/01\" xmlns:ns2=\"http://postilion/realtime/merchantframework/xsd/v1/\"><name>Validation Fault</name><message>cvc-type.3.1.3: The value '123' of element 'v1:pan' is not valid.</message><errorCode>50011</errorCode></SystemFault:SystemFault></detail></S:Fault></S:Body></S:Envelope>)
+  end
+
+  def successful_purchase_echeck_response
+    %(<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><ns2:SendTranResponse xmlns="http://postilion/realtime/portal/soa/xsd/Faults/2009/01" xmlns:ns2="http://postilion/realtime/merchantframework/xsd/v1/"><ns2:rspCode>00</ns2:rspCode><ns2:authRsp><ns2:gwyTranId>43550871</ns2:gwyTranId></ns2:authRsp><ns2:tranData><ns2:swchKey>0A09071615AD2403F804EFDA26EA76</ns2:swchKey><ns2:tranNr>000028705491</ns2:tranNr><ns2:dtTm>2017-03-15T06:55:10-07:00</ns2:dtTm><ns2:amt>000000000100</ns2:amt><ns2:stan>386950</ns2:stan></ns2:tranData><ns2:achResponse><ns2:Message>Transaction processed.</ns2:Message><ns2:Note>PrevPay: nil +0</ns2:Note><ns2:Note>Score: 100/100</ns2:Note></ns2:achResponse></ns2:SendTranResponse></S:Body></S:Envelope>)
+  end
+
+  def failed_purchase_echeck_response
+    %(<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><ns2:SendTranResponse xmlns="http://postilion/realtime/portal/soa/xsd/Faults/2009/01" xmlns:ns2="http://postilion/realtime/merchantframework/xsd/v1/"><ns2:rspCode>06</ns2:rspCode><ns2:authRsp/><ns2:tranData><ns2:swchKey>0A09071715AD2654A6814EE9ADC0EF</ns2:swchKey><ns2:tranNr>000028705711</ns2:tranNr><ns2:dtTm>2017-03-15T07:35:38-07:00</ns2:dtTm><ns2:amt>000000000100</ns2:amt><ns2:stan>386972</ns2:stan></ns2:tranData><ns2:achResponse><ns2:Message>Bank routing number validation negative (ABA).</ns2:Message></ns2:achResponse></ns2:SendTranResponse></S:Body></S:Envelope>)
+  end
+
+  def successful_refund_echeck_response
+    %( <?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><ns2:SendTranResponse xmlns="http://postilion/realtime/portal/soa/xsd/Faults/2009/01" xmlns:ns2="http://postilion/realtime/merchantframework/xsd/v1/"><ns2:rspCode>00</ns2:rspCode><ns2:authRsp><ns2:gwyTranId>43550889</ns2:gwyTranId></ns2:authRsp><ns2:tranData><ns2:swchKey>0A09071715AD2786821E2F357D7E52</ns2:swchKey><ns2:tranNr>000028706091</ns2:tranNr><ns2:dtTm>2017-03-15T07:56:31-07:00</ns2:dtTm><ns2:amt>000000000100</ns2:amt><ns2:stan>387010</ns2:stan></ns2:tranData><ns2:achResponse><ns2:Message>Transaction Cancelled.</ns2:Message><ns2:Note>PrevPay: nil +0</ns2:Note><ns2:Note>Score: 100/100</ns2:Note><ns2:Note>Cancellation Notes: RefNumber:28706091</ns2:Note></ns2:achResponse></ns2:SendTranResponse></S:Body></S:Envelope>)
+  end
+
+  def failed_refund_echeck_response
+    %(<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><ns2:SendTranResponse xmlns="http://postilion/realtime/portal/soa/xsd/Faults/2009/01" xmlns:ns2="http://postilion/realtime/merchantframework/xsd/v1/"><ns2:rspCode>12</ns2:rspCode><ns2:extRspCode>B40F</ns2:extRspCode><ns2:authRsp><ns2:gwyTranId>43550889</ns2:gwyTranId></ns2:authRsp><ns2:tranData><ns2:swchKey>0A09071615AD285C3E4E0AE3A42CF3</ns2:swchKey><ns2:tranNr>000028706091</ns2:tranNr><ns2:dtTm>2017-03-15T08:11:06-07:00</ns2:dtTm><ns2:amt>000000000100</ns2:amt></ns2:tranData></ns2:SendTranResponse></S:Body></S:Envelope>)
   end
 
   def empty_purchase_response

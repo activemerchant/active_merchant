@@ -123,7 +123,7 @@ class RemoteBankFrickTest < Test::Unit::TestCase
       sender: '',
       channel: '',
       userid: '',
-      userpwd: '',
+      userpwd: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

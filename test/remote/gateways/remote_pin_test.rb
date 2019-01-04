@@ -24,6 +24,25 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal true, response.params['response']['captured']
   end
 
+  def test_successful_purchase_with_metadata
+    options_with_metadata = {
+      metadata: {
+        order_id: generate_unique_id,
+        purchase_number: generate_unique_id
+      }
+    }
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(options_with_metadata))
+    assert_success response
+    assert_equal true, response.params['response']['captured']
+    assert_equal options_with_metadata[:metadata][:order_id], response.params['response']['metadata']['order_id']
+    assert_equal options_with_metadata[:metadata][:purchase_number], response.params['response']['metadata']['purchase_number']
+  end
+
+  def test_successful_purchase_with_reference
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(reference: 'statement descriptor'))
+    assert_success response
+  end
+
   def test_successful_authorize_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
@@ -40,7 +59,7 @@ class RemotePinTest < Test::Unit::TestCase
   end
 
   def test_failed_capture_due_to_invalid_token
-    response = @gateway.capture(@amount, "bogus", @options)
+    response = @gateway.capture(@amount, 'bogus', @options)
     assert_failure response
   end
 
@@ -70,8 +89,8 @@ class RemotePinTest < Test::Unit::TestCase
   # falls outside of active merchant
   def test_store_and_charge_with_pinjs_card_token
     headers = {
-      "Content-Type" => "application/json",
-      "Authorization" => "Basic #{Base64.strict_encode64(@gateway.options[:api_key] + ':').strip}"
+      'Content-Type' => 'application/json',
+      'Authorization' => "Basic #{Base64.strict_encode64(@gateway.options[:api_key] + ':').strip}"
     }
     # Get a token equivalent to what is returned by Pin.js
     card_attrs = {
@@ -80,17 +99,17 @@ class RemotePinTest < Test::Unit::TestCase
       :expiry_year => @credit_card.year,
       :cvc => @credit_card.verification_value,
       :name => "#{@credit_card.first_name} #{@credit_card.last_name}",
-      :address_line1 => "42 Sevenoaks St",
-      :address_city => "Lathlain",
-      :address_postcode => "6454",
-      :address_start => "WA",
-      :address_country => "Australia"
+      :address_line1 => '42 Sevenoaks St',
+      :address_city => 'Lathlain',
+      :address_postcode => '6454',
+      :address_start => 'WA',
+      :address_country => 'Australia'
     }
-    url = @gateway.test_url + "/cards"
+    url = @gateway.test_url + '/cards'
 
     body = JSON.parse(@gateway.ssl_post(url, card_attrs.to_json, headers))
 
-    card_token = body["response"]["token"]
+    card_token = body['response']['token']
 
     store = @gateway.store(card_token, @options)
     assert_success store
@@ -162,7 +181,7 @@ class RemotePinTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
-    
+
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end

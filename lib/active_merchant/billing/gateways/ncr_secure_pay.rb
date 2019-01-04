@@ -105,7 +105,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         doc = Nokogiri::XML(body)
         doc.remove_namespaces!
-        response = doc.xpath("/MonetraResp/Resp")[0]
+        response = doc.xpath('/MonetraResp/Resp')[0]
         resp_params = {}
 
         response.elements.each do |node|
@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:code] == "AUTH"
+        response[:code] == 'AUTH'
       end
 
       def message_from(response)
@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
       def request_body(action, parameters = {})
         Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
           xml.MonetraTrans do
-            xml.Trans(identifier: parameters.delete(:identifier) || "1") do
+            xml.Trans(identifier: parameters.delete(:identifier) || '1') do
               xml.username(options[:username])
               xml.password(options[:password])
               xml.action(action)

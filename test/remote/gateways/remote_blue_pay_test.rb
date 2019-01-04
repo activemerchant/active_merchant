@@ -72,8 +72,8 @@ class BluePayTest < Test::Unit::TestCase
     unknown_response_keys = response_keys - BluePayGateway::FIELD_MAP.values
     missing_response_keys = BluePayGateway::FIELD_MAP.values - response_keys
 
-    assert_empty unknown_response_keys, "unknown_response_keys"
-    assert_empty missing_response_keys, "missing response_keys"
+    assert_empty unknown_response_keys, 'unknown_response_keys'
+    assert_empty missing_response_keys, 'missing response_keys'
   end
 
   def test_that_we_understand_and_parse_all_keys_in_rebilling_response
@@ -87,8 +87,8 @@ class BluePayTest < Test::Unit::TestCase
     unknown_response_keys = response_keys - BluePayGateway::REBILL_FIELD_MAP.values
     missing_response_keys = BluePayGateway::REBILL_FIELD_MAP.values - response_keys
 
-    assert_empty unknown_response_keys, "unknown_response_keys"
-    assert_empty missing_response_keys, "missing response_keys"
+    assert_empty unknown_response_keys, 'unknown_response_keys'
+    assert_empty missing_response_keys, 'missing response_keys'
   end
 
   def test_authorization_and_capture

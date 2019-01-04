@@ -122,6 +122,7 @@ module ActiveMerchant
       end
 
       private
+
       def add_request_details(params, options)
         params['COMMENT'] = options[:description] unless options[:description].blank?
       end
@@ -130,7 +131,7 @@ module ActiveMerchant
       # format for a command.
       def expiry(credit_card)
         month = format(credit_card.month, :two_digits)
-        year  = format(credit_card.year , :two_digits)
+        year  = format(credit_card.year,  :two_digits)
         "#{month}/#{year}"
       end
 
@@ -141,7 +142,7 @@ module ActiveMerchant
       # omitted if nil.
       def commit(action, params)
         # get gateway response
-        response = parse( ssl_post(self.live_url, post_data(action, params)) )
+        response = parse(ssl_post(self.live_url, post_data(action, params)))
 
         Response.new(response['status'] == 'approved', message_from(response), response,
           :authorization => authorization_from(response, action)
@@ -151,7 +152,7 @@ module ActiveMerchant
       def post_data(action, params)
         params['COMMAND'] = TRANSACTIONS[action]
         params['LOGIN'] = "#{@options[:login]}/#{@options[:password]}"
-        escape_uri(params.map{|k,v| "#{k}=#{v}"}.join('&'))
+        escape_uri(params.map { |k, v| "#{k}=#{v}" }.join('&'))
       end
 
       # The upstream is picky and so we can't use CGI.escape like we want to

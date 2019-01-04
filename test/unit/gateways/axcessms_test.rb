@@ -10,23 +10,23 @@ class AxcessmsTest < Test::Unit::TestCase
     @gateway = AxcessmsGateway.new(fixtures(:axcessms))
 
     @amount = 1500
-    @credit_card = credit_card("4200000000000000", month: 05, year: 2022)
-    @declined_card = credit_card("4444444444444444", month: 05, year: 2022)
-    @mode = "CONNECTOR_TEST"
+    @credit_card = credit_card('4200000000000000', month: 05, year: 2022)
+    @declined_card = credit_card('4444444444444444', month: 05, year: 2022)
+    @mode = 'CONNECTOR_TEST'
 
     @options = {
       order_id: generate_unique_id,
-      email: "customer@example.com",
+      email: 'customer@example.com',
       description: "Order Number #{Time.now.to_f.divmod(2473)[1]}",
-      ip: "0.0.0.0",
+      ip: '0.0.0.0',
       mode: @mode,
       billing_address: {
-        :address1 => "10 Marklar St",
-        :address2 => "Musselburgh",
-        :city => "Dunedin",
-        :zip => "9013",
-        :state => "Otago",
-        :country => "NZ"
+        :address1 => '10 Marklar St',
+        :address2 => 'Musselburgh',
+        :city => 'Dunedin',
+        :zip => '9013',
+        :state => 'Otago',
+        :country => 'NZ'
       }
     }
   end
@@ -71,75 +71,75 @@ class AxcessmsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, TEST_AUTHORIZATION, @options)
     assert_success response
-    assert response.params["reference_id"], TEST_AUTHORIZATION
+    assert response.params['reference_id'], TEST_AUTHORIZATION
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     response = @gateway.refund(@amount - 30, TEST_PURCHASE, @options)
     assert_success response
-    assert response.params["reference_id"], TEST_PURCHASE
+    assert response.params['reference_id'], TEST_PURCHASE
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     response = @gateway.void(TEST_AUTHORIZATION, @options)
     assert_success response
-    assert response.params["reference_id"], TEST_AUTHORIZATION
+    assert response.params['reference_id'], TEST_AUTHORIZATION
   end
 
   def test_unauthorized_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
-    response = @gateway.capture(@amount, "authorization", @options)
+    response = @gateway.capture(@amount, 'authorization', @options)
     assert_failure response
-    assert_equal "Reference Error - capture needs at least one successful transaction of type (PA)", response.message
+    assert_equal 'Reference Error - capture needs at least one successful transaction of type (PA)', response.message
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
-    response = @gateway.refund(@amount - 30, "authorization", @options)
+    response = @gateway.refund(@amount - 30, 'authorization', @options)
     assert_failure response
-    assert_equal "Configuration Validation - Invalid payment data. You are not configured for this currency or sub type (country or brand)", response.message
+    assert_equal 'Configuration Validation - Invalid payment data. You are not configured for this currency or sub type (country or brand)', response.message
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
-    response = @gateway.refund(@amount - 30, "authorization", @options)
+    response = @gateway.refund(@amount - 30, 'authorization', @options)
     assert_failure response
-    assert_equal "Reference Error - reversal needs at least one successful transaction of type (CP or DB or RB or PA)",  response.message
+    assert_equal 'Reference Error - reversal needs at least one successful transaction of type (CP or DB or RB or PA)',  response.message
   end
 
   def test_authorize_using_reference_sets_proper_elements
     stub_comms do
-      @gateway.authorize(@amount, "MY_AUTHORIZE_VALUE", @options)
+      @gateway.authorize(@amount, 'MY_AUTHORIZE_VALUE', @options)
     end.check_request do |endpoint, body, headers|
-      assert_xpath_text(body, "//ReferenceID", "MY_AUTHORIZE_VALUE")
+      assert_xpath_text(body, '//ReferenceID', 'MY_AUTHORIZE_VALUE')
       assert_no_match(/<Account>/, body)
     end.respond_with(successful_authorize_response)
   end
 
   def test_purchase_using_reference_sets_proper_elements
     stub_comms do
-      @gateway.purchase(@amount, "MY_AUTHORIZE_VALUE", @options)
+      @gateway.purchase(@amount, 'MY_AUTHORIZE_VALUE', @options)
     end.check_request do |endpoint, body, headers|
-      assert_xpath_text(body, "//ReferenceID", "MY_AUTHORIZE_VALUE")
+      assert_xpath_text(body, '//ReferenceID', 'MY_AUTHORIZE_VALUE')
       assert_no_match(/<Account>/, body)
     end.respond_with(successful_authorize_response)
   end
 
   def test_setting_mode_sets_proper_element
     stub_comms do
-      @gateway.purchase(@amount, "MY_AUTHORIZE_VALUE", {mode: "CRAZY_TEST_MODE"})
+      @gateway.purchase(@amount, 'MY_AUTHORIZE_VALUE', {mode: 'CRAZY_TEST_MODE'})
     end.check_request do |endpoint, body, headers|
-      assert_xpath_text(body, "//Transaction/@mode", "CRAZY_TEST_MODE")
+      assert_xpath_text(body, '//Transaction/@mode', 'CRAZY_TEST_MODE')
     end.respond_with(successful_authorize_response)
   end
 
   def test_defaults_to_integrator_test
     stub_comms do
-      @gateway.purchase(@amount, "MY_AUTHORIZE_VALUE", {})
+      @gateway.purchase(@amount, 'MY_AUTHORIZE_VALUE', {})
     end.check_request do |endpoint, body, headers|
-      assert_xpath_text(body, "//Transaction/@mode", "INTEGRATOR_TEST")
+      assert_xpath_text(body, '//Transaction/@mode', 'INTEGRATOR_TEST')
     end.respond_with(successful_authorize_response)
   end
 
@@ -167,10 +167,10 @@ class AxcessmsTest < Test::Unit::TestCase
   private
 
   def assert_xpath_text(xml, xpath, expected_text)
-    xml = CGI.unescape(xml.gsub("load=", ""))
+    xml = CGI.unescape(xml.gsub('load=', ''))
     root = REXML::Document.new(xml).root
     element = REXML::XPath.first(root, xpath)
-    actual_text = xpath.include?("@") ? element.value : element.text
+    actual_text = xpath.include?('@') ? element.value : element.text
     assert_equal expected_text, actual_text, %{Expected to find the text "#{expected_text}" within the XML element with path "#{xpath}", but instead found the text "#{actual_text}" in the following XML:\n#{xml}}
   end
 

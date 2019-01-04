@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
-        add_payment_source(post, creditcard,options)
+        add_payment_source(post, creditcard, options)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
 
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
       # CreditCard object.
       def update(vault_id, creditcard, options = {})
         post = {}
-        post[:customer_vault] = "update_customer"
+        post[:customer_vault] = 'update_customer'
         add_customer_vault_id(post, vault_id)
         add_creditcard(post, creditcard, options)
         add_address(post, creditcard, options)
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
 
       def delete(vault_id)
         post = {}
-        post[:customer_vault] = "delete_customer"
+        post[:customer_vault] = 'delete_customer'
         add_customer_vault_id(post, vault_id)
         commit(nil, nil, post)
       end
@@ -99,6 +99,7 @@ module ActiveMerchant #:nodoc:
       alias_method :unstore, :delete
 
       private
+
       def add_customer_data(post, options)
         if options.has_key? :email
           post[:email] = options[:email]
@@ -135,13 +136,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_customer_vault_id(params,vault_id)
+      def add_customer_vault_id(params, vault_id)
         params[:customer_vault_id] = vault_id
       end
 
-      def add_creditcard(post, creditcard,options)
+      def add_creditcard(post, creditcard, options)
         if options[:store]
-          post[:customer_vault] = "add_customer"
+          post[:customer_vault] = 'add_customer'
           post[:customer_vault_id] = options[:store] unless options[:store] == true
         end
         post[:ccnumber]  = creditcard.number
@@ -163,7 +164,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
-          key,val = pair.split(%r{=})
+          key, val = pair.split(%r{=})
           results[key] = val
         end
 
@@ -173,25 +174,24 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:amount]  = amount(money) if money
 
-        response = parse( ssl_post(self.live_url, post_data(action,parameters)) )
+        response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
-        Response.new(response["response"] == "1", message_from(response), response,
-          :authorization => response["transactionid"],
+        Response.new(response['response'] == '1', message_from(response), response,
+          :authorization => response['transactionid'],
           :test => test?,
-          :cvv_result => response["cvvresponse"],
-          :avs_result => { :code => response["avsresponse"] }
+          :cvv_result => response['cvvresponse'],
+          :avs_result => { :code => response['avsresponse'] }
         )
-
       end
 
       def message_from(response)
-        case response["responsetext"]
-        when "SUCCESS","Approved"
-          "This transaction has been approved"
-        when "DECLINE"
-          "This transaction has been declined"
+        case response['responsetext']
+        when 'SUCCESS', 'Approved'
+          'This transaction has been approved'
+        when 'DECLINE'
+          'This transaction has been declined'
         else
-          response["responsetext"]
+          response['responsetext']
         end
       end
 
@@ -201,19 +201,18 @@ module ActiveMerchant #:nodoc:
         post[:password]   = @options[:password]
         post[:type]       = action if action
 
-        request = post.merge(parameters).map {|key,value| "#{key}=#{CGI.escape(value.to_s)}"}.join("&")
+        request = post.merge(parameters).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
 
       def determine_funding_source(source)
         case
         when source.is_a?(String) then :vault
-        when CreditCard.card_companies.keys.include?(card_brand(source)) then :credit_card
+        when CreditCard.card_companies.include?(card_brand(source)) then :credit_card
         when card_brand(source) == 'check' then :check
-        else raise ArgumentError, "Unsupported funding source provided"
+        else raise ArgumentError, 'Unsupported funding source provided'
         end
       end
     end
   end
 end
-
