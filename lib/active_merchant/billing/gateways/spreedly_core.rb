@@ -35,19 +35,13 @@ module ActiveMerchant #:nodoc:
       # Public: Run a purchase transaction.
       #
       # money          - The monetary amount of the transaction in cents.
-      # payment_method - The CreditCard or the Spreedly payment method token.
+      # payment_method - The CreditCard or Check or the Spreedly payment method token.
       # options        - A hash of options:
       #                  :store - Retain the payment method if the purchase
       #                           succeeds.  Defaults to false.  (optional)
       def purchase(money, payment_method, options = {})
-        if payment_method.is_a?(String)
-          purchase_with_token(money, payment_method, options)
-        else
-          MultiResponse.run do |r|
-            r.process { save_card(options[:store], payment_method, options) }
-            r.process { purchase_with_token(money, r.authorization, options) }
-          end
-        end
+        request = build_transaction_request(money, payment_method, options)
+        commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
       end
 
       # Public: Run an authorize transaction.
@@ -58,14 +52,8 @@ module ActiveMerchant #:nodoc:
       #                  :store - Retain the payment method if the authorize
       #                           succeeds.  Defaults to false.  (optional)
       def authorize(money, payment_method, options = {})
-        if payment_method.is_a?(String)
-          authorize_with_token(money, payment_method, options)
-        else
-          MultiResponse.run do |r|
-            r.process { save_card(options[:store], payment_method, options) }
-            r.process { authorize_with_token(money, r.authorization, options) }
-          end
-        end
+        request = build_transaction_request(money, payment_method, options)
+        commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
       def capture(money, authorization, options={})
@@ -155,32 +143,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase_with_token(money, payment_method_token, options)
-        request = auth_purchase_request(money, payment_method_token, options)
+        request = build_transaction_request(money, payment_method_token, options)
         commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
       end
 
       def authorize_with_token(money, payment_method_token, options)
-        request = auth_purchase_request(money, payment_method_token, options)
+        request = build_transaction_request(money, payment_method_token, options)
         commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
       def verify_with_token(payment_method_token, options)
-        request = build_xml_request('transaction') do |doc|
-          add_invoice(doc, nil, options)
-          doc.payment_method_token(payment_method_token)
-          doc.retain_on_success(true) if options[:store]
-          add_extra_options(:gateway_specific_fields, doc, options)
-        end
-
+        request = build_transaction_request(nil, payment_method_token, options)
         commit("gateways/#{@options[:gateway_token]}/verify.xml", request)
       end
 
-      def auth_purchase_request(money, payment_method_token, options)
+      def build_transaction_request(money, payment_method, options)
         build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
+          add_payment_method(doc, payment_method, options)
           add_extra_options(:gateway_specific_fields, doc, options)
-          doc.payment_method_token(payment_method_token)
-          doc.retain_on_success(true) if options[:store]
         end
       end
 
@@ -190,6 +171,20 @@ module ActiveMerchant #:nodoc:
         doc.order_id(options[:order_id])
         doc.ip(options[:ip]) if options[:ip]
         doc.description(options[:description]) if options[:description]
+      end
+
+      def add_payment_method(doc, payment_method, options)
+        doc.retain_on_success(true) if options[:store]
+
+        if payment_method.is_a?(String)
+          doc.payment_method_token(payment_method)
+        elsif payment_method.is_a?(CreditCard)
+          add_credit_card(doc, payment_method, options)
+        elsif payment_method.is_a?(Check)
+          add_bank_account(doc, payment_method, options)
+        else
+          raise TypeError, 'Payment method not supported'
+        end
       end
 
       def add_credit_card(doc, credit_card, options)
@@ -207,6 +202,17 @@ module ActiveMerchant #:nodoc:
           doc.state(options[:billing_address].try(:[], :state))
           doc.zip(options[:billing_address].try(:[], :zip))
           doc.country(options[:billing_address].try(:[], :country))
+        end
+      end
+
+      def add_bank_account(doc, bank_account, options)
+        doc.bank_account do
+          doc.first_name(bank_account.first_name)
+          doc.last_name(bank_account.last_name)
+          doc.bank_routing_number(bank_account.routing_number)
+          doc.bank_account_number(bank_account.account_number)
+          doc.bank_account_type(bank_account.account_type)
+          doc.bank_account_holder_type(bank_account.account_holder_type)
         end
       end
 

@@ -14,6 +14,7 @@
 * NMI: Add level 3 gateway-specific fields tax, shipping, and ponumber [jasonxp] #3239
 * Checkout V2: Update stored card flag [curiousepic] #3247
 * NMI: Add support for stored credentials [bayprogrammer] #3243
+* Spreedly: Consolidate API requests and support bank accounts [lancecarlson] #3105
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
