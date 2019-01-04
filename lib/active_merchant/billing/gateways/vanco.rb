@@ -178,6 +178,17 @@ module ActiveMerchant
       def add_amount(doc, money, options)
         if empty?(options[:fund_id])
           doc.Amount(amount(money))
+        elsif options[:fund_id].respond_to?(:each_pair)
+          doc.Funds do
+            options[:fund_id].each_pair do |k,v|
+              doc.Fund do
+                doc.FundID(k)
+                doc.FundAmount(amount(v))
+                doc.FundNote('hey')
+                doc.WebPayNote('heywpn')
+              end
+            end
+          end
         else
           doc.Funds do
             doc.Fund do
@@ -246,6 +257,8 @@ module ActiveMerchant
 
       def add_options(doc, options)
         doc.CustomerIPAddress(options[:ip]) if options[:ip]
+        doc.NewCustomer(options[:new_customer]) if options[:new_customer]
+        doc.CustomerID(options[:customer_id]) if options[:customer_id]
       end
 
       def add_client_id(doc)
