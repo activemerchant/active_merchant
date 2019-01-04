@@ -184,8 +184,6 @@ module ActiveMerchant
               doc.Fund do
                 doc.FundID(k)
                 doc.FundAmount(amount(v))
-                doc.FundNote('hey')
-                doc.WebPayNote('heywpn')
               end
             end
           end
