@@ -10,7 +10,6 @@ module ActiveMerchant #:nodoc:
     # At the moment, the following credit card types are supported:
     #
     # * Visa
-    # * MasterCard
     # * Discover
     # * American Express
     # * Diner's Club
