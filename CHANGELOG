@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087
 * Braintree: Update gem to latest version [curiousepic] #3091
 * Adyen: Pass arbitrary riskData fields [curiousepic] #3089
