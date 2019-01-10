@@ -23,6 +23,26 @@ module ActiveMerchant #:nodoc:
         'diners_club'      => 'DINERS-SSL',
       }
 
+      AVS_CODE_MAP = {
+        'A' => 'M', # Match
+        'B' => 'P', # Postcode matches, address not verified
+        'C' => 'Z', # Postcode matches, address does not match
+        'D' => 'B', # Address matched; postcode not checked
+        'E' => 'I', # Address and postal code not checked
+        'F' => 'A', # Address matches, postcode does not match
+        'G' => 'C', # Address does not match, postcode not checked
+        'H' => 'I', # Address and postcode not provided
+        'I' => 'C', # Address not checked postcode does not match
+        'J' => 'C', # Address and postcode does not match
+      }
+
+      CVC_CODE_MAP = {
+        'A' => 'M', # CVV matches
+        'B' => 'P', # Not provided
+        'C' => 'P', # Not checked
+        'D' => 'N', # Does not match
+      }
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super

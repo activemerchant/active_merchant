@@ -13,6 +13,7 @@
 * TrustCommerce: Use `application_id` [nfarve] #3103
 * Stripe: Add 3DS Support [nfarve] #3086
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
+* Worldpay: Add AVS and CVC Mapping [nfarve] #3107
 
 
 == Version 1.89.0 (December 17, 2018)
