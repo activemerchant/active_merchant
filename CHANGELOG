@@ -12,6 +12,8 @@
 * Braintree Blue: Refactor line_items field [curiousepic] #3100
 * TrustCommerce: Use `application_id` [nfarve] #3103
 * Stripe: Add 3DS Support [nfarve] #3086
+* WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
+
 
 == Version 1.89.0 (December 17, 2018)
 * Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068

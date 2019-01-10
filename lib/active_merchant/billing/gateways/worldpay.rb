@@ -370,7 +370,10 @@ module ActiveMerchant #:nodoc:
           raw,
           :authorization => authorization_from(raw),
           :error_code => error_code_from(success, raw),
-          :test => test?)
+          :test => test?,
+          :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
+          :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
+        )
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)
