@@ -23,6 +23,15 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_authorize_avs_and_cvv
+    card = credit_card('4111111111111111', :verification_value => 555)
+    assert response = @gateway.authorize(@amount, card, @options.merge(billing_address: address.update(zip: 'CCCC')))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_match %r{Street address does not match, but 5-digit postal code matches}, response.avs_result['message']
+    assert_match %r{CVV matches}, response.cvv_result['message']
+  end
+
   def test_successful_purchase_with_hcg_additional_data
     @options[:hcg_additional_data] = {
       key1: 'value1',
