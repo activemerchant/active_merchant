@@ -1,6 +1,9 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
+* Worldpay: Add AVS and CVC Mapping [nfarve] #3107
+* Paymentez: Fixes extra_params field [molbrown] #3108
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087
@@ -12,9 +15,6 @@
 * Braintree Blue: Refactor line_items field [curiousepic] #3100
 * TrustCommerce: Use `application_id` [nfarve] #3103
 * Stripe: Add 3DS Support [nfarve] #3086
-* WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
-* Worldpay: Add AVS and CVC Mapping [nfarve] #3107
-
 
 == Version 1.89.0 (December 17, 2018)
 * Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068

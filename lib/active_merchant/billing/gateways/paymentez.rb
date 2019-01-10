@@ -171,15 +171,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_extra_params(post, options)
-        if options[:extra_params]
-          items = {}
-          options[:extra_params].each do |param|
-            param.each do |key, value|
-              items[key.to_sym] = value
-            end
-          end
-          post[:extra_params] = items
-        end
+        extra_params = {}
+        extra_params.merge!(options[:extra_params]) if options[:extra_params]
+
+        post['extra_params'] = extra_params unless extra_params.empty?
       end
 
       def parse(body)
