@@ -204,7 +204,11 @@ module ActiveMerchant #:nodoc:
       def add_payment(post, payment, options={})
         if payment.respond_to?(:routing_number)
           post[:checkformat] = options[:check_format] if options[:check_format]
-          post[:accounttype] = options[:account_type] if options[:account_type]
+          if payment.account_type
+            account_type = payment.account_type.to_s.capitalize
+            raise ArgumentError, 'account_type must be checking or savings' unless %w(Checking Savings).include?(account_type)
+            post[:accounttype] = account_type
+          end
           post[:account] = payment.account_number
           post[:routing] = payment.routing_number
           post[:name]    = payment.name unless payment.name.blank?
