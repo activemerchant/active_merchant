@@ -185,12 +185,37 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_first_index_guard_on_custom_fields
+    assert_raise(ArgumentError) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :custom_fields => {
+          0 => 'butcher',
+          1 => 'diablo',
+          2 => 'mephisto',
+          3 => 'baal'
+        }
+      ))
+    end
+
+    assert_raise(ArgumentError) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :custom_fields => {
+          '0' => 'butcher',
+          '1' => 'diablo',
+          '2' => 'mephisto',
+          '3' => 'baal'
+        }
+      ))
+    end
+  end
+
   def test_successful_purchase_line_items
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(
         :line_items => [
           { :sku=> 'abc123', :cost => 119, :quantity => 1 },
           { :sku => 'def456', :cost => 200, :quantity => 2, :name => 'an item' },
+          { :cost => 300, :qty => 4 }
         ]
       ))
     end.check_request do |endpoint, data, headers|
@@ -202,6 +227,9 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       assert_match %r{UMline1cost=2.00},     data
       assert_match %r{UMline1qty=2},         data
       assert_match %r{UMline1name=an\+item}, data
+
+      assert_match %r{UMline2cost=3.00},     data
+      assert_match %r{UMline2qty=4},         data
     end.respond_with(successful_purchase_response)
     assert_success response
   end

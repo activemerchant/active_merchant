@@ -262,7 +262,10 @@ module ActiveMerchant #:nodoc:
       # see: https://wiki.usaepay.com/developer/transactionapi#merchant_defined_custom_fields
       def add_custom_fields(post, options)
         return unless options[:custom_fields].is_a?(Hash)
+
         options[:custom_fields].each do |index, custom|
+          raise ArgumentError.new('Cannot specify custom field with index 0') if index.to_i.zero?
+
           post["custom#{index}"] = custom
         end
       end
@@ -271,7 +274,7 @@ module ActiveMerchant #:nodoc:
       def add_line_items(post, options)
         return unless options[:line_items].is_a?(Array)
         options[:line_items].each_with_index do |line_item, index|
-          %w(product_ref_num sku name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
+          %w(product_ref_num sku qty name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
             post["line#{index}#{key.delete('_')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
           end
 

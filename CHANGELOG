@@ -5,6 +5,7 @@
 * Worldpay: Add AVS and CVC Mapping [nfarve] #3107
 * Paymentez: Fixes extra_params field [molbrown] #3108
 * Improved support for account_type using Check class's account_type instead [lancecarlson] #3097
+* USA Epay: Allow quantity to be passed and check custom fields [lancecarlson] #3090
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087
