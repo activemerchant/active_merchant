@@ -12,7 +12,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
     @options = {
       :order_id => '1',
-      :billing_address => address(:country_name => 'United States of America'),
+      :billing_address => address(:country_name => 'Canada'),
       :description => 'Store Purchase'
     }
   end

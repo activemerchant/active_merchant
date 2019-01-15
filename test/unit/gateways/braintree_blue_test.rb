@@ -576,7 +576,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
           :locality => 'Chicago',
           :region => 'Illinois',
           :postal_code => '60622',
-          :country_code_alpha2 => 'US'
+          :country_code_alpha2 => 'US',
+          :country_code_alpha3 => 'USA'
         },
         :options => {}
       }
