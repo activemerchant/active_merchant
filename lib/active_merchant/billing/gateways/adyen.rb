@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
           post[:card][:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
           post[:card][:billingAddress][:postalCode] = address[:zip] if address[:zip]
           post[:card][:billingAddress][:city] = address[:city] || 'N/A'
-          post[:card][:billingAddress][:stateOrProvince] = address[:state] if address[:state]
+          post[:card][:billingAddress][:stateOrProvince] = address[:state] || 'N/A'
           post[:card][:billingAddress][:country] = address[:country] if address[:country]
         end
       end

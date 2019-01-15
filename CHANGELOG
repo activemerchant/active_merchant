@@ -7,6 +7,7 @@
 * Improved support for account_type using Check class's account_type instead [lancecarlson] #3097
 * USA Epay: Allow quantity to be passed and check custom fields [lancecarlson] #3090
 * Fix usaepay transaction invoice [lancecarlson] #3093
+* Adyen: Handles blank state address field [molbrown] #3113
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087

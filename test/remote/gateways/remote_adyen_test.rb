@@ -327,6 +327,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_missing_state_for_purchase
+    @options[:billing_address].delete(:state)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_invalid_country_for_purchase
     @options[:billing_address][:country] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)

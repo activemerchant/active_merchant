@@ -262,12 +262,13 @@ class AdyenTest < Test::Unit::TestCase
     post = {:card => {:billingAddress => {}}}
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
+    @options[:billing_address].delete(:state)
     @gateway.send(:add_address, post, @options)
     assert_equal 'N/A', post[:card][:billingAddress][:street]
     assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
+    assert_equal 'N/A', post[:card][:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
     assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
-    assert_equal @options[:billing_address][:state], post[:card][:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
   end
 
