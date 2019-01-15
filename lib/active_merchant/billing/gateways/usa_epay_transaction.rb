@@ -265,7 +265,7 @@ module ActiveMerchant #:nodoc:
         return unless options[:custom_fields].is_a?(Hash)
 
         options[:custom_fields].each do |index, custom|
-          raise ArgumentError.new('Cannot specify custom field with index 0') if index.to_i.zero?
+          raise ArgumentError.new('Cannot specify custom field with index 0') if index.to_s.to_i.zero?
 
           post["custom#{index}"] = custom
         end
