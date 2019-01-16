@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = '7.1'
+      API_VERSION = '7.7'
 
       POST_HEADERS = {
         'MIME-Version' => '1.1',
@@ -506,6 +506,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_stored_credentials(xml, parameters)
+        xml.tag! :MITMsgType, parameters[:mit_msg_type] if parameters[:mit_msg_type]
+        xml.tag! :MITStoredCredentialInd, parameters[:mit_stored_credential_ind] if parameters[:mit_stored_credential_ind]
+        xml.tag! :MITSubmittedTransactionID, parameters[:mit_submitted_transaction_id] if parameters[:mit_submitted_transaction_id]
+      end
+
       def parse(body)
         response = {}
         xml = REXML::Document.new(body)
@@ -635,6 +641,7 @@ module ActiveMerchant #:nodoc:
             end
 
             add_level_2_purchase(xml, parameters)
+            add_stored_credentials(xml, parameters)
           end
         end
         xml.target!

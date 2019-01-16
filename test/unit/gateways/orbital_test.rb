@@ -31,6 +31,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     }
 
     @options = { :order_id => '1'}
+    @options_stored_credentials = {
+      mit_msg_type: 'MUSE',
+      mit_stored_credential_ind: 'Y',
+      mit_submitted_transaction_id: '123456abcdef'
+    }
   end
 
   def test_successful_purchase
@@ -388,6 +393,16 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_stored_credentials
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(@options_stored_credentials))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<MITMsgType>#{@options_stored_credentials[:mit_msg_type]}</MITMsgType>}, data
+      assert_match %{<MITStoredCredentialInd>#{@options_stored_credentials[:mit_stored_credential_ind]}</MITStoredCredentialInd>}, data
+      assert_match %{<MITSubmittedTransactionID>#{@options_stored_credentials[:mit_submitted_transaction_id]}</MITSubmittedTransactionID>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_default_managed_billing
     response = stub_comms do
       assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
@@ -567,7 +582,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address)
     end.check_request do |endpoint, data, headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI54.xsd")
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
       assert xsd.valid?(doc), 'Request does not adhere to DTD'
@@ -579,7 +594,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:country => 'DE'))
     end.check_request do |endpoint, data, headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI54.xsd")
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI77.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
       assert xsd.valid?(doc), 'Request does not adhere to DTD'
