@@ -38,7 +38,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'authorized', response.params['braintree_transaction']['status']
   end
 
-  def test_successful_authorize_with_nil_billing_address_options
+  def test_successful_authorize_with_nil_and_empty_billing_address_options
     credit_card = credit_card('5105105105105100')
     options = {
       :billing_address => {
@@ -50,7 +50,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
         :city => nil,
         :state => nil,
         :zip => nil,
-        :country_name => nil
+        :country => ''
       }
     }
     assert response = @gateway.authorize(@amount, credit_card, options)
