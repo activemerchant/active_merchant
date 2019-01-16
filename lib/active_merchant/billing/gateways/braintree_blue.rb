@@ -328,7 +328,9 @@ module ActiveMerchant #:nodoc:
         mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2]) if address[:country] || address[:country_code_alpha2]
         mapped[:country_name] = address[:country_name] if address[:country_name]
         mapped[:country_code_alpha3] = address[:country_code_alpha3] if address[:country_code_alpha3]
-        mapped[:country_code_alpha3] ||= Country.find(address[:country]).code(:alpha3).value if address[:country]
+        unless address[:country].blank?
+          mapped[:country_code_alpha3] ||= Country.find(address[:country]).code(:alpha3).value
+        end
         mapped[:country_code_numeric] = address[:country_code_numeric] if address[:country_code_numeric]
 
         mapped

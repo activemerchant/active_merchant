@@ -9,6 +9,7 @@
 * Fix usaepay transaction invoice [lancecarlson] #3093
 * Adyen: Handles blank state address field [molbrown] #3113
 * Braintree: Send all country fields [curiousepic] #3112
+* Braintree: Account for empty string countries [curiousepic] #3115
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087
