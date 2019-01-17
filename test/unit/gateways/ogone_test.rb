@@ -109,7 +109,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '3014726;RES', response.authorization
+    assert_equal '3014726;PAU', response.authorization
     assert response.test?
   end
 
@@ -129,7 +129,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:eci => 4))
     assert_success response
-    assert_equal '3014726;RES', response.authorization
+    assert_equal '3014726;PAU', response.authorization
     assert response.test?
   end
 
@@ -137,7 +137,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_3dsecure_purchase_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:d3d => true))
     assert_success response
-    assert_equal '3014726;RES', response.authorization
+    assert_equal '3014726;PAU', response.authorization
     assert response.params['HTML_ANSWER']
     assert_equal nil, response.params['HTML_ANSWER'] =~ /<HTML_ANSWER>/
     assert response.test?
@@ -233,7 +233,7 @@ class OgoneTest < Test::Unit::TestCase
     assert_deprecation_warning(OgoneGateway::OGONE_STORE_OPTION_DEPRECATION_MESSAGE) do
       assert response = @gateway.store(@credit_card, :store => @billing_id)
       assert_success response
-      assert_equal '3014726;RES', response.authorization
+      assert_equal '3014726;PAU', response.authorization
       assert response.test?
     end
   end
