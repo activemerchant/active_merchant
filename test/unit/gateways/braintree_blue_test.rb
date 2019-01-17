@@ -678,6 +678,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card('41111111111111111111'))
   end
 
+  def test_passes_transaction_source
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:transaction_source] == 'recurring')
+      (params[:recurring] == nil)
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card('41111111111111111111'), :transaction_source => 'recurring', :recurring => true)
+  end
+
   def test_configured_logger_has_a_default
     # The default is actually provided by the Braintree gem, but we
     # assert its presence in order to show ActiveMerchant need not

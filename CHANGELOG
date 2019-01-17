@@ -1,8 +1,6 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Openpay: Fix for marking successful transaction(s) as failed [jknipp] #3121
-* Orbital: Support for stored credentials framework [jknipp] #3117
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
 * Worldpay: Add AVS and CVC Mapping [nfarve] #3107
 * Paymentez: Fixes extra_params field [molbrown] #3108
@@ -12,6 +10,9 @@
 * Adyen: Handles blank state address field [molbrown] #3113
 * Braintree: Send all country fields [curiousepic] #3112
 * Braintree: Account for empty string countries [curiousepic] #3115
+* Orbital: Support for stored credentials framework [jknipp] #3117
+* Openpay: Fix for marking successful transaction(s) as failed [jknipp] #3121
+* Braintree: Adds support for transaction_source [molbrown] #3120
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087

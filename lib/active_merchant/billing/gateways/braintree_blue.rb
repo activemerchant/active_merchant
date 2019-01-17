@@ -585,7 +585,9 @@ module ActiveMerchant #:nodoc:
           parameters[:merchant_account_id] = merchant_account_id
         end
 
-        if options[:recurring]
+        if options[:transaction_source]
+          parameters[:transaction_source] = options[:transaction_source]
+        elsif options[:recurring]
           parameters[:recurring] = true
         end
 

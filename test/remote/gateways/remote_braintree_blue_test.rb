@@ -426,6 +426,16 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '510510', @braintree_backend.customer.find(response.params['customer_vault_id']).credit_cards[0].bin
   end
 
+  def test_purchase_with_transaction_source
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    customer_vault_id = response.params['customer_vault_id']
+
+    assert response = @gateway.purchase(@amount, customer_vault_id, @options.merge(:transaction_source => 'unscheduled'))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+  end
+
   def test_purchase_using_specified_payment_method_token
     assert response = @gateway.store(
       credit_card('4111111111111111',
