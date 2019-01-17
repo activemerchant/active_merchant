@@ -1,13 +1,16 @@
-require "nokogiri"
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayUsGateway < Gateway
-      self.display_name = "Worldpay US"
-      self.homepage_url = "http://www.worldpay.com/us"
+      class_attribute :backup_url
+
+      self.display_name = 'Worldpay US'
+      self.homepage_url = 'http://www.worldpay.com/us'
 
       # No sandbox, just use test cards.
-      self.live_url = 'https://trans.worldpay.us/cgi-bin/process.cgi'
+      self.live_url   = 'https://trans.worldpay.us/cgi-bin/process.cgi'
+      self.backup_url = 'https://trans.gwtx01.com/cgi-bin/process.cgi'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
@@ -25,7 +28,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit('purchase', post)
+        commit('purchase', options, post)
       end
 
       def authorize(money, payment, options={})
@@ -34,7 +37,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, payment)
         add_customer_data(post, options)
 
-        commit('authorize', post)
+        commit('authorize', options, post)
       end
 
       def capture(amount, authorization, options={})
@@ -43,7 +46,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit('capture', post)
+        commit('capture', options, post)
       end
 
       def refund(amount, authorization, options={})
@@ -52,14 +55,14 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("refund", post)
+        commit('refund', options, post)
       end
 
       def void(authorization, options={})
         post = {}
         add_reference(post, authorization)
 
-        commit('void', post)
+        commit('void', options, post)
       end
 
       def verify(credit_card, options={})
@@ -69,7 +72,23 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?merchantpin=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?ccnum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?ckacct=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?cvv2=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
+
+      def url(options)
+        options[:use_backup_url].to_s == 'true' ? self.backup_url : self.live_url
+      end
 
       def add_customer_data(post, options)
         if(billing_address = (options[:billing_address] || options[:address]))
@@ -119,8 +138,8 @@ module ActiveMerchant #:nodoc:
       end
 
       ACCOUNT_TYPES = {
-        "checking" => "1",
-        "savings" => "2",
+        'checking' => '1',
+        'savings' => '2',
       }
 
       def add_check(post, payment_method)
@@ -132,7 +151,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        historyid, orderid = authorization.split("|")
+        historyid, orderid = authorization.split('|')
         [historyid, orderid]
       end
 
@@ -146,7 +165,7 @@ module ActiveMerchant #:nodoc:
       def parse(xml)
         response = {}
         doc = Nokogiri::XML(xml)
-        message = doc.xpath("//plaintext")
+        message = doc.xpath('//plaintext')
         message.text.split(/\r?\n/).each do |line|
           key, value = line.split(%r{=})
           response[key] = value if key
@@ -155,14 +174,14 @@ module ActiveMerchant #:nodoc:
       end
 
       ACTIONS = {
-        "purchase" => "ns_quicksale_cc",
-        "refund" => "ns_credit",
-        "authorize" => "ns_quicksale_cc",
-        "capture" => "ns_quicksale_cc",
-        "void" => "ns_void",
+        'purchase' => 'ns_quicksale_cc',
+        'refund' => 'ns_credit',
+        'authorize' => 'ns_quicksale_cc',
+        'capture' => 'ns_quicksale_cc',
+        'void' => 'ns_void',
       }
 
-      def commit(action, post)
+      def commit(action, options, post)
         post[:action] = ACTIONS[action] unless post[:action]
         post[:acctid] = @options[:acctid]
         post[:subid] = @options[:subid]
@@ -170,7 +189,7 @@ module ActiveMerchant #:nodoc:
 
         post[:authonly] = '1' if action == 'authorize'
 
-        raw = parse(ssl_post(live_url, post.to_query))
+        raw = parse(ssl_post(url(options), post.to_query))
 
         succeeded = success_from(raw['result'])
         Response.new(
@@ -188,14 +207,14 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          (response['transresult'] || response['Reason'] || "Unable to read error message")
+          (response['transresult'] || response['Reason'] || 'Unable to read error message')
         end
       end
 
       def authorization_from(response)
-        [response['historyid'], response['orderid']].join("|")
+        [response['historyid'], response['orderid']].join('|')
       end
     end
   end

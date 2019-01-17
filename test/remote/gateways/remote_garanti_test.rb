@@ -4,11 +4,6 @@ require 'test_helper'
 class RemoteGarantiTest < Test::Unit::TestCase
 
   def setup
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
-
     @gateway = GarantiGateway.new(fixtures(:garanti))
 
     @amount = 100 # 1 cents = 0.01$
@@ -63,6 +58,6 @@ class RemoteGarantiTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal '0651', response.params["reason_code"]
+    assert_equal '0651', response.params['reason_code']
   end
 end

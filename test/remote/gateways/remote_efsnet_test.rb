@@ -1,22 +1,22 @@
 require 'test_helper'
 
 class RemoteEfsnetTest < Test::Unit::TestCase
-  
+
   def setup
     Base.mode = :test
 
     @gateway = EfsnetGateway.new(fixtures(:efsnet))
-    
+
     @credit_card = credit_card('4000100011112224')
-    
+
     @amount = 100
     @declined_amount = 156
 
-    @options = { :order_id => generate_unique_id, 
+    @options = { :order_id => generate_unique_id,
                  :billing_address => address
                }
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -45,10 +45,10 @@ class RemoteEfsnetTest < Test::Unit::TestCase
   def test_authorize_and_capture
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
-    assert_success auth    
+    assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
-    
+
     assert capture = @gateway.capture(amount, auth.authorization, @options)
     assert_success capture
   end

@@ -16,8 +16,8 @@ class RemoteCardknoxTest < Test::Unit::TestCase
       order_id: generate_unique_id,
       invoice: generate_unique_id,
       name: 'Jim Smith',
-      ip: "127.0.0.1",
-      email: "joe@example.com",
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
       tip: 2,
       tax: 3,
       custom02: 'mycustom',
@@ -37,7 +37,7 @@ class RemoteCardknoxTest < Test::Unit::TestCase
       }
     }
 
-     @options = {}
+    @options = {}
   end
 
   def test_successful_credit_card_purchase
@@ -149,7 +149,6 @@ class RemoteCardknoxTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount-1, auth.authorization)
     assert_failure refund
     assert_equal 'Refund not allowed on non-captured auth.', refund.message
-
   end
 
   def test_failed_partial_check_refund # the gate way does not support this transaction

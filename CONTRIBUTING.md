@@ -1,10 +1,16 @@
 # Contributing guidelines
 
-We gladly accept bugfixes and new gateways. Please follow the guidelines here to ensure your work is accepted.
+We gladly accept bugfixes, but are not actively looking to add new gateways. Please follow the guidelines here to ensure your work is accepted.
 
 ## New Gateways
 
-Please see the [ActiveMerchant Guide to Contributing a new Gateway](https://github.com/activemerchant/active_merchant/wiki/contributing) for information on adding a new gateway to ActiveMerchant.
+We're not taking on many new gateways at the moment. The team maintaining ActiveMerchant is small and with the limited resources available, we generally prefer not to support a gateway than to support a gateway poorly.
+
+Please see the [ActiveMerchant Guide to Contributing a new Gateway](https://github.com/activemerchant/active_merchant/wiki/contributing) for information on creating a new gateway. You can place your gateway code in your application's `lib/active_merchant/billing` folder to use it.
+
+We would like to work with the community to figure out how gateways can release and maintain their integrations outside of the the ActiveMerchant repository. Please join [the discussion](https://github.com/activemerchant/active_merchant/issues/2923) if you're interested or have ideas.
+
+Gateway placement within Shopify is available by invitation only at this time.
 
 ## Issues & Bugfixes
 
@@ -24,15 +30,6 @@ When submitting a pull request to resolve an issue:
 3. Commit your changes (`git add my/awesome/file.rb; git commit -m "Added my awesome feature"`)
 4. Push your changes to your fork (`git push origin my_awesome_feature`)
 5. Open a [Pull Request](https://github.com/activemerchant/active_merchant/pulls)
-
-## Gateway Placement within Shopify
-
-The addition of your gateway to active_merchant does not guarantee placement within Shopify. In order to have your gateway considered, please send an email to payment-integrations@shopify.com with **Active_Merchant Integration** in the subject. Be sure to include:
-
-1. Name, URL & description of the payment provider you wish to integrate
-2. Markets served by this integration
-3. List of major supported payment methods
-4. Your most recent Certificate of PCI Compliance
 
 ## Version/Release Management
 

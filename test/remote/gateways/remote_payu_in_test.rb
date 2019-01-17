@@ -23,27 +23,27 @@ class RemotePayuInTest < Test::Unit::TestCase
       @amount,
       @credit_card,
       order_id: generate_unique_id,
-      description: "Awesome!",
-      email: "jim@example.com",
+      description: 'Awesome!',
+      email: 'jim@example.com',
       billing_address: {
-        name: "Jim Smith",
-        address1: "123 Road",
-        address2: "Suite 123",
-        city: "Somewhere",
-        state: "ZZ",
-        country: "US",
-        zip: "12345",
-        phone: "12223334444"
+        name: 'Jim Smith',
+        address1: '123 Road',
+        address2: 'Suite 123',
+        city: 'Somewhere',
+        state: 'ZZ',
+        country: 'US',
+        zip: '12345',
+        phone: '12223334444'
       },
       shipping_address: {
-        name: "Joe Bob",
-        address1: "987 Street",
-        address2: "Suite 987",
-        city: "Anyplace",
-        state: "AA",
-        country: "IN",
-        zip: "98765",
-        phone: "98887776666"
+        name: 'Joe Bob',
+        address1: '987 Street',
+        address2: 'Suite 987',
+        city: 'Anyplace',
+        state: 'AA',
+        country: 'IN',
+        zip: '98765',
+        phone: '98887776666'
       }
     )
 
@@ -78,9 +78,9 @@ class RemotePayuInTest < Test::Unit::TestCase
   end
 
   def test_3ds_enrolled_card_fails
-    response = @gateway.purchase(@amount, credit_card("4012001037141112"), @options)
+    response = @gateway.purchase(@amount, credit_card('4012001037141112'), @options)
     assert_failure response
-    assert_equal "3D-secure enrolled cards are not supported.", response.message
+    assert_equal '3D-secure enrolled cards are not supported.', response.message
 
 =begin
     # This is handy for testing that 3DS is working with PayU
@@ -115,7 +115,7 @@ class RemotePayuInTest < Test::Unit::TestCase
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, transcript)
-    refute_match %r{[^\d]#{@credit_card.verification_value}(?:[^\d]|$)}, "Expected CVV to be scrubbed out of transcript"
+    refute_match %r{[^\d]#{@credit_card.verification_value}(?:[^\d]|$)}, 'Expected CVV to be scrubbed out of transcript'
   end
 
   def test_invalid_login

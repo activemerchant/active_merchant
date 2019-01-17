@@ -23,16 +23,16 @@ class SSLVerify
       end
 
       uri = URI.parse(g.live_url)
-      result,message = ssl_verify_peer?(uri)
+      result, message = ssl_verify_peer?(uri)
       case result
       when :success
-        print "."
+        print '.'
         success << g
       when :fail
-        print "F"
+        print 'F'
         failed << {:gateway => g, :message => message}
       when :error
-        print "E"
+        print 'E'
         errored << {:gateway => g, :message => message}
       end
     end
@@ -60,13 +60,12 @@ class SSLVerify
         puts d.name
       end
     end
-
   end
 
   def try_host(http, path)
     http.get(path)
   rescue Net::HTTPBadResponse, EOFError, SocketError
-    http.post(path, "")
+    http.post(path, '')
   end
 
   def ssl_verify_peer?(uri)
@@ -78,7 +77,7 @@ class SSLVerify
     http.read_timeout = 60
 
     if uri.path.blank?
-      try_host(http, "/")
+      try_host(http, '/')
     else
       try_host(http, uri.path)
     end

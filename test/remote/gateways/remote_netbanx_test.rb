@@ -3,13 +3,13 @@ require 'test_helper'
 class RemoteNetbanxTest < Test::Unit::TestCase
   def setup
     @gateway = NetbanxGateway.new(fixtures(:netbanx))
-
     @amount = 100
     @credit_card = credit_card('4530910000012345')
     @declined_amount = 11
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      currency: 'CAD'
     }
   end
 
@@ -23,9 +23,9 @@ class RemoteNetbanxTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: SecureRandom.uuid,
-      ip: "127.0.0.1",
+      ip: '127.0.0.1',
       billing_address: address,
-      email: "joe@example.com"
+      email: 'joe@example.com'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -54,7 +54,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'OK', capture.message
   end
@@ -63,7 +63,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
     assert_success capture
   end
 
@@ -127,7 +127,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
 
     # the following shall fail if you run it immediately after the capture
@@ -141,7 +141,7 @@ class RemoteNetbanxTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization)
+    assert void = @gateway.void(auth.authorization, @options)
     assert_success void
     assert_equal 'OK', void.message
   end
@@ -172,20 +172,20 @@ class RemoteNetbanxTest < Test::Unit::TestCase
 
   def test_successful_store
     merchant_customer_id = SecureRandom.hex
-    assert response = @gateway.store(@credit_card, locale: 'en_GB', merchant_customer_id: merchant_customer_id, email: "email@example.com")
+    assert response = @gateway.store(@credit_card, locale: 'en_GB', merchant_customer_id: merchant_customer_id, email: 'email@example.com')
     assert_success response
-    assert_equal merchant_customer_id, response.params["merchantCustomerId"]
-    first_card = response.params["cards"].first
-    assert_equal @credit_card.last_digits, first_card["lastDigits"]
+    assert_equal merchant_customer_id, response.params['merchantCustomerId']
+    first_card = response.params['cards'].first
+    assert_equal @credit_card.last_digits, first_card['lastDigits']
   end
 
   def test_successful_unstore
     merchant_customer_id = SecureRandom.hex
-    assert response = @gateway.store(@credit_card, locale: 'en_GB', merchant_customer_id: merchant_customer_id, email: "email@example.com")
+    assert response = @gateway.store(@credit_card, locale: 'en_GB', merchant_customer_id: merchant_customer_id, email: 'email@example.com')
     assert_success response
-    assert_equal merchant_customer_id, response.params["merchantCustomerId"]
-    first_card = response.params["cards"].first
-    assert_equal @credit_card.last_digits, first_card["lastDigits"]
+    assert_equal merchant_customer_id, response.params['merchantCustomerId']
+    first_card = response.params['cards'].first
+    assert_equal @credit_card.last_digits, first_card['lastDigits']
     identification = "#{response.params['id']}|#{first_card['id']}"
     assert unstore_card = @gateway.unstore(identification)
     assert_success unstore_card
@@ -200,6 +200,6 @@ class RemoteNetbanxTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, store.authorization.split('|').last)
     assert_success response
-    assert_equal "OK", response.message
+    assert_equal 'OK', response.message
   end
 end

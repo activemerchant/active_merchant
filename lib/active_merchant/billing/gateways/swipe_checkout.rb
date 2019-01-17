@@ -6,10 +6,7 @@ module ActiveMerchant #:nodoc:
       TRANSACTION_APPROVED_MSG = 'Transaction approved'
       TRANSACTION_DECLINED_MSG = 'Transaction declined'
 
-      LIVE_URLS = {
-        'NZ' => 'https://api.swipehq.com',
-        'CA' => 'https://api.swipehq.ca'
-      }
+      self.live_url = 'https://api.swipehq.com'
       self.test_url = 'https://api.swipehq.com'
 
       TRANSACTION_API = '/createShopifyTransaction.php'
@@ -69,7 +66,7 @@ module ActiveMerchant #:nodoc:
         post[:td_user_data] = options[:order_id] if options[:order_id]
         post[:td_item] = options[:description] if options[:description]
         post[:td_description] = options[:description] if options[:description]
-        post[:item_quantity] = "1"
+        post[:item_quantity] = '1'
       end
 
       def add_creditcard(post, creditcard)
@@ -95,16 +92,16 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         case action
-        when "sale"
+        when 'sale'
           begin
             response = call_api(TRANSACTION_API, parameters)
 
             # response code and message params should always be present
-            code = response["response_code"]
-            message = response["message"]
+            code = response['response_code']
+            message = response['message']
 
             if code == 200
-              result = response["data"]["result"]
+              result = response['data']['result']
               success = (result == 'accepted' || (test? && result == 'test-accepted'))
 
               Response.new(success,
@@ -120,8 +117,8 @@ module ActiveMerchant #:nodoc:
           rescue ResponseError => e
             build_error_response("ssl_post() with url #{url} raised ResponseError: #{e}")
           rescue JSON::ParserError => e
-            msg = 'Invalid response received from the Swipe Checkout API. ' +
-                  'Please contact support@optimizerhq.com if you continue to receive this message.' +
+            msg = 'Invalid response received from the Swipe Checkout API. ' \
+                  'Please contact support@optimizerhq.com if you continue to receive this message.' \
                   " (Full error message: #{e})"
             build_error_response(msg)
           end
@@ -135,11 +132,11 @@ module ActiveMerchant #:nodoc:
 
         # ssl_post() returns the response body as a string on success,
         # or raises a ResponseError exception on failure
-        JSON.parse(ssl_post(url(@options[:region], api), params.to_query))
+        JSON.parse(ssl_post(url(api), params.to_query))
       end
 
-      def url(region, api)
-        ((test? ? self.test_url : LIVE_URLS[region]) + api)
+      def url(api)
+        (test? ? self.test_url : self.live_url) + api
       end
 
       def build_error_response(message, params={})
@@ -153,4 +150,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

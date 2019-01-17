@@ -1,7 +1,6 @@
 module ActiveMerchant
   module Billing
     module MastercardGateway
-
       def initialize(options={})
         requires!(options, :userid, :password)
         super
@@ -20,6 +19,7 @@ module ActiveMerchant
         add_reference(post, *new_authorization)
         add_payment_method(post, payment_method)
         add_customer_data(post, payment_method, options)
+        add_3dsecure_id(post, options)
 
         commit('authorize', post)
       end
@@ -29,6 +29,7 @@ module ActiveMerchant
         add_invoice(post, amount, options, :transaction)
         add_reference(post, *next_authorization(authorization))
         add_customer_data(post, nil, options)
+        add_3dsecure_id(post, options)
 
         commit('capture', post)
       end
@@ -57,7 +58,7 @@ module ActiveMerchant
       end
 
       def verify_credentials
-        url = build_url(SecureRandom.uuid, "nonexistent")
+        url = build_url(SecureRandom.uuid, 'nonexistent')
         begin
           ssl_get(url, headers)
         rescue ResponseError => e
@@ -79,6 +80,7 @@ module ActiveMerchant
       end
 
       private
+
       def new_post
         {
           order: {},
@@ -160,6 +162,11 @@ module ActiveMerchant
         post[:customer].merge!(customer)
       end
 
+      def add_3dsecure_id(post, options)
+        return unless options[:threed_secure_id]
+        post.merge!({'3DSecureId' => options[:threed_secure_id]})
+      end
+
       def country_code(country)
         if country
           country = ActiveMerchant::Country.find(country)
@@ -214,7 +221,7 @@ module ActiveMerchant
       end
 
       def success_from(response)
-        response['result'] == "SUCCESS"
+        response['result'] == 'SUCCESS'
       end
 
       def message_from(succeeded, response)
@@ -255,7 +262,6 @@ module ActiveMerchant
         next_transactionid = SecureRandom.uuid
         [orderid, next_transactionid, prev_transactionid]
       end
-
     end
   end
 end

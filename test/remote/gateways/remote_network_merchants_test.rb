@@ -7,7 +7,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     @amount = 100
     @decline_amount = 1
     @credit_card = credit_card('4111111111111111')
-    @credit_card_with_track_data = credit_card_with_track_data("4111111111111111")
+    @credit_card_with_track_data = credit_card_with_track_data('4111111111111111')
     @check = check
 
     @options = {
@@ -83,7 +83,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert response = @gateway.void(purchase.authorization)
     assert_success response
-    assert_equal "Transaction Void Successful", response.message
+    assert_equal 'Transaction Void Successful', response.message
   end
 
   def test_refund
@@ -93,7 +93,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(50, purchase.authorization)
     assert_success response
-    assert_equal "SUCCESS", response.message
+    assert_equal 'SUCCESS', response.message
     assert response.authorization
   end
 
@@ -104,7 +104,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(50, purchase.authorization)
     assert_success response
-    assert_equal "SUCCESS", response.message
+    assert_equal 'SUCCESS', response.message
     assert response.authorization
   end
 
@@ -123,7 +123,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_store_failure
-    @credit_card.number = "123"
+    @credit_card.number = '123'
     assert store = @gateway.store(@credit_card, @options)
     assert_failure store
     assert store.message.include?('Invalid Credit Card Number')
@@ -138,7 +138,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert unstore = @gateway.unstore(store.params['customer_vault_id'])
     assert_success unstore
-    assert_equal "Customer Deleted", unstore.message
+    assert_equal 'Customer Deleted', unstore.message
   end
 
   def test_purchase_on_stored_card
@@ -148,7 +148,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
     assert purchase = @gateway.purchase(@amount, store.params['customer_vault_id'], @options)
     assert_success purchase
-    assert_equal "SUCCESS", purchase.message
+    assert_equal 'SUCCESS', purchase.message
   end
 
   def test_invalid_login

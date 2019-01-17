@@ -2,19 +2,24 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
     module CreditCardMethods
-      CARD_COMPANIES = {
-        'visa'               => /^4\d{12}(\d{3})?(\d{3})?$/,
-        'master'             => /^(5[1-5]\d{4}|677189|222[1-9]\d{2}|22[3-9]\d{3}|2[3-6]\d{4}|27[01]\d{3}|2720\d{2})\d{10}$/,
-        'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/,
-        'american_express'   => /^3[47]\d{13}$/,
-        'diners_club'        => /^3(0[0-5]|[68]\d)\d{11}$/,
-        'jcb'                => /^35(28|29|[3-8]\d)\d{12}$/,
-        'switch'             => /^6759\d{12}(\d{2,3})?$/,
-        'solo'               => /^6767\d{12}(\d{2,3})?$/,
-        'dankort'            => /^5019\d{12}$/,
-        'maestro'            => /^(5[06-8]|6\d)\d{10,17}$/,
-        'forbrugsforeningen' => /^600722\d{10}$/,
-        'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/
+      CARD_COMPANY_DETECTORS = {
+        'visa'               => ->(num) { num =~ /^4\d{12}(\d{3})?(\d{3})?$/ },
+        'master'             => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MASTERCARD_RANGES) },
+        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/ },
+        'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
+        'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
+        'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
+        'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
+        'maestro'            => ->(num) { (12..19).cover?(num&.size) && in_bin_range?(num.slice(0, 6), MAESTRO_RANGES) },
+        'forbrugsforeningen' => ->(num) { num =~ /^600722\d{10}$/ },
+        'sodexo'             => ->(num) { num =~ /^(606071|603389|606070|606069|606068|600818)\d{8}$/ },
+        'vr'                 => ->(num) { num =~ /^(627416|637036)\d{8}$/ },
+        'carnet'             => lambda { |num|
+          num&.size == 16 && (
+            in_bin_range?(num.slice(0, 6), CARNET_RANGES) ||
+            CARNET_BINS.any? { |bin| num.slice(0, bin.size) == bin }
+          )
+        }
       }
 
       # http://www.barclaycard.co.uk/business/files/bin_rules.pdf
@@ -37,12 +42,43 @@ module ActiveMerchant #:nodoc:
         (491730..491759),
       ]
 
+      CARNET_RANGES = [
+        (506199..506499),
+      ]
+
+      CARNET_BINS = Set.new(
+        [
+          '286900', '502275', '606333', '627535', '636318', '636379', '639388',
+          '639484', '639559', '50633601', '50633606', '58877274', '62753500',
+          '60462203', '60462204', '588772'
+        ]
+      )
+
+      # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
+      MASTERCARD_RANGES = [
+        (222100..272099),
+        (510000..559999),
+      ]
+
+      # https://www.mastercard.us/content/dam/mccom/global/documents/mastercard-rules.pdf, page 73
+      MAESTRO_RANGES = [
+        (639000..639099),
+        (670000..679999),
+      ]
+
       def self.included(base)
         base.extend(ClassMethods)
       end
 
+      def self.in_bin_range?(number, ranges)
+        bin = number.to_i
+        ranges.any? do |range|
+          range.cover?(bin)
+        end
+      end
+
       def valid_month?(month)
-        (1..12).include?(month.to_i)
+        (1..12).cover?(month.to_i)
       end
 
       def credit_card?
@@ -50,7 +86,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def valid_expiry_year?(year)
-        (Time.now.year..Time.now.year + 20).include?(year.to_i)
+        (Time.now.year..Time.now.year + 20).cover?(year.to_i)
       end
 
       def valid_start_year?(year)
@@ -75,7 +111,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_verification_value_length(brand)
-        brand == 'american_express' ? 4 : 3
+        case brand
+        when 'american_express'
+          4
+        when 'maestro'
+          0
+        else
+          3
+        end
       end
 
       def valid_issue_number?(number)
@@ -101,42 +144,23 @@ module ActiveMerchant #:nodoc:
             valid_checksum?(number)
         end
 
-        # Regular expressions for the known card companies.
-        #
-        # References:
-        # - http://en.wikipedia.org/wiki/Credit_card_number
-        # - http://www.barclaycardbusiness.co.uk/information_zone/processing/bin_rules.html
         def card_companies
-          CARD_COMPANIES
+          CARD_COMPANY_DETECTORS.keys
         end
 
         # Returns a string containing the brand of card from the list of known information below.
-        # Need to check the cards in a particular order, as there is some overlap of the allowable ranges
-        #--
-        # TODO Refactor this method. We basically need to tighten up the Maestro Regexp.
-        #
-        # Right now the Maestro regexp overlaps with the MasterCard regexp (IIRC). If we can tighten
-        # things up, we can boil this whole thing down to something like...
-        #
-        #   def brand?(number)
-        #     return 'visa' if valid_test_mode_card_number?(number)
-        #     card_companies.find([nil]) { |brand, regexp| number =~ regexp }.first.dup
-        #   end
-        #
         def brand?(number)
           return 'bogus' if valid_test_mode_card_number?(number)
 
-          card_companies.reject { |c,p| c == 'maestro' }.each do |company, pattern|
-            return company.dup if number =~ pattern
+          CARD_COMPANY_DETECTORS.each do |company, func|
+            return company.dup if func.call(number)
           end
-
-          return 'maestro' if number =~ card_companies['maestro']
 
           return nil
         end
 
         def electron?(number)
-          return false unless [16, 19].include?(number.length)
+          return false unless [16, 19].include?(number&.length)
 
           # don't recalculate for each range
           bank_identification_number = first_digits(number).to_i
@@ -147,16 +171,17 @@ module ActiveMerchant #:nodoc:
         end
 
         def type?(number)
-          ActiveMerchant.deprecated "CreditCard#type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand? instead."
+          ActiveMerchant.deprecated 'CreditCard#type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand? instead.'
           brand?(number)
         end
 
         def first_digits(number)
-          number.to_s.slice(0,6)
+          number&.slice(0, 6) || ''
         end
 
         def last_digits(number)
-          number.to_s.length <= 4 ? number : number.to_s.slice(-4..-1)
+          return '' if number.nil?
+          number.length <= 4 ? number : number.slice(-4..-1)
         end
 
         def mask(number)
@@ -169,23 +194,25 @@ module ActiveMerchant #:nodoc:
         end
 
         def matching_type?(number, brand)
-          ActiveMerchant.deprecated "CreditCard#matching_type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#matching_brand? instead."
+          ActiveMerchant.deprecated 'CreditCard#matching_type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#matching_brand? instead.'
           matching_brand?(number, brand)
         end
 
         private
 
         def valid_card_number_length?(number) #:nodoc:
-          number.to_s.length >= 12
+          return false if number.nil?
+          number.length >= 12
         end
 
         def valid_card_number_characters?(number) #:nodoc:
-          !number.to_s.match(/\D/)
+          return false if number.nil?
+          !number.match(/\D/)
         end
 
         def valid_test_mode_card_number?(number) #:nodoc:
           ActiveMerchant::Billing::Base.test? &&
-            %w[1 2 3 success failure error].include?(number.to_s)
+            %w[1 2 3 success failure error].include?(number)
         end
 
         ODD_LUHN_VALUE = {

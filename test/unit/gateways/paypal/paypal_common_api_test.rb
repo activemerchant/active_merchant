@@ -6,7 +6,9 @@ require 'nokogiri'
 class CommonPaypalGateway < ActiveMerchant::Billing::Gateway
   include ActiveMerchant::Billing::PaypalCommonAPI
   def currency(code); 'USD'; end
+
   def localized_amount(num, code); num; end
+
   def commit(a, b); end
 end
 
@@ -21,15 +23,16 @@ class PaypalCommonApiTest < Test::Unit::TestCase
       :pem => 'PEM'
     )
 
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @address = {
+      :address1 => '1234 My Street',
+      :address2 => 'Apt 1',
+      :company => 'Widgets Inc',
+      :city => 'Ottawa',
+      :state => 'ON',
+      :zip => 'K1C2N6',
+      :country => 'Canada',
+      :phone => '(555)555-5555'
+    }
   end
 
   def xml_builder
@@ -83,7 +86,7 @@ class PaypalCommonApiTest < Test::Unit::TestCase
 
   def test_build_request_wrapper_with_request_details
     result = @gateway.send(:build_request_wrapper, 'Action', :request_details => true) do |xml|
-       xml.tag! 'n2:TransactionID', 'baz'
+      xml.tag! 'n2:TransactionID', 'baz'
     end
     assert_equal 'baz', REXML::XPath.first(REXML::Document.new(result), '//ActionReq/ActionRequest/n2:ActionRequestDetails/n2:TransactionID').text
   end
@@ -115,14 +118,13 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_build_do_authorize_request
-    request = REXML::Document.new(@gateway.send(:build_do_authorize,123, 100, :currency => 'USD'))
+    request = REXML::Document.new(@gateway.send(:build_do_authorize, 123, 100, :currency => 'USD'))
     assert_equal '123', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/TransactionID').text
     assert_equal '1.00', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/Amount').text
   end
 
-
   def test_build_manage_pending_transaction_status_request
-    request = REXML::Document.new(@gateway.send(:build_manage_pending_transaction_status,123, 'Accept'))
+    request = REXML::Document.new(@gateway.send(:build_manage_pending_transaction_status, 123, 'Accept'))
     assert_equal '123', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/TransactionID').text
     assert_equal 'Accept', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/Action').text
   end
@@ -134,10 +136,12 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_build_transaction_search_request
-    options = {:start_date => DateTime.new(2012, 2, 21, 0),
+    options = {
+      :start_date => DateTime.new(2012, 2, 21, 0),
       :end_date => DateTime.new(2012, 3, 21, 0),
       :receiver => 'foo@example.com',
-      :first_name => 'Robert'}
+      :first_name => 'Robert'
+    }
     request = REXML::Document.new(@gateway.send(:build_transaction_search, options))
     assert_match %r{^2012-02-21T\d{2}:00:00Z$}, REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/StartDate').text
     assert_match %r{^2012-03-21T\d{2}:00:00Z$}, REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/EndDate').text
@@ -153,9 +157,9 @@ class PaypalCommonApiTest < Test::Unit::TestCase
 
   def test_build_reference_transaction_gets_ip
     request = REXML::Document.new(@gateway.send(:build_reference_transaction_request,
-                                                100,
-                                                :reference_id => 'id',
-                                                :ip => '127.0.0.1'))
+      100,
+      :reference_id => 'id',
+      :ip => '127.0.0.1'))
     assert_equal '100', REXML::XPath.first(request, '//n2:PaymentDetails/n2:OrderTotal').text
     assert_equal 'id', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
     assert_equal '127.0.0.1', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text

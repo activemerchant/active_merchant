@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BlueSnapTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = BlueSnapGateway.new(api_username: 'login', api_password: 'password')
     @credit_card = credit_card
@@ -21,13 +23,15 @@ class BlueSnapTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "14002", response.error_code
+    assert_equal '14002', response.error_code
   end
 
   def test_successful_authorize
-    @gateway.expects(:raw_ssl_request).returns(successful_authorize_response)
-
-    response = @gateway.authorize(@amount, @credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |type, endpoint, data, headers|
+      assert_match '<storeCard>false</storeCard>', data
+    end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal '1012082893', response.authorization
   end
@@ -37,55 +41,55 @@ class BlueSnapTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "14002", response.error_code
+    assert_equal '14002', response.error_code
   end
 
   def test_successful_capture
     @gateway.expects(:raw_ssl_request).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "Authorization")
+    response = @gateway.capture(@amount, 'Authorization')
     assert_success response
-    assert_equal "1012082881", response.authorization
+    assert_equal '1012082881', response.authorization
   end
 
   def test_failed_capture
     @gateway.expects(:raw_ssl_request).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "Authorization")
+    response = @gateway.capture(@amount, 'Authorization')
     assert_failure response
-    assert_equal "20008", response.error_code
+    assert_equal '20008', response.error_code
   end
 
   def test_successful_refund
     @gateway.expects(:raw_ssl_request).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, "Authorization")
+    response = @gateway.refund(@amount, 'Authorization')
     assert_success response
-    assert_equal "1012082907", response.authorization
+    assert_equal '1012082907', response.authorization
   end
 
   def test_failed_refund
     @gateway.expects(:raw_ssl_request).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "Authorization")
+    response = @gateway.refund(@amount, 'Authorization')
     assert_failure response
-    assert_equal "20008", response.error_code
+    assert_equal '20008', response.error_code
   end
 
   def test_successful_void
     @gateway.expects(:raw_ssl_request).returns(successful_void_response)
 
-    response = @gateway.void("Authorization")
+    response = @gateway.void('Authorization')
     assert_success response
-    assert_equal "1012082919", response.authorization
+    assert_equal '1012082919', response.authorization
   end
 
   def test_failed_void
     @gateway.expects(:raw_ssl_request).returns(failed_void_response)
 
-    response = @gateway.void("Authorization")
+    response = @gateway.void('Authorization')
     assert_failure response
-    assert_equal "20008", response.error_code
+    assert_equal '20008', response.error_code
   end
 
   def test_successful_verify
@@ -93,7 +97,7 @@ class BlueSnapTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "1012082929", response.authorization
+    assert_equal '1012082929', response.authorization
   end
 
   def test_failed_verify
@@ -101,7 +105,7 @@ class BlueSnapTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal "14002", response.error_code
+    assert_equal '14002', response.error_code
   end
 
   def test_successful_store
@@ -109,7 +113,7 @@ class BlueSnapTest < Test::Unit::TestCase
 
     response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal "20936441", response.authorization
+    assert_equal '20936441', response.authorization
   end
 
   def test_failed_store
@@ -117,7 +121,15 @@ class BlueSnapTest < Test::Unit::TestCase
 
     response = @gateway.store(@credit_card, @options)
     assert_failure response
-    assert_equal "14002", response.error_code
+    assert_equal '14002', response.error_code
+  end
+
+  def test_currency_added_correctly
+    stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
+    end.check_request do |method, url, data|
+      assert_match(/<currency>CAD<\/currency>/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_verify_good_credentials
@@ -128,6 +140,14 @@ class BlueSnapTest < Test::Unit::TestCase
   def test_verify_bad_credentials
     @gateway.expects(:raw_ssl_request).returns(credentials_are_bogus_response)
     assert !@gateway.verify_credentials
+  end
+
+  def test_failed_forbidden_response
+    @gateway.expects(:raw_ssl_request).returns(forbidden_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal '<xml>You are not authorized to perform this request due to inappropriate role permissions.</xml>', response.message
   end
 
   def test_scrub
@@ -488,7 +508,7 @@ class BlueSnapTest < Test::Unit::TestCase
       </vaulted-shopper>
     XML
 
-    response.headers = { "content-location" => "https://sandbox.bluesnap.com/services/2/vaulted-shoppers/20936441" }
+    response.headers = { 'content-location' => 'https://sandbox.bluesnap.com/services/2/vaulted-shoppers/20936441' }
     response
   end
 
@@ -506,12 +526,15 @@ class BlueSnapTest < Test::Unit::TestCase
     MockResponse.failed(body, 400)
   end
 
+  def forbidden_response
+    MockResponse.new(403, '<xml>You are not authorized to perform this request due to inappropriate role permissions.</xml>')
+  end
+
   def credentials_are_legit_response
-    MockResponse.new(400, "<xml>Server Error</xml>")
+    MockResponse.new(400, '<xml>Server Error</xml>')
   end
 
   def credentials_are_bogus_response
-    MockResponse.new(401, %{<!DOCTYPE html><html><head><title>Apache Tomcat/8.0.24 - Error report</title><style type="text/css">H1 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:22px;} H2 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:16px;} H3 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:14px;} BODY {font-family:Tahoma,Arial,sans-serif;color:black;background-color:white;} B {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;} P {font-family:Tahoma,Arial,sans-serif;background:white;color:black;font-size:12px;}A {color : black;}A.name {color : black;}.line {height: 1px; background-color: #525D76; border: none;}</style> </head><body><h1>HTTP Status 401 - Bad credentials</h1><div class="line"></div><p><b>type</b> Status report</p><p><b>message</b> <u>Bad credentials</u></p><p><b>description</b> <u>This request requires HTTP authentication.</u></p><hr class="line"><h3>Apache Tomcat/8.0.24</h3></body></html>})
+    MockResponse.new(401, %{<!DOCTYPE html><html lang="en"><head><title>HTTP Status 401 – Unauthorized</title><style type="text/css">h1 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:22px;} h2 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:16px;} h3 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:14px;} body {font-family:Tahoma,Arial,sans-serif;color:black;background-color:white;} b {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;} p {font-family:Tahoma,Arial,sans-serif;background:white;color:black;font-size:12px;} a {color:black;} a.name {color:black;} .line {height:1px;background-color:#525D76;border:none;}</style></head><body><h1>HTTP Status 401 – Unauthorized</h1><hr class="line" /><p><b>Type</b> Status Report</p><p><b>Message</b> Bad credentials</p><p><b>Description</b> The request has not been applied because it lacks valid authentication credentials for the target resource.</p><hr class="line" /><h3>Apache Tomcat Version X</h3></body></html>})
   end
-
 end

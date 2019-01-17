@@ -45,12 +45,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify(payment, options={})
-        authorize(0, payment, options)
+        if credit_card_type(payment) == 'Amex'
+          MultiResponse.run(:use_first_response) do |r|
+            r.process { authorize(100, payment, options) }
+            r.process(:ignore_result) { void(r.authorization, options) }
+          end
+        else
+          authorize(0, payment, options)
+        end
       end
 
       def verify_credentials
-        response = void("0")
-        response.params["result"] != "26"
+        response = void('0')
+        response.params['result'] != '26'
       end
 
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
@@ -85,7 +92,7 @@ module ActiveMerchant #:nodoc:
       def recurring_inquiry(profile_id, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        request = build_recurring_request(:inquiry, nil, options.update( :profile_id => profile_id ))
+        request = build_recurring_request(:inquiry, nil, options.update(:profile_id => profile_id))
         commit(request, options.merge(:request_type => :recurring))
       end
 
@@ -93,8 +100,20 @@ module ActiveMerchant #:nodoc:
         @express ||= PayflowExpressGateway.new(@options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<CardNum>)[^<]*(</CardNum>)), '\1[FILTERED]\2').
+          gsub(%r((<CVNum>)[^<]*(</CVNum>)), '\1[FILTERED]\2').
+          gsub(%r((<AcctNum>)[^<]*(</AcctNum>)), '\1[FILTERED]\2').
+          gsub(%r((<Password>)[^<]*(</Password>)), '\1[FILTERED]\2')
+      end
 
       private
+
       def build_sale_or_authorization_request(action, money, funding_source, options)
         if funding_source.is_a?(String)
           build_reference_sale_or_authorization_request(action, money, funding_source, options)
@@ -114,6 +133,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
               xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
@@ -123,7 +143,7 @@ module ActiveMerchant #:nodoc:
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
-              add_address(xml, 'ShipTo', options[:shipping_address],options) if options[:shipping_address]
+              add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
 
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
@@ -145,6 +165,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
@@ -152,6 +173,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
               xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
               xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
+              xml.tag! 'EMail', options[:email] unless options[:email].nil?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -176,6 +198,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'OrderDesc', options[:order_desc] unless options[:order_desc].blank?
               xml.tag! 'BillTo' do
                 xml.tag! 'Name', check.name
               end
@@ -214,10 +237,6 @@ module ActiveMerchant #:nodoc:
             end
           end
 
-          if requires_start_date_or_issue_number?(credit_card)
-            xml.tag!('ExtData', 'Name' => 'CardStart', 'Value' => startdate(credit_card)) unless credit_card.start_month.blank? || credit_card.start_year.blank?
-            xml.tag!('ExtData', 'Name' => 'CardIssue', 'Value' => format(credit_card.issue_number, :two_digits)) unless credit_card.issue_number.blank?
-          end
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
         end
       end
@@ -229,8 +248,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year.to_s.sub(/^0+/, ''))
-        month = sprintf("%.2i", creditcard.month.to_s.sub(/^0+/, ''))
+        year  = sprintf('%.4i', creditcard.year.to_s.sub(/^0+/, ''))
+        month = sprintf('%.2i', creditcard.month.to_s.sub(/^0+/, ''))
 
         "#{year}#{month}"
       end
@@ -270,7 +289,7 @@ module ActiveMerchant #:nodoc:
                   end
 
                   if action == :add
-                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1)
                   else
                     xml.tag! 'Start', format_rp_date(options[:starting_at]) unless options[:starting_at].nil?
                   end
@@ -286,10 +305,10 @@ module ActiveMerchant #:nodoc:
                 end
               end
               if action != :add
-                xml.tag! "ProfileID", options[:profile_id]
+                xml.tag! 'ProfileID', options[:profile_id]
               end
               if action == :inquiry
-                xml.tag! "PaymentHistory", ( options[:history] ? 'Y' : 'N' )
+                xml.tag! 'PaymentHistory', (options[:history] ? 'Y' : 'N')
               end
             end
           end
@@ -299,20 +318,20 @@ module ActiveMerchant #:nodoc:
       def get_pay_period(options)
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly])
         case options[:periodicity]
-          when :weekly then 'Weekly'
-          when :biweekly then 'Bi-weekly'
-          when :semimonthly then 'Semi-monthly'
-          when :quadweekly then 'Every four weeks'
-          when :monthly then 'Monthly'
-          when :quarterly then 'Quarterly'
-          when :semiyearly then 'Semi-yearly'
-          when :yearly then 'Yearly'
+        when :weekly then 'Weekly'
+        when :biweekly then 'Bi-weekly'
+        when :semimonthly then 'Semi-monthly'
+        when :quadweekly then 'Every four weeks'
+        when :monthly then 'Monthly'
+        when :quarterly then 'Quarterly'
+        when :semiyearly then 'Semi-yearly'
+        when :yearly then 'Yearly'
         end
       end
 
       def format_rp_date(time)
         case time
-          when Time, Date then time.strftime("%m%d%Y")
+        when Time, Date then time.strftime('%m%d%Y')
         else
           time.to_s
         end
@@ -324,4 +343,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

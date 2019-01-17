@@ -3,9 +3,9 @@ require 'nokogiri'
 module ActiveMerchant
   module Billing
     class BlueSnapGateway < Gateway
-      self.test_url = "https://sandbox.bluesnap.com/services/2"
-      self.live_url = "https://ws.bluesnap.com/services/2"
-      self.supported_countries = %w(US GB)
+      self.test_url = 'https://sandbox.bluesnap.com/services/2'
+      self.live_url = 'https://ws.bluesnap.com/services/2'
+      self.supported_countries = %w(US CA GB AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE)
 
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
@@ -14,11 +14,11 @@ module ActiveMerchant
       self.display_name = 'BlueSnap'
 
       TRANSACTIONS = {
-        purchase: "AUTH_CAPTURE",
-        authorize: "AUTH_ONLY",
-        capture: "CAPTURE",
-        void: "AUTH_REVERSAL",
-        refund: "REFUND"
+        purchase: 'AUTH_CAPTURE',
+        authorize: 'AUTH_ONLY',
+        capture: 'CAPTURE',
+        void: 'AUTH_REVERSAL',
+        refund: 'REFUND'
       }
 
       CVC_CODE_TRANSLATOR = {
@@ -86,7 +86,7 @@ module ActiveMerchant
       def refund(money, authorization, options={})
         commit(:refund, :put) do |doc|
           add_authorization(doc, authorization)
-          add_amount(doc, money)
+          add_amount(doc, money, options)
           add_order(doc, options)
         end
       end
@@ -105,8 +105,8 @@ module ActiveMerchant
       def store(credit_card, options = {})
         commit(:store) do |doc|
           add_personal_info(doc, credit_card, options)
-          doc.send("payment-sources") do
-            doc.send("credit-card-info") do
+          doc.send('payment-sources') do
+            doc.send('credit-card-info') do
               add_credit_card(doc, credit_card)
             end
           end
@@ -116,7 +116,7 @@ module ActiveMerchant
 
       def verify_credentials
         begin
-          ssl_get("#{url}/nonexistent", headers)
+          ssl_get(url.to_s, headers)
         rescue ResponseError => e
           return false if e.response.code.to_i == 401
         end
@@ -138,57 +138,58 @@ module ActiveMerchant
       private
 
       def add_auth_purchase(doc, money, payment_method, options)
-        doc.send("recurring-transaction", options[:recurring] ? "RECURRING" : "ECOMMERCE")
+        doc.send('recurring-transaction', options[:recurring] ? 'RECURRING' : 'ECOMMERCE')
         add_order(doc, options)
-        add_amount(doc, money)
-        doc.send("transaction-fraud-info") do
-          doc.send("shopper-ip-address", options[:ip]) if options[:ip]
+        doc.send('storeCard', options[:store_card] || false)
+        add_amount(doc, money, options)
+        doc.send('transaction-fraud-info') do
+          doc.send('shopper-ip-address', options[:ip]) if options[:ip]
         end
 
         if payment_method.is_a?(String)
-          doc.send("vaulted-shopper-id", payment_method)
+          doc.send('vaulted-shopper-id', payment_method)
         else
-          doc.send("card-holder-info") do
+          doc.send('card-holder-info') do
             add_personal_info(doc, payment_method, options)
           end
           add_credit_card(doc, payment_method)
         end
       end
 
-      def add_amount(doc, money)
+      def add_amount(doc, money, options)
         doc.amount(amount(money))
         doc.currency(options[:currency] || currency(money))
       end
 
       def add_personal_info(doc, credit_card, options)
-        doc.send("first-name", credit_card.first_name)
-        doc.send("last-name", credit_card.last_name)
+        doc.send('first-name', credit_card.first_name)
+        doc.send('last-name', credit_card.last_name)
         doc.email(options[:email]) if options[:email]
         add_address(doc, options)
       end
 
       def add_credit_card(doc, card)
-        doc.send("credit-card") do
-          doc.send("card-number", card.number)
-          doc.send("security-code", card.verification_value)
-          doc.send("expiration-month", card.month)
-          doc.send("expiration-year", card.year)
+        doc.send('credit-card') do
+          doc.send('card-number', card.number)
+          doc.send('security-code', card.verification_value)
+          doc.send('expiration-month', card.month)
+          doc.send('expiration-year', card.year)
         end
       end
 
       def add_description(doc, description)
-        doc.send("transaction-meta-data") do
-          doc.send("meta-data") do
-            doc.send("meta-key", "description")
-            doc.send("meta-value", truncate(description, 500))
-            doc.send("meta-description", "Description")
+        doc.send('transaction-meta-data') do
+          doc.send('meta-data') do
+            doc.send('meta-key', 'description')
+            doc.send('meta-value', truncate(description, 500))
+            doc.send('meta-description', 'Description')
           end
         end
       end
 
       def add_order(doc, options)
-        doc.send("merchant-transaction-id", truncate(options[:order_id], 50)) if options[:order_id]
-        doc.send("soft-descriptor", options[:soft_descriptor]) if options[:soft_descriptor]
+        doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
+        doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
         add_description(doc, options[:description]) if options[:description]
       end
 
@@ -203,22 +204,18 @@ module ActiveMerchant
         doc.zip(address[:zip]) if address[:zip]
       end
 
-      def add_invoice(post, money, options)
-        post[:amount] = amount(money)
-        post[:currency] = (options[:currency] || currency(money))
-      end
-
       def add_authorization(doc, authorization)
-        doc.send("transaction-id", authorization)
+        doc.send('transaction-id', authorization)
       end
 
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
+        return forbidden_response(response.body) if response.code.to_i == 403
 
         parsed = {}
         doc = Nokogiri::XML(response.body)
         doc.root.xpath('*').each do |node|
-          if (node.elements.empty?)
+          if node.elements.empty?
             parsed[node.name.downcase] = node.text
           else
             node.elements.each do |childnode|
@@ -227,24 +224,22 @@ module ActiveMerchant
           end
         end
 
-        parsed["content-location-header"] = response['content-location']
+        parsed['content-location-header'] = response['content-location']
         parsed
       end
 
       def parse_element(parsed, node)
         if !node.elements.empty?
-          node.elements.each {|e| parse_element(parsed, e) }
+          node.elements.each { |e| parse_element(parsed, e) }
         else
           parsed[node.name.downcase] = node.text
         end
       end
 
       def api_request(action, request, verb)
-        begin
-          ssl_request(verb, url(action), request, headers)
-        rescue ResponseError => e
-          e.response
-        end
+        ssl_request(verb, url(action), request, headers)
+      rescue ResponseError => e
+        e.response
       end
 
       def commit(action, verb = :post)
@@ -261,18 +256,18 @@ module ActiveMerchant
           avs_result: avs_result(parsed),
           cvv_result: cvv_result(parsed),
           error_code: error_code_from(parsed),
-          test: test?,
+          test: test?
         )
       end
 
       def url(action = nil)
         base = test? ? test_url : live_url
-        resource = (action == :store) ? "vaulted-shoppers" : "transactions"
+        resource = action == :store ? 'vaulted-shoppers' : 'transactions'
         "#{base}/#{resource}"
       end
 
       def cvv_result(parsed)
-        CVVResult.new(CVC_CODE_TRANSLATOR[parsed["cvv-response-code"]])
+        CVVResult.new(CVC_CODE_TRANSLATOR[parsed['cvv-response-code']])
       end
 
       def avs_result(parsed)
@@ -284,35 +279,35 @@ module ActiveMerchant
       end
 
       def success_from(action, response)
-        (200...300).include?(response.code.to_i)
+        (200...300).cover?(response.code.to_i)
       end
 
       def message_from(succeeded, parsed_response)
-        return "Success" if succeeded
-        parsed_response["description"]
+        return 'Success' if succeeded
+        parsed_response['description']
       end
 
       def authorization_from(action, parsed_response)
-        (action == :store) ? vaulted_shopper_id(parsed_response) : parsed_response["transaction-id"]
+        action == :store ? vaulted_shopper_id(parsed_response) : parsed_response['transaction-id']
       end
 
       def vaulted_shopper_id(parsed_response)
-        return nil unless parsed_response["content-location-header"]
-        parsed_response["content-location-header"].split("/").last
+        return nil unless parsed_response['content-location-header']
+        parsed_response['content-location-header'].split('/').last
       end
 
       def error_code_from(parsed_response)
-        parsed_response["code"]
+        parsed_response['code']
       end
 
       def root_attributes
         {
-          xmlns: "http://ws.plimus.com"
+          xmlns: 'http://ws.plimus.com'
         }
       end
 
       def root_element(action)
-        (action == :store) ? "vaulted-shopper" : "card-transaction"
+        action == :store ? 'vaulted-shopper' : 'card-transaction'
       end
 
       def headers
@@ -325,7 +320,7 @@ module ActiveMerchant
       def build_xml_request(action)
         builder = Nokogiri::XML::Builder.new
         builder.__send__(root_element(action), root_attributes) do |doc|
-          doc.send("card-transaction-type", TRANSACTIONS[action]) if TRANSACTIONS[action]
+          doc.send('card-transaction-type', TRANSACTIONS[action]) if TRANSACTIONS[action]
           yield(doc)
         end
         builder.doc.root.to_xml
@@ -341,7 +336,11 @@ module ActiveMerchant
       end
 
       def bad_authentication_response
-        { "description" => "Unable to authenticate.  Please check your credentials." }
+        { 'description' => 'Unable to authenticate.  Please check your credentials.' }
+      end
+
+      def forbidden_response(body)
+        { 'description' => body }
       end
     end
   end
