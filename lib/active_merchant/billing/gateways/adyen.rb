@@ -110,24 +110,28 @@ module ActiveMerchant #:nodoc:
 
       AVS_MAPPING = {
         '0'  => 'R',  # Unknown
-        '1'  => 'A',	# Address matches, postal code doesn't
-        '2'  => 'N',	# Neither postal code nor address match
-        '3'  => 'R',	# AVS unavailable
-        '4'  => 'E',	# AVS not supported for this card type
-        '5'  => 'U',	# No AVS data provided
-        '6'  => 'Z',	# Postal code matches, address doesn't match
-        '7'  => 'D',	# Both postal code and address match
-        '8'  => 'U',	# Address not checked, postal code unknown
-        '9'  => 'B',	# Address matches, postal code unknown
-        '10' => 'N',	# Address doesn't match, postal code unknown
-        '11' => 'U',	# Postal code not checked, address unknown
-        '12' => 'B',	# Address matches, postal code not checked
-        '13' => 'U',	# Address doesn't match, postal code not checked
-        '14' => 'P',	# Postal code matches, address unknown
-        '15' => 'P',	# Postal code matches, address not checked
-        '16' => 'N',	# Postal code doesn't match, address unknown
+        '1'  => 'A',  # Address matches, postal code doesn't
+        '2'  => 'N',  # Neither postal code nor address match
+        '3'  => 'R',  # AVS unavailable
+        '4'  => 'E',  # AVS not supported for this card type
+        '5'  => 'U',  # No AVS data provided
+        '6'  => 'Z',  # Postal code matches, address doesn't match
+        '7'  => 'D',  # Both postal code and address match
+        '8'  => 'U',  # Address not checked, postal code unknown
+        '9'  => 'B',  # Address matches, postal code unknown
+        '10' => 'N',  # Address doesn't match, postal code unknown
+        '11' => 'U',  # Postal code not checked, address unknown
+        '12' => 'B',  # Address matches, postal code not checked
+        '13' => 'U',  # Address doesn't match, postal code not checked
+        '14' => 'P',  # Postal code matches, address unknown
+        '15' => 'P',  # Postal code matches, address not checked
+        '16' => 'N',  # Postal code doesn't match, address unknown
         '17' => 'U',  # Postal code doesn't match, address not checked
-        '18' => 'I'	  # Neither postal code nor address were checked
+        '18' => 'I',  # Neither postal code nor address were checked
+        '20' => 'V',  # Name, address and postal code matches.
+        '23' => 'F',  # Postal code matches, name doesn't match.
+        '24' => 'H',  # Both postal code and address matches, name doesn't match.
+        '25' => 'T'  # Address matches, name doesn't match.
       }
 
       CVC_MAPPING = {

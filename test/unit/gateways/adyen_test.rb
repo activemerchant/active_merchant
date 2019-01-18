@@ -295,6 +295,13 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_extended_avs_response
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(extended_avs_response)
+    assert_equal 'Card member\'s name, billing address, and billing postal code match.', response.avs_result['message']
+  end
+
   private
 
   def pre_scrubbed
@@ -565,6 +572,12 @@ class AdyenTest < Test::Unit::TestCase
   def failed_store_response
     <<-RESPONSE
     {"pspReference":"8835205393394754","refusalReason":"Refused","resultCode":"Refused"}
+    RESPONSE
+  end
+
+  def extended_avs_response
+    <<-RESPONSE
+    {\"additionalData\":{\"cvcResult\":\"1 Matches\",\"cvcResultRaw\":\"Y\",\"avsResult\":\"20 Name, address and zip match\",\"avsResultRaw\":\"M\"}}
     RESPONSE
   end
 end
