@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error?(response)
-        response.key?('error_code')
+        response['error_code'] && !response['error_code'].blank?
       end
 
       def response_error(raw_response)

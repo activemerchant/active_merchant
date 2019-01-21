@@ -311,7 +311,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-20T17:08:43-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
   end
@@ -345,7 +346,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:01:10-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
   end
@@ -379,7 +381,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:01:10-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
       RESPONSE
   end
@@ -421,7 +424,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:49:38-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
   end

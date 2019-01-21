@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Openpay: Fix for marking successful transaction(s) as failed [jknipp] #3121
 * Orbital: Support for stored credentials framework [jknipp] #3117
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
 * Worldpay: Add AVS and CVC Mapping [nfarve] #3107
