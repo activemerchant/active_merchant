@@ -15,6 +15,7 @@
 * Braintree: Adds support for transaction_source [molbrown] #3120
 * Moneris: Remove redundant card on file guard clause [davidsantoso] #3123
 * Switch order of Romania country codes [molbrown] #3125
+* Blue Snap: Supports Level 2/3 data [molbrown] #3126
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087

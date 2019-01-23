@@ -150,6 +150,15 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '<xml>You are not authorized to perform this request due to inappropriate role permissions.</xml>', response.message
   end
 
+  def test_does_not_send_level_3_when_empty
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |type, endpoint, data, headers|
+      assert_not_match(/level-3-data/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
