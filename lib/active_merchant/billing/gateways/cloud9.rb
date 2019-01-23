@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc: ALL
         post = {}
         add_configure_group(post, options)
         add_request_amount_group(post, options, amount)
-        add_action_group(post, options)
+        add_action_group(post, options, payment)
         add_request_extend_info_group(post, options)
         add_trace_group(post, options)
         add_request_card_info_group(post, payment, options)
@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc: ALL
         post = {}
         add_configure_group(post, options)
         add_request_amount_group(post, options, amount)
-        add_action_group(post, options)
+        add_action_group(post, options, payment)
         add_request_extend_info_group(post, options)
         add_trace_group(post, options)
         add_request_card_info_group(post, payment, options)
@@ -215,6 +215,7 @@ module ActiveMerchant #:nodoc: ALL
         post = {}
         add_configure_group(post, options)
         add_request_amount_group(post, options, amount)
+        add_action_group(post, options, payment)
         add_trace_group(post, options, authorization)
         add_request_card_info_group(post, payment, options)
         commit(REFUND, 'restApi', post)
@@ -241,19 +242,8 @@ module ActiveMerchant #:nodoc: ALL
       def store(card, options = {})
         post = {}
         add_configure_group(post, options)
+        add_action_group(post, options, card)
         add_request_card_info_group(post, card, options)
-
-        # generally this is called by openslot after a token has already been
-        # created on the client-side. this new create token request is just
-        # a way to get metadata about the card, thus does not require AVS
-        # verification. furthermore, we don't even have the billing address
-        # info here at this point, only the previously created token, thus AVS
-        # verification fails 100% of the time. thus we must disable it, only
-        # when we are doing a pure store. when we are instead doing a charge,
-        # we must not disable AVS verification. hence why this parameter is not
-        # part of the `#add_request_card_info_group` method
-        post[:VerifyCard] = 'N'
-
         commit(CREATE_TOKEN, 'restApi', post)
       end
 
@@ -300,8 +290,9 @@ module ActiveMerchant #:nodoc: ALL
       #
       # ==== Options
       # * <tt>:offline</tt> -- offline transaction, Y/N, required, defaults to +N+
-      def add_action_group(post, options)
+      def add_action_group(post, options, payment = nil)
         post[:IsOffline] = %w[Y N].include?(options[:offline]) ? options[:offline] : 'N'
+        post[:VerifyCard] = 'N' if card_token?(payment) # don't need verification for tokens
       end
 
       # Add the Request Extend Group of options
@@ -367,7 +358,7 @@ module ActiveMerchant #:nodoc: ALL
             post[:EntryMode] = ENTRY_MANUAL
           end
           post[:Medium] = FUNDING_TYPES.include?(options[:funding]) ? options[:funding] : FUNDING_CREDIT
-        elsif credit_card.is_a?(String)
+        elsif card_token?(credit_card)
           post[:CardToken] = credit_card
           post[:Medium] = FUNDING_CREDIT
           post[:EntryMode] = ENTRY_MANUAL
@@ -504,6 +495,10 @@ module ActiveMerchant #:nodoc: ALL
         url = test? ? self.test_url : self.live_url
         endpoint = '/' + endpoint if endpoint&.size&.positive?
         url + endpoint
+      end
+
+      def card_token?(payment)
+        payment.is_a?(String)
       end
     end
   end
