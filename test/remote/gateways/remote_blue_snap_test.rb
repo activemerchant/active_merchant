@@ -44,58 +44,6 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'CAD', response.params['currency']
   end
 
-  def test_successful_purchase_with_level3_data
-    l_three_visa = credit_card('4111111111111111', month: 2, year: 2023)
-    options = @options.merge({
-      customer_reference_number: '1234A',
-      sales_tax_amount: 0.6,
-      freight_amount: 0,
-      duty_amount: 0,
-      destination_zip_code: 12345,
-      destination_country_code: 'us',
-      ship_from_zip_code: 12345,
-      discount_amount: 0,
-      tax_amount: 0.6,
-      tax_rate: 6.0,
-      level_3_data_items: [
-        {
-          line_item_total: 9.00,
-          description: 'test_desc',
-          product_code: 'test_code',
-          item_quantity: 1.0,
-          tax_rate: 6.0,
-          tax_amount: 0.60,
-          unit_of_measure: 'lb',
-          commodity_code: 123,
-          discount_indicator: 'Y',
-          gross_net_indicator: 'Y',
-          tax_type: 'test',
-          unit_cost: 10.00
-        },
-        {
-          line_item_total: 9.00,
-          description: 'test_2',
-          product_code: 'test_2',
-          item_quantity: 1.0,
-          tax_rate: 7.0,
-          tax_amount: 0.70,
-          unit_of_measure: 'lb',
-          commodity_code: 123,
-          discount_indicator: 'Y',
-          gross_net_indicator: 'Y',
-          tax_type: 'test',
-          unit_cost: 14.00
-        }
-      ]
-    })
-    response = @gateway.purchase(@amount, l_three_visa, options)
-
-    assert_success response
-    assert_equal 'Success', response.message
-    assert_equal '1234A', response.params['customer-reference-number']
-    assert_equal '9', response.params['line-item-total']
-  end
-
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

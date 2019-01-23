@@ -13,7 +13,6 @@
 * Orbital: Support for stored credentials framework [jknipp] #3117
 * Openpay: Fix for marking successful transaction(s) as failed [jknipp] #3121
 * Braintree: Adds support for transaction_source [molbrown] #3120
-* Blue Snap: Supports Level 2/3 data [molbrown] #3122
 * Moneris: Remove redundant card on file guard clause [davidsantoso] #3123
 
 == Version 1.90.0 (January 8, 2019)

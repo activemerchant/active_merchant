@@ -191,7 +191,6 @@ module ActiveMerchant
         doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
         doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
         add_description(doc, options[:description]) if options[:description]
-        add_level_3_data(doc, options)
       end
 
       def add_address(doc, options)
@@ -203,40 +202,6 @@ module ActiveMerchant
         doc.address(address[:address]) if address[:address]
         doc.city(address[:city]) if address[:city]
         doc.zip(address[:zip]) if address[:zip]
-      end
-
-      def add_level_3_data(doc, options)
-        doc.send('level-3-data') do
-          send_when_present(doc, :customer_reference_number, options)
-          send_when_present(doc, :sales_tax_amount, options)
-          send_when_present(doc, :freight_amount, options)
-          send_when_present(doc, :duty_amount, options)
-          send_when_present(doc, :destination_zip_code, options)
-          send_when_present(doc, :destination_country_code, options)
-          send_when_present(doc, :ship_from_zip_code, options)
-          send_when_present(doc, :discount_amount, options)
-          send_when_present(doc, :tax_amount, options)
-          send_when_present(doc, :tax_rate, options)
-          add_level_3_data_items(doc, options[:level_3_data_items]) if options[:level_3_data_items]
-        end
-      end
-
-      def send_when_present(doc, options_key, options, xml_element_name = nil)
-        return unless options[options_key]
-        xml_element_name ||= options_key.to_s
-
-        doc.send(xml_element_name.dasherize, options[options_key])
-      end
-
-      def add_level_3_data_items(doc, items)
-        items.each do |item|
-          doc.send('level-3-data-item') do
-            item.each do |key, value|
-              key = key.to_s.dasherize
-              doc.send(key, value)
-            end
-          end
-        end
       end
 
       def add_authorization(doc, authorization)
