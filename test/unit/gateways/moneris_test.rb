@@ -34,7 +34,6 @@ class MonerisTest < Test::Unit::TestCase
     gateway = MonerisGateway.new(
       :login => 'store3',
       :password => 'yesguy',
-      :cof_enabled => true
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_purchase_response)
     assert response = gateway.purchase(
@@ -56,7 +55,6 @@ class MonerisTest < Test::Unit::TestCase
     gateway = MonerisGateway.new(
       :login => 'store3',
       :password => 'yesguy',
-      :cof_enabled => true
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_authorize_response)
     assert response = gateway.authorize(
