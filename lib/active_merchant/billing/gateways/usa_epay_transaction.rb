@@ -197,8 +197,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:invoice]      = options[:invoice]
-        post[:orderid]      = options[:order_id]
+        post[:invoice]      = options[:order_id]
         post[:description]  = options[:description]
       end
 

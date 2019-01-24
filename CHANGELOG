@@ -6,7 +6,6 @@
 * Paymentez: Fixes extra_params field [molbrown] #3108
 * Improved support for account_type using Check class's account_type instead [lancecarlson] #3097
 * USA Epay: Allow quantity to be passed and check custom fields [lancecarlson] #3090
-* Fix usaepay transaction invoice [lancecarlson] #3093
 * Adyen: Handles blank state address field [molbrown] #3113
 * Braintree: Send all country fields [curiousepic] #3112
 * Braintree: Account for empty string countries [curiousepic] #3115
