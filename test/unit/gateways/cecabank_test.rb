@@ -53,6 +53,7 @@ class CecabankTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_match(/Formato CVV2\/CVC2 no valido/, response.message)
     assert response.test?
   end
 
