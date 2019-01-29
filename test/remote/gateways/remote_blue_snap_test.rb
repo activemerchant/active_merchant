@@ -7,6 +7,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4263982640269299')
     @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
+    @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
     @options = { billing_address: address }
   end
 
@@ -28,7 +29,8 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
       ip: '127.0.0.1',
       email: 'joe@example.com',
       description: 'Product Description',
-      soft_descriptor: 'OnCardStatement'
+      soft_descriptor: 'OnCardStatement',
+      personal_identification_number: 'CNPJ'
     })
 
     response = @gateway.purchase(@amount, @credit_card, more_options)
@@ -193,7 +195,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match(/Authorization has failed for this transaction/, response.message)
+    assert_match(/Transaction failed  because of payment processing failure/, response.message)
   end
 
   def test_successful_store
@@ -208,11 +210,11 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    assert response = @gateway.store(@declined_card, @options)
+    assert response = @gateway.store(@invalid_card, @options)
 
     assert_failure response
-    assert_match(/Transaction failed  because of payment processing failure/, response.message)
-    assert_equal '14002', response.error_code
+    assert_match(/'Card Number' should be a valid Credit Card/, response.message)
+    assert_equal '10001', response.error_code
   end
 
   def test_successful_purchase_using_stored_card

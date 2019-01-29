@@ -5,7 +5,7 @@ module ActiveMerchant
     class BlueSnapGateway < Gateway
       self.test_url = 'https://sandbox.bluesnap.com/services/2'
       self.live_url = 'https://ws.bluesnap.com/services/2'
-      self.supported_countries = %w(US CA GB AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE)
+      self.supported_countries = %w(US CA GB AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE AR BO BR BZ CL CO CR DO EC GF GP GT HN HT MF MQ MX NI PA PE PR PY SV UY VE)
 
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
@@ -164,6 +164,7 @@ module ActiveMerchant
       def add_personal_info(doc, credit_card, options)
         doc.send('first-name', credit_card.first_name)
         doc.send('last-name', credit_card.last_name)
+        doc.send('personal-identification-number', options[:personal_identification_number]) if options[:personal_identification_number]
         doc.email(options[:email]) if options[:email]
         add_address(doc, options)
       end

@@ -7,7 +7,7 @@ class BlueSnapTest < Test::Unit::TestCase
     @gateway = BlueSnapGateway.new(api_username: 'login', api_password: 'password')
     @credit_card = credit_card
     @amount = 100
-    @options = { order_id: '1' }
+    @options = { order_id: '1', personal_identification_number: 'CNPJ' }
   end
 
   def test_successful_purchase
@@ -31,6 +31,7 @@ class BlueSnapTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |type, endpoint, data, headers|
       assert_match '<storeCard>false</storeCard>', data
+      assert_match '<personal-identification-number>CNPJ</personal-identification-number>', data
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal '1012082893', response.authorization
@@ -211,6 +212,7 @@ class BlueSnapTest < Test::Unit::TestCase
           <state>ON</state>
           <city>Ottawa</city>
           <zip>K1C2N6</zip>
+          <personal-identification-number>CNPJ</personal-identification-number>
       </card-holder-info>
       <credit-card>
           <card-last-four-digits>9299</card-last-four-digits>
@@ -260,6 +262,7 @@ class BlueSnapTest < Test::Unit::TestCase
           <state>ON</state>
           <city>Ottawa</city>
           <zip>K1C2N6</zip>
+          <personal-identification-number>CNPJ</personal-identification-number>
       </card-holder-info>
       <credit-card>
           <card-last-four-digits>9299</card-last-four-digits>
@@ -308,6 +311,7 @@ class BlueSnapTest < Test::Unit::TestCase
           <state>ON</state>
           <city>Ottawa</city>
           <zip>K1C2N6</zip>
+          <personal-identification-number>CNPJ</personal-identification-number>
       </card-holder-info>
       <credit-card>
           <card-last-four-digits>9299</card-last-four-digits>
@@ -356,6 +360,7 @@ class BlueSnapTest < Test::Unit::TestCase
             <state>ON</state>
             <city>Ottawa</city>
             <zip>K1C2N6</zip>
+            <personal-identification-number>CNPJ</personal-identification-number>
          </card-holder-info>
          <credit-card>
             <card-last-four-digits>9299</card-last-four-digits>
@@ -404,6 +409,7 @@ class BlueSnapTest < Test::Unit::TestCase
             <state>ON</state>
             <city>Ottawa</city>
             <zip>K1C2N6</zip>
+            <personal-identification-number>CNPJ</personal-identification-number>
          </card-holder-info>
          <credit-card>
             <card-last-four-digits>9299</card-last-four-digits>
@@ -452,6 +458,7 @@ class BlueSnapTest < Test::Unit::TestCase
           <state>ON</state>
           <city>Ottawa</city>
           <zip>K1C2N6</zip>
+          <personal-identification-number>CNPJ</personal-identification-number>
         </card-holder-info>
         <credit-card>
           <card-last-four-digits>9299</card-last-four-digits>
@@ -493,6 +500,7 @@ class BlueSnapTest < Test::Unit::TestCase
         <state>ON</state>
         <city>Ottawa</city>
         <zip>K1C2N6</zip>
+        <personal-identification-number>CNPJ</personal-identification-number>
         <shopper-currency>USD</shopper-currency>
         <payment-sources>
           <credit-card-info>
