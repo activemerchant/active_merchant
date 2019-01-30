@@ -304,12 +304,14 @@ module ActiveMerchant #:nodoc: ALL
       # * <tt>:voucher_serial_number</tt> -- only used for offline EBT transaction, optional
       # * <tt>:additional_info</tt> -- reserved for future use. data is delimited by a FS (0x1c) and is formatted as
       #                                follows: Key=Value0x1cKey=Value0x1cKey=Value, optional
+      # * <tt>:print_receipt</tt> -- used to ask for a printed receipt if the terminal supports it, defaults to 'N'
       def add_request_extend_info_group(post, options)
         optional_assign(post, :InvoiceNum, options[:invoice_num])
         optional_assign(post, :OrderNum, options[:order_num])
         optional_assign(post, :AuthCode, options[:authorization_code])
         optional_assign(post, :VoucherNum, options[:voucher_serial_number])
         optional_assign(post, :AdditionalInfo, options[:additional_info])
+        optional_assign(post, :NeedReceipt, options[:need_receipt])
       end
 
       # Add the Trace Group of options - used for ALL transactions
