@@ -101,7 +101,6 @@ module ActiveMerchant #:nodoc:
         add_payment(post, options)
         add_additional_data(post, options)
         add_customer_data(post, payment, options)
-        add_address(post, options)
         post[:binary_mode] = (options[:binary_mode].nil? ? true : options[:binary_mode])
         post
       end
@@ -115,13 +114,12 @@ module ActiveMerchant #:nodoc:
       def add_additional_data(post, options)
         post[:sponsor_id] = options[:sponsor_id]
         post[:device_id] = options[:device_id] if options[:device_id]
-        post[:additional_info] = {
-          ip_address: options[:ip_address]
-        }.merge(options[:additional_info] || {})
+        post[:additional_info] = { ip_address: options[:ip_address] }
 
-
-        add_address(post, options)
+        add_payer_address(post, options)
         add_shipping_address(post, options)
+
+        post[:additional_info].merge!(options[:additional_info] || {})
       end
 
       def add_customer_data(post, payment, options)
@@ -132,7 +130,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def add_address(post, options)
+      def add_payer_address(post, options)
         if address = (options[:billing_address] || options[:address])
 
           post[:additional_info].merge!({
