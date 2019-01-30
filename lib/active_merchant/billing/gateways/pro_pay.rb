@@ -234,7 +234,7 @@ module ActiveMerchant #:nodoc:
           xml.aptNum address[:address2]
           xml.city address[:city]
           xml.state address[:state]
-          xml.zip address[:zip]
+          xml.zip address[:zip].to_s.delete('-')
         end
       end
 

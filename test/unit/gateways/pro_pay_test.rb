@@ -1,5 +1,4 @@
 require 'test_helper'
-
 class ProPayTest < Test::Unit::TestCase
   include CommStub
 
@@ -151,6 +150,16 @@ class ProPayTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_does_not_send_dashed_zip_code
+    options = @options.merge(billing_address: address.update(zip: '12345-3456'))
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<zip>123453456</, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private
