@@ -144,7 +144,8 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method, options)
         if(payment_method.is_a?(String))
-          post[:customer_vault_id] = payment_method
+          customer_vault_id, _ = split_authorization(payment_method)
+          post[:customer_vault_id] = customer_vault_id
         elsif payment_method.is_a?(NetworkTokenizationCreditCard)
           post[:ccnumber] = payment_method.number
           post[:ccexp] = exp_date(payment_method)
@@ -236,15 +237,16 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: authorization_from(response, params[:payment]),
+          authorization: authorization_from(response, params[:payment], action),
           avs_result: AVSResult.new(code: response[:avsresponse]),
           cvv_result: CVVResult.new(response[:cvvresponse]),
           test: test?
         )
       end
 
-      def authorization_from(response, payment_type)
-        [ response[:transactionid], payment_type ].join('#')
+      def authorization_from(response, payment_type, action)
+        authorization = (action == 'add_customer' ? response[:customer_vault_id] : response[:transactionid])
+        [ authorization, payment_type ].join('#')
       end
 
       def split_authorization(authorization)
