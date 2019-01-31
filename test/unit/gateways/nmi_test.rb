@@ -272,6 +272,7 @@ class NmiTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Succeeded', response.message
     assert response.params['customer_vault_id']
+    assert response.authorization.include?(response.params['customer_vault_id'])
   end
 
   def test_failed_store
@@ -303,7 +304,7 @@ class NmiTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_equal 'Succeeded', response.message
-    assert response.params['customer_vault_id']
+    assert response.authorization.include?(response.params['customer_vault_id'])
   end
 
   def test_avs_result
