@@ -37,6 +37,7 @@ class TrustCommerceTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @check)
     end.check_request do |endpoint, data, headers|
       assert_match(%r{aggregator1}, data)
+      assert_match(%r{name=Jim\+Smith}, data)
     end.respond_with(successful_purchase_response)
   end
 

@@ -21,7 +21,11 @@
 * Cecabank: Append error text to message [therufs] #3127
 * Adyen: Extend AVS code mappings [therufs] #3119
 * NMI: Add customer id to authorization on store [curiousepic] #3130
+<<<<<<< HEAD
 * Trans First Express: Don't pass blank name field [curiousepic] #3133
+=======
+* TrustCommerce: Send full name on ACH transactions [jknipp] #3132
+>>>>>>> TrustCommerce: Send full name on ACH transactions
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087
