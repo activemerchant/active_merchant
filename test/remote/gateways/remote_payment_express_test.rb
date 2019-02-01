@@ -31,6 +31,13 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_not_nil response.authorization
   end
 
+  def test_successful_purchase_with_client_info
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:client_info => '192.168.0.1'))
+    assert_success response
+    assert_equal 'The Transaction was approved', response.message
+    assert_not_nil response.authorization
+  end
+
   def test_declined_purchase
     assert response = @gateway.purchase(@amount, credit_card('5431111111111228'), @options)
     assert_match %r{declined}i, response.message

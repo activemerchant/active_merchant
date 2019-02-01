@@ -242,6 +242,14 @@ class PaymentExpressTest < Test::Unit::TestCase
     end
   end
 
+  def test_pass_client_info
+    options = {:client_info => '192.168.0.1'}
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<ClientInfo>192.168.0.1<\/ClientInfo>/, body)
+    end
+  end
+
   def test_purchase_truncates_order_id_to_16_chars
     stub_comms do
       @gateway.purchase(@amount, @visa, {:order_id => '16chars---------EXTRA'})

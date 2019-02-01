@@ -241,7 +241,8 @@ module ActiveMerchant #:nodoc:
       #       :client_type => :web, # Possible values are: :web, :ivr, :moto, :unattended, :internet, or :recurring
       #       :txn_data1 => "String up to 255 characters",
       #       :txn_data2 => "String up to 255 characters",
-      #       :txn_data3 => "String up to 255 characters"
+      #       :txn_data3 => "String up to 255 characters",
+      #       :client_info => "String up to 15 characters. The IP address of the user who processed the transaction."
       #     }
       #
       # +:client_type+, while not documented for PxPost, will be sent as
@@ -277,6 +278,8 @@ module ActiveMerchant #:nodoc:
         xml.add_element('TxnData1').text = options[:txn_data1].to_s.slice(0, 255) unless options[:txn_data1].blank?
         xml.add_element('TxnData2').text = options[:txn_data2].to_s.slice(0, 255) unless options[:txn_data2].blank?
         xml.add_element('TxnData3').text = options[:txn_data3].to_s.slice(0, 255) unless options[:txn_data3].blank?
+
+        xml.add_element('ClientInfo').text = options[:client_info] if options[:client_info]
       end
 
       def new_transaction
