@@ -23,6 +23,7 @@
 * NMI: Add customer id to authorization on store [curiousepic] #3130
 * Trans First Express: Don't pass blank name field [curiousepic] #3133
 * TrustCommerce: Send full name on ACH transactions [jknipp] #3132
+* Qvalent: Map CVV Result to responses [curiousepic] #3135
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087

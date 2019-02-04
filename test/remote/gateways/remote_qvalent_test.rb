@@ -25,7 +25,7 @@ class RemoteQvalentTest < Test::Unit::TestCase
       pem_password: 'bad'
     )
 
-    assert_raise ActiveMerchant::ClientCertificateError do
+    assert_raise OpenSSL::X509::CertificateError do
       gateway.purchase(@amount, @credit_card, @options)
     end
   end
