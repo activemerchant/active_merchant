@@ -268,12 +268,34 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
               xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
             end
-            add_stored_credential_options(xml, options) if options[:stored_credential_usage]
+            add_stored_credential_options(xml, options)
           end
         end
       end
 
       def add_stored_credential_options(xml, options={})
+        if options[:stored_credential]
+          add_stored_credential_using_normalized_fields(xml, options)
+        else
+          add_stored_credential_using_gateway_specific_fields(xml, options)
+        end
+      end
+
+      def add_stored_credential_using_normalized_fields(xml, options)
+        if options[:stored_credential][:initial_transaction]
+          xml.tag! 'storedCredentials', 'usage' => 'FIRST'
+        else
+          reason = options[:stored_credential][:recurring] ? 'RECURRING' : 'UNSCHEDULED'
+
+          xml.tag! 'storedCredentials', 'usage' => 'USED', 'merchantInitiatedReason' => reason do
+            xml.tag! 'schemeTransactionIdentifier', options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+          end
+        end
+      end
+
+      def add_stored_credential_using_gateway_specific_fields(xml, options)
+        return unless options[:stored_credential_usage]
+
         if options[:stored_credential_initiated_reason]
           xml.tag! 'storedCredentials', 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
             xml.tag! 'schemeTransactionIdentifier', options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]

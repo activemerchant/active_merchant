@@ -124,6 +124,40 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     refute first_message.params['session_id'].blank?
   end
 
+  def test_successful_auth_and_capture_with_normalized_stored_credential
+    stored_credential_params = {
+      initial_transaction: true,
+      recurring: false,
+      initiator: 'merchant',
+      network_transaction_id: nil
+    }
+
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge({stored_credential: stored_credential_params}))
+    assert_success auth
+    assert auth.authorization
+    assert auth.params['scheme_response']
+    assert auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, auth.authorization, authorization_validated: true)
+    assert_success capture
+
+    @options[:order_id] = generate_unique_id
+    @options[:stored_credential] = {
+      initial_transaction: false,
+      recurring: false,
+      initiator: 'merchant',
+      network_transaction_id: auth.params['transaction_identifier']
+    }
+
+    assert next_auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert next_auth.authorization
+    assert next_auth.params['scheme_response']
+    assert next_auth.params['transaction_identifier']
+
+    assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
+    assert_success capture
+  end
+
   def test_successful_auth_and_capture_with_stored_cred_options
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential_usage: 'FIRST'))
     assert_success auth
