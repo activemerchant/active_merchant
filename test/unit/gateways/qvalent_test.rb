@@ -24,6 +24,7 @@ class QvalentTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '5d53a33d960c46d00f5dc061947d998c', response.authorization
+    assert_equal 'M', response.cvv_result['code']
     assert response.test?
   end
 
@@ -186,6 +187,15 @@ class QvalentTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_cvv_result
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(mapped_cvv_response)
+
+    assert_success response
+    assert_equal 'D', response.cvv_result['code']
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
@@ -194,7 +204,8 @@ class QvalentTest < Test::Unit::TestCase
 
   def successful_purchase_response
     %(
-      response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=723907124\r\nresponse.orderNumber=5d53a33d960c46d00f5dc061947d998c\r\nresponse.RRN=723907124   \r\nresponse.settlementDate=20150228\r\nresponse.transactionDate=28-FEB-2015 09:34:15\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.end\r\n
+      response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=723907124\r\nresponse.orderNumber=5d53a33d960c46d00f5dc061947d998c\r\nresponse.RRN=723907124   \r\nresponse.settlementDate=20150228\r\nresponse.transactionDate=28-FEB-2015 09:34:15\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.cvnResponse=M
+\r\nresponse.end\r\n
     )
   end
 
@@ -278,6 +289,13 @@ class QvalentTest < Test::Unit::TestCase
 
   def empty_purchase_response
     %(
+    )
+  end
+
+  def mapped_cvv_response
+    %(
+      response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=723907124\r\nresponse.orderNumber=5d53a33d960c46d00f5dc061947d998c\r\nresponse.RRN=723907124   \r\nresponse.settlementDate=20150228\r\nresponse.transactionDate=28-FEB-2015 09:34:15\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.cvnResponse=S
+\r\nresponse.end\r\n
     )
   end
 
