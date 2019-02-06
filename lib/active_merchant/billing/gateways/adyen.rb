@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
-        if options[:execute_threed]
+        if options[:execute_threed] || options[:threed_dynamic]
           authorize(money, payment, options)
         else
           MultiResponse.run do |r|
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
         add_shopper_interaction(post, payment, options)
         add_address(post, options)
         add_installments(post, options) if options[:installments]
-        add_3ds(post, options) if options[:execute_threed]
+        add_3ds(post, options)
         commit('authorise', post)
       end
 
@@ -276,8 +276,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-        post[:additionalData] = { executeThreeD: 'true' }
+        return unless options[:execute_threed] || options[:threed_dynamic]
         post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+        post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
       end
 
       def parse(body)

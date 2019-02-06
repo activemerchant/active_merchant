@@ -72,6 +72,32 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_successful_authorize_with_3ds_dynamic
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(threed_dynamic: true))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'RedirectShopper'
+    refute response.params['issuerUrl'].blank?
+    refute response.params['md'].blank?
+    refute response.params['paRequest'].blank?
+  end
+
+  # with rule set in merchant account to skip 3DS for cards of this brand
+  def test_successful_authorize_with_3ds_dynamic_rule_broken
+    mastercard_threed = credit_card('5212345678901234',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'mastercard'
+    )
+    assert response = @gateway.authorize(@amount, mastercard_threed, @options.merge(threed_dynamic: true))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'Authorised'
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
