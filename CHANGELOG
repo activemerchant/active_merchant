@@ -26,6 +26,7 @@
 * Qvalent: Map CVV Result to responses [curiousepic] #3135
 * Card Connect: Handle 401s as responses [curiousepic] #3137
 * Worldpay: Introduce normalized stored credential options [davidsantoso] #3134
+* Worldpay: Adjust use of normalized stored credentials hash [davidsantoso] #3139
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087

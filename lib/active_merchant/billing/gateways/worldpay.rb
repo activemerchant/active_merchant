@@ -285,7 +285,11 @@ module ActiveMerchant #:nodoc:
         if options[:stored_credential][:initial_transaction]
           xml.tag! 'storedCredentials', 'usage' => 'FIRST'
         else
-          reason = options[:stored_credential][:recurring] ? 'RECURRING' : 'UNSCHEDULED'
+          reason = case options[:stored_credential][:reason_type]
+                   when 'installment' then 'INSTALMENT'
+                   when 'recurring' then 'RECURRING'
+                   when 'unscheduled' then 'UNSCHEDULED'
+                   end
 
           xml.tag! 'storedCredentials', 'usage' => 'USED', 'merchantInitiatedReason' => reason do
             xml.tag! 'schemeTransactionIdentifier', options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]

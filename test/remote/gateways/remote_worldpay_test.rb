@@ -127,7 +127,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   def test_successful_auth_and_capture_with_normalized_stored_credential
     stored_credential_params = {
       initial_transaction: true,
-      recurring: false,
+      reason_type: 'unscheduled',
       initiator: 'merchant',
       network_transaction_id: nil
     }
@@ -144,7 +144,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @options[:order_id] = generate_unique_id
     @options[:stored_credential] = {
       initial_transaction: false,
-      recurring: false,
+      reason_type: 'installment',
       initiator: 'merchant',
       network_transaction_id: auth.params['transaction_identifier']
     }
