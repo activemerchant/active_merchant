@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order_id(post)
-        post[:merchantRefNum] = (SecureRandom.uuid)
+        post[:merchantRefNum] = SecureRandom.uuid
       end
 
       def map_address(address)
