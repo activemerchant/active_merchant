@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         post = {}
-        add_order_id(post)
+        add_order_id(post, options)
 
         commit(:post, "auths/#{authorization}/voidauths", post)
       end
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
       def verify(credit_card, options={})
         post = {}
         add_payment(post, credit_card)
-        add_order_id(post)
+        add_order_id(post, options)
 
         commit(:post, 'verifications', post)
       end
@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
-        add_order_id(post)
+        add_order_id(post, options)
       end
 
       def add_payment(post, credit_card_or_reference, options = {})
@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
         { :month => month, :year => year }
       end
 
-      def add_order_id(post)
+      def add_order_id(post, options)
         post[:merchantRefNum] = SecureRandom.uuid
       end
 
