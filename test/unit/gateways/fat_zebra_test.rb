@@ -25,7 +25,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '001-P-12345AA', response.authorization
+    assert_equal '001-P-12345AA|purchases', response.authorization
     assert response.test?
   end
 
@@ -37,7 +37,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, 'e1q7dbj2', @options)
     assert_success response
 
-    assert_equal '001-P-12345AA', response.authorization
+    assert_equal '001-P-12345AA|purchases', response.authorization
     assert response.test?
   end
 
@@ -49,7 +49,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, 'e1q7dbj2', @options)
     assert_success response
 
-    assert_equal '001-P-12345AA', response.authorization
+    assert_equal '001-P-12345AA|purchases', response.authorization
     assert response.test?
   end
 
@@ -61,7 +61,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, 'e1q7dbj2', @options.merge(:currency => 'USD'))
     assert_success response
 
-    assert_equal '001-P-12345AA', response.authorization
+    assert_equal '001-P-12345AA|purchases', response.authorization
     assert response.test?
   end
 
@@ -82,7 +82,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, 'e1q7dbj2', @options.merge(:merchant => 'Merchant', :merchant_location => 'Location'))
     assert_success response
 
-    assert_equal '001-P-12345AA', response.authorization
+    assert_equal '001-P-12345AA|purchases', response.authorization
     assert response.test?
   end
 
@@ -94,7 +94,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, 'e1q7dbj2', @options)
     assert_success response
 
-    assert_equal '001-P-12345AA', response.authorization
+    assert_equal '001-P-12345AA|purchases', response.authorization
     assert response.test?
   end
 
@@ -105,7 +105,7 @@ class FatZebraTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, 'e1q7dbj2', @options)
     assert_success response
-    assert_equal '001-P-12345AA', response.authorization
+    assert_equal '001-P-12345AA|purchases', response.authorization
     assert response.test?
   end
 
@@ -147,7 +147,7 @@ class FatZebraTest < Test::Unit::TestCase
 
     assert response = @gateway.store(@credit_card)
     assert_success response
-    assert_equal 'e1q7dbj2', response.authorization
+    assert_equal 'e1q7dbj2|credit_cards', response.authorization
   end
 
   def test_unsuccessful_tokenization
@@ -162,7 +162,7 @@ class FatZebraTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(100, 'TEST')
     assert_success response
-    assert_equal '003-R-7MNIUMY6', response.authorization
+    assert_equal '003-R-7MNIUMY6|refunds', response.authorization
     assert response.test?
   end
 

@@ -46,14 +46,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
+        txn_id, _ = authorization.to_s.split('|')
         post = {}
+
         add_amount(post, money, options)
         add_extra_options(post, options)
 
-        commit(:post, "purchases/#{CGI.escape(authorization)}/capture", post)
+        commit(:post, "purchases/#{CGI.escape(txn_id)}/capture", post)
       end
 
-      def refund(money, txn_id, options={})
+      def refund(money, authorization, options={})
+        txn_id, _ = authorization.to_s.split('|')
         post = {}
 
         add_extra_options(post, options)
@@ -64,8 +67,15 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'refunds', post)
       end
 
+      def void(authorization, options={})
+        txn_id, endpoint = authorization.to_s.split('|')
+
+        commit(:post, "#{endpoint}/void?id=#{txn_id}", {})
+      end
+
       def store(creditcard, options={})
         post = {}
+
         add_creditcard(post, creditcard)
 
         commit(:post, 'credit_cards', post)
@@ -97,7 +107,8 @@ module ActiveMerchant #:nodoc:
           post[:cvv] = creditcard.verification_value if creditcard.verification_value?
           post[:card_holder] = creditcard.name if creditcard.name
         elsif creditcard.is_a?(String)
-          post[:card_token] = creditcard
+          id, _ = creditcard.to_s.split('|')
+          post[:card_token] = id
           post[:cvv] = options[:cvv]
         elsif creditcard.is_a?(Hash)
           ActiveMerchant.deprecated 'Passing the credit card as a Hash is deprecated. Use a String and put the (optional) CVV in the options hash instead.'
@@ -141,7 +152,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           :test => response['test'],
-          :authorization => authorization_from(response, success)
+          :authorization => authorization_from(response, success, uri)
         )
       end
 
@@ -149,13 +160,15 @@ module ActiveMerchant #:nodoc:
         (
           response['successful'] &&
           response['response'] &&
-          (response['response']['successful'] || response['response']['token'])
+          (response['response']['successful'] || response['response']['token'] || response['response']['response_code'] == '00')
         )
       end
 
-      def authorization_from(response, success)
+      def authorization_from(response, success, uri)
+        endpoint = uri.split('/')[0]
         if success
-          (response['response']['id'] || response['response']['token'])
+          id = response['response']['id'] || response['response']['token']
+          "#{id}|#{endpoint}"
         else
           nil
         end
