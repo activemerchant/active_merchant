@@ -29,6 +29,7 @@
 * Worldpay: Adjust use of normalized stored credentials hash [davidsantoso] #3139
 * Adyen: Enable Dynamic 3DS [molbrown] #3138
 * Fat Zebra: Support voids [curiousepic] #3142
+* Blue Snap: Support ACH/ECP payments [jknipp] #3143
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087

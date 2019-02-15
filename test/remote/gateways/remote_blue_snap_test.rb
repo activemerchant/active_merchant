@@ -9,6 +9,19 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
     @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
     @options = { billing_address: address }
+
+    @check = check
+    @invalid_check = check(:routing_number => '123456', :account_number => '123456789')
+    @valid_check_options = {
+      billing_address: {
+        address1: '123 Street',
+        address2: 'Apt 1',
+        city: 'Happy City',
+        state: 'CA',
+        zip: '94901'
+      },
+      authorized_by_shopper: true
+    }
   end
 
   def test_successful_purchase
@@ -98,6 +111,12 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal '9', response.params['line-item-total']
   end
 
+  def test_successful_echeck_purchase
+    response = @gateway.purchase(@amount, @check, @options.merge(@valid_check_options))
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -117,6 +136,20 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Address not verified.', response.avs_result['message']
     assert_equal 'I', response.avs_result['code']
+  end
+
+  def test_failed_echeck_purchase
+    response = @gateway.purchase(@amount, @invalid_check, @options.merge(@valid_check_options))
+    assert_failure response
+    assert_match(/ECP data validity check failed/, response.message)
+    assert_equal '10001', response.error_code
+  end
+
+  def test_failed_unauthorized_echeck_purchase
+    response = @gateway.purchase(@amount, @check, @options.merge({authorized_by_shopper: false}))
+    assert_failure response
+    assert_match(/The payment was not authorized by shopper/, response.message)
+    assert_equal '16004', response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -209,6 +242,15 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_match(/services\/2\/vaulted-shoppers/, response.params['content-location-header'])
   end
 
+  def test_successful_echeck_store
+    assert response = @gateway.store(@check, @options.merge(@valid_check_options))
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert response.authorization
+    assert_match(/services\/2\/vaulted-shoppers/, response.params['content-location-header'])
+  end
+
   def test_failed_store
     assert response = @gateway.store(@invalid_card, @options)
 
@@ -217,11 +259,29 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal '10001', response.error_code
   end
 
+  def test_failed_echeck_store
+    assert response = @gateway.store(@invalid_check, @options)
+
+    assert_failure response
+    assert_match(/ECP data validity check failed/, response.message)
+    assert_equal '10001', response.error_code
+  end
+
   def test_successful_purchase_using_stored_card
     assert store_response = @gateway.store(@credit_card, @options)
     assert_success store_response
 
     response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_using_stored_echeck
+    assert store_response = @gateway.store(@check, @options.merge(@valid_check_options))
+    assert_success store_response
+    assert_match(/check/, store_response.authorization)
+
+    response = @gateway.purchase(@amount, store_response.authorization, @options.merge({authorized_by_shopper: true}))
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -258,6 +318,17 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:api_password], transcript)
+  end
+
+  def test_transcript_scrubbing_with_echeck
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @valid_check_options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:api_password], transcript)
   end
 

@@ -59,14 +59,27 @@ module ActiveMerchant
         'line1: N, zip: N, name: N' => 'N',
       }
 
+      BANK_ACCOUNT_TYPE_MAPPING = {
+        'personal_checking' => 'CONSUMER_CHECKING',
+        'personal_savings' => 'CONSUMER_SAVINGS',
+        'business_checking' => 'CORPORATE_CHECKING',
+        'business_savings' => 'CORPORATE_SAVINGS'
+      }
+
       def initialize(options={})
         requires!(options, :api_username, :api_password)
         super
       end
 
       def purchase(money, payment_method, options={})
-        commit(:purchase) do |doc|
-          add_auth_purchase(doc, money, payment_method, options)
+        payment_method_details = PaymentMethodDetails.new(payment_method)
+
+        commit(:purchase, :post, payment_method_details) do |doc|
+          if payment_method_details.alt_transaction?
+            add_alt_transaction_purchase(doc, money, payment_method_details, options)
+          else
+            add_auth_purchase(doc, money, payment_method, options)
+          end
         end
       end
 
@@ -102,15 +115,30 @@ module ActiveMerchant
         authorize(0, payment_method, options)
       end
 
-      def store(credit_card, options = {})
-        commit(:store) do |doc|
-          add_personal_info(doc, credit_card, options)
+      def store(payment_method, options = {})
+        payment_method_details = PaymentMethodDetails.new(payment_method)
+
+        commit(:store, :post, payment_method_details) do |doc|
+          add_personal_info(doc, payment_method, options)
+          add_echeck_company(doc, payment_method) if payment_method_details.check?
           doc.send('payment-sources') do
-            doc.send('credit-card-info') do
-              add_credit_card(doc, credit_card)
-            end
+            payment_method_details.check? ? store_echeck(doc, payment_method) : store_credit_card(doc, payment_method)
           end
           add_order(doc, options)
+        end
+      end
+
+      def store_credit_card(doc, payment_method)
+        doc.send('credit-card-info') do
+          add_credit_card(doc, payment_method)
+        end
+      end
+
+      def store_echeck(doc, payment_method)
+        doc.send('ecp-info') do
+          doc.send('ecp') do
+            add_echeck(doc, payment_method)
+          end
         end
       end
 
@@ -132,7 +160,9 @@ module ActiveMerchant
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((<card-number>).+(</card-number>)), '\1[FILTERED]\2').
-          gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2')
+          gsub(%r((<security-code>).+(</security-code>)), '\1[FILTERED]\2').
+          gsub(%r((<(?:public-)?account-number>).+(</(?:public-)?account-number>)), '\1[FILTERED]\2').
+          gsub(%r((<(?:public-)?routing-number>).+(</(?:public-)?routing-number>)), '\1[FILTERED]\2')
       end
 
       private
@@ -142,9 +172,7 @@ module ActiveMerchant
         add_order(doc, options)
         doc.send('storeCard', options[:store_card] || false)
         add_amount(doc, money, options)
-        doc.send('transaction-fraud-info') do
-          doc.send('shopper-ip-address', options[:ip]) if options[:ip]
-        end
+        add_fraud_info(doc, options)
 
         if payment_method.is_a?(String)
           doc.send('vaulted-shopper-id', payment_method)
@@ -161,9 +189,9 @@ module ActiveMerchant
         doc.currency(options[:currency] || currency(money))
       end
 
-      def add_personal_info(doc, credit_card, options)
-        doc.send('first-name', credit_card.first_name)
-        doc.send('last-name', credit_card.last_name)
+      def add_personal_info(doc, payment_method, options)
+        doc.send('first-name', payment_method.first_name)
+        doc.send('last-name', payment_method.last_name)
         doc.send('personal-identification-number', options[:personal_identification_number]) if options[:personal_identification_number]
         doc.email(options[:email]) if options[:email]
         add_address(doc, options)
@@ -245,6 +273,53 @@ module ActiveMerchant
         doc.send('transaction-id', authorization)
       end
 
+      def add_fraud_info(doc, options)
+        doc.send('transaction-fraud-info') do
+          doc.send('shopper-ip-address', options[:ip]) if options[:ip]
+        end
+      end
+
+      def add_alt_transaction_purchase(doc, money, payment_method_details, options)
+        doc.send('merchant-transaction-id', truncate(options[:order_id], 50)) if options[:order_id]
+        doc.send('soft-descriptor', options[:soft_descriptor]) if options[:soft_descriptor]
+        add_amount(doc, money, options)
+
+        vaulted_shopper_id = payment_method_details.vaulted_shopper_id
+        doc.send('vaulted-shopper-id', vaulted_shopper_id) if vaulted_shopper_id
+
+        if payment_method_details.check?
+          add_echeck_transaction(doc, payment_method_details.payment_method, options, vaulted_shopper_id.present?)
+        end
+
+        add_fraud_info(doc, options)
+        add_description(doc, options)
+      end
+
+      def add_echeck_transaction(doc, check, options, vaulted_shopper)
+        unless vaulted_shopper
+          doc.send('payer-info') do
+            add_personal_info(doc, check, options)
+            add_echeck_company(doc, check)
+          end
+        end
+
+        doc.send('ecp-transaction') do
+          add_echeck(doc, check) unless vaulted_shopper
+        end
+
+        doc.send('authorized-by-shopper', options[:authorized_by_shopper])
+      end
+
+      def add_echeck_company(doc, check)
+        doc.send('company-name', truncate(check.name, 50)) if check.account_holder_type = 'business'
+      end
+
+      def add_echeck(doc, check)
+        doc.send('account-number', check.account_number)
+        doc.send('routing-number', check.routing_number)
+        doc.send('account-type', BANK_ACCOUNT_TYPE_MAPPING["#{check.account_holder_type}_#{check.account_type}"])
+      end
+
       def parse(response)
         return bad_authentication_response if response.code.to_i == 401
         return forbidden_response(response.body) if response.code.to_i == 403
@@ -273,15 +348,15 @@ module ActiveMerchant
         end
       end
 
-      def api_request(action, request, verb)
-        ssl_request(verb, url(action), request, headers)
+      def api_request(action, request, verb, payment_method_details)
+        ssl_request(verb, url(action, payment_method_details), request, headers)
       rescue ResponseError => e
         e.response
       end
 
-      def commit(action, verb = :post)
-        request = build_xml_request(action) { |doc| yield(doc) }
-        response = api_request(action, request, verb)
+      def commit(action, verb = :post, payment_method_details = PaymentMethodDetails.new())
+        request = build_xml_request(action, payment_method_details) { |doc| yield(doc) }
+        response = api_request(action, request, verb, payment_method_details)
         parsed = parse(response)
 
         succeeded = success_from(action, response)
@@ -289,7 +364,7 @@ module ActiveMerchant
           succeeded,
           message_from(succeeded, parsed),
           parsed,
-          authorization: authorization_from(action, parsed),
+          authorization: authorization_from(action, parsed, payment_method_details),
           avs_result: avs_result(parsed),
           cvv_result: cvv_result(parsed),
           error_code: error_code_from(parsed),
@@ -297,9 +372,9 @@ module ActiveMerchant
         )
       end
 
-      def url(action = nil)
+      def url(action = nil, payment_method_details = PaymentMethodDetails.new())
         base = test? ? test_url : live_url
-        resource = action == :store ? 'vaulted-shoppers' : 'transactions'
+        resource = action == :store ? 'vaulted-shoppers' : payment_method_details.resource_url
         "#{base}/#{resource}"
       end
 
@@ -324,13 +399,15 @@ module ActiveMerchant
         parsed_response['description']
       end
 
-      def authorization_from(action, parsed_response)
-        action == :store ? vaulted_shopper_id(parsed_response) : parsed_response['transaction-id']
+      def authorization_from(action, parsed_response, payment_method_details)
+        action == :store ? vaulted_shopper_id(parsed_response, payment_method_details) : parsed_response['transaction-id']
       end
 
-      def vaulted_shopper_id(parsed_response)
+      def vaulted_shopper_id(parsed_response, payment_method_details)
         return nil unless parsed_response['content-location-header']
-        parsed_response['content-location-header'].split('/').last
+        vaulted_shopper_id = parsed_response['content-location-header'].split('/').last
+        vaulted_shopper_id += "|#{payment_method_details.payment_method_type}" if payment_method_details.alt_transaction?
+        vaulted_shopper_id
       end
 
       def error_code_from(parsed_response)
@@ -343,8 +420,8 @@ module ActiveMerchant
         }
       end
 
-      def root_element(action)
-        action == :store ? 'vaulted-shopper' : 'card-transaction'
+      def root_element(action, payment_method_details)
+        action == :store ? 'vaulted-shopper' : payment_method_details.root_element
       end
 
       def headers
@@ -354,10 +431,10 @@ module ActiveMerchant
         }
       end
 
-      def build_xml_request(action)
+      def build_xml_request(action, payment_method_details)
         builder = Nokogiri::XML::Builder.new
-        builder.__send__(root_element(action), root_attributes) do |doc|
-          doc.send('card-transaction-type', TRANSACTIONS[action]) if TRANSACTIONS[action]
+        builder.__send__(root_element(action, payment_method_details), root_attributes) do |doc|
+          doc.send('card-transaction-type', TRANSACTIONS[action]) if TRANSACTIONS[action] && !payment_method_details.alt_transaction?
           yield(doc)
         end
         builder.doc.root.to_xml
@@ -378,6 +455,47 @@ module ActiveMerchant
 
       def forbidden_response(body)
         { 'description' => body }
+      end
+    end
+
+    class PaymentMethodDetails
+      attr_reader :payment_method, :vaulted_shopper_id, :payment_method_type
+
+      def initialize(payment_method = nil)
+        @payment_method = payment_method
+        @payment_method_type = nil
+        parse(payment_method)
+      end
+
+      def check?
+        @payment_method.is_a?(Check) || @payment_method_type == 'check'
+      end
+
+      def alt_transaction?
+        check?
+      end
+
+      def root_element
+        alt_transaction? ? 'alt-transaction' : 'card-transaction'
+      end
+
+      def resource_url
+        alt_transaction? ? 'alt-transactions' : 'transactions'
+      end
+
+      private
+
+      def parse(payment_method)
+        return unless payment_method
+
+        if payment_method.is_a?(String)
+          @vaulted_shopper_id, payment_method_type = payment_method.split('|')
+          @payment_method_type = payment_method_type if payment_method_type.present?
+        elsif payment_method.is_a?(Check)
+          @payment_method_type = payment_method.type
+        else
+          @payment_method_type = 'credit_card'
+        end
       end
     end
   end
