@@ -67,6 +67,7 @@ module ActiveMerchant #:nodoc:
       # Updates the credit card for the customer.
       def update(token, creditcard, options = {})
         post = {}
+        token = get_customer_token(token)
 
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
@@ -137,11 +138,19 @@ module ActiveMerchant #:nodoc:
           )
         elsif creditcard.kind_of?(String)
           if creditcard =~ /^card_/
-            post[:card_token] = creditcard
+            post[:card_token] = get_card_token(creditcard)
           else
             post[:customer_token] = creditcard
           end
         end
+      end
+
+      def get_customer_token(token)
+        token.split(/;(?=cus)/).last
+      end
+
+      def get_card_token(token)
+        token.split(/;(?=cus)/).first
       end
 
       def add_metadata(post, options)
@@ -206,7 +215,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def token(response)
-        response['token']
+        if response['token'].start_with?('cus')
+          "#{response.dig('card', 'token')};#{response['token']}"
+        else
+          response['token']
+        end
       end
 
       def parse(body)

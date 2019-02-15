@@ -34,6 +34,7 @@
 * Add Bambora gateway [InfraRuby] #3145
 * Bambora Asia-Pacific: Updates Gateway [molbrown] #3145
 * PaymentExpress: Support ClientInfo field [jknipp] #3131
+* Pin Payments: Concatenate card and customer tokens when storing card [therufs] #3144
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087

@@ -101,16 +101,16 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:ssl_request).returns(successful_store_response)
+    @gateway.expects(:ssl_request).returns(successful_customer_store_response)
     assert response = @gateway.store(@credit_card, @options)
     assert_success response
-    assert_equal 'card_sVOs8D9nANoNgDc38NvKow', response.authorization
-    assert_equal JSON.parse(successful_store_response), response.params
+    assert_equal 'card__o8I8GmoXDF0d35LEDZbNQ;cus_05p0n7UFPmcyCNjD8c6HdA', response.authorization
+    assert_equal JSON.parse(successful_customer_store_response), response.params
     assert response.test?
   end
 
   def test_unsuccessful_store
-    @gateway.expects(:ssl_request).returns(failed_store_response)
+    @gateway.expects(:ssl_request).returns(failed_customer_store_response)
 
     assert response = @gateway.store(@credit_card, @options)
     assert_failure response
@@ -123,7 +123,7 @@ class PinTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).with(:put, "https://test-api.pinpayments.com/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(successful_customer_store_response)
     assert response = @gateway.update('cus_05p0n7UFPmcyCNjD8c6HdA', @credit_card, @options)
     assert_success response
-    assert_equal 'cus_05p0n7UFPmcyCNjD8c6HdA', response.authorization
+    assert_equal 'card__o8I8GmoXDF0d35LEDZbNQ;cus_05p0n7UFPmcyCNjD8c6HdA', response.authorization
     assert_equal JSON.parse(successful_customer_store_response), response.params
     assert response.test?
   end
