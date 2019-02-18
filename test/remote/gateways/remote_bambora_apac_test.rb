@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class RemoteBamboraTest < Test::Unit::TestCase
+class RemoteBamboraApacTest < Test::Unit::TestCase
   def setup
-    @gateway = BamboraGateway.new(fixtures(:bambora))
+    @gateway = BamboraApacGateway.new(fixtures(:bambora))
 
     @credit_card = credit_card('4005550000000001')
 
@@ -66,10 +66,25 @@ class RemoteBamboraTest < Test::Unit::TestCase
     assert_equal 'Do Not Honour', response.message
   end
 
+  def test_successful_void
+    response = @gateway.purchase(200, @credit_card, @options)
+    assert_success response
+    response = @gateway.void(200, response.authorization)
+    assert_success response
+  end
+
+  def test_failed_void
+    response = @gateway.purchase(200, @credit_card, @options)
+    assert_success response
+    response = @gateway.void(200, 123)
+    assert_failure response
+    assert_equal 'Cannot find matching transaction to VOID', response.message
+  end
+
   def test_invalid_login
-    gateway = BamboraGateway.new(
+    gateway = BamboraApacGateway.new(
       username: '',
-      password: '',
+      password: ''
     )
     response = gateway.purchase(200, @credit_card, @options)
     assert_failure response

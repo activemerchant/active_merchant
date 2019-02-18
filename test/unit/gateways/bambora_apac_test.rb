@@ -1,12 +1,12 @@
 require 'test_helper'
 
-class BamboraTest < Test::Unit::TestCase
+class BamboraApacTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = BamboraGateway.new(
+    @gateway = BamboraApacGateway.new(
       username: 'username',
-      password: 'password',
+      password: 'password'
     )
 
     @amount = 100
@@ -31,7 +31,7 @@ class BamboraTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal "89435577", response.authorization
+    assert_equal '89435577', response.authorization
   end
 
   def test_failed_purchase
@@ -40,9 +40,9 @@ class BamboraTest < Test::Unit::TestCase
     end.respond_with(failed_purchase_response)
 
     assert_failure response
-    assert_equal "Do Not Honour", response.message
+    assert_equal 'Do Not Honour', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
-    assert_equal "", response.authorization
+    assert_equal '', response.authorization
   end
 
   def test_successful_authorize
@@ -55,12 +55,12 @@ class BamboraTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "89435583", response.authorization
+    assert_equal '89435583', response.authorization
   end
 
   def test_successful_capture
     response = stub_comms do
-      @gateway.capture(@amount, "receipt")
+      @gateway.capture(@amount, 'receipt')
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<SubmitSingleCapture }, data)
       assert_match(%r{<Receipt>receipt<}, data)
@@ -72,12 +72,22 @@ class BamboraTest < Test::Unit::TestCase
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(@amount, "receipt")
+      @gateway.refund(@amount, 'receipt')
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<SubmitSingleRefund }, data)
       assert_match(%r{<Receipt>receipt<}, data)
       assert_match(%r{<Amount>100<}, data)
     end.respond_with(successful_refund_response)
+
+    assert_success response
+  end
+
+  def test_successful_void
+    response = stub_comms do
+      @gateway.void(@amount, 'receipt')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<SubmitSingleVoid }, data)
+    end.respond_with(successful_void_response)
 
     assert_success response
   end
@@ -206,6 +216,17 @@ Conn close
   &lt;DeclinedMessage&gt;&lt;/DeclinedMessage&gt;
 &lt;/Response&gt;
 </SubmitSingleRefundResult></SubmitSingleRefundResponse></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def successful_void_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><SubmitSingleVoidResponse xmlns="http://www.ippayments.com.au/interface/api/dts"><SubmitSingleVoidResult>&lt;Response&gt;
+    &lt;ResponseCode&gt;0&lt;/ResponseCode&gt;
+    &lt;DeclinedCode&gt;&lt;/DeclinedCode&gt;
+    &lt;DeclinedMessage&gt;&lt;/DeclinedMessage&gt;
+  &lt;/Response&gt;
+  </SubmitSingleVoidResult></SubmitSingleVoidResponse></soap:Body></soap:Envelope>
     XML
   end
 end

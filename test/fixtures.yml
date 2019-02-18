@@ -40,10 +40,6 @@ bambora:
   username: nmi.api
   password: qwerty123
 
-bambora_ready:
-  username: nmi.api:747
-  password: qwerty123
-
 # Bank Frick doesn't provide public testing data
 bank_frick:
   sender: sender-uuid

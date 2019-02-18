@@ -31,6 +31,8 @@
 * Fat Zebra: Support voids [curiousepic] #3142
 * Blue Snap: Support ACH/ECP payments [jknipp] #3143
 * Blue Snap: Fix Card-on-File field typo [jknipp] #3143
+* Add Bambora gateway [InfraRuby] #3145
+* Bambora Asia-Pacific: Updates Gateway [molbrown] #3145
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087
