@@ -57,7 +57,7 @@ class BlueSnapTest < Test::Unit::TestCase
     response = stub_comms(@gateway, :raw_ssl_request) do
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |type, endpoint, data, headers|
-      assert_match '<storeCard>false</storeCard>', data
+      assert_match '<store-card>false</store-card>', data
       assert_match '<personal-identification-number>CNPJ</personal-identification-number>', data
     end.respond_with(successful_authorize_response)
     assert_success response
