@@ -136,7 +136,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert card = @gateway.store(@credit_card)
 
     assert_success card
-    assert_false card.authorization == nil
+    assert_not_nil card.authorization
   end
 
   def test_purchase_with_token
