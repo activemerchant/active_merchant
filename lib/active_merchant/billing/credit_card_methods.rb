@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       CARD_COMPANY_DETECTORS = {
         'visa'               => ->(num) { num =~ /^4\d{12}(\d{3})?(\d{3})?$/ },
         'master'             => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MASTERCARD_RANGES) },
-        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/ },
+        'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}|(62\d{14,17})$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
         'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
       # master:           http://www.mastercard.com/ca/merchant/en/getstarted/Anatomy_MasterCard.html
       # jcb:              http://www.jcbcard.com/security/info.html
       # diners_club:      http://www.dinersclub.com/assets/DinersClub_card_ID_features.pdf
-      # discover:         https://www.discover.com/credit-cards/help-center/glossary.html
+      # discover:         https://www.discoverglobalnetwork.com/downloads/IPP_VAR_Compliance.pdf
       # american_express: https://online.americanexpress.com/myca/fuidfyp/us/action?request_type=un_fuid&Face=en_US
       def valid_card_verification_value?(cvv, brand)
         cvv.to_s =~ /^\d{#{card_verification_value_length(brand)}}$/
