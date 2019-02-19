@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemoteBamboraApacTest < Test::Unit::TestCase
   def setup
-    @gateway = BamboraApacGateway.new(fixtures(:bambora))
+    @gateway = BamboraApacGateway.new(fixtures(:bambora_apac))
 
     @credit_card = credit_card('4005550000000001')
 
@@ -27,7 +27,7 @@ class RemoteBamboraApacTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(200, @credit_card, @options)
     assert_success response
-    assert_equal '', response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_purchase
@@ -56,7 +56,7 @@ class RemoteBamboraApacTest < Test::Unit::TestCase
     response = @gateway.purchase(200, @credit_card, @options)
     response = @gateway.refund(200, response.authorization, @options)
     assert_success response
-    assert_equal '', response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_refund
@@ -79,6 +79,36 @@ class RemoteBamboraApacTest < Test::Unit::TestCase
     response = @gateway.void(200, 123)
     assert_failure response
     assert_equal 'Cannot find matching transaction to VOID', response.message
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_failed_store
+    bad_credit_card = credit_card(nil)
+
+    response = @gateway.store(bad_credit_card, @options)
+    assert_failure response
+  end
+
+  def test_successful_purchase_using_stored_card
+    assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.purchase(500, store_response.authorization, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_authorize_using_stored_card
+    assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.authorize(500, store_response.authorization, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_invalid_login
