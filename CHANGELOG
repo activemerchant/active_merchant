@@ -3,6 +3,7 @@
 == HEAD
 * BluePay: Send customer IP address when provided [jknipp] #3149
 * PaymentExpress: Use ip field for client_info field [jknipp] #3150
+* Bambora Asia-Pacific: Adds Store [molbrown] #3147
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
