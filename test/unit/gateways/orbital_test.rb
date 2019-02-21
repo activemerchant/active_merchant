@@ -32,9 +32,23 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
     @options = { :order_id => '1'}
     @options_stored_credentials = {
-      mit_msg_type: 'MUSE',
+      mit_msg_type: 'MRSB',
       mit_stored_credential_ind: 'Y',
       mit_submitted_transaction_id: '123456abcdef'
+    }
+    @normalized_mit_stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: 'abcdefg12345678'
+      }
+    }
+    @normalized_initial_stored_credential = {
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'customer'
+      }
     }
   end
 
@@ -393,6 +407,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_negative_stored_credentials_indicator
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(mit_stored_credential_ind: 'N'))
+    end.check_request do |endpoint, data, headers|
+      assert_no_match /<MITMsgType>/, data
+      assert_no_match /<MITStoredCredentialInd>/, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_purchase_with_stored_credentials
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@options_stored_credentials))
@@ -400,6 +423,35 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<MITMsgType>#{@options_stored_credentials[:mit_msg_type]}</MITMsgType>}, data
       assert_match %{<MITStoredCredentialInd>#{@options_stored_credentials[:mit_stored_credential_ind]}</MITStoredCredentialInd>}, data
       assert_match %{<MITSubmittedTransactionID>#{@options_stored_credentials[:mit_submitted_transaction_id]}</MITSubmittedTransactionID>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_normalized_stored_credentials
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(@normalized_mit_stored_credential))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<MITMsgType>MUSE</MITMsgType>}, data
+      assert_match %{<MITStoredCredentialInd>Y</MITStoredCredentialInd>}, data
+      assert_match %{<MITSubmittedTransactionID>abcdefg12345678</MITSubmittedTransactionID>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_initial_purchase_with_normalized_stored_credentials
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(@normalized_initial_stored_credential))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<MITMsgType>CSTO</MITMsgType>}, data
+      assert_match %{<MITStoredCredentialInd>Y</MITStoredCredentialInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_purchase_with_overridden_normalized_stored_credentials
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(@normalized_mit_stored_credential).merge(@options_stored_credentials))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<MITMsgType>MRSB</MITMsgType>}, data
+      assert_match %{<MITStoredCredentialInd>Y</MITStoredCredentialInd>}, data
+      assert_match %{<MITSubmittedTransactionID>123456abcdef</MITSubmittedTransactionID>}, data
     end.respond_with(successful_purchase_response)
   end
 

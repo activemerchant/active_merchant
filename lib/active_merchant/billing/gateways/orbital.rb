@@ -507,9 +507,33 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_stored_credentials(xml, parameters)
-        xml.tag! :MITMsgType, parameters[:mit_msg_type] if parameters[:mit_msg_type]
-        xml.tag! :MITStoredCredentialInd, parameters[:mit_stored_credential_ind] if parameters[:mit_stored_credential_ind]
-        xml.tag! :MITSubmittedTransactionID, parameters[:mit_submitted_transaction_id] if parameters[:mit_submitted_transaction_id]
+        return unless parameters[:mit_stored_credential_ind] == 'Y' || parameters[:stored_credential] && !parameters[:stored_credential].values.all?(&:nil?)
+        if msg_type = get_msg_type(parameters)
+          xml.tag! :MITMsgType, msg_type
+        end
+        xml.tag! :MITStoredCredentialInd, 'Y'
+        if parameters[:mit_submitted_transaction_id]
+          xml.tag! :MITSubmittedTransactionID, parameters[:mit_submitted_transaction_id]
+        elsif parameters.dig(:stored_credential, :network_transaction_id) && parameters.dig(:stored_credential, :initiator) == 'merchant'
+          xml.tag! :MITSubmittedTransactionID, parameters[:stored_credential][:network_transaction_id]
+        end
+      end
+
+      def get_msg_type(parameters)
+        return parameters[:mit_msg_type] if parameters[:mit_msg_type]
+        return 'CSTO' if parameters[:stored_credential][:initial_transaction]
+        return unless parameters[:stored_credential][:initiator] && parameters[:stored_credential][:reason_type]
+        initiator = case parameters[:stored_credential][:initiator]
+        when 'customer' then 'C'
+        when 'merchant' then 'M'
+        end
+        reason = case parameters[:stored_credential][:reason_type]
+        when 'recurring' then 'REC'
+        when 'installment' then 'INS'
+        when 'unscheduled' then 'USE'
+        end
+
+        "#{initiator}#{reason}"
       end
 
       def parse(body)
