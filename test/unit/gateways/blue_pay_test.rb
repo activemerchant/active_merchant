@@ -20,29 +20,43 @@ class BluePayTest < Test::Unit::TestCase
     @credit_card = credit_card
     @rebill_id = '100096219669'
     @rebill_status = 'active'
+    @options = {ip: '192.168.0.1'}
   end
 
   def test_successful_authorization
-    @gateway.expects(:ssl_post).returns(RSP[:approved_auth])
-    assert response = @gateway.authorize(@amount, @credit_card)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/CUSTOMER_IP=192.168.0.1/, data)
+    end.respond_with(RSP[:approved_auth])
+
+    assert response
     assert_instance_of Response, response
     assert_success response
     assert_equal '100134203758', response.authorization
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(RSP[:approved_purchase])
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/CUSTOMER_IP=192.168.0.1/, data)
+    end.respond_with(RSP[:approved_purchase])
 
-    assert response = @gateway.purchase(@amount, @credit_card)
+    assert response
     assert_instance_of Response, response
     assert_success response
     assert_equal '100134203767', response.authorization
   end
 
   def test_failed_authorization
-    @gateway.expects(:ssl_post).returns(RSP[:declined])
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/CUSTOMER_IP=192.168.0.1/, data)
+    end.respond_with(RSP[:declined])
 
-    assert response = @gateway.authorize(@amount, @credit_card)
+    assert response
     assert_instance_of Response, response
     assert_failure response
     assert_equal '100000000150', response.authorization
@@ -105,26 +119,38 @@ class BluePayTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert response = @gateway.refund(@amount, '100134230412', :card_number => @credit_card.number)
+    response = stub_comms do
+      @gateway.refund(@amount, '100134230412', @options.merge({:card_number => @credit_card.number}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
+    end.respond_with(successful_refund_response)
+
+    assert response
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end
 
   def test_refund_passing_extra_info
     response = stub_comms do
-      @gateway.refund(50, '123456789', :card_number => @credit_card.number, :first_name => 'Bob', :last_name => 'Smith', :zip => '12345')
+      @gateway.refund(50, '123456789', @options.merge({:card_number => @credit_card.number, :first_name => 'Bob', :last_name => 'Smith', :zip => '12345'}))
     end.check_request do |endpoint, data, headers|
       assert_match(/NAME1=Bob/, data)
       assert_match(/NAME2=Smith/, data)
       assert_match(/ZIP=12345/, data)
+      assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
     end.respond_with(successful_purchase_response)
+
     assert_success response
   end
 
   def test_failed_refund
-    @gateway.expects(:ssl_post).returns(failed_refund_response)
-    assert response = @gateway.refund(@amount, '123456789', :card_number => @credit_card.number)
+    response = stub_comms do
+      @gateway.refund(@amount, '123456789', @options.merge({:card_number => @credit_card.number}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
+    end.respond_with(failed_refund_response)
+
+    assert response
     assert_failure response
     assert_equal 'The referenced transaction does not meet the criteria for issuing a credit', response.message
   end
@@ -132,7 +158,13 @@ class BluePayTest < Test::Unit::TestCase
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert_deprecation_warning('credit should only be used to credit a payment method') do
-      assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
+      response = stub_comms do
+        @gateway.credit(@amount, '123456789', @options.merge({:card_number => @credit_card.number}))
+      end.check_request do |endpoint, data, headers|
+        assert_match(/CUSTOMER_IP=192\.168\.0\.1/, data)
+      end.respond_with(failed_refund_response)
+
+      assert response
       assert_success response
       assert_equal 'This transaction has been approved', response.message
     end
