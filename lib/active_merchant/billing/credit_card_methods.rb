@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
       # master:           http://www.mastercard.com/ca/merchant/en/getstarted/Anatomy_MasterCard.html
       # jcb:              http://www.jcbcard.com/security/info.html
       # diners_club:      http://www.dinersclub.com/assets/DinersClub_card_ID_features.pdf
-      # discover:         https://www.discoverglobalnetwork.com/downloads/IPP_VAR_Compliance.pdf
+      # discover:         https://www.discover.com/credit-cards/help-center/glossary.html
       # american_express: https://online.americanexpress.com/myca/fuidfyp/us/action?request_type=un_fuid&Face=en_US
       def valid_card_verification_value?(cvv, brand)
         cvv.to_s =~ /^\d{#{card_verification_value_length(brand)}}$/
