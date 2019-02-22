@@ -168,7 +168,9 @@ module ActiveMerchant #:nodoc:
             "email": customer_attributes['email'],
             "given_name": customer_attributes['first_name'],
             "family_name": customer_attributes['last_name'],
-            "phone_number": customer_attributes['phone']
+            "phone_number": customer_attributes['phone'],
+            "danish_identity_number": customer_attributes['danish_identity_number'],
+            "swedish_identity_number": customer_attributes['swedish_identity_number']
           }
         }
         if options[:billing_address]
