@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* BluePay: Send customer IP address when provided [jknipp] #3149
+* PaymentExpress: Use ip field for client_info field [jknipp] #3150
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
@@ -38,7 +40,6 @@
 * Pin Payments: Concatenate card and customer tokens when storing card [therufs] #3144
 * Update Discover regex to allow card numbers longer than 16 digits [prashcr] #3146
 * Merrco partial refunds fix [payfirma1] #3141
-* BluePay: Send customer IP address when provided [jknipp] #3149
 
 == Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087

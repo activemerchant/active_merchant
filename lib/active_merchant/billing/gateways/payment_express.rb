@@ -153,6 +153,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(result, options)
         add_address_verification_data(result, options)
         add_optional_elements(result, options)
+        add_ip(result, options)
         result
       end
 
@@ -163,6 +164,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(result, options)
         add_reference(result, identification)
         add_optional_elements(result, options)
+        add_ip(result, options)
         result
       end
 
@@ -172,6 +174,7 @@ module ActiveMerchant #:nodoc:
         add_amount(result, 100, options) # need to make an auth request for $1
         add_token_request(result, options)
         add_optional_elements(result, options)
+        add_ip(result, options)
         result
       end
 
@@ -233,6 +236,10 @@ module ActiveMerchant #:nodoc:
         xml.add_element('AvsPostCode').text = address[:zip]
       end
 
+      def add_ip(xml, options)
+        xml.add_element('ClientInfo').text = options[:ip] if options[:ip]
+      end
+
       # The options hash may contain optional data which will be passed
       # through the specialized optional fields at PaymentExpress
       # as follows:
@@ -241,8 +248,7 @@ module ActiveMerchant #:nodoc:
       #       :client_type => :web, # Possible values are: :web, :ivr, :moto, :unattended, :internet, or :recurring
       #       :txn_data1 => "String up to 255 characters",
       #       :txn_data2 => "String up to 255 characters",
-      #       :txn_data3 => "String up to 255 characters",
-      #       :client_info => "String up to 15 characters. The IP address of the user who processed the transaction."
+      #       :txn_data3 => "String up to 255 characters"
       #     }
       #
       # +:client_type+, while not documented for PxPost, will be sent as
@@ -278,8 +284,6 @@ module ActiveMerchant #:nodoc:
         xml.add_element('TxnData1').text = options[:txn_data1].to_s.slice(0, 255) unless options[:txn_data1].blank?
         xml.add_element('TxnData2').text = options[:txn_data2].to_s.slice(0, 255) unless options[:txn_data2].blank?
         xml.add_element('TxnData3').text = options[:txn_data3].to_s.slice(0, 255) unless options[:txn_data3].blank?
-
-        xml.add_element('ClientInfo').text = options[:client_info] if options[:client_info]
       end
 
       def new_transaction

@@ -242,8 +242,8 @@ class PaymentExpressTest < Test::Unit::TestCase
     end
   end
 
-  def test_pass_client_info
-    options = {:client_info => '192.168.0.1'}
+  def test_pass_ip_as_client_info
+    options = {:ip => '192.168.0.1'}
 
     perform_each_transaction_type_with_request_body_assertions(options) do |body|
       assert_match(/<ClientInfo>192.168.0.1<\/ClientInfo>/, body)
