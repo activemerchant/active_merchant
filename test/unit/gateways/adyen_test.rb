@@ -19,6 +19,15 @@ class AdyenTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
+    @elo_credit_card = credit_card('5066 9911 1111 1118',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'elo'
+    )
+
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
@@ -114,6 +123,15 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
     assert_equal '7914775043909934#8814775564188305#', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_elo_card
+    response = stub_comms do
+      @gateway.purchase(@amount, @elo_credit_card, @options)
+    end.respond_with(successful_authorize_with_elo_response, successful_capture_with_elo_repsonse)
+    assert_success response
+    assert_equal '8835511210681145#8835511210689965#', response.authorization
     assert response.test?
   end
 
@@ -444,6 +462,25 @@ class AdyenTest < Test::Unit::TestCase
       "message": "Invalid card number",
       "errorType": "validation",
       "pspReference": "8514775645144049"
+    }
+    RESPONSE
+  end
+
+  def successful_authorize_with_elo_response
+    <<-RESPONSE
+    {
+      "pspReference":"8835511210681145",
+      "resultCode":"Authorised",
+      "authCode":"98696"
+    }
+    RESPONSE
+  end
+
+  def successful_capture_with_elo_repsonse
+    <<-RESPONSE
+    {
+      "pspReference":"8835511210689965",
+      "response":"[capture-received]"
     }
     RESPONSE
   end
