@@ -73,6 +73,7 @@ module ActiveMerchant #:nodoc:
 
       def add_metadata(post, options = {})
         post[:ms] = options[:market_source] if options[:market_source]
+        post[:guid] = options[:guid] if options[:guid]
       end
 
       def parse(body)
@@ -98,7 +99,7 @@ module ActiveMerchant #:nodoc:
 
       def url(options = {})
         params = { form_id: options[:form_id], offline: true, api_key: @options[:api_key] }
-        
+
         "#{@options[:hostname]}?#{params.to_query}"
       end
 
@@ -111,7 +112,7 @@ module ActiveMerchant #:nodoc:
           elsif ["406", "500"].include?(e.response.code)
             message = JSON.parse(e.response.body)
             return Response.new(false, message_from(message), test: test?)
-          end            
+          end
         end
 
         Response.new(
