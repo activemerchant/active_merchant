@@ -411,8 +411,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(mit_stored_credential_ind: 'N'))
     end.check_request do |endpoint, data, headers|
-      assert_no_match /<MITMsgType>/, data
-      assert_no_match /<MITStoredCredentialInd>/, data
+      assert_no_match(/<MITMsgType>/, data)
+      assert_no_match(/<MITStoredCredentialInd>/, data)
     end.respond_with(successful_purchase_response)
   end
 
