@@ -336,6 +336,26 @@ class AdyenTest < Test::Unit::TestCase
     assert_equal 'Card member\'s name, billing address, and billing postal code match.', response.avs_result['message']
   end
 
+  def test_optional_idempotency_key_header
+    options = @options.merge(:idempotency_key => 'test123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert headers['Idempotency-Key']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_optional_idempotency_key_header_excluded_on_purchase
+    options = @options.merge(:idempotency_key => 'test123')
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      refute headers['Idempotency-Key']
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
   private
 
   def pre_scrubbed
