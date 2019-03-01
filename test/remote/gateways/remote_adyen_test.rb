@@ -71,6 +71,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_authorize_with_idempotency_key
+    options = @options.merge(idempotency_key: 'test123')
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    first_auth = response.authorization
+
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
+  end
+
   def test_successful_authorize_with_3ds
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: true))
     assert response.test?
@@ -110,7 +122,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase
@@ -176,7 +188,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -287,7 +299,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.store(@declined_card, @options)
 
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase_using_stored_card
@@ -326,7 +338,22 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match 'Refused', response.message
+    assert_match 'CVC Declined', response.message
+  end
+
+  def test_verify_with_idempotency_key
+    options = @options.merge(idempotency_key: 'test123')
+    response = @gateway.authorize(0, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    first_auth = response.authorization
+
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
+
+    response = @gateway.void(first_auth, @options)
+    assert_success response
   end
 
   def test_invalid_login

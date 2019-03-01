@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
           authorize(money, payment, options)
         else
           MultiResponse.run do |r|
+            options[:idempotency_key] = nil
             r.process { authorize(money, payment, options) }
             r.process { capture(money, r.authorization, options) }
           end
@@ -53,27 +54,27 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_installments(post, options) if options[:installments]
         add_3ds(post, options)
-        commit('authorise', post)
+        commit('authorise', post, options)
       end
 
       def capture(money, authorization, options={})
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
-        commit('capture', post)
+        commit('capture', post, options)
       end
 
       def refund(money, authorization, options={})
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_original_reference(post, authorization, options)
-        commit('refund', post)
+        commit('refund', post, options)
       end
 
       def void(authorization, options={})
         post = init_post(options)
         add_reference(post, authorization, options)
-        commit('cancel', post)
+        commit('cancel', post, options)
       end
 
       def store(credit_card, options={})
@@ -84,12 +85,13 @@ module ActiveMerchant #:nodoc:
         add_extra_data(post, credit_card, options)
         add_recurring_contract(post, options)
         add_address(post, options)
-        commit('authorise', post)
+        commit('authorise', post, options)
       end
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(0, credit_card, options) }
+          options[:idempotency_key] = nil
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -286,9 +288,9 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(action, parameters)
+      def commit(action, parameters, options)
         begin
-          raw_response = ssl_post("#{url}/#{action}", post_data(action, parameters), request_headers)
+          raw_response = ssl_post("#{url}/#{action}", post_data(action, parameters), request_headers(action, options))
           response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
@@ -329,11 +331,13 @@ module ActiveMerchant #:nodoc:
         Base64.strict_encode64("#{@username}:#{@password}")
       end
 
-      def request_headers
-        {
+      def request_headers(action, options)
+        headers = {
           'Content-Type' => 'application/json',
           'Authorization' => "Basic #{basic_auth}"
         }
+        headers['Idempotency-Key'] = options[:idempotency_key] if options[:idempotency_key]
+        headers
       end
 
       def success_from(action, response)
