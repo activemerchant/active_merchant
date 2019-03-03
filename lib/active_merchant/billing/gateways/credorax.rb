@@ -3,10 +3,10 @@ module ActiveMerchant #:nodoc:
     class CredoraxGateway < Gateway
       class_attribute :test_url, :live_na_url, :live_eu_url
 
-      self.display_name = "Credorax Gateway"
-      self.homepage_url = "https://www.credorax.com/"
+      self.display_name = 'Credorax Gateway'
+      self.homepage_url = 'https://www.credorax.com/'
 
-      self.test_url = "https://intconsole.credorax.com/intenv/service/gateway"
+      self.test_url = 'https://intconsole.credorax.com/intenv/service/gateway'
 
       # The live URL is assigned on a per merchant basis once certification has passed
       # See the Credorax remote tests for the full certification test suite
@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://assigned-subdomain.credorax.net/crax_gate/service/gateway'
 
       self.supported_countries = %w(DE GB FR IT ES PL NL BE GR CZ PT SE HU RS AT CH BG DK FI SK NO IE HR BA AL LT MK SI LV EE ME LU MT IS AD MC LI SM)
-      self.default_currency = "EUR"
+      self.default_currency = 'EUR'
       self.currencies_without_fractions = %w(CLP JPY KRW PYG VND)
       self.currencies_with_three_decimal_places = %w(BHD JOD KWD OMR RSD TND)
 
@@ -24,80 +24,96 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :maestro]
 
       RESPONSE_MESSAGES = {
-        "00" => "Approved or completed successfully",
-        "01" => "Refer to card issuer",
-        "02" => "Refer to card issuer special condition",
-        "03" => "Invalid merchant",
-        "04" => "Pick up card",
-        "05" => "Do not Honour",
-        "06" => "Invalid Transaction for Terminal",
-        "07" => "Pick up card special condition",
-        "08" => "Time-Out",
-        "09" => "No Original",
-        "10" => "Approved for partial amount",
-        "11" => "Partial Approval",
-        "12" => "Invalid transaction card / issuer / acquirer",
-        "13" => "Invalid amount",
-        "14" => "Invalid card number",
-        "17" => "Invalid Capture date (terminal business date)",
-        "19" => "System Error; Re-enter transaction",
-        "20" => "No From Account",
-        "21" => "No To Account",
-        "22" => "No Checking Account",
-        "23" => "No Saving Account",
-        "24" => "No Credit Account",
-        "30" => "Format error",
-        "34" => "Implausible card data",
-        "39" => "Transaction Not Allowed",
-        "41" => "Lost Card, Pickup",
-        "42" => "Special Pickup",
-        "43" => "Hot Card, Pickup (if possible)",
-        "44" => "Pickup Card",
-        "51" => "Not sufficient funds",
-        "52" => "No checking Account",
-        "53" => "No savings account",
-        "54" => "Expired card",
-        "55" => "Pin incorrect",
-        "57" => "Transaction not allowed for cardholder",
-        "58" => "Transaction not allowed for merchant",
-        "59" => "Suspected Fraud",
-        "61" => "Exceeds withdrawal amount limit",
-        "62" => "Restricted card",
-        "63" => "MAC Key Error",
-        "65" => "Activity count limit exceeded",
-        "66" => "Exceeds Acquirer Limit",
-        "67" => "Retain Card; no reason specified",
-        "68" => "Response received too late",
-        "75" => "Pin tries exceeded",
-        "76" => "Invalid Account",
-        "77" => "Issuer Does Not Participate In The Service",
-        "78" => "Function Not Available",
-        "79" => "Key Validation Error",
-        "80" => "Approval for Purchase Amount Only",
-        "81" => "Unable to Verify PIN",
-        "82" => "Time out at issuer system",
-        "83" => "Not declined (Valid for all zero amount transactions)",
-        "84" => "Invalid Life Cycle of transaction",
-        "85" => "Not declined",
-        "86" => "Cannot verify pin",
-        "87" => "Purchase amount only, no cashback allowed",
-        "88" => "MAC sync Error",
-        "89" => "Security Violation",
-        "91" => "Issuer not available",
-        "92" => "Unable to route at acquirer Module",
-        "93" => "Transaction cannot be completed",
-        "94" => "Duplicate transaction",
-        "95" => "Contact Acquirer",
-        "96" => "System malfunction",
-        "97" => "No Funds Transfer",
-        "98" => "Duplicate Reversal",
-        "99" => "Duplicate Transaction",
-        "N3" => "Cash Service Not Available",
-        "N4" => "Cash Back Request Exceeds Issuer Limit",
-        "N7" => "N7 (visa), Decline CVV2 failure",
-        "R0" => "Stop Payment Order",
-        "R1" => "Revocation of Authorisation Order",
-        "R3" => "Revocation of all Authorisations Order"
+        '00' => 'Approved or completed successfully',
+        '01' => 'Refer to card issuer',
+        '02' => 'Refer to card issuer special condition',
+        '03' => 'Invalid merchant',
+        '04' => 'Pick up card',
+        '05' => 'Do not Honour',
+        '06' => 'Error',
+        '07' => 'Pick up card special condition',
+        '08' => 'Honour with identification',
+        '09' => 'Request in progress',
+        '10' => 'Approved for partial amount',
+        '11' => 'Approved (VIP)',
+        '12' => 'Invalid transaction',
+        '13' => 'Invalid amount',
+        '14' => 'Invalid card number',
+        '15' => 'No such issuer',
+        '16' => 'Approved, update track 3',
+        '17' => 'Customer cancellation',
+        '18' => 'Customer dispute',
+        '19' => 'Re-enter transaction',
+        '20' => 'Invalid response',
+        '21' => 'No action taken',
+        '22' => 'Suspected malfunction',
+        '23' => 'Unacceptable transaction fee',
+        '24' => 'File update not supported by receiver',
+        '25' => 'No such record',
+        '26' => 'Duplicate record update, old record replaced',
+        '27' => 'File update field edit error',
+        '28' => 'File locked out while update',
+        '29' => 'File update error, contact acquirer',
+        '30' => 'Format error',
+        '31' => 'Issuer signed-off',
+        '32' => 'Completed partially',
+        '33' => 'Pick-up, expired card',
+        '34' => 'Suspect Fraud',
+        '35' => 'Pick-up, card acceptor contact acquirer',
+        '36' => 'Pick up, card restricted',
+        '37' => 'Pick up, call acquirer security',
+        '38' => 'Pick up, Allowable PIN tries exceeded',
+        '39' => 'Transaction Not Allowed',
+        '40' => 'Requested function not supported',
+        '41' => 'Lost Card, Pickup',
+        '42' => 'No universal account',
+        '43' => 'Pick up, stolen card',
+        '44' => 'No investment account',
+        '50' => 'Do not renew',
+        '51' => 'Not sufficient funds',
+        '52' => 'No checking Account',
+        '53' => 'No savings account',
+        '54' => 'Expired card',
+        '55' => 'Pin incorrect',
+        '56' => 'No card record',
+        '57' => 'Transaction not allowed for cardholder',
+        '58' => 'Transaction not allowed for merchant',
+        '59' => 'Suspected Fraud',
+        '60' => 'Card acceptor contact acquirer',
+        '61' => 'Exceeds withdrawal amount limit',
+        '62' => 'Restricted card',
+        '63' => 'Security violation',
+        '64' => 'Wrong original amount',
+        '65' => 'Activity count limit exceeded',
+        '66' => 'Call acquirers security department',
+        '67' => 'Card to be picked up at ATM',
+        '68' => 'Response received too late.',
+        '70' => 'Invalid transaction; contact card issuer',
+        '71' => 'Decline PIN not changed',
+        '75' => 'Pin tries exceeded',
+        '76' => 'Wrong PIN, number of PIN tries exceeded',
+        '77' => 'Wrong Reference No.',
+        '78' => 'Record Not Found',
+        '79' => 'Already reversed',
+        '80' => 'Network error',
+        '81' => 'Foreign network error / PIN cryptographic error',
+        '82' => 'Time out at issuer system',
+        '83' => 'Transaction failed',
+        '84' => 'Pre-authorization timed out',
+        '85' => 'No reason to decline',
+        '86' => 'Cannot verify pin',
+        '87' => 'Purchase amount only, no cashback allowed',
+        '88' => 'MAC sync Error',
+        '89' => 'Authentication failure',
+        '91' => 'Issuer not available',
+        '92' => 'Unable to route at acquirer Module',
+        '93' => 'Cannot be completed, violation of law',
+        '94' => 'Duplicate Transmission',
+        '95' => 'Reconcile error / Auth Not found',
+        '96' => 'System malfunction',
+        'R0' => 'Stop Payment Order',
+        'R1' => 'Revocation of Authorisation Order',
+        'R3' => 'Revocation of all Authorisations Order'
       }
 
       def initialize(options={})
@@ -113,6 +129,8 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_3d_secure(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
+        add_transaction_type(post, options)
 
         commit(:purchase, post)
       end
@@ -125,6 +143,8 @@ module ActiveMerchant #:nodoc:
         add_email(post, options)
         add_3d_secure(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
+        add_transaction_type(post, options)
 
         commit(:authorize, post)
       end
@@ -135,6 +155,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
 
         commit(:capture, post)
       end
@@ -144,6 +165,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         reference_action = add_reference(post, authorization)
         add_echo(post, options)
+        add_submerchant_id(post, options)
         post[:a1] = generate_unique_id
 
         commit(:void, post, reference_action)
@@ -155,6 +177,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
 
         commit(:refund, post)
       end
@@ -166,6 +189,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_email(post, options)
         add_echo(post, options)
+        add_submerchant_id(post, options)
+        add_transaction_type(post, options)
 
         commit(:credit, post)
       end
@@ -196,12 +221,13 @@ module ActiveMerchant #:nodoc:
         post[:a1] = generate_unique_id
         post[:a5] = currency
         post[:h9] = options[:order_id]
+        post[:i2] = options[:billing_descriptor] if options[:billing_descriptor]
       end
 
       CARD_TYPES = {
-        "visa" => '1',
-        "mastercard" => '2',
-        "maestro" => '9'
+        'visa' => '1',
+        'mastercard' => '2',
+        'maestro' => '9'
       }
 
       def add_payment_method(post, payment_method)
@@ -226,7 +252,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        response_id, authorization_code, request_id, action = authorization.split(";")
+        response_id, authorization_code, request_id, action = authorization.split(';')
         post[:g2] = response_id
         post[:g3] = authorization_code
         post[:g4] = request_id
@@ -246,6 +272,14 @@ module ActiveMerchant #:nodoc:
         # The d2 parameter is used during the certification process
         # See remote tests for full certification test suite
         post[:d2] = options[:echo] unless options[:echo].blank?
+      end
+
+      def add_submerchant_id(post, options)
+        post[:h3] = options[:submerchant_id] if options[:submerchant_id]
+      end
+
+      def add_transaction_type(post, options)
+        post[:a9] = options[:transaction_type] if options[:transaction_type]
       end
 
       ACTIONS = {
@@ -269,8 +303,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: "#{response["Z1"]};#{response["Z4"]};#{response["A1"]};#{action}",
-          avs_result: AVSResult.new(code: response["Z9"]),
-          cvv_result: CVVResult.new(response["Z14"]),
+          avs_result: AVSResult.new(code: response['Z9']),
+          cvv_result: CVVResult.new(response['Z14']),
           test: test?
         )
       end
@@ -283,11 +317,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, params, reference_action)
-        params.keys.each { |key| params[key] = params[key].to_s}
+        params.keys.each { |key| params[key] = params[key].to_s }
         params[:M] = @options[:merchant_id]
         params[:O] = request_action(action, reference_action)
         params[:K] = sign_request(params)
-        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def request_action(action, reference_action)
@@ -303,18 +337,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
+        Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
       end
 
       def success_from(response)
-        response["Z2"] == "0"
+        response['Z2'] == '0'
       end
 
       def message_from(response)
         if success_from(response)
-          "Succeeded"
+          'Succeeded'
         else
-          RESPONSE_MESSAGES[response["Z6"]] || response["Z3"] || "Unable to read error message"
+          RESPONSE_MESSAGES[response['Z6']] || response['Z3'] || 'Unable to read error message'
         end
       end
     end

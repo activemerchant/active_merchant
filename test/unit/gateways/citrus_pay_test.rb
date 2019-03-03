@@ -91,7 +91,7 @@ class CitrusPayTest < Test::Unit::TestCase
 
   def test_passing_alpha3_country_code
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => {country: "US"})
+      @gateway.authorize(@amount, @credit_card, :billing_address => {country: 'US'})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/USA/, data)
     end.respond_with(successful_authorize_response)
@@ -99,7 +99,7 @@ class CitrusPayTest < Test::Unit::TestCase
 
   def test_non_existent_country
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(@amount, @credit_card, :billing_address => {country: "Blah"})
+      @gateway.authorize(@amount, @credit_card, :billing_address => {country: 'Blah'})
     end.check_request do |method, endpoint, data, headers|
       assert_match(/"country":null/, data)
     end.respond_with(successful_authorize_response)
@@ -138,7 +138,7 @@ class CitrusPayTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, successful_void_response)
     assert_success response
-    assert_equal "91debbeb-d88f-42e9-a6ce-9b62c99d656b", response.params['order']['id']
+    assert_equal '91debbeb-d88f-42e9-a6ce-9b62c99d656b', response.params['order']['id']
   end
 
   def test_successful_verify_with_failed_void
@@ -146,7 +146,7 @@ class CitrusPayTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_unsuccessful_verify
@@ -154,7 +154,7 @@ class CitrusPayTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "FAILURE - DECLINED", response.message
+    assert_equal 'FAILURE - DECLINED', response.message
   end
 
   def test_north_america_region_url

@@ -86,7 +86,7 @@ class NabTransactTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    assert_equal "Expired Card", response.message
+    assert_equal 'Expired Card', response.message
   end
 
   def test_failed_login
@@ -95,7 +95,7 @@ class NabTransactTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal "Invalid merchant ID", response.message
+    assert_equal 'Invalid merchant ID', response.message
   end
 
   def test_supported_countries
@@ -108,7 +108,7 @@ class NabTransactTest < Test::Unit::TestCase
 
   def test_successful_refund
     @gateway.expects(:ssl_post).with(&check_transaction_type(:refund)).returns(successful_refund_response)
-    assert_success @gateway.refund(@amount, "009887", {:order_id => '1'})
+    assert_success @gateway.refund(@amount, '009887', {:order_id => '1'})
   end
 
   def test_successful_refund_with_merchant_descriptor
@@ -131,9 +131,9 @@ class NabTransactTest < Test::Unit::TestCase
   def test_failed_refund
     @gateway.expects(:ssl_post).with(&check_transaction_type(:refund)).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "009887", {:order_id => '1'})
+    response = @gateway.refund(@amount, '009887', {:order_id => '1'})
     assert_failure response
-    assert_equal "Only $1.00 available for refund", response.message
+    assert_equal 'Only $1.00 available for refund', response.message
   end
 
   def test_request_timeout_default
@@ -151,6 +151,14 @@ class NabTransactTest < Test::Unit::TestCase
     end.check_request do |method, endpoint, data, headers|
       assert_match(/<timeoutValue>44/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_nonfractional_currencies
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(10000, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<amount>100<\/amount>/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_scrub
@@ -214,14 +222,14 @@ Conn close
   end
 
   def valid_metadata(name, location)
-    return <<-XML.gsub(/^\s{4}/,'').gsub(/\n/, '')
+    return <<-XML.gsub(/^\s{4}/, '').gsub(/\n/, '')
     <metadata><meta name="ca_name" value="#{name}"/><meta name="ca_location" value="#{location}"/></metadata>
     XML
   end
 
   def assert_metadata(name, location, &block)
     stub_comms(@gateway, :ssl_request) do
-      block.call
+      yield
     end.check_request do |method, endpoint, data, headers|
       metadata_matcher = Regexp.escape(valid_metadata(name, location))
       assert_match %r{#{metadata_matcher}}, data
@@ -233,7 +241,7 @@ Conn close
   end
 
   def successful_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -276,7 +284,7 @@ Conn close
   end
 
   def failed_purchase_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -319,7 +327,7 @@ Conn close
   end
 
   def successful_authorize_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -364,7 +372,7 @@ Conn close
   end
 
   def successful_refund_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -407,7 +415,7 @@ Conn close
   end
 
   def failed_refund_response
-    <<-XML.gsub(/^\s{4}/,'')
+    <<-XML.gsub(/^\s{4}/, '')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>

@@ -51,9 +51,9 @@ module ActiveMerchant #:nodoc:
           MultiResponse.run(:first) do |r|
             r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/", post, options) }
 
-            return r unless options[:set_default] and r.success? and !r.params["id"].blank?
+            return r unless options[:set_default] and r.success? and !r.params['id'].blank?
 
-            r.process { update_customer(options[:customer], :default_card => r.params["id"]) }
+            r.process { update_customer(options[:customer], :default_card => r.params['id']) }
           end
         else
           commit(:post, 'customers', post, options)
@@ -78,18 +78,18 @@ module ActiveMerchant #:nodoc:
         msg = 'Invalid response received from the WebPay API.  Please contact support@webpay.jp if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          "error" => {
-            "message" => msg
+          'error' => {
+            'message' => msg
           }
         }
       end
 
       def headers(options = {})
         {
-          "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
-          "User-Agent" => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "X-Webpay-Client-User-Agent" => user_agent,
-          "X-Webpay-Client-User-Metadata" => {:ip => options[:ip]}.to_json
+          'Authorization' => 'Basic ' + Base64.encode64(@api_key.to_s + ':').strip,
+          'User-Agent' => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          'X-Webpay-Client-User-Agent' => user_agent,
+          'X-Webpay-Client-User-Metadata' => {:ip => options[:ip]}.to_json
         }
       end
     end

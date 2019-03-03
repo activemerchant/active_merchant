@@ -1,15 +1,14 @@
 require 'test_helper'
 
 class RemoteQuantumTest < Test::Unit::TestCase
-  
 
   def setup
     @gateway = QuantumGateway.new(fixtures(:quantum))
-    
+
     @amount = 100
     @credit_card = credit_card('4000100011112224')
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
@@ -53,7 +52,7 @@ class RemoteQuantumTest < Test::Unit::TestCase
     assert response = @gateway.void(response.authorization)
     assert_success response
   end
-  
+
   def test_passing_billing_address
     options = {:billing_address => address}
     assert response = @gateway.purchase(@amount, @credit_card, options)

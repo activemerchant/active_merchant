@@ -27,11 +27,9 @@ module ActiveMerchant
 
       def self.humanize(lower_case_and_underscored_word)
         result = lower_case_and_underscored_word.to_s.dup
-        result.gsub!(/_id$/, "")
+        result.gsub!(/_id$/, '')
         result.gsub!(/_/, ' ')
-        result.gsub(/([a-z\d]*)/i) { |match|
-          match.downcase
-        }.gsub(/^\w/) { $&.upcase }
+        result.gsub(/([a-z\d]*)/i, &:downcase).gsub(/^\w/) { $&.upcase }
       end
     end
   end
@@ -63,7 +61,7 @@ module ActiveMerchant
 
         class Errors < Hash
           def initialize
-            super(){|h, k| h[k] = []}
+            super() { |h, k| h[k] = [] }
           end
 
           alias count size
@@ -77,7 +75,7 @@ module ActiveMerchant
           end
 
           def empty?
-            all?{|k, v| v && v.empty?}
+            all? { |k, v| v&.empty? }
           end
 
           def on(field)
@@ -93,7 +91,7 @@ module ActiveMerchant
           end
 
           def each_full
-            full_messages.each{|msg| yield msg}
+            full_messages.each { |msg| yield msg }
           end
 
           def full_messages
@@ -102,7 +100,7 @@ module ActiveMerchant
             self.each do |key, messages|
               next unless(messages && !messages.empty?)
               if key == 'base'
-                result << "#{messages.first}"
+                result << messages.first.to_s
               else
                 result << "#{Compatibility.humanize(key)} #{messages.first}"
               end
@@ -117,4 +115,3 @@ module ActiveMerchant
     Compatibility::Model.send(:include, Rails::Model)
   end
 end
-

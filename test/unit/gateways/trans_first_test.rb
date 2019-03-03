@@ -65,15 +65,30 @@ class TransFirstTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.stubs(:ssl_post).returns(successful_refund_response)
 
-    response = @gateway.refund(@amount, "TransID")
+    response = @gateway.refund(@amount, 'TransID')
     assert_success response
     assert_equal '207686608|creditcard', response.authorization
+    assert_equal @amount, response.params['amount'].to_i*100
   end
 
   def test_failed_refund
     @gateway.stubs(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "TransID")
+    response = @gateway.refund(@amount, 'TransID')
+    assert_failure response
+  end
+
+  def test_successful_void
+    @gateway.stubs(:ssl_post).returns(successful_void_response)
+
+    response = @gateway.void('TransID')
+    assert_success response
+  end
+
+  def test_failed_void
+    @gateway.stubs(:ssl_post).returns(failed_void_response)
+
+    response = @gateway.void('TransID')
     assert_failure response
   end
 
@@ -317,6 +332,38 @@ class TransFirstTest < Test::Unit::TestCase
         <Amount>0</Amount>
         <Status>Canceled</Status>
         <Message>Transaction Is Not Allowed To Void or Refund</Message>
+      </BankCardRefundStatus>
+    XML
+  end
+
+  def successful_void_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8" ?>
+      <BankCardRefundStatus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.paymentresources.com/webservices/">
+        <TransID>0</TransID>
+      <TransID>207616632</TransID>
+      <CreditID>0</CreditID>
+      <RefID>123</RefID>
+      <PostedDate>2010-08-09T12:25:00</PostedDate> <SettledDate>0001-01-01T00:00:00</SettledDate>
+      <Amount>1.3100</Amount>
+      <AuthCode>012921</AuthCode>
+      <Status>Voided</Status>
+      <AVSCode>N</AVSCode>
+      <CVV2Code />
+      </BankCardRefundStatus>
+   XML
+  end
+
+  def failed_void_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8" ?>
+      <BankCardRefundStatus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.paymentresources.com/webservices/">
+      <TransID>0</TransID>
+      <CreditID>0</CreditID>
+      <PostedDate>0001-01-01T00:00:00</PostedDate> <SettledDate>0001-01-01T00:00:00</SettledDate>
+      <Amount>0</Amount>
+      <Status>Canceled</Status>
+      <Message>Transaction Is Not Allowed To Void or Refund</Message>
       </BankCardRefundStatus>
     XML
   end

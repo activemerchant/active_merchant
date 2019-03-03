@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
     # You may use Check in place of CreditCard with any gateway that supports it.
     class Check < Model
       attr_accessor :first_name, :last_name,
-                    :bank_name, :routing_number, :account_number,
-                    :account_holder_type, :account_type, :number
+        :bank_name, :routing_number, :account_number,
+        :account_holder_type, :account_type, :number
 
       # Used for Canadian bank accounts
       attr_accessor :institution_number, :transit_number
@@ -30,17 +30,17 @@ module ActiveMerchant #:nodoc:
         errors = []
 
         [:name, :routing_number, :account_number].each do |attr|
-          errors << [attr, "cannot be empty"] if empty?(self.send(attr))
+          errors << [attr, 'cannot be empty'] if empty?(self.send(attr))
         end
 
-        errors << [:routing_number, "is invalid"] unless valid_routing_number?
+        errors << [:routing_number, 'is invalid'] unless valid_routing_number?
 
         if(!empty?(account_holder_type) && !%w[business personal].include?(account_holder_type.to_s))
-          errors << [:account_holder_type, "must be personal or business"]
+          errors << [:account_holder_type, 'must be personal or business']
         end
 
         if(!empty?(account_type) && !%w[checking savings].include?(account_type.to_s))
-          errors << [:account_type, "must be checking or savings"]
+          errors << [:account_type, 'must be checking or savings']
         end
 
         errors_hash(errors)
@@ -53,12 +53,13 @@ module ActiveMerchant #:nodoc:
       def credit_card?
         false
       end
+
       # Routing numbers may be validated by calculating a checksum and dividing it by 10. The
       # formula is:
       #   (3(d1 + d4 + d7) + 7(d2 + d5 + d8) + 1(d3 + d6 + d9))mod 10 = 0
       # See http://en.wikipedia.org/wiki/Routing_transit_number#Internal_checksums
       def valid_routing_number?
-        digits = routing_number.to_s.split('').map(&:to_i).select{|d| (0..9).include?(d)}
+        digits = routing_number.to_s.split('').map(&:to_i).select { |d| (0..9).cover?(d) }
         case digits.size
         when 9
           checksum = ((3 * (digits[0] + digits[3] + digits[6])) +

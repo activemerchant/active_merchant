@@ -54,14 +54,14 @@ class RemoteDigitzsTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, store.authorization, @options_token_split)
     assert_success response
     assert_equal 'Success', response.message
-    assert response.params["data"]["attributes"]["split"]["splitId"]
+    assert response.params['data']['attributes']['split']['splitId']
   end
 
   def test_successful_card_split_purchase
     response = @gateway.purchase(@amount, @credit_card, @options_card_split)
     assert_success response
     assert_equal 'Success', response.message
-    assert response.params["data"]["attributes"]["split"]["splitId"]
+    assert response.params['data']['attributes']['split']['splitId']
   end
 
   def test_failed_purchase
@@ -104,12 +104,12 @@ class RemoteDigitzsTest < Test::Unit::TestCase
   end
 
   def test_store_adds_card_to_existing_customer
-    assert response = @gateway.store(@credit_card, @options.merge({customer_id: "spreedly-susanswidg-32268973-2091076-148408385-5980208887457495-148700575"}))
+    assert response = @gateway.store(@credit_card, @options.merge({customer_id: 'spreedly-susanswidg-32268973-2091076-148408385-5980208887457495-148700575'}))
     assert_success response
   end
 
   def test_store_creates_new_customer_and_adds_card
-    assert response = @gateway.store(@credit_card, @options.merge({customer_id: "nonexistant"}))
+    assert response = @gateway.store(@credit_card, @options.merge({customer_id: 'nonexistant'}))
     assert_success response
   end
 

@@ -9,8 +9,16 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
-      email: "user+br@example.com",
+      shipping_address: address,
+      email: 'user+br@example.com',
       description: 'Store Purchase'
+    }
+    @processing_options = {
+      binary_mode: false,
+      processing_mode: 'gateway',
+      merchant_account_id: fixtures(:mercado_pago)[:merchant_account_id],
+      fraud_scoring: true,
+      fraud_manual_review: true
     }
   end
 
@@ -20,10 +28,32 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'accredited', response.message
   end
 
+  def test_successful_purchase_with_binary_false
+    @options.update(binary_mode: false)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'pending_capture', response.message
+  end
+
+  # Requires setup on merchant account
+  def test_successful_purchase_with_processing_mode_gateway
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(@processing_options))
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
+  def test_successful_purchase_with_american_express
+    amex_card = credit_card('375365153556885', brand: 'american_express', verification_value: '1234')
+
+    response = @gateway.purchase(@amount, amex_card, @options)
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "rejected", response.error_code
+    assert_equal 'rejected', response.error_code
     assert_equal 'cc_rejected_other_reason', response.message
   end
 
@@ -44,10 +74,10 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   end
 
   def test_partial_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
+    auth = @gateway.authorize(@amount+1, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'accredited', capture.message
   end
@@ -55,7 +85,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'Method not allowed', response.message
+    assert_equal 'json_parse_error', response.message
   end
 
   def test_successful_refund
@@ -78,7 +108,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal 'Resource /payments/refunds not found.', response.message
+    assert_equal 'Not Found', response.message
   end
 
   def test_successful_void
@@ -93,7 +123,7 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'Method not allowed', response.message
+    assert_equal 'json_parse_error', response.message
   end
 
   def test_successful_verify

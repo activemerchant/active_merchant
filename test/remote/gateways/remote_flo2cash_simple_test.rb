@@ -7,7 +7,7 @@ class RemoteFlo2cashSimpleTest < Test::Unit::TestCase
     @gateway = Flo2cashSimpleGateway.new(fixtures(:flo2cash_simple))
 
     @amount = 100
-    @credit_card = credit_card('5123456789012346', brand: :master, month: 5, year: 2017, verification_value: 111 )
+    @credit_card = credit_card('5123456789012346', brand: :master, month: 5, year: 2017, verification_value: 111)
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -25,7 +25,7 @@ class RemoteFlo2cashSimpleTest < Test::Unit::TestCase
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Authentication error. Username and/or Password are incorrect", response.message
+    assert_equal 'Authentication error. Username and/or Password are incorrect', response.message
   end
 
   def test_successful_purchase
@@ -53,7 +53,7 @@ class RemoteFlo2cashSimpleTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal "Original transaction not found", response.message
+    assert_equal 'Original transaction not found', response.message
   end
 
   def test_transcript_scrubbing

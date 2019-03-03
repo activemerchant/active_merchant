@@ -105,6 +105,7 @@ class NetRegistryTest < Test::Unit::TestCase
   end
 
   private
+
   def successful_purchase_response
     <<-RESPONSE
 approved

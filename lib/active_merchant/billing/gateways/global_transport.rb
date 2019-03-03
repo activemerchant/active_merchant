@@ -9,7 +9,6 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(CA PR US)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
-      self.ssl_version = :TLSv1
 
       self.homepage_url = 'https://www.globalpaymentsinc.com'
       self.display_name = 'Global Transport'
@@ -75,6 +74,17 @@ module ActiveMerchant #:nodoc:
         commit('CardVerify', post, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?CardNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?CVNum=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?GlobalPassword=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
       def add_address(post, options)
@@ -110,8 +120,8 @@ module ActiveMerchant #:nodoc:
         end
 
         ext_data = Nokogiri::HTML.parse(response[:extdata])
-        response[:approved_amount] = ext_data.xpath("//approvedamount").text
-        response[:balance_due] = ext_data.xpath("//balancedue").text
+        response[:approved_amount] = ext_data.xpath('//approvedamount').text
+        response[:balance_due] = ext_data.xpath('//balancedue').text
 
         response
       end
@@ -136,7 +146,7 @@ module ActiveMerchant #:nodoc:
         post[:TransType] = action
         post[:ExtData] = "<TermType>#{@options[:term_type]}</TermType>"
 
-        post.merge(params).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        post.merge(params).map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def url
@@ -144,7 +154,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:result] == "0" || response[:result] == "200"
+        response[:result] == '0' || response[:result] == '200'
       end
 
       def message_from(response)

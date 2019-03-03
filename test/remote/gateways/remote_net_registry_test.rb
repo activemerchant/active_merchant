@@ -58,8 +58,8 @@ class NetRegistryTest < Test::Unit::TestCase
       assert_match(/\A\d{6}\z/, response.authorization)
 
       response = @gateway.capture(@amount,
-                                  response.authorization,
-                                  :credit_card => @valid_creditcard)
+        response.authorization,
+        :credit_card => @valid_creditcard)
       assert_success response
       assert_equal 'approved', response.params['status']
     end

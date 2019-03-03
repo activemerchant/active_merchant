@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class MercadoPagoTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = MercadoPagoGateway.new(access_token: 'access_token')
     @credit_card = credit_card
@@ -19,8 +21,8 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "4141491|1.0", response.authorization
-    assert_equal "accredited", response.message
+    assert_equal '4141491|1.0', response.authorization
+    assert_equal 'accredited', response.message
     assert response.test?
   end
 
@@ -29,8 +31,8 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "rejected", response.error_code
-    assert_equal "cc_rejected_other_reason", response.message
+    assert_equal 'rejected', response.error_code
+    assert_equal 'cc_rejected_other_reason', response.message
   end
 
   def test_successful_authorize
@@ -39,8 +41,8 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "4261941|1.0", response.authorization
-    assert_equal "pending_capture", response.message
+    assert_equal '4261941|1.0', response.authorization
+    assert_equal 'pending_capture', response.message
     assert response.test?
   end
 
@@ -49,29 +51,29 @@ class MercadoPagoTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "rejected", response.error_code
-    assert_equal "cc_rejected_other_reason", response.message
+    assert_equal 'rejected', response.error_code
+    assert_equal 'cc_rejected_other_reason', response.message
   end
 
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "authorization|amount")
+    response = @gateway.capture(@amount, 'authorization|amount')
     assert_success response
 
-    assert_equal "4261941|1.0", response.authorization
-    assert_equal "accredited", response.message
+    assert_equal '4261941|1.0', response.authorization
+    assert_equal 'accredited', response.message
     assert response.test?
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "")
+    response = @gateway.capture(@amount, '')
     assert_failure response
 
-    assert_equal "|1.0", response.authorization
-    assert_equal "Method not allowed", response.message
+    assert_equal '|1.0', response.authorization
+    assert_equal 'Method not allowed', response.message
     assert response.test?
   end
 
@@ -93,22 +95,22 @@ class MercadoPagoTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_void_response)
 
-    response = @gateway.void("authorization|amount")
+    response = @gateway.void('authorization|amount')
     assert_success response
 
-    assert_equal "4261966|", response.authorization
-    assert_equal "by_collector", response.message
+    assert_equal '4261966|', response.authorization
+    assert_equal 'by_collector', response.message
     assert response.test?
   end
 
   def test_failed_void
     @gateway.expects(:ssl_request).returns(failed_void_response)
 
-    response = @gateway.void("")
+    response = @gateway.void('')
     assert_failure response
 
-    assert_equal "|", response.authorization
-    assert_equal "Method not allowed", response.message
+    assert_equal '|', response.authorization
+    assert_equal 'Method not allowed', response.message
     assert response.test?
   end
 
@@ -118,7 +120,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_success response
 
-    assert_equal "by_collector", response.message
+    assert_equal 'by_collector', response.message
     assert response.test?
   end
 
@@ -128,7 +130,7 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
 
-    assert_equal "Method not allowed", response.message
+    assert_equal 'Method not allowed', response.message
     assert response.test?
   end
 
@@ -138,13 +140,79 @@ class MercadoPagoTest < Test::Unit::TestCase
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
 
-    assert_equal "cc_rejected_other_reason", response.message
+    assert_equal 'cc_rejected_other_reason', response.message
     assert response.test?
   end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_does_not_send_brand
+    credit_card = credit_card('378282246310005', brand: 'american_express')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if endpoint =~ /payments/
+        assert_not_match(%r("payment_method_id":"amex"), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_sends_payment_method_id
+    credit_card = credit_card('30569309025904')
+
+    response = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options.merge(payment_method_id: 'diners'))
+    end.check_request do |endpoint, data, headers|
+      if endpoint =~ /payments/
+        assert_match(%r("payment_method_id":"diners"), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
+  end
+
+  def test_includes_deviceid_header
+    @options[:device_id] = '1a2b3c'
+    @gateway.expects(:ssl_post).with(anything, anything, {'Content-Type' => 'application/json'}).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, {'Content-Type' => 'application/json', 'X-Device-Session-ID' => '1a2b3c'}).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_includes_additional_data
+    @options[:additional_info] = {'foo' => 'bar', 'baz' => 'quux'}
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /payment_method_id/
+        assert_match(/"foo":"bar"/, data)
+        assert_match(/"baz":"quux"/, data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
+  def test_includes_issuer_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: '1a2b3c4d'))
+    end.check_request do |endpoint, data, headers|
+      if endpoint =~ /payments/
+        assert_match(%r("issuer_id":"1a2b3c4d"), data)
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal '4141491|1.0', response.authorization
   end
 
   private

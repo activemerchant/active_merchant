@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
         'REBID' => :rebid,
         'TRANS_TYPE' => :trans_type,
         'PAYMENT_ACCOUNT_MASK' => :acct_mask,
-        'CARD_TYPE' => :card_type,
+        'CARD_TYPE' => :card_type
       }
 
       REBILL_FIELD_MAP = {
@@ -41,6 +41,7 @@ module ActiveMerchant #:nodoc:
         'REB_AMOUNT' => :rebill_amount,
         'NEXT_AMOUNT' => :next_amount,
         'USUAL_DATE' => :undoc_usual_date, # Not found in the bp20rebadmin API doc.
+        'CUST_TOKEN' => :cust_token
       }
 
       self.supported_countries = ['US', 'CA']
@@ -84,7 +85,7 @@ module ActiveMerchant #:nodoc:
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
         post[:TRANS_TYPE]  = 'AUTH'
-        commit('AUTH_ONLY', money, post)
+        commit('AUTH_ONLY', money, post, options)
       end
 
       # Perform a purchase, which is essentially an authorization and capture in a single operation.
@@ -107,7 +108,7 @@ module ActiveMerchant #:nodoc:
         add_rebill(post, options) if options[:rebill]
         add_duplicate_override(post, options)
         post[:TRANS_TYPE]  = 'SALE'
-        commit('AUTH_CAPTURE', money, post)
+        commit('AUTH_CAPTURE', money, post, options)
       end
 
       # Captures the funds from an authorize transaction.
@@ -123,7 +124,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         post[:MASTER_ID] = identification
         post[:TRANS_TYPE] = 'CAPTURE'
-        commit('PRIOR_AUTH_CAPTURE', money, post)
+        commit('PRIOR_AUTH_CAPTURE', money, post, options)
       end
 
       # Void a previous transaction
@@ -136,7 +137,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:MASTER_ID] = identification
         post[:TRANS_TYPE] = 'VOID'
-        commit('VOID', nil, post)
+        commit('VOID', nil, post, options)
       end
 
       # Performs a credit.
@@ -155,7 +156,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of parameters.
       def refund(money, identification, options = {})
         if(identification && !identification.kind_of?(String))
-          ActiveMerchant.deprecated "refund should only be used to refund a referenced transaction"
+          ActiveMerchant.deprecated 'refund should only be used to refund a referenced transaction'
           return credit(money, identification, options)
         end
 
@@ -163,18 +164,18 @@ module ActiveMerchant #:nodoc:
         post[:PAYMENT_ACCOUNT] = ''
         post[:MASTER_ID]  = identification
         post[:TRANS_TYPE] = 'REFUND'
-        post[:NAME1] = (options[:first_name] ? options[:first_name] : "")
+        post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
         post[:ZIP] = options[:zip] if options[:zip]
         add_invoice(post, options)
         add_address(post, options)
         add_customer_data(post, options)
-        commit('CREDIT', money, post)
+        commit('CREDIT', money, post, options)
       end
 
       def credit(money, payment_object, options = {})
-        if(payment_object && payment_object.kind_of?(String))
-          ActiveMerchant.deprecated "credit should only be used to credit a payment method"
+        if payment_object&.kind_of?(String)
+          ActiveMerchant.deprecated 'credit should only be used to credit a payment method'
           return refund(money, payment_object, options)
         end
 
@@ -183,13 +184,13 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_object)
         post[:TRANS_TYPE] = 'CREDIT'
 
-        post[:NAME1] = (options[:first_name] ? options[:first_name] : "")
+        post[:NAME1] = options[:first_name] || ''
         post[:NAME2] = options[:last_name] if options[:last_name]
         post[:ZIP] = options[:zip] if options[:zip]
         add_invoice(post, options)
         add_address(post, options)
         add_customer_data(post, options)
-        commit('CREDIT', money, post)
+        commit('CREDIT', money, post, options)
       end
 
       # Create a new recurring payment.
@@ -313,10 +314,11 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def commit(action, money, fields)
+      def commit(action, money, fields, options = {})
         fields[:AMOUNT] = amount(money) unless(fields[:TRANS_TYPE] == 'VOID' || action == 'rebill')
         fields[:MODE] = (test? ? 'TEST' : 'LIVE')
         fields[:ACCOUNT_ID] = @options[:login]
+        fields[:CUSTOMER_IP] = options[:ip] if options[:ip]
 
         if action == 'rebill'
           url = rebilling_url
@@ -330,7 +332,7 @@ module ActiveMerchant #:nodoc:
 
       def parse_recurring(response_fields, opts={}) # expected status?
         parsed = {}
-        response_fields.each do |k,v|
+        response_fields.each do |k, v|
           mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
           parsed[mapped_key] = v
         end
@@ -345,14 +347,14 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         # The bp20api has max one value per form field.
-        response_fields = Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
+        response_fields = Hash[CGI::parse(body).map { |k, v| [k.upcase, v.first] }]
 
-        if response_fields.include? "REBILL_ID"
+        if response_fields.include? 'REBILL_ID'
           return parse_recurring(response_fields)
         end
 
         parsed = {}
-        response_fields.each do |k,v|
+        response_fields.each do |k, v|
           mapped_key = FIELD_MAP.include?(k) ? FIELD_MAP[k] : k
           parsed[mapped_key] = v
         end
@@ -374,16 +376,16 @@ module ActiveMerchant #:nodoc:
           if CARD_CODE_ERRORS.include?(parsed[:card_code])
             message = CVVResult.messages[parsed[:card_code]]
           elsif AVS_ERRORS.include?(parsed[:avs_result_code])
-            message = AVSResult.messages[ parsed[:avs_result_code] ]
+            message = AVSResult.messages[parsed[:avs_result_code]]
           else
             message = message.chomp('.')
           end
-        elsif message == "Missing ACCOUNT_ID"
-          message = "The merchant login ID or password is invalid"
+        elsif message == 'Missing ACCOUNT_ID'
+          message = 'The merchant login ID or password is invalid'
         elsif message =~ /Approved/
-          message = "This transaction has been approved"
+          message = 'This transaction has been approved'
         elsif message =~  /Expired/
-          message =  "The credit card has expired"
+          message =  'The credit card has expired'
         end
         message
       end
@@ -418,13 +420,13 @@ module ActiveMerchant #:nodoc:
       end
 
       CHECK_ACCOUNT_TYPES = {
-        "checking" => "C",
-        "savings" => "S"
+        'checking' => 'C',
+        'savings' => 'S'
       }
 
       def add_check(post, check)
         post[:PAYMENT_TYPE]     = 'ACH'
-        post[:PAYMENT_ACCOUNT]  = [CHECK_ACCOUNT_TYPES[check.account_type], check.routing_number, check.account_number].join(":")
+        post[:PAYMENT_ACCOUNT]  = [CHECK_ACCOUNT_TYPES[check.account_type], check.routing_number, check.account_number].join(':')
         post[:NAME1]            = check.first_name
         post[:NAME2]            = check.last_name
       end
@@ -465,15 +467,15 @@ module ActiveMerchant #:nodoc:
         post[:version]        = '1'
         post[:login]          = ''
         post[:tran_key]       = ''
-        post[:relay_response] = "FALSE"
+        post[:relay_response] = 'FALSE'
         post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
+        post[:delim_data]     = 'TRUE'
+        post[:delim_char]     = ','
+        post[:encap_char]     = '$'
         post[:card_num]       = '4111111111111111'
         post[:exp_date]       = '1212'
         post[:solution_ID]    = application_id if application_id
-        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def expdate(creditcard)
@@ -494,7 +496,7 @@ module ActiveMerchant #:nodoc:
             post[:MASTER_ID],
             post[:NAME1],
             post[:PAYMENT_ACCOUNT]
-          ].join("")
+          ].join('')
         )
       end
 
@@ -505,12 +507,12 @@ module ActiveMerchant #:nodoc:
             @options[:login],
             post[:TRANS_TYPE],
             post[:REBILL_ID]
-          ].join("")
+          ].join('')
         )
       end
 
       def handle_response(response)
-        if ignore_http_status || (200...300).include?(response.code.to_i)
+        if ignore_http_status || (200...300).cover?(response.code.to_i)
           return response.body
         end
         raise ResponseError.new(response)

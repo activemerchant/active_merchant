@@ -41,7 +41,6 @@ module ActiveMerchant #:nodoc:
         commit('capture', money, post)
       end
 
-
       def refund(money, authorization, options = {})
         post = {}
         post[:transactionid] = authorization
@@ -103,7 +102,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[body.split('&').map{|x|x.split('=')}]
+        Hash[body.split('&').map { |x| x.split('=') }]
       end
 
       def commit(action, money, parameters)
@@ -153,10 +152,9 @@ module ActiveMerchant #:nodoc:
         post[:password]       = @options[:password]
         post[:type]           = action
 
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
     end
   end
 end
-

@@ -21,7 +21,7 @@ class RemoteBpointTest < Test::Unit::TestCase
   def test_successful_store
     response = @gateway.store(@credit_card, { crn1: 'TEST' })
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
     token_key = 'AddTokenResult_Token'
     assert_not_nil response.params[token_key]
     assert_not_nil response.authorization
@@ -31,7 +31,7 @@ class RemoteBpointTest < Test::Unit::TestCase
   def test_failed_store
     response = @gateway.store(@error_card)
     assert_failure response
-    assert_equal "Error", response.message
+    assert_equal 'Error', response.message
   end
 
   def test_successful_purchase

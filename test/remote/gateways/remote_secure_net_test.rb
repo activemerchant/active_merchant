@@ -97,7 +97,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @bad_card_number, @options)
     assert_failure response
-    assert_equal "CARD TYPE COULD NOT BE IDENTIFIED", response.message
+    assert_equal 'CARD TYPE COULD NOT BE IDENTIFIED', response.message
   end
 
   def test_unsuccessful_purchase_and_credit
@@ -113,8 +113,8 @@ class SecureNetTest < Test::Unit::TestCase
 
   def test_invoice_description_and_number
     options = @options.merge({
-      invoice_description: "TheInvoiceDescriptions",
-      invoice_number: "TheInvoiceNumber"
+      invoice_description: 'TheInvoiceDescriptions',
+      invoice_number: 'TheInvoiceNumber'
     })
 
     assert auth = @gateway.authorize(@amount, @credit_card, options)
@@ -123,6 +123,17 @@ class SecureNetTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization, options)
     assert_success capture
     assert_equal 'Approved', capture.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 
 end

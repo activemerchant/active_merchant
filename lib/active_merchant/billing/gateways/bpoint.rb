@@ -185,7 +185,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_headers
-        { "Content-Type" => "application/soap+xml; charset=utf-8" }
+        { 'Content-Type' => 'application/soap+xml; charset=utf-8' }
       end
 
       def parse(body)

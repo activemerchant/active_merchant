@@ -5,8 +5,8 @@ class DibsTest < Test::Unit::TestCase
 
   def setup
     @gateway = DibsGateway.new(
-      merchant_id: "merchantId",
-      secret_key: "secretKey"
+      merchant_id: 'merchantId',
+      secret_key: 'secretKey'
     )
 
     @credit_card = credit_card
@@ -20,7 +20,7 @@ class DibsTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "1066662996", response.authorization
+    assert_equal '1066662996', response.authorization
     assert response.test?
   end
 
@@ -30,7 +30,7 @@ class DibsTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, failed_capture_response)
 
     assert_failure response
-    assert_equal "DECLINE: 1", response.message
+    assert_equal 'DECLINE: 1', response.message
     assert response.test?
   end
 
@@ -40,7 +40,7 @@ class DibsTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "DECLINE: REJECTED_BY_ACQUIRER", response.message
+    assert_equal 'DECLINE: REJECTED_BY_ACQUIRER', response.message
     assert response.test?
   end
 
@@ -49,7 +49,7 @@ class DibsTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
     assert_success response
-    assert_equal "1066662996", response.authorization
+    assert_equal '1066662996', response.authorization
   end
 
   def test_successful_authorize_and_capture
@@ -58,7 +58,7 @@ class DibsTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "1066662996", response.authorization
+    assert_equal '1066662996', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -75,13 +75,13 @@ class DibsTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "DECLINE: REJECTED_BY_ACQUIRER", response.message
+    assert_equal 'DECLINE: REJECTED_BY_ACQUIRER', response.message
     assert response.test?
   end
 
   def test_failed_capture
     response = stub_comms do
-      @gateway.capture(100, "")
+      @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
     assert_failure response
@@ -93,7 +93,7 @@ class DibsTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "1066662996", response.authorization
+    assert_equal '1066662996', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -106,7 +106,7 @@ class DibsTest < Test::Unit::TestCase
 
   def test_failed_void
     response = stub_comms do
-      @gateway.void("5d53a33d960c46d00f5dc061947d998c")
+      @gateway.void('5d53a33d960c46d00f5dc061947d998c')
     end.check_request do |endpoint, data, headers|
       assert_match(/5d53a33d960c46d00f5dc061947d998c/, data)
     end.respond_with(failed_void_response)
@@ -120,7 +120,7 @@ class DibsTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, successful_capture_response)
 
     assert_success response
-    assert_equal "1066662996", response.authorization
+    assert_equal '1066662996', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -133,7 +133,7 @@ class DibsTest < Test::Unit::TestCase
 
   def test_failed_refund
     response = stub_comms do
-      @gateway.refund(nil, "")
+      @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
     assert_failure response
@@ -144,7 +144,7 @@ class DibsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
   end
 
   def test_failed_verify
@@ -152,7 +152,7 @@ class DibsTest < Test::Unit::TestCase
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
-    assert_equal "DECLINE: REJECTED_BY_ACQUIRER", response.message
+    assert_equal 'DECLINE: REJECTED_BY_ACQUIRER', response.message
   end
 
   def test_successful_store
@@ -162,7 +162,7 @@ class DibsTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "Succeeded", response.message
+    assert_equal 'Succeeded', response.message
     assert response.test?
   end
 
@@ -172,7 +172,7 @@ class DibsTest < Test::Unit::TestCase
     end.respond_with(failed_store_response)
 
     assert_failure response
-    assert_equal "DECLINE: REJECTED_BY_ACQUIRER", response.message
+    assert_equal 'DECLINE: REJECTED_BY_ACQUIRER', response.message
     assert response.test?
   end
 
@@ -232,7 +232,7 @@ class DibsTest < Test::Unit::TestCase
   end
 
   def invalid_json_response
-    "{"
+    '{'
   end
 
   def transcript

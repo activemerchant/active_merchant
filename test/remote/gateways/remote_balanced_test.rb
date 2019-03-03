@@ -19,7 +19,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
@@ -27,7 +27,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
     outside_token = @gateway.store(@credit_card).params['cards'][0]['href']
     response = @gateway.purchase(@amount, outside_token, @options)
     assert_success response
-    assert_equal "Success", response.message
+    assert_equal 'Success', response.message
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
@@ -44,19 +44,19 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_passing_appears_on_statement
-    options = @options.merge(appears_on_statement_as: "Homer Electric")
+    options = @options.merge(appears_on_statement_as: 'Homer Electric')
     response = @gateway.purchase(@amount, @credit_card, options)
 
     assert_success response
-    assert_equal "BAL*Homer Electric", response.params['debits'][0]['appears_on_statement_as']
+    assert_equal 'BAL*Homer Electric', response.params['debits'][0]['appears_on_statement_as']
   end
 
   def test_passing_meta
-    options = @options.merge(meta: { "order_number" => '12345' })
+    options = @options.merge(meta: { 'order_number' => '12345' })
     response = @gateway.purchase(@amount, @credit_card, options)
 
     assert_success response
-    assert_equal options[:meta], response.params["debits"][0]["meta"]
+    assert_equal options[:meta], response.params['debits'][0]['meta']
   end
 
   def test_authorize_and_capture
@@ -90,7 +90,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
 
     assert void = @gateway.void(authorize.authorization)
     assert_success void
-    assert void.params["card_holds"][0]['voided_at'], void.inspect
+    assert void.params['card_holds'][0]['voided_at'], void.inspect
   end
 
   def test_voiding_a_capture_not_allowed
