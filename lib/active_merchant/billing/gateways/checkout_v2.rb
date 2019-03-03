@@ -188,11 +188,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-<<<<<<< HEAD
-        (response["responseCode"] == "10000" && !response["responseMessage"].start_with?("40")) || response["responseCode"] == "10100"
-=======
         (response['responseCode'] == '10000' && !response['responseMessage'].start_with?('40')) || response['responseCode'] == '10100'
->>>>>>> activemerchant/master
       end
 
       def message_from(succeeded, response)
