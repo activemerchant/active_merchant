@@ -5,6 +5,7 @@
 * PaymentExpress: Use ip field for client_info field [jknipp] #3150
 * Bambora Asia-Pacific: Adds Store [molbrown] #3147
 * Orbital: Pass normalized stored credential fields [curiousepic] #3148
+* Adds Elo card type in general and specifically to Adyen [deedeelavinder] #3153
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
