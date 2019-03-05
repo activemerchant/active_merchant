@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class RemoteFirstdataE4Test < Test::Unit::TestCase
+class RemoteFirstdataE4V11Test < Test::Unit::TestCase
   def setup
-    @gateway = FirstdataE4Gateway.new(fixtures(:firstdata_e4))
+    @gateway = FirstdataE4V11Gateway.new(fixtures(:firstdata_e4_v11))
     @credit_card = credit_card
     @bad_credit_card = credit_card('4111111111111113')
     @credit_card_with_track_data = credit_card_with_track_data('4003000123456781')
@@ -178,7 +178,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = FirstdataE4Gateway.new(:login    => 'NotARealUser',
+    gateway = FirstdataE4V11Gateway.new(:login    => 'NotARealUser',
                                      :password => 'NotARealPassword')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match %r{Unauthorized Request}, response.message
@@ -231,9 +231,9 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
   def test_verify_credentials
     assert @gateway.verify_credentials
 
-    gateway = FirstdataE4Gateway.new(login: 'unknown', password: 'unknown')
+    gateway = FirstdataE4V11Gateway.new(login: 'unknown', password: 'unknown')
     assert !gateway.verify_credentials
-    gateway = FirstdataE4Gateway.new(login: fixtures(:firstdata_e4)[:login], password: 'unknown')
+    gateway = FirstdataE4V11Gateway.new(login: fixtures(:firstdata_e4_v11)[:login], password: 'unknown')
     assert !gateway.verify_credentials
   end
 
