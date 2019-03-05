@@ -12,6 +12,7 @@
 * Paymentez: Adds Elo card type [deedeelavinder] #3162
 * WorldPay: Adds Elo card type [deedeelavinder] #3163
 * Adyen: Idempotency for non-purchase requests [molbrown] #3164
+* FirstData e4 v27: Support v28 url and stored creds [curiousepic] #3165
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
