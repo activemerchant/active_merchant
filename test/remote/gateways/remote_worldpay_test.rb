@@ -8,6 +8,14 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
+    @elo_credit_card = credit_card('4514 1600 0000 0008',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'elo'
+    )
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
     @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
 
@@ -19,6 +27,12 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_elo
+    assert response = @gateway.purchase(@amount, @elo_credit_card, @options.merge(currency: 'BRL'))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -250,6 +264,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert void.params['cancel_received_order_code']
   end
 
+  def test_void_with_elo
+    assert_success response = @gateway.authorize(@amount, @elo_credit_card, @options.merge(currency: 'BRL'))
+    assert_success void = @gateway.void(response.authorization, authorization_validated: true)
+    assert_equal 'SUCCESS', void.message
+    assert void.params['cancel_received_order_code']
+  end
+
   def test_void_nonexistent_transaction
     assert_failure response = @gateway.void('non_existent_authorization')
     assert_equal 'Could not find payment for order', response.message
@@ -304,6 +325,12 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{SUCCESS}, response.message
+  end
+
+  def test_successful_verify_with_elo
+    response = @gateway.verify(@elo_credit_card, @options.merge(currency: 'BRL'))
     assert_success response
     assert_match %r{SUCCESS}, response.message
   end

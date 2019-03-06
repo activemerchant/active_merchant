@@ -11,6 +11,14 @@ class WorldpayTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
+    @elo_credit_card = credit_card('4514 1600 0000 0008',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'elo'
+    )
     @options = {:order_id => 1}
   end
 
@@ -83,6 +91,13 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_elo
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'BRL'))
+    end.respond_with(successful_authorize_with_elo_response, successful_capture_with_elo_response)
+    assert_success response
+  end
+
   def test_purchase_passes_correct_currency
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
@@ -122,6 +137,15 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'SUCCESS', response.message
     assert_equal '924e810350efc21a989e0ac7727ce43b', response.params['cancel_received_order_code']
+  end
+
+  def test_successful_void_with_elo
+    response = stub_comms do
+      @gateway.void(@options[:order_id], @options)
+    end.respond_with(successful_void_inquiry_with_elo_response, successful_void_with_elo_response)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_equal '3a10f83fb9bb765488d0b3eb153879d7', response.params['cancel_received_order_code']
   end
 
   def test_void_fails_unless_status_is_authorized
@@ -492,6 +516,13 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_verify_with_elo
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorize_with_elo_response, successful_void_with_elo_response)
+
+    response = @gateway.verify(@elo_credit_card, @options.merge(currency: 'BRL'))
+    assert_success response
+  end
+
   def test_successful_verify_with_failed_void
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, failed_void_response)
 
@@ -581,6 +612,86 @@ class WorldpayTest < Test::Unit::TestCase
           </ok>
         </reply>
       </paymentService>
+    RESPONSE
+  end
+
+  def successful_authorize_with_elo_response
+    <<-RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <orderStatus orderCode="9fe31a79de5f6aa3ce1ed7bea7edbf42">
+            <payment>
+              <paymentMethod>ELO-SSL</paymentMethod>
+              <amount value="100" currencyCode="BRL" exponent="2" debitCreditIndicator="credit" />
+              <lastEvent>AUTHORISED</lastEvent>
+              <CVCResultCode description="C" />
+              <AVSResultCode description="H" />
+              <balance accountType="IN_PROCESS_AUTHORISED">
+                <amount value="100" currencyCode="BRL" exponent="2" debitCreditIndicator="credit" />
+              </balance>
+              <cardNumber>4514********0008</cardNumber>
+              <riskScore value="21" />
+            </payment>
+          </orderStatus>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_capture_with_elo_response
+    <<-RESPONSE
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+      <paymentService version="1.4" merchantCode="SPREEDLY">
+        <reply>
+          <ok>
+            <captureReceived orderCode="9fe31a79de5f6aa3ce1ed7bea7edbf42">
+              <amount value="100" currencyCode="BRL" exponent="2" debitCreditIndicator="credit" />
+            </captureReceived>
+          </ok>
+        </reply>
+      </paymentService>
+    RESPONSE
+  end
+
+  def successful_void_inquiry_with_elo_response
+    <<-RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+    <paymentService version="1.4" merchantCode="SPREEDLY">
+      <reply>
+        <orderStatus orderCode="eda0b101428892fdb32e2fc617a7f5e0">
+          <payment>
+            <paymentMethod>ELO-SSL</paymentMethod>
+            <amount value="100" currencyCode="BRL" exponent="2" debitCreditIndicator="credit" />
+            <lastEvent>AUTHORISED</lastEvent>
+            <CVCResultCode description="C" />
+            <AVSResultCode description="H" />
+            <balance accountType="IN_PROCESS_AUTHORISED">
+              <amount value="100" currencyCode="BRL" exponent="2" debitCreditIndicator="credit" />
+            </balance>
+            <cardNumber>4514********0008</cardNumber>
+            <riskScore value="21" />
+          </payment>
+        </orderStatus>
+      </reply>
+    </paymentService>
+    RESPONSE
+  end
+
+  def successful_void_with_elo_response
+    <<-RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+    <paymentService version="1.4" merchantCode="SPREEDLY">
+      <reply>
+        <ok>
+          <cancelReceived orderCode="3a10f83fb9bb765488d0b3eb153879d7" />
+        </ok>
+      </reply>
+    </paymentService>
     RESPONSE
   end
 
