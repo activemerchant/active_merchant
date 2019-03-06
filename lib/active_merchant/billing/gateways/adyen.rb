@@ -167,10 +167,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_risk_data(post, options)
-        risk_data = {}
-        risk_data.merge!(options[:risk_data]) if options[:risk_data]
-
-        post[:additionalData][:riskData] = risk_data unless risk_data.empty?
+        if (risk_data = options[:risk_data])
+          risk_data = Hash[risk_data.map { |k, v| ["riskdata.#{k}", v] }]
+          post[:additionalData].merge!(risk_data)
+        end
       end
 
       def add_shopper_interaction(post, payment, options={})

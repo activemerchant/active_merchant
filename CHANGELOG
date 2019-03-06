@@ -8,6 +8,7 @@
 * Adds Elo card type in general and specifically to Adyen [deedeelavinder] #3153
 * Mercado Pago: Adds Elo card type [deedeelavinder] #3156
 * Litle: Add support for stored credentials [bayprogrammer] #3155
+* Adyen: Correctly process risk_data option [bayprogrammer] #3161
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
