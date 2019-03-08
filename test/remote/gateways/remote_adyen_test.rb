@@ -161,6 +161,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_idempotency_key
+    options = @options.merge(idempotency_key: 'testkey45678')
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+    first_auth = response.authorization
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
+  end
+
   def test_successful_purchase_with_apple_pay
     response = @gateway.purchase(@amount, @apple_pay_card, @options)
     assert_success response

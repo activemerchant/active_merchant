@@ -33,13 +33,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
-        options[:idempotency_key] = nil
         if options[:execute_threed] || options[:threed_dynamic]
           authorize(money, payment, options)
         else
           MultiResponse.run do |r|
             r.process { authorize(money, payment, options) }
-            r.process { capture(money, r.authorization, options) }
+            r.process { capture(money, r.authorization, capture_options(options)) }
           end
         end
       end
@@ -239,6 +238,11 @@ module ActiveMerchant #:nodoc:
         card[:holderName] ||= 'Not Provided' if credit_card.is_a?(NetworkTokenizationCreditCard)
         requires!(card, :expiryMonth, :expiryYear, :holderName, :number)
         post[:card] = card
+      end
+
+      def capture_options(options)
+        return options.merge(idempotency_key: "#{options[:idempotency_key]}-cap") if options[:idempotency_key]
+        options
       end
 
       def add_reference(post, authorization, options = {})
