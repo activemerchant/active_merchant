@@ -29,6 +29,7 @@ require 'active_support/core_ext/object/conversions'
 require 'active_support/core_ext/class/attribute'
 require 'active_support/core_ext/enumerable'
 require 'active_support/core_ext/module/attribute_accessors'
+require 'active_support/core_ext/module/attribute_accessors_per_thread'
 
 require 'base64'
 require 'securerandom'

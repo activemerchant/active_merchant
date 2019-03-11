@@ -65,4 +65,15 @@ class BaseTest < Test::Unit::TestCase
     Base.mode = :production
     assert_false Base.test?
   end
+
+  def test_thread_local_mode
+    Base.mode = :test
+
+    t = Thread.new do
+      Base.mode = :production
+    end
+    t.join
+
+    assert_equal :test, Base.mode
+  end
 end
