@@ -339,6 +339,64 @@ SRC
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
+  def test_three_d_secure
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    options = {
+      :order_id => '1',
+      :three_d_secure => {
+        :cavv => '1234',
+        :eci => '1234',
+        :xid => '1234'
+      }
+    }
+
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_auth_xml_with_three_d_secure
+    options = {
+      :order_id => '1',
+      :three_d_secure => {
+        :cavv => '1234',
+        :eci => '1234',
+        :xid => '1234'
+      }
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_auth_request_xml = <<-SRC
+<request timestamp="20090824160201" type="auth">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <amount currency=\"EUR\">100</amount>
+  <card>
+    <number>4263971921001307</number>
+    <expdate>0808</expdate>
+    <chname>Longbob Longsen</chname>
+    <type>VISA</type>
+    <issueno></issueno>
+    <cvn>
+      <number></number>
+      <presind></presind>
+    </cvn>
+  </card>
+  <autosettle flag="0"/>
+  <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+  <mpi>
+    <cavv>1234</cavv>
+    <eci>1234</eci>
+    <xid>1234</xid>
+  </mpi>
+</request>
+SRC
+
+    assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
+  end
+
   private
 
   def successful_purchase_response
