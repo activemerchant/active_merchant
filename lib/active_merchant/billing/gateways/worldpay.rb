@@ -263,13 +263,13 @@ module ActiveMerchant #:nodoc:
 
               add_address(xml, (options[:billing_address] || options[:address]))
             end
+            add_stored_credential_options(xml, options)
             if options[:ip] && options[:session_id]
               xml.tag! 'session', 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
             else
               xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
               xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
             end
-            add_stored_credential_options(xml, options)
           end
         end
       end

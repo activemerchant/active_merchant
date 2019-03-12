@@ -172,7 +172,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_successful_auth_and_capture_with_stored_cred_options
+  def test_successful_auth_and_capture_with_gateway_specific_stored_credentials
     assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(stored_credential_usage: 'FIRST'))
     assert_success auth
     assert auth.authorization
@@ -195,6 +195,56 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, next_auth.authorization, authorization_validated: true)
     assert_success capture
+  end
+
+  def test_successful_authorize_with_3ds_with_normalized_stored_credentials
+    session_id = generate_unique_id
+    stored_credential_params = {
+      initial_transaction: true,
+      reason_type: 'unscheduled',
+      initiator: 'merchant',
+      network_transaction_id: nil
+    }
+    options = @options.merge(
+              {
+                execute_threed: true,
+                accept_header: 'text/html',
+                user_agent: 'Mozilla/5.0',
+                session_id: session_id,
+                ip: '127.0.0.1',
+                cookie: 'machine=32423423',
+                stored_credential: stored_credential_params
+              })
+    assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
+    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert first_message.test?
+    refute first_message.authorization.blank?
+    refute first_message.params['issuer_url'].blank?
+    refute first_message.params['pa_request'].blank?
+    refute first_message.params['cookie'].blank?
+    refute first_message.params['session_id'].blank?
+  end
+
+  def test_successful_authorize_with_3ds_with_gateway_specific_stored_credentials
+    session_id = generate_unique_id
+    options = @options.merge(
+              {
+                execute_threed: true,
+                accept_header: 'text/html',
+                user_agent: 'Mozilla/5.0',
+                session_id: session_id,
+                ip: '127.0.0.1',
+                cookie: 'machine=32423423',
+                stored_credential_usage: 'FIRST'
+              })
+    assert first_message = @gateway.authorize(@amount, @threeDS_card, options)
+    assert_equal "A transaction status of 'AUTHORISED' is required.", first_message.message
+    assert first_message.test?
+    refute first_message.authorization.blank?
+    refute first_message.params['issuer_url'].blank?
+    refute first_message.params['pa_request'].blank?
+    refute first_message.params['cookie'].blank?
+    refute first_message.params['session_id'].blank?
   end
 
   # Fails currently because the sandbox doesn't actually validate the stored_credential options
