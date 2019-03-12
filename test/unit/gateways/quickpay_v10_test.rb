@@ -58,6 +58,30 @@ class QuickpayV10Test < Test::Unit::TestCase
     end.respond_with(successful_payment_response, successful_authorization_response)
   end
 
+  def test_successful_authorization_with_3ds
+    options = @options.merge(
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        xid: '1234'
+      }
+    )
+    stub_comms do
+      assert response = @gateway.authorize(@amount, @credit_card, options)
+      assert_success response
+      assert_equal '1145', response.authorization
+      assert response.test?
+    end.check_request do |endpoint, data, headers|
+      parsed_data = parse(data)
+      if parsed_data['order_id']
+        assert_match %r{/payments}, endpoint
+        assert_match '1.1.1.1', options[:customer_ip]
+      else
+        assert_match %r{/payments/\d+/authorize}, endpoint
+      end
+    end.respond_with(successful_payment_response, successful_authorization_response)
+  end
+
   def test_successful_void
     stub_comms do
       assert response = @gateway.void(1145)
@@ -284,5 +308,4 @@ class QuickpayV10Test < Test::Unit::TestCase
       D, [2015-08-17T11:44:26.710099 #75027] DEBUG -- : {"amount":"100","card":{"number":"[FILTERED]","cvd":"[FILTERED]","expiration":"1609","issued_to":"Longbob Longsen"},"auto_capture":false}
     )
   end
-
 end

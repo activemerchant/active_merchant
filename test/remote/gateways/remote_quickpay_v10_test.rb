@@ -95,6 +95,23 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_equal 'OK', capture.message
   end
 
+  def test_successful_authorize_and_capture_with_3ds
+    options = @options.merge(
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        xid: '1234'
+      }
+    )
+    assert auth = @gateway.authorize(@amount, @valid_card, options)
+    assert_success auth
+    assert_equal 'OK', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'OK', capture.message
+  end
+
   def test_unsuccessful_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @capture_rejected_card, @options)
     assert_success auth
