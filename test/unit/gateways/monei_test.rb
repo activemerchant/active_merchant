@@ -17,7 +17,12 @@ class MoneiTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      three_d_secure: {
+        eci: '1234',
+        cavv: '1234',
+        xid: '1234'
+      }
     }
   end
 

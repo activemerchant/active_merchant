@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
           add_payment(xml, action, money, options)
           add_account(xml, credit_card)
           add_customer(xml, credit_card, options)
+          add_three_d_secure(xml, options)
         end
 
         commit(request)
@@ -221,6 +222,17 @@ module ActiveMerchant #:nodoc:
           xml.Contact do
             xml.Email options[:email] || 'noemail@monei.net'
             xml.Ip options[:ip] || '0.0.0.0'
+          end
+        end
+      end
+
+      # Private : Add the 3DSecure infos to XML
+      def add_three_d_secure(xml, options)
+        if options[:three_d_secure]
+          xml.ThreeDSecure do
+            xml.eci options[:three_d_secure][:eci]
+            xml.verificationId options[:three_d_secure][:cavv]
+            xml.xid options[:three_d_secure][:xid]
           end
         end
       end
