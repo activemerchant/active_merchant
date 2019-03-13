@@ -75,6 +75,31 @@ module ActiveMerchant #:nodoc:
         commit(request_params.compact)
       end
       # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
+
+      # Return Payfort order
+      #
+      # - amount **Number**
+      # - reference **String**
+      #
+      # ==== Options
+      #
+      # * <tt>:currency</tt> -- Currency, defaults to AED (REQUIRED)
+      # * <tt>:language</tt> -- checkout page language, defaults to en (REQUIRED)
+      # * <tt>:fort_id</tt> -- Order reference. (OPTIONAL)
+      # * <tt>:order_description</tt> -- order description (OPTIONAL)
+      # * <tt>:maintenance_reference</tt> -- refund’s unique order number. (OPTIONAL)
+      def refund(amount, reference, options = {})
+        request_params = {}
+        request_params[:command] = 'REFUND'
+        request_params[:amount] = amount
+        request_params[:merchant_reference] = reference
+        request_params[:currency] = options[:currency] || default_currency
+        request_params[:language] = options[:language] || 'en'
+        request_params[:order_description] = options[:description]
+        request_params[:fort_id] = options[:fort_id]
+        request_params[:maintenance_reference] = options[:maintenance_reference]
+        commit(request_params.compact)
+      end
     end
   end
 end
