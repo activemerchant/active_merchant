@@ -147,6 +147,8 @@ module ActiveMerchant #:nodoc:
               if options[:allow_guest_checkout]
                 xml.tag! 'n2:SolutionType', 'Sole'
                 xml.tag! 'n2:LandingPage', options[:landing_page] || 'Billing'
+              elsif options[:paypal_chooses_landing_page]
+                xml.tag! 'n2:SolutionType', 'Sole'
               end
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
 
