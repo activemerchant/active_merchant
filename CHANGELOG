@@ -20,6 +20,7 @@
 * Adyen: Fix adding phone from billing address [curiousepic] #3179
 * Fix partial or missing address exceptions [molbrown] #3180
 * Adyen: Update to support normalized stored credential fields [molbrown] #3182
+* VisaNet Peru: Always include DSC_COD_ACCION [bayprogrammer] #3174
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106

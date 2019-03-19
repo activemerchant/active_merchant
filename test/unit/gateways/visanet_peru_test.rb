@@ -60,7 +60,7 @@ class VisanetPeruTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal 'REJECT', response.message
+    assert_equal 'REJECT | Operacion denegada', response.message
   end
 
   def test_successful_capture
@@ -102,6 +102,27 @@ class VisanetPeruTest < Test::Unit::TestCase
     assert_failure response
     assert_match(/No se realizo la anulacion del deposito/, response.message)
     assert_equal 400, response.error_code
+  end
+
+  def test_failed_full_refund_when_unsettled
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(failed_refund_with_action_code_response)
+    response = @gateway.refund(@amount, '122333444|444333221', force_full_refund_if_unsettled: true)
+    assert_failure response
+    assert_equal("Operacion Denegada. | [ 'NUMORDEN 122333444 no se encuentra registrado', 'No se realizo la anulacion del deposito' ]", response.message)
+    assert_equal 400, response.error_code
+  end
+
+  def test_failed_full_refund_when_unsettled_additional_message_concatenation
+    @gateway.expects(:ssl_request).with(:put, any_parameters).returns(failed_refund_with_message_and_action_code_response)
+    @gateway.expects(:ssl_request).with(:post, any_parameters).returns(failed_refund_with_message_and_action_code_response_2)
+    first_msg = 'No se realizo la anulacion del deposito'
+    first_dsc = 'Operacion Denegada.'
+    second_msg = 'Mal funcionamiento de la inteligencia artificial'
+    second_dsc = 'Lo siento Dave, me temo que no puedo hacer eso.'
+
+    response = @gateway.refund(@amount, '122333444|444333221', force_full_refund_if_unsettled: true)
+    assert_equal("#{second_msg} | #{second_dsc} | #{first_msg} | #{first_dsc}", response.message)
   end
 
   def test_successful_void
@@ -446,4 +467,56 @@ class VisanetPeruTest < Test::Unit::TestCase
     }
     RESPONSE
   end
+
+  def failed_refund_with_action_code_response
+    <<-RESPONSE
+    {
+      "errorCode": 400,
+      "errorMessage": "[ ]",
+      "data": {
+        "ESTADO": "",
+        "RESPUESTA": "2",
+        "DSC_COD_ACCION": "Operacion Denegada."
+      },
+      "transactionLog": {
+
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_refund_with_message_and_action_code_response
+    <<-RESPONSE
+    {
+      "errorCode": 400,
+      "errorMessage": "No se realizo la anulacion del deposito",
+      "data": {
+        "ESTADO": "",
+        "RESPUESTA": "2",
+        "DSC_COD_ACCION": "Operacion Denegada."
+      },
+      "transactionLog": {
+
+      }
+    }
+    RESPONSE
+  end
+
+  def failed_refund_with_message_and_action_code_response_2
+    <<-RESPONSE
+    {
+      "errorCode": 400,
+      "errorMessage": "Mal funcionamiento de la inteligencia artificial",
+      "data": {
+        "ESTADO": "",
+        "RESPUESTA": "2",
+        "DSC_COD_ACCION": "Lo siento Dave, me temo que no puedo hacer eso."
+      },
+      "transactionLog": {
+
+      }
+    }
+    RESPONSE
+  end
+
 end
