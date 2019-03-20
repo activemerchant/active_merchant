@@ -45,7 +45,21 @@ class AdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       order_id: '345123',
       installments: 2,
-      recurring_processing_model: 'CardOnFile'
+      stored_credential: {reason_type: 'unscheduled'}
+    }
+
+    @normalized_initial_stored_credential = {
+      stored_credential: {
+        initial_transaction: true,
+        reason_type: 'unscheduled'
+      }
+    }
+
+    @normalized_stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        reason_type: 'recurring'
+      }
     }
   end
 
@@ -186,6 +200,25 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal 'express', parsed['additionalData']['riskdata.deliveryMethod']
       assert_equal 'Blue T Shirt', parsed['additionalData']['riskdata.basket.item.productTitle']
       assert_equal 'Big Sale promotion', parsed['additionalData']['riskdata.promotions.promotion.promotionName']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_authorize_with_normalized_stored_credentials
+    @credit_card.verification_value = nil
+    stub_comms do
+      @gateway.authorize(50, @credit_card, @options.merge(@normalized_stored_credential))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"ContAuth"/, data)
+      assert_match(/"recurringProcessingModel":"Subscription"/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_initial_authorize_with_normalized_stored_credentials
+    stub_comms do
+      @gateway.authorize(50, @credit_card, @options.merge(@normalized_initial_stored_credential))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"shopperInteraction":"Ecommerce"/, data)
+      assert_match(/"recurringProcessingModel":"CardOnFile"/, data)
     end.respond_with(successful_authorize_response)
   end
 

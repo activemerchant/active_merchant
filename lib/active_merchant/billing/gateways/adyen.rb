@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_extra_data(post, payment, options)
-        add_shopper_interaction(post, payment, options)
+        add_stored_credentials(post, payment, options)
         add_address(post, options)
         add_installments(post, options) if options[:installments]
         add_3ds(post, options)
@@ -82,6 +82,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, 0, options)
         add_payment(post, credit_card)
         add_extra_data(post, credit_card, options)
+        add_stored_credentials(post, credit_card, options)
         add_recurring_contract(post, options)
         add_address(post, options)
         commit('authorise', post, options)
@@ -177,14 +178,30 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_stored_credentials(post, payment, options)
+        add_shopper_interaction(post, payment, options)
+        add_recurring_processing_model(post, options)
+      end
+
       def add_shopper_interaction(post, payment, options={})
-        if (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
+        if options.dig(:stored_credential, :initial_transaction) || (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
           shopper_interaction = 'Ecommerce'
         else
           shopper_interaction = 'ContAuth'
         end
 
         post[:shopperInteraction] = options[:shopper_interaction] || shopper_interaction
+      end
+
+      def add_recurring_processing_model(post, options)
+        return unless options.dig(:stored_credential, :reason_type) || options[:recurring_processing_model]
+        if options.dig(:stored_credential, :reason_type) && options[:stored_credential][:reason_type] == 'unscheduled'
+          recurring_processing_model = 'CardOnFile'
+        else
+          recurring_processing_model = 'Subscription'
+        end
+
+        post[:recurringProcessingModel] = options[:recurring_processing_model] || recurring_processing_model
       end
 
       def add_address(post, options)
@@ -206,7 +223,6 @@ module ActiveMerchant #:nodoc:
           currency: options[:currency] || currency(money)
         }
         post[:amount] = amount
-        post[:recurringProcessingModel] = options[:recurring_processing_model] if options[:recurring_processing_model]
       end
 
       def add_invoice_for_modification(post, money, options)
