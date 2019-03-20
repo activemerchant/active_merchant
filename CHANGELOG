@@ -6,6 +6,16 @@
 * Bambora Asia-Pacific: Adds Store [molbrown] #3147
 * Orbital: Pass normalized stored credential fields [curiousepic] #3148
 * Adds Elo card type in general and specifically to Adyen [deedeelavinder] #3153
+* Mercado Pago: Adds Elo card type [deedeelavinder] #3156
+* Litle: Add support for stored credentials [bayprogrammer] #3155
+* Adyen: Correctly process risk_data option [bayprogrammer] #3161
+* Paymentez: Adds Elo card type [deedeelavinder] #3162
+* WorldPay: Adds Elo card type [deedeelavinder] #3163
+* Adyen: Idempotency for non-purchase requests [molbrown] #3164
+* FirstData e4 v27: Support v28 url and stored creds [curiousepic] #3165
+* WorldPay: Fix element order for 3DS + stored cred [bayprogrammer] #3172
+* Braintree: Add risk data to returned response [jknipp] #3169
+* Adyen: Support idempotency on purchase [molbrown] #3168
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106

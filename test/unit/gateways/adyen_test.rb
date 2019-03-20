@@ -169,7 +169,23 @@ class AdyenTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: {'operatingSystem' => 'HAL9000'}}))
     end.check_request do |endpoint, data, headers|
-      assert_equal 'HAL9000', JSON.parse(data)['additionalData']['riskData']['operatingSystem']
+      assert_equal 'HAL9000', JSON.parse(data)['additionalData']['riskdata.operatingSystem']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_risk_data_complex_data
+    stub_comms do
+      risk_data = {
+        'deliveryMethod' => 'express',
+        'basket.item.productTitle' => 'Blue T Shirt',
+        'promotions.promotion.promotionName' => 'Big Sale promotion'
+      }
+      @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: risk_data}))
+    end.check_request do |endpoint, data, headers|
+      parsed = JSON.parse(data)
+      assert_equal 'express', parsed['additionalData']['riskdata.deliveryMethod']
+      assert_equal 'Blue T Shirt', parsed['additionalData']['riskdata.basket.item.productTitle']
+      assert_equal 'Big Sale promotion', parsed['additionalData']['riskdata.promotions.promotion.promotionName']
     end.respond_with(successful_authorize_response)
   end
 
@@ -318,6 +334,16 @@ class AdyenTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(extended_avs_response)
     assert_equal 'Card member\'s name, billing address, and billing postal code match.', response.avs_result['message']
+  end
+
+  def test_optional_idempotency_key_header
+    options = @options.merge(:idempotency_key => 'test123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert headers['Idempotency-Key']
+    end.respond_with(successful_authorize_response)
+    assert_success response
   end
 
   private

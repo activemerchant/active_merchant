@@ -6,6 +6,14 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111', verification_value: '666')
+    @elo_credit_card = credit_card('6362970000457013',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'elo'
+    )
     @declined_card = credit_card('4242424242424242', verification_value: '666')
     @options = {
       billing_address: address,
@@ -19,6 +27,11 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_elo
+    response = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert_success response
   end
 
@@ -89,12 +102,28 @@ class RemotePaymentezTest < Test::Unit::TestCase
     auth = @gateway.purchase(@amount, @credit_card, @options)
     assert_success auth
 
-    assert refund = @gateway.refund(@amount, @credit_card, @options)
+    assert refund = @gateway.refund(@amount, auth.authorization, @options)
+    assert_success refund
+  end
+
+  def test_successful_refund_with_elo
+    auth = @gateway.purchase(@amount, @elo_credit_card, @options)
+    assert_success auth
+
+    assert refund = @gateway.refund(@amount, auth.authorization, @options)
     assert_success refund
   end
 
   def test_successful_void
     auth = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
+
+  def test_successful_void_with_elo
+    auth = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
@@ -110,6 +139,14 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Response by mock', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_elo
+    auth = @gateway.authorize(@amount, @elo_credit_card, @options)
     assert_success auth
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
@@ -159,8 +196,21 @@ class RemotePaymentezTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_store_with_elo
+    response = @gateway.store(@elo_credit_card, @options)
+    assert_success response
+  end
+
   def test_unstore
     response = @gateway.store(@credit_card, @options)
+    assert_success response
+    auth = response.authorization
+    response = @gateway.unstore(auth, @options)
+    assert_success response
+  end
+
+  def test_unstore_with_elo
+    response = @gateway.store(@elo_credit_card, @options)
     assert_success response
     auth = response.authorization
     response = @gateway.unstore(auth, @options)
@@ -172,7 +222,7 @@ class RemotePaymentezTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'BackendResponseException', response.message
+    assert_equal 'BackendResponseError', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:config_error], response.error_code
   end
 

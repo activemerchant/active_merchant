@@ -179,6 +179,20 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_match %r{number is not an accepted test number}, response.message
   end
 
+  def test_successful_verify_with_device_data
+    # Requires Advanced Fraud Tools to be enabled
+    assert response = @gateway.verify(@credit_card, @options.merge({device_data: 'device data for verify'}))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+
+    assert transaction = response.params['braintree_transaction']
+    assert transaction['risk_data']
+    assert transaction['risk_data']['id']
+    assert_equal 'Approve', transaction['risk_data']['decision']
+    assert_equal false, transaction['risk_data']['device_data_captured']
+    assert_equal 'kount', transaction['risk_data']['fraud_service_provider']
+  end
+
   def test_successful_validate_on_store
     card = credit_card('4111111111111111', :verification_value => '101')
     assert response = @gateway.store(card, :verify_card => true)
@@ -401,6 +415,20 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal '1000 Approved', response.message
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_purchase_with_device_data
+    # Requires Advanced Fraud Tools to be enabled
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(device_data: 'device data for purchase'))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+
+    assert transaction = response.params['braintree_transaction']
+    assert transaction['risk_data']
+    assert transaction['risk_data']['id']
+    assert_equal 'Approve', transaction['risk_data']['decision']
+    assert_equal false, transaction['risk_data']['device_data_captured']
+    assert_equal 'kount', transaction['risk_data']['fraud_service_provider']
   end
 
   def test_purchase_with_store_using_random_customer_id

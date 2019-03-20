@@ -754,6 +754,21 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card('41111111111111111111'), descriptor_name: 'wow*productname', descriptor_phone: '4443331112', descriptor_url: 'wow.com')
   end
 
+  def test_successful_purchase_with_device_data
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:device_data] == 'device data string')
+    end.returns(braintree_result({risk_data: {id: 123456, decision: 'Decline', device_data_captured: true, fraud_service_provider: 'kount'}}))
+
+    response = @gateway.purchase(100, credit_card('41111111111111111111'), device_data: 'device data string')
+
+    assert transaction = response.params['braintree_transaction']
+    assert transaction['risk_data']
+    assert_equal 123456, transaction['risk_data']['id']
+    assert_equal 'Decline', transaction['risk_data']['decision']
+    assert_equal true, transaction['risk_data']['device_data_captured']
+    assert_equal 'kount', transaction['risk_data']['fraud_service_provider']
+  end
+
   def test_apple_pay_card
     Braintree::TransactionGateway.any_instance.expects(:sale).
       with(

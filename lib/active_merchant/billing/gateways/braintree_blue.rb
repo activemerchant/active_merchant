@@ -543,6 +543,17 @@ module ActiveMerchant #:nodoc:
           'token'               => transaction.credit_card_details.token
         }
 
+        if transaction.risk_data
+          risk_data = {
+            'id'                      => transaction.risk_data.id,
+            'decision'                => transaction.risk_data.decision,
+            'device_data_captured'    => transaction.risk_data.device_data_captured,
+            'fraud_service_provider'  => transaction.risk_data.fraud_service_provider
+          }
+        else
+          risk_data = nil
+        end
+
         {
           'order_id'                => transaction.order_id,
           'amount'                  => transaction.amount.to_s,
@@ -553,6 +564,7 @@ module ActiveMerchant #:nodoc:
           'shipping_details'        => shipping_details,
           'vault_customer'          => vault_customer,
           'merchant_account_id'     => transaction.merchant_account_id,
+          'risk_data'               => risk_data,
           'processor_response_code' => response_code_from_result(result)
         }
       end
