@@ -18,6 +18,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     )
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
     @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
+    @threeDS_card_external_MPI = credit_card('4444333322221111', :first_name => 'AA', :last_name => 'BD')
 
     @options = {
       order_id: generate_unique_id,
@@ -283,6 +284,42 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert first_message.test?
     assert first_message.params['issuer_url'].blank?
     assert first_message.params['pa_request'].blank?
+  end
+
+  def test_3ds_version_1_parameters_pass_thru
+    options = @options.merge(
+      {
+        three_d_secure: {
+          version: '1.0.2',
+          xid: '',
+          cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+          eci: '05'
+        }
+      }
+    )
+
+    assert response = @gateway.authorize(@amount, @threeDS_card_external_MPI, @options.merge(options))
+    assert response.test?
+    assert response.success?
+    assert response.params['last_event'] || response.params['ok']
+  end
+
+  def test_3ds_version_2_parameters_pass_thru
+    options = @options.merge(
+      {
+        three_d_secure: {
+          version: '2.1.0',
+          xid: 'A' * 40,
+          cavv: 'MAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+          eci: '05'
+        }
+      }
+    )
+
+    assert response = @gateway.authorize(@amount, @threeDS_card_external_MPI, @options.merge(options))
+    assert response.test?
+    assert response.success?
+    assert response.params['last_event'] || response.params['ok']
   end
 
   def test_failed_capture

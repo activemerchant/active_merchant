@@ -270,6 +270,16 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
               xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
             end
+
+            if three_d_secure = options[:three_d_secure]
+              xml.tag! 'info3DSecure' do
+                xml.tag! 'threeDSVersion', three_d_secure[:version]
+                xid_tag = three_d_secure[:version] =~ /^2/ ? 'dsTransactionId' : 'xid'
+                xml.tag! xid_tag, three_d_secure[:xid]
+                xml.tag! 'cavv', three_d_secure[:cavv]
+                xml.tag! 'eci', three_d_secure[:eci]
+              end
+            end
           end
         end
       end
