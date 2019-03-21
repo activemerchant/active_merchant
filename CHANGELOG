@@ -16,6 +16,7 @@
 * WorldPay: Fix element order for 3DS + stored cred [bayprogrammer] #3172
 * Braintree: Add risk data to returned response [jknipp] #3169
 * Adyen: Support idempotency on purchase [molbrown] #3168
+* Adyen: Pass phone, statement, device_fingerprint [curiousepic] #3178
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
