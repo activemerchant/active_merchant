@@ -140,7 +140,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    options = @options.merge!(fraudOffset: '1', installments: 2)
+    options = @options.merge!(fraudOffset: '1', installments: 2, shopper_statement: 'statement note', device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA')
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -469,5 +469,11 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+  end
+
+  def test_missing_phone_for_purchase
+    @options[:billing_address].delete(:phone)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
   end
 end

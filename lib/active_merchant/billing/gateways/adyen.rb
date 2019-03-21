@@ -152,9 +152,11 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_extra_data(post, payment, options)
+        post[:telephoneNumber] = options[:billing_address][:phone] if options[:billing_address][:phone]
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
         post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
         post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
+        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
         post[:fraudOffset] = options[:fraud_offset] if options[:fraud_offset]
         post[:selectedBrand] = options[:selected_brand] if options[:selected_brand]
         post[:selectedBrand] ||= NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
@@ -164,6 +166,7 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
         post[:additionalData]['paymentdatasource.type'] = NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
         add_risk_data(post, options)
       end
 
