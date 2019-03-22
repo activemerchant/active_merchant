@@ -119,6 +119,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal response.params['resultCode'], 'Authorised'
   end
 
+  def test_successful_authorize_with_no_address
+    options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      order_id: '123',
+      recurring_processing_model: 'CardOnFile'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
