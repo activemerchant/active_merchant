@@ -128,8 +128,8 @@ module ActiveMerchant #:nodoc:
       def add_shipping_address(post, options)
         if address = options[:shipping_address]
           post[:address] = {}
-          post[:address][:street] = address[:address1].match(/\D+/)[0].strip if address[:address1]
-          post[:address][:number] = address[:address1].match(/\d+/)[0] if address[:address1]
+          post[:address][:street] = address[:address1].match(/\D+/)[0].strip if address[:address1]&.match(/\D+/)
+          post[:address][:number] = address[:address1].match(/\d+/)[0] if address[:address1]&.match(/\d+/)
           post[:address][:compliment] = address[:address2] if address[:address2]
           post[:address][:city] = address[:city] if address[:city]
           post[:address][:state] = address[:state] if address[:state]

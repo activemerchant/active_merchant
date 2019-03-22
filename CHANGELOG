@@ -18,6 +18,7 @@
 * Adyen: Support idempotency on purchase [molbrown] #3168
 * Adyen: Pass phone, statement, device_fingerprint [curiousepic] #3178
 * Adyen: Fix adding phone from billing address [curiousepic] #3179
+* Fix partial or missing address exceptions [molbrown] #3180
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
