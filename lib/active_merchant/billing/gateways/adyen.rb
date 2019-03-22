@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def add_extra_data(post, payment, options)
-        post[:telephoneNumber] = options[:billing_address][:phone] if options[:billing_address][:phone]
+        post[:telephoneNumber] = options[:billing_address][:phone] if options.dig(:billing_address, :phone)
         post[:shopperEmail] = options[:shopper_email] if options[:shopper_email]
         post[:shopperIP] = options[:shopper_ip] if options[:shopper_ip]
         post[:shopperReference] = options[:shopper_reference] if options[:shopper_reference]
