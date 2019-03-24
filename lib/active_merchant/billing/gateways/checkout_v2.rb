@@ -35,6 +35,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_transaction_data(post, options)
+        add_3ds(post, options)
 
         commit(:authorize, post)
       end
@@ -87,6 +88,7 @@ module ActiveMerchant #:nodoc:
         post[:billing_descriptor] = {}
         post[:billing_descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
         post[:billing_descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
+        post[:metadata][:udf5] = 'ActiveMerchant'
       end
 
       def add_payment_method(post, payment_method)
@@ -120,6 +122,15 @@ module ActiveMerchant #:nodoc:
         post[:card_on_file] = true if options[:card_on_file] == true
         post[:payment_type] = 'Regular' if options[:transaction_indicator] == 1
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
+      end
+
+      def add_3ds(post, options)
+        return unless options[:execute_threed] || options[:threed_dynamic]
+        post[:'3ds'] = {}
+        post[:'3ds'][:enabled] = true if options[:execute_threed]
+        post[:'3ds'][:eci] =  options[:eci] if options[:eci]
+        post[:'3ds'][:cryptogram] =  options[:cryptogram] if options[:cryptogram]
+        post[:'3ds'][:xid] =  options[:xid] if options[:xid]
       end
 
       def commit(action, post, authorization = nil)
