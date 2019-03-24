@@ -20,6 +20,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       transaction_indicator: 2,
       previous_charge_id: 'pay_12312'
     )
+    @additional_options_3ds = @options.merge(
+      "3ds": {
+          "enabled": true,
+          "eci": "05",
+          "cryptogram": "1234",
+          "xid": "1234"
+        }
+    )
   end
 
   def test_transcript_scrubbing
@@ -128,6 +136,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture_with_additional_options
     auth = @gateway.authorize(@amount, @credit_card, @additional_options)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_3ds
+    auth = @gateway.authorize(@amount, @credit_card, @additional_options_3ds)
     assert_success auth
 
     assert capture = @gateway.capture(nil, auth.authorization)

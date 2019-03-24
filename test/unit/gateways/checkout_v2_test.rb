@@ -117,6 +117,28 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_capture_with_3ds
+    response = stub_comms do
+      options = {
+        "3ds": {
+          "enabled": true,
+          "eci": "05",
+          "cryptogram": "1234",
+          "xid": "1234"
+        }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
+
+    capture = stub_comms do
+      @gateway.capture(@amount, response.authorization)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
