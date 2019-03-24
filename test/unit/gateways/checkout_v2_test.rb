@@ -120,12 +120,11 @@ class CheckoutV2Test < Test::Unit::TestCase
   def test_successful_authorize_and_capture_with_3ds
     response = stub_comms do
       options = {
-        "3ds": {
-          "enabled": true,
-          "eci": "05",
-          "cryptogram": "1234",
-          "xid": "1234"
-        }
+        execute_threed: true,
+        eci: '05',
+        cryptogram: '1234',
+        xid: '1234'
+      }
       @gateway.authorize(@amount, @credit_card, options)
     end.respond_with(successful_authorize_response)
 
