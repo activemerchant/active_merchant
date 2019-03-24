@@ -122,6 +122,7 @@ module ActiveMerchant #:nodoc:
       def add_transaction_data(post, options={})
         post[:card_on_file] = true if options[:card_on_file] == true
         post[:payment_type] = 'Regular' if options[:transaction_indicator] == 1
+        post[:payment_type] = 'Recurring' if options[:transaction_indicator] == 2
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
       end
 

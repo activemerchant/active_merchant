@@ -64,7 +64,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, {descriptor_city: 'london', descriptor_name: 'sherlock'})
     end.check_request do |endpoint, data, headers|
-      assert_match(/"descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
+      assert_match(/"billing_descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -104,7 +104,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(%r{"card_on_file":true}, data)
       assert_match(%r{"payment_type":"Recurring"}, data)
-      assert_match(%r{"previous_payment_id":"charge_123"}, data)
+      assert_match(%r{"previous_payment_id":"pay_123"}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
@@ -428,7 +428,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   def invalid_json_response
     %(
     {
-      "id": "pay_123456",
+      "id": "pay_123",
     )
   end
 
