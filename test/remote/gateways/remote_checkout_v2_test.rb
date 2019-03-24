@@ -21,12 +21,10 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
       previous_charge_id: 'pay_12312'
     )
     @additional_options_3ds = @options.merge(
-      "3ds": {
-          "enabled": true,
-          "eci": "05",
-          "cryptogram": "1234",
-          "xid": "1234"
-        }
+      execute_threed: true,
+      eci: '05',
+      cryptogram: '1234',
+      xid: '1234'
     )
   end
 
