@@ -5,7 +5,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @gateway = CheckoutV2Gateway.new(fixtures(:checkout_v2))
 
     @amount = 200
-    @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2018')
+    @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2025')
     @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('4000300011112220')
 
@@ -18,7 +18,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @additional_options = @options.merge(
       card_on_file: true,
       transaction_indicator: 2,
-      previous_charge_id: 'charge_12312'
+      previous_charge_id: 'pay_12312'
     )
   end
 
@@ -112,15 +112,12 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal '40111 - Street Match Only', response.message
   end
 
-<<<<<<< HEAD
-=======
   def test_avs_failed_authorize
     response = @gateway.authorize(@amount, @credit_card, billing_address: address.update(address1: 'Test_A'))
     assert_failure response
     assert_equal '40111 - Street Match Only', response.message
   end
 
->>>>>>> activemerchant/master
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -206,6 +203,6 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @expired_card, @options)
     assert_failure response
     assert_equal 'Validation error: Expired Card', response.message
-    assert_equal '70000: 70077', response.error_code
+    assert_equal 'request_invalid: card_expired', response.error_code
   end
 end
