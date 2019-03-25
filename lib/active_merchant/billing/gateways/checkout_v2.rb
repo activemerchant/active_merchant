@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['response_summary'] == 'Approved'
+        response['response_summary'] == 'Approved' || response.key?('action_id')
       end
 
       def message_from(succeeded, response)

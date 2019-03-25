@@ -228,7 +228,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(invalid_json_response)
 
     assert_failure response
-    assert_match %r{Invalid JSON response}, response.message
+    assert_match %r{Unable to read error message}, response.message
   end
 
   def test_error_code_returned
