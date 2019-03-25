@@ -352,6 +352,10 @@ flo2cash:
   password: ANOTHERCREDENTIAL
   account_id: ANOTHERCREDENTIAL
 
+flo2cash_rest:
+  api_key: APIKEY
+  merchant_id: MERCHANTID
+
 flo2cash_simple:
   username: SOMECREDENTIAL
   password: ANOTHERCREDENTIAL
