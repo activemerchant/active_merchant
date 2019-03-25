@@ -119,6 +119,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal response.params['resultCode'], 'Authorised'
   end
 
+  def test_successful_authorize_with_no_address
+    options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      order_id: '123',
+      recurring_processing_model: 'CardOnFile'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
@@ -140,7 +154,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    options = @options.merge!(fraudOffset: '1', installments: 2)
+    options = @options.merge!(fraudOffset: '1', installments: 2, shopper_statement: 'statement note', device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA')
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -469,5 +483,11 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+  end
+
+  def test_missing_phone_for_purchase
+    @options[:billing_address].delete(:phone)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
   end
 end

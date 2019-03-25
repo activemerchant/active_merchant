@@ -39,6 +39,15 @@ class DLocalTest < Test::Unit::TestCase
     assert_equal 'D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', response.authorization
   end
 
+  def test_successful_authorize_without_address
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options.delete(:billing_address))
+    assert_success response
+
+    assert_equal 'D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', response.authorization
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
