@@ -7,6 +7,8 @@ class StripeTest < Test::Unit::TestCase
     @gateway = StripeGateway.new(:login => 'login')
 
     @credit_card = credit_card()
+    @threeds_card = credit_card('4000000000003063')
+    @non_3ds_card = credit_card('378282246310005')
     @amount = 400
     @refund_amount = 200
 
@@ -14,6 +16,11 @@ class StripeTest < Test::Unit::TestCase
       :billing_address => address(),
       :statement_address => statement_address(),
       :description => 'Test Purchase'
+    }
+
+    @threeds_options = {
+      :execute_threed => true,
+      :callback_url => 'http://www.example.com/callback'
     }
 
     @apple_pay_payment_token = apple_pay_payment_token
@@ -1414,6 +1421,41 @@ class StripeTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_3ds_source_creation
+    @gateway.expects(:ssl_request).twice.returns(threeds_first_sources_created_response, threeds_second_sources_created_response)
+    card_source = @gateway.send(:create_source, @amount, @threeds_card, 'card', @options.merge(@threeds_options))
+    assert_success card_source
+    response = @gateway.send(:create_source, @amount, card_source.params['id'], 'three_d_secure', @options)
+    assert_equal 'source', response.params['object']
+    assert_equal 'pending', response.params['status']
+    assert_equal 'three_d_secure', response.params['type']
+    assert_equal false, response.params['three_d_secure']['authenticated']
+  end
+
+  def test_non3ds_card_source_creation
+    @gateway.expects(:ssl_request).returns(non_3ds_sources_create_response)
+    response = @gateway.send(:create_source, @amount, @non_3ds_card, 'card', @options.merge(@threeds_options))
+    assert_equal 'source', response.params['object']
+    assert_equal 'chargeable', response.params['status']
+    assert_equal 'card', response.params['type']
+    assert_equal 'not_supported', response.params['card']['three_d_secure']
+  end
+
+  def test_webhook_creation
+    @gateway.expects(:ssl_request).returns(webhook_event_creation_response)
+    response = @gateway.send(:create_webhook_endpoint, @options.merge(@threeds_options), ['source.chargeable'])
+    assert_includes response.params['enabled_events'], 'source.chargeable'
+    assert_equal @options.merge(@threeds_options)[:callback_url], response.params['url']
+  end
+
+  def test_webhook_deletion
+    @gateway.expects(:ssl_request).twice.returns(webhook_event_creation_response, webhook_event_deletion_response)
+    webhook = @gateway.send(:create_webhook_endpoint, @options.merge(@threeds_options), ['source.chargeable'])
+    response = @gateway.send(:delete_webhook_endpoint, @options.merge(:webhook_id => webhook.params['id']))
+    assert_equal response.params['id'], webhook.params['id']
+    assert_equal true, response.params['deleted']
+  end
+
   def test_verify_good_credentials
     @gateway.expects(:raw_ssl_request).returns(credentials_are_legit_response)
     assert @gateway.verify_credentials
@@ -2414,5 +2456,192 @@ class StripeTest < Test::Unit::TestCase
       'type' => 'card',
       'used' => false
     }
+  end
+
+  def threeds_first_sources_created_response
+    <<-RESPONSE
+      {
+        "id": "src_1Dj5lqAWOtgoysogqA4CJX9Y",
+        "object": "source",
+        "amount": null,
+        "card": {
+          "exp_month": 9,
+          "exp_year": 2019,
+          "brand": "Visa",
+          "country": "US",
+          "cvc_check": "unchecked",
+          "fingerprint": "53W491Mwz0OMuEJr",
+          "funding": "credit",
+          "last4": "3063",
+          "three_d_secure": "required",
+          "name": null,
+          "address_line1_check": null,
+          "address_zip_check": null,
+          "tokenization_method": null,
+          "dynamic_last4": null
+        },
+        "client_secret": "src_client_secret_EBShsJorDXd6WD521kRIQlbP",
+        "created": 1545228694,
+        "currency": null,
+        "flow": "none",
+        "livemode": false,
+        "metadata": {
+        },
+        "owner": {
+          "address": null,
+          "email": null,
+          "name": null,
+          "phone": null,
+          "verified_address": null,
+          "verified_email": null,
+          "verified_name": null,
+          "verified_phone": null
+        },
+        "statement_descriptor": null,
+        "status": "chargeable",
+        "type": "card",
+        "usage": "reusable"
+      }
+    RESPONSE
+  end
+
+  def threeds_second_sources_created_response
+    <<-RESPONSE
+      {
+        "id": "src_1Dj5lrAWOtgoysog910mc8oS",
+        "object": "source",
+        "amount": 100,
+        "client_secret": "src_client_secret_EBShU4HfxQAw2bVGMxvRECO1",
+        "created": 1545228695,
+        "currency": "usd",
+        "flow": "redirect",
+        "livemode": false,
+        "metadata": {
+        },
+        "owner": {
+          "address": {
+            "city": null,
+            "country": null,
+            "line1": "",
+            "line2": null,
+            "postal_code": null,
+            "state": null
+          },
+          "email": null,
+          "name": null,
+          "phone": null,
+          "verified_address": null,
+          "verified_email": null,
+          "verified_name": null,
+          "verified_phone": null
+        },
+        "redirect": {
+          "failure_reason": null,
+          "return_url": "http://www.example.com/callback",
+          "status": "pending",
+          "url": "https://hooks.stripe.com/redirect/authenticate/src_1Dj5lrAWOtgoysog910mc8oS?client_secret=src_client_secret_EBShU4HfxQAw2bVGMxvRECO1"
+        },
+        "statement_descriptor": null,
+        "status": "pending",
+        "three_d_secure": {
+          "card": "src_1Dj5lqAWOtgoysogqA4CJX9Y",
+          "brand": "Visa",
+          "country": "US",
+          "cvc_check": "unchecked",
+          "exp_month": 9,
+          "exp_year": 2019,
+          "fingerprint": "53W491Mwz0OMuEJr",
+          "funding": "credit",
+          "last4": "3063",
+          "three_d_secure": "required",
+          "customer": null,
+          "authenticated": false,
+          "name": null,
+          "address_line1_check": null,
+          "address_zip_check": null,
+          "tokenization_method": null,
+          "dynamic_last4": null
+        },
+        "type": "three_d_secure",
+        "usage": "single_use"
+      }
+    RESPONSE
+  end
+
+  def non_3ds_sources_create_response
+    <<-RESPONSE
+      {
+        "id": "src_1Dj5yAAWOtgoysogPB6hwOa1",
+        "object": "source",
+        "amount": null,
+        "card": {
+          "exp_month": 9,
+          "exp_year": 2019,
+          "brand": "American Express",
+          "country": "US",
+          "cvc_check": "unchecked",
+          "fingerprint": "DjZpoV89lmOMsJLF",
+          "funding": "credit",
+          "last4": "0005",
+          "three_d_secure": "not_supported",
+          "name": null,
+          "address_line1_check": null,
+          "address_zip_check": null,
+          "tokenization_method": null,
+          "dynamic_last4": null
+        },
+        "client_secret": "src_client_secret_EBStgH6cBMsODApAChcj9Kkq",
+        "created": 1545229458,
+        "currency": null,
+        "flow": "none",
+        "livemode": false,
+        "metadata": {
+        },
+        "owner": {
+          "address": null,
+          "email": null,
+          "name": null,
+          "phone": null,
+          "verified_address": null,
+          "verified_email": null,
+          "verified_name": null,
+          "verified_phone": null
+        },
+        "statement_descriptor": null,
+        "status": "chargeable",
+        "type": "card",
+        "usage": "reusable"
+      }
+    RESPONSE
+  end
+
+  def webhook_event_creation_response
+    <<-RESPONSE
+      {
+        "id": "we_1Dj8GvAWOtgoysogAW1V5FFm",
+        "object": "webhook_endpoint",
+        "application": null,
+        "created": 1545238309,
+        "enabled_events": [
+          "source.chargeable",
+          "source.failed",
+          "source.canceled"
+        ],
+        "livemode": false,
+        "secret": "whsec_sJVAv7f1rddt1bNhouoDvxwQbZ8t0Pgn",
+        "status": "enabled",
+        "url": "http://www.example.com/callback"
+      }
+    RESPONSE
+  end
+
+  def webhook_event_deletion_response
+    <<-RESPONSE
+      {
+        "id": "we_1Dj8GvAWOtgoysogAW1V5FFm",
+        "object": "webhook_endpoint",
+        "deleted": true
+      }
+    RESPONSE
   end
 end

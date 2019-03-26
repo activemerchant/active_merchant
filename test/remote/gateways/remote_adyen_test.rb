@@ -15,6 +15,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
+    @elo_credit_card = credit_card('5066 9911 1111 1118',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'elo'
+    )
+
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @declined_card = credit_card('4000300011112220')
@@ -62,6 +71,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_authorize_with_idempotency_key
+    options = @options.merge(idempotency_key: 'test123')
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    first_auth = response.authorization
+
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
+  end
+
   def test_successful_authorize_with_3ds
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: true))
     assert response.test?
@@ -70,6 +91,46 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['issuerUrl'].blank?
     refute response.params['md'].blank?
     refute response.params['paRequest'].blank?
+  end
+
+  def test_successful_authorize_with_3ds_dynamic
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(threed_dynamic: true))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'RedirectShopper'
+    refute response.params['issuerUrl'].blank?
+    refute response.params['md'].blank?
+    refute response.params['paRequest'].blank?
+  end
+
+  # with rule set in merchant account to skip 3DS for cards of this brand
+  def test_successful_authorize_with_3ds_dynamic_rule_broken
+    mastercard_threed = credit_card('5212345678901234',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'mastercard'
+    )
+    assert response = @gateway.authorize(@amount, mastercard_threed, @options.merge(threed_dynamic: true))
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'Authorised'
+  end
+
+  def test_successful_authorize_with_no_address
+    options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      order_id: '123',
+      recurring_processing_model: 'CardOnFile'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
   end
 
   def test_failed_authorize
@@ -93,7 +154,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    options = @options.merge!(fraudOffset: '1', installments: 2)
+    options = @options.merge!(fraudOffset: '1', installments: 2, shopper_statement: 'statement note', device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA')
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -114,6 +175,18 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_idempotency_key
+    options = @options.merge(idempotency_key: 'testkey45678')
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+    first_auth = response.authorization
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
+  end
+
   def test_successful_purchase_with_apple_pay
     response = @gateway.purchase(@amount, @apple_pay_card, @options)
     assert_success response
@@ -132,6 +205,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_elo_card
+    response = @gateway.purchase(@amount, @elo_credit_card, @options.merge(currency: 'BRL'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -140,6 +219,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_elo_card
+    auth = @gateway.authorize(@amount, @elo_credit_card, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -170,6 +258,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[refund-received]', refund.message
   end
 
+  def test_successful_refund_with_elo_card
+    purchase = @gateway.purchase(@amount, @elo_credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal '[refund-received]', refund.message
+  end
+
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -193,6 +290,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[cancel-received]', void.message
   end
 
+  def test_successful_void_with_elo_card
+    auth = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal '[cancel-received]', void.message
+  end
+
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
@@ -201,6 +307,14 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_store
     assert response = @gateway.store(@credit_card, @options)
+
+    assert_success response
+    assert !response.authorization.split('#')[2].nil?
+    assert_equal 'Authorised', response.message
+  end
+
+  def test_successful_store_with_elo_card
+    assert response = @gateway.store(@elo_credit_card, @options)
 
     assert_success response
     assert !response.authorization.split('#')[2].nil?
@@ -216,6 +330,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_purchase_using_stored_card
     assert store_response = @gateway.store(@credit_card, @options)
+    assert_success store_response
+
+    response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_using_stored_elo_card
+    assert store_response = @gateway.store(@elo_credit_card, @options)
     assert_success store_response
 
     response = @gateway.purchase(@amount, store_response.authorization, @options)
@@ -242,6 +365,21 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_match 'Refused', response.message
+  end
+
+  def test_verify_with_idempotency_key
+    options = @options.merge(idempotency_key: 'test123')
+    response = @gateway.authorize(0, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    first_auth = response.authorization
+
+    response = @gateway.verify(@credit_card, options)
+    assert_success response
+    assert_equal response.authorization, first_auth
+
+    response = @gateway.void(first_auth, @options)
+    assert_success response
   end
 
   def test_invalid_login
@@ -327,6 +465,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_missing_state_for_purchase
+    @options[:billing_address].delete(:state)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_invalid_country_for_purchase
     @options[:billing_address][:country] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
@@ -339,5 +483,11 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+  end
+
+  def test_missing_phone_for_purchase
+    @options[:billing_address].delete(:phone)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
   end
 end

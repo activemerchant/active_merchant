@@ -55,6 +55,10 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, money, options)
 
+        # Setting merchantRefNumber to a unique id for each refund
+        # This is to support multiple partial refunds for the same order
+        post[:merchantRefNum] = SecureRandom.uuid
+
         commit(:post, "settlements/#{authorization}/refunds", post)
       end
 

@@ -324,15 +324,15 @@ module ActiveMerchant #:nodoc:
           :region => address[:state],
           :postal_code => scrub_zip(address[:zip]),
         }
-        if address[:country] || address[:country_code_alpha2]
-          mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2])
-        elsif address[:country_name]
-          mapped[:country_name] = address[:country_name]
-        elsif address[:country_code_alpha3]
-          mapped[:country_code_alpha3] = address[:country_code_alpha3]
-        elsif address[:country_code_numeric]
-          mapped[:country_code_numeric] = address[:country_code_numeric]
+
+        mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2]) if address[:country] || address[:country_code_alpha2]
+        mapped[:country_name] = address[:country_name] if address[:country_name]
+        mapped[:country_code_alpha3] = address[:country_code_alpha3] if address[:country_code_alpha3]
+        unless address[:country].blank?
+          mapped[:country_code_alpha3] ||= Country.find(address[:country]).code(:alpha3).value
         end
+        mapped[:country_code_numeric] = address[:country_code_numeric] if address[:country_code_numeric]
+
         mapped
       end
 
@@ -543,6 +543,17 @@ module ActiveMerchant #:nodoc:
           'token'               => transaction.credit_card_details.token
         }
 
+        if transaction.risk_data
+          risk_data = {
+            'id'                      => transaction.risk_data.id,
+            'decision'                => transaction.risk_data.decision,
+            'device_data_captured'    => transaction.risk_data.device_data_captured,
+            'fraud_service_provider'  => transaction.risk_data.fraud_service_provider
+          }
+        else
+          risk_data = nil
+        end
+
         {
           'order_id'                => transaction.order_id,
           'amount'                  => transaction.amount.to_s,
@@ -553,6 +564,7 @@ module ActiveMerchant #:nodoc:
           'shipping_details'        => shipping_details,
           'vault_customer'          => vault_customer,
           'merchant_account_id'     => transaction.merchant_account_id,
+          'risk_data'               => risk_data,
           'processor_response_code' => response_code_from_result(result)
         }
       end
@@ -585,7 +597,9 @@ module ActiveMerchant #:nodoc:
           parameters[:merchant_account_id] = merchant_account_id
         end
 
-        if options[:recurring]
+        if options[:transaction_source]
+          parameters[:transaction_source] = options[:transaction_source]
+        elsif options[:recurring]
           parameters[:recurring] = true
         end
 

@@ -6,6 +6,13 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
 
     @amount = 500
     @credit_card = credit_card('4509953566233704')
+    @elo_credit_card = credit_card('5067268650517446',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737'
+    )
     @declined_card = credit_card('4000300011112220')
     @options = {
       billing_address: address,
@@ -24,6 +31,12 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'accredited', response.message
+  end
+
+  def test_successful_purchase_with_elo
+    response = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert_success response
     assert_equal 'accredited', response.message
   end
@@ -67,6 +80,16 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal 'accredited', capture.message
   end
 
+  def test_successful_authorize_and_capture_with_elo
+    auth = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert_success auth
+    assert_equal 'pending_capture', auth.message
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'accredited', capture.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
@@ -97,6 +120,15 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
     assert_equal nil, refund.message
   end
 
+  def test_successful_refund_with_elo
+    purchase = @gateway.purchase(@amount, @elo_credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal nil, refund.message
+  end
+
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -113,6 +145,15 @@ class RemoteMercadoPagoTest < Test::Unit::TestCase
 
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'by_collector', void.message
+  end
+
+  def test_successful_void_with_elo
+    auth = @gateway.authorize(@amount, @elo_credit_card, @options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)

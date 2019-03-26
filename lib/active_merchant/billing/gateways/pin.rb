@@ -1,14 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PinGateway < Gateway
-      self.test_url = 'https://test-api.pin.net.au/1'
-      self.live_url = 'https://api.pin.net.au/1'
+      self.test_url = 'https://test-api.pinpayments.com/1'
+      self.live_url = 'https://api.pinpayments.com/1'
 
       self.default_currency = 'AUD'
       self.money_format = :cents
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express]
-      self.homepage_url = 'http://www.pin.net.au/'
+      self.homepage_url = 'http://www.pinpayments.com/'
       self.display_name = 'Pin Payments'
 
       def initialize(options = {})
@@ -67,6 +67,7 @@ module ActiveMerchant #:nodoc:
       # Updates the credit card for the customer.
       def update(token, creditcard, options = {})
         post = {}
+        token = get_customer_token(token)
 
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
@@ -137,11 +138,19 @@ module ActiveMerchant #:nodoc:
           )
         elsif creditcard.kind_of?(String)
           if creditcard =~ /^card_/
-            post[:card_token] = creditcard
+            post[:card_token] = get_card_token(creditcard)
           else
             post[:customer_token] = creditcard
           end
         end
+      end
+
+      def get_customer_token(token)
+        token.split(/;(?=cus)/).last
+      end
+
+      def get_card_token(token)
+        token.split(/;(?=cus)/).first
       end
 
       def add_metadata(post, options)
@@ -200,13 +209,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def unparsable_response(raw_response)
-        message = 'Invalid JSON response received from Pin Payments. Please contact support@pin.net.au if you continue to receive this message.'
+        message = 'Invalid JSON response received from Pin Payments. Please contact support@pinpayments.com if you continue to receive this message.'
         message += " (The raw response returned by the API was #{raw_response.inspect})"
         return Response.new(false, message)
       end
 
       def token(response)
-        response['token']
+        if response['token'].start_with?('cus')
+          "#{response.dig('card', 'token')};#{response['token']}"
+        else
+          response['token']
+        end
       end
 
       def parse(body)

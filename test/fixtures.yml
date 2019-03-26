@@ -36,6 +36,10 @@ axcessms:
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
 
+bambora_apac:
+  username: nmi.api
+  password: qwerty123
+
 # Bank Frick doesn't provide public testing data
 bank_frick:
   sender: sender-uuid

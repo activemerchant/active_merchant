@@ -33,8 +33,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_first_purchase_with_credential_on_file
     gateway = MonerisGateway.new(
       :login => 'store3',
-      :password => 'yesguy',
-      :cof_enabled => true
+      :password => 'yesguy'
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_purchase_response)
     assert response = gateway.purchase(
@@ -55,8 +54,7 @@ class MonerisTest < Test::Unit::TestCase
   def test_successful_subsequent_purchase_with_credential_on_file
     gateway = MonerisGateway.new(
       :login => 'store3',
-      :password => 'yesguy',
-      :cof_enabled => true
+      :password => 'yesguy'
     )
     gateway.expects(:ssl_post).returns(successful_first_cof_authorize_response)
     assert response = gateway.authorize(

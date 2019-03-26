@@ -173,11 +173,22 @@ module ActiveMerchant #:nodoc:
         response = parse(xml)
         Response.new(
           response[:success],
-          response[:message],
+          message_from(response),
           response,
           :test => test?,
-          :authorization => build_authorization(response)
+          :authorization => build_authorization(response),
+          :error_code => response[:error_code]
         )
+      end
+
+      def message_from(response)
+        if response[:message] == 'ERROR' && response[:error_message]
+          response[:error_message]
+        elsif response[:error_message]
+          "#{response[:message]} #{response[:error_message]}"
+        else
+          response[:message]
+        end
       end
 
       def post_data(params)

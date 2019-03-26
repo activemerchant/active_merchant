@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w[MX EC VE CO BR CL]
       self.default_currency = 'USD'
-      self.supported_cardtypes = %i[visa master american_express diners_club]
+      self.supported_cardtypes = %i[visa master american_express diners_club elo]
 
       self.homepage_url = 'https://secure.paymentez.com/'
       self.display_name = 'Paymentez'
@@ -38,7 +38,8 @@ module ActiveMerchant #:nodoc:
         'visa' => 'vi',
         'master' => 'mc',
         'american_express' => 'ax',
-        'diners_club' => 'di'
+        'diners_club' => 'di',
+        'elo' => 'el'
       }.freeze
 
       def initialize(options = {})
@@ -171,15 +172,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_extra_params(post, options)
-        if options[:extra_params]
-          items = {}
-          options[:extra_params].each do |param|
-            param.each do |key, value|
-              items[key.to_sym] = value
-            end
-          end
-          post[:extra_params] = items
-        end
+        extra_params = {}
+        extra_params.merge!(options[:extra_params]) if options[:extra_params]
+
+        post['extra_params'] = extra_params unless extra_params.empty?
       end
 
       def parse(body)

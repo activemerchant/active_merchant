@@ -22,7 +22,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   end
 
   def test_successful_first_purchase_with_credential_on_file
-    gateway = MonerisGateway.new(fixtures(:moneris).merge(cof_enabled: true))
+    gateway = MonerisGateway.new(fixtures(:moneris))
     assert response = gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: '', payment_indicator: 'C', payment_information: '0'))
     assert_success response
     assert_equal 'Approved', response.message
@@ -31,7 +31,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_cof_enabled_and_no_cof_options
-    gateway = MonerisGateway.new(fixtures(:moneris).merge(cof_enabled: true))
+    gateway = MonerisGateway.new(fixtures(:moneris))
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -39,7 +39,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   end
 
   def test_successful_non_cof_purchase_with_cof_enabled_and_only_issuer_id_sent
-    gateway = MonerisGateway.new(fixtures(:moneris).merge(cof_enabled: true))
+    gateway = MonerisGateway.new(fixtures(:moneris))
     assert response = gateway.purchase(@amount, @credit_card, @options.merge(issuer_id: ''))
     assert_success response
     assert_equal 'Approved', response.message
@@ -48,7 +48,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
   end
 
   def test_successful_subsequent_purchase_with_credential_on_file
-    gateway = MonerisGateway.new(fixtures(:moneris).merge(cof_enabled: true))
+    gateway = MonerisGateway.new(fixtures(:moneris))
     assert response = gateway.authorize(
       @amount,
       @credit_card,

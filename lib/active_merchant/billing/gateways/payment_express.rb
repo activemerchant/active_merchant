@@ -153,6 +153,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(result, options)
         add_address_verification_data(result, options)
         add_optional_elements(result, options)
+        add_ip(result, options)
         result
       end
 
@@ -163,6 +164,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(result, options)
         add_reference(result, identification)
         add_optional_elements(result, options)
+        add_ip(result, options)
         result
       end
 
@@ -172,6 +174,7 @@ module ActiveMerchant #:nodoc:
         add_amount(result, 100, options) # need to make an auth request for $1
         add_token_request(result, options)
         add_optional_elements(result, options)
+        add_ip(result, options)
         result
       end
 
@@ -231,6 +234,10 @@ module ActiveMerchant #:nodoc:
 
         xml.add_element('AvsStreetAddress').text = address[:address1]
         xml.add_element('AvsPostCode').text = address[:zip]
+      end
+
+      def add_ip(xml, options)
+        xml.add_element('ClientInfo').text = options[:ip] if options[:ip]
       end
 
       # The options hash may contain optional data which will be passed

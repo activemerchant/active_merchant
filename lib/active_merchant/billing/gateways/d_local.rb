@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
         post[:payer][:name] = card.name
         post[:payer][:email] = options[:email] if options[:email]
         post[:payer][:birth_date] = options[:birth_date] if options[:birth_date]
-        post[:payer][:phone] = address[:phone] if address[:phone]
+        post[:payer][:phone] = address[:phone] if address && address[:phone]
         post[:payer][:document] = options[:document] if options[:document]
         post[:payer][:document2] = options[:document2] if options[:document2]
         post[:payer][:user_reference] = options[:user_reference] if options[:user_reference]

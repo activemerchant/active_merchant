@@ -103,7 +103,7 @@ module ActiveMerchant
         post = {}
 
         add_amount(post, money, options)
-        add_credit_card_or_reference(post, credit_card_or_reference)
+        add_credit_card_or_reference(post, credit_card_or_reference, options)
         add_additional_params(:authorize, post, options)
 
         post
@@ -216,6 +216,12 @@ module ActiveMerchant
           post[:card][:cvd]        = credit_card_or_reference.verification_value
           post[:card][:expiration] = expdate(credit_card_or_reference)
           post[:card][:issued_to]  = credit_card_or_reference.name
+        end
+
+        if options[:three_d_secure]
+          post[:card][:cavv]= options.dig(:three_d_secure, :cavv)
+          post[:card][:eci] = options.dig(:three_d_secure, :eci)
+          post[:card][:xav] = options.dig(:three_d_secure, :xid)
         end
       end
 

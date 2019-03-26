@@ -7,7 +7,21 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4263982640269299')
     @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
+    @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
     @options = { billing_address: address }
+
+    @check = check
+    @invalid_check = check(:routing_number => '123456', :account_number => '123456789')
+    @valid_check_options = {
+      billing_address: {
+        address1: '123 Street',
+        address2: 'Apt 1',
+        city: 'Happy City',
+        state: 'CA',
+        zip: '94901'
+      },
+      authorized_by_shopper: true
+    }
   end
 
   def test_successful_purchase
@@ -28,7 +42,8 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
       ip: '127.0.0.1',
       email: 'joe@example.com',
       description: 'Product Description',
-      soft_descriptor: 'OnCardStatement'
+      soft_descriptor: 'OnCardStatement',
+      personal_identification_number: 'CNPJ'
     })
 
     response = @gateway.purchase(@amount, @credit_card, more_options)
@@ -42,6 +57,64 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     assert_equal 'Success', response.message
     assert_equal 'CAD', response.params['currency']
+  end
+
+  def test_successful_purchase_with_level3_data
+    l_three_visa = credit_card('4111111111111111', month: 2, year: 2023)
+    options = @options.merge({
+      customer_reference_number: '1234A',
+      sales_tax_amount: 0.6,
+      freight_amount: 0,
+      duty_amount: 0,
+      destination_zip_code: 12345,
+      destination_country_code: 'us',
+      ship_from_zip_code: 12345,
+      discount_amount: 0,
+      tax_amount: 0.6,
+      tax_rate: 6.0,
+      level_3_data_items: [
+        {
+          line_item_total: 9.00,
+          description: 'test_desc',
+          product_code: 'test_code',
+          item_quantity: 1.0,
+          tax_rate: 6.0,
+          tax_amount: 0.60,
+          unit_of_measure: 'lb',
+          commodity_code: 123,
+          discount_indicator: 'Y',
+          gross_net_indicator: 'Y',
+          tax_type: 'test',
+          unit_cost: 10.00
+        },
+        {
+          line_item_total: 9.00,
+          description: 'test_2',
+          product_code: 'test_2',
+          item_quantity: 1.0,
+          tax_rate: 7.0,
+          tax_amount: 0.70,
+          unit_of_measure: 'lb',
+          commodity_code: 123,
+          discount_indicator: 'Y',
+          gross_net_indicator: 'Y',
+          tax_type: 'test',
+          unit_cost: 14.00
+        }
+      ]
+    })
+    response = @gateway.purchase(@amount, l_three_visa, options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal '1234A', response.params['customer-reference-number']
+    assert_equal '9', response.params['line-item-total']
+  end
+
+  def test_successful_echeck_purchase
+    response = @gateway.purchase(@amount, @check, @options.merge(@valid_check_options))
+    assert_success response
+    assert_equal 'Success', response.message
   end
 
   def test_failed_purchase
@@ -63,6 +136,20 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Address not verified.', response.avs_result['message']
     assert_equal 'I', response.avs_result['code']
+  end
+
+  def test_failed_echeck_purchase
+    response = @gateway.purchase(@amount, @invalid_check, @options.merge(@valid_check_options))
+    assert_failure response
+    assert_match(/ECP data validity check failed/, response.message)
+    assert_equal '10001', response.error_code
+  end
+
+  def test_failed_unauthorized_echeck_purchase
+    response = @gateway.purchase(@amount, @check, @options.merge({authorized_by_shopper: false}))
+    assert_failure response
+    assert_match(/The payment was not authorized by shopper/, response.message)
+    assert_equal '16004', response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -141,7 +228,7 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match(/Authorization has failed for this transaction/, response.message)
+    assert_match(/Transaction failed  because of payment processing failure/, response.message)
   end
 
   def test_successful_store
@@ -155,12 +242,29 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_match(/services\/2\/vaulted-shoppers/, response.params['content-location-header'])
   end
 
+  def test_successful_echeck_store
+    assert response = @gateway.store(@check, @options.merge(@valid_check_options))
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert response.authorization
+    assert_match(/services\/2\/vaulted-shoppers/, response.params['content-location-header'])
+  end
+
   def test_failed_store
-    assert response = @gateway.store(@declined_card, @options)
+    assert response = @gateway.store(@invalid_card, @options)
 
     assert_failure response
-    assert_match(/Transaction failed  because of payment processing failure/, response.message)
-    assert_equal '14002', response.error_code
+    assert_match(/'Card Number' should be a valid Credit Card/, response.message)
+    assert_equal '10001', response.error_code
+  end
+
+  def test_failed_echeck_store
+    assert response = @gateway.store(@invalid_check, @options)
+
+    assert_failure response
+    assert_match(/ECP data validity check failed/, response.message)
+    assert_equal '10001', response.error_code
   end
 
   def test_successful_purchase_using_stored_card
@@ -168,6 +272,16 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_success store_response
 
     response = @gateway.purchase(@amount, store_response.authorization, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_using_stored_echeck
+    assert store_response = @gateway.store(@check, @options.merge(@valid_check_options))
+    assert_success store_response
+    assert_match(/check/, store_response.authorization)
+
+    response = @gateway.purchase(@amount, store_response.authorization, @options.merge({authorized_by_shopper: true}))
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -204,6 +318,17 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:api_password], transcript)
+  end
+
+  def test_transcript_scrubbing_with_echeck
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @check, @valid_check_options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@check.account_number, transcript)
+    assert_scrubbed(@check.routing_number, transcript)
     assert_scrubbed(@gateway.options[:api_password], transcript)
   end
 

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = %w(HK GB AU AD AR BE BR CA CH CN CO CR CY CZ DE DK ES FI FR GI GR HU IE IN IT JP LI LU MC MT MY MX NL NO NZ PA PE PL PT SE SG SI SM TR UM VA)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :elo]
       self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.homepage_url = 'http://www.worldpay.com/'
@@ -21,6 +21,27 @@ module ActiveMerchant #:nodoc:
         'jcb'              => 'JCB-SSL',
         'maestro'          => 'MAESTRO-SSL',
         'diners_club'      => 'DINERS-SSL',
+        'elo'              => 'ELO-SSL'
+      }
+
+      AVS_CODE_MAP = {
+        'A' => 'M', # Match
+        'B' => 'P', # Postcode matches, address not verified
+        'C' => 'Z', # Postcode matches, address does not match
+        'D' => 'B', # Address matched; postcode not checked
+        'E' => 'I', # Address and postal code not checked
+        'F' => 'A', # Address matches, postcode does not match
+        'G' => 'C', # Address does not match, postcode not checked
+        'H' => 'I', # Address and postcode not provided
+        'I' => 'C', # Address not checked postcode does not match
+        'J' => 'C', # Address and postcode does not match
+      }
+
+      CVC_CODE_MAP = {
+        'A' => 'M', # CVV matches
+        'B' => 'P', # Not provided
+        'C' => 'P', # Not checked
+        'D' => 'N', # Does not match
       }
 
       def initialize(options = {})
@@ -242,18 +263,54 @@ module ActiveMerchant #:nodoc:
 
               add_address(xml, (options[:billing_address] || options[:address]))
             end
+            add_stored_credential_options(xml, options)
             if options[:ip] && options[:session_id]
               xml.tag! 'session', 'shopperIPAddress' => options[:ip], 'id' => options[:session_id]
             else
               xml.tag! 'session', 'shopperIPAddress' => options[:ip] if options[:ip]
               xml.tag! 'session', 'id' => options[:session_id] if options[:session_id]
             end
-            add_stored_credential_options(xml, options) if options[:stored_credential_usage]
+
+            if three_d_secure = options[:three_d_secure]
+              xml.tag! 'info3DSecure' do
+                xml.tag! 'threeDSVersion', three_d_secure[:version]
+                xid_tag = three_d_secure[:version] =~ /^2/ ? 'dsTransactionId' : 'xid'
+                xml.tag! xid_tag, three_d_secure[:xid]
+                xml.tag! 'cavv', three_d_secure[:cavv]
+                xml.tag! 'eci', three_d_secure[:eci]
+              end
+            end
           end
         end
       end
 
       def add_stored_credential_options(xml, options={})
+        if options[:stored_credential]
+          add_stored_credential_using_normalized_fields(xml, options)
+        else
+          add_stored_credential_using_gateway_specific_fields(xml, options)
+        end
+      end
+
+      def add_stored_credential_using_normalized_fields(xml, options)
+        if options[:stored_credential][:initial_transaction]
+          xml.tag! 'storedCredentials', 'usage' => 'FIRST'
+        else
+          reason = case options[:stored_credential][:reason_type]
+                   when 'installment' then 'INSTALMENT'
+                   when 'recurring' then 'RECURRING'
+                   when 'unscheduled' then 'UNSCHEDULED'
+                   end
+
+          xml.tag! 'storedCredentials', 'usage' => 'USED', 'merchantInitiatedReason' => reason do
+            xml.tag! 'schemeTransactionIdentifier', options[:stored_credential][:network_transaction_id] if options[:stored_credential][:network_transaction_id]
+          end
+        end
+      end
+
+      def add_stored_credential_using_gateway_specific_fields(xml, options)
+        return unless options[:stored_credential_usage]
+
         if options[:stored_credential_initiated_reason]
           xml.tag! 'storedCredentials', 'usage' => options[:stored_credential_usage], 'merchantInitiatedReason' => options[:stored_credential_initiated_reason] do
             xml.tag! 'schemeTransactionIdentifier', options[:stored_credential_transaction_id] if options[:stored_credential_transaction_id]
@@ -370,7 +427,10 @@ module ActiveMerchant #:nodoc:
           raw,
           :authorization => authorization_from(raw),
           :error_code => error_code_from(success, raw),
-          :test => test?)
+          :test => test?,
+          :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
+          :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
+        )
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)

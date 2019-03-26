@@ -65,6 +65,12 @@ class CountryTest < Test::Unit::TestCase
 
     country = ActiveMerchant::Country.find('ROU')
     assert_equal 'RO', country.code(:alpha2).value
+
+    country = ActiveMerchant::Country.find('Romania')
+    assert_equal 'ROU', country.code(:alpha3).value
+
+    country = ActiveMerchant::Country.find('Romania')
+    assert_not_equal 'ROM', country.code(:alpha3).value
   end
 
   def test_raise_on_nil_name

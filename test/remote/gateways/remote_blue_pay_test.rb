@@ -10,7 +10,8 @@ class BluePayTest < Test::Unit::TestCase
     @options = {
       :order_id => generate_unique_id,
       :billing_address => address,
-      :description => 'Store purchase'
+      :description => 'Store purchase',
+      :ip => '192.168.0.1'
     }
 
     @recurring_options = {
@@ -36,7 +37,7 @@ class BluePayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
     assert_success response
     assert response.test?
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal 'App ACH Sale', response.message
     assert response.authorization
   end
 

@@ -2,15 +2,15 @@ require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class IppGateway < Gateway
-      self.live_url = 'https://www.ippayments.com.au/interface/api/dts.asmx'
-      self.test_url = 'https://demo.ippayments.com.au/interface/api/dts.asmx'
+    class BamboraApacGateway < Gateway
+      self.live_url = 'https://www.bambora.co.nz/interface/api'
+      self.test_url = 'https://demo.bambora.co.nz/interface/api'
 
-      self.supported_countries = ['AU']
+      self.supported_countries = ['AU', 'NZ']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
-      self.homepage_url = 'http://www.ippayments.com.au/'
-      self.display_name = 'IPP'
+      self.homepage_url = 'http://www.bambora.com/'
+      self.display_name = 'Bambora Asia-Pacific'
 
       self.money_format = :cents
 
@@ -22,7 +22,6 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
-        ActiveMerchant.deprecated('IPP gateway is now named Bambora Asia-Pacific')
         requires!(options, :username, :password)
         super
       end
@@ -33,8 +32,8 @@ module ActiveMerchant #:nodoc:
             xml.CustRef options[:order_id]
             add_amount(xml, money)
             xml.TrnType '1'
-            add_credit_card(xml, payment)
-            add_credentials(xml)
+            add_payment(xml, payment)
+            add_credentials(xml, options)
             xml.TrnSource options[:ip]
           end
         end
@@ -46,8 +45,8 @@ module ActiveMerchant #:nodoc:
             xml.CustRef options[:order_id]
             add_amount(xml, money)
             xml.TrnType '2'
-            add_credit_card(xml, payment)
-            add_credentials(xml)
+            add_payment(xml, payment)
+            add_credentials(xml, options)
             xml.TrnSource options[:ip]
           end
         end
@@ -58,7 +57,7 @@ module ActiveMerchant #:nodoc:
           xml.Capture do
             xml.Receipt authorization
             add_amount(xml, money)
-            add_credentials(xml)
+            add_credentials(xml, options)
           end
         end
       end
@@ -68,7 +67,30 @@ module ActiveMerchant #:nodoc:
           xml.Refund do
             xml.Receipt authorization
             add_amount(xml, money)
-            add_credentials(xml)
+            add_credentials(xml, options)
+          end
+        end
+      end
+
+      def void(money, authorization, options={})
+        commit('SubmitSingleVoid') do |xml|
+          xml.Void do
+            xml.Receipt authorization
+            add_amount(xml, money)
+            add_credentials(xml, options)
+          end
+        end
+      end
+
+      def store(payment, options={})
+        commit('TokeniseCreditCard') do |xml|
+          xml.TokeniseCreditCard do
+            xml.CardNumber payment.number
+            xml.ExpM format(payment.month, :two_digits)
+            xml.ExpY format(payment.year, :four_digits)
+            xml.TokeniseAlgorithmID options[:tokenise_algorithm_id] || 2
+            xml.UserName @options[:username]
+            xml.Password @options[:password]
           end
         end
       end
@@ -86,7 +108,8 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_credentials(xml)
+      def add_credentials(xml, options)
+        xml.AccountNumber options[:account_number] if options[:account_number]
         xml.Security do
           xml.UserName @options[:username]
           xml.Password @options[:password]
@@ -95,6 +118,21 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(xml, money)
         xml.Amount amount(money)
+      end
+
+      def add_payment(xml, payment)
+        if payment.is_a?(String)
+          add_token(xml, payment)
+        else
+          add_credit_card(xml, payment)
+        end
+      end
+
+      def add_token(xml, payment)
+        xml.CreditCard do
+          xml.TokeniseAlgorithmID options[:tokenise_algorithm_id] || 2
+          xml.CardNumber payment
+        end
       end
 
       def add_credit_card(xml, payment)
@@ -121,9 +159,9 @@ module ActiveMerchant #:nodoc:
       def commit(action, &block)
         headers = {
           'Content-Type' => 'text/xml; charset=utf-8',
-          'SOAPAction' => "http://www.ippayments.com.au/interface/api/dts/#{action}",
+          'SOAPAction' => "http://www.ippayments.com.au/interface/api/#{endpoint(action)}/#{action}"
         }
-        response = parse(ssl_post(commit_url, new_submit_xml(action, &block), headers))
+        response = parse(ssl_post("#{commit_url}/#{endpoint(action)}.asmx", new_submit_xml(action, &block), headers))
 
         Response.new(
           success_from(response),
@@ -140,11 +178,19 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.soap :Envelope, 'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema', 'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' do
           xml.soap :Body do
-            xml.__send__(action, 'xmlns' => 'http://www.ippayments.com.au/interface/api/dts') do
-              xml.trnXML do
-                inner_xml = Builder::XmlMarkup.new(indent: 2)
-                yield(inner_xml)
-                xml.cdata!(inner_xml.target!)
+            xml.__send__(action, 'xmlns' => "http://www.ippayments.com.au/interface/api/#{endpoint(action)}") do
+              if action == 'TokeniseCreditCard'
+                xml.tokeniseCreditCardXML do
+                  inner_xml = Builder::XmlMarkup.new(indent: 2)
+                  yield(inner_xml)
+                  xml.cdata!(inner_xml.target!)
+                end
+              else
+                xml.trnXML do
+                  inner_xml = Builder::XmlMarkup.new(indent: 2)
+                  yield(inner_xml)
+                  xml.cdata!(inner_xml.target!)
+                end
               end
             end
           end
@@ -152,12 +198,16 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      def endpoint(action)
+        action == 'TokeniseCreditCard' ? 'sipp' : 'dts'
+      end
+
       def commit_url
-        (test? ? test_url : live_url)
+        test? ? test_url : live_url
       end
 
       def success_from(response)
-        (response[:response_code] == '0')
+        response[:response_code] == '0' || response[:return_value] == '0'
       end
 
       def error_code_from(response)
@@ -165,11 +215,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:declined_message]
+        success_from(response) ? 'Succeeded' : response[:declined_message]
       end
 
       def authorization_from(response)
-        response[:receipt]
+        response[:receipt] || response[:token]
       end
     end
   end

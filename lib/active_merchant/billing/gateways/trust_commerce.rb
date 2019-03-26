@@ -333,6 +333,7 @@ module ActiveMerchant #:nodoc:
         params[:routing] = check.routing_number
         params[:account] = check.account_number
         params[:savings] = 'y' if check.account_type == 'savings'
+        params[:name] = check.name
       end
 
       def add_creditcard(params, creditcard)

@@ -299,6 +299,31 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def create_source(money, payment, type, options = {})
+        post = {}
+        add_amount(post, money, options, true)
+        post[:type] = type
+        if type == 'card'
+          add_creditcard(post, payment, options)
+          post[:card].delete(:name)
+        elsif type == 'three_d_secure'
+          post[:three_d_secure] = {card: payment}
+          post[:redirect] = {return_url: options[:redirect_url]}
+        end
+        commit(:post, 'sources', post, options)
+      end
+
+      def create_webhook_endpoint(options, events)
+        post = {}
+        post[:url] = options[:callback_url]
+        post[:enabled_events] = events
+        commit(:post, 'webhook_endpoints', post, options)
+      end
+
+      def delete_webhook_endpoint(options)
+        commit(:delete, "webhook_endpoints/#{options[:webhook_id]}", {}, options)
+      end
+
       def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
 
@@ -581,7 +606,7 @@ module ActiveMerchant #:nodoc:
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
         response = api_request(method, url, parameters, options)
-
+        response['webhook_id'] = options[:webhook_id] if options[:webhook_id]
         success = success_from(response)
 
         card = card_from_response(response)

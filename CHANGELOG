@@ -1,6 +1,63 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* BluePay: Send customer IP address when provided [jknipp] #3149
+* PaymentExpress: Use ip field for client_info field [jknipp] #3150
+* Bambora Asia-Pacific: Adds Store [molbrown] #3147
+* Orbital: Pass normalized stored credential fields [curiousepic] #3148
+* Adds Elo card type in general and specifically to Adyen [deedeelavinder] #3153
+* Mercado Pago: Adds Elo card type [deedeelavinder] #3156
+* Litle: Add support for stored credentials [bayprogrammer] #3155
+* Adyen: Correctly process risk_data option [bayprogrammer] #3161
+* Paymentez: Adds Elo card type [deedeelavinder] #3162
+* WorldPay: Adds Elo card type [deedeelavinder] #3163
+* Adyen: Idempotency for non-purchase requests [molbrown] #3164
+* FirstData e4 v27: Support v28 url and stored creds [curiousepic] #3165
+* WorldPay: Fix element order for 3DS + stored cred [bayprogrammer] #3172
+* Braintree: Add risk data to returned response [jknipp] #3169
+* Adyen: Support idempotency on purchase [molbrown] #3168
+* Adyen: Pass phone, statement, device_fingerprint [curiousepic] #3178
+* Adyen: Fix adding phone from billing address [curiousepic] #3179
+* Fix partial or missing address exceptions [molbrown] #3180
+
+== Version 1.91.0 (February 22, 2019)
+* WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106
+* Worldpay: Add AVS and CVC Mapping [nfarve] #3107
+* Paymentez: Fixes extra_params field [molbrown] #3108
+* Improved support for account_type using Check class's account_type instead [lancecarlson] #3097
+* USA Epay: Allow quantity to be passed and check custom fields [lancecarlson] #3090
+* Fix usaepay transaction invoice [lancecarlson] #3093
+* Adyen: Handles blank state address field [molbrown] #3113
+* Braintree: Send all country fields [curiousepic] #3112
+* Braintree: Account for empty string countries [curiousepic] #3115
+* Orbital: Support for stored credentials framework [jknipp] #3117
+* Openpay: Fix for marking successful transaction(s) as failed [jknipp] #3121
+* Braintree: Adds support for transaction_source [molbrown] #3120
+* Moneris: Remove redundant card on file guard clause [davidsantoso] #3123
+* Switch order of Romania country codes [molbrown] #3125
+* Blue Snap: Supports Level 2/3 data [molbrown] #3126
+* Blue Snap: Support personal_identification_number [jknipp] #3128
+* ProPay: Send 9 digit zip code without dash [molbrown] #3129
+* Adyen: Extend AVS code mappings [therufs] #3119
+* NMI: Add customer id to authorization on store [curiousepic] #3130
+* Trans First Express: Don't pass blank name field [curiousepic] #3133
+* TrustCommerce: Send full name on ACH transactions [jknipp] #3132
+* Qvalent: Map CVV Result to responses [curiousepic] #3135
+* Card Connect: Handle 401s as responses [curiousepic] #3137
+* Worldpay: Introduce normalized stored credential options [davidsantoso] #3134
+* Worldpay: Adjust use of normalized stored credentials hash [davidsantoso] #3139
+* Adyen: Enable Dynamic 3DS [molbrown] #3138
+* Fat Zebra: Support voids [curiousepic] #3142
+* Blue Snap: Support ACH/ECP payments [jknipp] #3143
+* Blue Snap: Fix Card-on-File field typo [jknipp] #3143
+* Add Bambora gateway [InfraRuby] #3145
+* Bambora Asia-Pacific: Updates Gateway [molbrown] #3145
+* PaymentExpress: Support ClientInfo field [jknipp] #3131
+* Pin Payments: Concatenate card and customer tokens when storing card [therufs] #3144
+* Update Discover regex to allow card numbers longer than 16 digits [prashcr] #3146
+* Merrco partial refunds fix [payfirma1] #3141
+
+== Version 1.90.0 (January 8, 2019)
 * Mercado Pago: Support "gateway" processing mode [curiousepic] #3087
 * Braintree: Update gem to latest version [curiousepic] #3091
 * Adyen: Pass arbitrary riskData fields [curiousepic] #3089
@@ -9,6 +66,8 @@
 * Braintree Blue: Support Level 2 and 3 data fields [curiousepic] #3094
 * Braintree Blue: Refactor line_items field [curiousepic] #3100
 * TrustCommerce: Use `application_id` [nfarve] #3103
+* Stripe: Add 3DS Support [nfarve] #3086
+* Cecabank: Append error text to message [therufs] #3127
 
 == Version 1.89.0 (December 17, 2018)
 * Worldpay: handle Visa and MasterCard payouts differently [bpollack] #3068

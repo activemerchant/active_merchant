@@ -33,7 +33,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
         @cvv_enabled = options[:cvv_enabled]
         @avs_enabled = options[:avs_enabled]
-        @cof_enabled = options[:cof_enabled]
         options[:crypt_type] = 7 unless options.has_key?(:crypt_type)
         super
       end
@@ -51,7 +50,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        add_cof(post, options) if @cof_enabled
+        add_cof(post, options)
         action = if post[:cavv]
                    'cavv_preauth'
                  elsif post[:data_key].blank?
@@ -74,7 +73,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
         post[:address] = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        add_cof(post, options) if @cof_enabled
+        add_cof(post, options)
         action = if post[:cavv]
                    'cavv_purchase'
                  elsif post[:data_key].blank?
@@ -293,7 +292,7 @@ module ActiveMerchant #:nodoc:
           when :cvd_info
             transaction.add_element(cvd_element(parameters[:cvd_value])) if @cvv_enabled
           when :cof_info
-            transaction.add_element(credential_on_file(parameters)) if @cof_enabled && cof_details_present?(parameters)
+            transaction.add_element(credential_on_file(parameters)) if cof_details_present?(parameters)
           else
             transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
           end

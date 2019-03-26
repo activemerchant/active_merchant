@@ -19,6 +19,15 @@ class AdyenTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
+    @elo_credit_card = credit_card('5066 9911 1111 1118',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'elo'
+    )
+
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
@@ -117,6 +126,15 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_elo_card
+    response = stub_comms do
+      @gateway.purchase(@amount, @elo_credit_card, @options)
+    end.respond_with(successful_authorize_with_elo_response, successful_capture_with_elo_repsonse)
+    assert_success response
+    assert_equal '8835511210681145#8835511210689965#', response.authorization
+    assert response.test?
+  end
+
   def test_successful_maestro_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge({selected_brand: 'maestro', overwrite_brand: 'true'}))
@@ -151,7 +169,23 @@ class AdyenTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: {'operatingSystem' => 'HAL9000'}}))
     end.check_request do |endpoint, data, headers|
-      assert_equal 'HAL9000', JSON.parse(data)['additionalData']['riskData']['operatingSystem']
+      assert_equal 'HAL9000', JSON.parse(data)['additionalData']['riskdata.operatingSystem']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_risk_data_complex_data
+    stub_comms do
+      risk_data = {
+        'deliveryMethod' => 'express',
+        'basket.item.productTitle' => 'Blue T Shirt',
+        'promotions.promotion.promotionName' => 'Big Sale promotion'
+      }
+      @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: risk_data}))
+    end.check_request do |endpoint, data, headers|
+      parsed = JSON.parse(data)
+      assert_equal 'express', parsed['additionalData']['riskdata.deliveryMethod']
+      assert_equal 'Blue T Shirt', parsed['additionalData']['riskdata.basket.item.productTitle']
+      assert_equal 'Big Sale promotion', parsed['additionalData']['riskdata.promotions.promotion.promotionName']
     end.respond_with(successful_authorize_response)
   end
 
@@ -262,12 +296,13 @@ class AdyenTest < Test::Unit::TestCase
     post = {:card => {:billingAddress => {}}}
     @options[:billing_address].delete(:address1)
     @options[:billing_address].delete(:address2)
+    @options[:billing_address].delete(:state)
     @gateway.send(:add_address, post, @options)
     assert_equal 'N/A', post[:card][:billingAddress][:street]
     assert_equal 'N/A', post[:card][:billingAddress][:houseNumberOrName]
+    assert_equal 'N/A', post[:card][:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:zip], post[:card][:billingAddress][:postalCode]
     assert_equal @options[:billing_address][:city], post[:card][:billingAddress][:city]
-    assert_equal @options[:billing_address][:state], post[:card][:billingAddress][:stateOrProvince]
     assert_equal @options[:billing_address][:country], post[:card][:billingAddress][:country]
   end
 
@@ -290,6 +325,23 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal 'YwAAAAAABaYcCMX/OhNRQAAAAAA=', parsed['mpiData']['cavv']
       assert_equal '07', parsed['mpiData']['eci']
       assert_equal 'applepay', parsed['additionalData']['paymentdatasource.type']
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
+  def test_extended_avs_response
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(extended_avs_response)
+    assert_equal 'Card member\'s name, billing address, and billing postal code match.', response.avs_result['message']
+  end
+
+  def test_optional_idempotency_key_header
+    options = @options.merge(:idempotency_key => 'test123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert headers['Idempotency-Key']
     end.respond_with(successful_authorize_response)
     assert_success response
   end
@@ -440,6 +492,25 @@ class AdyenTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_authorize_with_elo_response
+    <<-RESPONSE
+    {
+      "pspReference":"8835511210681145",
+      "resultCode":"Authorised",
+      "authCode":"98696"
+    }
+    RESPONSE
+  end
+
+  def successful_capture_with_elo_repsonse
+    <<-RESPONSE
+    {
+      "pspReference":"8835511210689965",
+      "response":"[capture-received]"
+    }
+    RESPONSE
+  end
+
   def successful_authorize_response
     <<-RESPONSE
     {
@@ -564,6 +635,12 @@ class AdyenTest < Test::Unit::TestCase
   def failed_store_response
     <<-RESPONSE
     {"pspReference":"8835205393394754","refusalReason":"Refused","resultCode":"Refused"}
+    RESPONSE
+  end
+
+  def extended_avs_response
+    <<-RESPONSE
+    {\"additionalData\":{\"cvcResult\":\"1 Matches\",\"cvcResultRaw\":\"Y\",\"avsResult\":\"20 Name, address and zip match\",\"avsResultRaw\":\"M\"}}
     RESPONSE
   end
 end

@@ -201,9 +201,10 @@ class RemoteCardConnectTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = CardConnectGateway.new(username: '', password: '', merchant_id: '')
-    assert_raises(ActiveMerchant::ResponseError) do
-      gateway.purchase(@amount, @credit_card, @options)
-    end
+    response = gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_match %r{Unable to authenticate.  Please check your credentials.}, response.message
   end
 
   def test_transcript_scrubbing

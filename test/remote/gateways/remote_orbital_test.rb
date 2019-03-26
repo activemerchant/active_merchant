@@ -132,6 +132,79 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_purchase_with_mit_stored_credentials
+    mit_stored_credentials = {
+      mit_msg_type: 'MUSE',
+      mit_stored_credential_ind: 'Y',
+      mit_submitted_transaction_id: 'abcdefg12345678'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(mit_stored_credentials))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_cit_stored_credentials
+    cit_options = {
+      mit_msg_type: 'CUSE',
+      mit_stored_credential_ind: 'Y'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(cit_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_normalized_mit_stored_credentials
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: 'abcdefg12345678'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_normalized_cit_stored_credentials
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'customer',
+        reason_type: 'unscheduled'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_overridden_normalized_stored_credentials
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: 'abcdefg12345678'
+      },
+      mit_msg_type: 'MRSB'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   # Amounts of x.01 will fail
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(101, @declined_card, @options)

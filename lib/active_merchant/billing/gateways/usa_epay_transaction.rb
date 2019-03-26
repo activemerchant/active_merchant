@@ -197,14 +197,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:invoice]      = options[:order_id]
+        post[:invoice]      = options[:invoice]
+        post[:orderid]      = options[:order_id]
         post[:description]  = options[:description]
       end
 
       def add_payment(post, payment, options={})
         if payment.respond_to?(:routing_number)
           post[:checkformat] = options[:check_format] if options[:check_format]
-          post[:accounttype] = options[:account_type] if options[:account_type]
+          if payment.account_type
+            account_type = payment.account_type.to_s.capitalize
+            raise ArgumentError, 'account_type must be checking or savings' unless %w(Checking Savings).include?(account_type)
+            post[:accounttype] = account_type
+          end
           post[:account] = payment.account_number
           post[:routing] = payment.routing_number
           post[:name]    = payment.name unless payment.name.blank?
@@ -258,7 +263,10 @@ module ActiveMerchant #:nodoc:
       # see: https://wiki.usaepay.com/developer/transactionapi#merchant_defined_custom_fields
       def add_custom_fields(post, options)
         return unless options[:custom_fields].is_a?(Hash)
+
         options[:custom_fields].each do |index, custom|
+          raise ArgumentError.new('Cannot specify custom field with index 0') if index.to_s.to_i.zero?
+
           post["custom#{index}"] = custom
         end
       end
@@ -267,7 +275,7 @@ module ActiveMerchant #:nodoc:
       def add_line_items(post, options)
         return unless options[:line_items].is_a?(Array)
         options[:line_items].each_with_index do |line_item, index|
-          %w(product_ref_num sku name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
+          %w(product_ref_num sku qty name description taxable tax_rate tax_amount commodity_code discount_rate discount_amount).each do |key|
             post["line#{index}#{key.delete('_')}"] = line_item[key.to_sym] if line_item.has_key?(key.to_sym)
           end
 
