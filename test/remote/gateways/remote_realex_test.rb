@@ -115,6 +115,21 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_match %r{DECLINED}i, response.message
   end
 
+  def test_realex_purchase_with_three_d_secure
+    response = @gateway.purchase(
+      1000,
+      @visa,
+      three_d_secure: {
+        eci: '05', xid: '05', cavv: '05'
+      },
+      :order_id => generate_unique_id,
+      :description => 'Test Realex with 3DS'
+    )
+    assert_success response
+    assert response.test?
+    assert_equal 'Successful', response.message
+  end
+
   def test_realex_purchase_referral_b
     [ @visa_referral_b, @mastercard_referral_b ].each do |card|
       response = @gateway.purchase(@amount, card,
