@@ -85,9 +85,11 @@ module ActiveMerchant #:nodoc:
         post[:amount] = localized_amount(money, options[:currency])
         post[:reference] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
-        post[:billing_descriptor] = {}
-        post[:billing_descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
-        post[:billing_descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
+        if options[:descriptor_name] || options[:descriptor_city]
+          post[:billing_descriptor] = {}
+          post[:billing_descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
+          post[:billing_descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
+        end
         post[:metadata] = {}
         post[:metadata][:udf5] = 'ActiveMerchant'
       end
