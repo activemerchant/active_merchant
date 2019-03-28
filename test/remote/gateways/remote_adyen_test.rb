@@ -61,7 +61,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      recurring_processing_model: 'CardOnFile'
+      stored_credential: {reason_type: 'unscheduled'}
     }
   end
 
