@@ -353,6 +353,7 @@ module ActiveMerchant #:nodoc:
           add_creditcard_payment_method(xml)
         end
         add_subscription(xml, options)
+        add_mdd_fields(xml, options)
         if options[:setup_fee]
           if card_brand(payment_method) == 'check'
             add_check_service(xml)
