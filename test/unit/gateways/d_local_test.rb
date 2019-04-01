@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class DLocalTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = DLocalGateway.new(login: 'login', trans_key: 'password', secret_key: 'shhhhh_key')
     @credit_card = credit_card
@@ -46,6 +48,14 @@ class DLocalTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'D-15104-be03e883-3e6b-497d-840e-54c8b6209bc3', response.authorization
+  end
+
+  def test_passing_country_as_string
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/"country\":\"CA\"/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_failed_authorize

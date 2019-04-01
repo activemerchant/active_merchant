@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def lookup_country_code(country)
-        Country.find(country).code(:alpha2)
+        Country.find(country).code(:alpha2).value
       end
 
       def add_payer(post, card, options)
