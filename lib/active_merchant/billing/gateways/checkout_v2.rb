@@ -145,7 +145,8 @@ module ActiveMerchant #:nodoc:
           raise unless(e.response.code.to_s =~ /4\d\d/)
           response = parse(e.response.body)
         end
-
+        
+        response.id = authorization if action == :capture
         succeeded = success_from(response)
 
         response(action, succeeded, response)
