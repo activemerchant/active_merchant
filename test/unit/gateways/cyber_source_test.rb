@@ -425,6 +425,62 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_auth_first_unscheduled_stored_cred
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    @options[:stored_credential] = {
+      :initiator => 'cardholder',
+      :reason_type => 'unscheduled',
+      :initial_transaction => true,
+      :network_transaction_id => ''
+    }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal Response, response.class
+    assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_auth_subsequent_unscheduled_stored_cred
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    @options[:stored_credential] = {
+      :initiator => 'merchant',
+      :reason_type => 'unscheduled',
+      :initial_transaction => false,
+      :network_transaction_id => '016150703802094'
+    }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal Response, response.class
+    assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_auth_first_recurring_stored_cred
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    @options[:stored_credential] = {
+      :initiator => 'cardholder',
+      :reason_type => 'recurring',
+      :initial_transaction => true,
+      :network_transaction_id => ''
+    }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal Response, response.class
+    assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_auth_subsequent_recurring_stored_cred
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    @options[:stored_credential] = {
+      :initiator => 'merchant',
+      :reason_type => 'recurring',
+      :initial_transaction => false,
+      :network_transaction_id => '016150703802094'
+    }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal Response, response.class
+    assert response.success?
+    assert response.test?
+  end
+
   def test_nonfractional_currency_handling
     @gateway.expects(:ssl_post).with do |host, request_body|
       assert_match %r(<grandTotalAmount>1</grandTotalAmount>), request_body

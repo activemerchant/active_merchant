@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ics2wstesta.ic3.com/commerce/1.x/transactionProcessor'
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = '1.121'
+      XSD_VERSION = '1.153'
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB)
@@ -260,6 +260,7 @@ module ActiveMerchant #:nodoc:
         add_threeds_services(xml, options)
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
+        add_stored_credential_options(xml, options)
         xml.target!
       end
 
@@ -513,7 +514,24 @@ module ActiveMerchant #:nodoc:
         if network_tokenization?(payment_method)
           add_auth_network_tokenization(xml, payment_method, options)
         else
-          xml.tag! 'ccAuthService', {'run' => 'true'}
+          xml.tag! 'ccAuthService', {'run' => 'true'} do
+            check_for_stored_cred_commerce_indicator(xml, options)
+          end
+        end
+      end
+
+      def check_for_stored_cred_commerce_indicator(xml, options)
+        return unless options[:stored_credential]
+        if commerce_indicator(options)
+          xml.tag!('commerceIndicator', commerce_indicator(options))
+        end
+      end
+
+      def commerce_indicator(options)
+        return if options[:stored_credential][:initial_transaction]
+        case options[:stored_credential][:reason_type]
+        when 'installment' then 'install'
+        when 'recurring' then 'recurring'
         end
       end
 
@@ -678,6 +696,18 @@ module ActiveMerchant #:nodoc:
       def lookup_country_code(country_field)
         country_code = Country.find(country_field) rescue nil
         country_code&.code(:alpha2)
+      end
+
+      def add_stored_credential_options(xml, options={})
+        return unless options[:stored_credential]
+        if options[:stored_credential][:initial_transaction]
+          xml.tag! 'subsequentAuthFirst', 'true'
+        elsif options[:stored_credential][:reason_type] == 'unscheduled'
+          xml.tag! 'subsequentAuth', 'true'
+          xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
+        else
+          xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
+        end
       end
 
       # Where we actually build the full SOAP request using builder

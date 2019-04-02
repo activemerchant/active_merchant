@@ -432,6 +432,54 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.success?
   end
 
+  def test_successful_first_unscheduled_cof_transaction
+    @options[:stored_credential] = {
+      :initiator => 'cardholder',
+      :reason_type => 'unscheduled',
+      :initial_transaction => true,
+      :network_transaction_id => ''
+    }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+  end
+
+  def test_successful_subsequent_unscheduled_cof_transaction
+    @options[:stored_credential] = {
+      :initiator => 'merchant',
+      :reason_type => 'unscheduled',
+      :initial_transaction => false,
+      :network_transaction_id => '016150703802094'
+    }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+  end
+
+  def test_successful_first_recurring_cof_transaction
+    @options[:stored_credential] = {
+      :initiator => 'cardholder',
+      :reason_type => 'recurring',
+      :initial_transaction => true,
+      :network_transaction_id => ''
+    }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+  end
+
+  def test_successful_subsequent_recurring_cof_transaction
+    @options[:stored_credential] = {
+      :initiator => 'merchant',
+      :reason_type => 'recurring',
+      :initial_transaction => false,
+      :network_transaction_id => '016150703802094'
+    }
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+  end
+
   def pares
     <<-PARES
 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
