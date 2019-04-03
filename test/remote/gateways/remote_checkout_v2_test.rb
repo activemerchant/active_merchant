@@ -7,7 +7,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @amount = 200
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2025')
     @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
-    @declined_card = credit_card('4000300011112220')
+    @declined_card = credit_card('42424242424242424', verification_value: '234', month: '6', year: '2025')
 
     @options = {
       order_id: '1',
@@ -109,19 +109,19 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Invalid Card Number', response.message
+    assert_equal 'request_invalid: card_number_invalid', response.message
   end
 
   def test_avs_failed_purchase
-    response = @gateway.purchase(@amount, @credit_card, billing_address: address.update(address1: 'Test_A'))
+    response = @gateway.purchase(@amount, @declined_card, billing_address: address.update(address1: 'Test_A'))
     assert_failure response
-    assert_equal '40111 - Street Match Only', response.message
+    assert_equal 'request_invalid: card_number_invalid', response.message
   end
 
   def test_avs_failed_authorize
-    response = @gateway.authorize(@amount, @credit_card, billing_address: address.update(address1: 'Test_A'))
+    response = @gateway.authorize(@amount, @declined_card, billing_address: address.update(address1: 'Test_A'))
     assert_failure response
-    assert_equal '40111 - Street Match Only', response.message
+    assert_equal 'request_invalid: card_number_invalid', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -209,14 +209,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{Invalid Card Number}, response.message
-    assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+    assert_match %r{request_invalid: card_number_invalid}, response.message
   end
 
   def test_expired_card_returns_error_code
     response = @gateway.purchase(@amount, @expired_card, @options)
     assert_failure response
-    assert_equal 'Validation error: Expired Card', response.message
+    assert_equal 'request_invalid: card_expired', response.message
     assert_equal 'request_invalid: card_expired', response.error_code
   end
 end
