@@ -305,6 +305,36 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Original pspReference required for this operation', response.message
   end
 
+  def test_successful_adjust
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    assert adjust = @gateway.adjust(200, authorize.authorization)
+    assert_success adjust
+    assert_equal '[adjustAuthorisation-received]', adjust.message
+  end
+
+  def test_successful_adjust_and_capture
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    assert adjust = @gateway.adjust(200, authorize.authorization)
+    assert_success adjust
+    assert_equal '[adjustAuthorisation-received]', adjust.message
+
+    assert capture = @gateway.capture(200, authorize.authorization)
+    assert_success capture
+  end
+
+  def test_failed_adjust
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert response = @gateway.adjust(200, '')
+    assert_failure response
+    assert_equal 'Original pspReference required for this operation', response.message
+  end
+
   def test_successful_store
     assert response = @gateway.store(@credit_card, @options)
 
