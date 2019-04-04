@@ -270,6 +270,21 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_adjust
+    @gateway.expects(:ssl_post).returns(successful_adjust_response)
+    response = @gateway.adjust(200, '8835544088660594')
+    assert_equal '8835544088660594#8835544088660594#', response.authorization
+    assert_equal '[adjustAuthorisation-received]', response.message
+    assert response.test?
+  end
+
+  def test_failed_adjust
+    @gateway.expects(:ssl_post).returns(failed_adjust_response)
+    response = @gateway.adjust(200, '')
+    assert_equal 'Original pspReference required for this operation', response.message
+    assert_failure response
+  end
+
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card, @options)
@@ -623,6 +638,26 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def failed_void_response
+    <<-RESPONSE
+    {
+      "status":422,
+      "errorCode":"167",
+      "message":"Original pspReference required for this operation",
+      "errorType":"validation"
+    }
+    RESPONSE
+  end
+
+  def successful_adjust_response
+    <<-RESPONSE
+    {
+      "pspReference": "8835544088660594",
+      "response": "[adjustAuthorisation-received]"
+    }
+    RESPONSE
+  end
+
+  def failed_adjust_response
     <<-RESPONSE
     {
       "status":422,
