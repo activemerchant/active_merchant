@@ -31,6 +31,12 @@ module ActiveMerchant
         end
       end
 
+      def vanco_purchase(session_id, customer_ref, payment_method_ref, options={})
+        MultiResponse.run do |r|
+          r.process { commit('purchase', vanco_purchase_request(customer_ref, payment_method_ref, session_id, options)) }
+        end
+      end
+
       def refund(money, authorization, options={})
         MultiResponse.run do |r|
           r.process { login }
@@ -46,6 +52,20 @@ module ActiveMerchant
         transcript.
           gsub(%r((password=)\w+), '\1[FILTERED]').
           gsub(%r((accountnumber=)\d+), '\1[FILTERED]')
+      end
+
+      # performs login and returns session id
+      def nvp_login
+        session_id = nil
+        MultiResponse.run do |r|
+          r.process { login }
+          session_id = r.params['sessionid'] if r.success?
+        end
+        session_id
+      end
+
+      def nvp_encrypt(params)
+        encrypt(params)
       end
 
       private
@@ -120,6 +140,21 @@ module ActiveMerchant
         add_client_id(doc)
         add_amount(doc, money, options)
         add_payment_method(doc, payment_method, options)
+        add_options(doc, options)
+        add_purchase_noise(doc)
+        doc
+      end
+
+      def vanco_purchase_request(customer_ref, payment_method_ref, session_id, options)
+        doc = {}
+        doc['nvpvar'] = {}
+        add_auth(doc, 'eftaddcompletetransaction', session_id)
+        add_client_id(doc)
+        add_amount(doc, 0, options)
+        doc['nvpvar']['customerref'] = customer_ref unless customer_ref.blank?
+        doc['nvpvar']['paymentmethodref'] = payment_method_ref unless payment_method_ref.blank?
+#        doc['accounttype'] = 'CC'
+        doc['nvpvar']['isdebitcardonly'] = 'No'
         add_options(doc, options)
         add_purchase_noise(doc)
         doc
@@ -263,21 +298,25 @@ module ActiveMerchant
         if doc.include?('nvpvar')
           nvpvar = doc['nvpvar'].map { |k, v| "#{k.to_s}=#{v.to_s}" }.join('&')
           if doc['nvpvar']['requesttype'] && doc['nvpvar']['requesttype'] != 'login'
-            deflated = Zlib::Deflate.new(nil, -Zlib::MAX_WBITS).deflate(nvpvar, Zlib::FINISH)
-            padding_needed = 16 - (deflated.length % 16)
-            padded = deflated + (padding_needed == 16 ? '' : ' ' * padding_needed)
-            c = OpenSSL::Cipher.new('aes-256-ecb')
-            c.encrypt
-            c.key = @options[:client_key]
-            c.padding = 0
-            encrypted = c.update(padded) + c.final
-            nvpvar = Base64.urlsafe_encode64(encrypted)
+            nvpvar = encrypt(nvpvar)
           end
           params = doc.merge({ 'nvpvar' => nvpvar })
         else
           params = doc
         end
         params.map { |k, v| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}" }.join('&')
+      end
+
+      def encrypt(nvpvar)
+        deflated = Zlib::Deflate.new(nil, -Zlib::MAX_WBITS).deflate(nvpvar, Zlib::FINISH)
+        padding_needed = 16 - (deflated.length % 16)
+        padded = deflated + (padding_needed == 16 ? '' : ' ' * padding_needed)
+        c = OpenSSL::Cipher.new('aes-256-ecb')
+        c.encrypt
+        c.key = @options[:client_key]
+        c.padding = 0
+        encrypted = c.update(padded) + c.final
+        nvpvar = Base64.urlsafe_encode64(encrypted)
       end
     end
   end
