@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.91.0 (April 8, 2019)
 * BluePay: Send customer IP address when provided [jknipp] #3149
 * PaymentExpress: Use ip field for client_info field [jknipp] #3150
 * Bambora Asia-Pacific: Adds Store [molbrown] #3147
