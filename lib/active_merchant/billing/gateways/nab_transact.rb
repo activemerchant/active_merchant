@@ -35,6 +35,7 @@ module ActiveMerchant #:nodoc:
 
       PERIODIC_TYPES = {
         :addcrn    => 5,
+        :editcrn   => 5,
         :deletecrn => 5,
         :trigger   => 8
       }
@@ -71,7 +72,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(credit_card, options = {})
-        commit_periodic(:addcrn, build_store_request(credit_card, options))
+        periodic_type = options[:billing_id] ? :editcrn : :addcrn
+
+        commit_periodic(periodic_type, build_store_request(credit_card, options))
       end
 
       def unstore(identification, options = {})
@@ -251,7 +254,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(action, response)
-        if action == :addcrn
+        if %i[addcrn editcrn].include?(action)
           response[:crn]
         else
           [response[:txn_id], response[:purchase_order_no], response[:preauth_id], response[:amount]].join('*')
