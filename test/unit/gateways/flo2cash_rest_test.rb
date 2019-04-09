@@ -74,6 +74,22 @@ class Flo2cashRestTest < Test::Unit::TestCase
     assert_equal 'Card Plan not found', response.message
   end
 
+  def test_successful_direct_debit_plan_creation
+    @gateway.expects(:ssl_request).returns(successful_direct_debit_plan_response)
+
+    response = @gateway.create_direct_debit_plan(@options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal 25, response.params['paymentSchedule'].count
+  end
+
+  def test_fail_direct_debit_plan_creation
+    @gateway.expects(:commit).returns(fail_direct_debit_plan_response)
+
+    response = @gateway.create_direct_debit_plan(@options)
+    assert_equal "'Bank Details. Account. Number' must not be empty.", response.message
+  end
+
   private
 
   def successful_store_response
@@ -499,5 +515,247 @@ class Flo2cashRestTest < Test::Unit::TestCase
 
   def fail_retrieve_card_plan_response
     ActiveMerchant::Billing::Response.new(false, 'Card Plan not found')
+  end
+
+  def successful_direct_debit_plan_response
+    {
+      "id" => 4559,
+      "created" => "2019-04-09T15:18:12",
+      "startDate" => "2019-05-09",
+      "approvalDate" => nil,
+      "amendmentDate" => nil,
+      "nextPaymentDate" => "2019-05-09",
+      "type" => "recurring",
+      "frequency" => "monthly",
+      "status" => "pending-approval",
+      "statusChangedDate" => "2019-04-09T15:18:12",
+      "amount" => 10.0,
+      "totalAmount" => nil,
+      "currency" => "NZD",
+      "reference" => "",
+      "particulars" => "",
+      "instalmentFailOption" => "",
+      "merchantReference1" => nil,
+      "merchantReference2" => nil,
+      "merchantReference3" => nil,
+      "merchant" => {
+        "id" => 51145
+      },
+      "initialPayment" => {
+        "date" => "2019-05-09",
+        "amount" => 10.0
+      },
+      "payer" => {
+        "companyName" => nil,
+        "title" => "Mr.",
+        "firstNames" => "John",
+        "lastName" => "Doe",
+        "dateOfBirth" => nil,
+        "telephoneHome" => nil,
+        "telephoneWork" => nil,
+        "telephoneMobile" => nil,
+        "fax" => nil,
+        "email" => "john.doe@test.com",
+        "address1" => nil,
+        "address2" => nil,
+        "address3" => nil,
+        "suburb" => nil,
+        "city" => nil,
+        "postcode" => nil,
+        "state" => "",
+        "country" => ""
+      },
+      "bankDetails" => {
+        "name" => "BNZ",
+        "branchAddress1" => "123 Street",
+        "branchAddress2" => "Suburb, City",
+        "account" => {
+          "name" => "Account Name",
+          "number" => "44 - 1100 - 0000000 - 000"
+        }
+      },
+      "amendments" => [],
+      "paymentSchedule" => [
+        {
+          "date" => "2019-05-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2019-05-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2019-06-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2019-07-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2019-08-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2019-09-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2019-10-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2019-11-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2019-12-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-01-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-02-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-03-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-04-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-05-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-06-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-07-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-08-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-09-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-10-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-11-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2020-12-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2021-01-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2021-02-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2021-03-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        },
+        {
+          "date" => "2021-04-09",
+          "status" => "scheduled",
+          "amount" => 10.0,
+          "skip" => false,
+          "directDebit" => nil
+        }
+      ]
+    }.to_json
+  end
+
+  def fail_direct_debit_plan_response
+    ActiveMerchant::Billing::Response.new(false, "'Bank Details. Account. Number' must not be empty.")
   end
 end
