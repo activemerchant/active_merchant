@@ -505,18 +505,18 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>retry_preference_perform</tt> -- true | false
-      # * <tt>retry_preference_frequency</tt> Number of days in between attempts
-      # * <tt>retry_preference_max_retry</tt> Number of attempts (max value 7)
+      # * <tt>retry_payments</tt> -- true | false
+      # * <tt>retry_day_interval</tt> Number of days in between attempts
+      # * <tt>retry_max_amount</tt> Number of attempts (max value 7)
       #
       # Based on the chosen parameters, retires are attempted every calendar day,
       # irrespective of the weekend or a public holiday.
       #
       def add_retry_preferences(post, options)
         post[:retryPreferences] = {
-          'perform' => options[:retry_preference_perform] || false,
-          'frequencyInDays' => options[:retry_preference_frequency] || 1,
-          'maxAttempts' => options[:retry_preference_max_retry] || 7
+          'perform' => options[:retry_payments] || false,
+          'frequencyInDays' => options[:retry_day_interval] || 1,
+          'maxAttempts' => options[:retry_max_amount] || 7
         }
       end
 
