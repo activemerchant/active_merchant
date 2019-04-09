@@ -1,8 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
+* Stripe: Fix webhook creation for connected account [jknipp] #3193
 
 == Version 1.91.0 (April 8, 2019)
 * BluePay: Send customer IP address when provided [jknipp] #3149

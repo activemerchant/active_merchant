@@ -313,6 +313,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:url] = options[:callback_url]
         post[:enabled_events] = events
+        post[:connect] = true if options[:stripe_account]
+        options.delete(:stripe_account)
         commit(:post, 'webhook_endpoints', post, options)
       end
 
