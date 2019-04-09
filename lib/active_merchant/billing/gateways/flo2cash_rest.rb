@@ -339,7 +339,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_resume(post, options)
-        post[:initiatedBy] = options[:initiatedBy]
+        post[:initiatedBy] = options[:initiated_by]
         post[:receiptRecipient] = options[:email]
       end
 
@@ -454,7 +454,6 @@ module ActiveMerchant #:nodoc:
       def add_merchant(post, options)
         post[:merchant]  = {
           'id' => options[:merchant_id] || @merchant_id
-          # 'subAccount' => options[:sub_account_id] || @sub_account_id
         }
       end
 
@@ -486,11 +485,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_debit_card_references(post, options)
-        post[:statementReference1] = options[:statementReference1]
-        post[:statementReference2] = options[:statementReference2]
-        post[:merchantReference1] = options[:merchantReference1]
-        post[:merchantReference2] = options[:merchantReference2]
-        post[:merchantReference3] = options[:merchantReference3]
+        post[:statementReference1] = options[:statement_reference_1]
+        post[:statementReference2] = options[:statement_reference_2]
+        post[:merchantReference1] = options[:merchant_reference_1]
+        post[:merchantReference2] = options[:merchant_reference_2]
+        post[:merchantReference3] = options[:merchant_reference_3]
       end
 
       # For Recurring Plans Flo2Cash manages charging and retries on defined
