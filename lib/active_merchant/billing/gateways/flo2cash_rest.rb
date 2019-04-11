@@ -97,6 +97,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_type(post, 'purchase')
         add_channel(post, options)
+        add_particular(post, options)
         add_invoice(post, money, options)
         add_customer_resume(post, options)
         add_references(post, options)
@@ -482,6 +483,10 @@ module ActiveMerchant #:nodoc:
       def add_references(post, options)
         post[:reference1] = options[:reference_1]
         post[:reference2] = options[:reference_2]
+      end
+
+      def add_particular(post, options)
+        post[:particulars] = options[:particulars]
       end
 
       def add_debit_card_references(post, options)
