@@ -150,14 +150,21 @@ module ActiveMerchant #:nodoc:
         post[:reason] = options[:reason] if options[:reason]
         post[:expand] = [:charge]
 
-        MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options) }
+        response = commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options)
 
-          if options[:refund_fee_amount] && options[:refund_fee_amount].to_s != '0'
-            r.process { fetch_application_fee(identification, options) }
-            r.process { refund_application_fee(options[:refund_fee_amount].to_i, application_fee_from_response(r.responses.last), options) }
+        if options[:refund_fee_amount] && options[:refund_fee_amount].to_s != '0'
+          charge = api_request(:get, "charges/#{CGI.escape(identification)}", nil, options)
+
+          if application_fee = charge['application_fee']
+            fee_refund_options = {
+              currency: options[:currency], # currency isn't used by Stripe here, but we need it for #add_amount
+              key: @fee_refund_api_key
+            }
+            refund_application_fee(options[:refund_fee_amount].to_i, application_fee, fee_refund_options)
           end
         end
+
+        response
       end
 
       def verify(payment, options = {})
@@ -168,21 +175,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def application_fee_from_response(response)
-        return unless response.success?
-        response.params['application_fee'] unless response.params['application_fee'].empty?
-      end
-
       def refund_application_fee(money, identification, options = {})
-        return Response.new(false, 'Application fee id could not be found') unless identification
-
         post = {}
         add_amount(post, money, options)
-        options[:key] = @fee_refund_api_key if @fee_refund_api_key
-        options.delete(:stripe_account)
-
-        refund_fee = commit(:post, "application_fees/#{CGI.escape(identification)}/refunds", post, options)
-        application_fee_response!(refund_fee, "Application fee could not be refunded: #{refund_fee.message}")
+        commit(:post, "application_fees/#{CGI.escape(identification)}/refunds", post, options)
       end
 
       # Note: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
@@ -514,17 +510,6 @@ module ActiveMerchant #:nodoc:
       def add_emv_metadata(post, creditcard)
         post[:metadata] ||= {}
         post[:metadata][:card_read_method] = creditcard.read_method if creditcard.respond_to?(:read_method)
-      end
-
-      def fetch_application_fee(identification, options = {})
-        options[:key] = @fee_refund_api_key
-
-        fetch_charge = commit(:get, "charges/#{CGI.escape(identification)}", nil, options)
-        application_fee_response!(fetch_charge, "Application fee id could not be retrieved: #{fetch_charge.message}")
-      end
-
-      def application_fee_response!(response, message)
-        response.success? ? response : Response.new(false, message)
       end
 
       def parse(body)

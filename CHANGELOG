@@ -2,6 +2,8 @@
 
 == HEAD
 
+* Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
+
 == Version 1.91.0 (April 8, 2019)
 * BluePay: Send customer IP address when provided [jknipp] #3149
 * PaymentExpress: Use ip field for client_info field [jknipp] #3150
