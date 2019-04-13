@@ -7,6 +7,7 @@
 * Adyen: Correct formatting of Billing Address [nfarve] #3200
 * Stripe: Stripe: Show payment source [jknipp] #3202
 * Checkout V2: Checkout V2: Correct success criteria [curiousepic] #3205
+* Adyen: Add normalized hash of 3DS 2.0 data fields from web browsers [davidsantoso] #3207
 
 == Version 1.93.0 (April 18, 2019)
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188

@@ -61,6 +61,29 @@ class AdyenTest < Test::Unit::TestCase
         reason_type: 'recurring'
       }
     }
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      }
+    }
   end
 
   # Subdomains are only valid for production gateways, so the test_url check must be manually bypassed for this test to pass.
@@ -161,6 +184,23 @@ class AdyenTest < Test::Unit::TestCase
     assert_success response
     assert_equal '7914775043909934#8814775564188305#', response.authorization
     assert response.test?
+  end
+
+  def test_3ds_2_fields_sent
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @normalized_3ds_2_options)
+    end.check_request do |endpoint, data, headers|
+      data = JSON.parse(data)
+      assert_equal 'browser', data['threeDS2RequestData']['deviceChannel']
+      assert_equal 'unknown', data['browserInfo']['acceptHeader']
+      assert_equal 100, data['browserInfo']['colorDepth']
+      assert_equal false, data['browserInfo']['javaEnabled']
+      assert_equal 'US', data['browserInfo']['language']
+      assert_equal 1000, data['browserInfo']['screenHeight']
+      assert_equal 500, data['browserInfo']['screenWidth']
+      assert_equal '-120', data['browserInfo']['timeZoneOffset']
+      assert_equal 'unknown', data['browserInfo']['userAgent']
+    end.respond_with(successful_authorize_response)
   end
 
   def test_installments_sent

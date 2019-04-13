@@ -70,7 +70,30 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'}
+      stored_credential: {reason_type: 'unscheduled'},
+    }
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      }
     }
   end
 
@@ -99,7 +122,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_idempotency_key
-    options = @options.merge(idempotency_key: 'test123')
+    options = @options.merge(idempotency_key: SecureRandom.hex)
     response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Authorised', response.message
@@ -128,6 +151,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['issuerUrl'].blank?
     refute response.params['md'].blank?
     refute response.params['paRequest'].blank?
+  end
+
+  def test_successful_authorize_with_3ds2_browser_client_data
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options)
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
   end
 
   # with rule set in merchant account to skip 3DS for cards of this brand
@@ -203,7 +236,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_idempotency_key
-    options = @options.merge(idempotency_key: 'testkey45678')
+    options = @options.merge(idempotency_key: SecureRandom.hex)
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -425,7 +458,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_verify_with_idempotency_key
-    options = @options.merge(idempotency_key: 'test123')
+    options = @options.merge(idempotency_key: SecureRandom.hex)
     response = @gateway.authorize(0, @credit_card, options)
     assert_success response
     assert_equal 'Authorised', response.message
