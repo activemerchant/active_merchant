@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Mundipagg: Fix number lengths for both VR and Sodexo [dtykocki] #3195
+
 == Version 1.93.0 (April 18, 2019)
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
 * Stripe: Fix webhook creation for connected account [jknipp] #3193
