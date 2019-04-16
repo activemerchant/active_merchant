@@ -3,6 +3,7 @@
 == HEAD
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
 * Stripe: Fix webhook creation for connected account [jknipp] #3193
+* Adyen: Upgrade to v40 API version [davidsantoso] #3192
 
 == Version 1.91.0 (April 8, 2019)
 * BluePay: Send customer IP address when provided [jknipp] #3149
