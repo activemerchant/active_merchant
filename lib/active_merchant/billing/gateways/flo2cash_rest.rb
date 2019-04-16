@@ -104,7 +104,12 @@ module ActiveMerchant #:nodoc:
         add_device_info(post, options)
         add_geolocation(post, options)
 
-        token = retrieve_token(payment_method, options)
+        token = if payment_method.is_a?(String)
+            payment_method
+          else
+            store(payment_method, options).authorization
+          end
+
         add_payment_method(post, options, token)
 
         commit(:post, :purchase, post, options)
@@ -308,7 +313,7 @@ module ActiveMerchant #:nodoc:
       def headers(options={})
         {
           'Content-Type' => 'application/json',
-          'Authorization' => "Basic #{options[:api_key]}"
+          'Authorization' => "Basic #{options[:api_key] || @api_key}"
         }
       end
 
@@ -322,21 +327,6 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         succeeded ? 'Succeeded' : error_code_from(false, response)
-      end
-
-      # Returns a card token
-      #
-      # ==== Options
-      #
-      # * <tt>payment_method</tt> -- The instrument to charge.
-      # * <tt>options</tt> -- A hash of parameters.
-      #
-      def retrieve_token(payment_method, options)
-        if payment_method.is_a?(String)
-          payment_method
-        else
-          store(payment_method, options).authorization
-        end
       end
 
       def add_customer_resume(post, options)
@@ -469,13 +459,13 @@ module ActiveMerchant #:nodoc:
         if options[:payment_method_type] == 'iframe'
           post[:paymentMethod] = {
             type: options[:payment_method_type],
-            iframe: { 'value': value }
+            iframe: { 'value' => value }
           }
 
         else
           post[:paymentMethod] = {
             type: options[:payment_method_type] || 'token',
-            token: { 'value': value }
+            token: { 'value' => value }
           }
         end
       end
@@ -510,18 +500,18 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>retry_payments</tt> -- true | false
-      # * <tt>retry_day_interval</tt> Number of days in between attempts
-      # * <tt>retry_max_amount</tt> Number of attempts (max value 7)
+      # * <tt>retry_perform</tt> -- true | false
+      # * <tt>retry_frequency_in_days</tt> Number of days in between attempts
+      # * <tt>retry_max_attempts</tt> Number of attempts (max value 7)
       #
       # Based on the chosen parameters, retires are attempted every calendar day,
       # irrespective of the weekend or a public holiday.
       #
       def add_retry_preferences(post, options)
         post[:retryPreferences] = {
-          'perform' => options[:retry_payments] || false,
-          'frequencyInDays' => options[:retry_day_interval] || 1,
-          'maxAttempts' => options[:retry_max_amount] || 7
+          'perform' => options[:retry_perform] || false,
+          'frequencyInDays' => options[:retry_frequency_in_days] || 1,
+          'maxAttempts' => options[:retry_max_attempts] || 7
         }
       end
 
