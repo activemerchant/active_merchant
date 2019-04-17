@@ -1,6 +1,10 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
+* Stripe: Fix webhook creation for connected account [jknipp] #3193
+
+== Version 1.91.0 (April 8, 2019)
 * BluePay: Send customer IP address when provided [jknipp] #3149
 * PaymentExpress: Use ip field for client_info field [jknipp] #3150
 * Bambora Asia-Pacific: Adds Store [molbrown] #3147
@@ -20,6 +24,9 @@
 * Adyen: Fix adding phone from billing address [curiousepic] #3179
 * Fix partial or missing address exceptions [molbrown] #3180
 * Adyen: Update to support normalized stored credential fields [molbrown] #3182
+* VisaNet Peru: Always include DSC_COD_ACCION [bayprogrammer] #3174
+* Adyen: Support adjust action [curiousepic] #3190
+* CyberSource: Add support for stored credentials [therufs] #3185
 
 == Version 1.91.0 (February 22, 2019)
 * WorldPay: Pull CVC and AVS Result from Response [nfarve] #3106

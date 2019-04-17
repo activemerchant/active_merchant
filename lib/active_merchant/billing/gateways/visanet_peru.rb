@@ -57,7 +57,10 @@ module ActiveMerchant #:nodoc:
         response = commit('cancelDeposit', params, options)
         return response if response.success? || split_authorization(authorization).length == 1 || !options[:force_full_refund_if_unsettled]
 
-        # Attempt RefundSingleTransaction if unsettled
+        # Attempt RefundSingleTransaction if unsettled (and stash the original
+        # response message so it will be included it in the follow-up response
+        # message)
+        options[:error_message] = response.message
         prepare_refund_data(params, authorization, options)
         commit('refund', params, options)
       end
@@ -197,15 +200,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response, options, action)
-        if empty?(response['errorMessage']) || response['errorMessage'] == '[ ]'
-          action == 'refund' ? "#{response['data']['DSC_COD_ACCION']}, #{options[:error_message]}" : response['data']['DSC_COD_ACCION']
-        elsif action == 'refund'
-          message = "#{response['errorMessage']}, #{options[:error_message]}"
-          options[:error_message] = response['errorMessage']
-          message
-        else
-          response['errorMessage']
-        end
+        message_from_messages(
+          response['errorMessage'],
+          action_code_description(response),
+          options[:error_message]
+        )
+      end
+
+      def message_from_messages(*args)
+        args.reject { |m| error_message_empty?(m) }.join(' | ')
+      end
+
+      def action_code_description(response)
+        return nil unless response['data']
+        response['data']['DSC_COD_ACCION']
+      end
+
+      def error_message_empty?(error_message)
+        empty?(error_message) || error_message == '[ ]'
       end
 
       def response_error(raw_response, options, action)

@@ -73,17 +73,21 @@ class RemoteVisanetPeruTest < Test::Unit::TestCase
     assert_equal '1.99', response.params['data']['IMP_AUTORIZADO']
   end
 
-  def test_failed_authorize
+  def test_failed_authorize_declined_card
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
     assert_equal 'Operacion Denegada.', response.message
+  end
 
+  def test_failed_authorize_bad_email
     @options[:email] = 'cybersource@reject.com'
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 400, response.error_code
-    assert_equal 'REJECT', response.message
+
+    # this also exercises message joining for errorMessage and DSC_COD_ACCION when both are present
+    assert_equal 'REJECT | Operacion denegada', response.message
   end
 
   def test_failed_capture

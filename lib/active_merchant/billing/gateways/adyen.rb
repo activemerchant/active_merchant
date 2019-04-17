@@ -76,6 +76,13 @@ module ActiveMerchant #:nodoc:
         commit('cancel', post, options)
       end
 
+      def adjust(money, authorization, options={})
+        post = init_post(options)
+        add_invoice_for_modification(post, money, options)
+        add_reference(post, authorization, options)
+        commit('adjustAuthorisation', post, options)
+      end
+
       def store(credit_card, options={})
         requires!(options, :order_id)
         post = init_post(options)
@@ -367,7 +374,7 @@ module ActiveMerchant #:nodoc:
         case action.to_s
         when 'authorise', 'authorise3d'
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
-        when 'capture', 'refund', 'cancel'
+        when 'capture', 'refund', 'cancel', 'adjustAuthorisation'
           response['response'] == "[#{action}-received]"
         else
           false

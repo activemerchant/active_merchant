@@ -17,6 +17,8 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
     }
     @credit_card = credit_card('4000000000003063')
     @non_3ds_card = credit_card('378282246310005')
+
+    @stripe_account = fixtures(:stripe_destination)[:stripe_user_id]
   end
 
   def test_create_3ds_card_source
@@ -53,8 +55,21 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
     assert_equal @options[:callback_url], response.params['url']
   end
 
+  def test_create_webhook_endpoint_on_connected_account
+    response = @gateway.send(:create_webhook_endpoint, @options.merge({stripe_account: @stripe_account}), ['source.chargeable'])
+    assert_includes response.params['enabled_events'], 'source.chargeable'
+    assert_equal @options[:callback_url], response.params['url']
+  end
+
   def test_delete_webhook_endpoint
     webhook = @gateway.send(:create_webhook_endpoint, @options, ['source.chargeable'])
+    response = @gateway.send(:delete_webhook_endpoint, @options.merge(:webhook_id => webhook.params['id']))
+    assert_equal response.params['id'], webhook.params['id']
+    assert_equal true, response.params['deleted']
+  end
+
+  def test_delete_webhook_endpoint_on_connected_account
+    webhook = @gateway.send(:create_webhook_endpoint, @options.merge({stripe_account: @stripe_account}), ['source.chargeable'])
     response = @gateway.send(:delete_webhook_endpoint, @options.merge(:webhook_id => webhook.params['id']))
     assert_equal response.params['id'], webhook.params['id']
     assert_equal true, response.params['deleted']
