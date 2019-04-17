@@ -142,12 +142,12 @@ module ActiveMerchant #:nodoc:
         begin
           raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
           response = parse(raw_response)
+          response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture
         rescue ResponseError => e
           raise unless(e.response.code.to_s =~ /4\d\d/)
           response = parse(e.response.body)
         end
 
-        response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture
         succeeded = success_from(response)
 
         response(action, succeeded, response)
