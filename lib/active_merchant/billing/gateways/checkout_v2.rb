@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
           response = parse(raw_response)
 
-          if action == :capture && response.key?('_links')            
+          if action == :capture && response.key?('_links')
             response['id'] = response['_links']['payment']['href'].split('/')[-1]
           end
 
