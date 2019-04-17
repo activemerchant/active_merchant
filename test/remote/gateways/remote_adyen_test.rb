@@ -501,18 +501,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_invalid_country_for_purchase
+  def test_blank_country_for_purchase
     @options[:billing_address][:country] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
-  def test_invalid_state_for_purchase
+  def test_blank_state_for_purchase
     @options[:billing_address][:state] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_missing_phone_for_purchase
