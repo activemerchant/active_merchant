@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
           response = parse(e.response.body)
         end
 
-        response['id'] = authorization if action == :capture
+        response['id'] = response['_links']['payment']['href'].split('/')[-1] if action == :capture
         succeeded = success_from(response)
 
         response(action, succeeded, response)
