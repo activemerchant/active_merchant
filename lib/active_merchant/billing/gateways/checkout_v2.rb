@@ -130,11 +130,12 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds(post, options)
         if options[:three_d_secure]
-        post[:'3ds'] = {}
-        post[:'3ds'][:enabled] = true
-        post[:'3ds'][:eci] =  options[:eci] if options[:eci]
-        post[:'3ds'][:cryptogram] =  options[:cavv] if options[:cavv]
-        post[:'3ds'][:xid] =  options[:xid] if options[:xid]
+          post[:'3ds'] = {}
+          post[:'3ds'][:enabled] = true
+          post[:'3ds'][:eci] =  options[:eci] if options[:eci]
+          post[:'3ds'][:cryptogram] =  options[:cavv] if options[:cavv]
+          post[:'3ds'][:xid] =  options[:xid] if options[:xid]
+        end
       end
 
       def commit(action, post, authorization = nil)
