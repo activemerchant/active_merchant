@@ -129,11 +129,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-        return unless options[:execute_threed] || options[:threed_dynamic]
+        if options[:three_d_secure]
         post[:'3ds'] = {}
-        post[:'3ds'][:enabled] = true if options[:execute_threed]
+        post[:'3ds'][:enabled] = true
         post[:'3ds'][:eci] =  options[:eci] if options[:eci]
-        post[:'3ds'][:cryptogram] =  options[:cryptogram] if options[:cryptogram]
+        post[:'3ds'][:cryptogram] =  options[:cavv] if options[:cavv]
         post[:'3ds'][:xid] =  options[:xid] if options[:xid]
       end
 
