@@ -64,16 +64,16 @@ module ActiveMerchant #:nodoc:
       SUCCESS_STATUSES = %w(successful scheduled processing active cancelled pending-approval)
 
       ACTION_URL_MAP = {
-        store: 'cardTokens',
-        purchase: '/payments',
-        refund: "/payments/%{payment_id}/refunds",
-        create_card_plan: '/cardplans',
-        create_direct_debit_plan: "/directdebitplans",
-        update_card_plan: "/cardplans/%{plan_id}/status",
-        update_direct_debit_plan: "/directdebitplans/%{plan_id}/status",
-        retrieve_card_plan: "/cardplans/%{plan_id}",
-        retrieve_card_payment: "/payments/%{payment_id}",
-        retrieve_direct_debit_plan: "/directdebitplans/%{plan_id}",
+        store: 'cardtokens',
+        purchase: 'payments',
+        refund: "payments/%{payment_id}/refunds",
+        create_card_plan: 'cardplans',
+        create_direct_debit_plan: "directdebitplans",
+        update_card_plan: "cardplans/%{plan_id}/status",
+        update_direct_debit_plan: "directdebitplans/%{plan_id}/status",
+        retrieve_card_plan: "cardplans/%{plan_id}",
+        retrieve_card_payment: "payments/%{payment_id}",
+        retrieve_direct_debit_plan: "directdebitplans/%{plan_id}",
       }
 
       # Creates a new Flo2cachRest gateway
@@ -88,6 +88,9 @@ module ActiveMerchant #:nodoc:
       #
       def initialize(options = {})
         requires!(options, :merchant_id, :api_key)
+        @merchant_id = options[:merchant_id]
+        @api_key = options[:api_key]
+
         super
       end
 
@@ -109,7 +112,6 @@ module ActiveMerchant #:nodoc:
           else
             store(payment_method, options).authorization
           end
-
         add_payment_method(post, options, token)
 
         commit(:post, :purchase, post, options)
@@ -347,8 +349,6 @@ module ActiveMerchant #:nodoc:
           fax: options[:fax],
           email: options[:email]
         }
-
-        add_references(post, options)
       end
 
       def add_device_info(post, options)
