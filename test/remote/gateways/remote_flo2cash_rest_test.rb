@@ -127,7 +127,8 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     response = @gateway.purchase(@card_declined_amount, @credit_card, @options)
     assert_failure response
 
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal 'declined - insufficient funds', response.message
   end
 
   def test_successful_refund

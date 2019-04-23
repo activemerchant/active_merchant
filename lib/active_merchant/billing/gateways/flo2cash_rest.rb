@@ -328,7 +328,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(succeeded, response)
-        succeeded ? 'Succeeded' : error_code_from(false, response)
+        if succeeded
+          'Succeeded'
+        else
+          response.dig('response', 'message').presence || error_code_from(false, response)
+        end
       end
 
       def add_customer_resume(post, options)
