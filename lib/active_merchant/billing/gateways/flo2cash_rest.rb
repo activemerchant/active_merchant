@@ -184,6 +184,8 @@ module ActiveMerchant #:nodoc:
         commit(:post, :create_card_plan, post, options)
       end
 
+      alias_method :recurring, :create_card_plan
+
       # Create a new Direct Debit Plan
       #
       # recurring payments with their bank account numbers
@@ -228,6 +230,8 @@ module ActiveMerchant #:nodoc:
         commit(:post, :create_direct_debit_plan, post, options)
       end
 
+      alias_method :recurring_debit, :create_card_plan
+
       def supports_scrubbing?
         true
       end
@@ -241,19 +245,19 @@ module ActiveMerchant #:nodoc:
 
       # Returns a Payment resource
       #
-      def retrieve_card_plan(plan_id, options)
+      def retrieve_card_plan(plan_id, options={})
         commit(:get, :retrieve_card_plan, { plan_id: plan_id }, options)
       end
 
       # Returns a Payment resource
       #
-      def retrieve_card_payment(payment_id, options)
+      def retrieve_card_payment(payment_id, options={})
         commit(:get, :retrieve_card_payment, { payment_id: payment_id }, options)
       end
 
       # Returns a Direct Debit Plan
       #
-      def retrieve_direct_debit_plan(plan_id, options)
+      def retrieve_direct_debit_plan(plan_id, options={})
         commit(:get, :retrieve_direct_debit_plan, { plan_id: plan_id }, options)
       end
 
@@ -267,7 +271,7 @@ module ActiveMerchant #:nodoc:
       #   + Active can only be applied to suspended plans
       #   + Suspended can only be applied to active plans
       #
-      def update_card_plan(plan_id, status, options)
+      def update_card_plan(plan_id, status, options={})
         params = { plan_id: plan_id, status: status }
         commit(:put, :update_card_plan, params, options)
       end
@@ -282,7 +286,7 @@ module ActiveMerchant #:nodoc:
       #   + Active can only be applied to suspended plans
       #   + Suspended can only be applied to active plans
       #
-      def update_direct_debit_plan(plan_id, status, options)
+      def update_direct_debit_plan(plan_id, status, options={})
         params = { plan_id: plan_id, status: status }
         commit(:put, :update_direct_debit_plan, params, options)
       end
