@@ -1,15 +1,15 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CheckoutV2Gateway < Gateway
-      self.display_name = 'Checkout.com V2 Gateway'
+      self.display_name = 'Checkout.com Unified Payments'
       self.homepage_url = 'https://www.checkout.com/'
-      self.live_url = 'https://api2.checkout.com/v2'
-      self.test_url = 'https://sandbox.checkout.com/api2/v2'
+      self.live_url = 'https://api.checkout.com'
+      self.test_url = 'https://api.sandbox.checkout.com'
 
       self.supported_countries = ['AD', 'AE', 'AT', 'BE', 'BG', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FO', 'FI', 'FR', 'GB', 'GI', 'GL', 'GR', 'HR', 'HU', 'IE', 'IS', 'IL', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SM', 'SK', 'SJ', 'TR', 'VA']
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :maestro,  :discover]
 
       def initialize(options={})
         requires!(options, :secret_key)
@@ -30,11 +30,12 @@ module ActiveMerchant #:nodoc:
 
       def authorize(amount, payment_method, options={})
         post = {}
-        post[:autoCapture] = 'n'
+        post[:capture] = false
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_transaction_data(post, options)
+        add_3ds(post, options)
 
         commit(:authorize, post)
       end
@@ -81,49 +82,69 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_invoice(post, money, options)
-        post[:value] = localized_amount(money, options[:currency])
-        post[:trackId] = options[:order_id]
+        post[:amount] = localized_amount(money, options[:currency])
+        post[:reference] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
-        post[:descriptor] = {}
-        post[:descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
-        post[:descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
+        if options[:descriptor_name] || options[:descriptor_city]
+          post[:billing_descriptor] = {}
+          post[:billing_descriptor][:name] = options[:descriptor_name] if options[:descriptor_name]
+          post[:billing_descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
+        end
+        post[:metadata] = {}
+        post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
       def add_payment_method(post, payment_method)
-        post[:card] = {}
-        post[:card][:name] = payment_method.name
-        post[:card][:number] = payment_method.number
-        post[:card][:cvv] = payment_method.verification_value
-        post[:card][:expiryYear] = format(payment_method.year, :four_digits)
-        post[:card][:expiryMonth] = format(payment_method.month, :two_digits)
+        post[:source] = {}
+        post[:source][:type] = 'card'
+        post[:source][:name] = payment_method.name
+        post[:source][:number] = payment_method.number
+        post[:source][:cvv] = payment_method.verification_value
+        post[:source][:expiry_year] = format(payment_method.year, :four_digits)
+        post[:source][:expiry_month] = format(payment_method.month, :two_digits)
       end
 
       def add_customer_data(post, options)
-        post[:email] = options[:email] || 'unspecified@example.com'
-        post[:customerIp] = options[:ip] if options[:ip]
+        post[:customer] = {}
+        post[:customer][:email] = options[:email] || nil
+        post[:payment_ip] = options[:ip] if options[:ip]
         address = options[:billing_address]
-        if(address && post[:card])
-          post[:card][:billingDetails] = {}
-          post[:card][:billingDetails][:addressLine1] = address[:address1]
-          post[:card][:billingDetails][:addressLine2] = address[:address2]
-          post[:card][:billingDetails][:city] = address[:city]
-          post[:card][:billingDetails][:state] = address[:state]
-          post[:card][:billingDetails][:country] = address[:country]
-          post[:card][:billingDetails][:postcode] = address[:zip]
-          post[:card][:billingDetails][:phone] = { number: address[:phone] } unless address[:phone].blank?
+        if(address && post[:source])
+          post[:source][:billing_address] = {}
+          post[:source][:billing_address][:address_line1] = address[:address1] if address[:address1]
+          post[:source][:billing_address][:address_line2] = address[:address2] if address[:address2]
+          post[:source][:billing_address][:city] = address[:city] if address[:city]
+          post[:source][:billing_address][:state] = address[:state] if address[:state]
+          post[:source][:billing_address][:country] = address[:country] if address[:country]
+          post[:source][:billing_address][:zip] = address[:zip] if address[:zip]
+          post[:source][:phone] = { number: address[:phone] } unless address[:phone].blank?
         end
       end
 
       def add_transaction_data(post, options={})
-        post[:cardOnFile] = true if options[:card_on_file] == true
-        post[:transactionIndicator] = options[:transaction_indicator] || 1
-        post[:previousChargeId] = options[:previous_charge_id] if options[:previous_charge_id]
+        post[:card_on_file] = true if options[:card_on_file] == true
+        post[:payment_type] = 'Regular' if options[:transaction_indicator] == 1
+        post[:payment_type] = 'Recurring' if options[:transaction_indicator] == 2
+        post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
+      end
+
+      def add_3ds(post, options)
+        if options[:three_d_secure]
+          post[:'3ds'] = {}
+          post[:'3ds'][:enabled] = true
+          post[:'3ds'][:eci] =  options[:eci] if options[:eci]
+          post[:'3ds'][:cryptogram] =  options[:cavv] if options[:cavv]
+          post[:'3ds'][:xid] =  options[:xid] if options[:xid]
+        end
       end
 
       def commit(action, post, authorization = nil)
         begin
           raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
           response = parse(raw_response)
+          if action == :capture && response.key?('_links')
+            response['id'] = response['_links']['payment']['href'].split('/')[-1]
+          end
         rescue ResponseError => e
           raise unless(e.response.code.to_s =~ /4\d\d/)
           response = parse(e.response.body)
@@ -160,9 +181,15 @@ module ActiveMerchant #:nodoc:
 
       def url(post, action, authorization)
         if action == :authorize
-          "#{base_url}/charges/card"
+          "#{base_url}/payments"
+        elsif action == :capture
+          "#{base_url}/payments/#{authorization}/captures"
+        elsif action == :refund
+          "#{base_url}/payments/#{authorization}/refunds"
+        elsif action == :void
+          "#{base_url}/payments/#{authorization}/voids"
         else
-          "#{base_url}/charges/#{authorization}/#{action}"
+          "#{base_url}/payments/#{authorization}/#{action}"
         end
       end
 
@@ -171,33 +198,33 @@ module ActiveMerchant #:nodoc:
       end
 
       def avs_result(response)
-        response['card'] && response['card']['avsCheck'] ? AVSResult.new(code: response['card']['avsCheck']) : nil
+        response['source'] && response['source']['avs_check'] ? AVSResult.new(code: response['source']['avs_check']) : nil
       end
 
       def cvv_result(response)
-        response['card'] && response['card']['cvvCheck'] ? CVVResult.new(response['card']['cvvCheck']) : nil
+        response['source'] && response['source']['cvv_check'] ? CVVResult.new(response['source']['cvv_check']) : nil
       end
 
       def parse(body)
         JSON.parse(body)
       rescue JSON::ParserError
         {
-          'message' => 'Invalid JSON response received from CheckoutV2Gateway. Please contact CheckoutV2Gateway if you continue to receive this message.',
+          'message' => 'Invalid JSON response received from Checkout.com Unified Payments Gateway. Please contact Checkout.com if you continue to receive this message.',
           'raw_response' => scrub(body)
         }
       end
 
       def success_from(response)
-        (response['responseCode'] == '10000' && !response['responseMessage'].start_with?('40')) || response['responseCode'] == '10100'
+        response['response_summary'] == 'Approved' || response.key?('action_id')
       end
 
       def message_from(succeeded, response)
         if succeeded
           'Succeeded'
-        elsif response['errors']
-          response['message'] + ': ' + response['errors'].first
+        elsif response['error_type']
+          response['error_type'] + ': ' + response['error_codes'].first
         else
-          response['responseMessage'] || response['message'] || 'Unable to read error message'
+          response['response_summary'] || response['response_code'] || 'Unable to read error message'
         end
       end
 
@@ -220,12 +247,12 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(succeeded, response)
         return if succeeded
-        if response['errorCode'] && response['errorMessageCodes']
-          "#{response["errorCode"]}: #{response["errorMessageCodes"].join(", ")}"
-        elsif response['errorCode']
-          response['errorCode']
+        if response['error_type'] && response['error_codes']
+          "#{response["error_type"]}: #{response["error_codes"].join(", ")}"
+        elsif response['error_type']
+          response['error_type']
         else
-          STANDARD_ERROR_CODE_MAPPING[response['responseCode']]
+          STANDARD_ERROR_CODE_MAPPING[response['response_code']]
         end
       end
     end

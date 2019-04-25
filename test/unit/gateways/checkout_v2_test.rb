@@ -18,7 +18,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal 'charge_test_941CA9CE174U76BD29C8', response.authorization
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
     assert response.test?
   end
 
@@ -64,7 +64,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, {descriptor_city: 'london', descriptor_name: 'sherlock'})
     end.check_request do |endpoint, data, headers|
-      assert_match(/"descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
+      assert_match(/"billing_descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
@@ -84,7 +84,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal 'charge_test_AF1A29AD350Q748C7EA8', response.authorization
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -98,17 +98,38 @@ class CheckoutV2Test < Test::Unit::TestCase
       options = {
         card_on_file: true,
         transaction_indicator: 2,
-        previous_charge_id: 'charge_123'
+        previous_charge_id: 'pay_123'
       }
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
-      assert_match(%r{"cardOnFile":true}, data)
-      assert_match(%r{"transactionIndicator":2}, data)
-      assert_match(%r{"previousChargeId":"charge_123"}, data)
+      assert_match(%r{"card_on_file":true}, data)
+      assert_match(%r{"payment_type":"Recurring"}, data)
+      assert_match(%r{"previous_payment_id":"pay_123"}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal 'charge_test_AF1A29AD350Q748C7EA8', response.authorization
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
+
+    capture = stub_comms do
+      @gateway.capture(@amount, response.authorization)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_3ds
+    response = stub_comms do
+      options = {
+        execute_threed: true,
+        eci: '05',
+        cryptogram: '1234',
+        xid: '1234'
+      }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -141,7 +162,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal 'charge_test_AF1A29AD350Q748C7EA8', response.authorization
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
     void = stub_comms do
       @gateway.void(response.authorization)
@@ -164,7 +185,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     assert_success response
-    assert_equal 'charge_test_941CA9CE174U76BD29C8', response.authorization
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -207,7 +228,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(invalid_json_response)
 
     assert_failure response
-    assert_match %r{Invalid JSON response}, response.message
+    assert_match %r{Unable to read error message}, response.message
   end
 
   def test_error_code_returned
@@ -216,7 +237,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     end.respond_with(error_code_response)
 
     assert_failure response
-    assert_match(/70000: 70077/, response.error_code)
+    assert_match(/request_invalid: card_expired/, response.error_code)
   end
 
   def test_supported_countries
@@ -227,38 +248,35 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def pre_scrubbed
     %q(
-      <- "POST /v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: sk_test_ab12301d-e432-4ea7-97d1-569809518aaf\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api2.checkout.com\r\nContent-Length: 346\r\n\r\n"
-      <- "{\"autoCapture\":\"n\",\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"4242424242424242\",\"cvv\":\"100\",\"expiryYear\":\"2018\"
+      <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: sk_test_ab12301d-e432-4ea7-97d1-569809518aaf\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
+      <- "{\"capture\":false,\"amount\":\"200\",\"reference\":\"1\",\"currency\":\"USD\",\"source\":{\"type\":\"card\",\"name\":\"Longbob Longsen\",\"number\":\"4242424242424242\",\"cvv\":\"100\",\"expiry_year\":\"2025\"
     )
   end
 
   def post_scrubbed
     %q(
-      <- "POST /v2/charges/card HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api2.checkout.com\r\nContent-Length: 346\r\n\r\n"
-      <- "{\"autoCapture\":\"n\",\"value\":\"200\",\"trackId\":\"1\",\"currency\":\"USD\",\"card\":{\"name\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"cvv\":\"[FILTERED]\",\"expiryYear\":\"2018\"
+      <- "POST /payments HTTP/1.1\r\nContent-Type: application/json;charset=UTF-8\r\nAuthorization: [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.checkout.com\r\nContent-Length: 346\r\n\r\n"
+      <- "{\"capture\":false,\"amount\":\"200\",\"reference\":\"1\",\"currency\":\"USD\",\"source\":{\"type\":\"card\",\"name\":\"Longbob Longsen\",\"number\":\"[FILTERED]\",\"cvv\":\"[FILTERED]\",\"expiry_year\":\"2025\"
     )
   end
 
   def successful_purchase_response
     %(
      {
-       "id":"charge_test_941CA9CE174U76BD29C8",
-       "liveMode":false,
-       "created":"2015-05-27T20:45:58Z",
-       "value":200.0,
+       "id":"pay_fj3xswqe3emuxckocjx6td73ni",
+       "amount":200,
        "currency":"USD",
-       "trackId":"1",
-       "description":null,
-       "email":"longbob.longsen@gmail.com",
-       "chargeMode":1,
-       "transactionIndicator":1,
-       "customerIp":null,
-       "responseMessage":"Approved",
-       "responseAdvancedInfo":"Approved",
-       "responseCode":"10000",
-       "card": {
-         "cvvCheck":"Y",
-         "avsCheck":"S"
+       "reference":"1",
+       "response_summary": "Approved",
+       "response_code":"10000",
+       "customer": {
+        "id": "cus_zvnv7gsblfjuxppycd7bx4erue",
+        "email": "longbob.longsen@example.com",
+        "name": "Sarah Mitchell"
+       },
+       "source": {
+         "cvv_check":"Y",
+         "avs_check":"S"
        }
       }
     )
@@ -267,21 +285,18 @@ class CheckoutV2Test < Test::Unit::TestCase
   def failed_purchase_response
     %(
      {
-       "id":"charge_test_941CA9CE174U76BD29C8",
-       "liveMode":false,
-       "created":"2015-05-27T20:45:58Z",
-       "value":200.0,
+       "id":"pay_awjzhfj776gulbp2nuslj4agbu",
+       "amount":200,
        "currency":"USD",
-       "trackId":"1",
-       "description":null,
-       "email":"longbob.longsen@gmail.com",
-       "chargeMode":1,
-       "transactionIndicator":1,
-       "customerIp":null,
-       "responseMessage":"Invalid Card Number",
-       "responseAdvancedInfo":"If credit card number contains characters other digits, or bank does not recognize this number as a valid credit card number",
-       "responseCode":"20014",
-       "card": {
+       "reference":"1",
+       "response_summary": "Invalid Card Number",
+       "response_code":"20014",
+       "customer": {
+        "id": "cus_zvnv7gsblfjuxppycd7bx4erue",
+        "email": "longbob.longsen@example.com",
+        "name": "Sarah Mitchell"
+       },
+       "source": {
          "cvvCheck":"Y",
          "avsCheck":"S"
        }
@@ -291,66 +306,61 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def successful_authorize_response
     %(
-      {
-        "id":"charge_test_AF1A29AD350Q748C7EA8",
-        "liveMode":false,
-        "created":"2017-11-13T14:05:27Z",
-        "value":200,
-        "currency":"USD",
-        "trackId":"1",
-        "description":null,
-        "email":"longbob.longsen@example.com",
-        "chargeMode":1,
-        "transactionIndicator":1,
-        "customerIp":null,
-        "responseMessage":"Approved",
-        "responseAdvancedInfo":"Approved",
-        "responseCode":"10000",
-        "status":"Authorised",
-        "authCode":"923189",
-        "isCascaded":false,
-        "autoCapture":"N",
-        "autoCapTime":0.0,
-        "card":{"customerId":
-        "cust_12DCEB24-ACEA-48AB-BEF2-35A3C09BE581",
-        "expiryMonth":"06",
-        "expiryYear":"2018",
-        "billingDetails":{
-          "addressLine1":"456 My Street",
-          "addressLine2":"Apt 1",
-          "postcode":"K1C2N6",
-          "country":"CA",
-          "city":"Ottawa",
-          "state":"ON",
-          "phone":{"number":"(555)555-5555"}
-         },
-        "id":"card_CFA314F4-388D-4CF4-BE6F-940D894C9E64",
-        "last4":"4242",
-        "bin":"424242",
-        "paymentMethod":"Visa",
-        "fingerprint":"F639CAB2745BEE4140BF86DF6B6D6E255C5945AAC3788D923FA047EA4C208622",
-        "name":"Longbob Longsen",
-        "cvvCheck":"Y",
-        "avsCheck":"S"
+    {
+      "id": "pay_fj3xswqe3emuxckocjx6td73ni",
+      "action_id": "act_fj3xswqe3emuxckocjx6td73ni",
+      "amount": 200,
+      "currency": "USD",
+      "approved": true,
+      "status": "Authorized",
+      "auth_code": "858188",
+      "eci": "05",
+      "scheme_id": "638284745624527",
+      "response_code": "10000",
+      "response_summary": "Approved",
+      "risk": {
+        "flagged": false
       },
-      "riskCheck":true,
-      "customerPaymentPlans":null,
-      "metadata":{},
-      "shippingDetails":{
-        "addressLine1":null,
-        "addressLine2":null,
-        "postcode":null,
-        "country":null,
-        "city":null,
-        "state":null,
-        "phone":{}
+      "source": {
+        "id": "src_nq6m5dqvxmsunhtzf7adymbq3i",
+        "type": "card",
+        "expiry_month": 8,
+        "expiry_year": 2025,
+        "name": "Sarah Mitchell",
+        "scheme": "Visa",
+        "last4": "4242",
+        "fingerprint": "5CD3B9CB15338683110959D165562D23084E1FF564F420FE9A990DF0BCD093FC",
+        "bin": "424242",
+        "card_type": "Credit",
+        "card_category": "Consumer",
+        "issuer": "JPMORGAN CHASE BANK NA",
+        "issuer_country": "US",
+        "product_id": "A",
+        "product_type": "Visa Traditional",
+        "avs_check": "S",
+        "cvv_check": "Y"
       },
-      "products":[],
-      "udf1":null,
-      "udf2":null,
-      "udf3":null,
-      "udf4":null,
-      "udf5":null
+      "customer": {
+        "id": "cus_ssxcidkqvfde7lfn5n7xzmgv2a",
+        "email": "longbob.longsen@example.com",
+        "name": "Sarah Mitchell"
+      },
+      "processed_on": "2019-03-24T10:14:32Z",
+      "reference": "ORD-5023-4E89",
+      "_links": {
+        "self": {
+          "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni"
+        },
+        "actions": {
+          "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/actions"
+        },
+        "capture": {
+          "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/captures"
+        },
+        "void": {
+          "href": "https://api.sandbox.checkout.com/payments/pay_fj3xswqe3emuxckocjx6td73ni/voids"
+        }
+      }
     }
   )
   end
@@ -358,125 +368,74 @@ class CheckoutV2Test < Test::Unit::TestCase
   def failed_authorize_response
     %(
      {
-       "id":"charge_test_941CA9CE174U76BD29C8",
-       "liveMode":false,
-       "created":"2015-05-27T20:45:58Z",
-       "value":200.0,
+       "id":"pay_awjzhfj776gulbp2nuslj4agbu",
+       "amount":200,
        "currency":"USD",
-       "trackId":"1",
-       "description":null,
-       "email":"longbob.longsen@gmail.com",
-       "chargeMode":1,
-       "transactionIndicator":1,
-       "customerIp":null,
-       "responseMessage":"Invalid Card Number",
-       "responseAdvancedInfo":"If credit card number contains characters other digits, or bank does not recognize this number as a valid credit card number",
-       "responseCode":"20014"
+       "reference":"1",
+       "customer": {
+        "id": "cus_zvnv7gsblfjuxppycd7bx4erue",
+        "email": "longbob.longsen@example.com",
+        "name": "Sarah Mitchell"
+       },
+       "response_summary": "Invalid Card Number",
+       "response_code":"20014"
       }
     )
   end
 
   def successful_capture_response
     %(
-     {
-       "id":"charge_test_941CA9CE174U76BD29C8",
-       "liveMode":false,
-       "created":"2015-05-27T20:45:58Z",
-       "value":200.0,
-       "currency":"USD",
-       "trackId":"1",
-       "description":null,
-       "email":"longbob.longsen@gmail.com",
-       "chargeMode":1,
-       "transactionIndicator":1,
-       "customerIp":null,
-       "responseMessage":"Captured",
-       "responseAdvancedInfo":"Captured",
-       "responseCode":"10000"
-      }
+    {
+     "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
+     "reference": "1"
+    }
     )
   end
 
   def failed_capture_response
     %(
-    {
-    "errorCode":"405",
-    "message":"You tried to access the endpoint with an invalid method",
-    }
     )
   end
 
   def successful_refund_response
     %(
-     {
-       "id":"charge_test_941CA9CE174U76BD29C8",
-       "liveMode":false,
-       "created":"2015-05-27T20:45:58Z",
-       "value":200.0,
-       "currency":"USD",
-       "trackId":"1",
-       "description":null,
-       "email":"longbob.longsen@gmail.com",
-       "chargeMode":1,
-       "transactionIndicator":1,
-       "customerIp":null,
-       "responseMessage":"Refunded",
-       "responseAdvancedInfo":"Refunded",
-       "responseCode":"10000"
-      }
+    {
+     "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
+     "reference": "1"
+    }
     )
   end
 
   def failed_refund_response
     %(
-    {
-    "errorCode":"405",
-    "message":"You tried to access the endpoint with an invalid method",
-    }
     )
   end
 
   def successful_void_response
     %(
-     {
-       "id":"charge_test_941CA9CE174U76BD29C8",
-       "liveMode":false,
-       "created":"2015-05-27T20:45:58Z",
-       "value":200.0,
-       "currency":"USD",
-       "trackId":"1",
-       "description":null,
-       "email":"longbob.longsen@gmail.com",
-       "chargeMode":1,
-       "transactionIndicator":1,
-       "customerIp":null,
-       "responseMessage":"Voided",
-       "responseAdvancedInfo":"Voided",
-       "responseCode":"10000"
-      }
+    {
+     "action_id": "act_2f56bhkau5dubequbv5aa6w4qi",
+     "reference": "1"
+    }
     )
   end
 
   def failed_void_response
     %(
-    {
-    "errorCode":"405",
-    "message":"You tried to access the endpoint with an invalid method",
-    }
     )
   end
 
   def invalid_json_response
     %(
     {
-      "id": "charge_test_123456",
+      "id": "pay_123",
     )
   end
 
   def error_code_response
     %(
       {
-        "eventId":"1b206f69-b4db-4259-9713-b72dfe0f19da","errorCode":"70000","message":"Validation error","errorMessageCodes":["70077"],"errors":["Expired Card"]
+        "request_id": "e5a3ce6f-a4e9-4445-9ec7-e5975e9a6213","error_type": "request_invalid","error_codes": ["card_expired"]
       }
     )
   end
