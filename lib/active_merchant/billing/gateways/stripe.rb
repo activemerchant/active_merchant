@@ -322,6 +322,18 @@ module ActiveMerchant #:nodoc:
         commit(:delete, "webhook_endpoints/#{options[:webhook_id]}", {}, options)
       end
 
+      def show_webhook_endpoint(options)
+        options.delete(:stripe_account)
+        commit(:get, "webhook_endpoints/#{options[:webhook_id]}", nil, options)
+      end
+
+      def list_webhook_endpoints(options)
+        params = {}
+        params[:limit] = options[:limit] if options[:limit]
+        options.delete(:stripe_account)
+        commit(:get, "webhook_endpoints?#{post_data(params)}", nil, options)
+      end
+
       def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
 
