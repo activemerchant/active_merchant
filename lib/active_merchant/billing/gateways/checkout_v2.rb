@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
           post[:billing_descriptor][:city] = options[:descriptor_city] if options[:descriptor_city]
         end
         post[:metadata] = {}
-        post[:metadata][:udf5] = Gateway.application_id || 'ActiveMerchant'
+        post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
       def add_payment_method(post, payment_method)
