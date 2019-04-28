@@ -669,7 +669,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         if payment_method_or_reference.is_a?(String)
-          add_line_item_data if options[:line_items]
+          add_line_item_data(xml, options) if options[:line_items]
           add_address(xml, payment_method_or_reference, options[:billing_address], options) if options[:billing_address]
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true) if options[:shipping_address]
           add_purchase_data(xml, money, true, options)
@@ -679,7 +679,7 @@ module ActiveMerchant #:nodoc:
           add_purchase_data(xml, money, true, options)
           add_check(xml, payment_method_or_reference)
         else
-          add_line_item_data if options[:line_items]
+          add_line_item_data(xml, options) if options[:line_items]
           add_address(xml, payment_method_or_reference, options[:billing_address], options)
           add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
           add_purchase_data(xml, money, true, options)
