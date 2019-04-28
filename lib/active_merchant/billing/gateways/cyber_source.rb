@@ -669,6 +669,9 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
         if payment_method_or_reference.is_a?(String)
+          add_line_item_data if options[:line_items]
+          add_address(xml, payment_method_or_reference, options[:billing_address], options) if options[:billing_address]
+          add_address(xml, payment_method_or_reference, options[:shipping_address], options, true) if options[:shipping_address]
           add_purchase_data(xml, money, true, options)
           add_subscription(xml, options, payment_method_or_reference)
         elsif card_brand(payment_method_or_reference) == 'check'
