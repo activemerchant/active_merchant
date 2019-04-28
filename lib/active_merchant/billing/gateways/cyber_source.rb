@@ -300,6 +300,7 @@ module ActiveMerchant #:nodoc:
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
+        add_device_fingerprint_id(xml, options)
         xml.target!
       end
 
@@ -365,6 +366,7 @@ module ActiveMerchant #:nodoc:
         end
         add_subscription_create_service(xml, options)
         add_business_rules_data(xml, payment_method, options)
+        add_device_fingerprint_id(xml, options)
         xml.target!
       end
 
