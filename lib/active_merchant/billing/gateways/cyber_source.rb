@@ -260,6 +260,7 @@ module ActiveMerchant #:nodoc:
         add_threeds_services(xml, options)
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
+        add_device_fingerprint_id(xml, options)
         add_stored_credential_options(xml, options)
         xml.target!
       end
@@ -707,6 +708,12 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
         else
           xml.tag! 'subsequentAuthTransactionID', options[:stored_credential][:network_transaction_id]
+        end
+      end
+      
+      def add_device_fingerprint_id(xml, options={})
+        if options[:device_fingerprint_id]
+          xml.tag! 'deviceFingerprintID', options[:device_fingerprint_id]
         end
       end
 
