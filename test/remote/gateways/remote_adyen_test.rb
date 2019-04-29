@@ -15,6 +15,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
+    @avs_credit_card = credit_card('4400000000000008',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'visa'
+    )
+
     @elo_credit_card = credit_card('5066 9911 1111 1118',
       :month => 10,
       :year => 2020,
@@ -69,6 +78,24 @@ class RemoteAdyenTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Authorised', response.message
+  end
+
+  def test_successful_authorize_avs
+    # Account configuration may need to be done: https://docs.adyen.com/developers/api-reference/payments-api#paymentresultadditionaldata
+    options = @options.update({
+      billing_address: {
+        address1: 'Infinite Loop',
+        address2: 1,
+        country: 'US',
+        city: 'Cupertino',
+        state: 'CA',
+        zip: '95014'
+      }
+    })
+    response = @gateway.authorize(@amount, @avs_credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+    assert_equal 'D', response.avs_result['code']
   end
 
   def test_successful_authorize_with_idempotency_key
@@ -504,13 +531,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_blank_country_for_purchase
     @options[:billing_address][:country] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
   end
 
   def test_blank_state_for_purchase
     @options[:billing_address][:state] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
   end
 
   def test_missing_phone_for_purchase
