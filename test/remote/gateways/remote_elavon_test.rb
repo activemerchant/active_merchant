@@ -205,6 +205,15 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_currency
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'JPY'))
+
+    assert_success response
+    assert response.test?
+    assert_equal 'APPROVAL', response.message
+    assert response.authorization
+  end
+
   def test_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)

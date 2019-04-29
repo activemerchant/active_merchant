@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
         else
           add_creditcard(form, payment_method)
         end
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -54,6 +55,7 @@ module ActiveMerchant #:nodoc:
         add_salestax(form, options)
         add_invoice(form, options)
         add_creditcard(form, creditcard)
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -69,6 +71,7 @@ module ActiveMerchant #:nodoc:
           add_approval_code(form, authorization)
           add_invoice(form, options)
           add_creditcard(form, options[:credit_card])
+          add_currency(form, money, options)
           add_customer_data(form, options)
           add_test_mode(form, options)
         else
@@ -102,6 +105,7 @@ module ActiveMerchant #:nodoc:
         form = {}
         add_invoice(form, options)
         add_creditcard(form, creditcard)
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -176,6 +180,10 @@ module ActiveMerchant #:nodoc:
 
         form[:first_name] = truncate(creditcard.first_name, 20)
         form[:last_name] = truncate(creditcard.last_name, 30)
+      end
+
+      def add_currency(form, money, options)
+        form[:transaction_currency] = options[:currency] if options[:currency]
       end
 
       def add_token(form, token)
