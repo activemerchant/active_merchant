@@ -309,6 +309,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'sources', post, options)
       end
 
+      def show_source(source_id, options)
+        commit(:get, "sources/#{source_id}", nil, options)
+      end
+
       def create_webhook_endpoint(options, events)
         post = {}
         post[:url] = options[:callback_url]
