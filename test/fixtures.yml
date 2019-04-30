@@ -253,6 +253,12 @@ data_cash:
   login: X
   password: Y
 
+# Working credentials, no need to replace
+debitway:
+  identifier: "EGN1151306ay288"
+  vericode: "Veri4SRskraQg6"
+  website_unique_id: "uBR4zYoAXEdcZsKh"
+
 # No working test credentials
 dibs:
   merchant_id: SOMECREDENTIAL
