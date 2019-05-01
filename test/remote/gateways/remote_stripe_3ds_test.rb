@@ -49,6 +49,18 @@ class RemoteStripe3DSTest < Test::Unit::TestCase
     assert_equal false, response.params['three_d_secure']['authenticated']
   end
 
+  def test_show_3ds_source
+    card_source  = @gateway.send(:create_source, @amount, @credit_card, 'card', @options)
+    assert three_d_secure_source = @gateway.send(:create_source, @amount, card_source.params['id'], 'three_d_secure',  @options)
+    assert_success three_d_secure_source
+
+    assert response = @gateway.send(:show_source, three_d_secure_source.params['id'], @options)
+    assert_equal 'source', response.params['object']
+    assert_equal 'pending', response.params['status']
+    assert_equal 'three_d_secure', response.params['type']
+    assert_equal false, response.params['three_d_secure']['authenticated']
+  end
+
   def test_create_webhook_endpoint
     response = @gateway.send(:create_webhook_endpoint, @options, ['source.chargeable'])
     assert_includes response.params['enabled_events'], 'source.chargeable'

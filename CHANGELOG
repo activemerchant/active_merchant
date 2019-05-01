@@ -5,6 +5,7 @@
 * Stripe: Support show and list webhook endpoints [jknipp] #3196
 * CardConnect: Add frontendid parameter to requests [gcatlin] #3198
 * Adyen: Correct formatting of Billing Address [nfarve] #3200
+* Stripe: Stripe: Show payment source [jknipp] #3202
 
 == Version 1.93.0 (April 18, 2019)
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
