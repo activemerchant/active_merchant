@@ -214,13 +214,13 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         return unless post[:card]&.kind_of?(Hash)
         if (address = options[:billing_address] || options[:address]) && address[:country]
-          post[:card][:billingAddress] = {}
-          post[:card][:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:card][:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
-          post[:card][:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:card][:billingAddress][:city] = address[:city] || 'N/A'
-          post[:card][:billingAddress][:stateOrProvince] = address[:state] || 'N/A'
-          post[:card][:billingAddress][:country] = address[:country] if address[:country]
+          post[:billingAddress] = {}
+          post[:billingAddress][:street] = address[:address1] || 'N/A'
+          post[:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
+          post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
+          post[:billingAddress][:city] = address[:city] || 'N/A'
+          post[:billingAddress][:stateOrProvince] = address[:state] || 'N/A'
+          post[:billingAddress][:country] = address[:country] if address[:country]
         end
       end
 
