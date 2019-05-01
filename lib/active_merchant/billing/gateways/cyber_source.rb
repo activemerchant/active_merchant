@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Initial setup instructions can be found in
-    # http://cybersource.com/support_center/implementation/downloads/soap_api/SOAP_toolkits.pdf
+    # http://apps.cybersource.com/library/documentation/dev_guides/SOAP_Toolkits/SOAP_toolkits.pdf
     #
     # Important Notes
     # * For checks you can purchase and store.
