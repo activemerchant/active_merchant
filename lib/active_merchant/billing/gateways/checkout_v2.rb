@@ -111,12 +111,12 @@ module ActiveMerchant #:nodoc:
         address = options[:billing_address]
         if(address && post[:source])
           post[:source][:billing_address] = {}
-          post[:source][:billing_address][:address_line1] = address[:address1] if address[:address1]
-          post[:source][:billing_address][:address_line2] = address[:address2] if address[:address2]
-          post[:source][:billing_address][:city] = address[:city] if address[:city]
-          post[:source][:billing_address][:state] = address[:state] if address[:state]
-          post[:source][:billing_address][:country] = address[:country] if address[:country]
-          post[:source][:billing_address][:zip] = address[:zip] if address[:zip]
+          post[:source][:billing_address][:address_line1] = address[:address1] unless address[:address1].blank?
+          post[:source][:billing_address][:address_line2] = address[:address2] unless address[:address2].blank?
+          post[:source][:billing_address][:city] = address[:city] unless address[:city].blank?
+          post[:source][:billing_address][:state] = address[:state] unless address[:state].blank?
+          post[:source][:billing_address][:country] = address[:country] unless address[:country].blank?
+          post[:source][:billing_address][:zip] = address[:zip] unless address[:zip].blank?
           post[:source][:phone] = { number: address[:phone] } unless address[:phone].blank?
         end
       end
@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['response_summary'] == 'Approved' || response.key?('action_id')
+        response['response_summary'] == 'Approved' || !response.key?('response_summary') && response.key?('action_id')
       end
 
       def message_from(succeeded, response)
