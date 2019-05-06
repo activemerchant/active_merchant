@@ -80,6 +80,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
+        add_extra_data(post, nil, options)
         commit('adjustAuthorisation', post, options)
       end
 
@@ -174,6 +175,9 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
         post[:additionalData]['paymentdatasource.type'] = NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        post[:additionalData][:authorisationType] = options[:authorisation_type] if options[:authorisation_type]
+        post[:additionalData][:adjustAuthorisationData] = options[:adjust_authorisation_data] if options[:adjust_authorisation_data]
+        post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
         post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
         add_risk_data(post, options)
       end
@@ -396,8 +400,10 @@ module ActiveMerchant #:nodoc:
         case action.to_s
         when 'authorise', 'authorise3d'
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
-        when 'capture', 'refund', 'cancel', 'adjustAuthorisation'
+        when 'capture', 'refund', 'cancel'
           response['response'] == "[#{action}-received]"
+        when 'adjustAuthorisation'
+          response['response'] == 'Authorised' || response['response'] == '[adjustAuthorisation-received]'
         else
           false
         end
