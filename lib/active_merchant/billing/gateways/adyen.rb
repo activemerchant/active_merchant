@@ -308,9 +308,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-        return unless options[:execute_threed] || options[:threed_dynamic]
-        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
-        post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+        if three_ds_2_options = options[:three_ds_2]
+          if browser_info = three_ds_2_options[:browser_info]
+            post[:browserInfo] = {
+              acceptHeader: browser_info[:accept_header],
+              colorDepth: browser_info[:depth],
+              javaEnabled: browser_info[:java],
+              language: browser_info[:language],
+              screenHeight: browser_info[:height],
+              screenWidth: browser_info[:width],
+              timeZoneOffset: browser_info[:timezone],
+              userAgent: browser_info[:user_agent]
+            }
+
+            if device_channel = three_ds_2_options[:channel]
+              post[:threeDS2RequestData] = {
+                deviceChannel: device_channel,
+                notificationURL: three_ds_2_options[:notification_url] || 'https://example.com/notification'
+              }
+            end
+          end
+        else
+          return unless options[:execute_threed] || options[:threed_dynamic]
+          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+          post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+        end
       end
 
       def parse(body)
