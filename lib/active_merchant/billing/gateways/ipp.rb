@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         commit("SubmitSinglePayment") do |xml|
           xml.Transaction do
+            xml.CustNumber payment.name
             xml.CustRef options[:order_id]
             add_amount(xml, money)
             xml.TrnType "1"
@@ -44,6 +45,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         commit("SubmitSinglePayment") do |xml|
           xml.Transaction do
+            xml.CustNumber payment.name
             xml.CustRef options[:order_id]
             add_amount(xml, money)
             xml.TrnType "2"
