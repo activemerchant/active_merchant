@@ -11,6 +11,7 @@
 * Stripe: Do not attempt application fee refund if refund was not successful [jasonwebster] #3206
 * Elavon: Send transaction_currency if currency is provided [gcatlin] #3201
 * Elavon: Multi-currency support [jknipp] #3210
+* Adyen: Support preAuths and Synchronous Adjusts [curiousepic] #3212
 
 == Version 1.93.0 (April 18, 2019)
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
