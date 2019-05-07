@@ -118,6 +118,13 @@ braintree_orange:
   password: password
 
 # Working credentials, no need to replace
+braspag:
+  # merchant_id: 7212da97-04fc-46ba-8201-2c3998b60500
+  # merchant_key: KZKZMNJXZERWVGZVUXXLJDOEVWUUECOLWKXZJLVS
+  merchant_id: DAE838A3-24A6-464D-BF18-C50C5481E484
+  merchant_key: e1PH5TKgL4SZgyvYB4hm2L9nm7zu2J4Y2TuwtsWt
+
+# Working credentials, no need to replace
 bridge_pay:
   user_name: Spre3676
   password: H3392nc5
