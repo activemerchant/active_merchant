@@ -20,6 +20,7 @@ class IppTest < Test::Unit::TestCase
       assert_match(%r{<SubmitSinglePayment }, data)
       assert_match(%r{<UserName>username<}, data)
       assert_match(%r{<Password>password<}, data)
+      assert_match(%r{<CustNumber>#{@credit_card.name}<}, data)
       assert_match(%r{<CustRef>1<}, data)
       assert_match(%r{<Amount>100<}, data)
       assert_match(%r{<TrnType>1<}, data)
@@ -50,6 +51,7 @@ class IppTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, order_id: 1)
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<SubmitSinglePayment }, data)
+      assert_match(%r{<CustNumber>#{@credit_card.name}<}, data)
       assert_match(%r{<CustRef>1<}, data)
       assert_match(%r{<TrnType>2<}, data)
     end.respond_with(successful_authorize_response)
