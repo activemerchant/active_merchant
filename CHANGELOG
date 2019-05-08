@@ -10,6 +10,7 @@
 * Adyen: Add normalized hash of 3DS 2.0 data fields from web browsers [davidsantoso] #3207
 * Stripe: Do not attempt application fee refund if refund was not successful [jasonwebster] #3206
 * Elavon: Send transaction_currency if currency is provided [gcatlin] #3201
+* Elavon: Multi-currency support [jknipp] #3210
 
 == Version 1.93.0 (April 18, 2019)
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
