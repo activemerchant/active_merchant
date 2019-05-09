@@ -16,6 +16,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       :verification_value => '737',
       :brand => 'elo'
     )
+    @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
     @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
     @threeDS_card_external_MPI = credit_card('4444333322221111', :first_name => 'AA', :last_name => 'BD')
@@ -449,6 +450,27 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  def test_failed_authorize_with_unknown_card
+    assert auth = @gateway.authorize(@amount, @sodexo_voucher, @options)
+    assert_failure auth
+    assert_equal '5', auth.error_code
+    assert_match %r{XML failed validation: Invalid payment details : Card number not recognised:}, auth.message
+  end
+
+  def test_failed_purchase_with_unknown_card
+    assert response = @gateway.purchase(@amount, @sodexo_voucher, @options)
+    assert_failure response
+    assert_equal '5', response.error_code
+    assert_match %r{XML failed validation: Invalid payment details : Card number not recognised:}, response.message
+  end
+
+  def test_failed_verify_with_unknown_card
+    response = @gateway.verify(@sodexo_voucher, @options)
+    assert_failure response
+    assert_equal '5', response.error_code
+    assert_match %r{XML failed validation: Invalid payment details : Card number not recognised:}, response.message
   end
 
   # Worldpay has a delay between asking for a transaction to be captured and actually marking it as captured
