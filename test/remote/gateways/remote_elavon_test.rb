@@ -225,7 +225,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_multi_currency_transaction_setting
-    @multi_currency_gateway.options.merge!(multi_currency: false)
+    @multi_currency_gateway.options[:multi_currency] = false
     assert response = @multi_currency_gateway.purchase(@amount, @credit_card, @options.merge(currency: 'JPY', multi_currency: true))
 
     assert_success response
