@@ -19,6 +19,7 @@ class WorldpayTest < Test::Unit::TestCase
       :verification_value => '737',
       :brand => 'elo'
     )
+    @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @options = {:order_id => 1}
   end
 
@@ -577,6 +578,30 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_failed_authorize_with_unknown_card
+    response = stub_comms do
+      @gateway.authorize(@amount, @sodexo_voucher, @options)
+    end.respond_with(failed_with_unknown_card_response)
+    assert_failure response
+    assert_equal '5', response.error_code
+  end
+
+  def test_failed_purchase_with_unknown_card
+    response = stub_comms do
+      @gateway.purchase(@amount, @sodexo_voucher, @options)
+    end.respond_with(failed_with_unknown_card_response)
+    assert_failure response
+    assert_equal '5', response.error_code
+  end
+
+  def test_failed_verify_with_unknown_card
+    @gateway.expects(:ssl_post).returns(failed_with_unknown_card_response)
+
+    response = @gateway.verify(@sodexo_voucher, @options)
+    assert_failure response
+    assert_equal '5', response.error_code
+  end
+
   private
 
   def three_d_secure_option(version)
@@ -1070,5 +1095,19 @@ class WorldpayTest < Test::Unit::TestCase
       </submit>
     </paymentService>
     TRANSCRIPT
+  end
+
+  def failed_with_unknown_card_response
+    <<-RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+    <paymentService version="1.4" merchantCode="SPREEDLY">
+      <reply>
+        <error code="5">
+          <![CDATA[XML failed validation: Invalid payment details : Card number not recognised: 606070******4400]]>
+        </error>
+      </reply>
+    </paymentService>
+    RESPONSE
   end
 end
