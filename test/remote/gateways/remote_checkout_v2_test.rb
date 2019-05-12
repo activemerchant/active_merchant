@@ -212,6 +212,18 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_match %r{request_invalid: card_number_invalid}, response.message
   end
 
+  def test_successful_credit_card_tokenization
+    response = @gateway.tokenize_credit_card(@credit_card, @options)
+    assert_success response
+    assert_match %r{Succeeded}, response.message
+  end
+
+  def test_failed_credit_card_tokenization
+    response = @gateway.tokenize_credit_card(@declined_card, @options)
+    assert_failure response
+    assert_match %r{request_invalid: card_number_invalid}, response.message
+  end
+
   def test_expired_card_returns_error_code
     response = @gateway.purchase(@amount, @expired_card, @options)
     assert_failure response
