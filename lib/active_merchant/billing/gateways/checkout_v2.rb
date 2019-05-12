@@ -61,11 +61,8 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post, authorization)
       end
 
-      def verify(credit_card, options={})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(100, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+      def verify(payment_method, options={})
+        authorize(0, payment_method, options)
       end
 
       def supports_scrubbing?
