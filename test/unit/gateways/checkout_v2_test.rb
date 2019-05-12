@@ -8,6 +8,11 @@ class CheckoutV2Test < Test::Unit::TestCase
       secret_key: '1111111111111'
     )
 
+    @gateway_with_public_key = CheckoutV2Gateway.new(
+      secret_key: '1111111111111',
+      public_key: '2222222222222'
+    )
+
     @credit_card = credit_card
     @amount = 100
   end
@@ -218,6 +223,44 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Invalid Card Number', response.message
   end
 
+  def test_successful_tokenize_credit_card
+    response = stub_comms(@gateway_with_public_key) do
+      @gateway_with_public_key.tokenize_credit_card(@credit_card)
+    end.respond_with(successful_tokenize_credit_card_response)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_failed_tokenize_credit_card
+    response = stub_comms(@gateway_with_public_key) do
+      @gateway_with_public_key.tokenize_credit_card(@credit_card)
+    end.respond_with(failed_tokenize_credit_card_response)
+    assert_failure response
+    assert_equal 'request_invalid: card_number_invalid', response.message
+  end
+
+  def test_missing_public_key_tokenize_credit_card
+    assert_raise KeyError do
+      credit_card = ActiveMerchant::Billing::CreditCard.new(
+        first_name: 'First',
+        last_name: "Last",
+        number: '4242424242424242',
+        month: '12',
+        year: Time.now.year+ 1,
+        verification_value: '100'
+      )
+
+      @gateway.tokenize_credit_card(credit_card)
+    end
+  end
+
+  def test_wrong_parameter_type_tokenize_credit_card
+    assert_raise TypeError do
+      @gateway_with_public_key.tokenize_credit_card('a string')
+    end
+  end
+
   def test_transcript_scrubbing
     assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
   end
@@ -422,6 +465,40 @@ class CheckoutV2Test < Test::Unit::TestCase
 
   def failed_void_response
     %(
+    )
+  end
+
+  def successful_tokenize_credit_card_response
+    %(
+      {
+        "type": "card",
+        "token": "tok_2a4kdr27xwiepcsl47so4ukhp4",
+        "expires_on": "2019-05-09T12:40:14Z",
+        "expiry_month": 12,
+        "expiry_year": 2020,
+        "name": "Mumen Rider",
+        "scheme": "Visa",
+        "last4": "4242",
+        "bin": "424242",
+        "card_type": "Credit",
+        "card_category": "Consumer",
+        "issuer": "JPMORGAN CHASE BANK NA",
+        "issuer_country": "US",
+        "product_id": "A",
+        "product_type": "Visa Traditional"
+      }
+    )
+  end
+
+  def failed_tokenize_credit_card_response
+    %(
+      {
+        "request_id": "9f7f02ca-b012-4e0a-bfdd-f53d570bba62",
+        "error_type": "request_invalid",
+        "error_codes": [
+          "card_number_invalid"
+        ]
+      }
     )
   end
 
