@@ -135,6 +135,7 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:eci] =  options[:eci] if options[:eci]
           post[:'3ds'][:cryptogram] =  options[:cavv] if options[:cavv]
           post[:'3ds'][:xid] =  options[:xid] if options[:xid]
+          post[:'3ds'][:attempt_n3d] = options[:attempt_n3d] if options[:attempt_n3d]
         end
       end
 
