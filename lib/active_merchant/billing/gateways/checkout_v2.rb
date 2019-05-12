@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, authorization = nil)
         begin
-          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
+          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers(action))
           response = parse(raw_response)
           if action == :capture && response.key?('_links')
             response['id'] = response['_links']['payment']['href'].split('/')[-1]
@@ -172,9 +172,12 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def headers
+      def headers(action)
+        key = @options[:secret_key]
+        key = @options[:public_key] if action == :tokenize_credit_card
+
         {
-          'Authorization' => @options[:secret_key],
+          'Authorization' => key,
           'Content-Type'  => 'application/json;charset=UTF-8'
         }
       end
