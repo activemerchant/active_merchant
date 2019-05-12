@@ -275,10 +275,17 @@ efsnet:
   password: Y
 
 # Provided for url update test
+
 elavon:
+  login: "009005"
+  user: "devportal"
+  password: "BDDZY5KOUDCNPV4L3821K7PETO4Z7TPYOJB06TYBI1CW771IDHXBVBP51HZ6ZANJ"
+
+elavon_multi_currency:
   login: "009006"
   user: "devportal"
   password: "XWJS3QTFCH40HW0QGHJKXAYADCTDH0TXXAKXAEZCGCCJ29CFNPCZT4KA9D5KQMDA"
+  multi_currency: true
 
 element:
   account_id: "1013963"

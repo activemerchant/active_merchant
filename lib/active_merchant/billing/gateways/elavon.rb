@@ -183,7 +183,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_currency(form, money, options)
-        form[:transaction_currency] = options[:currency] if options[:currency]
+        currency = options[:currency] || currency(money)
+        form[:transaction_currency] = currency if currency && (@options[:multi_currency] || options[:multi_currency])
       end
 
       def add_token(form, token)
