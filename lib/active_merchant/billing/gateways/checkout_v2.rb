@@ -1,5 +1,11 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    class CheckoutPaymentToken < PaymentToken
+      def type
+        'checkout'
+      end
+    end
+
     class CheckoutV2Gateway < Gateway
       self.display_name = 'Checkout.com Unified Payments'
       self.homepage_url = 'https://www.checkout.com/'
@@ -96,12 +102,27 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method)
         post[:source] = {}
+
+        if payment_method.is_a?(CreditCard)
+          add_credit_card(post, payment_method)
+
+        elsif payment_method.is_a?(CheckoutPaymentToken)
+          add_payment_token(post, payment_method)
+        end
+      end
+
+      def add_credit_card(post, credit_card)
         post[:source][:type] = 'card'
-        post[:source][:name] = payment_method.name
-        post[:source][:number] = payment_method.number
-        post[:source][:cvv] = payment_method.verification_value
-        post[:source][:expiry_year] = format(payment_method.year, :four_digits)
-        post[:source][:expiry_month] = format(payment_method.month, :two_digits)
+        post[:source][:name] = credit_card.name
+        post[:source][:number] = credit_card.number
+        post[:source][:cvv] = credit_card.verification_value
+        post[:source][:expiry_year] = format(credit_card.year, :four_digits)
+        post[:source][:expiry_month] = format(credit_card.month, :two_digits)
+      end
+
+      def add_payment_token(post, token)
+        post[:source][:type] = 'token'
+        post[:source][:token] = token.payment_data
       end
 
       def add_customer_data(post, options)
