@@ -244,7 +244,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_raise KeyError do
       credit_card = ActiveMerchant::Billing::CreditCard.new(
         first_name: 'First',
-        last_name: "Last",
+        last_name: 'Last',
         number: '4242424242424242',
         month: '12',
         year: Time.now.year+ 1,
