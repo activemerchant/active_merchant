@@ -22,6 +22,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
       payment_network: 'Visa',
       transaction_identifier: 'transaction123'
     )
+    @opaque_data_payment_token = ActiveMerchant::Billing::OpaqueDataPaymentToken.new(
+      'eyJjb2RlIjoiNTBfMl8wNjAwMDUzMTg1MEFCNDg3Mzc3OTkyRUI4RUJGMzJGNDFDQUVDM0U4OTlERTU5MzJBQzIyNzdBM0E0MEUwQ0I5MTI0NEQ1QzcwMUU5OEU3RURBQzAyODE2QjcwMUZCNDE1QzlDNzQzIiwidG9rZW4iOiI5NTQ5NDkzNDM2Mzc4ODAyMDA0NjAzIiwidiI6IjEuMSJ9',
+      data_descriptor: 'COMMON.ACCEPT.INAPP.PAYMENT'
+    )
 
     @options = {
       order_id: '1',
@@ -275,6 +279,22 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '508141795', response.authorization.split('#')[0]
+  end
+
+  def test_successful_accept_js_authorization
+    response = stub_comms do
+      @gateway.authorize(@amount, @opaque_data_payment_token)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal @opaque_data_payment_token.data_descriptor, doc.at_xpath('//opaqueData/dataDescriptor').content
+        assert_equal @opaque_data_payment_token.payment_data, doc.at_xpath('//opaqueData/dataValue').content
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141794', response.authorization.split('#')[0]
   end
 
   def test_successful_authorization

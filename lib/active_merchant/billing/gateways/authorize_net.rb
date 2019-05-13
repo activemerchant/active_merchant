@@ -397,6 +397,8 @@ module ActiveMerchant
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
           add_apple_pay_payment_token(xml, source)
+        elsif card_brand(source) == 'opaque_data'
+          add_opaque_data_payment_method(xml, source)
         else
           add_credit_card(xml, source, action)
         end
@@ -520,8 +522,17 @@ module ActiveMerchant
         end
       end
 
+      def add_opaque_data_payment_method(xml, opaque_data_payment_token)
+        xml.payment do
+          xml.opaqueData do
+            xml.dataDescriptor opaque_data_payment_token.data_descriptor
+            xml.dataValue opaque_data_payment_token.payment_data
+          end
+        end
+      end
+
       def add_market_type_device_type(xml, payment, options)
-        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay'
+        return if payment.is_a?(String) || card_brand(payment) == 'check' || card_brand(payment) == 'apple_pay' || card_brand(payment) == 'opaque_data'
         if valid_track_data
           xml.retail do
             xml.marketType(options[:market_type] || MARKET_TYPE[:retail])
@@ -747,7 +758,7 @@ module ActiveMerchant
       end
 
       def names_from(payment_source, address, options)
-        if payment_source && !payment_source.is_a?(PaymentToken) && !payment_source.is_a?(String)
+        if payment_source && !payment_source.is_a?(ApplePayPaymentToken) && !payment_source.is_a?(String)
           first_name, last_name = split_names(address[:name])
           [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
         else
