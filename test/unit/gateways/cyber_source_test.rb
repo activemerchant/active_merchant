@@ -15,6 +15,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @amount = 100
     @customer_ip = '127.0.0.1'
     @credit_card = credit_card('4111111111111111', :brand => 'visa')
+    @elo_credit_card = credit_card('5067310000000010', :brand => 'elo')
     @declined_card = credit_card('801111111111111', :brand => 'visa')
     @check = check()
 
@@ -57,6 +58,16 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_credit_card_purchase_with_elo
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']};purchase;100;USD;", response.authorization
@@ -198,6 +209,14 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_auth_with_elo_request
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert_equal Response, response.class
+    assert response.success?
+    assert response.test?
+  end
+
   def test_successful_credit_card_tax_request
     @gateway.stubs(:ssl_post).returns(successful_tax_response)
     assert response = @gateway.calculate_tax(@credit_card, @options)
@@ -216,9 +235,26 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response_capture.test?
   end
 
+  def test_successful_credit_card_capture_with_elo_request
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_capture_response)
+    assert response = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert response.success?
+    assert response.test?
+    assert response_capture = @gateway.capture(@amount, response.authorization)
+    assert response_capture.success?
+    assert response_capture.test?
+  end
+
   def test_successful_credit_card_purchase_request
     @gateway.stubs(:ssl_post).returns(successful_capture_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_credit_card_purchase_with_elo_request
+    @gateway.stubs(:ssl_post).returns(successful_capture_response)
+    assert response = @gateway.purchase(@amount, @elo_credit_card, @options)
     assert response.success?
     assert response.test?
   end
@@ -296,6 +332,13 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success(@gateway.refund(@amount, response.authorization))
   end
 
+  def test_successful_refund_with_elo_request
+    @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_refund_response)
+    assert_success(response = @gateway.purchase(@amount, @elo_credit_card, @options))
+
+    assert_success(@gateway.refund(@amount, response.authorization))
+  end
+
   def test_successful_credit_request
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_credit_response)
 
@@ -323,6 +366,15 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response_void.success?
   end
 
+  def test_successful_void_authorization_with_elo_request
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_void_response)
+    assert response = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert response.success?
+    assert response.test?
+    assert response_void = @gateway.void(response.authorization, @options)
+    assert response_void.success?
+  end
+
   def test_validate_pinless_debit_card_request
     @gateway.stubs(:ssl_post).returns(successful_validate_pinless_debit_card)
     assert response = @gateway.validate_pinless_debit_card(@credit_card, @options)
@@ -341,6 +393,13 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_successful_verify
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+  end
+
+  def test_successful_verify_with_elo
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@elo_credit_card, @options)
     end.respond_with(successful_authorization_response)
     assert_success response
   end
