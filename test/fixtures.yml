@@ -550,6 +550,8 @@ money_movers:
 
 mundipagg:
   api_key: api_key
+  gateway_affiliation_id: gateway_affiliation_id
+  # left for backward-compatibility
   gateway_id: gateway_id
 
 # Working credentials, no need to replace

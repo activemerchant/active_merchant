@@ -8,6 +8,7 @@ class MundipaggTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
+      gateway_affiliation_id: 'abc123',
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
@@ -166,6 +167,20 @@ class MundipaggTest < Test::Unit::TestCase
 
     assert_equal 'cus_N70xAX6S65cMnokB|card_51ElNwYSVJFpRe0g', response.authorization
     assert response.test?
+  end
+
+  def test_gateway_id_fallback
+    gateway = MundipaggGateway.new(api_key: 'my_api_key', gateway_id: 'abc123')
+    options = {
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
+    }
+    stub_comms do
+      gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"gateway_affiliation_id":"abc123"/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_scrub
