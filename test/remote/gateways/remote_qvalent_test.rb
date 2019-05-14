@@ -5,7 +5,8 @@ class RemoteQvalentTest < Test::Unit::TestCase
     @gateway = QvalentGateway.new(fixtures(:qvalent))
 
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
+    @credit_card = credit_card('4242424242424242')
+    @mastercard = credit_card('5163200000000008', brand: 'master')
     @declined_card = credit_card('4000000000000000')
     @expired_card = credit_card('4111111113444494')
 
@@ -189,4 +190,53 @@ class RemoteQvalentTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.verification_value, clean_transcript)
     assert_scrubbed(@gateway.options[:password], clean_transcript)
   end
+
+  def test_successful_purchase_initial
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'merchant',
+        reason_type: 'unscheduled'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_not_nil response.params['response.authTraceId']
+  end
+
+  def test_successful_purchase_cardholder
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'cardholder',
+        reason_type: 'unscheduled',
+        network_transaction_id: 'qwerty7890'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_mastercard
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'recurring',
+        network_transaction_id: 'qwerty7890'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @mastercard, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
 end

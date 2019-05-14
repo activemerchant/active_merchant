@@ -2,7 +2,7 @@
 
 == HEAD
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
-
+* Qvalent: Adds support for standard stored credential framework [molbrown] #3227
 
 == Version 1.94.0 (May 21, 2019)
 * Mundipagg: Fix number lengths for both VR and Sodexo [dtykocki] #3195
