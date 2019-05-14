@@ -13,6 +13,7 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     # See https://docs.mundipagg.com/docs/simulador-de-voucher.
     @vr_voucher = credit_card('4000000000000010', brand: 'vr')
     @options = {
+      gateway_affiliation_id: fixtures(:mundipagg)[:gateway_affiliation_id],
       billing_address: address({neighborhood: 'Sesame Street'}),
       description: 'Store Purchase'
     }
@@ -185,6 +186,16 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_match %r{Invalid API key; Authorization has been denied for this request.}, response.message
+  end
+
+  def test_gateway_id_fallback
+    gateway = MundipaggGateway.new(api_key: fixtures(:mundipagg)[:api_key], gateway_id: fixtures(:mundipagg)[:gateway_id])
+    options = {
+      billing_address: address({neighborhood: 'Sesame Street'}),
+      description: 'Store Purchase'
+    }
+    response = gateway.purchase(@amount, @credit_card, options)
+    assert_success response
   end
 
   def test_transcript_scrubbing
