@@ -365,20 +365,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Original pspReference required for this operation', response.message
   end
 
-  def test_successful_adjust
-    authorize = @gateway.authorize(@amount, @credit_card, @options)
+  def test_successful_asynchronous_adjust
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
     assert_success authorize
 
-    assert adjust = @gateway.adjust(200, authorize.authorization)
+    assert adjust = @gateway.adjust(200, authorize.authorization, @options)
     assert_success adjust
     assert_equal '[adjustAuthorisation-received]', adjust.message
   end
 
-  def test_successful_adjust_and_capture
-    authorize = @gateway.authorize(@amount, @credit_card, @options)
+  def test_successful_asynchronous_adjust_and_capture
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
     assert_success authorize
 
-    assert adjust = @gateway.adjust(200, authorize.authorization)
+    assert adjust = @gateway.adjust(200, authorize.authorization, @options)
     assert_success adjust
     assert_equal '[adjustAuthorisation-received]', adjust.message
 
@@ -386,13 +386,50 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_failed_adjust
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+  def test_failed_asynchronous_adjust
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
 
-    assert response = @gateway.adjust(200, '')
+    assert response = @gateway.adjust(200, '', @options)
     assert_failure response
     assert_equal 'Original pspReference required for this operation', response.message
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_successful_synchronous_adjust_using_adjust_data
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'])
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_success adjust
+    assert_equal 'Authorised', adjust.message
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_successful_synchronous_adjust_and_capture
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'])
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_success adjust
+    assert_equal 'Authorised', adjust.message
+
+    assert capture = @gateway.capture(200, authorize.authorization)
+    assert_success capture
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_failed_synchronous_adjust_using_adjust_data
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'],
+      requested_test_acquirer_response_code: '2')
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_failure adjust
+    assert_equal 'Refused', adjust.message
   end
 
   def test_successful_store

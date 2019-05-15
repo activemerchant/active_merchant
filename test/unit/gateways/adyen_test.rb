@@ -315,13 +315,26 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.adjust(200, '8835544088660594')
     assert_equal '8835544088660594#8835544088660594#', response.authorization
     assert_equal '[adjustAuthorisation-received]', response.message
-    assert response.test?
   end
 
   def test_failed_adjust
     @gateway.expects(:ssl_post).returns(failed_adjust_response)
     response = @gateway.adjust(200, '')
     assert_equal 'Original pspReference required for this operation', response.message
+    assert_failure response
+  end
+
+  def test_successful_synchronous_adjust
+    @gateway.expects(:ssl_post).returns(successful_synchronous_adjust_response)
+    response = @gateway.adjust(200, '8835544088660594')
+    assert_equal '8835544088660594#8835574118820108#', response.authorization
+    assert_equal 'Authorised', response.message
+  end
+
+  def test_failed_synchronous_adjust
+    @gateway.expects(:ssl_post).returns(failed_synchronous_adjust_response)
+    response = @gateway.adjust(200, '8835544088660594')
+    assert_equal 'Refused', response.message
     assert_failure response
   end
 
@@ -705,6 +718,18 @@ class AdyenTest < Test::Unit::TestCase
       "message":"Original pspReference required for this operation",
       "errorType":"validation"
     }
+    RESPONSE
+  end
+
+  def successful_synchronous_adjust_response
+    <<-RESPONSE
+    {\"additionalData\":{\"authCode\":\"70125\",\"adjustAuthorisationData\":\"BQABAQA9NtGnJAkLXKqW1C+VUeCNMzDf4WwzLFBiuQ8iaA2Yvflz41t0cYxtA7XVzG2pzlJPMnkSK75k3eByNS0\\/m0\\/N2+NnnKv\\/9rYPn8Pjq1jc7CapczdqZNl8P9FwqtIa4Kdeq7ZBNeGalx9oH4reutlFggzWCr+4eYXMRqMgQNI2Bu5XvwkqBbXwbDL05CuNPjjEwO64YrCpVBLrxk4vlW4fvCLFR0u8O68C+Y4swmsPDvGUxWpRgwNVqXsTmvt9z8hlej21BErL8fPEy+fJP4Zab8oyfcLrv9FJkHZq03cyzJpOzqX458Ctn9sIwBawXzNEFN5bCt6eT1rgp0yuHeMGEGwrjNl8rijez7Rd\\/vy1WUYAAMfmZFuJMQ73l1+Hkr0VlHv6crlyP\\/FVTY\\/XIUiGMqa1yM08Zu\\/Gur5N7lU8qnMi2WO9QPyHmmdlfo7+AGsrKrzV4wY\\/wISg0pcv8PypBWVq\\/hYoCqlHsGUuIiyGLIW7A8LtG6\\/JqAA9t\\/0EdnQVz0k06IEEYnBzkQoY8Qv3cVszgPQukGstBraB47gQdVDp9vmuQjMstt8Te56SDRxtfcu0z4nQIURVSkJJNj8RYfwXH9OUbz3Vd2vwoR3lCJFTCKIeW8sidNVB3xAZnddBVQ3P\\/QxPnrrRdCcnoWSGoEOBBIxgF00XwNxJ4P7Xj1bB7oq3M7k99dgPnSdZIjyvG6BWKnCQcGyVRB0yOaYBaOCmN66EgWfXoJR5BA4Jo6gnWnESWV62iUC8OCzmis1VagfaBn0A9vWNcqKFkUr\\/68s3w8ixLJFy+WdpAS\\/flzC3bJbvy9YR9nESKAP40XiNGz9iBROCfPI2bSOvdFf831RdTxWaE+ewAC3w9GsgEKAXxzWsVeSODWRZQA0TEVOfX8SaNVa5w3EXLDsRVnmKgUH8yQnEJQBGhDJXg1sEbowE07CzzdAY5Mc=\",\"refusalReasonRaw\":\"AUTHORISED\"},\"pspReference\":\"8835574118820108\",\"response\":\"Authorised\"}
+    RESPONSE
+  end
+
+  def failed_synchronous_adjust_response
+    <<-RESPONSE
+    {\"additionalData\":{\"authCode\":\"90745\",\"refusalReasonRaw\":\"2\"},\"pspReference\":\"8835574120337117\",\"response\":\"Refused\"}
     RESPONSE
   end
 
