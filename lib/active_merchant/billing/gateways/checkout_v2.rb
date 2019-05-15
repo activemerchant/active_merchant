@@ -138,16 +138,25 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(action, post, authorization = nil)
+      def api_request(method, url, post = {})
+        raw_response = response = nil
+
         begin
-          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
+          raw_response = ssl_request(method, url, post.to_json, headers)
           response = parse(raw_response)
-          if action == :capture && response.key?('_links')
-            response['id'] = response['_links']['payment']['href'].split('/')[-1]
-          end
         rescue ResponseError => e
           raise unless(e.response.code.to_s =~ /4\d\d/)
           response = parse(e.response.body)
+        end
+
+        response
+      end
+
+      def commit(action, post, authorization = nil)
+        response = api_request(:post, url(post, action, authorization), post)
+
+        if action == :capture && response.key?('_links')
+          response['id'] = response['_links']['payment']['href'].split('/')[-1]
         end
 
         succeeded = success_from(response)
