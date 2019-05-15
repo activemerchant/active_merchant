@@ -17,20 +17,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(amount, payment_method, options={})
-        multi = MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
-        end
-
-        merged_params = multi.responses.map(&:params).reduce({}, :merge)
-        succeeded = success_from(merged_params)
-
-        response(:purchase, succeeded, merged_params)
+        options[:capture] = true
+        authorize(amount, payment_method, options)
       end
 
       def authorize(amount, payment_method, options={})
         post = {}
-        post[:capture] = false
+        post[:capture] = options[:capture] || false
+
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
