@@ -358,7 +358,23 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_subscription_credit
+  def test_successful_standalone_credit_to_card
+    assert response = @gateway.credit(@amount, @credit_card, @options)
+
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_standalone_credit_to_card
+    assert response = @gateway.credit(@amount, @declined_card, @options)
+
+    assert_equal 'Invalid account number', response.message
+    assert_failed response
+    assert response.test?
+  end
+
+  def test_successful_standalone_credit_to_subscription
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
     assert_success response

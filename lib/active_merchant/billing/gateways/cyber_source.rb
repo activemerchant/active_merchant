@@ -143,9 +143,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # Adds credit to a subscription (stand alone credit).
-      def credit(money, reference, options = {})
-        commit(build_credit_request(money, reference, options), :credit, money, options)
+      # Adds credit to a card or subscription (stand alone credit).
+      def credit(money, creditcard_or_reference, options = {})
+        setup_address_hash(options)
+        commit(build_credit_request(money, creditcard_or_reference, options), :credit, money, options)
       end
 
       # Stores a customer subscription/profile with type "on-demand".
@@ -328,11 +329,10 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_credit_request(money, reference, options)
+      def build_credit_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
 
-        add_purchase_data(xml, money, true, options)
-        add_subscription(xml, options, reference)
+        add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_credit_service(xml)
 
         xml.target!

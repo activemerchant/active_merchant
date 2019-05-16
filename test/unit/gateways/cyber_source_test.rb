@@ -339,8 +339,14 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_success(@gateway.refund(@amount, response.authorization))
   end
 
-  def test_successful_credit_request
-    @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_credit_response)
+  def test_successful_credit_to_card_request
+    @gateway.stubs(:ssl_post).returns(successful_card_credit_response)
+
+    assert_success(@gateway.credit(@amount, @credit_card, @options))
+  end
+
+  def test_successful_credit_to_subscription_request
+    @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_subscription_credit_response)
 
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert response.success?
@@ -784,7 +790,13 @@ class CyberSourceTest < Test::Unit::TestCase
     XML
   end
 
-  def successful_credit_response
+  def successful_card_credit_response
+    <<-XML
+<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n<soap:Header>\n<wsse:Security xmlns:wsse=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd\"><wsu:Timestamp xmlns:wsu=\"http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd\" wsu:Id=\"Timestamp-1360351593\"><wsu:Created>2019-05-16T20:25:05.234Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c=\"urn:schemas-cybersource-com:transaction-data-1.153\"><c:merchantReferenceCode>329b25a4540e05c731a4fb16112e4c72</c:merchantReferenceCode><c:requestID>5580383051126990804008</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Ahj/7wSTLoNfMt0KyZQoGxDdm1ctGjlmo0/RdCA4BUafouhAdpAfJHYQyaSZbpAdvSeAnJl0GvmW6FZMoUAA/SE0</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccCreditReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2019-05-16T20:25:05Z</c:requestDateTime><c:amount>1.00</c:amount><c:reconciliationID>73594493</c:reconciliationID></c:ccCreditReply><c:acquirerMerchantNumber>000123456789012</c:acquirerMerchantNumber><c:pos><c:terminalID>01234567</c:terminalID></c:pos></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
+
+  def successful_subscription_credit_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
 <soap:Header>
