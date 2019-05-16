@@ -16,6 +16,12 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def get_payment(payment_id)
+        post = { id: payment_id }
+
+        commit(:get, :get_payment, post)
+      end
+
       def purchase(amount, payment_method, options={})
         multi = MultiResponse.run do |r|
           r.process { authorize(amount, payment_method, options) }
@@ -37,7 +43,7 @@ module ActiveMerchant #:nodoc:
         add_transaction_data(post, options)
         add_3ds(post, options)
 
-        commit(:authorize, post)
+        commit(:post, :authorize, post)
       end
 
       def capture(amount, authorization, options={})
@@ -45,12 +51,12 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_customer_data(post, options)
 
-        commit(:capture, post, authorization)
+        commit(:post, :capture, post, authorization)
       end
 
       def void(authorization, options={})
         post = {}
-        commit(:void, post, authorization)
+        commit(:post, :void, post, authorization)
       end
 
       def refund(amount, authorization, options={})
@@ -58,7 +64,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_customer_data(post, options)
 
-        commit(:refund, post, authorization)
+        commit(:post, :refund, post, authorization)
       end
 
       def verify(credit_card, options={})
@@ -138,11 +144,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def api_request(method, url, post = {})
+      def api_request(method, url, post = nil)
         raw_response = response = nil
 
         begin
-          raw_response = ssl_request(method, url, post.to_json, headers)
+          if method != :get
+            raw_response = ssl_request(method, url, post.to_json, headers)
+          else
+            raw_response = ssl_request(method, url, nil, headers)
+          end
+
           response = parse(raw_response)
         rescue ResponseError => e
           raise unless(e.response.code.to_s =~ /4\d\d/)
@@ -152,14 +163,15 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, post, authorization = nil)
-        response = api_request(:post, url(post, action, authorization), post)
+      def commit(method, action, post, authorization = nil)
+        url = url(post, action, authorization)
+        response = api_request(method, url, post)
 
         if action == :capture && response.key?('_links')
           response['id'] = response['_links']['payment']['href'].split('/')[-1]
         end
 
-        succeeded = success_from(response)
+        succeeded = success_from(response, action)
 
         response(action, succeeded, response)
       end
@@ -197,6 +209,8 @@ module ActiveMerchant #:nodoc:
           "#{base_url}/payments/#{authorization}/refunds"
         elsif action == :void
           "#{base_url}/payments/#{authorization}/voids"
+        elsif action == :get_payment
+          "#{base_url}/payments/#{post[:id]}"
         else
           "#{base_url}/payments/#{authorization}/#{action}"
         end
@@ -223,8 +237,12 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def success_from(response)
-        response['response_summary'] == 'Approved' || !response.key?('response_summary') && response.key?('action_id')
+      def success_from(response, action = nil)
+        if action == :get_payment
+          response.key?('id')
+        else
+          response['response_summary'] == 'Approved' || !response.key?('response_summary') && response.key?('action_id')
+        end
       end
 
       def message_from(succeeded, response)

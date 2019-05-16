@@ -8,6 +8,7 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2025')
     @expired_card = credit_card('4242424242424242', verification_value: '100', month: '6', year: '2010')
     @declined_card = credit_card('42424242424242424', verification_value: '234', month: '6', year: '2025')
+    @invalid_payment_id = '1111'
 
     @options = {
       order_id: '1',
@@ -218,4 +219,10 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'request_invalid: card_expired', response.message
     assert_equal 'request_invalid: card_expired', response.error_code
   end
+
+  def test_failed_get_payment
+    response = @gateway.get_payment(@invalid_payment_id)
+    assert_failure response
+  end
+
 end

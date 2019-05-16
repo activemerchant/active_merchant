@@ -1,5 +1,4 @@
 require 'test_helper'
-require "byebug"
 class CheckoutV2Test < Test::Unit::TestCase
   include CommStub
 
@@ -218,6 +217,20 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Invalid Card Number', response.message
   end
 
+  def test_successful_get_payment
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.get_payment('pay_1111')
+    end.respond_with(sucessful_get_payment_response)
+    assert_success response
+    assert_equal 'pay_1111', response.params['id']
+  end
+
+  def test_failed_get_payment
+    @gateway.expects(:raw_ssl_request).returns(failed_get_payment_response)
+    response = @gateway.get_payment('pay_1111')
+    assert_failure response
+  end
+
   def test_transcript_scrubbing
     assert_equal post_scrubbed, @gateway.scrub(pre_scrubbed)
   end
@@ -423,6 +436,66 @@ class CheckoutV2Test < Test::Unit::TestCase
   def failed_void_response
     %(
     )
+  end
+
+  def sucessful_get_payment_response
+    %(
+      {
+        "id": "pay_1111",
+        "requested_on": "2019-05-15T12:25:52Z",
+        "source": {
+          "id": "123123",
+          "type": "card",
+          "expiry_month": 12,
+          "expiry_year": 2020,
+          "name": "First Last",
+          "scheme": "Visa",
+          "last4": "4242",
+          "fingerprint": "436D1EB12C4B92B9EEB1E798DEA93A718C78F5362C7FB5D84B51C72A869B6101",
+          "bin": "424242",
+          "card_type": "Credit",
+          "card_category": "Consumer",
+          "issuer": "JPMORGAN CHASE BANK NA",
+          "issuer_country": "US",
+          "product_id": "A",
+          "product_type": "Visa Traditional",
+          "avs_check": "S",
+          "cvv_check": ""
+        },
+        "amount": 500,
+        "currency": "SAR",
+        "payment_type": "Regular",
+        "status": "Captured",
+        "approved": true,
+        "risk": {
+          "flagged": false
+        },
+        "customer": {
+          "id": "cus_2222"
+        },
+        "billing_descriptor": {
+          "name": "",
+          "city": "London"
+        },
+        "eci": "05",
+        "scheme_id": "638284745624527",
+        "_links": {
+          "self": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_1111"
+          },
+          "actions": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_1111/actions"
+          },
+          "refund": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_1111/refunds"
+          }
+        }
+      }
+    )
+  end
+
+  def failed_get_payment_response
+    MockResponse.new(404, '')
   end
 
   def invalid_json_response
