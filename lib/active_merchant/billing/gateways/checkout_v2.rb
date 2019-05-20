@@ -2,7 +2,13 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CheckoutPaymentToken < PaymentToken
       def type
-        'checkout'
+        'checkout_token'
+      end
+    end
+
+    class CheckoutPaymentId < PaymentToken
+      def type
+        'checkout_id'
       end
     end
 
@@ -142,6 +148,9 @@ module ActiveMerchant #:nodoc:
 
         elsif payment_method.is_a?(CheckoutPaymentToken)
           add_payment_token(post, payment_method)
+
+        elsif payment_method.is_a?(CheckoutPaymentId)
+          add_payment_id(post, payment_method)
         end
       end
 
@@ -157,6 +166,11 @@ module ActiveMerchant #:nodoc:
       def add_payment_token(post, token)
         post[:source][:type] = 'token'
         post[:source][:token] = token.payment_data
+      end
+
+      def add_payment_id(post, id)
+        post[:source][:type] = 'id'
+        post[:source][:id] = id.payment_data
       end
 
       def build_billing_address(address)
