@@ -29,6 +29,24 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '1012082839', response.authorization
   end
 
+  def test_successful_purchase_with_unused_state_code
+    unrecognized_state_code_options = {
+      billing_address: {
+        city: 'Dresden',
+        state: 'Sachsen',
+        country: 'DE',
+        zip: '01069'
+      }
+    }
+
+    @gateway.expects(:raw_ssl_request).returns(successful_stateless_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, unrecognized_state_code_options)
+    assert_success response
+    assert_equal '1021645629', response.authorization
+    assert_not_includes(response.params, "state")
+  end
+
   def test_successful_echeck_purchase
     @gateway.expects(:raw_ssl_request).returns(successful_echeck_purchase_response)
 
@@ -330,6 +348,46 @@ class BlueSnapTest < Test::Unit::TestCase
           <processing-status>PENDING</processing-status>
         </processing-info>
       </alt-transaction>
+    XML
+  end
+
+  def successful_stateless_purchase_response
+    MockResponse.succeeded <<-XML
+      <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+      <card-transaction xmlns=\"http://ws.plimus.com\">
+      <card-transaction-type>AUTH_CAPTURE</card-transaction-type>
+      <transaction-id>1021645629</transaction-id>
+      <recurring-transaction>ECOMMERCE</recurring-transaction>
+      <soft-descriptor>BLS&#x2a;Spreedly</soft-descriptor>
+      <amount>1.00</amount>
+      <usd-amount>1.00</usd-amount>
+      <currency>USD</currency>
+      <card-holder-info>
+          <first-name>Longbob</first-name>
+          <last-name>Longsen</last-name>
+          <country>DE</country>
+          <city>Dresden</city>
+          <zip>01069</zip>
+      </card-holder-info>
+      <vaulted-shopper-id>24449087</vaulted-shopper-id>
+      <credit-card>
+          <card-last-four-digits>9299</card-last-four-digits>
+          <card-type>VISA</card-type>
+          <card-sub-type>CREDIT</card-sub-type>
+          <card-category>PLATINUM</card-category>
+          <bin-category>CONSUMER</bin-category>
+          <card-regulated>N</card-regulated>
+          <issuing-bank>ALLIED IRISH BANKS PLC</issuing-bank>
+          <issuing-country-code>ie</issuing-country-code>
+      </credit-card>
+      <processing-info>
+      <processing-status>success</processing-status>
+          <cvv-response-code>ND</cvv-response-code>
+          <avs-response-code-zip>U</avs-response-code-zip>
+          <avs-response-code-address>U</avs-response-code-address>
+          <avs-response-code-name>U</avs-response-code-name>
+      </processing-info>
+      </card-transaction>
     XML
   end
 
