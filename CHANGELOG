@@ -16,7 +16,8 @@
 * WorldPay: Support Unknown Card Type [tanyajajodia] #3213
 * Mundipagg: Make gateway_affiliation_id an option [curiousepic] #3219
 * CyberSource: Adds Elo Card Type [tanyajajodia] #3220
-* CyberSource: Support standalone credit for cards [curiousepic] 3225
+* CyberSource: Support standalone credit for cards [curiousepic] #3225
+* Adyen: Constantize version to fix subdomains [curiousepic] #3228
 
 == Version 1.93.0 (April 18, 2019)
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
