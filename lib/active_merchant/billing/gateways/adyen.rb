@@ -4,8 +4,8 @@ module ActiveMerchant #:nodoc:
 
       # we recommend setting up merchant-specific endpoints.
       # https://docs.adyen.com/developers/api-manual#apiendpoints
-      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/v40'
-      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/v40'
+      self.test_url = 'https://pal-test.adyen.com/pal/servlet/Payment/'
+      self.live_url = 'https://pal-live.adyen.com/pal/servlet/Payment/'
 
       self.supported_countries = ['AT', 'AU', 'BE', 'BG', 'BR', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'SI', 'US']
       self.default_currency = 'USD'
@@ -15,6 +15,8 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.adyen.com/'
       self.display_name = 'Adyen'
+
+      API_VERSION = 'v40'
 
       STANDARD_ERROR_CODE_MAPPING = {
         '101' => STANDARD_ERROR_CODE[:incorrect_number],
@@ -375,11 +377,11 @@ module ActiveMerchant #:nodoc:
 
       def url
         if test?
-          test_url
+          "#{test_url}#{API_VERSION}"
         elsif @options[:subdomain]
-          "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/Payment/v18"
+          "https://#{@options[:subdomain]}-pal-live.adyenpayments.com/pal/servlet/Payment/#{API_VERSION}"
         else
-          live_url
+          "#{live_url}#{API_VERSION}"
         end
       end
 
