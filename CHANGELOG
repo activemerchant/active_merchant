@@ -1,6 +1,9 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Adyen: Constantize version to fix subdomains [curiousepic] #3228
+
+
 == Version 1.94.0 (May 21, 2019)
 * Mundipagg: Fix number lengths for both VR and Sodexo [dtykocki] #3195
 * Stripe: Support show and list webhook endpoints [jknipp] #3196
@@ -17,7 +20,6 @@
 * Mundipagg: Make gateway_affiliation_id an option [curiousepic] #3219
 * CyberSource: Adds Elo Card Type [tanyajajodia] #3220
 * CyberSource: Support standalone credit for cards [curiousepic] #3225
-* Adyen: Constantize version to fix subdomains [curiousepic] #3228
 
 == Version 1.93.0 (April 18, 2019)
 * Stripe: Do not consider a refund unsuccessful if only refunding the fee failed [jasonwebster] #3188
