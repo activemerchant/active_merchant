@@ -462,7 +462,7 @@ class CyberSourceTest < Test::Unit::TestCase
     end.returns(successful_purchase_response)
 
     credit_card = network_tokenization_credit_card('5555555555554444',
-      :brand              => 'mastercard',
+      :brand              => 'master',
       :transaction_id     => '123',
       :eci                => '05',
       :payment_cryptogram => '111111111100cryptogram'
