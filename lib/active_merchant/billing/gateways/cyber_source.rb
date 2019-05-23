@@ -550,7 +550,7 @@ module ActiveMerchant #:nodoc:
             xml.tag!('commerceIndicator', 'vbv')
             xml.tag!('xid', payment_method.payment_cryptogram)
           end
-        when :mastercard
+        when :master
           xml.tag! 'ucaf' do
             xml.tag!('authenticationData', payment_method.payment_cryptogram)
             xml.tag!('collectionIndicator', '2')
