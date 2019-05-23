@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
     #
     class Flo2cashRestGateway < Gateway
       self.test_url = 'https://sandbox.flo2cash.com/api'
-      self.live_url = 'https://secure.flo2cash.co.nz/web2pay/'
+      self.live_url = 'https://secure.flo2cash.co.nz/web2pay'
 
       self.supported_countries = ['NZ']
       self.default_currency = 'NZD'
