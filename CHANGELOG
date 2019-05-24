@@ -8,6 +8,7 @@
 * Cybersource: Send tokenization data when card is :master [pi3r] #3230
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229
 * Adyen: Pass updateShopperStatement, industryUsage [curiousepic] #3233
+* TransFirst Transaction Express: Fix blank address2 values [britth] #3231
 
 == Version 1.94.0 (May 21, 2019)
 * Mundipagg: Fix number lengths for both VR and Sodexo [dtykocki] #3195
