@@ -397,10 +397,10 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   # Requires Adyen to set your test account to Synchronous Adjust mode.
   def test_successful_synchronous_adjust_using_adjust_data
-    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth', shopper_statement: 'statement note'))
     assert_success authorize
 
-    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'])
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'], update_shopper_statement: 'new statement note', industry_usage: 'DelayedCharge')
     assert adjust = @gateway.adjust(200, authorize.authorization, options)
     assert_success adjust
     assert_equal 'Authorised', adjust.message

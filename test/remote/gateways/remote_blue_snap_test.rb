@@ -114,10 +114,10 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
   def test_successful_purchase_with_unused_state_code
     unrecognized_state_code_options = {
       billing_address: {
-        city: "Dresden",
-        state: "Sachsen",
-        country: "DE",
-        zip: "01069"
+        city: 'Dresden',
+        state: 'Sachsen',
+        country: 'DE',
+        zip: '01069'
       }
     }
 
