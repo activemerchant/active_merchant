@@ -44,7 +44,7 @@ class BlueSnapTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, unrecognized_state_code_options)
     assert_success response
     assert_equal '1021645629', response.authorization
-    assert_not_includes(response.params, "state")
+    assert_not_includes(response.params, 'state')
   end
 
   def test_successful_echeck_purchase
