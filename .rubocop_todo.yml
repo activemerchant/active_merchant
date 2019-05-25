@@ -499,7 +499,6 @@ Style/ClassVars:
     - 'lib/active_merchant/billing/base.rb'
     - 'lib/active_merchant/billing/gateway.rb'
     - 'lib/active_merchant/billing/gateways/balanced.rb'
-    - 'lib/active_merchant/billing/gateways/cyber_source.rb'
     - 'test/remote/gateways/remote_cams_test.rb'
     - 'test/test_helper.rb'
 
@@ -974,7 +973,6 @@ Style/RegexpLiteral:
 Style/RescueModifier:
   Exclude:
     - 'lib/active_merchant/billing/gateways/clearhaus.rb'
-    - 'lib/active_merchant/billing/gateways/cyber_source.rb'
     - 'lib/active_merchant/billing/gateways/jetpay.rb'
     - 'lib/active_merchant/billing/gateways/jetpay_v2.rb'
     - 'lib/active_merchant/billing/gateways/optimal_payment.rb'
