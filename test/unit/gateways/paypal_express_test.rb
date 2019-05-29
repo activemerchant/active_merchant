@@ -639,7 +639,6 @@ class PaypalExpressTest < Test::Unit::TestCase
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_guest_checkout => true}))
 
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
-    assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
   end
 
   def test_not_adds_brand_name_if_not_specified
