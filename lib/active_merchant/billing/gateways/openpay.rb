@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
       def charge(customer_id, money, params = {})
         requires!(params, :description, :order_id)
         post = {}
-        post[:method] = 'bank_account'
+        post[:method] = params[:method] || 'bank_account'
         post[:amount] = amount(money)
         post[:description] = params[:description]
         post[:order_id] = params[:order_id]
