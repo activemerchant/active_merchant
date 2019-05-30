@@ -4,6 +4,7 @@
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229
 * Adyen: Pass updateShopperStatement, industryUsage [curiousepic] #3233
 * TransFirst Transaction Express: Fix blank address2 values [britth] #3231
+* WorldPay: Add support for store method [bayprogrammer] #3232
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
