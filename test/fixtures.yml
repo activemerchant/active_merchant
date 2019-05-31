@@ -180,6 +180,7 @@ checkout:
 
 checkout_v2:
   secret_key: secret_key
+  public_key: public_key
 
 citrus_pay:
   userid: CPF00001

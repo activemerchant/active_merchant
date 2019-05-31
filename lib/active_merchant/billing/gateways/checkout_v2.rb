@@ -1,5 +1,17 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    class CheckoutPaymentToken < PaymentToken
+      def type
+        'checkout_token'
+      end
+    end
+
+    class CheckoutPaymentId < PaymentToken
+      def type
+        'checkout_id'
+      end
+    end
+
     class CheckoutV2Gateway < Gateway
       self.display_name = 'Checkout.com Unified Payments'
       self.homepage_url = 'https://www.checkout.com/'
@@ -68,6 +80,40 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # Note: Tokenization needs the class to be initialized with the public key
+      # e.g.
+      # ActiveMerchant::Billing::CheckoutV2Gateway.new(
+      #  secret_key: 'sk_test_1'
+      #  public_key: 'sk_test_2'
+      # )
+      def tokenize_credit_card(credit_card, options={})
+        if @options[:public_key].blank?
+          raise KeyError, 'public_key is not present in options'
+        end
+
+        unless credit_card.is_a?(CreditCard)
+          raise TypeError, 'credit_card must be of type CreditCard'
+        end
+
+        post = {
+          type: 'card',
+          number: credit_card.number,
+          name: credit_card.name,
+          cvv: credit_card.verification_value,
+          expiry_month: format(credit_card.month, :two_digits),
+          expiry_year: format(credit_card.year, :four_digits),
+        }
+
+        address = options[:billing_address]
+
+        phone = build_phone(address)
+
+        post[:billing_address] = build_billing_address(address)
+        post[:phone] = phone
+
+        commit(:tokenize_credit_card, post)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -96,12 +142,59 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method)
         post[:source] = {}
+
+        if payment_method.is_a?(CreditCard)
+          add_credit_card(post, payment_method)
+
+        elsif payment_method.is_a?(CheckoutPaymentToken)
+          add_payment_token(post, payment_method)
+
+        elsif payment_method.is_a?(CheckoutPaymentId)
+          add_payment_id(post, payment_method)
+        end
+      end
+
+      def add_credit_card(post, credit_card)
         post[:source][:type] = 'card'
-        post[:source][:name] = payment_method.name
-        post[:source][:number] = payment_method.number
-        post[:source][:cvv] = payment_method.verification_value
-        post[:source][:expiry_year] = format(payment_method.year, :four_digits)
-        post[:source][:expiry_month] = format(payment_method.month, :two_digits)
+        post[:source][:name] = credit_card.name
+        post[:source][:number] = credit_card.number
+        post[:source][:cvv] = credit_card.verification_value
+        post[:source][:expiry_year] = format(credit_card.year, :four_digits)
+        post[:source][:expiry_month] = format(credit_card.month, :two_digits)
+      end
+
+      def add_payment_token(post, token)
+        post[:source][:type] = 'token'
+        post[:source][:token] = token.payment_data
+      end
+
+      def add_payment_id(post, id)
+        post[:source][:type] = 'id'
+        post[:source][:id] = id.payment_data
+      end
+
+      def build_billing_address(address)
+        return {} if address.blank?
+
+        billing_address = {}
+        billing_address[:address_line1] = address[:address1] unless address[:address1].blank?
+        billing_address[:address_line2] = address[:address2] unless address[:address2].blank?
+        billing_address[:city] = address[:city] unless address[:city].blank?
+        billing_address[:state] = address[:state] unless address[:state].blank?
+        billing_address[:country] = address[:country] unless address[:country].blank?
+        billing_address[:zip] = address[:zip] unless address[:zip].blank?
+
+        billing_address
+      end
+
+      def build_phone(address)
+        return {} if address.blank?
+
+        if !address[:phone].blank?
+          return { number: address[:phone] }
+        else
+          return {}
+        end
       end
 
       def add_customer_data(post, options)
@@ -110,14 +203,8 @@ module ActiveMerchant #:nodoc:
         post[:payment_ip] = options[:ip] if options[:ip]
         address = options[:billing_address]
         if(address && post[:source])
-          post[:source][:billing_address] = {}
-          post[:source][:billing_address][:address_line1] = address[:address1] unless address[:address1].blank?
-          post[:source][:billing_address][:address_line2] = address[:address2] unless address[:address2].blank?
-          post[:source][:billing_address][:city] = address[:city] unless address[:city].blank?
-          post[:source][:billing_address][:state] = address[:state] unless address[:state].blank?
-          post[:source][:billing_address][:country] = address[:country] unless address[:country].blank?
-          post[:source][:billing_address][:zip] = address[:zip] unless address[:zip].blank?
-          post[:source][:phone] = { number: address[:phone] } unless address[:phone].blank?
+          post[:source][:billing_address] = build_billing_address(address)
+          post[:source][:phone] = build_phone(address)
         end
       end
 
@@ -140,7 +227,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, authorization = nil)
         begin
-          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
+          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers(action))
           response = parse(raw_response)
           if action == :capture && response.key?('_links')
             response['id'] = response['_links']['payment']['href'].split('/')[-1]
@@ -150,7 +237,7 @@ module ActiveMerchant #:nodoc:
           response = parse(e.response.body)
         end
 
-        succeeded = success_from(response)
+        succeeded = success_from(response, action)
 
         response(action, succeeded, response)
       end
@@ -172,9 +259,12 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def headers
+      def headers(action)
+        key = @options[:secret_key]
+        key = @options[:public_key] if action == :tokenize_credit_card
+
         {
-          'Authorization' => @options[:secret_key],
+          'Authorization' => key,
           'Content-Type'  => 'application/json;charset=UTF-8'
         }
       end
@@ -188,6 +278,8 @@ module ActiveMerchant #:nodoc:
           "#{base_url}/payments/#{authorization}/refunds"
         elsif action == :void
           "#{base_url}/payments/#{authorization}/voids"
+        elsif action == :tokenize_credit_card
+          "#{base_url}/tokens"
         else
           "#{base_url}/payments/#{authorization}/#{action}"
         end
@@ -214,8 +306,14 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def success_from(response)
-        response['response_summary'] == 'Approved' || !response.key?('response_summary') && response.key?('action_id')
+      def success_from(response, action = nil)
+        successful = response['response_summary'] == 'Approved' || !response.key?('response_summary') && response.key?('action_id')
+
+        if action == :tokenize_credit_card
+          successful = response.key?('token')
+        end
+
+        successful
       end
 
       def message_from(succeeded, response)
