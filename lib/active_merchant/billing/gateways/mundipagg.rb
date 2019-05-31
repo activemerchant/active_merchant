@@ -155,7 +155,8 @@ module ActiveMerchant #:nodoc:
         post[:customer][:name] = payment.name if post[:customer]
         post[:customer_id] = parse_auth(payment)[0] if payment.is_a?(String)
         post[:payment] = {}
-        post[:payment][:gateway_affiliation_id] = @options[:gateway_id] if @options[:gateway_id]
+        affiliation = options[:gateway_affiliation_id] || @options[:gateway_id]
+        post[:payment][:gateway_affiliation_id] = affiliation if affiliation
         post[:payment][:metadata] = { mundipagg_payment_method_code: '1' } if test?
         if voucher?(payment)
           add_voucher(post, payment, options)

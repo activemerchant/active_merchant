@@ -275,10 +275,17 @@ efsnet:
   password: Y
 
 # Provided for url update test
+
 elavon:
-  login: "000127"
-  user: ssltest
-  password: "IERAOBEE5V0D6Q3Q6R51TG89XAIVGEQ3LGLKMKCKCVQBGGGAU7FN627GPA54P5HR"
+  login: "009005"
+  user: "devportal"
+  password: "BDDZY5KOUDCNPV4L3821K7PETO4Z7TPYOJB06TYBI1CW771IDHXBVBP51HZ6ZANJ"
+
+elavon_multi_currency:
+  login: "009006"
+  user: "devportal"
+  password: "XWJS3QTFCH40HW0QGHJKXAYADCTDH0TXXAKXAEZCGCCJ29CFNPCZT4KA9D5KQMDA"
+  multi_currency: true
 
 element:
   account_id: "1013963"
@@ -543,6 +550,8 @@ money_movers:
 
 mundipagg:
   api_key: api_key
+  gateway_affiliation_id: gateway_affiliation_id
+  # left for backward-compatibility
   gateway_id: gateway_id
 
 # Working credentials, no need to replace

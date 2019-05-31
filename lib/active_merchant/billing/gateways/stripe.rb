@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
 
         response = commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options)
 
-        if options[:refund_fee_amount] && options[:refund_fee_amount].to_s != '0'
+        if response.success? && options[:refund_fee_amount] && options[:refund_fee_amount].to_s != '0'
           charge = api_request(:get, "charges/#{CGI.escape(identification)}", nil, options)
 
           if application_fee = charge['application_fee']

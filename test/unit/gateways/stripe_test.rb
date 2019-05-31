@@ -685,7 +685,6 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
-  # What is the significance of this??? it's to test that the first response is used as primary. so identical to above with an extra assertion
   def test_refund_with_fee_response_responds_with_the_refund_authorization
     s = sequence('request')
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
@@ -714,6 +713,14 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
     assert_success response
+  end
+
+  def test_unsuccessful_refund_does_not_refund_fee
+    s = sequence('request')
+    @gateway.expects(:ssl_request).returns(generic_error_response).in_sequence(s)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
+    assert_failure response
   end
 
   def test_successful_verify

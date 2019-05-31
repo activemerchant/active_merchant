@@ -70,7 +70,30 @@ class RemoteAdyenTest < Test::Unit::TestCase
       shopper_reference: 'John Smith',
       billing_address: address(),
       order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'}
+      stored_credential: {reason_type: 'unscheduled'},
+    }
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'browser',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      }
     }
   end
 
@@ -99,7 +122,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_idempotency_key
-    options = @options.merge(idempotency_key: 'test123')
+    options = @options.merge(idempotency_key: SecureRandom.hex)
     response = @gateway.authorize(@amount, @credit_card, options)
     assert_success response
     assert_equal 'Authorised', response.message
@@ -128,6 +151,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     refute response.params['issuerUrl'].blank?
     refute response.params['md'].blank?
     refute response.params['paRequest'].blank?
+  end
+
+  def test_successful_authorize_with_3ds2_browser_client_data
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options)
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
   end
 
   # with rule set in merchant account to skip 3DS for cards of this brand
@@ -203,7 +236,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_idempotency_key
-    options = @options.merge(idempotency_key: 'testkey45678')
+    options = @options.merge(idempotency_key: SecureRandom.hex)
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
@@ -332,20 +365,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Original pspReference required for this operation', response.message
   end
 
-  def test_successful_adjust
-    authorize = @gateway.authorize(@amount, @credit_card, @options)
+  def test_successful_asynchronous_adjust
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
     assert_success authorize
 
-    assert adjust = @gateway.adjust(200, authorize.authorization)
+    assert adjust = @gateway.adjust(200, authorize.authorization, @options)
     assert_success adjust
     assert_equal '[adjustAuthorisation-received]', adjust.message
   end
 
-  def test_successful_adjust_and_capture
-    authorize = @gateway.authorize(@amount, @credit_card, @options)
+  def test_successful_asynchronous_adjust_and_capture
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
     assert_success authorize
 
-    assert adjust = @gateway.adjust(200, authorize.authorization)
+    assert adjust = @gateway.adjust(200, authorize.authorization, @options)
     assert_success adjust
     assert_equal '[adjustAuthorisation-received]', adjust.message
 
@@ -353,13 +386,50 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_failed_adjust
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+  def test_failed_asynchronous_adjust
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
 
-    assert response = @gateway.adjust(200, '')
+    assert response = @gateway.adjust(200, '', @options)
     assert_failure response
     assert_equal 'Original pspReference required for this operation', response.message
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_successful_synchronous_adjust_using_adjust_data
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'])
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_success adjust
+    assert_equal 'Authorised', adjust.message
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_successful_synchronous_adjust_and_capture
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'])
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_success adjust
+    assert_equal 'Authorised', adjust.message
+
+    assert capture = @gateway.capture(200, authorize.authorization)
+    assert_success capture
+  end
+
+  # Requires Adyen to set your test account to Synchronous Adjust mode.
+  def test_failed_synchronous_adjust_using_adjust_data
+    authorize = @gateway.authorize(@amount, @credit_card, @options.merge(authorisation_type: 'PreAuth'))
+    assert_success authorize
+
+    options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'],
+      requested_test_acquirer_response_code: '2')
+    assert adjust = @gateway.adjust(200, authorize.authorization, options)
+    assert_failure adjust
+    assert_equal 'Refused', adjust.message
   end
 
   def test_successful_store
@@ -425,7 +495,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_verify_with_idempotency_key
-    options = @options.merge(idempotency_key: 'test123')
+    options = @options.merge(idempotency_key: SecureRandom.hex)
     response = @gateway.authorize(0, @credit_card, options)
     assert_success response
     assert_equal 'Authorised', response.message

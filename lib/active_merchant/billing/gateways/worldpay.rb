@@ -21,7 +21,8 @@ module ActiveMerchant #:nodoc:
         'jcb'              => 'JCB-SSL',
         'maestro'          => 'MAESTRO-SSL',
         'diners_club'      => 'DINERS-SSL',
-        'elo'              => 'ELO-SSL'
+        'elo'              => 'ELO-SSL',
+        'unknown'          => 'CARD-SSL'
       }
 
       AVS_CODE_MAP = {
@@ -252,7 +253,7 @@ module ActiveMerchant #:nodoc:
           end
         else
           xml.tag! 'paymentDetails', credit_fund_transfer_attribute(options) do
-            xml.tag! CARD_CODES[card_brand(payment_method)] do
+            xml.tag! card_code_for(payment_method) do
               xml.tag! 'cardNumber', payment_method.number
               xml.tag! 'expiryDate' do
                 xml.tag! 'date', 'month' => format(payment_method.month, :two_digits), 'year' => format(payment_method.year, :four_digits)
@@ -501,6 +502,10 @@ module ActiveMerchant #:nodoc:
         return 0 if non_fractional_currency?(currency)
         return 3 if three_decimal_currency?(currency)
         return 2
+      end
+
+      def card_code_for(payment_method)
+        CARD_CODES[card_brand(payment_method)] || CARD_CODES['unknown']
       end
     end
   end

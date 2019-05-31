@@ -80,6 +80,7 @@ module ActiveMerchant #:nodoc:
         post = init_post(options)
         add_invoice_for_modification(post, money, options)
         add_reference(post, authorization, options)
+        add_extra_data(post, nil, options)
         commit('adjustAuthorisation', post, options)
       end
 
@@ -174,6 +175,9 @@ module ActiveMerchant #:nodoc:
         post[:additionalData][:overwriteBrand] = normalize(options[:overwrite_brand]) if options[:overwrite_brand]
         post[:additionalData][:customRoutingFlag] = options[:custom_routing_flag] if options[:custom_routing_flag]
         post[:additionalData]['paymentdatasource.type'] = NETWORK_TOKENIZATION_CARD_SOURCE[payment.source.to_s] if payment.is_a?(NetworkTokenizationCreditCard)
+        post[:additionalData][:authorisationType] = options[:authorisation_type] if options[:authorisation_type]
+        post[:additionalData][:adjustAuthorisationData] = options[:adjust_authorisation_data] if options[:adjust_authorisation_data]
+        post[:additionalData][:RequestedTestAcquirerResponseCode] = options[:requested_test_acquirer_response_code] if options[:requested_test_acquirer_response_code] && test?
         post[:deviceFingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
         add_risk_data(post, options)
       end
@@ -308,9 +312,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-        return unless options[:execute_threed] || options[:threed_dynamic]
-        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
-        post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+        if three_ds_2_options = options[:three_ds_2]
+          if browser_info = three_ds_2_options[:browser_info]
+            post[:browserInfo] = {
+              acceptHeader: browser_info[:accept_header],
+              colorDepth: browser_info[:depth],
+              javaEnabled: browser_info[:java],
+              language: browser_info[:language],
+              screenHeight: browser_info[:height],
+              screenWidth: browser_info[:width],
+              timeZoneOffset: browser_info[:timezone],
+              userAgent: browser_info[:user_agent]
+            }
+
+            if device_channel = three_ds_2_options[:channel]
+              post[:threeDS2RequestData] = {
+                deviceChannel: device_channel,
+                notificationURL: three_ds_2_options[:notification_url] || 'https://example.com/notification'
+              }
+            end
+          end
+        else
+          return unless options[:execute_threed] || options[:threed_dynamic]
+          post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
+          post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
+        end
       end
 
       def parse(body)
@@ -374,8 +400,10 @@ module ActiveMerchant #:nodoc:
         case action.to_s
         when 'authorise', 'authorise3d'
           ['Authorised', 'Received', 'RedirectShopper'].include?(response['resultCode'])
-        when 'capture', 'refund', 'cancel', 'adjustAuthorisation'
+        when 'capture', 'refund', 'cancel'
           response['response'] == "[#{action}-received]"
+        when 'adjustAuthorisation'
+          response['response'] == 'Authorised' || response['response'] == '[adjustAuthorisation-received]'
         else
           false
         end
