@@ -3,10 +3,17 @@ require 'test_helper'
 class RemoteCardPointeTest < Test::Unit::TestCase
   def setup
     @gateway = CardPointeGateway.new(fixtures(:card_pointe))
+    @merchid = fixtures(:card_pointe)[:merchid]
 
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
+    @credit_card = credit_card('6011361000006668',
+      :month => '12',
+      :year  => '2020'
+    )
+    @declined_card = credit_card('6011361000006668',
+      :month => '12',
+      :year  => '2018'
+    )
     @options = {
       billing_address: address,
       description: 'Store Purchase'
@@ -16,7 +23,8 @@ class RemoteCardPointeTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'Approval', response.message
+    assert_equal 'A', response.params['respstat']
   end
 
   def test_successful_purchase_with_more_options
@@ -28,13 +36,14 @@ class RemoteCardPointeTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'Approval', response.message
+    assert_equal 'A', response.params['respstat']
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'Wrong expiration', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -43,13 +52,19 @@ class RemoteCardPointeTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', capture.message
+    assert_equal 'Approval', capture.message
   end
+
+  # def test_successful_authorize
+  #   response = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success response
+  #   assert_equal 'Approval', response.message
+  # end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED AUTHORIZE MESSAGE', response.message
+    assert_equal 'Wrong expiration', response.message
   end
 
   def test_partial_capture
@@ -63,7 +78,7 @@ class RemoteCardPointeTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED CAPTURE MESSAGE', response.message
+    assert_equal 'Invalid field', response.message
   end
 
   def test_successful_refund
@@ -72,7 +87,7 @@ class RemoteCardPointeTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
-    assert_equal 'REPLACE WITH SUCCESSFUL REFUND MESSAGE', refund.message
+    assert_equal 'Approval', refund.message
   end
 
   def test_partial_refund
@@ -86,7 +101,7 @@ class RemoteCardPointeTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED REFUND MESSAGE', response.message
+    assert_equal 'Txn not found', response.message
   end
 
   def test_successful_void
@@ -95,33 +110,33 @@ class RemoteCardPointeTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
-    assert_equal 'REPLACE WITH SUCCESSFUL VOID MESSAGE', void.message
+    assert_equal 'Approval', void.message
   end
 
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED VOID MESSAGE', response.message
+    assert_equal 'Invalid field', response.message
   end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
+    assert_match %r{Approval}, response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+    assert_match %r{Wrong expiration}, response.message
   end
 
   def test_invalid_login
-    gateway = CardPointeGateway.new(login: '', password: '')
+    gateway = CardPointeGateway.new(username: '', password: '', merchid: '')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED LOGIN MESSAGE}, response.message
+    assert_match %r{Unauthorized}, response.message
   end
 
   def test_dump_transcript
@@ -139,9 +154,13 @@ class RemoteCardPointeTest < Test::Unit::TestCase
     end
     transcript = @gateway.scrub(transcript)
 
+    # assert_scrubbed(@credit_card.number, transcript)
+    # assert_scrubbed(@credit_card.verification_value, transcript)
+    # assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed('dGVzdGluZzp0ZXN0aW5nMTIz', transcript)
     assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@merchid, transcript)
+    assert_scrubbed("#{@credit_card.month}/#{@credit_card.year}", transcript)
   end
 
 end
