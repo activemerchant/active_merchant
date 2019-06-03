@@ -133,6 +133,11 @@ card_connect:
   username: testing
   password: testing123
 
+# Working credentials, no need to replace
+card_pointe:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
