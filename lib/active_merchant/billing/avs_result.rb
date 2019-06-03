@@ -3,11 +3,10 @@
 module ActiveMerchant
   module Billing
     # Implements the Address Verification System
-    # https://www.wellsfargo.com/downloads/pdf/biz/merchant/visa_avs.pdf
+    # https://www.cybersource.com/developers/other_resources/quick_references/avs_results/.
     # http://en.wikipedia.org/wiki/Address_Verification_System
-    # http://apps.cybersource.com/library/documentation/dev_guides/CC_Svcs_IG/html/app_avs_cvn_codes.htm#app_AVS_CVN_codes_7891_48375
-    # http://imgserver.skipjack.com/imgServer/5293710/AVS%20and%20CVV2.pdf
     # http://www.emsecommerce.net/avs_cvv2_response_codes.htm
+    # https://www.cardfellow.com/blog/address-verification-service-avs/
     class AVSResult
       MESSAGES = {
         'A' => 'Street address matches, but 5-digit and 9-digit postal code do not match.',
@@ -23,7 +22,7 @@ module ActiveMerchant
         'K' => 'Card member\'s name matches but billing address and billing postal code do not match.',
         'L' => 'Card member\'s name and billing postal code match, but billing address does not match.',
         'M' => 'Street address and postal code match.',
-        'N' => 'Street address and postal code do not match.',
+        'N' => 'Street address and postal code do not match. For American Express: Card member\'s name, street address and postal code do not match.',
         'O' => 'Card member\'s name and billing address match, but billing postal code does not match.',
         'P' => 'Postal code matches, but street address not verified.',
         'Q' => 'Card member\'s name, billing address, and postal code match. Shipping information verified but chargeback protection not guaranteed.',

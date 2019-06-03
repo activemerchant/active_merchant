@@ -140,10 +140,14 @@ module ActiveMerchant #:nodoc:
         '16' => 'N',  # Postal code doesn't match, address unknown
         '17' => 'U',  # Postal code doesn't match, address not checked
         '18' => 'I',  # Neither postal code nor address were checked
+        '19' => 'L',  # Name and postal code matches.
         '20' => 'V',  # Name, address and postal code matches.
+        '21' => 'O',  # Name and address matches.
+        '22' => 'K',  # Name matches.
         '23' => 'F',  # Postal code matches, name doesn't match.
         '24' => 'H',  # Both postal code and address matches, name doesn't match.
-        '25' => 'T'  # Address matches, name doesn't match.
+        '25' => 'T',  # Address matches, name doesn't match.
+        '26' => 'N'   # Neither postal code, address nor name matches.
       }
 
       CVC_MAPPING = {
