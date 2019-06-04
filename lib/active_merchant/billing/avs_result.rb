@@ -9,7 +9,7 @@ module ActiveMerchant
     # https://www.cardfellow.com/blog/address-verification-service-avs/
     class AVSResult
       MESSAGES = {
-        'A' => 'Street address matches, but 5-digit and 9-digit postal code do not match.',
+        'A' => 'Street address matches, but postal code does not match.',
         'B' => 'Street address matches, but postal code not verified.',
         'C' => 'Street address and postal code do not match.',
         'D' => 'Street address and postal code match.',

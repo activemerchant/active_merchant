@@ -6,6 +6,7 @@
 * TransFirst Transaction Express: Fix blank address2 values [britth] #3231
 * WorldPay: Add support for store method [bayprogrammer] #3232
 * Adyen: Support for additional AVS code mapping [jknipp] #3236
+* Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
