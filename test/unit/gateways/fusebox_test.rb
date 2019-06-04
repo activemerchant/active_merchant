@@ -36,7 +36,7 @@ class FuseboxTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:build_request).with(:mail_order_indicator => '1', :transaction_type => '02', :tax1_indicator => '0', :tax1_amount => '0.00', :transaction_qualifier => '010', :transaction_amount => '1.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => '0917', :cvc => '123')
+    @gateway.expects(:build_request).with(:mail_order_indicator => '1', :transaction_type => '02', :tax1_indicator => '0', :tax1_amount => '0.00', :transaction_qualifier => '010', :transaction_amount => '1.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => @expiry, :cvc => '123')
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -49,7 +49,7 @@ class FuseboxTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_request
-    @gateway.expects(:build_request).with(:mail_order_indicator => '1', :transaction_type => '02', :tax1_indicator => '0', :tax1_amount => '0.00', :transaction_qualifier => '010', :transaction_amount => '1.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => '0917', :cvc => '123')
+    @gateway.expects(:build_request).with(:mail_order_indicator => '1', :transaction_type => '02', :tax1_indicator => '0', :tax1_amount => '0.00', :transaction_qualifier => '010', :transaction_amount => '1.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => @expiry, :cvc => '123')
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -61,7 +61,7 @@ class FuseboxTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:build_request).with(:token_request => 'ID:', :transaction_qualifier => '010', :transaction_amount => '0.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => '0917', :cvc => '123', :transaction_type => '01')
+    @gateway.expects(:build_request).with(:token_request => 'ID:', :transaction_qualifier => '010', :transaction_amount => '0.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => @expiry, :cvc => '123', :transaction_type => '01')
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
     assert response = @gateway.store(@credit_card, @options)
@@ -74,7 +74,7 @@ class FuseboxTest < Test::Unit::TestCase
   end
 
   def test_successful_store_and_auth_and_reverse
-    @gateway.expects(:build_request).with(:token_request => 'ID:', :transaction_qualifier => '010', :transaction_amount => '1.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => '0917', :cvc => '123', :transaction_type => '01')
+    @gateway.expects(:build_request).with(:token_request => 'ID:', :transaction_qualifier => '010', :transaction_amount => '1.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => @expiry, :cvc => '123', :transaction_type => '01')
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
     assert response = @gateway.store(@credit_card, @options.merge(:auth_amount => 100))
@@ -85,7 +85,7 @@ class FuseboxTest < Test::Unit::TestCase
     assert_match /^0000, COMPLETE, DEMO90/, response.message
     assert response.test?
 
-    @gateway.expects(:build_request).with(:transaction_qualifier => '010', :transaction_amount => '1.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => '0917', :cvc => '123', :transaction_type => '61')
+    @gateway.expects(:build_request).with(:transaction_qualifier => '010', :transaction_amount => '1.00', :unique_reference => 8888888, :billing_zip_code => '', :billing_address => '', :cashier_id => '0', :customer_code => 8888888, :account_number => '4242424242424242', :expiration => @expiry, :cvc => '123', :transaction_type => '61')
     @gateway.expects(:ssl_post).returns(successful_auth_reverse_response)
     assert response = @gateway.auth_reversal(100, @credit_card, @options)
     assert_match /^0000, COMPLETE, DEMO37/, response.message
@@ -382,7 +382,7 @@ class FuseboxTest < Test::Unit::TestCase
     <API_Field><Field_Number>0001</Field_Number><Field_Value>61</Field_Value></API_Field>
     <API_Field><Field_Number>0002</Field_Number><Field_Value>1.00</Field_Value></API_Field>
     <API_Field><Field_Number>0003</Field_Number><Field_Value>ID:7979582790001</Field_Value></API_Field>
-    <API_Field><Field_Number>0004</Field_Number><Field_Value>0917</Field_Value></API_Field>
+    <API_Field><Field_Number>0004</Field_Number><Field_Value>#{@expiry}</Field_Value></API_Field>
     <API_Field><Field_Number>0006</Field_Number><Field_Value>DEMO37</Field_Value></API_Field>
     <API_Field><Field_Number>0007</Field_Number><Field_Value>11437951</Field_Value></API_Field>
     <API_Field><Field_Number>0009</Field_Number><Field_Value>0021</Field_Value></API_Field>
