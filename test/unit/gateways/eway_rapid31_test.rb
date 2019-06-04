@@ -10,6 +10,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                )
 
     @credit_card = credit_card('4444333322221111')
+    @credit_card_year = @credit_card.year.to_s[2..4]
     @amount = 100
 
     @options = {
@@ -189,7 +190,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Number":"444433XXXXXX1111",
                   "Name":"Longbob Longsen",
                   "ExpiryMonth":"09",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"#{@credit_card_year}",
                   "StartMonth":null,
                   "StartYear":null,
                   "IssueNumber":null
@@ -299,7 +300,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Name":"Longbob Longsen",
                   "Number":"4444333322221111",
                   "ExpiryMonth":"09",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"#{@credit_card_year}",
                   "CVN":"123"
               },
               "FirstName":"Jim",
@@ -334,7 +335,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Name":"Longbob Longsen",
                   "Number":"4444333322221111",
                   "ExpiryMonth":"#{sprintf('%02d', options[:month])}",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"#{@credit_card_year}",
                   "CVN":"123"
               },
               "FirstName":"Jim",
@@ -366,7 +367,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Name":"Longbob Longsen",
                   "Number":"378282246310005",
                   "ExpiryMonth":"#{sprintf('%02d', options[:month])}",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"#{@credit_card_year}",
                   "CVN":"123"
               },
               "FirstName":"Jim",
@@ -398,7 +399,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Number":"444433XXXXXX1111",
                   "Name":"Longbob Longsen",
                   "ExpiryMonth":"09",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"#{@credit_card_year}",
                   "StartMonth":null,
                   "StartYear":null,
                   "IssueNumber":null
@@ -436,7 +437,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Number":"444433XXXXXX1111",
                   "Name":"Longbob Longsen",
                   "ExpiryMonth":"13",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"#{@credit_card_year}",
                   "StartMonth":null,
                   "StartYear":null,
                   "IssueNumber":null
@@ -474,7 +475,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Number":"444433XXXXXX1111",
                   "Name":"Longbob Longsen",
                   "ExpiryMonth":"13",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"#{@credit_card_year}",
                   "StartMonth":null,
                   "StartYear":null,
                   "IssueNumber":null
@@ -798,7 +799,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Number":"444433XXXXXX1111",
                   "Name":"Longbob Longsen",
                   "ExpiryMonth":"03",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"#{@credit_card_year}",
                   "StartMonth":null,
                   "StartYear":null,
                   "IssueNumber":null
@@ -851,7 +852,7 @@ class EwayRapid31Test < Test::Unit::TestCase
                   "Name":"Longbob Longsen",
                   "Number":"4444333322221111",
                   "ExpiryMonth":"09",
-                  "ExpiryYear":"18",
+                  "ExpiryYear":"20",
                   "CVN":"123"
               }
           },

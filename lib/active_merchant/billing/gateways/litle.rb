@@ -222,7 +222,7 @@ module ActiveMerchant #:nodoc:
 
           if options[:email]
             doc.email(options[:email])
-          elsif options[:billing_address][:email]
+          elsif options[:billing_address] && options[:billing_address][:email]
             doc.email(options[:billing_address][:email])
           end
 

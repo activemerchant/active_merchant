@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
         # For testing, set force_inquiry=true to throw an exception.
         sale_result = begin
           commit_result = commit(fields)
-          raise ActiveMerchant::ConnectionError.new if self.class.force_inquiry
+          raise ActiveMerchant::ConnectionError.new('' , nil) if self.class.force_inquiry
           commit_result
         rescue ActiveMerchant::ConnectionError
           # Failure scenario 1: networking exception. re-raise if inquiry returns negative.
