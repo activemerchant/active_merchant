@@ -219,6 +219,15 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_update_shopper_statement_and_industry_usage_sent
+    stub_comms do
+      @gateway.adjust(@amount, '123', @options.merge({update_shopper_statement: 'statement note', industry_usage: 'DelayedCharge'}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'statement note', JSON.parse(data)['additionalData']['updateShopperStatement']
+      assert_equal 'DelayedCharge', JSON.parse(data)['additionalData']['industryUsage']
+    end.respond_with(successful_adjust_response)
+  end
+
   def test_risk_data_sent
     stub_comms do
       @gateway.authorize(@amount, @credit_card, @options.merge({risk_data: {'operatingSystem' => 'HAL9000'}}))

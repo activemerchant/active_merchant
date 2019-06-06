@@ -66,6 +66,8 @@ module ActiveMerchant
         'business_savings' => 'CORPORATE_SAVINGS'
       }
 
+      STATE_CODE_COUNTRIES = %w(US CA)
+
       def initialize(options={})
         requires!(options, :api_username, :api_password)
         super
@@ -228,7 +230,7 @@ module ActiveMerchant
         return unless address
 
         doc.country(address[:country]) if address[:country]
-        doc.state(address[:state]) if address[:state]
+        doc.state(address[:state]) if address[:state] && STATE_CODE_COUNTRIES.include?(address[:country])
         doc.address(address[:address]) if address[:address]
         doc.city(address[:city]) if address[:city]
         doc.zip(address[:zip]) if address[:zip]

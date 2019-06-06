@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
 
       XSD_VERSION = '1.153'
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB)
 
       self.default_currency = 'USD'
@@ -43,7 +43,8 @@ module ActiveMerchant #:nodoc:
         :diners_club => '005',
         :jcb => '007',
         :dankort => '034',
-        :maestro => '042'
+        :maestro => '042',
+        :elo => '054'
       }
 
       @@response_codes = {
@@ -142,9 +143,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # Adds credit to a subscription (stand alone credit).
-      def credit(money, reference, options = {})
-        commit(build_credit_request(money, reference, options), :credit, money, options)
+      # Adds credit to a card or subscription (stand alone credit).
+      def credit(money, creditcard_or_reference, options = {})
+        setup_address_hash(options)
+        commit(build_credit_request(money, creditcard_or_reference, options), :credit, money, options)
       end
 
       # Stores a customer subscription/profile with type "on-demand".
@@ -327,11 +329,10 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_credit_request(money, reference, options)
+      def build_credit_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
 
-        add_purchase_data(xml, money, true, options)
-        add_subscription(xml, options, reference)
+        add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
         add_credit_service(xml)
 
         xml.target!
@@ -549,7 +550,7 @@ module ActiveMerchant #:nodoc:
             xml.tag!('commerceIndicator', 'vbv')
             xml.tag!('xid', payment_method.payment_cryptogram)
           end
-        when :mastercard
+        when :master
           xml.tag! 'ucaf' do
             xml.tag!('authenticationData', payment_method.payment_cryptogram)
             xml.tag!('collectionIndicator', '2')

@@ -25,6 +25,10 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       order_id: generate_unique_id,
       email: 'wow@example.com'
     }
+    @store_options = {
+      customer: generate_unique_id,
+      email: 'wow@example.com'
+    }
   end
 
   def test_successful_purchase
@@ -494,4 +498,91 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   #   assert_equal 'A transaction status of 'AUTHORISED' is required.', response.message
   # end
 
+  def test_successful_store
+    assert response = @gateway.store(@credit_card, @store_options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_match response.params['payment_token_id'], response.authorization
+    assert_match 'shopper', response.authorization
+    assert_match @store_options[:customer], response.authorization
+  end
+
+  def test_successful_authorize_using_token
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
+
+    assert response = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_authorize_using_token_and_minimum_options
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
+
+    assert response = @gateway.authorize(@amount, store.authorization, order_id: generate_unique_id)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_using_token
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
+
+    assert response = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_verify_using_token
+    assert store = @gateway.store(@credit_card, @store_options)
+    assert_success store
+
+    response = @gateway.verify(store.authorization, @options)
+    assert_success response
+    assert_match %r{SUCCESS}, response.message
+  end
+
+  def test_successful_credit_using_token
+    assert store = @cftgateway.store(@credit_card, @store_options)
+    assert_success store
+
+    credit = @cftgateway.credit(@amount, store.authorization, @options)
+    assert_success credit
+    assert_equal 'SUCCESS', credit.message
+  end
+
+  def test_failed_store
+    assert response = @gateway.store(@credit_card, @store_options.merge(customer: '_invalidId'))
+    assert_failure response
+    assert_equal '2', response.error_code
+    assert_equal 'authenticatedShopperID cannot start with an underscore', response.message
+  end
+
+  def test_failed_authorize_using_token
+    assert store = @gateway.store(@declined_card, @store_options)
+    assert_success store
+
+    assert response = @gateway.authorize(@amount, store.authorization, @options)
+    assert_failure response
+    assert_equal '5', response.error_code
+    assert_equal 'REFUSED', response.message
+  end
+
+  def test_failed_authorize_using_bogus_token
+    assert response = @gateway.authorize(@amount, '|this|is|bogus', @options)
+    assert_failure response
+    assert_equal '2', response.error_code
+    assert_match 'tokenScope', response.message
+  end
+
+  def test_failed_verify_using_token
+    assert store = @gateway.store(@declined_card, @store_options)
+    assert_success store
+
+    response = @gateway.verify(store.authorization, @options)
+    assert_failure response
+    assert_equal '5', response.error_code
+    assert_match %r{REFUSED}, response.message
+  end
 end

@@ -11,6 +11,7 @@ class WorldpayTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
+    @token = '|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8'
     @elo_credit_card = credit_card('4514 1600 0000 0008',
       :month => 10,
       :year => 2020,
@@ -21,6 +22,10 @@ class WorldpayTest < Test::Unit::TestCase
     )
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @options = {:order_id => 1}
+    @store_options = {
+      customer: '59424549c291397379f30c5c082dbed8',
+      email: 'wow@example.com'
+    }
   end
 
   def test_successful_authorize
@@ -82,6 +87,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.respond_with(failed_authorize_response)
     assert_equal '7', response.error_code
+    assert_match 'Invalid payment details', response.message
     assert_failure response
   end
 
@@ -113,6 +119,8 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.respond_with(failed_authorize_response)
     assert_failure response
+    assert_equal '7', response.error_code
+    assert_match 'Invalid payment details', response.message
     assert_equal 1, response.responses.size
   end
 
@@ -157,6 +165,23 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal "A transaction status of 'AUTHORISED' is required.", response.message
   end
 
+  def test_void_using_order_id_embedded_with_token
+    response = stub_comms do
+      authorization = "#{@options[:order_id]}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
+      @gateway.void(authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      if %r(<orderInquiry .*?>) =~ data
+        assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data)
+      end
+      if %r(<orderModification .*?>) =~ data
+        assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data)
+      end
+    end.respond_with(successful_void_inquiry_response, successful_void_response)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_equal '924e810350efc21a989e0ac7727ce43b', response.params['cancel_received_order_code']
+  end
+
   def test_successful_refund_for_captured_payment
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options)
@@ -196,10 +221,38 @@ class WorldpayTest < Test::Unit::TestCase
     assert 'cancel', response.responses.last.params['action']
   end
 
+  def test_refund_using_order_id_embedded_with_token
+    response = stub_comms do
+      authorization = "#{@options[:order_id]}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
+      @gateway.refund(@amount, authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      if %r(<orderInquiry .*?>) =~ data
+        assert_tag_with_attributes('orderInquiry', {'orderCode' => @options[:order_id].to_s}, data)
+      end
+      if %r(<orderModification .*?>) =~ data
+        assert_tag_with_attributes('orderModification', {'orderCode' => @options[:order_id].to_s}, data)
+      end
+    end.respond_with(successful_refund_inquiry_response('CAPTURED'), successful_refund_response)
+    assert_success response
+  end
+
   def test_capture
     response = stub_comms do
       response = @gateway.authorize(@amount, @credit_card, @options)
       @gateway.capture(@amount, response.authorization, @options)
+    end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_capture_using_order_id_embedded_with_token
+    response = stub_comms do
+      response = @gateway.authorize(@amount, @credit_card, @options)
+      authorization = "#{response.authorization}|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8"
+      @gateway.capture(@amount, authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      if %r(<orderModification .*?>) =~ data
+        assert_tag_with_attributes('orderModification', {'orderCode' => response.authorization}, data)
+      end
     end.respond_with(successful_authorize_response, successful_capture_response)
     assert_success response
   end
@@ -503,13 +556,6 @@ class WorldpayTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def assert_tag_with_attributes(tag, attributes, string)
-    assert(m = %r(<#{tag}([^>]+)/>).match(string))
-    attributes.each do |attribute, value|
-      assert_match %r(#{attribute}="#{value}"), m[1]
-    end
-  end
-
   def test_successful_verify
     @gateway.expects(:ssl_post).times(2).returns(successful_authorize_response, successful_void_response)
 
@@ -602,7 +648,192 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal '5', response.error_code
   end
 
+  def test_successful_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @store_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<paymentTokenCreate>), data
+      assert_match %r(<createToken/?>), data
+      assert_match %r(<authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>), data
+      assert_match %r(4242424242424242), data
+      assert_no_match %r(<order>), data
+      assert_no_match %r(<paymentDetails>), data
+      assert_no_match %r(<VISA-SSL>), data
+    end.respond_with(successful_store_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_equal @token, response.authorization
+  end
+
+  def test_successful_authorize_using_token
+    response = stub_comms do
+      @gateway.authorize(@amount, @token, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
+      assert_match %r(<authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>), data
+      assert_tag_with_attributes 'TOKEN-SSL', {'tokenScope' => 'shopper'}, data
+      assert_match %r(<paymentTokenID>99411111780163871111</paymentTokenID>), data
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_authorize_with_token_includes_shopper_using_minimal_options
+    stub_comms do
+      @gateway.authorize(@amount, @token, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_successful_purchase_using_token
+    response = stub_comms do
+      @gateway.purchase(@amount, @token, @options)
+    end.check_request do |endpoint, data, headers|
+      if %r(<order .*?>) =~ data
+        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_verify_using_token
+    response = stub_comms do
+      @gateway.verify(@token, @options)
+    end.check_request do |endpoint, data, headers|
+      if %r(<order .*?>) =~ data
+        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
+      end
+    end.respond_with(successful_authorize_response, successful_void_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_credit_using_token
+    response = stub_comms do
+      @gateway.credit(@amount, @token, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
+      assert_match(/<paymentDetails action="REFUND">/, data)
+      assert_match %r(<authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>), data
+      assert_tag_with_attributes 'TOKEN-SSL', {'tokenScope' => 'shopper'}, data
+      assert_match '<paymentTokenID>99411111780163871111</paymentTokenID>', data
+    end.respond_with(successful_visa_credit_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
+  def test_failed_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @store_options.merge(customer: '_invalidId'))
+    end.respond_with(failed_store_response)
+
+    assert_failure response
+    assert_equal '2', response.error_code
+    assert_equal 'authenticatedShopperID cannot start with an underscore', response.message
+  end
+
+  def test_store_should_raise_when_customer_not_present
+    assert_raises(ArgumentError) do
+      @gateway.store(@credit_card)
+    end
+  end
+
+  def test_failed_authorize_using_token
+    response = stub_comms do
+      @gateway.authorize(@amount, @token, @options)
+    end.respond_with(failed_authorize_response_2)
+
+    assert_failure response
+    assert_equal '5', response.error_code
+    assert_match %r{XML failed validation: Invalid payment details : Card number not recognised:}, response.message
+  end
+
+  def test_failed_verify_using_token
+    response = stub_comms do
+      @gateway.verify(@token, @options)
+    end.respond_with(failed_authorize_response_2)
+
+    assert_failure response
+    assert_equal '5', response.error_code
+    assert_match %r{XML failed validation: Invalid payment details : Card number not recognised:}, response.message
+  end
+
+  def test_authorize_order_id_not_overridden_by_order_id_of_token
+    @token = 'wrong_order_id|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8'
+    response = stub_comms do
+      @gateway.authorize(@amount, @token, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
+      assert_match %r(<authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>), data
+      assert_tag_with_attributes 'TOKEN-SSL', {'tokenScope' => 'shopper'}, data
+      assert_match %r(<paymentTokenID>99411111780163871111</paymentTokenID>), data
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_purchase_order_id_not_overridden_by_order_id_of_token
+    @token = 'wrong_order_id|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8'
+    response = stub_comms do
+      @gateway.purchase(@amount, @token, @options)
+    end.check_request do |endpoint, data, headers|
+      if %r(<order .*?>) =~ data
+        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
+      end
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_verify_order_id_not_overridden_by_order_id_of_token
+    @token = 'wrong_order_id|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8'
+    response = stub_comms do
+      @gateway.verify(@token, @options)
+    end.check_request do |endpoint, data, headers|
+      if %r(<order .*?>) =~ data
+        assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
+      end
+    end.respond_with(successful_authorize_response, successful_void_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_credit_order_id_not_overridden_by_order_if_of_token
+    @token = 'wrong_order_id|99411111780163871111|shopper|59424549c291397379f30c5c082dbed8'
+    response = stub_comms do
+      @gateway.credit(@amount, @token, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_tag_with_attributes('order', {'orderCode' => @options[:order_id].to_s}, data)
+      assert_match(/<paymentDetails action="REFUND">/, data)
+      assert_match %r(<authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>), data
+      assert_tag_with_attributes 'TOKEN-SSL', {'tokenScope' => 'shopper'}, data
+      assert_match '<paymentTokenID>99411111780163871111</paymentTokenID>', data
+    end.respond_with(successful_visa_credit_response)
+
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
+  end
+
   private
+
+  def assert_tag_with_attributes(tag, attributes, string)
+    assert(m = %r(<#{tag}([^>]+)/?>).match(string))
+    attributes.each do |attribute, value|
+      assert_match %r(#{attribute}="#{value}"), m[1]
+    end
+  end
 
   def three_d_secure_option(version)
     {
@@ -655,6 +886,21 @@ class WorldpayTest < Test::Unit::TestCase
           </orderStatus>
         </reply>
       </paymentService>
+    RESPONSE
+  end
+
+  # main variation is that CDATA is nested inside <error> w/o newlines; also a
+  # more recent captured response from remote tests where the reply is
+  # contained the error directly (no <orderStatus>)
+  def failed_authorize_response_2
+    <<-RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+    <paymentService version="1.4" merchantCode="SPREEDLY">
+      <reply>
+        <error code="5"><![CDATA[XML failed validation: Invalid payment details : Card number not recognised: 606070******4400]]></error>
+      </reply>
+    </paymentService>
     RESPONSE
   end
 
@@ -1106,6 +1352,53 @@ class WorldpayTest < Test::Unit::TestCase
         <error code="5">
           <![CDATA[XML failed validation: Invalid payment details : Card number not recognised: 606070******4400]]>
         </error>
+      </reply>
+    </paymentService>
+    RESPONSE
+  end
+
+  def successful_store_response
+    <<-RESPONSE
+    <?xml version="1.0"?>
+    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+    <paymentService version="1.4" merchantCode="SPREEDLY">
+      <reply>
+        <token>
+          <authenticatedShopperID>59424549c291397379f30c5c082dbed8</authenticatedShopperID>
+          <tokenDetails tokenEvent="NEW">
+            <paymentTokenID>99411111780163871111</paymentTokenID>
+            <paymentTokenExpiry>
+              <date dayOfMonth="30" month="05" year="2019" hour="22" minute="54" second="47"/>
+            </paymentTokenExpiry>
+            <tokenReason>Created token without payment on 2019-05-23</tokenReason>
+          </tokenDetails>
+          <paymentInstrument>
+            <cardDetails>
+              <expiryDate>
+                <date month="09" year="2020"/>
+              </expiryDate>
+              <cardHolderName><![CDATA[Longbob Longsen]]></cardHolderName>
+              <derived>
+                <cardBrand>VISA</cardBrand>
+                <cardSubBrand>VISA_CREDIT</cardSubBrand>
+                <issuerCountryCode>N/A</issuerCountryCode>
+                <obfuscatedPAN>4111********1111</obfuscatedPAN>
+              </derived>
+            </cardDetails>
+          </paymentInstrument>
+        </token>
+      </reply>
+    </paymentService>
+    RESPONSE
+  end
+
+  def failed_store_response
+    <<-RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" "http://dtd.worldpay.com/paymentService_v1.dtd">
+    <paymentService version="1.4" merchantCode="SPREEDLY">
+      <reply>
+        <error code="2"><![CDATA[authenticatedShopperID cannot start with an underscore]]></error>
       </reply>
     </paymentService>
     RESPONSE
