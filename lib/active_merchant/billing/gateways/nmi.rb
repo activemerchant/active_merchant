@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
+        add_level3_fields(post, options)
 
         commit('sale', post)
       end
@@ -45,6 +46,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
+        add_level3_fields(post, options)
 
         commit('auth', post)
       end
@@ -81,6 +83,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_vendor_data(post, options)
+        add_level3_fields(post, options)
 
         commit('credit', post)
       end
@@ -91,6 +94,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
+        add_level3_fields(post, options)
 
         commit('validate', post)
       end
@@ -130,6 +134,10 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_level3_fields(post, options)
+        add_fields_to_post_if_present(post, options, [:tax, :shipping, :ponumber])
+      end
 
       def add_invoice(post, money, options)
         post[:amount] = amount(money)

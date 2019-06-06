@@ -9,7 +9,13 @@ class NmiTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
-    @options = {}
+
+    @merchant_defined_fields = { merchant_defined_field_8: 'value8' }
+
+    @transaction_options = {
+      recurring: true, order_id: '#1001', description: 'AM test', currency: 'GBP', dup_seconds: 15,
+      customer: '123', tax: 5.25, shipping: 10.51, ponumber: 1002
+    }
   end
 
   def test_successful_purchase
@@ -33,18 +39,13 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_purchase_with_options
+    options = @transaction_options.merge(@merchant_defined_fields)
+
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card,
-        recurring: true, order_id: '#1001', description: 'AM test',
-        currency: 'GBP', dup_seconds: 15, customer: '123',
-        merchant_defined_field_8: 'value8')
+      @gateway.purchase(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
-      assert_match(/billing_method=recurring/, data)
-      assert_match(/orderid=#{CGI.escape("#1001")}/, data)
-      assert_match(/orderdescription=AM\+test/, data)
-      assert_match(/currency=GBP/, data)
-      assert_match(/dup_seconds=15/, data)
-      assert_match(/customer_id=123/, data)
+      test_transaction_options(data)
+
       assert_match(/merchant_defined_field_8=value8/, data)
     end.respond_with(successful_purchase_response)
 
@@ -93,6 +94,20 @@ class NmiTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_equal 'FAILED', response.message
+  end
+
+  def test_authorize_with_options
+    options = @transaction_options.merge(@merchant_defined_fields)
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      test_transaction_options(data)
+
+      assert_match(/merchant_defined_field_8=value8/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_successful_authorize_and_capture
@@ -219,6 +234,16 @@ class NmiTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_credit_with_options
+    response = stub_comms do
+      @gateway.credit(@amount, @credit_card, @transaction_options)
+    end.check_request do |endpoint, data, headers|
+      test_transaction_options(data)
+    end.respond_with(successful_credit_response)
+
+    assert_success response
+  end
+
   def test_failed_credit
     response = stub_comms do
       @gateway.credit(@amount, @credit_card)
@@ -230,20 +255,11 @@ class NmiTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
-      @gateway.verify(@credit_card)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/username=#{@gateway.options[:login]}/, data)
-      assert_match(/password=#{@gateway.options[:password]}/, data)
-      assert_match(/type=validate/, data)
-      assert_match(/payment=creditcard/, data)
-      assert_match(/ccnumber=#{@credit_card.number}/, data)
-      assert_match(/cvv=#{@credit_card.verification_value}/, data)
-      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/, data)
-    end.respond_with(successful_validate_response)
+    test_verify
+  end
 
-    assert_success response
-    assert_equal 'Succeeded', response.message
+  def test_verify_with_options
+    test_verify(@transaction_options)
   end
 
   def test_failed_verify
@@ -367,6 +383,43 @@ class NmiTest < Test::Unit::TestCase
   end
 
   private
+
+  def test_verify(options = {})
+    response = stub_comms do
+      @gateway.verify(@credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/username=#{@gateway.options[:login]}/, data)
+      assert_match(/password=#{@gateway.options[:password]}/, data)
+      assert_match(/type=validate/, data)
+      assert_match(/payment=creditcard/, data)
+      assert_match(/ccnumber=#{@credit_card.number}/, data)
+      assert_match(/cvv=#{@credit_card.verification_value}/, data)
+      assert_match(/ccexp=#{sprintf("%.2i", @credit_card.month)}#{@credit_card.year.to_s[-2..-1]}/,
+        data)
+
+      test_level3_options(data) if options.any?
+    end.respond_with(successful_validate_response)
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_level3_options(data)
+    assert_match(/tax=5.25/, data)
+    assert_match(/shipping=10.51/, data)
+    assert_match(/ponumber=1002/, data)
+  end
+
+  def test_transaction_options(data)
+    assert_match(/billing_method=recurring/, data)
+    assert_match(/orderid=#{CGI.escape("#1001")}/, data)
+    assert_match(/orderdescription=AM\+test/, data)
+    assert_match(/currency=GBP/, data)
+    assert_match(/dup_seconds=15/, data)
+    assert_match(/customer_id=123/, data)
+
+    test_level3_options(data)
+  end
 
   def successful_purchase_response
     'response=1&responsetext=SUCCESS&authcode=123456&transactionid=2762757839&avsresponse=N&cvvresponse=N&orderid=b6c1c57f709cfaa65a5cf5b8532ad181&type=&response_code=100'
