@@ -417,11 +417,11 @@ module ActiveMerchant #:nodoc: ALL
 
       def json_error(raw_response)
         msg = 'Invalid response received from the Cloud9 API.'
-        msg + "  (The raw response returned by the API was #{raw_response.inspect})"
+        msg + "  (The raw response returned by the API was: #{raw_response.inspect})"
         {
           'Status' => STATUS_FAIL,
-          'ResponseCode' => STANDARD_ERROR_CODE[:processing_error],
-          'ResponseText' => msg
+          'ErrorCode' => '096', # System malfunction
+          'ErrorText' => msg
         }
       end
 
