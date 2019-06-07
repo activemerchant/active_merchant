@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test.ctpe.io/payment/ctpe'
       self.live_url = 'https://ctpe.io/payment/ctpe'
 
-      self.supported_countries = ['LI','US']
+      self.supported_countries = ['LI', 'US']
       self.default_currency = 'EUR'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1].to_s
           post[:company] = address[:company].to_s
-          post[:phone]   = address[:phone].to_s.gsub(/[^0-9]/, '') || "0000000"
+          post[:phone]   = address[:phone].to_s.gsub(/[^0-9]/, '') || '0000000'
           post[:zip]     = address[:zip].to_s
           post[:city]    = address[:city].to_s
           post[:country] = address[:country].to_s
@@ -121,11 +121,11 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results  = {}
         xml = Nokogiri::XML(body)
-        resp = xml.xpath("//Response/Transaction/Identification")
+        resp = xml.xpath('//Response/Transaction/Identification')
         resp.children.each do |element|
           results[element.name.downcase.to_sym] = element.text
         end
-        resp = xml.xpath("//Response/Transaction/Processing")
+        resp = xml.xpath('//Response/Transaction/Processing')
         resp.children.each do |element|
           results[element.name.downcase.to_sym] = element.text
         end

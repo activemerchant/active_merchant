@@ -19,7 +19,7 @@ module CommStub
       singleton_class = (class << @gateway; self; end)
       singleton_class.send(:undef_method, @method_to_stub)
       singleton_class.send(:define_method, @method_to_stub) do |*args|
-        check.call(*args) if check
+        check&.call(*args)
         (responses.size == 1 ? responses.last : responses.shift)
       end
       @action.call

@@ -39,10 +39,10 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
     @options[:fraud_http_referer] = 'http://www.excample.com'
     @options[:fraud_remote_addr] = '127.0.0.1'
     @options[:fraud_http_accept] = 'foo'
-    @options[:fraud_http_accept_language] = "DK"
-    @options[:fraud_http_accept_encoding] = "UFT8"
-    @options[:fraud_http_accept_charset] = "Latin"
-    @options[:fraud_http_user_agent] = "Safari"
+    @options[:fraud_http_accept_language] = 'DK'
+    @options[:fraud_http_accept_encoding] = 'UFT8'
+    @options[:fraud_http_accept_charset] = 'Latin'
+    @options[:fraud_http_user_agent] = 'Safari'
 
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_equal 'OK', response.message
@@ -50,8 +50,6 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
     assert_success response
     assert !response.authorization.blank?
   end
-
-
 
   def test_successful_usd_purchase
     assert response = @gateway.purchase(@amount, @visa, @options.update(:currency => 'USD'))
@@ -191,7 +189,7 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
   end
 
   def test_successful_store_and_reference_purchase
-    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription"))
+    assert store = @gateway.store(@visa, @options.merge(:description => 'New subscription'))
     assert_success store
     assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
     assert_success purchase
@@ -199,8 +197,8 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = QuickpayGateway.new(
-        :login => '999999999',
-        :password => ''
+      :login => '999999999',
+      :password => ''
     )
     assert response = gateway.purchase(@amount, @visa, @options)
     assert_equal 'Invalid merchant id', response.message

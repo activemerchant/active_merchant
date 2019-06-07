@@ -4,8 +4,8 @@ class RemotePayHubTest < Test::Unit::TestCase
   def setup
     @gateway = PayHubGateway.new(fixtures(:pay_hub))
     @amount = 100
-    @credit_card = credit_card('5466410004374507', verification_value: "998")
-    @invalid_card = credit_card('371449635398431', verification_value: "9997")
+    @credit_card = credit_card('5466410004374507', verification_value: '998')
+    @invalid_card = credit_card('371449635398431', verification_value: '9997')
     @options = {
       :first_name => 'Garrya',
       :last_name => 'Barrya',
@@ -47,7 +47,7 @@ class RemotePayHubTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_capture
-    assert_failure @gateway.capture(@amount, "bogus")
+    assert_failure @gateway.capture(@amount, 'bogus')
   end
 
   def test_partial_capture
@@ -69,7 +69,7 @@ class RemotePayHubTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert_failure @gateway.refund(@amount, "bogus")
+    assert_failure @gateway.refund(@amount, 'bogus')
   end
 
   def test_successful_verify
@@ -77,6 +77,6 @@ class RemotePayHubTest < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    assert_failure @gateway.verify(credit_card("4111111111111111"))
+    assert_failure @gateway.verify(credit_card('4111111111111111'))
   end
 end

@@ -125,13 +125,13 @@ module ActiveMerchant #:nodoc:
 
       def add_shipping_info(xml, options)
         if options[:shipping_address]
-          xml.ship_address_   options[:shipping_address][:address1]
-          xml.ship_address2_  options[:shipping_address][:address2]
-          xml.ship_city_    options[:shipping_address][:city]
-          xml.ship_state_   options[:shipping_address][:state]
-          xml.ship_postal_  options[:shipping_address][:zip]
-          xml.ship_country_   options[:shipping_address][:country]
-          xml.ship_phone_   options[:shipping_address][:phone]
+          xml.ship_address_  options[:shipping_address][:address1]
+          xml.ship_address2_ options[:shipping_address][:address2]
+          xml.ship_city_     options[:shipping_address][:city]
+          xml.ship_state_    options[:shipping_address][:state]
+          xml.ship_postal_   options[:shipping_address][:zip]
+          xml.ship_country_  options[:shipping_address][:country]
+          xml.ship_phone_    options[:shipping_address][:phone]
         end
       end
 
@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_other_fields(xml, options)
-        xml.bill_email_   options[:email]
+        xml.bill_email_ options[:email]
         xml.bill_customerip_ options[:ip]
         xml.merchantcustomerid_ options[:customer]
         xml.descriptor_name options[:descriptor_name]
@@ -164,8 +164,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, amount=nil, options={}, &builder)
         response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
         Response.new(
-          (response[:responsecode] == "0"),
-          (response[:result] || response[:error_text] || "Unknown Response"),
+          (response[:responsecode] == '0'),
+          (response[:result] || response[:error_text] || 'Unknown Response'),
           response,
           authorization: authorization_from(response, action, amount, options),
           test: test?
@@ -184,10 +184,10 @@ module ActiveMerchant #:nodoc:
       def parse_xml(xml)
         response = {}
 
-        Nokogiri::XML(CGI.unescapeHTML(xml)).xpath("//response").children.each do |node|
+        Nokogiri::XML(CGI.unescapeHTML(xml)).xpath('//response').children.each do |node|
           if node.text?
             next
-          elsif (node.elements.size == 0)
+          elsif node.elements.size == 0
             response[node.name.downcase.to_sym] = node.text
           else
             node.elements.each do |childnode|
@@ -202,11 +202,11 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response, action,  amount, options)
         currency = options[:currency] || currency(amount)
-        [response[:tranid], response[:trackid], action, amount, currency].join("|")
+        [response[:tranid], response[:trackid], action, amount, currency].join('|')
       end
 
       def split_authorization(authorization)
-        transid, trackid, action, amount, currency = authorization.split("|")
+        transid, trackid, action, amount, currency = authorization.split('|')
         [transid, trackid, action, amount, currency]
       end
     end

@@ -1,4 +1,4 @@
-require "test_helper.rb"
+require 'test_helper.rb'
 
 class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def setup
@@ -12,19 +12,20 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @options = {
       :order_id => generate_unique_id,
       :address => address,
+      :merchant_id => 'merchant1234'
     }
 
     @cards = {
-      :visa => "4788250000028291",
-      :mc => "5454545454545454",
-      :amex => "371449635398431",
-      :ds => "6011000995500000",
-      :diners => "36438999960016",
-      :jcb => "3566002020140006"}
+      :visa => '4788250000028291',
+      :mc => '5454545454545454',
+      :amex => '371449635398431',
+      :ds => '6011000995500000',
+      :diners => '36438999960016',
+      :jcb => '3566002020140006'}
 
     @level_2_options = {
-      tax_indicator: 1,
-      tax: 10,
+      tax_indicator: '1',
+      tax: '75',
       advice_addendum_1: 'taa1 - test',
       advice_addendum_2: 'taa2 - test',
       advice_addendum_3: 'taa3 - test',
@@ -39,15 +40,16 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     }
 
     @test_suite = [
-      {:card => :visa, :AVSzip => 11111, :CVD =>	111,  :amount => 3000},
-      {:card => :visa, :AVSzip => 33333, :CVD =>	nil,  :amount => 3801},
-      {:card => :mc,	 :AVSzip => 44444, :CVD =>	nil,  :amount => 4100},
-      {:card => :mc,	 :AVSzip => 88888, :CVD =>	666,  :amount => 1102},
-      {:card => :amex, :AVSzip => 55555, :CVD =>	nil,  :amount => 105500},
-      {:card => :amex, :AVSzip => 66666, :CVD =>	2222, :amount => 7500},
-      {:card => :ds,	 :AVSzip => 77777, :CVD =>	nil,  :amount => 1000},
-      {:card => :ds, 	 :AVSzip => 88888, :CVD =>	444,  :amount => 6303},
-      {:card => :jcb,  :AVSzip => 33333, :CVD =>	nil,  :amount => 2900}]
+      {:card => :visa, :AVSzip => 11111, :CVD => 111,  :amount => 3000},
+      {:card => :visa, :AVSzip => 33333, :CVD => nil,  :amount => 3801},
+      {:card => :mc,   :AVSzip => 44444, :CVD => nil,  :amount => 4100},
+      {:card => :mc,   :AVSzip => 88888, :CVD => 666,  :amount => 1102},
+      {:card => :amex, :AVSzip => 55555, :CVD => nil,  :amount => 105500},
+      {:card => :amex, :AVSzip => 66666, :CVD => 2222, :amount => 7500},
+      {:card => :ds,   :AVSzip => 77777, :CVD => nil,  :amount => 1000},
+      {:card => :ds,   :AVSzip => 88888, :CVD => 444,  :amount => 6303},
+      {:card => :jcb,  :AVSzip => 33333, :CVD => nil,  :amount => 2900}
+    ]
   end
 
   def test_successful_purchase
@@ -79,8 +81,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_visa_network_tokenization_credit_card_with_eci
     network_card = network_tokenization_credit_card('4788250000028291',
-      payment_cryptogram: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
-      transaction_id: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
       brand: 'visa',
       eci: '5'
@@ -93,8 +95,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_master_card_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
-      payment_cryptogram: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
-      transaction_id: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
       brand: 'master'
     )
@@ -106,8 +108,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_american_express_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
-      payment_cryptogram: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
-      transaction_id: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
       brand: 'american_express'
     )
@@ -119,8 +121,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_discover_network_tokenization_credit_card
     network_card = network_tokenization_credit_card('4788250000028291',
-      payment_cryptogram: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
-      transaction_id: "BwABB4JRdgAAAAAAiFF2AAAAAAA=",
+      payment_cryptogram: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
+      transaction_id: 'BwABB4JRdgAAAAAAiFF2AAAAAAA=',
       verification_value: '111',
       brand: 'discover'
     )
@@ -128,6 +130,79 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
     assert_false response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_mit_stored_credentials
+    mit_stored_credentials = {
+      mit_msg_type: 'MUSE',
+      mit_stored_credential_ind: 'Y',
+      mit_submitted_transaction_id: 'abcdefg12345678'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(mit_stored_credentials))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_cit_stored_credentials
+    cit_options = {
+      mit_msg_type: 'CUSE',
+      mit_stored_credential_ind: 'Y'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(cit_options))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_normalized_mit_stored_credentials
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: 'abcdefg12345678'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_normalized_cit_stored_credentials
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: true,
+        initiator: 'customer',
+        reason_type: 'unscheduled'
+      }
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_overridden_normalized_stored_credentials
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        initiator: 'merchant',
+        reason_type: 'unscheduled',
+        network_transaction_id: 'abcdefg12345678'
+      },
+      mit_msg_type: 'MRSB'
+    }
+
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 
   # Amounts of x.01 will fail
@@ -150,7 +225,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture_with_level_2_data
     auth = @gateway.authorize(@amount, @credit_card, @options.merge(level_2_data: @level_2_options))
     assert_success auth
-    assert_equal "Approved", auth.message
+    assert_equal 'Approved', auth.message
 
     capture = @gateway.capture(@amount, auth.authorization, @options.merge(level_2_data: @level_2_options))
     assert_success capture
@@ -196,7 +271,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     for suite in @test_suite do
       amount = suite[:amount]
       card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
-      @options[:address].merge!(:zip => suite[:AVSzip])
+      @options[:address][:zip] = suite[:AVSzip]
       assert response = @gateway.authorize(amount, card, @options)
       assert_kind_of Response, response
 
@@ -214,7 +289,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     for suite in @test_suite do
       amount = suite[:amount]
       card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
-      options = @options; options[:address].merge!(:zip => suite[:AVSzip])
+      options = @options; options[:address][:zip] = suite[:AVSzip]
       assert response = @gateway.purchase(amount, card, options)
       assert_kind_of Response, response
 
@@ -229,7 +304,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   # ==== Section C
   def test_mark_for_capture_transactions
-    [[:visa, 3000],[:mc, 4100],[:amex, 105500],[:ds, 1000],[:jcb, 2900]].each do |suite|
+    [[:visa, 3000], [:mc, 4100], [:amex, 105500], [:ds, 1000], [:jcb, 2900]].each do |suite|
       amount = suite[1]
       card = credit_card(@cards[suite[0]])
       assert auth_response = @gateway.authorize(amount, card, @options)
@@ -245,7 +320,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
 
   # ==== Section D
   def test_refund_transactions
-    [[:visa, 1200],[:mc, 1100],[:amex, 105500],[:ds, 1000],[:jcb, 2900]].each do |suite|
+    [[:visa, 1200], [:mc, 1100], [:amex, 105500], [:ds, 1000], [:jcb, 2900]].each do |suite|
       amount = suite[1]
       card = credit_card(@cards[suite[0]])
       assert purchase_response = @gateway.purchase(amount, card, @options)
@@ -293,5 +368,20 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:merchant_id], transcript)
+  end
+
+  def test_transcript_scrubbing_profile
+    transcript = capture_transcript(@gateway) do
+      @gateway.add_customer_profile(@credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:merchant_id], transcript)
   end
 end

@@ -102,7 +102,7 @@ class PayJunctionV2Test < Test::Unit::TestCase
 
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_credit
@@ -115,7 +115,7 @@ class PayJunctionV2Test < Test::Unit::TestCase
     amount = 0
     response = @gateway.credit(amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Amount Base must be greater than 0.|", response.message
+    assert_equal 'Amount Base must be greater than 0.|', response.message
   end
 
   def test_successful_void
@@ -148,7 +148,7 @@ class PayJunctionV2Test < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_successful_verify_with_failed_void
@@ -161,7 +161,7 @@ class PayJunctionV2Test < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_verify
@@ -185,7 +185,7 @@ class PayJunctionV2Test < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert response.authorization
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
 
     response = @gateway.purchase(@amount, response.authorization, @options)
     assert_success response

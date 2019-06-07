@@ -10,7 +10,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
     @options = {
       :order_id => rand(100000).to_s,
-      :ip => "123.1.2.3"
+      :ip => '1.2.3.4'
     }
   end
 
@@ -30,7 +30,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_unsuccessful_multi_currency_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'XYZ'))
     assert_failure response
-    assert_match /Currency XYZ is not valid for this merchant/, response.message
+    assert_match(/Currency XYZ is not valid for this merchant/, response.message)
   end
 
   def test_successful_purchase_sans_cvv
@@ -93,7 +93,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   end
 
   def test_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
 
     assert response = @gateway.refund(@amount, purchase.authorization, @options)
     assert_success response
@@ -103,16 +103,40 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_invalid_refund
     @gateway.purchase(@amount, @credit_card, @options)
 
-    assert response = @gateway.refund(@amount, nil, @options)
+    assert response = @gateway.refund(@amount, '', @options)
     assert_failure response
     assert_match %r{Invalid credit card for unmatched refund}, response.message
+  end
+
+  def test_successful_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert response = @gateway.void(auth.authorization, @options)
+    assert_success response
+    assert_match %r{Voided}, response.message
+  end
+
+  def test_successful_void_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    puts purchase.inspect
+    refund = @gateway.refund(@amount, purchase.authorization, @options)
+
+    assert response = @gateway.void(refund.authorization, @options)
+    assert_success response
+    assert_match %r{Voided}, response.message
+  end
+
+  def test_failed_void
+    assert response = @gateway.void('123', @options)
+    assert_failure response
+    assert_match %r{Not Found}, response.message
   end
 
   def test_store
     assert card = @gateway.store(@credit_card)
 
     assert_success card
-    assert_false card.authorization.nil?
+    assert_not_nil card.authorization
   end
 
   def test_purchase_with_token
@@ -147,5 +171,15 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Login', response.message
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
   end
 end

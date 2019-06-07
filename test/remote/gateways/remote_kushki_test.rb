@@ -4,7 +4,7 @@ class RemoteKushkiTest < Test::Unit::TestCase
   def setup
     @gateway = KushkiGateway.new(fixtures(:kushki))
     @amount = 100
-    @credit_card = credit_card('4000100011112224', verification_value: "777")
+    @credit_card = credit_card('4000100011112224', verification_value: '777')
     @declined_card = credit_card('4000300011112220')
   end
 
@@ -17,12 +17,12 @@ class RemoteKushkiTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_options
     options = {
-      currency: "USD",
+      currency: 'USD',
       amount: {
-        subtotal_iva_0: "4.95",
-        subtotal_iva: "10",
-        iva: "1.54",
-        ice: "3.50"
+        subtotal_iva_0: '4.95',
+        subtotal_iva: '10',
+        iva: '1.54',
+        ice: '3.50'
       }
     }
 
@@ -42,13 +42,31 @@ class RemoteKushkiTest < Test::Unit::TestCase
   def test_failed_purchase
     options = {
       amount: {
-        subtotal_iva: "200"
+        subtotal_iva: '200'
       }
     }
 
     response = @gateway.purchase(@amount, @declined_card, options)
     assert_failure response
     assert_equal 'Monto de la transacción es diferente al monto de la venta inicial', response.message
+  end
+
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'Succeeded', refund.message
+  end
+
+  def test_failed_refund
+    purchase = @gateway.purchase(@amount, @credit_card)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, nil)
+    assert_failure refund
+    assert_equal 'Missing Authentication Token', refund.message
   end
 
   def test_successful_void
@@ -61,9 +79,9 @@ class RemoteKushkiTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = @gateway.void("000")
+    response = @gateway.void('000')
     assert_failure response
-    assert_equal 'Tipo de moneda no válida', response.message
+    assert_equal 'El monto de la transacción es requerido', response.message
   end
 
   def test_invalid_login

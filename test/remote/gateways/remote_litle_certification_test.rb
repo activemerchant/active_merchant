@@ -4,7 +4,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
   def setup
     Base.mode = :test
     @gateway = LitleGateway.new(fixtures(:litle))
-    @gateway.test_url = "https://payments.vantivprelive.com/vap/communicator/online"
+    @gateway.test_url = 'https://payments.vantivprelive.com/vap/communicator/online'
   end
 
   def test1
@@ -28,11 +28,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => "X", :cvv => "M")
+    auth_assertions(10100, credit_card, options, :avs => 'X', :cvv => 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => "X", :cvv => "M")
+    authorize_avs_assertions(credit_card, options, :avs => 'X', :cvv => 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => "X", :cvv => "M")
+    sale_assertions(10100, credit_card, options, :avs => 'X', :cvv => 'M')
   end
 
   def test2
@@ -53,11 +53,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => "Z", :cvv => "M")
+    auth_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => "Z", :cvv => "M")
+    authorize_avs_assertions(credit_card, options, :avs => 'Z', :cvv => 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => "Z", :cvv => "M")
+    sale_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
   end
 
   def test3
@@ -80,11 +80,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
         :country => 'US'
       }
     }
-    auth_assertions(10100, credit_card, options, :avs => "Z", :cvv => "M")
+    auth_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => "Z", :cvv => "M")
+    authorize_avs_assertions(credit_card, options, :avs => 'Z', :cvv => 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => "Z", :cvv => "M")
+    sale_assertions(10100, credit_card, options, :avs => 'Z', :cvv => 'M')
   end
 
   def test4
@@ -107,11 +107,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
       }
     }
 
-    auth_assertions(10100, credit_card, options, :avs => "A", :cvv => nil)
+    auth_assertions(10100, credit_card, options, :avs => 'A', :cvv => nil)
 
-    authorize_avs_assertions(credit_card, options, :avs => "A")
+    authorize_avs_assertions(credit_card, options, :avs => 'A')
 
-    sale_assertions(10100, credit_card, options, :avs => "A", :cvv => nil)
+    sale_assertions(10100, credit_card, options, :avs => 'A', :cvv => nil)
   end
 
   def test5
@@ -128,11 +128,11 @@ class RemoteLitleCertification < Test::Unit::TestCase
       :order_id => '5'
     }
 
-    auth_assertions(10100, credit_card, options, :avs => "U", :cvv => "M")
+    auth_assertions(10100, credit_card, options, :avs => 'U', :cvv => 'M')
 
-    authorize_avs_assertions(credit_card, options, :avs => "U", :cvv => "M")
+    authorize_avs_assertions(credit_card, options, :avs => 'U', :cvv => 'M')
 
-    sale_assertions(10100, credit_card, options, :avs => "U", :cvv => "M")
+    sale_assertions(10100, credit_card, options, :avs => 'U', :cvv => 'M')
   end
 
   def test6
@@ -157,8 +157,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '110', response.params['response']
     assert_equal 'Insufficient Funds', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "P", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 6. sale
@@ -166,17 +166,15 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '110', response.params['response']
     assert_equal 'Insufficient Funds', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "P", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
-
 
     # 6A. void
     assert response = @gateway.void(response.authorization, {:order_id => '6A'})
     assert_equal '360', response.params['response']
     assert_equal 'No transaction found with specified transaction Id', response.message
     puts "Test #{options[:order_id]}A: #{txn_id(response)}"
-
   end
 
   def test7
@@ -201,20 +199,20 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '301', response.params['response']
     assert_equal 'Invalid Account Number', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "N", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'N', response.cvv_result['code']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 7: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => "I", :cvv => "N", :message => "Invalid Account Number", :success => false)
+    authorize_avs_assertions(credit_card, options, :avs => 'I', :cvv => 'N', :message => 'Invalid Account Number', :success => false)
 
     # 7. sale
     assert response = @gateway.purchase(10100, credit_card, options)
     assert !response.success?
     assert_equal '301', response.params['response']
     assert_equal 'Invalid Account Number', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "N", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'N', response.cvv_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
   end
 
@@ -240,20 +238,20 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '123', response.params['response']
     assert_equal 'Call Discover', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "P", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 8: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => "I", :cvv => "P", :message => "Call Discover", :success => false)
+    authorize_avs_assertions(credit_card, options, :avs => 'I', :cvv => 'P', :message => 'Call Discover', :success => false)
 
     # 8: sale
     assert response = @gateway.purchase(80080, credit_card, options)
     assert !response.success?
     assert_equal '123', response.params['response']
     assert_equal 'Call Discover', response.message
-    assert_equal "I", response.avs_result["code"]
-    assert_equal "P", response.cvv_result["code"]
+    assert_equal 'I', response.avs_result['code']
+    assert_equal 'P', response.cvv_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
   end
 
@@ -279,18 +277,18 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert !response.success?
     assert_equal '303', response.params['response']
     assert_equal 'Pick Up Card', response.message
-    assert_equal "I", response.avs_result["code"]
+    assert_equal 'I', response.avs_result['code']
     puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
 
     # 9: authorize avs
-    authorize_avs_assertions(credit_card, options, :avs => "I", :message => "Pick Up Card", :success => false)
+    authorize_avs_assertions(credit_card, options, :avs => 'I', :message => 'Pick Up Card', :success => false)
 
     # 9: sale
     assert response = @gateway.purchase(10100, credit_card, options)
     assert !response.success?
     assert_equal '303', response.params['response']
     assert_equal 'Pick Up Card', response.message
-    assert_equal "I", response.avs_result["code"]
+    assert_equal 'I', response.avs_result['code']
     puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
   end
 
@@ -402,7 +400,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert auth_response = @gateway.authorize(10100, credit_card, options)
     assert_success auth_response
     assert_equal '44444 ', auth_response.params['authCode']
-    assert_equal 'A', auth_response.avs_result["code"]
+    assert_equal 'A', auth_response.avs_result['code']
     puts "Test #{options[:order_id]}: #{txn_id(auth_response)}"
 
     assert capture_response = @gateway.capture(5050, auth_response.authorization, options)
@@ -433,6 +431,416 @@ class RemoteLitleCertification < Test::Unit::TestCase
     puts "Test #{options[:order_id]}A: #{txn_id(reversal_response)}"
   end
 
+  # Echeck
+  def test37
+    check = check(
+      name: 'Tom Black',
+      routing_number:  '053100300',
+      account_number: '10@BC99999',
+      account_type: 'Checking'
+    )
+    options = {
+      :order_id => '37',
+      :billing_address => {
+        :name => 'Tom Black',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert auth_response = @gateway.authorize(3001, check, options)
+    assert_failure auth_response
+    assert_equal 'Invalid Account Number', auth_response.message
+    assert_equal '301', auth_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(auth_response)}"
+  end
+
+  def test38
+    check = check(
+      name: 'John Smith',
+      routing_number:  '011075150',
+      account_number: '1099999999',
+      account_type: 'Checking'
+    )
+    options = {
+      :order_id => '38',
+      :billing_address => {
+        :name => 'John Smith',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert auth_response = @gateway.authorize(3002, check, options)
+    assert_success auth_response
+    assert_equal 'Approved', auth_response.message
+    assert_equal '000', auth_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(auth_response)}"
+  end
+
+  def test39
+    check = check(
+      name: 'Robert Jones',
+      routing_number:  '053100300',
+      account_number: '3099999999',
+      account_type: 'Corporate'
+    )
+    options = {
+      :order_id => '39',
+      :billing_address => {
+        :name => 'John Smith',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :company => 'Good Goods Inc',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert auth_response = @gateway.authorize(3003, check, options)
+    assert_failure auth_response
+    assert_equal 'Decline - Negative Information on File', auth_response.message
+    assert_equal '950', auth_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(auth_response)}"
+  end
+
+  def test40
+    declined_authorize_check = check(
+      name: 'Peter Green',
+      routing_number: '011075150',
+      account_number: '8099999999',
+      account_type: 'Corporate'
+    )
+    options = {
+      :order_id => '40',
+      :billing_address => {
+        :name => 'Peter Green',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :company => 'Green Co',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert auth_response = @gateway.authorize(3004, declined_authorize_check, options)
+    assert_failure auth_response
+    assert_equal 'Absolute Decline', auth_response.message
+    assert_equal '951', auth_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(auth_response)}"
+  end
+
+  def test41
+    check = check(
+      name: 'Mike Hammer',
+      routing_number:  '053100300',
+      account_number: '10@BC99999',
+      account_type: 'Checking'
+    )
+    options = {
+      :order_id => '41',
+      :billing_address => {
+        :name => 'Mike Hammer',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert purchase_response = @gateway.purchase(2008, check, options)
+    assert_failure purchase_response
+    assert_equal 'Invalid Account Number', purchase_response.message
+    assert_equal '301', purchase_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(purchase_response)}"
+  end
+
+  def test42
+    check = check(
+      name: 'Tom Black',
+      routing_number:  '011075150',
+      account_number: '4099999992',
+      account_type: 'Checking'
+    )
+    options = {
+      :order_id => '42',
+      :billing_address => {
+        :name => 'Tom Black',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert purchase_response = @gateway.purchase(2004, check, options)
+    assert_success purchase_response
+    assert_equal 'Approved', purchase_response.message
+    assert_equal '000', purchase_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(purchase_response)}"
+  end
+
+  def test43
+    check = check(
+      name: 'Peter Green',
+      routing_number:  '011075150',
+      account_number: '6099999992',
+      account_type: 'Corporate'
+    )
+    options = {
+      :order_id => '43',
+      :billing_address => {
+        :name => 'Peter Green',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :company => 'Green Co',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert purchase_response = @gateway.purchase(2007, check, options)
+    assert_success purchase_response
+    assert_equal 'Approved', purchase_response.message
+    assert_equal '000', purchase_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(purchase_response)}"
+  end
+
+  def test44
+    check = check(
+      name: 'Peter Green',
+      routing_number: '053133052',
+      account_number: '9099999992',
+      account_type: 'Corporate'
+    )
+    options = {
+      :order_id => '44',
+      :billing_address => {
+        :name => 'Peter Green',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :company => 'Green Co',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert purchase_response = @gateway.purchase(2009, check, options)
+    assert_failure purchase_response
+    assert_equal 'Invalid Bank Routing Number', purchase_response.message
+    assert_equal '900', purchase_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(purchase_response)}"
+  end
+
+  def test45
+    check = check(
+      name: 'John Smith',
+      routing_number:  '053100300',
+      account_number: '10@BC99999',
+      account_type: 'Checking'
+    )
+    options = {
+      :order_id => '45',
+      :billing_address => {
+        :name => 'John Smith',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert refund_response = @gateway.refund(1001, check, options)
+    assert_failure refund_response
+    assert_equal 'Invalid Account Number', refund_response.message
+    assert_equal '301', refund_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(refund_response)}"
+  end
+
+  def test46
+    check = check(
+      name: 'Robert Jones',
+      routing_number:  '011075150',
+      account_number: '3099999999',
+      account_type: 'Corporate'
+    )
+    options = {
+      :order_id => '46',
+      :order_source => 'telephone',
+      :billing_address => {
+        :name => 'Robert Jones',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :email => 'test@test.com',
+        :phone => '2233334444',
+        :company => 'Widget Inc'
+      }
+    }
+    assert purchase_response = @gateway.purchase(1003, check, options)
+    sleep(10)
+    assert refund_response = @gateway.refund(1003, purchase_response.authorization, options)
+    assert_success refund_response
+    assert_equal 'Approved', refund_response.message
+    assert_equal '000', refund_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(refund_response)}"
+  end
+
+  def test47
+    check = check(
+      name: 'Peter Green',
+      routing_number:  '211370545',
+      account_number: '6099999993',
+      account_type: 'Corporate'
+    )
+    options = {
+      :order_id => '47',
+      :billing_address => {
+        :name => 'Peter Green',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :company => 'Green Co',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert purchase_response = @gateway.purchase(1007, check, options)
+    assert refund_response = @gateway.refund(1007, purchase_response.authorization, options)
+    assert_success refund_response
+    assert_equal 'Approved', refund_response.message
+    assert_equal '000', refund_response.params['response']
+    puts "Test #{options[:order_id]}: #{txn_id(refund_response)}"
+  end
+
+  def test48
+    check = check(
+      name: 'Peter Green',
+      routing_number: '011075150',
+      account_number: '6099999992',
+      account_type: 'Corporate'
+    )
+    options = {
+      :order_id => '43',
+      :billing_address => {
+        :name => 'Peter Green',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :company => 'Green Co',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert purchase_response = @gateway.purchase(2007, check, options)
+    assert_success purchase_response
+    assert refund_response = @gateway.refund(2007, purchase_response.authorization, options)
+    assert_equal '000', refund_response.params['response']
+    puts "Test 48: #{txn_id(refund_response)}"
+  end
+
+  def test49
+    assert refund_response = @gateway.refund(2007, 2)
+    assert_failure refund_response
+    assert_equal '360', refund_response.params['response']
+    assert_equal 'No transaction found with specified transaction Id', refund_response.message
+    puts "Test 49: #{txn_id(refund_response)}"
+  end
+
+  def test_echeck_void1
+    check = check(
+      name: 'Tom Black',
+      routing_number:  '011075150',
+      account_number: '4099999992',
+      account_type: 'Checking'
+    )
+    options = {
+      :order_id => '42',
+      :id => '236222',
+      :billing_address => {
+        :name => 'Tom Black',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert purchase_response = @gateway.purchase(2004, check, options)
+    assert_success purchase_response
+    sleep(10)
+    assert void_response = @gateway.void(purchase_response.authorization)
+    assert_equal '000', void_response.params['response']
+    puts "Test void1: #{txn_id(void_response)}"
+  end
+
+  def test_echeck_void2
+    check = check(
+      name: 'Robert Jones',
+      routing_number:  '011075150',
+      account_number: '3099999999',
+      account_type: 'Checking'
+    )
+    options = {
+      :order_id => '46',
+      :id => '232222',
+      :billing_address => {
+        :name => 'Robert Jones',
+        :address1 => '8 Main St.',
+        :city => 'Manchester',
+        :state => 'NH',
+        :zip => '03101',
+        :country => 'US',
+        :email => 'test@test.com',
+        :phone => '2233334444'
+      }
+    }
+    assert purchase_response = @gateway.purchase(1003, check, options)
+    assert_success purchase_response
+    sleep(20)
+    assert void_response = @gateway.void(purchase_response.authorization)
+    assert_equal '000', void_response.params['response']
+    puts "Test void2: #{txn_id(void_response)}"
+  end
+
+  def test_echeck_void3
+    assert void_response = @gateway.void(2)
+    assert_failure void_response
+    assert_equal '360', void_response.params['response']
+    assert_equal 'No transaction found with specified transaction Id', void_response.message
+    puts "Test void3: #{txn_id(void_response)}"
+  end
+
   # Explicit Token Registration Tests
   def test50
     credit_card = CreditCard.new(:number => '4457119922390123')
@@ -446,7 +854,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_success store_response
     assert_equal '445711', store_response.params['bin']
     assert_equal 'VI', store_response.params['type']
-    assert_equal '0123', store_response.params['litleToken'][-4,4]
+    assert_equal '0123', store_response.params['litleToken'][-4, 4]
     assert_equal '801', store_response.params['response']
     assert_equal 'Account number was successfully registered', store_response.message
     puts "Test #{options[:order_id]}: #{txn_id(response)}"
@@ -481,7 +889,43 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal '445711', store_response.params['bin']
     assert_equal 'VI', store_response.params['type']
     assert_equal '802', store_response.params['response']
-    assert_equal '0123', store_response.params['litleToken'][-4,4]
+    assert_equal '0123', store_response.params['litleToken'][-4, 4]
+    puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
+  end
+
+  def test53
+    check = check(
+      routing_number: '011100012',
+      account_number: '1099999998'
+    )
+    options     = {
+      :order_id => '53'
+    }
+
+    store_response = @gateway.store(check, options)
+
+    assert_success store_response
+    assert_equal '998', store_response.params['eCheckAccountSuffix']
+    assert_equal 'EC', store_response.params['type']
+    assert_equal '801', store_response.params['response']
+    assert_equal 'Account number was successfully registered', store_response.message
+    puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
+  end
+
+  def test54
+    check = check(
+      routing_number: '1145_7895',
+      account_number: '1022222102'
+    )
+    options     = {
+      :order_id => '54'
+    }
+
+    store_response = @gateway.store(check, options)
+
+    assert_failure store_response
+    assert_equal '900', store_response.params['response']
+    assert_equal 'Invalid Bank Routing Number', store_response.message
     puts "Test #{options[:order_id]}: #{txn_id(store_response)}"
   end
 
@@ -500,7 +944,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(15000, credit_card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal '0196', response.params['tokenResponse_litleToken'][-4,4]
+    assert_equal '0196', response.params['tokenResponse_litleToken'][-4, 4]
     assert %w(801 802).include? response.params['tokenResponse_tokenResponseCode']
     assert_equal 'MC', response.params['tokenResponse_type']
     assert_equal '543510', response.params['tokenResponse_bin']
@@ -540,7 +984,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal '0196', response.params['tokenResponse_litleToken'][-4,4]
+    assert_equal '0196', response.params['tokenResponse_litleToken'][-4, 4]
     assert %w(801 802).include? response.params['tokenResponse_tokenResponseCode']
     assert_equal 'MC', response.params['tokenResponse_type']
     assert_equal '543510', response.params['tokenResponse_bin']
@@ -610,9 +1054,9 @@ class RemoteLitleCertification < Test::Unit::TestCase
       {
         month: '01',
         year: '2021',
-        brand: "visa",
-        number:  "4457000300000007",
-        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       })
 
     assert response = @gateway.purchase(10010, decrypted_apple_pay, options)
@@ -629,9 +1073,9 @@ class RemoteLitleCertification < Test::Unit::TestCase
         source: :android_pay,
         month: '01',
         year: '2021',
-        brand: "visa",
-        number:  "4457000300000007",
-        payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
+        brand: 'visa',
+        number:  '4457000300000007',
+        payment_cryptogram: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA='
       })
 
     assert response = @gateway.purchase(10010, decrypted_android_pay, options)
@@ -722,65 +1166,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(amount, card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"] if assertions[:avs]
-    assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
-    assert_equal auth_code(options[:order_id]), response.params['authCode']
-    puts "Test #{options[:order_id]} Authorize: #{txn_id(response)}"
-
-    # 1A: capture
-    assert response = @gateway.capture(amount, response.authorization, {:id => transaction_id})
-    assert_equal 'Approved', response.message
-    puts "Test #{options[:order_id]}A: #{txn_id(response)}"
-
-    # 1B: credit
-    assert response = @gateway.credit(amount, response.authorization, {:id => transaction_id})
-    assert_equal 'Approved', response.message
-    puts "Test #{options[:order_id]}B: #{txn_id(response)}"
-
-    # 1C: void
-    assert response = @gateway.void(response.authorization, {:id => transaction_id})
-    assert_equal 'Approved', response.message
-    puts "Test #{options[:order_id]}C: #{txn_id(response)}"
-  end
-
-  def authorize_avs_assertions(credit_card, options, assertions={})
-    assert response = @gateway.authorize(000, credit_card, options)
-    assert_equal assertions.key?(:success) ? assertions[:success] : true, response.success?
-    assert_equal assertions[:message] || 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"], caller.inspect
-    assert_equal assertions[:cvv], response.cvv_result["code"], caller.inspect if assertions[:cvv]
-    puts "Test #{options[:order_id]} AVS Only: #{txn_id(response)}"
-  end
-
-  def sale_assertions(amount, card, options, assertions={})
-    # 1: sale
-    assert response = @gateway.purchase(amount, card, options)
-    assert_success response
-    assert_equal 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"] if assertions[:avs]
-    assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
-    assert_equal auth_code(options[:order_id]), response.params['authCode']
-    puts "Test #{options[:order_id]} Sale: #{txn_id(response)}"
-
-
-    # 1B: credit
-    assert response = @gateway.credit(amount, response.authorization, {:id => transaction_id})
-    assert_equal 'Approved', response.message
-    puts "Test #{options[:order_id]}B Sale: #{txn_id(response)}"
-
-    # 1C: void
-    assert response = @gateway.void(response.authorization, {:id => transaction_id})
-    assert_equal 'Approved', response.message
-    puts "Test #{options[:order_id]}C Sale: #{txn_id(response)}"
-  end
-
-  def auth_assertions(amount, card, options, assertions={})
-    # 1: authorize
-    assert response = @gateway.authorize(amount, card, options)
-    assert_success response
-    assert_equal 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"] if assertions[:avs]
-    assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'] if assertions[:avs]
+    assert_equal assertions[:cvv], response.cvv_result['code'] if assertions[:cvv]
     assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1A: capture
@@ -800,8 +1187,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.authorize(000, credit_card, options)
     assert_equal assertions.key?(:success) ? assertions[:success] : true, response.success?
     assert_equal assertions[:message] || 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"], caller.inspect
-    assert_equal assertions[:cvv], response.cvv_result["code"], caller.inspect if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'], caller.inspect
+    assert_equal assertions[:cvv], response.cvv_result['code'], caller.inspect if assertions[:cvv]
   end
 
   def sale_assertions(amount, card, options, assertions={})
@@ -809,8 +1196,8 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert response = @gateway.purchase(amount, card, options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal assertions[:avs], response.avs_result["code"] if assertions[:avs]
-    assert_equal assertions[:cvv], response.cvv_result["code"] if assertions[:cvv]
+    assert_equal assertions[:avs], response.avs_result['code'] if assertions[:avs]
+    assert_equal assertions[:cvv], response.cvv_result['code'] if assertions[:cvv]
     # assert_equal auth_code(options[:order_id]), response.params['authCode']
 
     # 1B: credit
@@ -856,6 +1243,6 @@ class RemoteLitleCertification < Test::Unit::TestCase
   end
 
   def txn_id(response)
-    response.authorization.split(";")[0]
+    response.authorization.split(';')[0]
   end
 end

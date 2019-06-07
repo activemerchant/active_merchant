@@ -19,10 +19,10 @@ module ActiveMerchant #:nodoc:
     # Next, create a credit card object using a TC approved test card.
     #
     #   creditcard = ActiveMerchant::Billing::CreditCard.new(
-    #	    :number => '4111111111111111',
-    #	    :month => 8,
-    #	    :year => 2006,
-    #	    :first_name => 'Longbob',
+    #     :number => '4111111111111111',
+    #     :month => 8,
+    #     :year => 2006,
+    #     :first_name => 'Longbob',
     #     :last_name => 'Longsen'
     #   )
     #
@@ -67,38 +67,38 @@ module ActiveMerchant #:nodoc:
     class TrustCommerceGateway < Gateway
       self.live_url = self.test_url = 'https://vault.trustcommerce.com/trans/'
 
-      SUCCESS_TYPES = ["approved", "accepted"]
+      SUCCESS_TYPES = ['approved', 'accepted']
 
       DECLINE_CODES = {
-        "decline"       => "The credit card was declined",
-        "avs"           => "AVS failed; the address entered does not match the billing address on file at the bank",
-        "cvv"           => "CVV failed; the number provided is not the correct verification number for the card",
-        "call"          => "The card must be authorized manually over the phone",
-        "expiredcard"   => "Issuer was not certified for card verification",
-        "carderror"     => "Card number is invalid",
-        "authexpired"   => "Attempt to postauth an expired (more than 14 days old) preauth",
-        "fraud"         => "CrediGuard fraud score was below requested threshold",
-        "blacklist"     => "CrediGuard blacklist value was triggered",
-        "velocity"      => "CrediGuard velocity control value was triggered",
-        "dailylimit"    => "Daily limit in transaction count or amount as been reached",
-        "weeklylimit"   => "Weekly limit in transaction count or amount as been reached",
-        "monthlylimit"  => "Monthly limit in transaction count or amount as been reached"
+        'decline'       => 'The credit card was declined',
+        'avs'           => 'AVS failed; the address entered does not match the billing address on file at the bank',
+        'cvv'           => 'CVV failed; the number provided is not the correct verification number for the card',
+        'call'          => 'The card must be authorized manually over the phone',
+        'expiredcard'   => 'Issuer was not certified for card verification',
+        'carderror'     => 'Card number is invalid',
+        'authexpired'   => 'Attempt to postauth an expired (more than 14 days old) preauth',
+        'fraud'         => 'CrediGuard fraud score was below requested threshold',
+        'blacklist'     => 'CrediGuard blacklist value was triggered',
+        'velocity'      => 'CrediGuard velocity control value was triggered',
+        'dailylimit'    => 'Daily limit in transaction count or amount as been reached',
+        'weeklylimit'   => 'Weekly limit in transaction count or amount as been reached',
+        'monthlylimit'  => 'Monthly limit in transaction count or amount as been reached'
       }
 
       BADDATA_CODES = {
-        "missingfields"       => "One or more parameters required for this transaction type were not sent",
-        "extrafields"         => "Parameters not allowed for this transaction type were sent",
-        "badformat"           => "A field was improperly formatted, such as non-digit characters in a number field",
-        "badlength"           => "A field was longer or shorter than the server allows",
-        "merchantcantaccept"  => "The merchant can't accept data passed in this field",
-        "mismatch"            => "Data in one of the offending fields did not cross-check with the other offending field"
+        'missingfields'       => 'One or more parameters required for this transaction type were not sent',
+        'extrafields'         => 'Parameters not allowed for this transaction type were sent',
+        'badformat'           => 'A field was improperly formatted, such as non-digit characters in a number field',
+        'badlength'           => 'A field was longer or shorter than the server allows',
+        'merchantcantaccept'  => "The merchant can't accept data passed in this field",
+        'mismatch'            => 'Data in one of the offending fields did not cross-check with the other offending field'
       }
 
       ERROR_CODES = {
-        "cantconnect"   => "Couldn't connect to the TrustCommerce gateway",
-        "dnsfailure"    => "The TCLink software was unable to resolve DNS hostnames",
-        "linkfailure"   => "The connection was established, but was severed before the transaction could complete",
-        "failtoprocess" => "The bank servers are offline and unable to authorize transactions"
+        'cantconnect'   => "Couldn't connect to the TrustCommerce gateway",
+        'dnsfailure'    => 'The TCLink software was unable to resolve DNS hostnames',
+        'linkfailure'   => 'The connection was established, but was severed before the transaction could complete',
+        'failtoprocess' => 'The bank servers are offline and unable to authorize transactions'
       }
 
       TEST_LOGIN = 'TestMerchant'
@@ -153,6 +153,7 @@ module ActiveMerchant #:nodoc:
         }
 
         add_order_id(parameters, options)
+        add_aggregator(parameters, options)
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
@@ -167,6 +168,7 @@ module ActiveMerchant #:nodoc:
         }
 
         add_order_id(parameters, options)
+        add_aggregator(parameters, options)
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
@@ -181,6 +183,7 @@ module ActiveMerchant #:nodoc:
           :amount => amount(money),
           :transid => authorization,
         }
+        add_aggregator(parameters, options)
 
         commit('postauth', parameters)
       end
@@ -192,6 +195,7 @@ module ActiveMerchant #:nodoc:
           :amount => amount(money),
           :transid => identification
         }
+        add_aggregator(parameters, options)
 
         commit('credit', parameters)
       end
@@ -219,6 +223,7 @@ module ActiveMerchant #:nodoc:
         parameters = {
           :transid => authorization,
         }
+        add_aggregator(parameters, options)
 
         commit('reversal', parameters)
       end
@@ -237,7 +242,7 @@ module ActiveMerchant #:nodoc:
       def recurring(money, creditcard, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
-        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily] )
+        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily])
 
         cycle = case options[:periodicity]
         when :monthly
@@ -300,20 +305,39 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((&?cc=)\d*(&?)), '\1[FILTERED]\2').
+          gsub(%r((&?password=)[^&]+(&?)), '\1[FILTERED]\2').
           gsub(%r((&?cvv=)\d*(&?)), '\1[FILTERED]\2')
       end
 
       private
+
+      def add_aggregator(params, options)
+        if @options[:aggregator_id] || application_id != Gateway.application_id
+          params[:aggregators] = 1
+          params[:aggregator1] = @options[:aggregator_id] || application_id
+        end
+      end
+
       def add_payment_source(params, source)
         if source.is_a?(String)
           add_billing_id(params, source)
+        elsif card_brand(source) == 'check'
+          add_check(params, source)
         else
           add_creditcard(params, source)
         end
       end
 
+      def add_check(params, check)
+        params[:media] = 'ach'
+        params[:routing] = check.routing_number
+        params[:account] = check.account_number
+        params[:savings] = 'y' if check.account_type == 'savings'
+        params[:name] = check.name
+      end
+
       def add_creditcard(params, creditcard)
-        params[:media]     = "cc"
+        params[:media]     = 'cc'
         params[:name]      = creditcard.name
         params[:cc]        = creditcard.number
         params[:exp]       = expdate(creditcard)
@@ -352,7 +376,7 @@ module ActiveMerchant #:nodoc:
           params[:shipto_address2] = shipping_address[:address2] unless shipping_address[:address2].blank?
           params[:shipto_city]     = shipping_address[:city]     unless shipping_address[:city].blank?
           params[:shipto_state]    = shipping_address[:state]    unless shipping_address[:state].blank?
-          params[:shipto_zip]	     = shipping_address[:zip]      unless shipping_address[:zip].blank?
+          params[:shipto_zip]      = shipping_address[:zip]      unless shipping_address[:zip].blank?
           params[:shipto_country]  = shipping_address[:country]  unless shipping_address[:country].blank?
         end
       end
@@ -361,7 +385,7 @@ module ActiveMerchant #:nodoc:
         # TCLink wants us to send a hash with string keys, and activemerchant pushes everything around with
         # symbol keys. Before sending our input to TCLink, we convert all our keys to strings and dump the symbol keys.
         # We also remove any pairs with nil values, as these confuse TCLink.
-        parameters.keys.reverse.each do |key|
+        parameters.keys.reverse_each do |key|
           if parameters[key]
             parameters[key.to_s] = parameters[key]
           end
@@ -370,7 +394,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(parameters)
-        parameters.collect { |key, value| "#{key}=#{ CGI.escape(value.to_s)}" }.join("&")
+        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       def commit(action, parameters)
@@ -382,19 +406,19 @@ module ActiveMerchant #:nodoc:
         clean_and_stringify_params(parameters)
 
         data = if tclink?
-          TCLink.send(parameters)
-        else
-          parse( ssl_post(self.live_url, post_data(parameters)) )
+                 TCLink.send(parameters)
+               else
+                 parse(ssl_post(self.live_url, post_data(parameters)))
         end
 
         # to be considered successful, transaction status must be either "approved" or "accepted"
-        success = SUCCESS_TYPES.include?(data["status"])
+        success = SUCCESS_TYPES.include?(data['status'])
         message = message_from(data)
         Response.new(success, message, data,
           :test => test?,
-          :authorization => data["transid"],
-          :cvv_result => data["cvv"],
-          :avs_result => { :code => data["avs"] }
+          :authorization => data['transid'],
+          :cvv_result => data['cvv'],
+          :avs_result => { :code => data['avs'] }
         )
       end
 
@@ -402,7 +426,7 @@ module ActiveMerchant #:nodoc:
         results = {}
 
         body.split(/\n/).each do |pair|
-          key,val = pair.split(/=/)
+          key, val = pair.split(/=/)
           results[key] = val
         end
 
@@ -410,15 +434,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(data)
-        case data["status"]
-        when "decline"
-          return DECLINE_CODES[data["declinetype"]]
-        when "baddata"
-          return BADDATA_CODES[data["error"]]
-        when "error"
-          return ERROR_CODES[data["errortype"]]
+        case data['status']
+        when 'decline'
+          return DECLINE_CODES[data['declinetype']]
+        when 'baddata'
+          return BADDATA_CODES[data['error']]
+        when 'error'
+          return ERROR_CODES[data['errortype']]
         else
-          return "The transaction was successful"
+          return 'The transaction was successful'
         end
       end
 

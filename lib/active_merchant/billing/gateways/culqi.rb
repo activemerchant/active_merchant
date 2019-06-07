@@ -9,14 +9,14 @@ module ActiveMerchant #:nodoc:
     # largely depends on the transaction acquiring bank. Be sure to understand how
     # your account was configured prior to using this gateway.
     class CulqiGateway < Gateway
-      self.display_name = "Culqi"
-      self.homepage_url = "https://www.culqi.com"
+      self.display_name = 'Culqi'
+      self.homepage_url = 'https://www.culqi.com'
 
-      self.test_url = "https://staging.paymentz.com/transaction/"
-      self.live_url = "https://secure.culqi.com/transaction/"
+      self.test_url = 'https://staging.paymentz.com/transaction/'
+      self.live_url = 'https://secure.culqi.com/transaction/'
 
-      self.supported_countries = ["PE"]
-      self.default_currency = "PEN"
+      self.supported_countries = ['PE']
+      self.default_currency = 'PEN'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :diners_club, :american_express]
 
@@ -86,8 +86,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def verify_credentials
-        response = void("0", order_id: "0")
-        response.message.include? "Transaction not found"
+        response = void('0', order_id: '0')
+        response.message.include? 'Transaction not found'
       end
 
       def store(credit_card, options={})
@@ -181,11 +181,11 @@ module ActiveMerchant #:nodoc:
 
       def add_checksum(action, post)
         checksum_elements = case action
-        when :capture;  [post[:toid], post[:trackingid], post[:captureamount], @options[:secret_key]]
-        when :void;     [post[:toid], post[:description], post[:trackingid], @options[:secret_key]]
-        when :refund;   [post[:toid], post[:trackingid], post[:refundamount], @options[:secret_key]]
-        when :tokenize; [post[:partnerid], post[:cardnumber], post[:cvv], @options[:secret_key]]
-        when :invalidate; [post[:partnerid], post[:token], @options[:secret_key]]
+        when :capture    then  [post[:toid], post[:trackingid], post[:captureamount], @options[:secret_key]]
+        when :void       then  [post[:toid], post[:description], post[:trackingid], @options[:secret_key]]
+        when :refund     then  [post[:toid], post[:trackingid], post[:refundamount], @options[:secret_key]]
+        when :tokenize   then [post[:partnerid], post[:cardnumber], post[:cvv], @options[:secret_key]]
+        when :invalidate then [post[:partnerid], post[:token], @options[:secret_key]]
         else [post[:toid], post[:totype], post[:amount], post[:description], post[:redirecturl],
               post[:cardnumber] || post[:token], @options[:secret_key]]
         end
@@ -198,13 +198,13 @@ module ActiveMerchant #:nodoc:
       end
 
       ACTIONS = {
-        authorize: "SingleCallGenericServlet",
-        capture: "SingleCallGenericCaptureServlet",
-        void: "SingleCallGenericVoid",
-        refund: "SingleCallGenericReverse",
-        tokenize: "SingleCallTokenServlet",
-        invalidate: "SingleCallInvalidateToken",
-        tokenpay: "SingleCallTokenTransaction",
+        authorize: 'SingleCallGenericServlet',
+        capture: 'SingleCallGenericCaptureServlet',
+        void: 'SingleCallGenericVoid',
+        refund: 'SingleCallGenericReverse',
+        tokenize: 'SingleCallTokenServlet',
+        invalidate: 'SingleCallInvalidateToken',
+        tokenpay: 'SingleCallTokenTransaction',
       }
 
       def commit(action, params)
@@ -229,13 +229,13 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Accept"  => "application/json",
-          "Content-Type"  => "application/x-www-form-urlencoded;charset=UTF-8"
+          'Accept'  => 'application/json',
+          'Content-Type'  => 'application/x-www-form-urlencoded;charset=UTF-8'
         }
       end
 
       def post_data(action, params)
-        params.map {|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
+        params.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join('&')
       end
 
       def url
@@ -243,16 +243,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        begin
-          JSON.parse(body)
-        rescue JSON::ParserError
-          message = "Invalid JSON response received from CulqiGateway. Please contact CulqiGateway if you continue to receive this message."
-          message += "(The raw response returned by the API was #{body.inspect})"
-          {
-            "status" => "N",
-            "statusdescription" => message
-          }
-        end
+        JSON.parse(body)
+      rescue JSON::ParserError
+        message = 'Invalid JSON response received from CulqiGateway. Please contact CulqiGateway if you continue to receive this message.'
+        message += "(The raw response returned by the API was #{body.inspect})"
+        {
+          'status' => 'N',
+          'statusdescription' => message
+        }
       end
 
       def success_from(response)

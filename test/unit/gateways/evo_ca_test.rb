@@ -99,7 +99,7 @@ class EvoCaTest < Test::Unit::TestCase
   def test_add_address
     result = {}
 
-    @gateway.send(:add_address, result, :address => {:address1 => '123 Main Street', :country => 'CA', :state => 'BC'} )
+    @gateway.send(:add_address, result, :address => {:address1 => '123 Main Street', :country => 'CA', :state => 'BC'})
     assert_equal %w{address1 address2 city company country firstname lastname phone state zip}, result.stringify_keys.keys.sort
     assert_equal 'BC', result[:state]
     assert_equal '123 Main Street', result[:address1]
@@ -109,7 +109,7 @@ class EvoCaTest < Test::Unit::TestCase
   def test_add_shipping_address
     result = {}
 
-    @gateway.send(:add_address, result, :shipping_address => {:address1 => '123 Main Street', :country => 'CA', :state => 'BC'} )
+    @gateway.send(:add_address, result, :shipping_address => {:address1 => '123 Main Street', :country => 'CA', :state => 'BC'})
     assert_equal %w{shipping_address1 shipping_address2 shipping_city shipping_company shipping_country shipping_firstname shipping_lastname shipping_state shipping_zip}, result.stringify_keys.keys.sort
     assert_equal 'BC', result[:shipping_state]
     assert_equal '123 Main Street', result[:shipping_address1]

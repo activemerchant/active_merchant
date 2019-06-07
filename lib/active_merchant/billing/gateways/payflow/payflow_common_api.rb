@@ -43,16 +43,14 @@ module ActiveMerchant #:nodoc:
         :american_express => 'Amex',
         :jcb => 'JCB',
         :diners_club => 'DinersClub',
-        :switch => 'Switch',
-        :solo => 'Solo'
       }
 
       TRANSACTIONS = {
-        :purchase       => "Sale",
-        :authorization  => "Authorization",
-        :capture        => "Capture",
-        :void           => "Void",
-        :credit         => "Credit"
+        :purchase       => 'Sale',
+        :authorization  => 'Authorization',
+        :capture        => 'Capture',
+        :void           => 'Void',
+        :credit         => 'Credit'
       }
 
       CVV_CODE = {
@@ -80,10 +78,11 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def build_request(body, options = {})
         xml = Builder::XmlMarkup.new
         xml.instruct!
-        xml.tag! 'XMLPayRequest', 'Timeout' => timeout.to_s, 'version' => "2.1", "xmlns" => XMLNS do
+        xml.tag! 'XMLPayRequest', 'Timeout' => timeout.to_s, 'version' => '2.1', 'xmlns' => XMLNS do
           xml.tag! 'RequestData' do
             xml.tag! 'Vendor', @options[:login]
             xml.tag! 'Partner', @options[:partner]
@@ -119,6 +118,11 @@ module ActiveMerchant #:nodoc:
               xml.tag!('Description', options[:description]) unless options[:description].blank?
               xml.tag!('Comment', options[:comment]) unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag!(
+                'ExtData',
+                'Name' => 'CAPTURECOMPLETE',
+                'Value' => options[:capture_complete]
+              ) unless options[:capture_complete].blank?
             end
           end
         end
@@ -137,8 +141,9 @@ module ActiveMerchant #:nodoc:
 
           xml.tag! 'Address' do
             xml.tag! 'Street', address[:address1] unless address[:address1].blank?
+            xml.tag! 'Street2', address[:address2] unless address[:address2].blank?
             xml.tag! 'City', address[:city] unless address[:city].blank?
-            xml.tag! 'State', address[:state].blank? ? "N/A" : address[:state]
+            xml.tag! 'State', address[:state].blank? ? 'N/A' : address[:state]
             xml.tag! 'Country', address[:country] unless address[:country].blank?
             xml.tag! 'Zip', address[:zip] unless address[:zip].blank?
           end
@@ -149,16 +154,16 @@ module ActiveMerchant #:nodoc:
         response = {}
         xml = Nokogiri::XML(data)
         xml.remove_namespaces!
-        root = xml.xpath("//ResponseData")
+        root = xml.xpath('//ResponseData')
 
         # REXML::XPath in Ruby 1.8.6 is now unable to match nodes based on their attributes
-        tx_result = root.xpath(".//TransactionResult").first
+        tx_result = root.xpath('.//TransactionResult').first
 
-        if tx_result && tx_result.attributes['Duplicate'].to_s == "true"
+        if tx_result && tx_result.attributes['Duplicate'].to_s == 'true'
           response[:duplicate] = true
         end
 
-        root.xpath(".//*").each do |node|
+        root.xpath('.//*').each do |node|
           parse_element(response, node)
         end
 
@@ -173,10 +178,10 @@ module ActiveMerchant #:nodoc:
           # down as we do everywhere else. RPPaymentResult elements are not contained
           # in an RPPaymentResults element so we'll come here multiple times
           response[node_name] ||= []
-          response[node_name] << ( payment_result_response = {} )
-          node.xpath(".//*").each{ |e| parse_element(payment_result_response, e) }
-        when node.xpath(".//*").to_a.any?
-          node.xpath(".//*").each{|e| parse_element(response, e) }
+          response[node_name] << (payment_result_response = {})
+          node.xpath('.//*').each { |e| parse_element(payment_result_response, e) }
+        when node.xpath('.//*').to_a.any?
+          node.xpath('.//*').each { |e| parse_element(response, e) }
         when node_name.to_s =~ /amt$/
           # *Amt elements don't put the value in the #text - instead they use a Currency attribute
           response[node_name] = node.attributes['Currency'].to_s
@@ -189,15 +194,15 @@ module ActiveMerchant #:nodoc:
 
       def build_headers(content_length)
         headers = {
-          "Content-Type" => "text/xml",
-          "Content-Length" => content_length.to_s,
-          "X-VPS-Client-Timeout" => timeout.to_s,
-          "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
-          "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
-          "X-VPS-Request-ID" => SecureRandom.hex(16)
+          'Content-Type' => 'text/xml',
+          'Content-Length' => content_length.to_s,
+          'X-VPS-Client-Timeout' => timeout.to_s,
+          'X-VPS-VIT-Integration-Product' => 'ActiveMerchant',
+          'X-VPS-VIT-Runtime-Version' => RUBY_VERSION,
+          'X-VPS-Request-ID' => SecureRandom.hex(16)
         }
 
-        headers.merge!("PAYPAL-NVP" => "Y") if self.use_paypal_nvp
+        headers['PAYPAL-NVP'] = 'Y' if self.use_paypal_nvp
         headers
       end
 
@@ -223,7 +228,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def under_fraud_review?(response)
-        (response[:result] == "126")
+        (response[:result] == '126')
       end
     end
   end

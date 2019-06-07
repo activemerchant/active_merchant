@@ -7,8 +7,8 @@ class RemoteSkipJackTest < Test::Unit::TestCase
     @gateway = SkipJackGateway.new(fixtures(:skip_jack))
 
     @credit_card = credit_card('4445999922225',
-                    :verification_value => '999'
-                  )
+      :verification_value => '999'
+    )
 
     @amount = 100
 
@@ -61,7 +61,7 @@ class RemoteSkipJackTest < Test::Unit::TestCase
     capture = @gateway.capture(1000, authorization.authorization)
 
     assert_success capture
-    assert_equal "1000", capture.params["TransactionAmount"]
+    assert_equal '1000', capture.params['TransactionAmount']
   end
 
   def test_authorization_and_void

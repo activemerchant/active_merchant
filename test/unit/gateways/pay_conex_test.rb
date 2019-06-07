@@ -21,7 +21,7 @@ class PayConexTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "000000001681", response.authorization
+    assert_equal '000000001681', response.authorization
     assert response.test?
   end
 
@@ -30,19 +30,19 @@ class PayConexTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 30002, response.params["error_code"]
+    assert_equal 30002, response.params['error_code']
   end
 
   def test_successful_authorize_and_capture
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "000000001721", response.authorization
+    assert_equal '000000001721', response.authorization
 
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, response.authorization)
     assert_success response
-    assert_equal "CAPTURED", response.message
+    assert_equal 'CAPTURED', response.message
   end
 
   def test_failed_authorize
@@ -50,66 +50,66 @@ class PayConexTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 30002, response.params["error_code"]
-    assert_equal "DECLINED", response.message
+    assert_equal 30002, response.params['error_code']
+    assert_equal 'DECLINED', response.message
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "Authorization")
+    response = @gateway.capture(@amount, 'Authorization')
     assert_failure response
-    assert_equal 20006, response.params["error_code"]
-    assert_equal "Invalid token_id", response.message
+    assert_equal 20006, response.params['error_code']
+    assert_equal 'Invalid token_id', response.message
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    response = @gateway.refund(@amount, "Authorization")
+    response = @gateway.refund(@amount, 'Authorization')
     assert_success response
-    assert_equal "000000001801", response.authorization
-    assert_equal "VOID", response.message
+    assert_equal '000000001801', response.authorization
+    assert_equal 'VOID', response.message
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(@amount, "Authorization")
+    response = @gateway.refund(@amount, 'Authorization')
     assert_failure response
-    assert_equal 20017, response.params["error_code"]
-    assert_equal "INVALID REFUND AMOUNT", response.message
+    assert_equal 20017, response.params['error_code']
+    assert_equal 'INVALID REFUND AMOUNT', response.message
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
-    response = @gateway.void("Authorization")
+    response = @gateway.void('Authorization')
     assert_success response
-    assert_equal "000000001881", response.authorization
-    assert_equal "APPROVED", response.message
+    assert_equal '000000001881', response.authorization
+    assert_equal 'APPROVED', response.message
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.refund(@amount, "Authorization")
+    response = @gateway.refund(@amount, 'Authorization')
     assert_failure response
-    assert_equal 20687, response.params["error_code"]
-    assert_equal "TRANSACTION ID ALREADY REVERSED", response.message
+    assert_equal 20687, response.params['error_code']
+    assert_equal 'TRANSACTION ID ALREADY REVERSED', response.message
   end
 
   def test_successful_verify
     @gateway.expects(:ssl_post).returns(successful_verify_response)
     response = @gateway.verify(@credit_card)
     assert_success response
-    assert_equal "000000001981", response.authorization
-    assert_equal "APPROVED", response.message
+    assert_equal '000000001981', response.authorization
+    assert_equal 'APPROVED', response.message
   end
 
   def test_successful_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
     response = @gateway.credit(@amount, @credit_card)
     assert_success response
-    assert_equal "000000002061", response.authorization
+    assert_equal '000000002061', response.authorization
   end
 
   def test_failed_credit
@@ -117,15 +117,15 @@ class PayConexTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card)
     assert_failure response
-    assert_equal "30370", response.params["error_code"]
-    assert_equal "CARD DATA UNREADABLE", response.message
+    assert_equal '30370', response.params['error_code']
+    assert_equal 'CARD DATA UNREADABLE', response.message
   end
 
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
     response = @gateway.store(@credit_card)
     assert_success response
-    assert_equal "000000002101", response.authorization
+    assert_equal '000000002101', response.authorization
   end
 
   def test_failed_store
@@ -133,8 +133,8 @@ class PayConexTest < Test::Unit::TestCase
 
     response = @gateway.store(@credit_card)
     assert_failure response
-    assert_equal "30370", response.params["error_code"]
-    assert_equal "CARD DATA UNREADABLE", response.message
+    assert_equal '30370', response.params['error_code']
+    assert_equal 'CARD DATA UNREADABLE', response.message
   end
 
   def test_card_present_purchase_passes_track_data
@@ -147,23 +147,23 @@ class PayConexTest < Test::Unit::TestCase
 
   def test_successful_purchase_using_token
     @gateway.expects(:ssl_post).returns(successful_purchase_using_token_response)
-    response = @gateway.purchase(@amount, "TheToken", @options)
+    response = @gateway.purchase(@amount, 'TheToken', @options)
     assert_success response
-    assert_equal "000000004561", response.authorization
+    assert_equal '000000004561', response.authorization
   end
 
   def test_successful_purchase_using_echeck
     @gateway.expects(:ssl_post).returns(successful_purchase_using_echeck_response)
     response = @gateway.purchase(@amount, check, @options)
     assert_success response
-    assert_equal "000000007161", response.authorization
+    assert_equal '000000007161', response.authorization
   end
 
   def test_failed_purchase_using_echeck
     @gateway.expects(:ssl_post).returns(failed_purchase_using_echeck_response)
     response = @gateway.purchase(@amount, check, @options)
     assert_failure response
-    assert_equal "Invalid bank_routing_number", response.message
+    assert_equal 'Invalid bank_routing_number', response.message
   end
 
   def test_scrub

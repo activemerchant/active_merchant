@@ -10,7 +10,7 @@ class RemoteProPayTest < Test::Unit::TestCase
     @credit_card_without_cvv = credit_card('4747474747474747', verification_value: nil)
     @options = {
       billing_address: address,
-      account_num: "32287391"
+      account_num: '32287391'
     }
   end
 
@@ -23,9 +23,9 @@ class RemoteProPayTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com",
-      account_num: "32287391"
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
+      account_num: '32287391'
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
@@ -34,7 +34,7 @@ class RemoteProPayTest < Test::Unit::TestCase
   end
 
   def test_successful_recurring_purchase_without_cvv
-    @options.merge!({recurring_payment: 'Y'})
+    @options[:recurring_payment] = 'Y'
     response = @gateway.purchase(@amount, @credit_card_without_cvv, @options)
     assert_success response
     assert_equal 'Success', response.message
@@ -130,7 +130,7 @@ class RemoteProPayTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match "Success", response.message
+    assert_match 'Success', response.message
   end
 
   def test_failed_verify
