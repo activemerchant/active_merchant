@@ -5,6 +5,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     @gateway = RedsysGateway.new(fixtures(:redsys_sha256))
     @credit_card = credit_card('4548812049400004')
     @declined_card = credit_card
+    @threeds2_credit_card = credit_card('4548814479727229')
     @options = {
       order_id: generate_order_id,
     }
@@ -12,6 +13,13 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(100, @credit_card, @options)
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
+  def test_successful_purchase_3ds
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.purchase(100, @credit_card, options)
     assert_success response
     assert_equal 'Transaction Approved', response.message
   end

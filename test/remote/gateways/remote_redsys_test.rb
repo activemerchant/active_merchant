@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteRedsysTest < Test::Unit::TestCase
   def setup
     @gateway = RedsysGateway.new(fixtures(:redsys))
-    @credit_card = credit_card('4548812049400004')
+    @credit_card = credit_card('4548812049400004', {verification_value: 123, month: 19, year: 2020})
     @declined_card = credit_card
     @options = {
       order_id: generate_order_id,

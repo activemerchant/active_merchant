@@ -193,10 +193,12 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         data = {}
-        add_action(data, :purchase)
+        add_action(data, :purchase, options)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_payment(data, payment)
+        add_threeds(data, options) if options[:execute_threed]
+        require 'pry'
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
 
@@ -207,10 +209,11 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         data = {}
-        add_action(data, :authorize)
+        add_action(data, :authorize, options)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_payment(data, payment)
+        add_threeds(data, options) if options[:execute_threed]
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
 
@@ -278,8 +281,8 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_action(data, action)
-        data[:action] = transaction_code(action)
+      def add_action(data, action, options)
+        data[:action] = options[:execute_threed].present? ? '0' : transaction_code(action)
       end
 
       def add_amount(data, money, options)
@@ -293,6 +296,10 @@ module ActiveMerchant #:nodoc:
 
       def url
         test? ? test_url : live_url
+      end
+
+      def threeds_url
+        test? ? 'https://sis-t.redsys.es:25443/sis/services/SerClsWSEntradaV2': 'https://sis.redsys.es/sis/services/SerClsWSEntradaV2'
       end
 
       def add_payment(data, card)
@@ -311,14 +318,54 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(data)
-        parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data))}", headers))
+      def add_threeds(data, options)
+        if options[:execute_threed] == true
+          data[:threeds] = {threeDSInfo: 'CardData'}
+        end
       end
 
-      def headers
-        {
-          'Content-Type' => 'application/x-www-form-urlencoded'
-        }
+      def determine_3ds_action(threeds_hash)
+        return 'iniciaPeticion' if threeds_hash[:threeDSInfo] == 'CardData'
+        return 'trataPeticion'
+      end
+
+      def commit(data)
+        # puts data
+        if data[:threeds]
+          url = threeds_url
+          action = determine_3ds_action(data[:threeds])
+          request = <<-EOS
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://webservice.sis.sermepa.es" xmlns:intf="http://webservice.sis.sermepa.es" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
+          <soapenv:Header/>
+          <soapenv:Body>
+            <intf:#{action} xmlns:intf="http://webservice.sis.sermepa.es">
+              <intf:datoEntrada>
+              <![CDATA[#{xml_request_from(data)}]]>
+              </intf:datoEntrada>
+            </intf:#{action}>
+          </soapenv:Body>
+        </soapenv:Envelope>
+        EOS
+        d{request}
+        d{url}
+        # puts request
+          parse(ssl_post(url, request, headers(action)), action)
+        else
+          parse(ssl_post(url, "entrada=#{CGI.escape(xml_request_from(data))}", headers), action)
+        end
+      end
+
+      def headers(action=nil)
+        if action
+          {
+            'Content-Type' => 'text/xml',
+            'SOAPAction'    => action
+          }
+        else
+          {
+            'Content-Type' => 'application/x-www-form-urlencoded'
+          }
+        end
       end
 
       def xml_request_from(data)
@@ -332,6 +379,7 @@ module ActiveMerchant #:nodoc:
       def build_signature(data)
         str = data[:amount] +
           data[:order_id].to_s +
+          success = true
           @options[:login].to_s +
           data[:currency]
 
@@ -353,7 +401,7 @@ module ActiveMerchant #:nodoc:
 
       def build_sha256_xml_request(data)
         xml = Builder::XmlMarkup.new
-        xml.instruct!
+        # xml.instruct!
         xml.REQUEST do
           build_merchant_data(xml, data)
           xml.DS_SIGNATUREVERSION 'HMAC_SHA256_V1'
@@ -398,22 +446,43 @@ module ActiveMerchant #:nodoc:
             xml.DS_MERCHANT_IDENTIFIER data[:credit_card_token]
             xml.DS_MERCHANT_DIRECTPAYMENT 'true'
           end
+
+          if data[:threeds]
+            xml.DS_MERCHANT_EMV3DS  data[:threeds].to_json
+          end
         end
       end
 
-      def parse(data)
+      def parse(data, action)
+        # puts data
         params  = {}
         success = false
         message = ''
         options = @options.merge(:test => test?)
         xml     = Nokogiri::XML(data)
         code    = xml.xpath('//RETORNOXML/CODIGO').text
-        if code == '0'
+
+        if action == 'iniciaPeticion'
+          vxml = Nokogiri::XML(data).remove_namespaces!.xpath('//Envelope/Body/iniciaPeticionResponse/iniciaPeticionReturn').inner_text
+          xml = Nokogiri::XML(vxml)
+          op = xml.xpath('//RETORNOXML/INFOTARJETA')
+          op.children.each do |element|
+            params[element.name.downcase.to_sym] = element.text
+          end
+          success = true
+        elsif action == 'trataPeticion'
+          vxml = Nokogiri::XML(data).remove_namespaces!.xpath('//Envelope/Body/trataPeticionResponse/trataPeticionReturn').inner_text
+          xml = Nokogiri::XML(vxml)
           op = xml.xpath('//RETORNOXML/OPERACION')
           op.children.each do |element|
             params[element.name.downcase.to_sym] = element.text
           end
-
+          success = true
+        elsif code == '0'
+          op = xml.xpath('//RETORNOXML/OPERACION')
+          op.children.each do |element|
+            params[element.name.downcase.to_sym] = element.text
+          end
           if validate_signature(params)
             message = response_text(params[:ds_response])
             options[:authorization] = build_authorization(params)
@@ -426,6 +495,7 @@ module ActiveMerchant #:nodoc:
           message = "#{code} ERROR"
         end
 
+        puts Response.new(success, message, params, options)
         Response.new(success, message, params, options)
       end
 
@@ -521,6 +591,10 @@ module ActiveMerchant #:nodoc:
 
         if data[:ds_cardnumber]
           xml_signed_fields += data[:ds_cardnumber]
+        end
+
+        if data[:ds_emv3ds]
+          xml_signed_fields += data[:ds_emv3ds]
         end
 
         xml_signed_fields + data[:ds_transactiontype] + data[:ds_securepayment]
