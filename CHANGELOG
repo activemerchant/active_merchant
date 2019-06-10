@@ -9,6 +9,7 @@
 * Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
 * CyberSource: Update CyberSource SOAP documentation link [vince-smith] #3204
 * USAePay: Handle additional error codes and add default error code [estelendur] #3167
+* Braintree: Add `skip_avs` and `skip_cvv` gateway specific fields [leila-alderman] #3241
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228

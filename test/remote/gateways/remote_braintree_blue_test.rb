@@ -417,6 +417,20 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
   end
 
+  def test_successful_purchase_with_skip_avs
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_avs: true))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'B', response.avs_result['code']
+  end
+
+  def test_successful_purchase_with_skip_cvv
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(skip_cvv: true))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'B', response.cvv_result['code']
+  end
+
   def test_successful_purchase_with_device_data
     # Requires Advanced Fraud Tools to be enabled
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(device_data: 'device data for purchase'))

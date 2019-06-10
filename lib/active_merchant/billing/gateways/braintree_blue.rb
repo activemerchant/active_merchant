@@ -419,7 +419,9 @@ module ActiveMerchant #:nodoc:
           'street: A, zip: N' => 'C',
           'street: A, zip: U' => 'I',
           'street: A, zip: I' => 'I',
-          'street: A, zip: A' => 'I'
+          'street: A, zip: A' => 'I',
+
+          'street: B, zip: B' => 'B'
         }
       end
 
@@ -588,6 +590,14 @@ module ActiveMerchant #:nodoc:
 
         if options[:skip_advanced_fraud_checking]
           parameters[:options][:skip_advanced_fraud_checking] = options[:skip_advanced_fraud_checking]
+        end
+
+        if options[:skip_avs]
+          parameters[:options][:skip_avs] = options[:skip_avs]
+        end
+
+        if options[:skip_cvv]
+          parameters[:options][:skip_cvv] = options[:skip_cvv]
         end
 
         parameters[:custom_fields] = options[:custom_fields]
