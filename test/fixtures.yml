@@ -1152,6 +1152,11 @@ secure_pay_tech:
   login: TESTDIGISPL1
   password: d557591484cb2cd12bba445aba420d2c69cd6a88
 
+secure_trading:
+  user_id: user@test.net
+  api_key: TOKEN
+  site_id: SITE_ID
+
 securion_pay:
   secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
 
