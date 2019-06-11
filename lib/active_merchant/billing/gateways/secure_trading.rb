@@ -6,7 +6,6 @@ module ActiveMerchant #:nodoc:
     # {SecureTraining}[https://docs.securetrading.com]
     #
     class SecureTradingGateway < Gateway
-      self.test_url = 'https://webservices.securetrading.net:443/xml/'
       self.live_url = 'https://webservices.securetrading.net:443/xml/'
 
       self.supported_countries = ['US']
@@ -207,11 +206,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        url = (test? ? test_url : live_url)
-
-        response = parse(
-          ssl_post(url, post_data(parameters), headers(parameters))
-        )
+        response = parse(ssl_post(live_url, parameters, headers(parameters)))
 
         Response.new(
           success_from(response),
