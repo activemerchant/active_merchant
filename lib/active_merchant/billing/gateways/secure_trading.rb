@@ -8,8 +8,8 @@ module ActiveMerchant #:nodoc:
     class SecureTradingGateway < Gateway
       self.live_url = 'https://webservices.securetrading.net:443/xml/'
 
-      self.supported_countries = ['US']
-      self.default_currency = 'USD'
+      self.supported_countries = ['GB', 'US']
+      self.default_currency = 'GBP'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       self.homepage_url = 'https://www.securetrading.com/'
