@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
         response_element = doc.at_xpath('//responseblock')
         response[:response_code] = response_element.at_xpath('response').attr('type')
         response[:request_reference] = response_element.at_xpath('requestreference').content
-        response[:transaction_reference] = response_element.at_xpath('response/transactionreference').content
+        response[:transaction_reference] = response_element.at_xpath('response/transactionreference').try(:content)
         
         error_element = response_element.at_xpath('response/error')
         response[:error_message] = error_element.at_xpath('message').content
