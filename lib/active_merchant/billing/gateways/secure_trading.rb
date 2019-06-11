@@ -76,6 +76,7 @@ module ActiveMerchant #:nodoc:
           .gsub(%r((<pan>\d{6})\d+(\d{4}</pan>)), '\1[FILTERED]\2')
           .gsub(%r((<securitycode>).+(</securitycode>)), '\1[FILTERED]\2')
           .gsub(%r((<alias>).+(</alias>)), '\1[FILTERED]\2')
+          .gsub(%r((<sitereference>).+(</sitereference>)), '\1[FILTERED]\2')
       end
 
       private
