@@ -363,6 +363,76 @@ class NmiTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_purchase_with_stored_credentials_cit
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: true,
+        recurring: nil,
+        initiator: 'cardholder',
+        network_transaction_id: nil
+      }
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/initiated_by=customer/, data)
+      assert_match(/initial_transaction_id=/, data)
+      assert_match(/stored_credential_indicator=stored/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal "2762757839", response.params['transactionid']
+  end
+
+  def test_successful_purchase_with_stored_credentials_mit
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        recurring: true,
+        initiator: 'merchant',
+        network_transaction_id: '2762797441'
+      }
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/initial_transaction_id=2762797441/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert response.test?
+    assert_equal "2762757839", response.params['transactionid']
+  end
+
+  def test_failed_purchase_with_stored_credentials_mit
+    stored_credential = {
+      stored_credential: {
+        initial_transaction: false,
+        recurring: true,
+        initiator: 'merchant',
+        network_transaction_id: '2762797441'
+      }
+    }
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(stored_credential))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/initial_transaction_id=2762797441/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+    end.respond_with(failed_mit_purchase_response)
+
+    assert_failure response
+    assert response.test?
+    assert_match(/Invalid Initial Transaction ID/, response.message)
+  end
+
+
   private
 
   def successful_purchase_response
@@ -457,5 +527,9 @@ class NmiTest < Test::Unit::TestCase
       amount=1.00&orderid=e88df316d8ba3c8c6b98aa93b78facc0&orderdescription=Store+purchase&currency=USD&payment=check&checkname=Jim+Smith&checkaba=[FILTERED]&checkaccount=[FILTERED]&account_holder_type=personal&account_type=checking&sec_code=WEB&email=&ipaddress=&company=Widgets+Inc&address1=456+My+Street&address2=Apt+1&city=Ottawa&state=ON&country=CA&zip=K1C2N6&phone=%28555%29555-5555&type=sale&username=demo&password=[FILTERED]
       response=1&responsetext=SUCCESS&authcode=123456&transactionid=2767467157&avsresponse=&cvvresponse=&orderid=e88df316d8ba3c8c6b98aa93b78facc0&type=sale&response_code=100
     )
+  end
+
+  def failed_mit_purchase_response
+    'response=3&responsetext=Invalid Initial Transaction ID REFID:1197003826&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=7d9e38cff13df87aef9d26c7536cebe8&type=sale&response_code=300'
   end
 end

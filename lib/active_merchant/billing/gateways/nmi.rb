@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
+        add_stored_credentials_options(post, options)
 
         commit("sale", post)
       end
@@ -43,6 +44,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
+        add_stored_credentials_options(post, options)
 
         commit("auth", post)
       end
@@ -78,6 +80,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
+        add_stored_credentials_options(post, options)
 
         commit("credit", post)
       end
@@ -87,6 +90,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
+        add_stored_credentials_options(post, options)
 
         commit("validate", post)
       end
@@ -97,6 +101,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_merchant_defined_fields(post, options)
+        add_stored_credentials_options(post, options)
 
         commit("add_customer", post)
       end
@@ -191,6 +196,24 @@ module ActiveMerchant #:nodoc:
       def add_payment_type(post, authorization)
         _, payment_type = split_authorization(authorization)
         post[:payment] = payment_type if payment_type
+      end
+
+      def add_stored_credentials_options(post, options)
+        return unless (stored_credential = options[:stored_credential])
+
+        if stored_credential[:initial_transaction]
+          post[:stored_credential_indicator] = 'stored'
+        else
+          post[:stored_credential_indicator] = 'used'
+        end
+
+        if stored_credential[:initiator] == 'merchant'
+          post[:initiated_by] = 'merchant'
+        else
+          post[:initiated_by] = 'customer'
+        end
+
+        post[:initial_transaction_id] = stored_credential[:network_transaction_id]
       end
 
       def exp_date(payment_method)

@@ -234,4 +234,56 @@ class RemoteNmiTest < Test::Unit::TestCase
     # "password=password is filtered, but can't be tested b/c of key match"
     # assert_scrubbed(@gateway.options[:password], clean_transcript)
   end
+
+  def test_successful_store_and_purchase_with_stored_credentials
+    @options.merge!(stored_credential: {
+      initial_transaction: true,
+      recurring: nil,
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    })
+    vault_id = @gateway.store(@credit_card, @options).params["customer_vault_id"]
+    purchase = @gateway.purchase(@amount, vault_id, @options)
+    transaction_id = purchase.params["transactionid"]
+    assert_success purchase
+    assert_equal "Succeeded", purchase.message
+
+    # Second request as MIT
+    @options.merge!(stored_credential: {
+      initial_transaction: false,
+      recurring: true,
+      initiator: 'merchant',
+      network_transaction_id: transaction_id
+    })
+    purchase = @gateway.purchase(@amount, vault_id, @options)
+    purchase.params["transactionid"]
+
+    assert_success purchase
+    assert_equal "Succeeded", purchase.message
+  end
+
+  def test_failed_store_and_purchase_with_stored_credentials
+    @options.merge!(stored_credential: {
+      initial_transaction: true,
+      recurring: nil,
+      initiator: 'cardholder',
+      network_transaction_id: nil
+    })
+    vault_id = @gateway.store(@credit_card, @options).params["customer_vault_id"]
+    purchase = @gateway.purchase(@amount, vault_id, @options)
+    assert_success purchase
+    assert_equal "Succeeded", purchase.message
+
+    # Second request as MIT
+    @options.merge!(stored_credential: {
+      initial_transaction: false,
+      recurring: true,
+      initiator: 'merchant',
+      network_transaction_id: '10202-fake'
+    })
+    response = @gateway.purchase(@amount, vault_id, @options)
+
+    assert_failure response
+    assert_match(/Invalid Initial Transaction ID/, response.message)
+  end
 end
