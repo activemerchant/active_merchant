@@ -133,11 +133,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(xml, credit_card, options)
-        xml.payment type: credit_card.brand.upcase do
+        xml.payment type: card_brand(credit_card) do
           xml.expirydate exp_date(credit_card)
           xml.securitycode credit_card.verification_value
           xml.pan credit_card.number
         end
+      end
+
+      def card_brand(card)
+        super.upcase
       end
 
       def exp_date(credit_card)
