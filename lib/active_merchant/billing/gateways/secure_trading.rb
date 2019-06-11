@@ -34,34 +34,35 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, payment, options={})
-        parameter = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-          xml.requestblock version: '3.67' do
-            add_alias(xml)
-            xml.request type: 'ACCOUNTCHECK' do
-              add_operation(xml, 'authonly', options)
-              add_merchant(xml, options)
-              add_billing_data(xml, payment, 0, options)
-            end
+      def build_xml_request(action)
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8')
+        builder.__send__('requestblock', { version: '3.67' }) do |doc|
+          doc.alias @user_id
+          doc.request type: action do
+            yield(doc)
           end
         end
+        builder.doc.root.to_xml
+      end
 
-        commit('authonly', parameter)
+      def authorize(money, payment, options={})
+        post = build_xml_request('ACCOUNTCHECK') do |xml|
+          add_operation(xml, 'authonly', options)
+          add_merchant(xml, options)
+          add_billing_data(xml, payment, 0, options)
+        end
+
+        commit('authonly', post)
       end
 
       def purchase(money, payment_method, options={})
-        post = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
-          xml.requestblock version: '3.67' do
-            add_alias(xml)
-            xml.request type: 'AUTH' do
-              add_operation(xml, 'purchase', options)
-              add_merchant(xml, options)
-              add_billing_data(xml, payment_method, money, options)
-              add_customer(xml, options)
-              add_settlement(xml, options)
-            end
-          end
-        end 
+        post = build_xml_request('AUTH') do |xml|
+          add_operation(xml, 'purchase', options)
+          add_merchant(xml, options)
+          add_billing_data(xml, payment_method, money, options)
+          add_customer(xml, options)
+          add_settlement(xml, options)
+        end
 
         commit('purchase', post)       
       end
@@ -79,11 +80,6 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-
-      def add_alias(xml)
-        xml.alias @user_id
-      end
-
       def add_address(xml, address)
         if address.present?
           xml.town address[:city]
@@ -231,7 +227,7 @@ module ActiveMerchant #:nodoc:
         {
           'Authorization' => "Basic #{@api_key}",
           'Content-Type' => 'application/xml',
-          'Content-length' => "#{parameters.to_xml.size}"
+          'Content-length' => "#{parameters.size}"
         }
       end
 
@@ -246,10 +242,6 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         response[:transaction_reference] 
-      end
-
-      def post_data(parameters = {})
-        parameters.to_xml
       end
 
       def error_code_from(response)
