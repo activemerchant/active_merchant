@@ -96,6 +96,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:method] = params[:method] || 'bank_account'
         post[:amount] = amount(money)
+        post[:due_date] = params[:due_date] if params[:due_date].present?
         post[:description] = params[:description]
         post[:order_id] = params[:order_id]
         commit(:post, "customers/#{customer_id}/charges", post, {})
