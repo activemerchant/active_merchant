@@ -1,6 +1,10 @@
+require 'active_merchant/billing/gateways/card_pointe/card_pointe_codes'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardPointeGateway < Gateway
+      include CardPointeCodes
+
       self.test_url = 'https://fts.cardconnect.com:6443/cardconnect/rest/'
       self.live_url = 'https://example.com/live'
 
@@ -10,8 +14,6 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://cardconect.com/integrate'
       self.display_name = 'CardPointe'
-
-      STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
         requires!(options, :username, :password, :merchid)
@@ -103,7 +105,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((Authorization: Basic )[\w=]+), '\1[FILTERED]').
           gsub(%r(("account\\?":\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("merchid\\?":\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("expiry\\?":\\?")[^"]*)i, '\1[FILTERED]').
@@ -121,7 +123,10 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         address = billing_address(options)
+
         post[:address] = address[:address1]
+        post[:address] += ", #{address[:address2]}" if address[:address2]
+
         post[:city] = address[:city]
         post[:postal] = address[:zip]
         post[:region] = address[:state]
@@ -185,7 +190,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Content-type'  => 'application/json',
+          'Content-Type'  => 'application/json',
           'Authorization' => "Basic #{basic_auth}"
         }
       end
@@ -202,8 +207,7 @@ module ActiveMerchant #:nodoc:
             response = parse(ssl_post(url, post_data(action, parameters), headers))
           end
         rescue ResponseError => e
-          # raise unless(e.response.code.to_s =~ /4\d\d/)
-          raise unless e.response.code.to_i.between?(400, 499)
+          raise unless(e.response.code.to_s =~ /4\d\d/)
           response = { 'resptext' => e.response.message, 'code' => e.response.code }
         end
         Response.new(
@@ -251,9 +255,21 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(action, response)
         unless success_from(action, response)
-          # TODO: lookup error code for this response
+          respcode = response['respcode']
+
+          case response['respproc']
+          when 'FNOR'
+            FNOR_ERROR_CODE_MAPPING[respcode] || STANDARD_ERROR_CODE[:card_declined]
+          when 'RPCT'
+            RPCT_ERROR_CODE_MAPPING[respcode] || STANDARD_ERROR_CODE[:card_declined]
+          when 'PPS'
+            PPS_ERROR_CODE_MAPPING[respcode] || STANDARD_ERROR_CODE[:card_declined]
+          else
+            STANDARD_ERROR_CODE[:card_declined]
+          end
         end
       end
+
     end
   end
 end

@@ -6,15 +6,11 @@ class RemoteCardPointeTest < Test::Unit::TestCase
     @merchid = fixtures(:card_pointe)[:merchid]
 
     @amount = 100
-    # @credit_card = credit_card('6011361000006668',
-    #   :month => '12',
-    #   :year  => '2020'
-    # )
-    @credit_card = credit_card
+    @credit_card = credit_card('6011361000006668')
     @update_card = credit_card('4761739001010010')
-    @declined_card = credit_card('6011361000006668',
+    @expired_card = credit_card('6011361000006668',
       :month => '12',
-      :year  => '2018'
+      :year  => '2000'
     )
     @options = {
       billing_address: address,
@@ -25,32 +21,24 @@ class RemoteCardPointeTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    # assert_equal 'Approval', response.message
-    assert_equal 'A', response.params['respstat']
   end
 
   def test_successful_purchase_with_more_options
     options = @options.merge(
-      :order_id => '1',
+      :order_id => generate_unique_id,
       :ip => '127.0.0.1',
       :email => 'joe@example.com'
     )
-    # options = {
-    #   billing_address: address,
-    #   order_id: '1',
-    #   ip: "127.0.0.1",
-    #   email: "joe@example.com"
-    # }
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    # assert_equal 'Approval', response.message
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(512400, @credit_card, @options)
+    response = @gateway.purchase(112400, @credit_card, @options)
     assert_failure response
-    assert_equal 'Wrong expiration', response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    # assert_equal 'Wrong expiration', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -59,7 +47,6 @@ class RemoteCardPointeTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert_equal 'Approval', capture.message
   end
 
   def test_successful_authorize
@@ -68,9 +55,10 @@ class RemoteCardPointeTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(@amount, @declined_card, @options)
+    response = @gateway.authorize(155400, @credit_card, @options)
     assert_failure response
-    assert_equal 'Wrong expiration', response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal 'Over daily limit', response.message
   end
 
   def test_partial_capture
@@ -85,7 +73,7 @@ class RemoteCardPointeTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'Invalid field', response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 
   def test_successful_refund
@@ -94,7 +82,6 @@ class RemoteCardPointeTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
-    # assert_equal 'Approval', refund.message
   end
 
   def test_partial_refund
@@ -103,11 +90,13 @@ class RemoteCardPointeTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount-1, purchase.authorization)
     assert_success refund
+    assert_equal '0.99', refund.params['amount']
   end
 
   def test_failed_refund
     response = @gateway.refund(@amount, '')
     assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     assert_equal 'Txn not found', response.message
   end
 
@@ -117,27 +106,25 @@ class RemoteCardPointeTest < Test::Unit::TestCase
 
     assert void = @gateway.void(auth.authorization)
     assert_success void
-    # assert_equal 'Approval', void.message
   end
 
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     assert_equal 'Invalid field', response.message
   end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    # assert_match %r{Approval}, response.message
-    # assert_equal 'A', response.params['respstat']
     assert_equal '0.00', response.params['amount']
   end
 
   def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
+    response = @gateway.verify(@expired_card, @options)
     assert_failure response
-    assert_match %r{Wrong expiration}, response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:expired_card], response.error_code
   end
 
   def test_successful_store
