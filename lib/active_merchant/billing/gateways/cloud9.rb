@@ -415,6 +415,14 @@ module ActiveMerchant #:nodoc: ALL
         JSON.parse(body)
       end
 
+      def connection_error(e)
+        {
+          'Status' => STATUS_FAIL,
+          'ErrorCode' => '0FF', # Network error
+          'ErrorText' => e.message
+        }
+      end
+
       def json_error(raw_response)
         msg = 'Invalid response received from the Cloud9 API.'
         msg + "  (The raw response returned by the API was: #{raw_response.inspect})"
@@ -432,7 +440,7 @@ module ActiveMerchant #:nodoc: ALL
       end
 
       def api_request(action, endpoint, parameters = nil)
-        raw_response = response = nil
+        raw_response = nil
         begin
           raw_response = ssl_post(target_url(endpoint), post_data(action, parameters), headers(parameters))
           response = parse(raw_response)
@@ -441,6 +449,8 @@ module ActiveMerchant #:nodoc: ALL
           response = response_error(raw_response)
         rescue JSON::ParserError
           response = json_error(raw_response)
+        rescue ActiveMerchant::ConnectionError => e
+          response = connection_error(e)
         end
         response
       end
