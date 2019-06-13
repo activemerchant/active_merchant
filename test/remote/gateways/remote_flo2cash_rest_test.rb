@@ -26,6 +26,10 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
       frequency: 'monthly'
     }
 
+    skip_initial_payment = {
+      skip_initial_payment: 'yes'
+    }
+
     @debit_options = @payment_options.merge({
       start_date: Date.today.next_month.to_s(:ymd),
       initial_date: Date.today.next_month.to_s(:ymd),
@@ -37,6 +41,7 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     })
 
     @options = @auth_options.merge(@payment_options)
+    @options_skip_initial_payment = @options.merge(skip_initial_payment)
   end
 
   def test_success_store
@@ -56,6 +61,15 @@ class RemoteFlo2cashRestTest < Test::Unit::TestCase
     assert_success store
 
     response = @gateway.create_card_plan(store.authorization, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_success_create_card_plan_without_initial_payment
+    store = @gateway.store(@credit_card, @auth_options)
+    assert_success store
+
+    response = @gateway.create_card_plan(store.authorization, @options_skip_initial_payment)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
