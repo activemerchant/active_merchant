@@ -325,6 +325,14 @@ class LitleTest < Test::Unit::TestCase
     assert_equal "1", response.params["response"]
   end
 
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrub), post_scrub
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
+
   private
 
   def successful_purchase_response
@@ -560,6 +568,66 @@ class LitleTest < Test::Unit::TestCase
                      message='Error validating xml data against the schema on line 8\nthe length of the value is 10, but the required minimum is 13.'/>
 
     )
+  end
+
+  def pre_scrub
+    <<-pre_scrub
+      opening connection to www.testlitle.com:443...
+      opened
+      starting SSL for www.testlitle.com:443...
+      SSL established
+      <- "POST /sandbox/communicator/online HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.testlitle.com\r\nContent-Length: 406\r\n\r\n"
+      <- "<litleOnlineRequest xmlns=\"http://www.litle.com/schema\" merchantId=\"101\" version=\"9.4\">\n  <authentication>\n    <user>ACTIVE</user>\n    <password>MERCHANT</password>\n  </authentication>\n  <registerTokenRequest reportGroup=\"Default Report Group\">\n    <orderId/>\n    <accountNumber>4242424242424242</accountNumber>\n    <cardValidationNum>111</cardValidationNum>\n  </registerTokenRequest>\n</litleOnlineRequest>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 16 May 2016 03:07:36 GMT\r\n"
+      -> "Server: Apache-Coyote/1.1\r\n"
+      -> "Content-Type: text/xml;charset=utf-8\r\n"
+      -> "Connection: close\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "1bf\r\n"
+      reading 447 bytes...
+      -> ""
+      -> "<litleOnlineResponse version='10.1' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>\n  <registerTokenResponse id='' reportGroup='Default Report Group' customerId=''>\n    <litleTxnId>185074924759529000</litleTxnId>\n    <litleToken>1111222233334444</litleToken>\n    <response>000</response>\n    <responseTime>2016-05-15T23:07:36</responseTime>\n    <message>Approved</message>\n  </registerTokenResponse>\n</litleOnlineResponse>"
+      read 447 bytes
+      reading 2 bytes...
+      -> ""
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    pre_scrub
+  end
+
+  def post_scrub
+    <<-post_scrub
+      opening connection to www.testlitle.com:443...
+      opened
+      starting SSL for www.testlitle.com:443...
+      SSL established
+      <- "POST /sandbox/communicator/online HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.testlitle.com\r\nContent-Length: 406\r\n\r\n"
+      <- "<litleOnlineRequest xmlns=\"http://www.litle.com/schema\" merchantId=\"101\" version=\"9.4\">\n  <authentication>\n    <user>[FILTERED]</user>\n    <password>[FILTERED]</password>\n  </authentication>\n  <registerTokenRequest reportGroup=\"Default Report Group\">\n    <orderId/>\n    <accountNumber>[FILTERED]</accountNumber>\n    <cardValidationNum>[FILTERED]</cardValidationNum>\n  </registerTokenRequest>\n</litleOnlineRequest>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Mon, 16 May 2016 03:07:36 GMT\r\n"
+      -> "Server: Apache-Coyote/1.1\r\n"
+      -> "Content-Type: text/xml;charset=utf-8\r\n"
+      -> "Connection: close\r\n"
+      -> "Transfer-Encoding: chunked\r\n"
+      -> "\r\n"
+      -> "1bf\r\n"
+      reading 447 bytes...
+      -> ""
+      -> "<litleOnlineResponse version='10.1' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>\n  <registerTokenResponse id='' reportGroup='Default Report Group' customerId=''>\n    <litleTxnId>185074924759529000</litleTxnId>\n    <litleToken>1111222233334444</litleToken>\n    <response>000</response>\n    <responseTime>2016-05-15T23:07:36</responseTime>\n    <message>Approved</message>\n  </registerTokenResponse>\n</litleOnlineResponse>"
+      read 447 bytes
+      reading 2 bytes...
+      -> ""
+      -> "\r\n"
+      read 2 bytes
+      -> "0\r\n"
+      -> "\r\n"
+      Conn close
+    post_scrub
   end
 
 end

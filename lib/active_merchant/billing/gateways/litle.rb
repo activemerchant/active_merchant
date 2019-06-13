@@ -123,7 +123,25 @@ module ActiveMerchant #:nodoc:
         commit(:registerToken, request)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<user>).+(</user>)), '\1[FILTERED]\2').
+          gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
+          gsub(%r((<number>).+(</number>)), '\1[FILTERED]\2').
+          gsub(%r((<accNum>).+(</accNum>)), '\1[FILTERED]\2').
+          gsub(%r((<routingNum>).+(</routingNum>)), '\1[FILTERED]\2').
+          gsub(%r((<cardValidationNum>).+(</cardValidationNum>)), '\1[FILTERED]\2').
+          gsub(%r((<accountNumber>).+(</accountNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<paypageRegistrationId>).+(</paypageRegistrationId>)), '\1[FILTERED]\2').
+          gsub(%r((<authenticationValue>).+(</authenticationValue>)), '\1[FILTERED]\2')
+      end
+
       private
+
       CARD_TYPE = {
         'visa'             => 'VI',
         'master'           => 'MC',
