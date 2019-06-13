@@ -12,7 +12,8 @@ class RemoteJacksonRiverTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase',
       form_id: 34467,
-      market_source: 'FooBar_MarketSource'
+      market_source: 'FooBar_MarketSource',
+      canvasser_name: 'John Doe Canvasser'
     }
   end
 
