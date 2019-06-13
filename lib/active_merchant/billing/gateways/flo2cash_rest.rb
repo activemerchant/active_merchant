@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options[:amount], options)
         add_references(post, options)
         add_merchant(post, options)
-        add_initial_payment(post, options)
+        add_initial_payment(post, options) unless options[:skip_initial_payment]
         add_retry_preferences(post, options)
 
         commit(:post, :create_card_plan, post, options)
@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options[:amount], options)
         add_debit_card_references(post, options)
         add_merchant(post, options)
-        add_initial_payment(post, options)
+        add_initial_payment(post, options) unless options[:skip_initial_payment]
         add_retry_preferences(post, options)
         add_customer_data(post, options)
         add_address(post, options[:address])
