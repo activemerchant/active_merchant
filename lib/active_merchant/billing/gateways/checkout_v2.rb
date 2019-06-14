@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:capture] = false
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method)
+        add_payment_method(post, payment_method, options)
         add_customer_data(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
-      def add_payment_method(post, payment_method)
+      def add_payment_method(post, payment_method, options)
         post[:source] = {}
         post[:source][:type] = 'card'
         post[:source][:name] = payment_method.name
@@ -102,6 +102,7 @@ module ActiveMerchant #:nodoc:
         post[:source][:cvv] = payment_method.verification_value
         post[:source][:expiry_year] = format(payment_method.year, :four_digits)
         post[:source][:expiry_month] = format(payment_method.month, :two_digits)
+        post[:source][:stored] = 'true' if options[:card_on_file] == true
       end
 
       def add_customer_data(post, options)
@@ -122,7 +123,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction_data(post, options={})
-        post[:card_on_file] = true if options[:card_on_file] == true
         post[:payment_type] = 'Regular' if options[:transaction_indicator] == 1
         post[:payment_type] = 'Recurring' if options[:transaction_indicator] == 2
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
