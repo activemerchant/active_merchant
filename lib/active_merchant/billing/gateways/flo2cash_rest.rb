@@ -367,7 +367,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        post[:payer].merge({
+        post[:payer].merge!({
           address1: options.try(:[], :address1),
           address2: options.try(:[], :address2),
           address3: options.try(:[], :address3),
