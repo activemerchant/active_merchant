@@ -1,5 +1,4 @@
 require 'test_helper'
-
 class CheckoutV2Test < Test::Unit::TestCase
   include CommStub
 
@@ -13,7 +12,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
@@ -23,7 +22,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_includes_avs_result
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
@@ -34,7 +33,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_includes_cvv_result
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
@@ -42,7 +41,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_includes_avs_result
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
@@ -53,7 +52,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_includes_cvv_result
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
@@ -61,9 +60,9 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_purchase_with_additional_fields
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, {descriptor_city: 'london', descriptor_name: 'sherlock'})
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |method, endpoint, data, headers|
       assert_match(/"billing_descriptor\":{\"name\":\"sherlock\",\"city\":\"london\"}/, data)
     end.respond_with(successful_purchase_response)
 
@@ -71,7 +70,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(failed_purchase_response)
     assert_failure response
@@ -79,14 +78,14 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    capture = stub_comms do
+    capture = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
@@ -94,14 +93,14 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_with_additional_options
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       options = {
         card_on_file: true,
         transaction_indicator: 2,
         previous_charge_id: 'pay_123'
       }
       @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
+    end.check_request do |method, endpoint, data, headers|
       assert_match(%r{"card_on_file":true}, data)
       assert_match(%r{"payment_type":"Recurring"}, data)
       assert_match(%r{"previous_payment_id":"pay_123"}, data)
@@ -110,7 +109,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    capture = stub_comms do
+    capture = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
@@ -118,7 +117,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture_with_3ds
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       options = {
         execute_threed: true,
         eci: '05',
@@ -131,7 +130,7 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    capture = stub_comms do
+    capture = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, response.authorization)
     end.respond_with(successful_capture_response)
 
@@ -139,7 +138,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(failed_authorize_response)
 
@@ -149,7 +148,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.capture(100, '')
     end.respond_with(failed_capture_response)
 
@@ -157,14 +156,14 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_void
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    void = stub_comms do
+    void = stub_comms(@gateway, :ssl_request) do
       @gateway.void(response.authorization)
     end.respond_with(successful_void_response)
 
@@ -172,7 +171,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.void('5d53a33d960c46d00f5dc061947d998c')
     end.respond_with(failed_void_response)
 
@@ -180,14 +179,14 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(successful_purchase_response)
 
     assert_success response
     assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
 
-    refund = stub_comms do
+    refund = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(@amount, response.authorization)
     end.respond_with(successful_refund_response)
 
@@ -195,7 +194,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.refund(nil, '')
     end.respond_with(failed_refund_response)
 
@@ -203,7 +202,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@credit_card)
     end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
@@ -211,11 +210,25 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_failed_verify
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@credit_card)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
     assert_equal 'Invalid Card Number', response.message
+  end
+
+  def test_successful_get_payment
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.get_payment('pay_1111')
+    end.respond_with(sucessful_get_payment_response)
+    assert_success response
+    assert_equal 'pay_1111', response.params['id']
+  end
+
+  def test_failed_get_payment
+    @gateway.expects(:raw_ssl_request).returns(failed_get_payment_response)
+    response = @gateway.get_payment('pay_1111')
+    assert_failure response
   end
 
   def test_transcript_scrubbing
@@ -223,7 +236,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_invalid_json
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(invalid_json_response)
 
@@ -232,7 +245,7 @@ class CheckoutV2Test < Test::Unit::TestCase
   end
 
   def test_error_code_returned
-    response = stub_comms do
+    response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card)
     end.respond_with(error_code_response)
 
@@ -423,6 +436,66 @@ class CheckoutV2Test < Test::Unit::TestCase
   def failed_void_response
     %(
     )
+  end
+
+  def sucessful_get_payment_response
+    %(
+      {
+        "id": "pay_1111",
+        "requested_on": "2019-05-15T12:25:52Z",
+        "source": {
+          "id": "123123",
+          "type": "card",
+          "expiry_month": 12,
+          "expiry_year": 2020,
+          "name": "First Last",
+          "scheme": "Visa",
+          "last4": "4242",
+          "fingerprint": "436D1EB12C4B92B9EEB1E798DEA93A718C78F5362C7FB5D84B51C72A869B6101",
+          "bin": "424242",
+          "card_type": "Credit",
+          "card_category": "Consumer",
+          "issuer": "JPMORGAN CHASE BANK NA",
+          "issuer_country": "US",
+          "product_id": "A",
+          "product_type": "Visa Traditional",
+          "avs_check": "S",
+          "cvv_check": ""
+        },
+        "amount": 500,
+        "currency": "SAR",
+        "payment_type": "Regular",
+        "status": "Captured",
+        "approved": true,
+        "risk": {
+          "flagged": false
+        },
+        "customer": {
+          "id": "cus_2222"
+        },
+        "billing_descriptor": {
+          "name": "",
+          "city": "London"
+        },
+        "eci": "05",
+        "scheme_id": "638284745624527",
+        "_links": {
+          "self": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_1111"
+          },
+          "actions": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_1111/actions"
+          },
+          "refund": {
+            "href": "https://api.sandbox.checkout.com/payments/pay_1111/refunds"
+          }
+        }
+      }
+    )
+  end
+
+  def failed_get_payment_response
+    MockResponse.new(404, '')
   end
 
   def invalid_json_response
