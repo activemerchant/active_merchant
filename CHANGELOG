@@ -12,6 +12,7 @@
 * Braintree: Add `skip_avs` and `skip_cvv` gateway specific fields [leila-alderman] #3241
 * NAB Transact: Update periodic test url [mengqing] #3177
 * NMI: Add level 3 gateway-specific fields tax, shipping, and ponumber [jasonxp] #3239
+* Checkout V2: Update stored card flag [curiousepic] #3247
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
