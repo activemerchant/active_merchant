@@ -79,4 +79,21 @@ class PostsDataTests < Test::Unit::TestCase
       @gateway.ssl_post(@url, '')
     end
   end
+
+  def test_respecting_environment_proxy_settings
+    # use rfc5737 test PI range && expect Errno::ENETUNREACH
+    url = 'http://192.0.2.0'
+
+    # mock result
+    http = Net::HTTP.new('192.0.2.0', 80)
+    
+    # ensure clean proxy config
+    gw_class = Class.new(ActiveMerchant::Billing::Gateway)
+    gateway = gw_class.new
+
+    Net::HTTP.stubs(:new).with('192.0.2.0', 80, :ENV, nil).returns(http, http)
+    assert_raises(Errno::ENETUNREACH) do
+      gateway.ssl_post(url, '')
+    end
+  end
 end

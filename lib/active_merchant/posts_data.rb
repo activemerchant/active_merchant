@@ -29,6 +29,8 @@ module ActiveMerchant #:nodoc:
       base.class_attribute :wiredump_device
 
       base.class_attribute :proxy_address
+      base.proxy_address = Connection::PROXY_ADDRESS
+
       base.class_attribute :proxy_port
     end
 
