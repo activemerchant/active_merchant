@@ -1,6 +1,7 @@
 require 'test_helper'
 
 class PostsDataTests < Test::Unit::TestCase
+  class HttpConnectionAbort < StandardError; end
 
   def setup
     @url = 'http://example.com'
@@ -81,19 +82,13 @@ class PostsDataTests < Test::Unit::TestCase
   end
 
   def test_respecting_environment_proxy_settings
-    # use rfc5737 test PI range && expect Errno::ENETUNREACH
-    url = 'http://192.0.2.0'
-
-    # mock result
-    http = Net::HTTP.new('192.0.2.0', 80)
-    
     # ensure clean proxy config
     gw_class = Class.new(ActiveMerchant::Billing::Gateway)
     gateway = gw_class.new
 
-    Net::HTTP.stubs(:new).with('192.0.2.0', 80, :ENV, nil).returns(http, http)
-    assert_raises(Errno::ENETUNREACH) do
-      gateway.ssl_post(url, '')
+    Net::HTTP.stubs(:new).with('example.com', 80, :ENV, nil).raises(PostsDataTests::HttpConnectionAbort)
+    assert_raises(PostsDataTests::HttpConnectionAbort) do
+      gateway.ssl_post(@url, '')
     end
   end
 end
