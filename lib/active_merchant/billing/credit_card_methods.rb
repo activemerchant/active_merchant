@@ -6,6 +6,7 @@ module ActiveMerchant #:nodoc:
         'visa'               => ->(num) { num =~ /^4\d{12}(\d{3})?(\d{3})?$/ },
         'master'             => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), MASTERCARD_RANGES) },
         'elo'                => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ELO_RANGES) },
+        'alelo'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ALELO_RANGES) },
         'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}|(62\d{14,17})$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
@@ -77,6 +78,19 @@ module ActiveMerchant #:nodoc:
         650439..650439, 650485..650504, 650506..650530, 650577..650580, 650582..650591, 650721..650727, 650901..650922,
         650928..650928, 650938..650939, 650946..650948, 650954..650955, 650962..650963, 650967..650967, 650971..650971,
         651652..651667, 651675..651678, 655000..655010, 655012..655015, 655051..655052, 655056..655057
+      ]
+
+      # Alelo provides BIN ranges by e-mailing them out periodically.
+      # The BINs beginning with the digit 4 overlap with Visa's range of valid card numbers.
+      # By placing the 'alelo' entry in CARD_COMPANY_DETECTORS below the 'visa' entry, we
+      # identify these cards as Visa. This works because transactions with such cards will
+      # run on Visa rails.
+      ALELO_RANGES = [
+        402588..402588, 404347..404347, 405876..405876, 405882..405882, 405884..405884,
+        405886..405886, 430471..430471, 438061..438061, 438064..438064, 470063..470066,
+        496067..496067, 506699..506704, 506706..506706, 506713..506714, 506716..506716,
+        506749..506750, 506752..506752, 506754..506756, 506758..506762, 506764..506767,
+        506770..506771, 509015..509019, 509880..509882, 509884..509885, 509987..509988
       ]
 
       def self.included(base)
