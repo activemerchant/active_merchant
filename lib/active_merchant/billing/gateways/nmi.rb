@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
+        add_stored_credential(post, options)
         add_customer_data(post, options)
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
@@ -43,6 +44,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method, options)
+        add_stored_credential(post, options)
         add_customer_data(post, options)
         add_vendor_data(post, options)
         add_merchant_defined_fields(post, options)
@@ -175,6 +177,34 @@ module ActiveMerchant #:nodoc:
           post[:ccnumber] = payment_method.number
           post[:cvv] = payment_method.verification_value unless empty?(payment_method.verification_value)
           post[:ccexp] = exp_date(payment_method)
+        end
+      end
+
+      def add_stored_credential(post, options)
+        return unless (stored_credential = options[:stored_credential])
+
+        if stored_credential[:initiator] == 'cardholder'
+          post[:initiated_by] = 'customer'
+        else
+          post[:initiated_by] = 'merchant'
+        end
+
+        # :reason_type, when provided, overrides anything previously set in
+        # post[:billing_method] (see `add_invoice` and the :recurring) option
+        case stored_credential[:reason_type]
+        when 'recurring'
+          post[:billing_method] = 'recurring'
+        when 'installment'
+          post[:billing_method] = 'installment'
+        when 'unscheduled'
+          post.delete(:billing_method)
+        end
+
+        if stored_credential[:initial_transaction]
+          post[:stored_credential_indicator] = 'stored'
+        else
+          post[:stored_credential_indicator] = 'used'
+          post[:initial_transaction_id] = stored_credential[:network_transaction_id]
         end
       end
 

@@ -264,6 +264,87 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
+  def test_purchase_using_stored_credential_recurring_cit
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['transactionid']
+
+    used_options = stored_credential_options(:recurring, :cardholder, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_recurring_mit
+    initial_options = stored_credential_options(:merchant, :recurring, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['transactionid']
+
+    used_options = stored_credential_options(:merchant, :recurring, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_installment_cit
+    initial_options = stored_credential_options(:cardholder, :installment, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['transactionid']
+
+    used_options = stored_credential_options(:cardholder, :installment, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_installment_mit
+    initial_options = stored_credential_options(:merchant, :installment, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['transactionid']
+
+    used_options = stored_credential_options(:merchant, :installment, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_unscheduled_cit
+    initial_options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['transactionid']
+
+    used_options = stored_credential_options(:cardholder, :unscheduled, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_purchase_using_stored_credential_unscheduled_mit
+    initial_options = stored_credential_options(:merchant, :unscheduled, :initial)
+    assert purchase = @gateway.purchase(@amount, @credit_card, initial_options)
+    assert_success purchase
+    assert network_transaction_id = purchase.params['transactionid']
+
+    used_options = stored_credential_options(:merchant, :unscheduled, id: network_transaction_id)
+    assert purchase = @gateway.purchase(@amount, @credit_card, used_options)
+    assert_success purchase
+  end
+
+  def test_authorize_and_capture_with_stored_credential
+    initial_options = stored_credential_options(:cardholder, :recurring, :initial)
+    assert authorization = @gateway.authorize(@amount, @credit_card, initial_options)
+    assert_success authorization
+    assert network_transaction_id = authorization.params['transactionid']
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+
+    used_options = stored_credential_options(:cardholder, :recurring, id: network_transaction_id)
+    assert authorization = @gateway.authorize(@amount, @credit_card, used_options)
+    assert_success authorization
+    assert @gateway.capture(@amount, authorization.authorization)
+  end
+
   def test_card_transcript_scrubbing
     transcript = capture_transcript(@gateway) do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -271,10 +352,8 @@ class RemoteNmiTest < Test::Unit::TestCase
     clean_transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(@credit_card.number, clean_transcript)
-    assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
-
-    # "password=password is filtered, but can't be tested b/c of key match"
-    # assert_scrubbed(@gateway.options[:password], clean_transcript)
+    assert_cvv_scrubbed(clean_transcript)
+    assert_password_scrubbed(clean_transcript)
   end
 
   def test_check_transcript_scrubbing
@@ -285,9 +364,7 @@ class RemoteNmiTest < Test::Unit::TestCase
 
     assert_scrubbed(@check.account_number, clean_transcript)
     assert_scrubbed(@check.routing_number, clean_transcript)
-
-    # "password=password is filtered, but can't be tested b/c of key match"
-    # assert_scrubbed(@gateway.options[:password], clean_transcript)
+    assert_password_scrubbed(clean_transcript)
   end
 
   def test_network_tokenization_transcript_scrubbing
@@ -298,8 +375,30 @@ class RemoteNmiTest < Test::Unit::TestCase
 
     assert_scrubbed(@apple_pay_card.number, clean_transcript)
     assert_scrubbed(@apple_pay_card.payment_cryptogram, clean_transcript)
+    assert_password_scrubbed(clean_transcript)
+  end
 
-    # "password=password is filtered, but can't be tested b/c of key match"
-    # assert_scrubbed(@gateway.options[:password], clean_transcript)
+  private
+
+  # "password=password is filtered, but can't be tested via normal
+  # `assert_scrubbed` b/c of key match"
+  def assert_password_scrubbed(transcript)
+    assert_match(/password=\[FILTERED\]/, transcript)
+  end
+
+  # Because the cvv is a simple three digit number, sometimes there are random
+  # failures using `assert_scrubbed` because of natural collisions with a
+  # substring within orderid in transcript; e.g.
+  #
+  #   Expected the value to be scrubbed out of the transcript.
+  #   </917/> was expected to not match
+  #   <"opening connection to secure.nmi.com:443...\nopened\nstarting SSL for secure.nmi.com:443...\nSSL established\n<- \"POST /api/transact.php HTTP/1.1\\r\\nContent-Type: application/x-www-form-urlencoded;charset=UTF-8\\r\\nConnection: close\\r\\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\\r\\nAccept: */*\\r\\nUser-Agent: Ruby\\r\\nHost: secure.nmi.com\\r\\nContent-Length: 394\\r\\n\\r\\n\"\n<- \"amount=7.96&orderid=9bb4c3bf6fbb26b91796ae9442cb1941&orderdescription=Store+purchase&currency=USD&payment=creditcard&firstname=Longbob&lastname=Longsen&ccnumber=[FILTERED]&cvv=[FILTERED]&ccexp=0920&email=&ipaddress=&customer_id=&company=Widgets+Inc&address1=456+My+Street&address2=Apt+1&city=Ottawa&state=ON&country=CA&zip=K1C2N6&phone=%28555%29555-5555&type=sale&username=demo&password=[FILTERED]\"\n-> \"HTTP/1.1 200 OK\\r\\n\"\n-> \"Date: Wed, 12 Jun 2019 21:10:29 GMT\\r\\n\"\n-> \"Server: Apache\\r\\n\"\n-> \"Content-Length: 169\\r\\n\"\n-> \"Connection: close\\r\\n\"\n-> \"Content-Type: text/html; charset=UTF-8\\r\\n\"\n-> \"\\r\\n\"\nreading 169 bytes...\n-> \"response=1&responsetext=SUCCESS&authcode=123456&transactionid=4743046890&avsresponse=N&cvvresponse=N&orderid=9bb4c3bf6fbb26b91796ae9442cb1941&type=sale&response_code=100\"\nread 169 bytes\nConn close\n">.
+  def assert_cvv_scrubbed(transcript)
+    assert_match(/cvv=\[FILTERED\]/, transcript)
+  end
+
+  def stored_credential_options(*args, id: nil)
+    @options.merge(order_id: generate_unique_id,
+                   stored_credential: stored_credential(*args, id: id))
   end
 end

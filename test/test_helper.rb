@@ -245,6 +245,26 @@ module ActiveMerchant
       }.update(options)
     end
 
+    def stored_credential(*args, **options)
+      id = options.delete(:id) || options.delete(:network_transaction_id)
+
+      stored_credential = {
+        network_transaction_id: id,
+        initial_transaction: false
+      }
+
+      stored_credential[:initial_transaction] = true if args.include?(:initial)
+
+      stored_credential[:reason_type] = 'recurring' if args.include?(:recurring)
+      stored_credential[:reason_type] = 'unscheduled' if args.include?(:unscheduled)
+      stored_credential[:reason_type] = 'installment' if args.include?(:installment)
+
+      stored_credential[:initiator] = 'cardholder' if args.include?(:cardholder)
+      stored_credential[:initiator] = 'merchant' if args.include?(:merchant)
+
+      stored_credential
+    end
+
     def generate_unique_id
       SecureRandom.hex(16)
     end

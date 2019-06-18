@@ -382,6 +382,216 @@ class NmiTest < Test::Unit::TestCase
     end
   end
 
+  def test_stored_credential_recurring_cit_initial
+    options = stored_credential_options(:cardholder, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=customer/, data)
+      assert_match(/stored_credential_indicator=stored/, data)
+      assert_match(/billing_method=recurring/, data)
+      refute_match(/initial_transaction_id/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_cit_used
+    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=customer/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      assert_match(/billing_method=recurring/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_initial
+    options = stored_credential_options(:merchant, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=stored/, data)
+      assert_match(/billing_method=recurring/, data)
+      refute_match(/initial_transaction_id/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_used
+    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      assert_match(/billing_method=recurring/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_cit_initial
+    options = stored_credential_options(:cardholder, :installment, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=customer/, data)
+      assert_match(/stored_credential_indicator=stored/, data)
+      assert_match(/billing_method=installment/, data)
+      refute_match(/initial_transaction_id/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_cit_used
+    options = stored_credential_options(:cardholder, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=customer/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      assert_match(/billing_method=installment/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_mit_initial
+    options = stored_credential_options(:merchant, :installment, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=stored/, data)
+      assert_match(/billing_method=installment/, data)
+      refute_match(/initial_transaction_id/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_mit_used
+    options = stored_credential_options(:merchant, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      assert_match(/billing_method=installment/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_initial
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=customer/, data)
+      assert_match(/stored_credential_indicator=stored/, data)
+      refute_match(/billing_method/, data)
+      refute_match(/initial_transaction_id/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_used
+    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=customer/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      refute_match(/billing_method/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_initial
+    options = stored_credential_options(:merchant, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=stored/, data)
+      refute_match(/billing_method/, data)
+      refute_match(/initial_transaction_id/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_used
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      refute_match(/billing_method/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_stored_credential
+    options = stored_credential_options(:merchant, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      assert_match(/billing_method=installment/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_takes_precedence_over_recurring_option
+    options = stored_credential_options(:merchant, :installment, id: 'abc123').merge(recurring: true)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      assert_match(/billing_method=installment/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_takes_precedence_over_recurring_option
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123').merge(recurring: true)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/initiated_by=merchant/, data)
+      assert_match(/stored_credential_indicator=used/, data)
+      refute_match(/billing_method/, data)
+      assert_match(/initial_transaction_id=abc123/, data)
+    end.respond_with(successful_authorization_response)
+
+    assert_success response
+  end
+
   private
 
   def test_verify(options = {})
@@ -419,6 +629,20 @@ class NmiTest < Test::Unit::TestCase
     assert_match(/customer_id=123/, data)
 
     test_level3_options(data)
+  end
+
+  def stored_credential_options(*args, id: nil)
+    {
+      order_id: '#1001',
+      description: 'AM test',
+      currency: 'GBP',
+      dup_seconds: 15,
+      customer: '123',
+      tax: 5.25,
+      shipping: 10.51,
+      ponumber: 1002,
+      stored_credential: stored_credential(*args, id: id)
+    }
   end
 
   def successful_purchase_response
