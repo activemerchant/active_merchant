@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:capture] = false
         add_invoice(post, amount, options)
-        add_payment_method(post, payment_method, options)
+        add_payment_method(post, payment_method)
         add_customer_data(post, options)
         add_transaction_data(post, options)
         add_3ds(post, options)
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:udf5] = application_id || 'ActiveMerchant'
       end
 
-      def add_payment_method(post, payment_method, options)
+      def add_payment_method(post, payment_method)
         post[:source] = {}
         post[:source][:type] = 'card'
         post[:source][:name] = payment_method.name
@@ -102,7 +102,6 @@ module ActiveMerchant #:nodoc:
         post[:source][:cvv] = payment_method.verification_value
         post[:source][:expiry_year] = format(payment_method.year, :four_digits)
         post[:source][:expiry_month] = format(payment_method.month, :two_digits)
-        post[:source][:stored] = 'true' if options[:card_on_file] == true
       end
 
       def add_customer_data(post, options)
@@ -118,11 +117,12 @@ module ActiveMerchant #:nodoc:
           post[:source][:billing_address][:state] = address[:state] unless address[:state].blank?
           post[:source][:billing_address][:country] = address[:country] unless address[:country].blank?
           post[:source][:billing_address][:zip] = address[:zip] unless address[:zip].blank?
-          post[:source][:phone] = { number: address[:phone] } unless address[:phone].blank?
+          post[:source][:phone] = { number: sanitize_phone_number(address[:phone]) } unless address[:phone].blank?
         end
       end
 
-      def add_transaction_data(post, options={})
+      def add_transaction_data(post, options = {})
+        post[:card_on_file] = true if options[:card_on_file] == true
         post[:payment_type] = 'Regular' if options[:transaction_indicator] == 1
         post[:payment_type] = 'Recurring' if options[:transaction_indicator] == 2
         post[:previous_payment_id] = options[:previous_charge_id] if options[:previous_charge_id]
@@ -254,6 +254,10 @@ module ActiveMerchant #:nodoc:
         else
           STANDARD_ERROR_CODE_MAPPING[response['response_code']]
         end
+      end
+
+      def sanitize_phone_number(phone)
+        phone.gsub(/\D/, '')
       end
     end
   end
