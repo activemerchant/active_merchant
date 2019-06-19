@@ -248,8 +248,13 @@ module ActiveMerchant #:nodoc:
         post[:merchid] = @options[:merchid]
       end
 
+      def add_frontendid(post)
+        post[:frontendid] = '37'
+      end
+
       def post_data(action, parameters = {})
         add_merchid(parameters)
+        add_frontendid(parameters)
         JSON.generate(parameters)
       end
 
