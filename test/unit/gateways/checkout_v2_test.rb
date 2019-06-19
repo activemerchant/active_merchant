@@ -93,19 +93,6 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_successful_authorize_with_sanitized_phone_number
-    stub_comms do
-      options = {
-        billing_address: {
-          phone: "'12345*)",
-        },
-      }
-      @gateway.authorize(@amount, @credit_card, options)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/\"phone\":{\"number\":\"12345\"/, data)
-    end.respond_with(successful_authorize_response)
-  end
-
   def test_successful_authorize_and_capture_with_additional_options
     response = stub_comms do
       options = {
