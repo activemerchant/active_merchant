@@ -232,9 +232,13 @@ module ActiveMerchant #:nodoc:
           post[:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
           post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
           post[:billingAddress][:city] = address[:city] || 'N/A'
-          post[:billingAddress][:stateOrProvince] = address[:state] || 'N/A'
+          post[:billingAddress][:stateOrProvince] = get_state(address)
           post[:billingAddress][:country] = address[:country] if address[:country]
         end
+      end
+
+      def get_state(address)
+        address[:state] && !address[:state].blank? ? address[:state] : 'N/A'
       end
 
       def add_invoice(post, money, options)
