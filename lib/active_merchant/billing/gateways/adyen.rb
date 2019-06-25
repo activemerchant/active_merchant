@@ -237,17 +237,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
+        currency = options[:currency] || currency(money)
         amount = {
-          value: amount(money),
-          currency: options[:currency] || currency(money)
+          value: localized_amount(money, currency),
+          currency: currency
         }
         post[:amount] = amount
       end
 
       def add_invoice_for_modification(post, money, options)
+        currency = options[:currency] || currency(money)
         amount = {
-          value: amount(money),
-          currency: options[:currency] || currency(money)
+          value: localized_amount(money, currency),
+          currency: currency
         }
         post[:modificationAmount] = amount
       end

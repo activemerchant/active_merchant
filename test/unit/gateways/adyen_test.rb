@@ -271,6 +271,14 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_nonfractional_currency_handling
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(currency: 'JPY'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"amount\":{\"value\":\"1\",\"currency\":\"JPY\"}/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
