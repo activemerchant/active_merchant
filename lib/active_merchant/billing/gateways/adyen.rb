@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AT', 'AU', 'BE', 'BG', 'BR', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'SI', 'US']
       self.default_currency = 'USD'
+      self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo]
 
       self.money_format = :cents
@@ -237,19 +238,35 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
+        currency = options[:currency] || currency(money)
+        money = calculate_amount(money, options)
         amount = {
-          value: amount(money),
-          currency: options[:currency] || currency(money)
+          value: localized_amount(money, currency),
+          currency: currency
         }
         post[:amount] = amount
       end
 
       def add_invoice_for_modification(post, money, options)
+        currency = options[:currency] || currency(money)
+        money = calculate_amount(money, options)
         amount = {
-          value: amount(money),
-          currency: options[:currency] || currency(money)
+          value: localized_amount(money, currency),
+          currency: currency
         }
         post[:modificationAmount] = amount
+      end
+
+      # temporary method in place to support Spreedly customers switching
+      # over to sending multiplied amounts for non-fractional currency transactions,
+      # as now required for localized_amount. To avoid amount manipulation, send
+      # opt_out_multiply_amount with any non-fractional currency transaction.
+      def calculate_amount(money, options)
+        currency = options[:currency] || currency(money)
+        if non_fractional_currency?(currency)
+          money *=100 unless options[:opt_out_multiply_amount]
+        end
+        money
       end
 
       def add_payment(post, payment)

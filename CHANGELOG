@@ -17,6 +17,7 @@
 * Spreedly: Consolidate API requests and support bank accounts [lancecarlson] #3105
 * BPoint: Hook up merchant_reference and CRN fields [curiousepic] #3249
 * Barclaycard Smartpay: Add support for 3DS2 [britth] #3251
+* Adyen: Add support for non-fractional currencies [molbrown] #3257
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
