@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_creditcard(post, creditcard, options)
-        add_amount(post, 0, options) if @protocol >= 7
+        add_amount(post, 0, options)
         add_invoice(post, options)
         add_description(post, options)
         add_fraud_parameters(post, options)

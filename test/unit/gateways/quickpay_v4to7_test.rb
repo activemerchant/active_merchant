@@ -192,7 +192,9 @@ class QuickpayV4to7Test < Test::Unit::TestCase
 
   def expected_store_parameters_v6
     {
+      "amount"=>["0"],
       "cardnumber"=>["4242424242424242"],
+      "currency"=>["DKK"],
       "cvd"=>["123"],
       "expirationdate"=>[expected_expiration_date],
       "ordernumber"=>["fa73664073e23597bbdd"],
