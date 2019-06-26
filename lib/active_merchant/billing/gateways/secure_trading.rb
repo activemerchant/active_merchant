@@ -162,6 +162,8 @@ module ActiveMerchant #:nodoc:
           # ECOM (E-commerce)
           #
           xml.accounttypedescription account_type(action)
+
+          xml.credentialsonfile '1'
           
           if options[:parent_transaction_reference].present?
             xml.parenttransactionreference options[:parent_transaction_reference]
