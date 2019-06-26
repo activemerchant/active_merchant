@@ -87,11 +87,8 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            if emv_payment?(payment)
-              add_application_fee(post, options)
-            else
-              post[:capture] = 'false'
-            end
+            add_application_fee(post, options) if emv_payment?(payment)
+            post[:capture] = 'false'
             commit(:post, 'charges', post, options)
           end
         end.responses.last
@@ -127,14 +124,17 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         if emv_tc_response = options.delete(:icc_data)
-          post[:card] = { emv_approval_data: emv_tc_response }
-          commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
+          # update the charge with emv data if card present
+          update = {}
+          update[:card] = { emv_approval_data: emv_tc_response }
+          commit(:post, "charges/#{CGI.escape(authorization)}", update, options)
         else
           add_application_fee(post, options)
           add_amount(post, money, options)
           add_exchange_rate(post, options)
-          commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
         end
+
+        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
       end
 
       def void(identification, options = {})
