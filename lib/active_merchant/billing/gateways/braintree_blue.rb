@@ -6,8 +6,8 @@ rescue LoadError
   raise "Could not load the braintree gem.  Use `gem install braintree` to install it."
 end
 
-unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 4
-  raise "Need braintree gem >= 2.4.0. Run `gem install braintree --version '~>2.4'` to get the correct version."
+unless Braintree::Version::Major == 2 && Braintree::Version::Minor >= 78
+  raise "Need braintree gem >= 2.78.0. Run `gem install braintree --version '~>2.78'` to get the correct version."
 end
 
 module ActiveMerchant #:nodoc:
@@ -665,6 +665,14 @@ module ActiveMerchant #:nodoc:
             name: options[:descriptor_name],
             phone: options[:descriptor_phone],
             url: options[:descriptor_url]
+          }
+        end
+
+        if options[:three_d_secure]
+          parameters[:three_d_secure_pass_thru] = {
+            cavv: options[:three_d_secure][:cavv],
+            eci_flag: options[:three_d_secure][:eci],
+            xid: options[:three_d_secure][:xid],
           }
         end
 

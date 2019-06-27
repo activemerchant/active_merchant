@@ -142,6 +142,12 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert  response.message.match(/Invalid Transaction ID \/ Object ID specified:/)
   end
 
+  def test_authorize_with_three_d_secure_pass_thru
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(eci: "05", xid: "xid", cavv: "cavv"))
+    assert_success auth
+    assert_equal 'This transaction has been approved', auth.message
+  end
+
   def test_successful_verify
     assert response = @gateway.verify(@credit_card, @options)
     assert_success response

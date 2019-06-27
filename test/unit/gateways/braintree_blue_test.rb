@@ -497,6 +497,20 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:zip => "1234567890"})
   end
 
+  def test_three_d_secure_pass_thru_handling
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(has_entries(three_d_secure_pass_thru: {
+        cavv: "cavv",
+        eci_flag: "eci",
+        xid: "xid",
+    })).
+   returns(braintree_result)
+
+    @gateway.purchase(100, credit_card("41111111111111111111"), three_d_secure: {cavv: "cavv", eci: "eci", xid: "xid"})
+  end
+
   def test_passes_recurring_flag
     @gateway = BraintreeBlueGateway.new(
       :merchant_id => 'test',

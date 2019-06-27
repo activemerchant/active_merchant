@@ -331,6 +331,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'Mexico', transaction["shipping_details"]["country_name"]
   end
 
+  def test_successful_purchase_with_three_d_secure_pass_thru
+    three_d_secure_params = { eci: "05", cavv: "cavv", xid: "xid" }
+    assert response = @gateway.purchase(@amount, @credit_card,
+                                        three_d_secure: three_d_secure_params
+                                       )
+    assert_success response
+  end
+
   def test_unsuccessful_purchase_declined
     assert response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
@@ -409,7 +417,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'voided', void.params["braintree_transaction"]["status"]
     assert failed_void = @gateway.void(auth.authorization)
     assert_failure failed_void
-    assert_equal 'Transaction can only be voided if status is authorized or submitted_for_settlement. (91504)', failed_void.message
+    assert_equal 'Transaction can only be voided if status is authorized, submitted_for_settlement, or - for PayPal - settlement_pending. (91504)', failed_void.message
     assert_equal({"processor_response_code"=>"91504"}, failed_void.params["braintree_transaction"])
   end
 
@@ -620,7 +628,6 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
-
   private
   def assert_avs(address1, zip, expected_avs_code)
     response = @gateway.purchase(@amount, @credit_card, billing_address: {address1: address1, zip: zip})
@@ -628,5 +635,4 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal expected_avs_code, response.avs_result['code']
   end
-
 end
