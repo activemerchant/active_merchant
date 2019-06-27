@@ -20,6 +20,10 @@
 * Adyen: Add support for non-fractional currencies [molbrown] #3257
 * Decidir: Add new gateway [jknipp] #3254
 * Checkout V2: Reapply Update stored card flag [curiousepic]
+* CyberSource: Update supported countries [molbrown] #3260
+* Credorax: Update supported countries [molbrown] #3260
+* Kushki: Update supported countries [molbrown] #3260
+* Paypal: Update supported countries [molbrown] #3260
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
