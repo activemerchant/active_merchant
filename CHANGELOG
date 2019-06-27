@@ -24,6 +24,8 @@
 * Credorax: Update supported countries [molbrown] #3260
 * Kushki: Update supported countries [molbrown] #3260
 * Paypal: Update supported countries [molbrown] #3260
+* BlueSnap: Send amount in capture requests [jknipp] #3262
+
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
