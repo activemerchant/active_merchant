@@ -196,7 +196,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase
@@ -274,7 +274,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -452,7 +452,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.store(@declined_card, @options)
 
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase_using_stored_card
@@ -491,7 +491,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match 'Refused', response.message
+    assert_match 'CVC Declined', response.message
   end
 
   def test_verify_with_idempotency_key

@@ -239,7 +239,6 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, money, options)
         currency = options[:currency] || currency(money)
-        money = calculate_amount(money, options)
         amount = {
           value: localized_amount(money, currency),
           currency: currency
@@ -249,24 +248,11 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice_for_modification(post, money, options)
         currency = options[:currency] || currency(money)
-        money = calculate_amount(money, options)
         amount = {
           value: localized_amount(money, currency),
           currency: currency
         }
         post[:modificationAmount] = amount
-      end
-
-      # temporary method in place to support Spreedly customers switching
-      # over to sending multiplied amounts for non-fractional currency transactions,
-      # as now required for localized_amount. To avoid amount manipulation, send
-      # opt_out_multiply_amount with any non-fractional currency transaction.
-      def calculate_amount(money, options)
-        currency = options[:currency] || currency(money)
-        if non_fractional_currency?(currency)
-          money *=100 unless options[:opt_out_multiply_amount]
-        end
-        money
       end
 
       def add_payment(post, payment)
