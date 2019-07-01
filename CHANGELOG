@@ -33,6 +33,7 @@
 * Global Collect: Only add name if present [curiousepic] #3268
 * HPS: Add Apple Pay raw cryptogram support [slogsdon] #3209
 * CardConnect: Fix parsing of level 3 fields [hdeters] #3273
+* TrustCommerce: Support void after purchase [jknipp] #3265
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
