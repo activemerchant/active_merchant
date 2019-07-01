@@ -296,7 +296,7 @@ module ActiveMerchant #:nodoc:
 
       def build_url(url, authorization, options)
         if options[:store]
-          url.gsub(/payments/, 'registrations'
+          url.gsub(/payments/, 'registrations')
         elsif options[:registrationId]
           "#{url.gsub(/payments/, 'registrations')}/#{options[:registrationId]}/payments"
         elsif authorization
