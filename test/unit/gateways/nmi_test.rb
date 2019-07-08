@@ -723,9 +723,9 @@ class NmiTest < Test::Unit::TestCase
 
   def transcript
     '
-      amount=1.00&orderid=c9f2fb356d2a839d315aa6e8d7ed2404&orderdescription=Store+purchase&currency=USD&payment=creditcard&firstname=Longbob&lastname=Longsen&ccnumber=4111111111111111&cvv=917&ccexp=0916&email=&ipaddress=&company=Widgets+Inc&address1=456+My+Street&address2=Apt+1&city=Ottawa&state=ON&country=CA&zip=K1C2N6&phone=%28555%29555-5555&type=sale&username=demo&password=password
+      amount=1.00&orderid=c9f2fb356d2a839d315aa6e8d7ed2404&orderdescription=Store+purchase&currency=USD&payment=creditcard&firstname=Longbob&lastname=Longsen&ccnumber=4111111111111111&cvv=917&ccexp=0916&email=&ipaddress=&company=Widgets+Inc&address1=456+My+Street&address2=Apt+1&city=Ottawa&state=ON&country=CA&zip=K1C2N6&phone=%28555%29555-5555&type=sale&username=demo&password=passwordw$thsym%ols
       response=1&responsetext=SUCCESS&authcode=123456&transactionid=2767466670&avsresponse=N&cvvresponse=N&orderid=c9f2fb356d2a839d315aa6e8d7ed2404&type=sale&response_code=100
-      amount=1.00&orderid=e88df316d8ba3c8c6b98aa93b78facc0&orderdescription=Store+purchase&currency=USD&payment=check&checkname=Jim+Smith&checkaba=123123123&checkaccount=123123123&account_holder_type=personal&account_type=checking&sec_code=WEB&email=&ipaddress=&company=Widgets+Inc&address1=456+My+Street&address2=Apt+1&city=Ottawa&state=ON&country=CA&zip=K1C2N6&phone=%28555%29555-5555&type=sale&username=demo&password=password
+      amount=1.00&orderid=e88df316d8ba3c8c6b98aa93b78facc0&orderdescription=Store+purchase&currency=USD&payment=check&checkname=Jim+Smith&checkaba=123123123&checkaccount=123123123&account_holder_type=personal&account_type=checking&sec_code=WEB&email=&ipaddress=&company=Widgets+Inc&address1=456+My+Street&address2=Apt+1&city=Ottawa&state=ON&country=CA&zip=K1C2N6&phone=%28555%29555-5555&type=sale&username=demo&password=passwordw$thsym%ols
       response=1&responsetext=SUCCESS&authcode=123456&transactionid=2767467157&avsresponse=&cvvresponse=&orderid=e88df316d8ba3c8c6b98aa93b78facc0&type=sale&response_code=100
     '
   end

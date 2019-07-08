@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((password=)\w+), '\1[FILTERED]').
+          gsub(%r((password=)[^&\n]*), '\1[FILTERED]').
           gsub(%r((ccnumber=)\d+), '\1[FILTERED]').
           gsub(%r((cvv=)\d+), '\1[FILTERED]').
           gsub(%r((checkaba=)\d+), '\1[FILTERED]').

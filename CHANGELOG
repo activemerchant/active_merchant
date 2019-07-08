@@ -29,6 +29,7 @@
 * Adyen: Remove temporary amount modification for non-fractional currencies [molbrown] #3263
 * Adyen: Set blank state to N/A [therufs] #3252
 * MiGS: Add tx_source gateway specific field [leila-alderman] #3264
+* NMI: Correct password scrubber to scrub symbols [hdeters] #3267
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
