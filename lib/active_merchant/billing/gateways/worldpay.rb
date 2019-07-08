@@ -208,6 +208,8 @@ module ActiveMerchant #:nodoc:
                 add_instalments_data(xml, options)
               end
               add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
+              add_additional_3ds_data(xml, options) if options[:execute_threed] && options[:three_ds_version] && options[:three_ds_version] =~ /^2/
+              add_3ds_exemption(xml, options) if options[:exemption_type]
             end
           end
         end
@@ -255,6 +257,14 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
+      end
+
+      def add_additional_3ds_data(xml, options)
+        xml.tag! 'additional3DSData', 'dfReferenceId' => options[:session_id]
+      end
+
+      def add_3ds_exemption(xml, options)
+        xml.tag! 'exemption', 'type' => options[:exemption_type], 'placement' => options[:exemption_placement] || 'AUTHORISATION'
       end
 
       def add_amount(xml, money, options)
@@ -329,7 +339,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'date', 'month' => format(payment_method.month, :two_digits), 'year' => format(payment_method.year, :four_digits)
         end
 
-        xml.tag! 'cardHolderName', options[:execute_threed] ? '3D' : payment_method.name
+        xml.tag! 'cardHolderName', options[:execute_threed] && (options[:three_ds_version] =~ /[^2]/).nil? ? '3D' : payment_method.name
         xml.tag! 'cvc', payment_method.verification_value
 
         add_address(xml, (options[:billing_address] || options[:address]))
@@ -481,6 +491,7 @@ module ActiveMerchant #:nodoc:
         if options[:execute_threed]
           raw[:cookie] = @cookie
           raw[:session_id] = options[:session_id]
+          raw[:is3DSOrder] = true
         end
         success = success_from(action, raw, success_criteria)
         message = message_from(success, raw, success_criteria)

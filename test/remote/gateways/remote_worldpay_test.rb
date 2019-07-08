@@ -19,6 +19,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
     @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
+    @threeDS2_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3DS_V2_FRICTIONLESS_IDENTIFIED')
     @threeDS_card_external_MPI = credit_card('4444333322221111', :first_name => 'AA', :last_name => 'BD')
 
     @options = {
@@ -50,6 +51,13 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
     assert_match %r{Street address does not match, but 5-digit postal code matches}, response.avs_result['message']
     assert_match %r{CVV matches}, response.cvv_result['message']
+  end
+
+  def test_successful_3ds2_authorize
+    options = @options.merge({execute_threed: true, three_ds_version: '2.0'})
+    assert response = @gateway.authorize(@amount, @threeDS2_card, options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_purchase_with_hcg_additional_data
