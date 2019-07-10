@@ -226,6 +226,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_address(post, options[:address])
         add_bank_details(post, options)
+        add_references(post, options)
 
         commit(:post, :create_direct_debit_plan, post, options)
       end
