@@ -313,15 +313,15 @@ module ActiveMerchant #:nodoc:
     ]
 
     def self.find(name)
-      raise InvalidCountryCodeError, "Cannot lookup country for an empty name" if name.blank?
+      raise InvalidCountryCodeError, 'Cannot lookup country for an empty name' if name.blank?
 
       case name.length
       when 2, 3
         upcase_name = name.upcase
         country_code = CountryCode.new(name)
-        country = COUNTRIES.detect{|c| c[country_code.format] == upcase_name }
+        country = COUNTRIES.detect { |c| c[country_code.format] == upcase_name }
       else
-        country = COUNTRIES.detect{|c| c[:name] == name }
+        country = COUNTRIES.detect { |c| c[:name].casecmp(name).zero? }
       end
       raise InvalidCountryCodeError, "No country could be found for the country #{name}" if country.nil?
       Country.new(country.dup)
