@@ -95,7 +95,6 @@ module ActiveMerchant
         commit(:capture, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
-          add_amount(doc, money, options)
         end
       end
 

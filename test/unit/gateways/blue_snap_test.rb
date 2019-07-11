@@ -91,13 +91,9 @@ class BlueSnapTest < Test::Unit::TestCase
   end
 
   def test_successful_capture
-    response = stub_comms(@gateway, :raw_ssl_request) do
-      @gateway.capture(@amount, @credit_card, @options)
-    end.check_request do |method, url, data|
-      assert_match(/<amount>1.00<\/amount>/, data)
-      assert_match(/<currency>USD<\/currency>/, data)
-    end.respond_with(successful_capture_response)
+    @gateway.expects(:raw_ssl_request).returns(successful_capture_response)
 
+    response = @gateway.capture(@amount, 'Authorization')
     assert_success response
     assert_equal '1012082881', response.authorization
   end

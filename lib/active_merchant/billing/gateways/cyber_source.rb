@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Initial setup instructions can be found in
-    # http://apps.cybersource.com/library/documentation/dev_guides/SOAP_Toolkits/SOAP_toolkits.pdf
+    # http://cybersource.com/support_center/implementation/downloads/soap_api/SOAP_toolkits.pdf
     #
     # Important Notes
     # * For checks you can purchase and store.
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       XSD_VERSION = '1.153'
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
-      self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
+      self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB)
 
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(JPY)

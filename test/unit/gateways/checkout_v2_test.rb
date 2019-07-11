@@ -102,7 +102,7 @@ class CheckoutV2Test < Test::Unit::TestCase
       }
       @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
-      assert_match(%r{"stored":"true"}, data)
+      assert_match(%r{"card_on_file":true}, data)
       assert_match(%r{"payment_type":"Recurring"}, data)
       assert_match(%r{"previous_payment_id":"pay_123"}, data)
     end.respond_with(successful_authorize_response)

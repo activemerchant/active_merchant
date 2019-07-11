@@ -133,6 +133,12 @@ card_connect:
   username: testing
   password: testing123
 
+# Working credentials, no need to replace
+card_pointe:
+  username: testing1
+  password: Q2Ctyd97P!#u5JYSP6RRTt
+  merchid: "496480518000"
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
@@ -252,14 +258,6 @@ d_local:
 data_cash:
   login: X
   password: Y
-
-# Working credentials, no need to replace
-decidir_authorize:
-  api_key: 5a15fbc227224edabdb6f2e8219e8b28
-  preauth_mode: true
-
-decidir_purchase:
-  api_key: 5df6b5764c3f4822aecdc82d56f26b9d
 
 # No working test credentials
 dibs:
