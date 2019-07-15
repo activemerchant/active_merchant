@@ -220,6 +220,9 @@ creditcall:
   terminal_id: '99961426'
   transaction_key: '9drdRU9wJ65SNRw3'
 
+# NOTE: the IP address you run the remote tests from will need to be
+# whitelisted by Credorax; contact support@credorax.com as necessary to request
+# your IP address be added to the whitelist for your test account.
 credorax:
   merchant_id: 'merchant_id'
   cipher_key: 'cipher_key'
