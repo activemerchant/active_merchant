@@ -1,3 +1,4 @@
+require 'nokogiri'
 require 'active_merchant/billing/gateways/payflow/payflow_common_api'
 require 'active_merchant/billing/gateways/payflow/payflow_response'
 require 'active_merchant/billing/gateways/payflow_express'
@@ -187,7 +188,44 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        xml.target!
+        add_level_two_three_fields(xml.target!, options)
+      end
+
+      def add_level_two_three_fields(xml_string, options)
+        if options[:level_two_fields] || options[:level_three_fields]
+          xml_doc = Nokogiri::XML.parse(xml_string)
+          %i[level_two_fields level_three_fields].each do |fields|
+            xml_string = add_fields(xml_doc, options[fields]) if options[fields]
+          end
+        end
+        xml_string
+      end
+
+      def check_fields(parent, fields, xml_doc)
+        fields.each do |k, v|
+          if v.is_a? String
+            new_node = Nokogiri::XML::Node.new(k, xml_doc)
+            new_node.add_child(v)
+            xml_doc.at_css(parent).add_child(new_node)
+          else
+            check_subparent_before_continuing(parent, k, xml_doc)
+            check_fields(k, v, xml_doc)
+          end
+        end
+        xml_doc
+      end
+
+      def check_subparent_before_continuing(parent, subparent, xml_doc)
+        unless xml_doc.at_css(subparent)
+          subparent_node = Nokogiri::XML::Node.new(subparent, xml_doc)
+          xml_doc.at_css(parent).add_child(subparent_node)
+        end
+      end
+
+      def add_fields(xml_doc, options_fields)
+        fields_to_add = JSON.parse(options_fields)
+        check_fields('Invoice', fields_to_add, xml_doc)
+        xml_doc.root.to_s
       end
 
       def build_check_request(action, money, check, options)
@@ -213,7 +251,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        xml.target!
+        add_level_two_three_fields(xml.target!, options)
       end
 
       def add_credit_card(xml, credit_card, options = {})
