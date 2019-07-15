@@ -5,8 +5,6 @@
 * Adyen: Pass updateShopperStatement, industryUsage [curiousepic] #3233
 * TransFirst Transaction Express: Fix blank address2 values [britth] #3231
 * WorldPay: Add support for store method [bayprogrammer] #3232
-<<<<<<< HEAD
-=======
 * Adyen: Support for additional AVS code mapping [jknipp] #3236
 * Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
 * CyberSource: Update CyberSource SOAP documentation link [vince-smith] #3204
@@ -37,7 +35,6 @@
 * CardConnect: Fix parsing of level 3 fields [hdeters] #3273
 * TrustCommerce: Support void after purchase [jknipp] #3265
 * Payflow: Support arbitrary level 2 + level 3 fields [therufs] #3272
->>>>>>> e15d4d8914c797b604e8be32dd9ea5ae075305ff
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228

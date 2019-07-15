@@ -100,8 +100,8 @@ class CardPointeTest < Test::Unit::TestCase
     assert response.params['amount'] = '0.00'
   end
 
-  def test_successful_verify_with_failed_void
-  end
+  # def test_successful_verify_with_failed_void
+  # end
 
   def test_failed_verify
     @gateway.expects(:ssl_post).returns(failed_verify_response)
@@ -144,9 +144,6 @@ class CardPointeTest < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    %q(
-      Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    )
     <<-PRE_SCRUBBED
       opening connection to fts.cardconnect.com:6443...
       opened
@@ -172,13 +169,6 @@ class CardPointeTest < Test::Unit::TestCase
   end
 
   def post_scrubbed
-    %q(
-      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
-      Things to scrub:
-        - Credit card number
-        - CVV
-        - Sensitive authentication details
-    )
     <<-POST_SCRUBBED
       opening connection to fts.cardconnect.com:6443...
       opened
@@ -204,14 +194,6 @@ class CardPointeTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_card_pointe_test.rb \
-        -n test_successful_purchase
-    )
     <<-RESPONSE
     {\"amount\":\"1.00\",\"resptext\":\"Approval\",\"commcard\":\"   \",\"cvvresp\":\"X\",\"respcode\":\"00\",\"batchid\":\"1900942457\",\"avsresp\":\" \",\"entrymode\":\"Keyed\",\"merchid\":\"496160873888\",\"token\":\"9605849968916668\",\"authcode\":\"PPS935\",\"respproc\":\"FNOR\",\"bintype\":\"\",\"retref\":\"155748247575\",\"respstat\":\"A\",\"account\":\"9605849968916668\"}
     RESPONSE
