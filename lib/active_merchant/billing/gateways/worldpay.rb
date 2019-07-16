@@ -301,15 +301,22 @@ module ActiveMerchant #:nodoc:
             end
 
             if three_d_secure = options[:three_d_secure]
-              xml.tag! 'info3DSecure' do
-                xml.tag! 'threeDSVersion', three_d_secure[:version]
-                xid_tag = three_d_secure[:version] =~ /^2/ ? 'dsTransactionId' : 'xid'
-                xml.tag! xid_tag, three_d_secure[:xid]
-                xml.tag! 'cavv', three_d_secure[:cavv]
-                xml.tag! 'eci', three_d_secure[:eci]
-              end
+              add_three_d_secure(three_d_secure, xml)
             end
           end
+        end
+      end
+
+      def add_three_d_secure(three_d_secure, xml)
+        xml.tag! 'info3DSecure' do
+          xml.tag! 'threeDSVersion', three_d_secure[:version]
+          if three_d_secure[:version] =~ /^2/
+            xml.tag! 'dsTransactionId', three_d_secure[:ds_transaction_id]
+          else
+            xml.tag! 'xid', three_d_secure[:xid]
+          end
+          xml.tag! 'cavv', three_d_secure[:cavv]
+          xml.tag! 'eci', three_d_secure[:eci]
         end
       end
 
