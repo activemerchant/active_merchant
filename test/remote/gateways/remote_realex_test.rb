@@ -75,15 +75,15 @@ class RemoteRealexTest < Test::Unit::TestCase
   end
 
   def test_realex_purchase_with_invalid_account
-    response = RealexGateway.new(fixtures(:realex_with_account)).purchase(@amount, @visa,
+    response = RealexGateway.new(fixtures(:realex_with_account).merge(account: 'invalid')).purchase(@amount, @visa,
       :order_id => generate_unique_id,
-      :description => 'Test Realex purchase with invalid acocunt'
+      :description => 'Test Realex purchase with invalid account'
     )
 
     assert_not_nil response
     assert_failure response
 
-    assert_equal '504', response.params['result']
+    assert_equal '506', response.params['result']
     assert_match %r{no such}i, response.message
   end
 
@@ -388,6 +388,40 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert response.test?
     assert_equal '101', response.params['result']
     assert_match %r{DECLINED}i, response.message
+  end
+
+  def test_successful_credit
+    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:refund_secret => 'refund'))
+
+    credit_response = gateway_with_refund_password.credit(@amount, @visa,
+      :order_id => generate_unique_id,
+      :description => 'Test Realex Credit',
+      :billing_address => {
+        :zip => '90210',
+        :country => 'US'
+      }
+    )
+
+    assert_not_nil credit_response
+    assert_success credit_response
+    assert credit_response.authorization.length > 0
+    assert_equal 'Successful', credit_response.message
+  end
+
+  def test_failed_credit
+    credit_response = @gateway.credit(@amount, @visa,
+      :order_id => generate_unique_id,
+      :description => 'Test Realex Credit',
+      :billing_address => {
+        :zip => '90210',
+        :country => 'US'
+      }
+    )
+
+    assert_not_nil credit_response
+    assert_failure credit_response
+    assert credit_response.authorization.length > 0
+    assert_equal 'Refund Hash not present.', credit_response.message
   end
 
   def test_maps_avs_and_cvv_response_codes
