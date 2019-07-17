@@ -36,6 +36,7 @@
 * TrustCommerce: Support void after purchase [jknipp] #3265
 * Payflow: Support arbitrary level 2 + level 3 fields [therufs] #3272
 * BlueSnap: Default to not send amount on capture [molbrown] #3270
+* Spreedly: extra fields, remove extraneous check [montdidier] #3102 #3281
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
