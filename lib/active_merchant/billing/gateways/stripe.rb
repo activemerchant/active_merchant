@@ -90,6 +90,11 @@ module ActiveMerchant #:nodoc:
           return Response.new(false, direct_bank_error)
         end
 
+        if options[:payment_to_confirm]
+          r = commit(:post, "payment_intents/#{options[:payment_to_confirm]}/confirm", {}, options)
+          return r
+        end
+
         MultiResponse.run do |r|
           if payment.is_a?(ApplePayPaymentToken)
             r.process { tokenize_apple_pay_token(payment) }
@@ -97,7 +102,7 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            commit(:post, 'charges', post, options)
+            commit(:post, options[:three_d_secure] ? 'payment_intents' : 'charges', post, options)
           end
         end.responses.last
       end
@@ -118,7 +123,7 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         post = {}
         post[:expand] = [:charge]
-        commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options)
+        commit(:post, "charges/#{CGI.escape(payment_intent_id_to_charge_id(identification))}/refunds", post, options)
       end
 
       def refund(money, identification, options = {})
@@ -130,7 +135,7 @@ module ActiveMerchant #:nodoc:
         post[:expand] = [:charge]
 
         MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refunds", post, options) }
+          r.process { commit(:post, "charges/#{CGI.escape(payment_intent_id_to_charge_id(identification))}/refunds", post, options) }
 
           return r unless options[:refund_fee_amount]
 
@@ -297,6 +302,12 @@ module ActiveMerchant #:nodoc:
         add_metadata(post, options)
         add_application_fee(post, options)
         add_destination(post, options)
+
+        if options[:three_d_secure]
+          post[:confirmation_method] = "manual"
+          post[:confirm] = "true"
+        end
+
         post
       end
 
@@ -330,8 +341,10 @@ module ActiveMerchant #:nodoc:
         metadata_options = [:description, :ip, :user_agent, :referrer]
         post.update(options.slice(*metadata_options))
 
-        post[:external_id] = options[:order_id]
-        post[:payment_user_agent] = "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
+        unless options[:three_d_secure]
+          post[:external_id] = options[:order_id]
+          post[:payment_user_agent] = "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
+        end
       end
 
       def add_address(post, options)
@@ -485,16 +498,16 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
-        response = api_request(method, url, parameters, options)
 
-        success = !response.key?("error")
+        response = api_request(method, url, parameters, options)
+        success = success_response?(url, response)
 
         card = card_from_response(response)
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
         cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
 
         Response.new(success,
-          success ? "Transaction approved" : response["error"]["message"],
+          response_message(success, url, response),
           response,
           :test => response_is_test?(response),
           :authorization => authorization_from(success, url, method, response),
@@ -505,8 +518,37 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def success_response?(url, response)
+        if url =~ /\Apayment_intents/
+          !response.key?("error") && response["status"] == "succeeded"
+        else
+          !response.key?("error")
+        end
+      end
+
+      def response_message(success, url, response)
+        if url =~ /\Apayment_intents/
+          success ? "Transaction approved" : response.dig("error", "message") || response_status_to_response_message_mapper(response)
+        else
+          success ? "Transaction approved" : response["error"]["message"]
+        end
+      end
+
+      def response_status_to_response_message_mapper(response)
+        {
+          requires_source_action: "Your card was declined. This transaction requires 3D secure authentication."
+        }.fetch(response["status"].to_sym, response["status"])
+      end
+
+      def payment_intent_id_to_charge_id(identification)
+        return identification unless identification =~ /\Api_/
+
+        result = commit(:get, "payment_intents/#{CGI.escape(identification)}", nil, options)
+        result.params["charges"]["data"].first["id"]
+      end
+
       def authorization_from(success, url, method, response)
-        return response["error"]["charge"] unless success
+        return response.dig("error", "payment_intent", "id") || response.dig("error", "charge") || response["id"] unless success
 
         if url == "customers"
           [response["id"], response["sources"]["data"].first["id"]].join("|")
@@ -560,6 +602,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def error_code_from(response)
+        return unless response.key?('error')
+
         code = response['error']['code']
         decline_code = response['error']['decline_code'] if code == 'card_declined'
 

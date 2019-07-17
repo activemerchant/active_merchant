@@ -394,6 +394,18 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_payment_intents
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response_with_payment_intents)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: true))
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'pi_test_payment_intents', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_with_token_string
     @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
@@ -405,6 +417,17 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_token_string_and_with_payment_intents
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response_with_payment_intents)
+
+    assert response = @gateway.purchase(@amount, @token_string, @options.merge(three_d_secure: true))
+    assert_success response
+
+    assert_equal 'pi_test_payment_intents', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_with_payment_token
     @gateway.expects(:add_payment_token)
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
@@ -413,6 +436,17 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_payment_token_and_with_payment_intents
+    @gateway.expects(:add_payment_token)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response_with_payment_intents)
+
+    assert response = @gateway.purchase(@amount, @payment_token, @options.merge(three_d_secure: true))
+    assert_success response
+
+    assert_equal 'pi_test_payment_intents', response.authorization
     assert response.test?
   end
 
@@ -1703,6 +1737,27 @@ class StripeTest < Test::Unit::TestCase
         "object": "card",
         "type": "Visa"
       }
+    }
+    RESPONSE
+  end
+
+  def successful_purchase_response_with_payment_intents
+    <<-RESPONSE
+    {
+      "id": "pi_test_payment_intents",
+      "description": "Test Purchase",
+      "object": "payment_intent",
+      "amount": 400,
+      "amount_capturable": 0,
+      "amount_received": 400,
+      "application_fee_amount": null,
+      "canceled_at": null,
+      "cancellation_reason": null,
+      "capture_method": "automatic",
+      "status": "succeeded",
+      "livemode": false,
+      "created": 1309131571,
+      "currency": "usd"
     }
     RESPONSE
   end
