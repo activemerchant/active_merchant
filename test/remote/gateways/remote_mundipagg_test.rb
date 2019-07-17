@@ -8,10 +8,14 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
+
     # Mundipagg only allows certain card numbers for success and failure scenarios.
-    # As such, we cannot use a card number with a BIN belonging to VR.
+    # As such, we cannot use card numbers with BINs belonging to VR or Alelo.
     # See https://docs.mundipagg.com/docs/simulador-de-voucher.
     @vr_voucher = credit_card('4000000000000010', brand: 'vr')
+    @alelo_voucher = credit_card('4000000000000010', brand: 'alelo')
+    @declined_alelo_voucher = credit_card('4000000000000028', brand: 'alelo')
+
     @options = {
       gateway_affiliation_id: fixtures(:mundipagg)[:gateway_affiliation_id],
       billing_address: address({neighborhood: 'Sesame Street'}),
@@ -20,9 +24,11 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+    test_successful_purchase_with(@credit_card)
+  end
+
+  def test_successful_purchase_with_alelo_card
+    test_successful_purchase_with(@alelo_voucher)
   end
 
   def test_successful_purchase_no_address
@@ -59,32 +65,35 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    response = @gateway.purchase(105200, @declined_card, @options)
-    assert_failure response
-    assert_equal 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.', response.message
+    test_failed_purchase_with(@declined_card)
+  end
+
+  def test_failed_purchase_with_alelo_card
+    test_failed_purchase_with(@declined_alelo_voucher)
   end
 
   def test_successful_authorize_and_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+    test_successful_authorize_and_capture_with(@credit_card)
+  end
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
-    assert_success capture
-    assert_equal 'Simulator|Transação de simulação capturada com sucesso', capture.message
+  def test_successful_authorize_and_capture_with_alelo_card
+    test_successful_authorize_and_capture_with(@alelo_voucher)
   end
 
   def test_failed_authorize
-    response = @gateway.authorize(105200, @declined_card, @options)
-    assert_failure response
-    assert_equal 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.', response.message
+    test_failed_authorize_with(@declined_card)
+  end
+
+  def test_failed_authorize_with_alelo_card
+    test_failed_authorize_with(@declined_alelo_voucher)
   end
 
   def test_partial_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+    test_partial_capture_with(@credit_card)
+  end
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
-    assert_success capture
+  def test_partial_capture_with_alelo_card
+    test_partial_capture_with(@alelo_voucher)
   end
 
   def test_failed_capture
@@ -94,19 +103,19 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
+    test_successful_refund_with(@credit_card)
+  end
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
-    assert_success refund
+  def test_successful_refund_with_alelo_card
+    test_successful_refund_with(@alelo_voucher)
   end
 
   def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
+    test_partial_refund_with(@credit_card)
+  end
 
-    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
-    assert_success refund
+  def test_partial_refund_with_alelo_card
+    test_partial_refund_with(@alelo_voucher)
   end
 
   def test_failed_refund
@@ -116,11 +125,11 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
+    test_successful_void_with(@credit_card)
+  end
 
-    assert void = @gateway.void(auth.authorization)
-    assert_success void
+  def test_successful_void_with_alelo_card
+    test_successful_void_with(@alelo_voucher)
   end
 
   def test_successful_void_with_sodexo_voucher
@@ -166,18 +175,19 @@ class RemoteMundipaggTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-    assert_match %r{Simulator|Transação de simulação autorizada com sucesso}, response.message
+    test_successful_verify_with(@credit_card)
+  end
+
+  def test_successful_verify_with_alelo_card
+    test_successful_verify_with(@alelo_voucher)
   end
 
   def test_successful_store_and_purchase
-    store = @gateway.store(@credit_card, @options)
-    assert_success store
+    test_successful_store_and_purchase_with(@credit_card)
+  end
 
-    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
-    assert_success purchase
-    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', purchase.message
+  def test_successful_store_and_purchase_with_alelo_card
+    test_successful_store_and_purchase_with(@alelo_voucher)
   end
 
   def test_invalid_login
@@ -207,5 +217,81 @@ class RemoteMundipaggTest < Test::Unit::TestCase
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
     assert_scrubbed(@gateway.options[:api_key], transcript)
+  end
+
+  private
+
+  def test_successful_purchase_with(card)
+    response = @gateway.purchase(@amount, card, @options)
+    assert_success response
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', response.message
+  end
+
+  def test_failed_purchase_with(card)
+    response = @gateway.purchase(105200, card, @options)
+    assert_failure response
+    assert_equal 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.', response.message
+  end
+
+  def test_successful_authorize_and_capture_with(card)
+    auth = @gateway.authorize(@amount, card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Simulator|Transação de simulação capturada com sucesso', capture.message
+  end
+
+  def test_failed_authorize_with(card)
+    response = @gateway.authorize(105200, card, @options)
+    assert_failure response
+    assert_equal 'Simulator|Transação de simulada negada por falta de crédito, utilizado para realizar simulação de autorização parcial.', response.message
+  end
+
+  def test_partial_capture_with(card)
+    auth = @gateway.authorize(@amount, card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert_success capture
+  end
+
+  def test_successful_refund_with(card)
+    purchase = @gateway.purchase(@amount, card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+  end
+
+  def test_partial_refund_with(card)
+    purchase = @gateway.purchase(@amount, card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount - 1, purchase.authorization)
+    assert_success refund
+  end
+
+  def test_successful_void_with(card)
+    auth = @gateway.authorize(@amount, card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
+
+  def test_successful_verify_with(card)
+    response = @gateway.verify(card, @options)
+    assert_success response
+    assert_match %r{Simulator|Transação de simulação autorizada com sucesso}, response.message
+  end
+
+  def test_successful_store_and_purchase_with(card)
+    store = @gateway.store(card, @options)
+    assert_success store
+
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+    assert_equal 'Simulator|Transação de simulação autorizada com sucesso', purchase.message
   end
 end

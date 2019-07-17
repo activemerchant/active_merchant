@@ -219,7 +219,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['US'], PaypalGateway.supported_countries
+    assert_equal ['CA', 'NZ', 'GB', 'US'], PaypalGateway.supported_countries
   end
 
   def test_supported_card_types

@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       include PaypalRecurringApi
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.supported_countries = ['US']
+      self.supported_countries = ['CA', 'NZ', 'GB', 'US']
       self.homepage_url = 'https://www.paypal.com/us/webapps/mpp/paypal-payments-pro'
       self.display_name = 'PayPal Payments Pro (US)'
 

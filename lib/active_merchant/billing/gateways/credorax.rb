@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       # ActiveMerchant::Billing::CredoraxGateway.live_url = "https://assigned-subdomain.credorax.net/crax_gate/service/gateway"
       self.live_url = 'https://assigned-subdomain.credorax.net/crax_gate/service/gateway'
 
-      self.supported_countries = %w(DE GB FR IT ES PL NL BE GR CZ PT SE HU RS AT CH BG DK FI SK NO IE HR BA AL LT MK SI LV EE ME LU MT IS AD MC LI SM)
+      self.supported_countries = %w(AD AT BE BG HR CY CZ DK EE FR DE GI GR GG HU IS IE IM IT JE LV LI LT LU MT MC NO PL PT RO SM SK ES SE CH GB)
       self.default_currency = 'EUR'
       self.currencies_without_fractions = %w(CLP JPY KRW PYG VND)
       self.currencies_with_three_decimal_places = %w(BHD JOD KWD OMR RSD TND)
