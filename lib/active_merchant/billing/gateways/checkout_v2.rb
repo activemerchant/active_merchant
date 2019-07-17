@@ -133,7 +133,8 @@ module ActiveMerchant #:nodoc:
           post[:'3ds'][:enabled] = true
           post[:'3ds'][:eci] = options[:eci] if options[:eci]
           post[:'3ds'][:cryptogram] = options[:cavv] if options[:cavv]
-          post[:'3ds'][:xid] = options[:xid] if options[:xid]
+          post[:'3ds'][:version] = options[:version] if options[:version]
+          post[:'3ds'][:xid] = options[:ds_transaction_id] || options[:xid]
         end
       end
 
