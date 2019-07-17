@@ -118,10 +118,6 @@ module ActiveMerchant #:nodoc:
           post[:source][:billing_address][:state] = address[:state] unless address[:state].blank?
           post[:source][:billing_address][:country] = address[:country] unless address[:country].blank?
           post[:source][:billing_address][:zip] = address[:zip] unless address[:zip].blank?
-<<<<<<< HEAD
-          post[:source][:phone] = { number: address[:phone].strip } unless address[:phone].blank?
-=======
->>>>>>> activemerchant/master
         end
       end
 
