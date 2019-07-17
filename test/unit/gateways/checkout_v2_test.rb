@@ -121,9 +121,36 @@ class CheckoutV2Test < Test::Unit::TestCase
     response = stub_comms do
       options = {
         execute_threed: true,
-        eci: '05',
-        cryptogram: '1234',
-        xid: '1234'
+        three_d_secure: {
+          version: '1.0.2',
+          eci: '05',
+          cryptogram: '1234',
+          xid: '1234'
+        }
+      }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal 'pay_fj3xswqe3emuxckocjx6td73ni', response.authorization
+
+    capture = stub_comms do
+      @gateway.capture(@amount, response.authorization)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_3ds2
+    response = stub_comms do
+      options = {
+        execute_threed: true,
+        three_d_secure: {
+          version: '2.0.0',
+          eci: '05',
+          cryptogram: '1234',
+          ds_transaction_id: '1234'
+        }
       }
       @gateway.authorize(@amount, @credit_card, options)
     end.respond_with(successful_authorize_response)
