@@ -67,6 +67,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options={})
         request = build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
+          add_extra_options(:gateway_specific_fields, doc, options)
         end
 
         commit("transactions/#{authorization}/credit.xml", request)
@@ -171,6 +172,13 @@ module ActiveMerchant #:nodoc:
         doc.order_id(options[:order_id])
         doc.ip(options[:ip]) if options[:ip]
         doc.description(options[:description]) if options[:description]
+
+        if options[:merchant_name_descriptor]
+          doc.merchant_name_descriptor(options[:merchant_name_descriptor])
+        end
+        if options[:merchant_location_descriptor]
+          doc.merchant_location_descriptor(options[:merchant_location_descriptor])
+        end
       end
 
       def add_payment_method(doc, payment_method, options)
