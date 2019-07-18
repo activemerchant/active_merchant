@@ -22,9 +22,21 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     )
     @additional_options_3ds = @options.merge(
       execute_threed: true,
-      eci: '05',
-      cryptogram: '1234',
-      xid: '1234'
+      three_d_secure: {
+        version: '1.0.2',
+        eci: '06',
+        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+      }
+    )
+    @additional_options_3ds2 = @options.merge(
+      execute_threed: true,
+      three_d_secure: {
+        version: '2.0.0',
+        eci: '06',
+        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+        ds_transaction_id: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY='
+      }
     )
   end
 
@@ -142,6 +154,14 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture_with_3ds
     auth = @gateway.authorize(@amount, @credit_card, @additional_options_3ds)
+    assert_success auth
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+  end
+
+  def test_successful_authorize_and_capture_with_3ds2
+    auth = @gateway.authorize(@amount, @credit_card, @additional_options_3ds2)
     assert_success auth
 
     assert capture = @gateway.capture(nil, auth.authorization)

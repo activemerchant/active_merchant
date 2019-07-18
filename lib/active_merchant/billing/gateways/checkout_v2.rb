@@ -131,9 +131,10 @@ module ActiveMerchant #:nodoc:
         if options[:three_d_secure]
           post[:'3ds'] = {}
           post[:'3ds'][:enabled] = true
-          post[:'3ds'][:eci] = options[:eci] if options[:eci]
-          post[:'3ds'][:cryptogram] = options[:cavv] if options[:cavv]
-          post[:'3ds'][:xid] = options[:xid] if options[:xid]
+          post[:'3ds'][:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
+          post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
+          post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
+          post[:'3ds'][:xid] = options[:three_d_secure][:ds_transaction_id] || options[:three_d_secure][:xid]
         end
       end
 
