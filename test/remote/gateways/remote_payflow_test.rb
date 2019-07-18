@@ -40,7 +40,7 @@ class RemotePayflowTest < Test::Unit::TestCase
         }
       }'
 
-    @l3_json = '{
+    @xml_json = '{
         "Invoice": {
           "Date": "20190104",
           "Level3Invoice": {
@@ -99,8 +99,8 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_not_nil response.authorization
   end
 
-  def test_successful_purchase_with_l3_fields
-    options = @options.merge(level_three_fields: @l3_json)
+  def test_successful_purchase_with_xml_fields
+    options = @options.merge(level_three_fields: @xml_json)
 
     assert response = @gateway.purchase(100000, @credit_card, options)
     assert_equal 'Approved', response.message
@@ -109,8 +109,8 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_not_nil response.authorization
   end
 
-  def test_successful_purchase_with_l2_l3_fields
-    options = @options.merge(level_two_fields: @l2_json).merge(level_three_fields: @l3_json)
+  def test_successful_purchase_with_l2_and_xml_fields
+    options = @options.merge(level_two_fields: @l2_json).merge(level_three_fields: @xml_json)
 
     assert response = @gateway.purchase(100000, @credit_card, options)
     assert_equal 'Approved', response.message

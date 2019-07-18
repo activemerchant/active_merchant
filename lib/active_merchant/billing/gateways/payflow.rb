@@ -205,7 +205,7 @@ module ActiveMerchant #:nodoc:
         fields.each do |k, v|
           if v.is_a? String
             new_node = Nokogiri::XML::Node.new(k, xml_doc)
-            new_node.add_child(v)
+            new_node.add_child(check_child(v))
             xml_doc.at_css(parent).add_child(new_node)
           else
             check_subparent_before_continuing(parent, k, xml_doc)
@@ -213,6 +213,10 @@ module ActiveMerchant #:nodoc:
           end
         end
         xml_doc
+      end
+
+      def check_child(child)
+        Nokogiri::XML.parse(child).root || child
       end
 
       def check_subparent_before_continuing(parent, subparent, xml_doc)

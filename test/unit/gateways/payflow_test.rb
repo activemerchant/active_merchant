@@ -25,13 +25,15 @@ class PayflowTest < Test::Unit::TestCase
       }
     }'
 
-    @l3_json = '{
+    @xml_json = '{
       "Invoice": {
         "Date": "20190104",
         "Level3Invoice": {
           "CountyTax": {"Amount": "3.23"}
         }
-      }
+      },
+      "Items":
+        "<Item Number=\"1\"><SKU>1111</SKU><UPC>9999</UPC><Description>Widget</Description><Quantity>2</Quantity><UnitOfMeasurement>INQ</UnitOfMeasurement><UnitPrice>49.99</UnitPrice><DiscountAmt>9.98</DiscountAmt><FreightAmt>3.00</FreightAmt><HandlingAmt>8.00</HandlingAmt><TotalAmt>101.00</TotalAmt><PickUp>  <Address>  <Street>500 Main St.</Street><City>Anytown</City><State>NY</State><Zip>67890</Zip><Country>US</Country></Address><Time>15:30</Time><Date>20030630</Date><RecordNumber>24680</RecordNumber></PickUp><TrackingNumber>ABC0123</TrackingNumber><Delivery><Date>20030714</Date><Time>12:00</Time></Delivery><UNSPSCCode>54.10.15.05</UNSPSCCode></Item><Item Number=\"2\"><SKU>2222</SKU><UPC>8888</UPC><Description>Gizmo</Description><Quantity>5</Quantity><UnitOfMeasurement>INQ</UnitOfMeasurement><UnitPrice>9.99</UnitPrice><DiscountAmt>2.50</DiscountAmt><FreightAmt>3.00</FreightAmt><HandlingAmt>2.50</HandlingAmt><TotalAmt>52.95</TotalAmt><PickUp>  <Address>    <Street>500 Main St.</Street><City>Anytown</City><State>NY</State><Zip>67890</Zip><Country>US</Country></Address><Time>09:00</Time><Date>20030628</Date><RecordNumber>13579</RecordNumber></PickUp><TrackingNumber>XYZ7890</TrackingNumber><Delivery><Date>20030711</Date><Time>09:00</Time></Delivery><UNSPSCCode>54.10.16.05</UNSPSCCode></Item>"
     }'
   end
 
@@ -131,7 +133,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_level_3_fields
-    options = @options.merge(level_three_fields: @l3_json)
+    options = @options.merge(level_three_fields: @xml_json)
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
@@ -147,7 +149,7 @@ class PayflowTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_level_2_3_fields
-    options = @options.merge(level_two_fields: @l2_json).merge(level_three_fields: @l3_json)
+    options = @options.merge(level_two_fields: @l2_json).merge(level_three_fields: @xml_json)
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, options)
