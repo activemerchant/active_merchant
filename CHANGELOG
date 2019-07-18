@@ -1,7 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* CardConnect: Move domain from gateway spefici to gateway field
+* CardConnect: Move domain from gateway specific to gateway field [hdeters] #3283
+* Braintree Blue: Support for stored credentials [hdeters] #3286
 
 == Version 1.96.0 (Jul 26, 2019)
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229

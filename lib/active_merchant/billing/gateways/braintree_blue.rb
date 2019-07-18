@@ -447,7 +447,6 @@ module ActiveMerchant #:nodoc:
 
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
-
         commit do
           result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
@@ -567,6 +566,7 @@ module ActiveMerchant #:nodoc:
           'vault_customer'          => vault_customer,
           'merchant_account_id'     => transaction.merchant_account_id,
           'risk_data'               => risk_data,
+          'network_transaction_id'  => transaction.network_transaction_id || nil,
           'processor_response_code' => response_code_from_result(result)
         }
       end
@@ -614,6 +614,7 @@ module ActiveMerchant #:nodoc:
         end
 
         add_payment_method(parameters, credit_card_or_vault_id, options)
+        add_stored_credential_data(parameters, credit_card_or_vault_id, options)
 
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
@@ -648,6 +649,26 @@ module ActiveMerchant #:nodoc:
         parameters[:line_items] = options[:line_items] if options[:line_items]
 
         parameters
+      end
+
+      def add_stored_credential_data(parameters, credit_card_or_vault_id, options)
+        return unless (stored_credential = options[:stored_credential])
+        parameters[:external_vault] = {}
+        if stored_credential[:initial_transaction]
+          parameters[:external_vault][:status] = 'will_vault'
+        else
+          parameters[:external_vault][:status] = 'vaulted'
+          parameters[:external_vault][:previous_network_transaction_id] = stored_credential[:network_transaction_id]
+        end
+        if stored_credential[:initiator] == 'merchant'
+          if stored_credential[:reason_type] == 'installment'
+            parameters[:transaction_source] = 'recurring'
+          else
+            parameters[:transaction_source] = stored_credential[:reason_type]
+          end
+        else
+          parameters[:transaction_source] = ''
+        end
       end
 
       def add_payment_method(parameters, credit_card_or_vault_id, options)
