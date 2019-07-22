@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_brand(card)
-        CARD_BRAND_MAP[super.downcase].presence || super.upcase
+        CARD_BRAND_MAP.fetch(super.downcase, super.upcase)
       end
 
       def exp_date(credit_card)
