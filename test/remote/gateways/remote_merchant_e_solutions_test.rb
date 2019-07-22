@@ -149,7 +149,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
     }
     assert response = @gateway.purchase(@amount, @credit_card, options)
     assert_equal 'A', response.avs_result['code']
-    assert_equal 'Street address matches, but 5-digit and 9-digit postal code do not match.', response.avs_result['message']
+    assert_equal 'Street address matches, but postal code does not match.', response.avs_result['message']
     assert_equal 'Y', response.avs_result['street_match']
     assert_equal 'N', response.avs_result['postal_match']
   end

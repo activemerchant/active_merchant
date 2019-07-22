@@ -23,7 +23,7 @@ class RemoteCecabankTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'ERROR', response.message
+    assert_match 'ERROR', response.message
   end
 
   def test_successful_refund
@@ -36,20 +36,19 @@ class RemoteCecabankTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    assert response = @gateway.refund(@amount, 'wrongreference', @options)
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert response = @gateway.refund(@amount, purchase.authorization, @options.merge(currency: 'USD'))
     assert_failure response
-    assert_equal 'ERROR', response.message
+    assert_match 'ERROR', response.message
   end
 
   def test_invalid_login
-    gateway = CecabankGateway.new(
-      :merchant_id => '',
-      :acquirer_bin => '',
-      :terminal_id => '',
-      :key => ''
-    )
+    gateway = CecabankGateway.new(fixtures(:cecabank).merge(key: 'invalid'))
+
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'ERROR', response.message
+    assert_match 'ERROR', response.message
   end
 end

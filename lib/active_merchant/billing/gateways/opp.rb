@@ -125,6 +125,9 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         # debit
+        if payment.is_a?(String)
+          options[:registrationId] = payment
+        end
         execute_dbpa(options[:risk_workflow] ? 'PA.CP': 'DB',
           money, payment, options)
       end
@@ -156,6 +159,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store(credit_card, options = {})
+        execute_store(credit_card, options.merge(store: true))
+      end
+
       def supports_scrubbing?
         true
       end
@@ -168,6 +175,15 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def execute_store(payment, options)
+        post = {}
+        add_payment_method(post, payment, options)
+        add_address(post, options)
+        add_options(post, options)
+        add_3d_secure(post, options)
+        commit(post, nil, options)
+      end
 
       def execute_dbpa(txtype, money, payment, options)
         post = {}
@@ -243,6 +259,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method(post, payment, options)
+        return if payment.is_a?(String)
         if options[:registrationId]
           post[:card] = {
             cvv: payment.verification_value,
@@ -278,7 +295,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_url(url, authorization, options)
-        if options[:registrationId]
+        if options[:store]
+          url.gsub(/payments/, 'registrations')
+        elsif options[:registrationId]
           "#{url.gsub(/payments/, 'registrations')}/#{options[:registrationId]}/payments"
         elsif authorization
           "#{url}/#{authorization}"

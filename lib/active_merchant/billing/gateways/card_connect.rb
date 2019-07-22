@@ -233,6 +233,7 @@ module ActiveMerchant #:nodoc:
             item.each_pair do |k, v|
               updated.merge!(k.to_s.gsub(/_/, '') => v)
             end
+            updated
           end
         end
       end

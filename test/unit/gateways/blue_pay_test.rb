@@ -208,7 +208,7 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_message_from
     assert_equal 'CVV does not match', @gateway.send(:parse, 'STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE').message
-    assert_equal 'Street address matches, but 5-digit and 9-digit postal code do not match.',
+    assert_equal 'Street address matches, but postal code does not match.',
       @gateway.send(:parse, 'STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE').message
   end
 

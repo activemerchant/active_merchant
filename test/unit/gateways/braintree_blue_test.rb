@@ -686,6 +686,24 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card('41111111111111111111'), :transaction_source => 'recurring', :recurring => true)
   end
 
+  def test_passes_skip_avs
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:options][:skip_avs] == true)
+    end.returns(braintree_result(:avs_postal_code_response_code => 'B', :avs_street_address_response_code => 'B'))
+
+    response = @gateway.purchase(100, credit_card('41111111111111111111'), :skip_avs => true)
+    assert_equal 'B', response.avs_result['code']
+  end
+
+  def test_passes_skip_cvv
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:options][:skip_cvv] == true)
+    end.returns(braintree_result(:cvv_response_code => 'B'))
+
+    response = @gateway.purchase(100, credit_card('41111111111111111111'), :skip_cvv => true)
+    assert_equal 'B', response.cvv_result['code']
+  end
+
   def test_configured_logger_has_a_default
     # The default is actually provided by the Braintree gem, but we
     # assert its presence in order to show ActiveMerchant need not
