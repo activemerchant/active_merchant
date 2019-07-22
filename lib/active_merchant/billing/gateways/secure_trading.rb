@@ -26,11 +26,7 @@ module ActiveMerchant #:nodoc:
       }.freeze
 
       CARD_BRAND_MAP = {
-        'visa'              => 'VISA',
         'master'            => 'MASTERCARD',
-        'maestro'           => 'MAESTRO',
-        'discover'          => 'DISCOVER',
-        'jcb'               => 'JCB',
         'american_express'  => 'AMEX',
       }.freeze
 
