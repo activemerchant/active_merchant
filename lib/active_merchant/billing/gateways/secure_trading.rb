@@ -23,7 +23,16 @@ module ActiveMerchant #:nodoc:
         '31004' => STANDARD_ERROR_CODE[:expired_card],
         '31009' => STANDARD_ERROR_CODE[:processing_error],
         '70000' => STANDARD_ERROR_CODE[:card_declined],
-      }
+      }.freeze
+
+      CARD_BRAND_MAP = {
+        'visa'              => 'VISA',
+        'master'            => 'MASTERCARD',
+        'maestro'           => 'MAESTRO',
+        'discover'          => 'DISCOVER',
+        'jcb'               => 'JCB',
+        'american_express'  => 'AMEX',
+      }.freeze
 
       def initialize(options={})
         requires!(options, :api_key, :user_id, :site_id)
@@ -142,7 +151,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_brand(card)
-        super.upcase
+        CARD_BRAND_MAP[super.downcase].presence || super.upcase
       end
 
       def exp_date(credit_card)
