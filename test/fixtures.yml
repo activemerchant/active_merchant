@@ -1051,6 +1051,12 @@ realex_visa:
   year: '2020'
   verification_value: '123'
 
+realex_visa_3ds_enrolled:
+  number: '4012001037141112'
+  month: '9'
+  year: '2021'
+  verification_value: '123'
+
 realex_visa_coms_error:
   number: '4009830000001985'
   month: '6'
