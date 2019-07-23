@@ -115,12 +115,27 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_match %r{DECLINED}i, response.message
   end
 
-  def test_realex_purchase_with_three_d_secure
+  def test_realex_purchase_with_three_d_secure_1
     response = @gateway.purchase(
       1000,
       @visa,
       three_d_secure: {
-        eci: '05', xid: '05', cavv: '05'
+        eci: '05', xid: '05', cavv: '05', version: '1.0.2'
+      },
+      :order_id => generate_unique_id,
+      :description => 'Test Realex with 3DS'
+    )
+    assert_success response
+    assert response.test?
+    assert_equal 'Successful', response.message
+  end
+
+  def test_realex_purchase_with_three_d_secure_2
+    response = @gateway.purchase(
+      1000,
+      @visa,
+      three_d_secure: {
+        eci: '05', ds_transaction_id: '05', cavv: '05', version: '2.1.0'
       },
       :order_id => generate_unique_id,
       :description => 'Test Realex with 3DS'

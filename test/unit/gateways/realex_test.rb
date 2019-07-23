@@ -339,15 +339,16 @@ SRC
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
 
-  def test_three_d_secure
+  def test_three_d_secure_1
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     options = {
-      :order_id => '1',
-      :three_d_secure => {
-        :cavv => '1234',
-        :eci => '1234',
-        :xid => '1234'
+      order_id: '1',
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        xid: '1234',
+        version: '1.0.2',
       }
     }
 
@@ -355,13 +356,14 @@ SRC
     assert_equal 'M', response.cvv_result['code']
   end
 
-  def test_auth_xml_with_three_d_secure
+  def test_auth_xml_with_three_d_secure_1
     options = {
-      :order_id => '1',
-      :three_d_secure => {
-        :cavv => '1234',
-        :eci => '1234',
-        :xid => '1234'
+      order_id: '1',
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        xid: '1234',
+        version: '1.0.2',
       }
     }
 
@@ -388,8 +390,53 @@ SRC
   <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
   <mpi>
     <cavv>1234</cavv>
-    <eci>1234</eci>
     <xid>1234</xid>
+    <eci>1234</eci>
+    <message_version>1.0.2</message_version>
+  </mpi>
+</request>
+SRC
+
+    assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
+  end
+
+  def test_auth_xml_with_three_d_secure_2
+    options = {
+      order_id: '1',
+      three_d_secure: {
+        cavv: '1234',
+        eci: '1234',
+        ds_transaction_id: '1234',
+        version: '2.1.0',
+      }
+    }
+
+    @gateway.expects(:new_timestamp).returns('20090824160201')
+
+    valid_auth_request_xml = <<-SRC
+<request timestamp="20090824160201" type="auth">
+  <merchantid>your_merchant_id</merchantid>
+  <account>your_account</account>
+  <orderid>1</orderid>
+  <amount currency=\"EUR\">100</amount>
+  <card>
+    <number>4263971921001307</number>
+    <expdate>0808</expdate>
+    <chname>Longbob Longsen</chname>
+    <type>VISA</type>
+    <issueno></issueno>
+    <cvn>
+      <number></number>
+      <presind></presind>
+    </cvn>
+  </card>
+  <autosettle flag="0"/>
+  <sha1hash>3499d7bc8dbacdcfba2286bd74916d026bae630f</sha1hash>
+  <mpi>
+    <authentication_value>1234</authentication_value>
+    <ds_trans_id>1234</ds_trans_id>
+    <eci>1234</eci>
+    <message_version>2.1.0</message_version>
   </mpi>
 </request>
 SRC
