@@ -370,6 +370,20 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_store_and_purchase_with_token_and_options_successful
+    options = { month: '01', year: '20' }
+    credit_card = CreditCard.new(@credit_card_hash.merge(:number => '4100280190123000'))
+    assert store_response = @gateway.store(credit_card, :order_id => '50')
+    assert_success store_response
+
+    token = store_response.authorization
+    assert_equal store_response.params['litleToken'], token
+
+    assert response = @gateway.purchase(10010, token, options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_echeck_store_and_purchase
     assert store_response = @gateway.store(@store_check)
     assert_success store_response
