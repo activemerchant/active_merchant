@@ -17,6 +17,7 @@
 * Redsys: Add support for stored_credential [meagabeth] #3844
 * Redsys: add_payment method solution [meagabeth] #3845
 * Stripe Payment Intents: Add support for error_on_requires_action option [tatsianaclifton] #3846
+* Add 3DS 2.0 values to paypal [nebdil] #3285
 
 == Version 1.117.0 (November 13th)
 * Checkout V2: Pass attempt_n3d along with 3ds enabled [naashton] #3805
