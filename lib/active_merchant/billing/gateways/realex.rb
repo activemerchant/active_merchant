@@ -289,12 +289,18 @@ module ActiveMerchant
       end
 
       def add_three_d_secure(xml, options)
-        if options[:three_d_secure]
-          xml.tag! 'mpi' do
-            xml.tag! 'cavv', options[:three_d_secure][:cavv]
-            xml.tag! 'eci', options[:three_d_secure][:eci]
-            xml.tag! 'xid', options[:three_d_secure][:xid]
+        return unless three_d_secure = options[:three_d_secure]
+        version = three_d_secure.fetch(:version, '')
+        xml.tag! 'mpi' do
+          if version =~ /^2/
+            xml.tag! 'authentication_value', three_d_secure[:cavv]
+            xml.tag! 'ds_trans_id', three_d_secure[:ds_transaction_id]
+          else
+            xml.tag! 'cavv', three_d_secure[:cavv]
+            xml.tag! 'xid', three_d_secure[:xid]
           end
+          xml.tag! 'eci', three_d_secure[:eci]
+          xml.tag! 'message_version', version
         end
       end
 

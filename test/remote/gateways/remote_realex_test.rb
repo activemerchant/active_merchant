@@ -3,14 +3,15 @@ require 'test_helper'
 class RemoteRealexTest < Test::Unit::TestCase
 
   def setup
-    @gateway = RealexGateway.new(fixtures(:realex))
+    @gateway = RealexGateway.new(fixtures(:realex_with_account))
 
     # Replace the card numbers with the test account numbers from Realex
-    @visa            = card_fixtures(:realex_visa)
-    @visa_declined   = card_fixtures(:realex_visa_declined)
-    @visa_referral_b = card_fixtures(:realex_visa_referral_b)
-    @visa_referral_a = card_fixtures(:realex_visa_referral_a)
-    @visa_coms_error = card_fixtures(:realex_visa_coms_error)
+    @visa              = card_fixtures(:realex_visa)
+    @visa_declined     = card_fixtures(:realex_visa_declined)
+    @visa_referral_b   = card_fixtures(:realex_visa_referral_b)
+    @visa_referral_a   = card_fixtures(:realex_visa_referral_a)
+    @visa_coms_error   = card_fixtures(:realex_visa_coms_error)
+    @visa_3ds_enrolled = card_fixtures(:realex_visa_3ds_enrolled)
 
     @mastercard            = card_fixtures(:realex_mastercard)
     @mastercard_declined   = card_fixtures(:realex_mastercard_declined)
@@ -115,12 +116,33 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_match %r{DECLINED}i, response.message
   end
 
-  def test_realex_purchase_with_three_d_secure
+  def test_realex_purchase_with_three_d_secure_1
     response = @gateway.purchase(
       1000,
-      @visa,
+      @visa_3ds_enrolled,
       three_d_secure: {
-        eci: '05', xid: '05', cavv: '05'
+        eci: '05',
+        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+        xid: 'MDAwMDAwMDAwMDAwMDAwMzIyNzY=',
+        version: '1.0.2',
+      },
+      :order_id => generate_unique_id,
+      :description => 'Test Realex with 3DS'
+    )
+    assert_success response
+    assert response.test?
+    assert_equal 'Successful', response.message
+  end
+
+  def test_realex_purchase_with_three_d_secure_2
+    response = @gateway.purchase(
+      1000,
+      @visa_3ds_enrolled,
+      three_d_secure: {
+        eci: '05',
+        cavv: 'AgAAAAAAAIR8CQrXcIhbQAAAAAA',
+        ds_transaction_id: 'bDE9Aa1A-C5Ac-AD3a-4bBC-aC918ab1de3E',
+        version: '2.1.0',
       },
       :order_id => generate_unique_id,
       :description => 'Test Realex with 3DS'
@@ -163,7 +185,6 @@ class RemoteRealexTest < Test::Unit::TestCase
         :order_id => generate_unique_id,
         :description => 'Test Realex coms error'
       )
-
       assert_not_nil response
       assert_failure response
 
