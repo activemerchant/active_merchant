@@ -39,6 +39,7 @@
 * Spreedly: extra fields, remove extraneous check [montdidier] #3102 #3281
 * Cecabank: Update encryption to SHA2 [leila-alderman] #3278
 * Credorax: add 3DS2 MPI auth data support [bayprogrammer] #3274
+* Add Kosovo to the list of countries [AnotherJoSmith] #3226
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
