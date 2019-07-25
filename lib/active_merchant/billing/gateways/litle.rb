@@ -261,6 +261,9 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
+            if options.has_key?(:month) && options.has_key?(:year)
+              doc.expDate(exp_date(OpenStruct.new(options)))
+            end
           end
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
