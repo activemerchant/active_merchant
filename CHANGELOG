@@ -1,12 +1,14 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+
+== Version 1.96.0 (Jul 26, 2019)
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229
 * Adyen: Pass updateShopperStatement, industryUsage [curiousepic] #3233
 * TransFirst Transaction Express: Fix blank address2 values [britth] #3231
 * WorldPay: Add support for store method [bayprogrammer] #3232
 * Adyen: Support for additional AVS code mapping [jknipp] #3236
-* Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
+* Adyen: Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
 * CyberSource: Update CyberSource SOAP documentation link [vince-smith] #3204
 * USAePay: Handle additional error codes and add default error code [estelendur] #3167
 * Braintree: Add `skip_avs` and `skip_cvv` gateway specific fields [leila-alderman] #3241
@@ -16,6 +18,7 @@
 * NMI: Add support for stored credentials [bayprogrammer] #3243
 * Spreedly: Consolidate API requests and support bank accounts [lancecarlson] #3105
 * BPoint: Hook up merchant_reference and CRN fields [curiousepic] #3249
+* Checkout V2: Stop sending phone number to Checkout V2 integration [filipebarcos] #3248
 * Barclaycard Smartpay: Add support for 3DS2 [britth] #3251
 * Adyen: Add support for non-fractional currencies [molbrown] #3257
 * Decidir: Add new gateway [jknipp] #3254
@@ -25,7 +28,7 @@
 * Kushki: Update supported countries [molbrown] #3260
 * Paypal: Update supported countries [molbrown] #3260
 * BlueSnap: Send amount in capture requests [jknipp] #3262
-* Adds Elo card type in general, and specifically to Mundipagg [jasonxp] #3255
+* Mundipagg: Add Alelo card support [jasonxp] #3255
 * Adyen: Remove temporary amount modification for non-fractional currencies [molbrown] #3263
 * Adyen: Set blank state to N/A [therufs] #3252
 * MiGS: Add tx_source gateway specific field [leila-alderman] #3264
@@ -38,8 +41,11 @@
 * BlueSnap: Default to not send amount on capture [molbrown] #3270
 * Spreedly: extra fields, remove extraneous check [montdidier] #3102 #3281
 * Cecabank: Update encryption to SHA2 [leila-alderman] #3278
+* Checkout V2: Fix 3DS 1&2 integration [nicolas-maalouf-cko] #3240
 * Credorax: add 3DS2 MPI auth data support [bayprogrammer] #3274
 * Add Kosovo to the list of countries [AnotherJoSmith] #3226
+* Realex: Adds 3DS 1&2 support through external MPI [filipebarcos] #3284
+* PayPal: Adds 3DS 1 support through external MPI [nebdil] #3279
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
