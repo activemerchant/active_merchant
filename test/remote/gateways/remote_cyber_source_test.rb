@@ -435,6 +435,38 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.success?
   end
 
+  # HYBRID 2.0
+  # `authentication_transaction_id` and `reference_id` are returned by MPI. Update those before run.
+  def test_3ds_payer_auth_request
+    card = credit_card('4000000000001091',
+                       verification_value: '111',
+                       month: '01',
+                       year: (Time.now.year + 3).to_s,
+                       brand: :visa
+    )
+
+    assert response = @gateway.purchase(1000, card, @options.merge(payer_auth_validate_service: true, authentication_transaction_id: 'MLK3OjdxxoYDT6RWK5r0'))
+    assert response.success?
+    assert_equal '100', response.params['reasonCode']
+  end
+
+  def test_3ds_payer_auth_enroll
+    card = credit_card('4000000000001091',
+                       verification_value: '111',
+                       month: '01',
+                       year: (Time.now.year + 3).to_s,
+                       brand: :visa
+    )
+
+    assert response = @gateway.purchase(1000, card, @options.merge(payer_auth_enroll_service: true, reference_id: '0_097aff87-17fe-42e9-a3b4-0d1b9df6c49d'))
+    assert_equal '475', response.params['reasonCode']
+    assert !response.params['acsURL'].blank?
+    assert !response.params['paReq'].blank?
+    assert_equal 'Y', response.params['veresEnrolled']
+    assert !response.success?
+  end
+  # / HYBRID
+
   def test_successful_first_unscheduled_cof_transaction
     @options[:stored_credential] = {
       :initiator => 'cardholder',

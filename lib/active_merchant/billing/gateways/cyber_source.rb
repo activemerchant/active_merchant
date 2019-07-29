@@ -84,7 +84,9 @@ module ActiveMerchant #:nodoc:
         :r247 => 'You requested a credit for a capture that was previously voided',
         :r250 => 'The request was received, but a time-out occurred with the payment processor',
         :r254 => 'Your CyberSource account is prohibited from processing stand-alone refunds',
-        :r255 => 'Your CyberSource account is not configured to process the service in the country you specified'
+        :r255 => 'Your CyberSource account is not configured to process the service in the country you specified',
+        :r475 => 'The customer is enrolled in payer authentication. Authenticate the cardholder before continuing with the transaction.',
+        :r476 => 'The customer cannot be authenticated'
       }
 
       # These are the options that can be used when creating a new CyberSource
@@ -687,10 +689,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_threeds_services(xml, options)
-        xml.tag! 'payerAuthEnrollService', {'run' => 'true'} if options[:payer_auth_enroll_service]
+        xml.tag! 'payerAuthEnrollService', {'run' => 'true'} do
+          xml.tag! 'authenticationTransactionID', options[:authentication_transaction_id] if options[:authentication_transaction_id]
+          xml.tag! 'referenceID', options[:reference_id] if options[:reference_id]
+        end if options[:payer_auth_enroll_service]
+
         if options[:payer_auth_validate_service]
           xml.tag! 'payerAuthValidateService', {'run' => 'true'} do
-            xml.tag! 'signedPARes', options[:pares]
+            xml.tag! 'signedPARes', options[:pares] if options[:pares]
+            xml.tag! 'authenticationTransactionID', options[:authentication_transaction_id] if options[:authentication_transaction_id]
           end
         end
       end

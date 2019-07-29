@@ -514,7 +514,7 @@ class CyberSourceTest < Test::Unit::TestCase
     purchase = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_enroll_service: true))
     end.check_request do |endpoint, data, headers|
-      assert_match(/\<payerAuthEnrollService run=\"true\"\/\>/, data)
+      assert_match(/\<payerAuthEnrollService run=\"true\">/, data)
     end.respond_with(threedeesecure_purchase_response)
 
     assert_failure purchase
@@ -530,6 +530,33 @@ class CyberSourceTest < Test::Unit::TestCase
       assert_match(/\<payerAuthValidateService run=\"true\"\>/, data)
       assert_match(/\<signedPARes\>ABC123\<\/signedPARes\>/, data)
     end.respond_with(successful_threedeesecure_validate_response)
+
+    assert_success validation
+  end
+
+  def test_3ds_2_enroll_response
+    credit_card = credit_card('4000000000001091', :brand => 'visa')
+
+    purchase = stub_comms do
+      @gateway.purchase(@amount, credit_card, @options.merge(payer_auth_enroll_service: true, reference_id: 'ABC123'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<payerAuthEnrollService run="true">/, data)
+      assert_match(/<referenceID>ABC123<\/referenceID>/, data)
+    end.respond_with(three_ds_2_payer_auth_enroll_response)
+
+    assert_failure purchase
+    assert_equal '475', purchase.params['reasonCode']
+    assert_equal 'eyJtZXNzYWdlVHlwZSI6IkNSZXEiLCJtZXNzYWdlVmVyc2lvbiI6IjIuMi4wIiwidGhyZWVEU1NlcnZlclRyYW5zSUQiOiJlNjYxZGM2My0yMWQ4LTRiNWMtYjk4MC0wYmIwMGM5MTExZDUiLCJhY3NUcmFuc0lEIjoiNGMwYWRmZDktMDQ5OC00OTBmLWEzNmItMjY0OTc4MGQ4ZTZkIiwiY2hhbGxlbmdlV2luZG93U2l6ZSI6IjAyIn0', purchase.params['paReq']
+    assert_equal 'https://0merchantacsstag.cardinalcommerce.com/MerchantACSWeb/creq.jsp', purchase.params['acsURL']
+  end
+
+  def test_3ds_2_validate_response
+    validation = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(payer_auth_validate_service: true, authentication_transaction_id: 'MLK3OjdxxoYDT6RWK5r0'))
+    end.check_request do |_endpoint, data, _headers|
+      assert_match(/<payerAuthValidateService run=\"true\">/, data)
+      assert_match(/<authenticationTransactionID>MLK3OjdxxoYDT6RWK5r0<\/authenticationTransactionID>/, data)
+    end.respond_with(three_ds_2_payer_auth_validate_response)
 
     assert_success validation
   end
@@ -946,6 +973,97 @@ class CyberSourceTest < Test::Unit::TestCase
         </c:replyMessage>
     </soap:Body>
 </soap:Envelope>
+    XML
+  end
+
+  def three_ds_2_payer_auth_validate_response
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Header>
+          <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+            <wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-1893359384">
+              <wsu:Created>2019-07-24T13:39:34.091Z</wsu:Created>
+            </wsu:Timestamp>
+          </wsse:Security>
+        </soap:Header>
+        <soap:Body>
+          <c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.153">
+            <c:merchantReferenceCode>b3f03345f0d2f2cfa4cefa99581ced20</c:merchantReferenceCode>
+            <c:requestID>5639755737336730603008</c:requestID>
+            <c:decision>ACCEPT</c:decision>
+            <c:reasonCode>100</c:reasonCode>
+            <c:requestToken>Ahj//wSTMbtVWma3D84AESDZi0cuWzZk4st58RrElqLyrvzQgAVF5V35oQaQK+iP1hk0ky3SA4b7EMB8mY3aqtM1uH5wAAAA9ALu</c:requestToken>
+            <c:purchaseTotals>
+              <c:currency>USD</c:currency>
+            </c:purchaseTotals>
+            <c:ccAuthReply>
+              <c:reasonCode>100</c:reasonCode>
+              <c:amount>10.00</c:amount>
+              <c:authorizationCode>888888</c:authorizationCode>
+              <c:avsCode>X</c:avsCode>
+              <c:avsCodeRaw>I1</c:avsCodeRaw>
+              <c:cvCode>M</c:cvCode>
+              <c:cvCodeRaw>M</c:cvCodeRaw>
+              <c:authorizedDateTime>2019-07-24T13:39:34Z</c:authorizedDateTime>
+              <c:processorResponse>100</c:processorResponse>
+              <c:reconciliationID>614996628Y7OD5DK</c:reconciliationID>
+            </c:ccAuthReply>
+            <c:ccCaptureReply>
+              <c:reasonCode>100</c:reasonCode>
+              <c:requestDateTime>2019-07-24T13:39:34Z</c:requestDateTime>
+              <c:amount>10.00</c:amount>
+              <c:reconciliationID>614996628Y7OD5DK</c:reconciliationID>
+            </c:ccCaptureReply>
+            <c:payerAuthValidateReply>
+              <c:reasonCode>100</c:reasonCode>
+              <c:authenticationResult>0</c:authenticationResult>
+              <c:authenticationStatusMessage>Success</c:authenticationStatusMessage>
+              <c:cavv>MTIzNDU2Nzg5MDEyMzQ1Njc4OTA=</c:cavv>
+              <c:commerceIndicator>vbv</c:commerceIndicator>
+              <c:eci>05</c:eci>
+              <c:eciRaw>05</c:eciRaw>
+              <c:xid>MTIzNDU2Nzg5MDEyMzQ1Njc4OTA=</c:xid>
+              <c:paresStatus>Y</c:paresStatus>
+              <c:specificationVersion>2.2.0</c:specificationVersion>
+              <c:directoryServerTransactionID>b6a36585-c7ef-499d-ac4a-b7ade7d1754e</c:directoryServerTransactionID>
+            </c:payerAuthValidateReply>
+          </c:replyMessage>
+        </soap:Body>
+      </soap:Envelope>
+    XML
+  end
+
+  def three_ds_2_payer_auth_enroll_response
+    <<~XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Header>
+          <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
+            <wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-219781280">
+              <wsu:Created>2019-07-24T13:40:39.118Z</wsu:Created>
+            </wsu:Timestamp>
+          </wsse:Security>
+        </soap:Header>
+        <soap:Body>
+          <c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.153">
+            <c:merchantReferenceCode>b034d390a33135fdbafacfbd6c273864</c:merchantReferenceCode>
+            <c:requestID>5639756388986013103009</c:requestID>
+            <c:decision>REJECT</c:decision>
+            <c:reasonCode>475</c:reasonCode>
+            <c:requestToken>AhjzbwSTMbtXqxKjEDOhEQFReVd+cUukCvoj9V29JMt0gOG+xAPAO0kb</c:requestToken>
+            <c:payerAuthEnrollReply>
+              <c:reasonCode>475</c:reasonCode>
+              <c:acsURL>https://0merchantacsstag.cardinalcommerce.com/MerchantACSWeb/creq.jsp</c:acsURL>
+              <c:paReq>eyJtZXNzYWdlVHlwZSI6IkNSZXEiLCJtZXNzYWdlVmVyc2lvbiI6IjIuMi4wIiwidGhyZWVEU1NlcnZlclRyYW5zSUQiOiJlNjYxZGM2My0yMWQ4LTRiNWMtYjk4MC0wYmIwMGM5MTExZDUiLCJhY3NUcmFuc0lEIjoiNGMwYWRmZDktMDQ5OC00OTBmLWEzNmItMjY0OTc4MGQ4ZTZkIiwiY2hhbGxlbmdlV2luZG93U2l6ZSI6IjAyIn0</c:paReq>
+              <c:veresEnrolled>Y</c:veresEnrolled>
+              <c:specificationVersion>2.2.0</c:specificationVersion>
+              <c:authenticationTransactionID>ndKeZjP0EmlD8q2W1V20</c:authenticationTransactionID>
+              <c:directoryServerTransactionID>ce6153b4-2527-4be5-b401-0886ff8c82c1</c:directoryServerTransactionID>
+            </c:payerAuthEnrollReply>
+          </c:replyMessage>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 end
