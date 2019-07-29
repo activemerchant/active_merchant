@@ -73,7 +73,7 @@ module ActiveMerchant
 
       retry_exceptions(:max_retries => max_retries, :logger => logger, :tag => tag) do
         begin
-          info "connection_http_method=#{method.to_s.upcase} connection_uri=#{endpoint}", tag
+          info "connection_http_method=#{method.to_s.upcase} connection_uri=#{endpoint} headers=#{headers.to_s}", tag
 
           result = nil
 
