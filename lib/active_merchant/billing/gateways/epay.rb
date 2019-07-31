@@ -63,6 +63,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard_or_reference(post, credit_card_or_reference)
         add_instant_capture(post, false)
+        add_3ds_auth(post, options)
 
         commit(:authorize, post)
       end
@@ -74,6 +75,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard_or_reference(post, credit_card_or_reference)
         add_invoice(post, options)
         add_instant_capture(post, true)
+        add_3ds_auth(post, options)
 
         commit(:authorize, post)
       end
@@ -158,6 +160,16 @@ module ActiveMerchant #:nodoc:
         post[:instantcapture] = option ? 1 : 0
       end
 
+      def add_3ds_auth(post, options)
+        if options[:three_d_secure]
+          post[:eci] = options.dig(:three_d_secure, :eci)
+          post[:xid] = options.dig(:three_d_secure, :xid)
+          post[:cavv] = options.dig(:three_d_secure, :cavv)
+          post[:threeds_version] = options.dig(:three_d_secure, :version)
+          post[:ds_transaction_id] = options.dig(:three_d_secure, :ds_transaction_id)
+        end
+      end
+
       def commit(action, params)
         response = send("do_#{action}", params)
 
@@ -193,7 +205,6 @@ module ActiveMerchant #:nodoc:
         headers['Referer'] = (options[:password] || 'activemerchant.org')
 
         response = raw_ssl_request(:post, live_url + 'auth/default.aspx', authorize_post_data(params), headers)
-
         # Authorize gives the response back by redirecting with the values in
         # the URL query
         if location = response['Location']
@@ -268,7 +279,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize_post_data(params = {})
         params[:language] = '2'
-        params[:cms] = 'activemerchant'
+        params[:cms] = 'activemerchant_3ds'
         params[:accepturl] = live_url + 'auth/default.aspx?accept=1'
         params[:declineurl] = live_url + 'auth/default.aspx?decline=1'
         params[:merchantnumber] = @options[:login]
