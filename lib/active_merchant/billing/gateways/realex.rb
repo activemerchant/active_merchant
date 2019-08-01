@@ -42,8 +42,8 @@ module ActiveMerchant
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options.has_key?(:rebate_secret)
-        options[:credit_hash] = Digest::SHA1.hexdigest(options[:refund_secret]) if options.has_key?(:refund_secret)
+        options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options[:rebate_secret].present?
+        options[:credit_hash] = Digest::SHA1.hexdigest(options[:refund_secret]) if options[:refund_secret].present?
         super
       end
 

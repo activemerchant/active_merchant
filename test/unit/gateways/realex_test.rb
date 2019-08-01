@@ -51,6 +51,43 @@ class RealexTest < Test::Unit::TestCase
     @amount = 100
   end
 
+  def test_initialize_sets_refund_and_credit_hashes
+    refund_secret = 'refund'
+    rebate_secret = 'rebate'
+
+    gateway = RealexGateway.new(
+      login: @login,
+      password: @password,
+      rebate_secret: rebate_secret,
+      refund_secret: refund_secret
+    )
+
+    assert gateway.options[:refund_hash] == Digest::SHA1.hexdigest(rebate_secret)
+    assert gateway.options[:credit_hash] == Digest::SHA1.hexdigest(refund_secret)
+  end
+
+  def test_initialize_with_nil_refund_and_rebate_secrets
+    gateway = RealexGateway.new(
+      login: @login,
+      password: @password,
+      rebate_secret: nil,
+      refund_secret: nil
+    )
+
+    assert_false gateway.options.key?(:refund_hash)
+    assert_false gateway.options.key?(:credit_hash)
+  end
+
+  def test_initialize_without_refund_and_rebate_secrets
+    gateway = RealexGateway.new(
+      login: @login,
+      password: @password
+    )
+
+    assert_false gateway.options.key?(:refund_hash)
+    assert_false gateway.options.key?(:credit_hash)
+  end
+
   def test_hash
     gateway = RealexGateway.new(
       :login => 'thestore',
