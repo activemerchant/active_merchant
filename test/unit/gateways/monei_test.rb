@@ -5,10 +5,7 @@ class MoneiTest < Test::Unit::TestCase
 
   def setup
     @gateway = MoneiGateway.new(
-      :sender_id => 'mother',
-      :channel_id => 'there is no other',
-      :login => 'like mother',
-      :pwd => 'so treat Her right'
+      fixtures(:monei)
     )
 
     @credit_card = credit_card
@@ -17,7 +14,12 @@ class MoneiTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      three_d_secure: {
+        eci: '05',
+        cavv: 'AAACAgSRBklmQCFgMpEGAAAAAAA=',
+        xid: 'CAACCVVUlwCXUyhQNlSXAAAAAAA='
+      }
     }
   end
 
