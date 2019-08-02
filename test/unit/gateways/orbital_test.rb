@@ -50,6 +50,13 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         initiator: 'customer'
       }
     }
+    @three_d_secure_options = {
+      three_d_secure: {
+        eci: '5',
+        xid: 'TESTXID',
+        cavv: 'TESTCAVV',
+      }
+    }
   end
 
   def test_successful_purchase
@@ -89,6 +96,64 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match %{<DPANInd>Y</DPANInd>}, data
       assert_match %{DigitalTokenCryptogram}, data
       assert_match %{XID}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_visa_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<CAVV>TESTCAVV</CAVV>}, data
+      assert_match %{<XID>TESTXID</XID>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_visa_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card, @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<CAVV>TESTCAVV</CAVV>}, data
+      assert_match %{<XID>TESTXID</XID>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AAV>TESTCAVV</AAV>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_master_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AAV>TESTCAVV</AAV>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_american_express_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AEVV>TESTCAVV</AEVV>}, data
+      assert_match %{<PymtBrandProgramCode>ASK</PymtBrandProgramCode>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_data_on_american_express_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AEVV>TESTCAVV</AEVV>}, data
+      assert_match %{<PymtBrandProgramCode>ASK</PymtBrandProgramCode>}, data
     end.respond_with(successful_purchase_response)
   end
 
