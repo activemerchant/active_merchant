@@ -235,8 +235,8 @@ module ActiveMerchant #:nodoc:
       # 02 = MASTER_3D_SUCCESS
       # 05 = VISA_3D_SUCCESS
       # 06 = VISA_3D_ATTEMPT
-      # 07 = DEFAULT_E_COMMERCE 
-      def eci_to_result_indicator(eci) 
+      # 07 = DEFAULT_E_COMMERCE
+      def eci_to_result_indicator(eci)
         case eci
         when '02', '05'
           return eci
@@ -249,7 +249,7 @@ module ActiveMerchant #:nodoc:
       def add_three_d_secure(xml, options)
         if options[:three_d_secure]
           xml.Authentication(:type => '3DSecure') do
-            xml.ResultIndicator eci_to_result_indicator options[:three_d_secure][:eci] 
+            xml.ResultIndicator eci_to_result_indicator options[:three_d_secure][:eci]
             xml.Parameter(:name => 'VERIFICATION_ID') { xml.text options[:three_d_secure][:cavv] }
             xml.Parameter(:name => 'XID') { xml.text options[:three_d_secure][:xid] }
           end
