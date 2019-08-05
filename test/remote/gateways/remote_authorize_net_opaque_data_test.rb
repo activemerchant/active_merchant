@@ -42,7 +42,7 @@ class RemoteAuthorizeNetOpaqueDataTest < Test::Unit::TestCase
   end
 
   def test_failed_opaque_data_authorization
-    opaque_data_payment_token = OpaqueDataPaymentToken.new('garbage', data_descriptor: 'COMMON.ACCEPT.INAPP.PAYMENT')
+    opaque_data_payment_token = ActiveMerchant::Billing::AuthorizeNetGateway::OpaqueDataToken.new('garbage', data_descriptor: 'COMMON.ACCEPT.INAPP.PAYMENT')
     response = @gateway.authorize(@amount, opaque_data_payment_token, @options)
     assert_failure response
     assert_equal "OTS Service Error 'Field validation error.'", response.message
@@ -50,7 +50,7 @@ class RemoteAuthorizeNetOpaqueDataTest < Test::Unit::TestCase
   end
 
   def test_failed_opaque_data_purchase
-    opaque_data_payment_token = OpaqueDataPaymentToken.new('garbage', data_descriptor: 'COMMON.ACCEPT.INAPP.PAYMENT')
+    opaque_data_payment_token = ActiveMerchant::Billing::AuthorizeNetGateway::OpaqueDataToken.new('garbage', data_descriptor: 'COMMON.ACCEPT.INAPP.PAYMENT')
     response = @gateway.purchase(@amount, opaque_data_payment_token, @options)
     assert_failure response
     assert_equal "OTS Service Error 'Field validation error.'", response.message
@@ -71,7 +71,7 @@ class RemoteAuthorizeNetOpaqueDataTest < Test::Unit::TestCase
     cc = credit_card('4000100011112224')
     options = { public_client_key: fetch_public_client_key, name: address[:name] }
     opaque_data = accept_js_gateway.accept_js_token(cc, options)
-    OpaqueDataPaymentToken.new(opaque_data[:data_value], data_descriptor: opaque_data[:data_descriptor])
+    ActiveMerchant::Billing::AuthorizeNetGateway::OpaqueDataToken.new(opaque_data[:data_value], data_descriptor: opaque_data[:data_descriptor])
   end
 
   class AcceptJsGateway < ActiveMerchant::Billing::AuthorizeNetGateway
