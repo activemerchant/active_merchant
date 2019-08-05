@@ -12,7 +12,6 @@ Gem::Specification.new do |s|
   s.author = 'Tobias Luetke'
   s.email = 'tobi@leetsoft.com'
   s.homepage = 'http://activemerchant.org/'
-  s.rubyforge_project = 'activemerchant'
 
   s.required_ruby_version = '>= 2.3'
 
