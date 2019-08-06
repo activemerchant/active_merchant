@@ -156,7 +156,6 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal xid, JSON.parse(data)['mpiData']['xid']
       assert_equal veres_response, JSON.parse(data)['mpiData']['directoryResponse']
       assert_equal pa_response, JSON.parse(data)['mpiData']['authenticationResponse']
-
     end.respond_with(successful_authorize_response)
   end
 

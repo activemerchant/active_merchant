@@ -355,7 +355,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-
       def add_3ds_authenticated_data(post, options)
         if options[:three_d_secure] && options[:three_d_secure][:eci] && options[:three_d_secure][:xid]
           add_3ds1_authenticated_data(post, options)
