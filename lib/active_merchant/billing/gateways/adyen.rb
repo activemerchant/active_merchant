@@ -378,13 +378,19 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds2_authenticated_data(post, options)
         three_d_secure_options = options[:three_d_secure]
+        # If the transaction was authenticated in a frictionless flow, send the transStatus from the ARes.
+        if(three_d_secure_options[:trans_status_rreq].nil?)
+          authenticationResponse = three_d_secure_options[:trans_status_ares]
+        else
+          authenticationResponse = three_d_secure_options[:trans_status_rreq]
+        end
         post[:mpiData] = {
           threeDSVersion: three_d_secure_options[:version],
           eci: three_d_secure_options[:eci],
           cavv: three_d_secure_options[:cavv],
           dsTransID: three_d_secure_options[:ds_transaction_id],
           directoryResponse: three_d_secure_options[:trans_status_ares],
-          authenticationResponse: three_d_secure_options[:trans_status_rreq]
+          authenticationResponse: authenticationResponse
         }
       end
 
