@@ -56,6 +56,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_installments(post, options) if options[:installments]
         add_3ds(post, options)
+        add_3ds_authenticated_data(post, options)
         commit('authorise', post, options)
       end
 
@@ -352,6 +353,39 @@ module ActiveMerchant #:nodoc:
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
           post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
         end
+      end
+
+
+      def add_3ds_authenticated_data(post, options)
+        if options[:three_d_secure] && options[:three_d_secure][:eci] && options[:three_d_secure][:xid]
+          add_3ds1_authenticated_data(post, options)
+        elsif options[:three_d_secure]
+          add_3ds2_authenticated_data(post, options)
+        end
+      end
+
+      def add_3ds1_authenticated_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+        post[:mpiData] = {
+          cavv: three_d_secure_options[:cavv],
+          cavvAlgorithm: three_d_secure_options[:cavv_algorithm],
+          eci: three_d_secure_options[:eci],
+          xid: three_d_secure_options[:xid],
+          directoryResponse: three_d_secure_options[:veres_response],
+          authenticationResponse: three_d_secure_options[:pa_response]
+        }
+      end
+
+      def add_3ds2_authenticated_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+        post[:mpiData] = {
+          threeDSVersion: three_d_secure_options[:version],
+          eci: three_d_secure_options[:eci],
+          cavv: three_d_secure_options[:cavv],
+          dsTransID: three_d_secure_options[:ds_transaction_id],
+          directoryResponse: three_d_secure_options[:trans_status_ares],
+          authenticationResponse: three_d_secure_options[:trans_status_rreq]
+        }
       end
 
       def parse(body)

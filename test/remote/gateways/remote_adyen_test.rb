@@ -179,6 +179,62 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal response.params['resultCode'], 'Authorised'
   end
 
+  def test_successful_purchase_with_auth_data_via_threeds1_standalone
+    eci = '05'
+    cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+    cavv_algorithm = '1'
+    xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
+    veres_response = 'Y'
+    pa_response = 'Y'
+    options = @options.merge(
+      three_d_secure: {
+        eci: eci,
+        cavv: cavv,
+        cavv_algorithm: cavv_algorithm,
+        xid: xid,
+        veres_response: veres_response,
+        pa_response: pa_response
+      }
+    )
+
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+    assert_equal 'Authorised', auth.message
+    assert_equal 'true', auth.params['additionalData']['liabilityShift']
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_auth_data_via_threeds2_standalone
+    version = '2.1.0'
+    eci = '02'
+    cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    trans_status_ares = 'C'
+    trans_status_rreq = 'Y'
+
+    options = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        trans_status_ares: trans_status_ares,
+        trans_status_rreq: trans_status_rreq
+      }
+    )
+
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+    assert_equal 'Authorised', auth.message
+    assert_equal 'true', auth.params['additionalData']['liabilityShift']
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+  end
+
   def test_successful_authorize_with_no_address
     options = {
       reference: '345123',
