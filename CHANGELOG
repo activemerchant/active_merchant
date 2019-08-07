@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Bambora formerly Beanstream: Pass card owner when storing tokenized cards [#3006]
 * CardConnect: Move domain from gateway specific to gateway field [hdeters] #3283
 * Braintree Blue: Support for stored credentials [hdeters] #3286
 * Realex: Re-implement credit as general credit [leila-alderman] #3280
@@ -197,7 +198,6 @@
 * Forte: Allow void on capture [nfarve] #3059
 
 == Version 1.86.0 (October 26, 2018)
-* UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] #3002
 * Global Collect: handle internal server errors [molbrown] #3005
 * Barclaycard Smartpay: allow third-party payouts for credits [bpollack] #3009
 * RuboCop: AlignHash [nfarve] #3004
