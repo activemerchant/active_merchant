@@ -24,7 +24,9 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ics2wstesta.ic3.com/commerce/1.x/transactionProcessor'
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = '1.153'
+      # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
+      TEST_XSD_VERSION = '1.156'
+      PRODUCTION_XSD_VERSION = '1.155'
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
@@ -263,6 +265,8 @@ module ActiveMerchant #:nodoc:
         add_payment_network_token(xml) if network_tokenization?(creditcard_or_reference)
         add_business_rules_data(xml, creditcard_or_reference, options)
         add_stored_credential_options(xml, options)
+        add_issuer_additional_data(xml, options)
+
         xml.target!
       end
 
@@ -301,6 +305,8 @@ module ActiveMerchant #:nodoc:
           add_payment_network_token(xml) if network_tokenization?(payment_method_or_reference)
           add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
+        add_issuer_additional_data(xml, options)
+
         xml.target!
       end
 
@@ -482,6 +488,14 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'decisionManager' do
           xml.tag! 'enabled', options[:decision_manager_enabled] if options[:decision_manager_enabled]
           xml.tag! 'profile', options[:decision_manager_profile] if options[:decision_manager_profile]
+        end
+      end
+
+      def add_issuer_additional_data(xml, options)
+        return unless options[:issuer_additional_data]
+
+        xml.tag! 'issuer' do
+          xml.tag! 'additionalData', options[:issuer_additional_data]
         end
       end
 
@@ -713,6 +727,8 @@ module ActiveMerchant #:nodoc:
 
       # Where we actually build the full SOAP request using builder
       def build_request(body, options)
+        xsd_version = test? ? TEST_XSD_VERSION : PRODUCTION_XSD_VERSION
+
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
@@ -725,7 +741,7 @@ module ActiveMerchant #:nodoc:
             end
           end
           xml.tag! 's:Body', {'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance', 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema'} do
-            xml.tag! 'requestMessage', {'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{XSD_VERSION}"} do
+            xml.tag! 'requestMessage', {'xmlns' => "urn:schemas-cybersource-com:transaction-data-#{xsd_version}"} do
               add_merchant_data(xml, options)
               xml << body
             end
