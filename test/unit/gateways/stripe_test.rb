@@ -396,7 +396,12 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_payment_intents
     @gateway.expects(:add_creditcard)
-    @gateway.expects(:ssl_request).returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_payment_methods_for_customer)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: true))
     assert_instance_of Response, response
@@ -419,7 +424,12 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_token_string_and_with_payment_intents
     @gateway.expects(:add_creditcard)
-    @gateway.expects(:ssl_request).returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_payment_methods_for_customer)
 
     assert response = @gateway.purchase(@amount, @token_string, @options.merge(three_d_secure: true))
     assert_success response
@@ -441,7 +451,12 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_payment_token_and_with_payment_intents
     @gateway.expects(:add_payment_token)
-    @gateway.expects(:ssl_request).returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_payment_methods_for_customer)
 
     assert response = @gateway.purchase(@amount, @payment_token, @options.merge(three_d_secure: true))
     assert_success response
@@ -2078,5 +2093,53 @@ class StripeTest < Test::Unit::TestCase
       "type" => "card",
       "used" => false
     }
+  end
+
+  def successful_payment_methods_for_customer
+    <<~RESPONSE
+    {
+      "data": [
+        {
+          "id": "card_1F2e3vKajOcZzbwk5tgSLkge",
+          "object": "payment_method",
+          "billing_details": {
+            "address": {
+              "city": null,
+              "country": null,
+              "line1": null,
+              "line2": null,
+              "postal_code": null,
+              "state": null
+            },
+            "email": null,
+            "name": "John Doe",
+            "phone": null
+          },
+          "card": {
+            "brand": "visa",
+            "checks": {
+              "address_line1_check": null,
+              "address_postal_code_check": null,
+              "cvc_check": "pass"
+            },
+            "country": "US",
+            "exp_month": 5,
+            "exp_year": 2024,
+            "fingerprint": "CdXRxPXtbWEnWs5q",
+            "funding": "credit",
+            "generated_from": null,
+            "last4": "3155",
+            "three_d_secure_usage": {"supported": true},
+            "wallet": null
+          },
+          "created": 1564665140,
+          "customer": "cus_FXjWtbC8cvVmXu",
+          "livemode": false,
+          "metadata": {},
+          "type": "card"
+        }
+      ]
+    }
+    RESPONSE
   end
 end

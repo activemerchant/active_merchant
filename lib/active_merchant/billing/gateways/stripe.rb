@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            commit(:post, options[:three_d_secure] ? 'payment_intents' : 'charges', post, options)
+            commit(:post, options[:three_d_secure] && post[:payment_method] ? 'payment_intents' : 'charges', post, options)
           end
         end.responses.last
       end
@@ -289,6 +289,18 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, payment, options)
         end
 
+        if options[:three_d_secure]
+          payment_method = card_payment_method_for_customer(options[:customer])
+
+          if payment_method
+            post[:confirmation_method] = "manual"
+            post[:confirm] = "true"
+            post[:setup_future_usage] = "off_session"
+            post[:save_payment_method] = "true"
+            post[:payment_method] = payment_method
+          end
+        end
+
         unless emv_payment?(payment)
           add_amount(post, money, options, true)
           add_customer_data(post, options)
@@ -303,12 +315,12 @@ module ActiveMerchant #:nodoc:
         add_application_fee(post, options)
         add_destination(post, options)
 
-        if options[:three_d_secure]
-          post[:confirmation_method] = "manual"
-          post[:confirm] = "true"
-        end
-
         post
+      end
+
+      def card_payment_method_for_customer(customer)
+        r = commit(:get, "payment_methods?customer=#{customer}&type=card", nil, options)
+        r.params["data"].present? ? r.params["data"][0]["id"] : nil
       end
 
       def add_amount(post, money, options, include_currency = false)
@@ -341,7 +353,7 @@ module ActiveMerchant #:nodoc:
         metadata_options = [:description, :ip, :user_agent, :referrer]
         post.update(options.slice(*metadata_options))
 
-        unless options[:three_d_secure]
+        unless post[:payment_method]
           post[:external_id] = options[:order_id]
           post[:payment_user_agent] = "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         end
