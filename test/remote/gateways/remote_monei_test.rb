@@ -24,10 +24,37 @@ class RemoteMoneiTest < Test::Unit::TestCase
     assert_equal 'Request successfully processed in \'Merchant in Connector Test Mode\'', response.message
   end
 
+  def test_successful_purchase_with_3ds
+    options = @options.merge!({
+      three_d_secure: {
+        eci: '05',
+        cavv: 'AAACAgSRBklmQCFgMpEGAAAAAAA=',
+        xid: 'CAACCVVUlwCXUyhQNlSXAAAAAAA='
+      }
+    })
+    response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal 'Request successfully processed in \'Merchant in Connector Test Mode\'', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'invalid cc number/brand combination', response.message
+  end
+
+  def test_failed_purchase_with_3ds
+    options = @options.merge!({
+      three_d_secure: {
+        eci: '05',
+        cavv: 'INVALID_Verification_ID',
+        xid: 'CAACCVVUlwCXUyhQNlSXAAAAAAA='
+      }
+    })
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_failure response
+    assert_equal 'Invalid 3DSecure Verification_ID. Must have Base64 encoding a Length of 28 digits', response.message
   end
 
   def test_successful_authorize_and_capture
