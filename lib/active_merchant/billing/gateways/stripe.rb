@@ -377,6 +377,7 @@ module ActiveMerchant #:nodoc:
 
       def add_application_fee(post, options)
         post[:application_fee] = options[:application_fee] if options[:application_fee]
+        post[:application_fee_amount] = options[:application_fee_amount] if options[:application_fee_amount]
       end
 
       def add_exchange_rate(post, options)
