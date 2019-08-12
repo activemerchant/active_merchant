@@ -231,7 +231,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, :create_direct_debit_plan, post, options)
       end
 
-      alias_method :recurring_debit, :create_card_plan
+      alias_method :recurring_debit, :create_direct_debit_plan
 
       def supports_scrubbing?
         true
