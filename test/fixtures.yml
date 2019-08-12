@@ -1017,6 +1017,11 @@ qvalent:
     RFjxWKtn9pXbM1PLmUXCkKQnSJSeD1K0NjV+g8KFChTEgmhnLogyF/7YYw/amfc=
     -----END CERTIFICATE-----
 
+rapidata:
+  username: USERNAME
+  password: PASSWORD
+  client_id: CLIENT_ID
+
 raven_pac_net:
   user: ernest
   secret: "all good men die young"
