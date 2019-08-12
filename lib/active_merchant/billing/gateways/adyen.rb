@@ -328,24 +328,12 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds(post, options)
         if three_ds_2_options = options[:three_ds_2]
-          if browser_info = three_ds_2_options[:browser_info]
-            post[:browserInfo] = {
-              acceptHeader: browser_info[:accept_header],
-              colorDepth: browser_info[:depth],
-              javaEnabled: browser_info[:java],
-              language: browser_info[:language],
-              screenHeight: browser_info[:height],
-              screenWidth: browser_info[:width],
-              timeZoneOffset: browser_info[:timezone],
-              userAgent: browser_info[:user_agent]
-            }
-
-            if device_channel = three_ds_2_options[:channel]
-              post[:threeDS2RequestData] = {
-                deviceChannel: device_channel,
-                notificationURL: three_ds_2_options[:notification_url] || 'https://example.com/notification'
-              }
-            end
+          device_channel = three_ds_2_options[:channel]
+          if device_channel == 'app'
+            post[:threeDS2RequestData] = { deviceChannel: device_channel }
+          else
+            add_browser_info(three_ds_2_options[:browser_info], post)
+            post[:threeDS2RequestData] = { deviceChannel: device_channel, notificationURL: three_ds_2_options[:notification_url] }
           end
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
@@ -456,6 +444,20 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
+      end
+
+      def add_browser_info(browser_info, post)
+        return unless browser_info
+        post[:browserInfo] = {
+          acceptHeader: browser_info[:accept_header],
+          colorDepth: browser_info[:depth],
+          javaEnabled: browser_info[:java],
+          language: browser_info[:language],
+          screenHeight: browser_info[:height],
+          screenWidth: browser_info[:width],
+          timeZoneOffset: browser_info[:timezone],
+          userAgent: browser_info[:user_agent]
+        }
       end
     end
   end
