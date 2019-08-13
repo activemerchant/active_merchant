@@ -20,7 +20,7 @@ module ActiveMerchant
 
       # Datacash server URLs
       self.test_url = 'https://testserver.datacash.com/Transaction'
-      self.live_url = 'https://mars.transaction.datacash.com/Transaction'
+      self.live_url = 'https://venus.transaction.datacash.com/Transaction'
 
       # Different Card Transaction Types
       AUTH_TYPE = 'auth'
