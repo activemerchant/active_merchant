@@ -76,12 +76,12 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>database_id</tt>: an identifier supplied by Rapidata that identifies
       #   the database to which this record should be associated
-      # * <tt>source</tt>: a string, we're harcoding it for the time being.
+      # * <tt>source</tt>: string, limited to 50 chars
       # * <tt>other1...other20</tt>: twenty optional parameters that can be set and sent
       #
       def add_metadata(post, options)
         post['DatabaseId'] = options[:database_id]
-        post['Source'] = 'Evergiving'
+        post['Source'] = truncate(options[:source], 50)
         (1..20).each do |index|
           k = "other#{index}".to_sym
           post["Other#{index}"] = options[k] if options.key?(k)

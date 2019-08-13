@@ -13,7 +13,8 @@ class RemoteRapidataTest < Test::Unit::TestCase
       frequency_id: 1,
       first_name: 'Bob',
       last_name: 'Longsen',
-      first_collection_date: (Date.current + 1.month).change(day: 1)
+      first_collection_date: (Date.current + 1.month).change(day: 1),
+      source: 'Evergiving'
     }
     @more_options = @options.merge(
       is_fulfilment: false,
