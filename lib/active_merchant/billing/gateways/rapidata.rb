@@ -58,11 +58,13 @@ module ActiveMerchant #:nodoc:
       #
       # === Options
       #
+      # * <tt>title</tt>: the title of the donor
       # * <tt>first_name</tt>: first name of the donor
       # * <tt>last_name</tt>: last name of the donor
       # * <tt>email</tt>: the email of the donor
       #
       def add_customer_data(post, options)
+        post['Title'] = options[:title] if options[:title]
         post['FirstName'] = options[:first_name]
         post['LastName'] = options[:last_name]
         post['Email'] = options[:email] if options[:email]
@@ -74,12 +76,12 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>database_id</tt>: an identifier supplied by Rapidata that identifies
       #   the database to which this record should be associated
-      # * <tt>source</tt>: a string, we're harcoding it for the time being.
+      # * <tt>source</tt>: string, limited to 50 chars
       # * <tt>other1...other20</tt>: twenty optional parameters that can be set and sent
       #
       def add_metadata(post, options)
         post['DatabaseId'] = options[:database_id]
-        post['Source'] = 'Evergiving'
+        post['Source'] = truncate(options[:source], 50)
         (1..20).each do |index|
           k = "other#{index}".to_sym
           post["Other#{index}"] = options[k] if options.key?(k)
