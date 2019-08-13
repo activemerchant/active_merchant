@@ -9,6 +9,7 @@
 * Realex: Prevent error calculating `refund_hash` or `credit_hash` when the secret is nil [jasonxp] #3291
 * MercadoPago: Add Cabal card type [leila-alderman] #3295
 * Adyen: Add app based 3DS requests for auth and purchase [jeremywrowe] #3298
+* PayU Latam: Add Naranja card type [hdeters] #3299
 
 == Version 1.96.0 (Jul 26, 2019)
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229

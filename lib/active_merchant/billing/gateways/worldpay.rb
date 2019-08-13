@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = %w(HK GB AU AD AR BE BR CA CH CN CO CR CY CZ DE DK ES FI FR GI GR HU IE IN IT JP LI LU MC MT MY MX NL NO NZ PA PE PL PT SE SG SI SM TR UM VA)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :elo]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :elo, :naranja]
       self.currencies_without_fractions = %w(HUF IDR ISK JPY KRW)
       self.currencies_with_three_decimal_places = %w(BHD KWD OMR RSD TND)
       self.homepage_url = 'http://www.worldpay.com/'
@@ -22,6 +22,7 @@ module ActiveMerchant #:nodoc:
         'maestro'          => 'MAESTRO-SSL',
         'diners_club'      => 'DINERS-SSL',
         'elo'              => 'ELO-SSL',
+        'naranja'          => 'NARANJA-SSL',
         'unknown'          => 'CARD-SSL'
       }
 

@@ -9,6 +9,7 @@ module ActiveMerchant #:nodoc:
         'alelo'              => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), ALELO_RANGES) },
         'discover'           => ->(num) { num =~ /^(6011|65\d{2}|64[4-9]\d)\d{12,15}|(62\d{14,17})$/ },
         'american_express'   => ->(num) { num =~ /^3[47]\d{13}$/ },
+        'naranja'            => ->(num) { num&.size == 16 && in_bin_range?(num.slice(0, 6), NARANJA_RANGES) },
         'diners_club'        => ->(num) { num =~ /^3(0[0-5]|[68]\d)\d{11}$/ },
         'jcb'                => ->(num) { num =~ /^35(28|29|[3-8]\d)\d{12}$/ },
         'dankort'            => ->(num) { num =~ /^5019\d{12}$/ },
@@ -100,6 +101,10 @@ module ActiveMerchant #:nodoc:
         60352200..60352299
       ]
 
+      NARANJA_RANGES = [
+        589562..589562
+      ]
+
       def self.included(base)
         base.extend(ClassMethods)
       end
@@ -175,7 +180,7 @@ module ActiveMerchant #:nodoc:
           valid_test_mode_card_number?(number) ||
             valid_card_number_length?(number) &&
             valid_card_number_characters?(number) &&
-            valid_checksum?(number)
+            valid_by_algorithm?(brand?(number), number)
         end
 
         def card_companies
@@ -249,6 +254,15 @@ module ActiveMerchant #:nodoc:
             %w[1 2 3 success failure error].include?(number)
         end
 
+        def valid_by_algorithm?(brand, numbers) #:nodoc:
+          case brand
+          when 'naranja'
+            valid_naranja_algo?(numbers)
+          else
+            valid_luhn?(numbers)
+          end
+        end
+
         ODD_LUHN_VALUE = {
           48 => 0,
           49 => 1,
@@ -279,7 +293,7 @@ module ActiveMerchant #:nodoc:
         # Checks the validity of a card number by use of the Luhn Algorithm.
         # Please see http://en.wikipedia.org/wiki/Luhn_algorithm for details.
         # This implementation is from the luhn_checksum gem, https://github.com/zendesk/luhn_checksum.
-        def valid_checksum?(numbers) #:nodoc:
+        def valid_luhn?(numbers) #:nodoc:
           sum = 0
 
           odd = true
@@ -294,6 +308,16 @@ module ActiveMerchant #:nodoc:
           end
 
           sum % 10 == 0
+        end
+
+        # Checks the validity of a card number by use of Naranja's specific algorithm.
+        def valid_naranja_algo?(numbers) #:nodoc:
+          num_array = numbers.to_s.chars.map(&:to_i)
+          multipliers = [4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+          num_sum = num_array[0..14].zip(multipliers).map { |a, b| a*b }.reduce(:+)
+          intermediate = 11 - (num_sum % 11)
+          final_num = intermediate > 9 ? 0 : intermediate
+          final_num == num_array[15]
         end
       end
     end

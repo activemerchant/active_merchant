@@ -145,6 +145,12 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'alelo', CreditCard.brand?('5067600000000044')
   end
 
+  def test_should_detect_naranja_card
+    assert_equal 'naranja', CreditCard.brand?('5895627823453005')
+    assert_equal 'naranja', CreditCard.brand?('5895620000000002')
+    assert_equal 'naranja', CreditCard.brand?('5895626746595650')
+  end
+
   # Alelo BINs beginning with the digit 4 overlap with Visa's range of valid card numbers.
   # We intentionally misidentify these cards as Visa, which works because transactions with
   # such cards will run on Visa rails.
@@ -197,6 +203,12 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_nil CreditCard.brand?('XXXXXXXXXXXX0000')
     assert_false CreditCard.valid_number?('XXXXXXXXXXXX0000')
     assert_false CreditCard.valid_number?(nil)
+  end
+
+  def test_matching_valid_naranja
+    number = '5895627823453005'
+    assert_equal 'naranja', CreditCard.brand?(number)
+    assert CreditCard.valid_number?(number)
   end
 
   def test_16_digit_maestro_uk
