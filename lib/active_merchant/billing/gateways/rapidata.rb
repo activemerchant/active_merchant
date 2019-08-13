@@ -58,11 +58,13 @@ module ActiveMerchant #:nodoc:
       #
       # === Options
       #
+      # * <tt>title</tt>: the title of the donor
       # * <tt>first_name</tt>: first name of the donor
       # * <tt>last_name</tt>: last name of the donor
       # * <tt>email</tt>: the email of the donor
       #
       def add_customer_data(post, options)
+        post['Title'] = options[:title] if options[:title]
         post['FirstName'] = options[:first_name]
         post['LastName'] = options[:last_name]
         post['Email'] = options[:email] if options[:email]
