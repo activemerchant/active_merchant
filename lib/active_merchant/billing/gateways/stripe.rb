@@ -304,8 +304,8 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options, true)
         post[:type] = type
         if type == 'card'
-          add_creditcard(post, payment, options)
-          post[:card].delete(:name)
+          add_creditcard(post, payment, options, true)
+          add_source_owner(post, payment, options)
         elsif type == 'three_d_secure'
           post[:three_d_secure] = {card: payment}
           post[:redirect] = {return_url: options[:redirect_url]}
@@ -351,6 +351,12 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, payment, options)
         end
 
+        add_charge_details(post, money, payment, options)
+        post
+      end
+
+      # Used internally by Spreedly to populate the charge object for 3DS 1.0 transactions
+      def add_charge_details(post, money, payment, options)
         if emv_payment?(payment)
           add_statement_address(post, options)
           add_emv_metadata(post, payment)
@@ -453,7 +459,7 @@ module ActiveMerchant #:nodoc:
         post[:statement_address][:state] = statement_address[:state]
       end
 
-      def add_creditcard(post, creditcard, options)
+      def add_creditcard(post, creditcard, options, use_sources = false)
         card = {}
         if emv_payment?(creditcard)
           add_emv_creditcard(post, creditcard.icc_data)
@@ -476,7 +482,7 @@ module ActiveMerchant #:nodoc:
             card[:exp_month] = creditcard.month
             card[:exp_year] = creditcard.year
             card[:cvc] = creditcard.verification_value if creditcard.verification_value?
-            card[:name] = creditcard.name if creditcard.name
+            card[:name] = creditcard.name if creditcard.name && !use_sources
           end
 
           if creditcard.is_a?(NetworkTokenizationCreditCard)
@@ -486,7 +492,7 @@ module ActiveMerchant #:nodoc:
           end
           post[:card] = card
 
-          add_address(post, options)
+          add_address(post, options) unless use_sources
         elsif creditcard.kind_of?(String)
           if options[:track_data]
             card[:swipe_data] = options[:track_data]
@@ -532,6 +538,25 @@ module ActiveMerchant #:nodoc:
       def add_emv_metadata(post, creditcard)
         post[:metadata] ||= {}
         post[:metadata][:card_read_method] = creditcard.read_method if creditcard.respond_to?(:read_method)
+      end
+
+      def add_source_owner(post, creditcard, options)
+        post[:owner] = {}
+        post[:owner][:name] = creditcard.name if creditcard.name
+        post[:owner][:email] = options[:email] if options[:email]
+
+        if address = options[:billing_address] || options[:address]
+          owner_address = {}
+          owner_address[:line1] = address[:address1] if address[:address1]
+          owner_address[:line2] = address[:address2] if address[:address2]
+          owner_address[:country] = address[:country] if address[:country]
+          owner_address[:postal_code] = address[:zip] if address[:zip]
+          owner_address[:state] = address[:state] if address[:state]
+          owner_address[:city] = address[:city] if address[:city]
+
+          post[:owner][:phone] = address[:phone] if address[:phone]
+          post[:owner][:address] = owner_address
+        end
       end
 
       def parse(body)
