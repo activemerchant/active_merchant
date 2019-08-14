@@ -44,6 +44,7 @@ class LitleTest < Test::Unit::TestCase
       account_number: '1099999999',
       account_type: 'Checking'
     )
+    @apple_pay = ActiveMerchant::Billing::ApplePayPaymentToken.new({})
   end
 
   def test_successful_purchase
@@ -54,6 +55,17 @@ class LitleTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal "100000000000000006;sale;100", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_apple_pay
+    response = stub_comms do
+      @gateway.purchase(@amount, @apple_pay)
+    end.respond_with(successful_purchase_with_apple_pay_response)
+
+    assert_success response
+
+    assert_equal "038391448715428438;sale;100", response.authorization
     assert response.test?
   end
 
@@ -99,6 +111,14 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       assert_match(%r(<billToAddress>\s*<name>Longbob Longsen<), data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_passing_name_without_card
+    stub_comms do
+      @gateway.purchase(@amount, @apple_pay, { billing_address: { name: 'Bill Paid' } })
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<billToAddress>\s*<name>Bill Paid<), data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -428,6 +448,32 @@ class LitleTest < Test::Unit::TestCase
           <responseTime>2018-01-09T14:02:20</responseTime>
           <message>Approved</message>
         </echeckSalesResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_purchase_with_apple_pay_response
+    %(
+      <litleOnlineResponse xmlns="http://www.litle.com/schema" version="9.12" response="0" message="Valid Format">
+        <saleResponse reportGroup="Default Report Group">
+          <litleTxnId>038391448715428438</litleTxnId>
+          <orderId />
+          <response>000</response>
+          <message>Approved</message>
+          <responseTime>2019-08-14T23:10:26.839</responseTime>
+          <authCode>70492</authCode>
+          <applepayResponse>
+            <applicationPrimaryAccountNumber>8386385852516810</applicationPrimaryAccountNumber>
+            <applicationExpirationDate>488412</applicationExpirationDate>
+            <currencyCode>953</currencyCode>
+            <transactionAmount>10</transactionAmount>
+            <cardholderName>CardHolder</cardholderName>
+            <deviceManufacturerIdentifier>608874265730</deviceManufacturerIdentifier>
+            <paymentDataType>3DSecure</paymentDataType>
+            <onlinePaymentCryptogram>VDRyUTc2bGc2Zw==</onlinePaymentCryptogram>
+            <eciIndicator>mH</eciIndicator>
+          </applepayResponse>
+        </saleResponse>
       </litleOnlineResponse>
     )
   end
