@@ -3,6 +3,7 @@
 == HEAD
 * Stripe Payment Intents: Add new gateway [britth] #3290
 * Stripe: Send cardholder name and address when creating sources for 3DS 1.0 [jknipp] #3300
+* Checkout_v2: Support for native 3DS2.0 [nfarve] #3303
 
 == Version 1.97.0 (Aug 15, 2019)
 * CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296

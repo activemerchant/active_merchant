@@ -68,6 +68,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify_payment(authorization, option={})
+        commit(:verify_payment, authorization)
+      end
+
       def supports_scrubbing?
         true
       end
@@ -128,9 +132,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-        if options[:three_d_secure]
+        if options[:three_d_secure] || options[:execute_threed]
           post[:'3ds'] = {}
           post[:'3ds'][:enabled] = true
+          post[:success_url] = options[:callback_url] if options[:callback_url]
+          post[:failure_url] = options[:callback_url] if options[:callback_url]
+        end
+
+        if options[:three_d_secure]
           post[:'3ds'][:eci] = options[:three_d_secure][:eci] if options[:three_d_secure][:eci]
           post[:'3ds'][:cryptogram] = options[:three_d_secure][:cavv] if options[:three_d_secure][:cavv]
           post[:'3ds'][:version] = options[:three_d_secure][:version] if options[:three_d_secure][:version]
@@ -140,7 +149,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, post, authorization = nil)
         begin
-          raw_response = ssl_post(url(post, action, authorization), post.to_json, headers)
+          raw_response = (action == :verify_payment ? ssl_get("#{base_url}/payments/#{post}", headers) : ssl_post(url(post, action, authorization), post.to_json, headers))
           response = parse(raw_response)
           if action == :capture && response.key?('_links')
             response['id'] = response['_links']['payment']['href'].split('/')[-1]
@@ -215,7 +224,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response['response_summary'] == 'Approved' || !response.key?('response_summary') && response.key?('action_id')
+        response['response_summary'] == 'Approved' || response['approved'] == true || !response.key?('response_summary') && response.key?('action_id')
       end
 
       def message_from(succeeded, response)
