@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       TRANSACTIONS = {
         :purchase => 0,           # Standard Payment
         :refund => 4,             # Refund
-        :void => 6,               # Client Reversal (Void)
+        :void => 42,              # Preauthorisation Cancellation
         :unmatched_refund => 666, # Unmatched Refund
         :authorization => 10,     # Preauthorise
         :capture => 11            # Preauthorise Complete (Advice)
@@ -58,12 +58,16 @@ module ActiveMerchant #:nodoc:
         commit :unmatched_refund, build_purchase_request(money, credit_card, options)
       end
 
+      def void(authorization, options = {})
+        commit :void, build_reference_request(nil, authorization, options)
+      end
+
       def refund(money, authorization, options = {})
         commit :refund, build_reference_request(money, authorization, options)
       end
 
       def authorize(money, credit_card, options = {})
-        commit :authorization, build_purchase_request(money, credit_card, options)
+        commit :authorization, build_purchase_request(money, credit_card, options.merge(auth: true))
       end
 
       def capture(money, authorization, options = {})
@@ -106,6 +110,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'amount', localized_amount(money, options[:currency] || currency(money))
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
+        xml.tag! 'initialAuth', 'yes' if options[:auth]
 
         xml.tag! 'CreditCardInfo' do
           xml.tag! 'cardNumber', credit_card.number

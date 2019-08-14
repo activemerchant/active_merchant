@@ -48,6 +48,12 @@ class NabTransactTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize_cancellation
+    @gateway.expects(:ssl_post).with(&check_transaction_type(:void)).returns(successful_authorize_cancellation_response)
+    response = @gateway.void('009887*test*009887*200')
+    assert response.test?
+  end
+
   def test_successful_authorize_with_merchant_descriptor
     name, location = 'Active Merchant', 'USA'
 
@@ -328,7 +334,7 @@ Conn close
 
   def successful_authorize_response
     <<-XML.gsub(/^\s{4}/, '')
-    <?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
+    <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
         <messageID>4650de0ab4db398640b672a85e59ac</messageID>
@@ -344,8 +350,8 @@ Conn close
         <statusDescription>Normal</statusDescription>
       </Status>
       <Payment>
-        <TxnList count=\"1\">
-          <Txn ID=\"1\">
+        <TxnList count="1">
+          <Txn ID="1">
             <txnType>10</txnType>
             <txnSource>23</txnSource>
             <amount>200</amount>
@@ -357,6 +363,50 @@ Conn close
             <settlementDate>20130712</settlementDate>
             <txnID>009887</txnID>
             <preauthID>009887</preauthID>
+            <authID/>
+            <CreditCardInfo>
+              <pan>444433...111</pan>
+              <expiryDate>09/14</expiryDate>
+              <cardType>6</cardType>
+              <cardDescription>Visa</cardDescription>
+            </CreditCardInfo>
+          </Txn>
+        </TxnList>
+      </Payment>
+    </NABTransactMessage>
+    XML
+  end
+
+  def successful_authorize_cancellation_response
+    <<-XML.gsub(/^\s{4}/, '')
+    <?xml version="1.0" encoding="UTF-8"?>
+    <NABTransactMessage>
+      <MessageInfo>
+        <messageID>354e0c7f96b811965dc8dc66e329e8</messageID>
+        <messageTimestamp>20191408113756421000+600</messageTimestamp>
+        <apiVersion>xml-4.2</apiVersion>
+      </MessageInfo>
+      <RequestType>Payment</RequestType>
+      <MerchantInfo>
+        <merchantID>XYZ0010</merchantID>
+      </MerchantInfo>
+      <Status>
+        <statusCode>000</statusCode>
+        <statusDescription>Normal</statusDescription>
+      </Status>
+      <Payment>
+        <TxnList count="1">
+          <Txn ID="1">
+            <txnType>42</txnType>
+            <txnSource>23</txnSource>
+            <amount>200</amount>
+            <currency>AUD</currency>
+            <purchaseOrderNo>test</purchaseOrderNo>
+            <approved>Yes</approved>
+            <responseCode>00</responseCode>
+            <responseText>Approved</responseText>
+            <settlementDate>20190814</settlementDate>
+            <txnID>009887</txnID>
             <authID/>
             <CreditCardInfo>
               <pan>444433...111</pan>
