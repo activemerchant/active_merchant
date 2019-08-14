@@ -135,6 +135,7 @@ module ActiveMerchant #:nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_transaction_type(post, options)
+        add_processor(post, options)
 
         commit(:purchase, post)
       end
@@ -149,6 +150,7 @@ module ActiveMerchant #:nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_transaction_type(post, options)
+        add_processor(post, options)
 
         commit(:authorize, post)
       end
@@ -160,6 +162,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_echo(post, options)
         add_submerchant_id(post, options)
+        add_processor(post, options)
 
         commit(:capture, post)
       end
@@ -171,6 +174,7 @@ module ActiveMerchant #:nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         post[:a1] = generate_unique_id
+        add_processor(post, options)
 
         commit(:void, post, reference_action)
       end
@@ -182,6 +186,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_echo(post, options)
         add_submerchant_id(post, options)
+        add_processor(post, options)
 
         commit(:refund, post)
       end
@@ -195,6 +200,7 @@ module ActiveMerchant #:nodoc:
         add_echo(post, options)
         add_submerchant_id(post, options)
         add_transaction_type(post, options)
+        add_processor(post, options)
 
         commit(:credit, post)
       end
@@ -303,7 +309,6 @@ module ActiveMerchant #:nodoc:
 
       def add_3d_secure_1_data(post, options)
         post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
-        post[:r1] = 'CREDORAX'
       end
 
       def add_normalized_3d_secure_2_data(post, options)
@@ -315,7 +320,6 @@ module ActiveMerchant #:nodoc:
         )
         post[:'3ds_version'] = three_d_secure_options[:version]
         post[:'3ds_dstrxid'] = three_d_secure_options[:ds_transaction_id]
-        post[:r1] = 'CREDORAX'
       end
 
       def build_i8(eci, cavv=nil, xid=nil)
@@ -335,6 +339,11 @@ module ActiveMerchant #:nodoc:
       def add_transaction_type(post, options)
         post[:a9] = options[:transaction_type] if options[:transaction_type]
         post[:a2] = '3' if options.dig(:metadata, :manual_entry)
+      end
+
+      def add_processor(post, options)
+        post[:r1] = options[:processor] || 'CREDORAX'
+        post[:r2] = options[:processor_merchant_id] if options[:processor_merchant_id]
       end
 
       ACTIONS = {

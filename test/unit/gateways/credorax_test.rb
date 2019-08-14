@@ -233,7 +233,7 @@ class CredoraxTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_adds_3d_secure_fields
+  def test_purchase_adds_3d_secure_fields
     options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid'})
 
     response = stub_comms do
@@ -245,6 +245,21 @@ class CredoraxTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
+  def test_authorize_adds_3d_secure_fields
+    options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid'})
+
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/i8=sample-eci%3Asample-cavv%3Asample-xid/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;authorize', response.authorization
     assert response.test?
   end
 
@@ -307,9 +322,8 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_adds_a9_field
+  def test_purchase_adds_a9_field
     options_with_3ds = @options.merge({transaction_type: '8'})
-
     stub_comms do
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
@@ -317,7 +331,25 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_adds_submerchant_id
+  def test_authorize_adds_a9_field
+    options_with_3ds = @options.merge({transaction_type: '8'})
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=8/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_credit_adds_a9_field
+    options_with_3ds = @options.merge({transaction_type: '8'})
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=8/, data)
+    end.respond_with(successful_credit_response)
+  end
+
+  def test_purchase_adds_submerchant_id
     @options[:submerchant_id] = '12345'
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -335,6 +367,63 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_authorize_adds_submerchant_id
+    @options[:submerchant_id] = '12345'
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/h3=12345/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_capture_adds_submerchant_id
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:submerchant_id] = '12345'
+    stub_comms do
+      @gateway.capture(@amount, response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/h3=12345/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_void_adds_submerchant_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:submerchant_id] = '12345'
+    stub_comms do
+      @gateway.void(response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/h3=12345/, data)
+    end.respond_with(successful_void_response)
+  end
+
+  def test_refund_adds_submerchant_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    @options[:submerchant_id] = '12345'
+    stub_comms do
+      @gateway.refund(@amount, response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/h3=12345/, data)
+    end.respond_with(successful_refund_response)
+  end
+
+  def test_credit_adds_submerchant_id
+    @options[:submerchant_id] = '12345'
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/h3=12345/, data)
+    end.respond_with(successful_credit_response)
+  end
+
   def test_supports_billing_descriptor
     @options[:billing_descriptor] = 'abcdefghijkl'
     stub_comms do
@@ -342,6 +431,137 @@ class CredoraxTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/i2=abcdefghijkl/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_purchase_adds_billing_descriptor
+    @options[:billing_descriptor] = 'abcdefghijkl'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/i2=abcdefghijkl/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_adds_billing_descriptor
+    @options[:billing_descriptor] = 'abcdefghijkl'
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/i2=abcdefghijkl/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_capture_adds_billing_descriptor
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:billing_descriptor] = 'abcdefghijkl'
+    stub_comms do
+      @gateway.capture(@amount, response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/i2=abcdefghijkl/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_refund_adds_billing_descriptor
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    @options[:billing_descriptor] = 'abcdefghijkl'
+    stub_comms do
+      @gateway.refund(@amount, response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/i2=abcdefghijkl/, data)
+    end.respond_with(successful_refund_response)
+  end
+
+  def test_credit_adds_billing_descriptor
+    @options[:billing_descriptor] = 'abcdefghijkl'
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/i2=abcdefghijkl/, data)
+    end.respond_with(successful_credit_response)
+  end
+
+  def test_purchase_adds_processor_fields
+    @options[:processor] = 'TEST'
+    @options[:processor_merchant_id] = '123'
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/r1=TEST/, data)
+      assert_match(/r2=123/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_adds_processor_fields
+    @options[:processor] = 'TEST'
+    @options[:processor_merchant_id] = '123'
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/r1=TEST/, data)
+      assert_match(/r2=123/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_capture_adds_processor_fields
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:processor] = 'TEST'
+    @options[:processor_merchant_id] = '123'
+    stub_comms do
+      @gateway.capture(@amount, response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/r1=TEST/, data)
+      assert_match(/r2=123/, data)
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_void_adds_processor_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    @options[:processor] = 'TEST'
+    @options[:processor_merchant_id] = '123'
+    stub_comms do
+      @gateway.void(response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/r1=TEST/, data)
+      assert_match(/r2=123/, data)
+    end.respond_with(successful_void_response)
+  end
+
+  def test_refund_adds_processor_fields
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    @options[:processor] = 'TEST'
+    @options[:processor_merchant_id] = '123'
+    stub_comms do
+      @gateway.refund(@amount, response.authorization, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/r1=TEST/, data)
+      assert_match(/r2=123/, data)
+    end.respond_with(successful_refund_response)
+  end
+
+  def test_credit_adds_processor_fields
+    @options[:processor] = 'TEST'
+    @options[:processor_merchant_id] = '123'
+    stub_comms do
+      @gateway.credit(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/r1=TEST/, data)
+      assert_match(/r2=123/, data)
+    end.respond_with(successful_credit_response)
   end
 
   private
