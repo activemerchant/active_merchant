@@ -1,16 +1,20 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
-* Bambora formerly Beanstream: Pass card owner when storing tokenized cards [#3006]
-* CardConnect: Move domain from gateway specific to gateway field [hdeters] #3283
-* Braintree Blue: Support for stored credentials [hdeters] #3286
-* Realex: Re-implement credit as general credit [leila-alderman] #3280
-* Paymill: Add currency and amount to store requests [jasonxp] #3289
-* Realex: Prevent error calculating `refund_hash` or `credit_hash` when the secret is nil [jasonxp] #3291
-* MercadoPago: Add Cabal card type [leila-alderman] #3295
-* Adyen: Add app based 3DS requests for auth and purchase [jeremywrowe] #3298
-* PayU Latam: Add Naranja card type [hdeters] #3299
+
+== Version 1.97.0 (Aug 15, 2019)
 * CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296
+* PayU Latam: Add Naranja card type [hdeters] #3299
+* Adyen: Add app based 3DS requests for auth and purchase [jeremywrowe] #3298
+* MercadoPago: Add Cabal card type [leila-alderman] #3295
+* MONEI: Add external MPI 3DS 1 support [jimmyn] #3292
+* Bambora formerly Beanstream: Pass card owner when storing tokenized cards [alexdunae] #3006
+* Realex: Prevent error calculating `refund_hash` or `credit_hash` when the secret is nil [jasonxp] #3291
+* Orbital: Add external MPI support for 3DS1 [pi3r] #3261
+* Paymill: Add currency and amount to store requests [jasonxp] #3289
+* Realex: Re-implement credit as general credit [leila-alderman] #3280
+* Braintree Blue: Support for stored credentials [hdeters] #3286
+* CardConnect: Move domain from gateway specific to gateway field [hdeters] #3283
 
 == Version 1.96.0 (Jul 26, 2019)
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229
