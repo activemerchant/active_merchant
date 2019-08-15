@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Stripe Payment Intents: Add new gateway [britth] #3290
 
 == Version 1.97.0 (Aug 15, 2019)
 * CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296

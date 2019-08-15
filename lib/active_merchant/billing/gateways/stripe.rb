@@ -2,6 +2,8 @@ require 'active_support/core_ext/hash/slice'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # This gateway uses an older version of the Stripe API.
+    # To utilize the updated {Payment Intents API}[https://stripe.com/docs/api/payment_intents], integrate with the StripePaymentIntents gateway
     class StripeGateway < Gateway
       self.live_url = 'https://api.stripe.com/v1/'
 
@@ -20,6 +22,8 @@ module ActiveMerchant #:nodoc:
         'fail' => 'N',
         'unchecked' => 'P'
       }
+
+      DEFAULT_API_VERSION = '2015-04-07'
 
       self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
       self.default_currency = 'USD'
@@ -589,7 +593,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def api_version(options)
-        options[:version] || @options[:version] || '2015-04-07'
+        options[:version] || @options[:version] || self.class::DEFAULT_API_VERSION
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})
@@ -632,8 +636,8 @@ module ActiveMerchant #:nodoc:
         return response.fetch('error', {})['charge'] unless success
 
         if url == 'customers'
-          [response['id'], response['sources']['data'].first['id']].join('|')
-        elsif method == :post && url.match(/customers\/.*\/cards/)
+          [response['id'], response.dig('sources', 'data').first&.dig('id')].join('|')
+        elsif method == :post && (url.match(/customers\/.*\/cards/) || url.match(/payment_methods\/.*\/attach/))
           [response['customer'], response['id']].join('|')
         else
           response['id']
