@@ -81,6 +81,22 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal :SSLv3, @connection.ssl_version
   end
 
+  def test_override_min_version
+    omit_if Net::HTTP.instance_methods.exclude?(:min_version=)
+
+    refute_equal :TLS1_1, @connection.min_version
+    @connection.min_version = :TLS1_1
+    assert_equal :TLS1_1, @connection.min_version
+  end
+
+  def test_override_max_version
+    omit_if Net::HTTP.instance_methods.exclude?(:min_version=)
+
+    refute_equal :TLS1_2, @connection.max_version
+    @connection.max_version = :TLS1_2
+    assert_equal :TLS1_2, @connection.max_version
+  end
+
   def test_default_read_timeout
     assert_equal ActiveMerchant::Connection::READ_TIMEOUT, @connection.read_timeout
   end
