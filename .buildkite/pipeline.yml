@@ -1,0 +1,3 @@
+steps:
+  - name: ":ruby: run unit tests"
+    command: ".buildkite/steps/run-tests.sh"
