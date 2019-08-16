@@ -1,6 +1,5 @@
-# Active Merchant
-[![Build Status](https://travis-ci.org/activemerchant/active_merchant.png?branch=master)](https://travis-ci.org/activemerchant/active_merchant)
-[![Code Climate](https://codeclimate.com/github/activemerchant/active_merchant.png)](https://codeclimate.com/github/activemerchant/active_merchant)
+# Forked Active Merchant
+[![Build status](https://badge.buildkite.com/93506686509bb21003e768f50c1bcb9a879c30665fe2007bea.svg)](https://buildkite.com/waysact/active-merchant)
 
 Active Merchant is an extraction from the ecommerce system [Shopify](http://www.shopify.com).
 Shopify's requirements for a simple and unified API to access dozens of different payment

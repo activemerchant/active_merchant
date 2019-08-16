@@ -5,6 +5,7 @@ pkg
 # don't want to ship locked version requirements
 Gemfile.lock
 Gemfile*.lock
+vendor/bundle*
 .rbx/
 *.gem
 .rvmrc
