@@ -1,12 +1,66 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Stripe Payment Intents: Add new gateway [britth] #3290
+
+== Version 1.97.0 (Aug 15, 2019)
+* CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296
+* PayU Latam: Add Naranja card type [hdeters] #3299
+* Adyen: Add app based 3DS requests for auth and purchase [jeremywrowe] #3298
+* MercadoPago: Add Cabal card type [leila-alderman] #3295
+* MONEI: Add external MPI 3DS 1 support [jimmyn] #3292
+* Bambora formerly Beanstream: Pass card owner when storing tokenized cards [alexdunae] #3006
+* Realex: Prevent error calculating `refund_hash` or `credit_hash` when the secret is nil [jasonxp] #3291
+* Orbital: Add external MPI support for 3DS1 [pi3r] #3261
+* Paymill: Add currency and amount to store requests [jasonxp] #3289
+* Realex: Re-implement credit as general credit [leila-alderman] #3280
+* Braintree Blue: Support for stored credentials [hdeters] #3286
+* CardConnect: Move domain from gateway specific to gateway field [hdeters] #3283
+
+== Version 1.96.0 (Jul 26, 2019)
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229
 * Adyen: Pass updateShopperStatement, industryUsage [curiousepic] #3233
 * TransFirst Transaction Express: Fix blank address2 values [britth] #3231
 * WorldPay: Add support for store method [bayprogrammer] #3232
 * Adyen: Support for additional AVS code mapping [jknipp] #3236
-* Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
+* Adyen: Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
+* CyberSource: Update CyberSource SOAP documentation link [vince-smith] #3204
+* USAePay: Handle additional error codes and add default error code [estelendur] #3167
+* Braintree: Add `skip_avs` and `skip_cvv` gateway specific fields [leila-alderman] #3241
+* NAB Transact: Update periodic test url [mengqing] #3177
+* NMI: Add level 3 gateway-specific fields tax, shipping, and ponumber [jasonxp] #3239
+* Checkout V2: Update stored card flag [curiousepic] #3247
+* NMI: Add support for stored credentials [bayprogrammer] #3243
+* Spreedly: Consolidate API requests and support bank accounts [lancecarlson] #3105
+* BPoint: Hook up merchant_reference and CRN fields [curiousepic] #3249
+* Checkout V2: Stop sending phone number to Checkout V2 integration [filipebarcos] #3248
+* Barclaycard Smartpay: Add support for 3DS2 [britth] #3251
+* Adyen: Add support for non-fractional currencies [molbrown] #3257
+* Decidir: Add new gateway [jknipp] #3254
+* Checkout V2: Reapply Update stored card flag [curiousepic]
+* CyberSource: Update supported countries [molbrown] #3260
+* Credorax: Update supported countries [molbrown] #3260
+* Kushki: Update supported countries [molbrown] #3260
+* Paypal: Update supported countries [molbrown] #3260
+* BlueSnap: Send amount in capture requests [jknipp] #3262
+* Mundipagg: Add Alelo card support [jasonxp] #3255
+* Adyen: Remove temporary amount modification for non-fractional currencies [molbrown] #3263
+* Adyen: Set blank state to N/A [therufs] #3252
+* MiGS: Add tx_source gateway specific field [leila-alderman] #3264
+* NMI: Correct password scrubber to scrub symbols [hdeters] #3267
+* Global Collect: Only add name if present [curiousepic] #3268
+* HPS: Add Apple Pay raw cryptogram support [slogsdon] #3209
+* CardConnect: Fix parsing of level 3 fields [hdeters] #3273
+* TrustCommerce: Support void after purchase [jknipp] #3265
+* Payflow: Support arbitrary level 2 + level 3 fields [therufs] #3272
+* BlueSnap: Default to not send amount on capture [molbrown] #3270
+* Spreedly: extra fields, remove extraneous check [montdidier] #3102 #3281
+* Cecabank: Update encryption to SHA2 [leila-alderman] #3278
+* Checkout V2: Fix 3DS 1&2 integration [nicolas-maalouf-cko] #3240
+* Credorax: add 3DS2 MPI auth data support [bayprogrammer] #3274
+* Add Kosovo to the list of countries [AnotherJoSmith] #3226
+* Realex: Adds 3DS 1&2 support through external MPI [filipebarcos] #3284
+* PayPal: Adds 3DS 1 support through external MPI [nebdil] #3279
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228
@@ -153,7 +207,6 @@
 * Forte: Allow void on capture [nfarve] #3059
 
 == Version 1.86.0 (October 26, 2018)
-* UsaEpayTransaction: Support UMcheckformat option for echecks [dtykocki] #3002
 * Global Collect: handle internal server errors [molbrown] #3005
 * Barclaycard Smartpay: allow third-party payouts for credits [bpollack] #3009
 * RuboCop: AlignHash [nfarve] #3004

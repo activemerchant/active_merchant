@@ -12,13 +12,14 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PA', 'PE']
       self.default_currency = 'USD'
       self.money_format = :dollars
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja]
 
       BRAND_MAP = {
         'visa' => 'VISA',
         'master' => 'MASTERCARD',
         'american_express' => 'AMEX',
-        'diners_club' => 'DINERS'
+        'diners_club' => 'DINERS',
+        'naranja' => 'NARANJA'
       }
 
       MINIMUMS = {

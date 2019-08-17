@@ -33,7 +33,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :brand => 'elo'
     )
 
-    @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
+    @three_ds_enrolled_card = credit_card('4917610000000000', brand: :visa)
 
     @declined_card = credit_card('4000300011112220')
 
@@ -83,6 +83,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       stored_credential: {reason_type: 'unscheduled'},
       three_ds_2: {
         channel: 'browser',
+        notification_url: 'https://example.com/notification',
         browser_info: {
           accept_header: 'unknown',
           depth: 100,
@@ -157,10 +158,36 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options)
     assert response.test?
     refute response.authorization.blank?
+
     assert_equal response.params['resultCode'], 'IdentifyShopper'
     refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
     refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
     refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_authorize_with_3ds2_app_based_request
+    three_ds_app_based_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'app',
+      }
+    }
+
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, three_ds_app_based_options)
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.algorithm'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.directoryServerId'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.publicKey'].blank?
   end
 
   # with rule set in merchant account to skip 3DS for cards of this brand
@@ -196,7 +223,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase
@@ -274,7 +301,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -452,7 +479,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.store(@declined_card, @options)
 
     assert_failure response
-    assert_equal 'Refused', response.message
+    assert_equal 'CVC Declined', response.message
   end
 
   def test_successful_purchase_using_stored_card
@@ -491,7 +518,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match 'Refused', response.message
+    assert_match 'CVC Declined', response.message
   end
 
   def test_verify_with_idempotency_key
@@ -605,11 +632,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
   end
 
+  def test_nil_state_for_purchase
+    @options[:billing_address][:state] = nil
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_blank_state_for_purchase
     @options[:billing_address][:state] = ''
     response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_address], response.error_code
+    assert_success response
   end
 
   def test_missing_phone_for_purchase

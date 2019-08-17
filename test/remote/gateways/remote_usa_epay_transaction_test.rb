@@ -6,6 +6,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
+    @invalid_transaction_card = credit_card('4000300511112225')
     @check = check
     @options = { :billing_address => address(:zip => '27614', :state => 'NC'), :shipping_address => address }
     @amount = 100
@@ -252,5 +253,11 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
 
     assert_scrubbed(@check.account_number, transcript)
     assert_scrubbed(@gateway.options[:login], transcript)
+  end
+
+  def test_processing_error
+    assert response = @gateway.purchase(@amount, @invalid_transaction_card, @options)
+    assert_equal 'processing_error', response.error_code
+    assert_failure response
   end
 end

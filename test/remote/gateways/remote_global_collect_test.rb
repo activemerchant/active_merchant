@@ -63,6 +63,14 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_blank_name
+    credit_card = credit_card('4567350000427977', { first_name: nil, last_name: nil})
+
+    response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@rejected_amount, @declined_card, @options)
     assert_failure response
@@ -155,7 +163,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match %r{UNKNOWN_SERVER_ERROR}, response.message
+    assert_match %r{MISSING_OR_INVALID_AUTHORIZATION}, response.message
   end
 
   def test_transcript_scrubbing

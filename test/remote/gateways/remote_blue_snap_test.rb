@@ -176,6 +176,15 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', capture.message
   end
 
+  def test_successful_authorize_and_partial_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response

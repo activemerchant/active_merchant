@@ -602,7 +602,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_3ds_version_1_request
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option('1.0.2')))
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option(version: '1.0.2', xid: 'xid')))
     end.check_request do |endpoint, data, headers|
       assert_match %r{<paymentService version="1.4" merchantCode="testlogin">}, data
       assert_match %r{<eci>eci</eci>}, data
@@ -614,12 +614,12 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_3ds_version_2_request
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option('2.1.0')))
+      @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option(version: '2.1.0', ds_transaction_id: 'ds_transaction_id')))
     end.check_request do |endpoint, data, headers|
       assert_match %r{<paymentService version="1.4" merchantCode="testlogin">}, data
       assert_match %r{<eci>eci</eci>}, data
       assert_match %r{<cavv>cavv</cavv>}, data
-      assert_match %r{<dsTransactionId>xid</dsTransactionId>}, data
+      assert_match %r{<dsTransactionId>ds_transaction_id</dsTransactionId>}, data
       assert_match %r{<threeDSVersion>2.1.0</threeDSVersion>}, data
     end.respond_with(successful_authorize_response)
   end
@@ -835,13 +835,14 @@ class WorldpayTest < Test::Unit::TestCase
     end
   end
 
-  def three_d_secure_option(version)
+  def three_d_secure_option(version:, xid: nil, ds_transaction_id: nil)
     {
       three_d_secure: {
         eci: 'eci',
         cavv: 'cavv',
-        xid: 'xid',
-        version: version
+        xid: xid,
+        ds_transaction_id: ds_transaction_id,
+        version: version,
       }
     }
   end

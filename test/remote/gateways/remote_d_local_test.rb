@@ -4,8 +4,9 @@ class RemoteDLocalTest < Test::Unit::TestCase
   def setup
     @gateway = DLocalGateway.new(fixtures(:d_local))
 
-    @amount = 100
+    @amount = 200
     @credit_card = credit_card('4111111111111111')
+    @credit_card_naranja = credit_card('5895627823453005')
     # No test card numbers, all txns are approved by default,
     # but errors can be invoked directly with the `description` field
     @options = {
@@ -37,6 +38,12 @@ class RemoteDLocalTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match 'The payment was paid', response.message
+  end
+
+  def test_successful_purchase_naranja
+    response = @gateway.purchase(@amount, @credit_card_naranja, @options)
     assert_success response
     assert_match 'The payment was paid', response.message
   end

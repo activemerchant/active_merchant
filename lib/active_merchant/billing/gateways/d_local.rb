@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AR', 'BR', 'CL', 'CO', 'MX', 'PE', 'UY', 'TR']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro, :naranja]
 
       self.homepage_url = 'https://dlocal.com/'
       self.display_name = 'dLocal'

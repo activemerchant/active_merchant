@@ -52,6 +52,9 @@ class CyberSourceTest < Test::Unit::TestCase
         :amount => 100
       }
     }
+
+    @issuer_additional_data = 'PR25000000000011111111111112222222sk111111111111111111111111111'
+    + '1111111115555555222233101abcdefghijkl7777777777777777777777777promotionCde'
   end
 
   def test_successful_credit_card_purchase
@@ -83,12 +86,28 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_purchase_includes_issuer_additional_data
+    stub_comms do
+      @gateway.purchase(100, @credit_card, order_id: '1', issuer_additional_data: @issuer_additional_data)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer>\s+<additionalData>#{@issuer_additional_data}<\/additionalData>\s+<\/issuer>/m, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_purchase_includes_mdd_fields
     stub_comms do
       @gateway.purchase(100, @credit_card, order_id: '1', mdd_field_2: 'CustomValue2', mdd_field_3: 'CustomValue3')
     end.check_request do |endpoint, data, headers|
       assert_match(/field2>CustomValue2.*field3>CustomValue3</m, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_authorize_includes_issuer_additional_data
+    stub_comms do
+      @gateway.authorize(100, @credit_card, order_id: '1', issuer_additional_data: @issuer_additional_data)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer>\s+<additionalData>#{@issuer_additional_data}<\/additionalData>\s+<\/issuer>/m, data)
+    end.respond_with(successful_authorization_response)
   end
 
   def test_authorize_includes_mdd_fields
@@ -873,7 +892,7 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def assert_xml_valid_to_xsd(data, root_element = '//s:Body/*')
-    schema_file = File.open("#{File.dirname(__FILE__)}/../../schema/cyber_source/CyberSourceTransaction_#{CyberSourceGateway::XSD_VERSION}.xsd")
+    schema_file = File.open("#{File.dirname(__FILE__)}/../../schema/cyber_source/CyberSourceTransaction_#{CyberSourceGateway::TEST_XSD_VERSION}.xsd")
     doc = Nokogiri::XML(data)
     root = Nokogiri::XML(doc.xpath(root_element).to_s)
     xsd = Nokogiri::XML::Schema(schema_file)

@@ -8,6 +8,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     @credit_card = credit_card('4097440000000004', verification_value: '444', first_name: 'APPROVED', last_name: '')
     @declined_card = credit_card('4097440000000004', verification_value: '444', first_name: 'REJECTED', last_name: '')
     @pending_card = credit_card('4097440000000004', verification_value: '444', first_name: 'PENDING', last_name: '')
+    @naranja_credit_card = credit_card('5895620000000002', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'naranja')
 
     @options = {
       dni_number: '5415668464654',
@@ -44,6 +45,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_naranja_card
+    response = @gateway.purchase(@amount, @naranja_credit_card, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
     assert response.test?
@@ -231,6 +239,13 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_match %r(^\d+\|(\w|-)+$), response.authorization
   end
 
+  def test_successful_authorize_with_naranja_card
+    response = @gateway.authorize(@amount, @naranja_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
+  end
+
   def test_successful_authorize_with_specified_language
     response = @gateway.authorize(@amount, @credit_card, @options.merge(language: 'es'))
     assert_success response
@@ -299,16 +314,6 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert_match(/property: parentTransactionId, message: No puede ser vacio/, response.message)
   end
 
-  # If this test fails, support for void may have been added to the sandbox
-  def test_unsupported_test_void_fails_as_expected
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert void = @gateway.void(auth.authorization)
-    assert_failure void
-    assert_equal 'Internal payment provider error. ', void.message
-  end
-
   def test_failed_void
     response = @gateway.void('')
     assert_failure response
@@ -319,16 +324,6 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     response = @gateway.void('', language: 'es')
     assert_failure response
     assert_match(/property: parentTransactionId, message: No puede ser vacio/, response.message)
-  end
-
-  # If this test fails, support for captures may have been added to the sandbox
-  def test_unsupported_test_capture_fails_as_expected
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert capture = @gateway.capture(@amount, auth.authorization, @options)
-    assert_failure capture
-    assert_equal 'Internal payment provider error. ', capture.message
   end
 
   def test_failed_capture
@@ -366,17 +361,17 @@ class RemotePayuLatamTest < Test::Unit::TestCase
   end
 
   def test_failed_verify_with_specified_amount
-    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 1699))
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499))
 
     assert_failure verify
-    assert_equal 'The order value is less than minimum allowed. Minimum value allowed 17 ARS', verify.message
+    assert_equal 'The order value is less than minimum allowed. Minimum value allowed 5 ARS', verify.message
   end
 
   def test_failed_verify_with_specified_language
-    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 1699, language: 'es'))
+    verify = @gateway.verify(@credit_card, @options.merge(verify_amount: 499, language: 'es'))
 
     assert_failure verify
-    assert_equal 'The order value is less than minimum allowed. Minimum value allowed 17 ARS', verify.message
+    assert_equal 'The order value is less than minimum allowed. Minimum value allowed 5 ARS', verify.message
   end
 
   def test_transcript_scrubbing

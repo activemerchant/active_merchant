@@ -34,28 +34,28 @@ class RemoteCardConnectTest < Test::Unit::TestCase
       ship_from_date: '20877',
       items: [
         {
-          line_no: '1',
+          lineno: '1',
           material: 'MATERIAL-1',
           description: 'DESCRIPTION-1',
           upc: 'UPC-1',
           quantity: '1000',
           uom: 'CS',
-          unit_cost: '900',
-          net_amnt: '150',
-          tax_amnt: '117',
-          disc_amnt: '0'
+          unitcost: '900',
+          netamnt: '150',
+          taxamnt: '117',
+          discamnt: '0'
         },
         {
-          line_no: '2',
+          lineno: '2',
           material: 'MATERIAL-2',
           description: 'DESCRIPTION-2',
           upc: 'UPC-1',
           quantity: '2000',
           uom: 'CS',
-          unit_cost: '450',
-          net_amnt: '300',
-          tax_amnt: '117',
-          disc_amnt: '0'
+          unitcost: '450',
+          netamnt: '300',
+          taxamnt: '117',
+          discamnt: '0'
         }
       ]
     }

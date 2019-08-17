@@ -9,7 +9,8 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AT', 'AU', 'BE', 'BG', 'BR', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'SI', 'US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo]
+      self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo, :naranja]
 
       self.money_format = :cents
 
@@ -231,23 +232,29 @@ module ActiveMerchant #:nodoc:
           post[:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
           post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
           post[:billingAddress][:city] = address[:city] || 'N/A'
-          post[:billingAddress][:stateOrProvince] = address[:state] || 'N/A'
+          post[:billingAddress][:stateOrProvince] = get_state(address)
           post[:billingAddress][:country] = address[:country] if address[:country]
         end
       end
 
+      def get_state(address)
+        address[:state] && !address[:state].blank? ? address[:state] : 'N/A'
+      end
+
       def add_invoice(post, money, options)
+        currency = options[:currency] || currency(money)
         amount = {
-          value: amount(money),
-          currency: options[:currency] || currency(money)
+          value: localized_amount(money, currency),
+          currency: currency
         }
         post[:amount] = amount
       end
 
       def add_invoice_for_modification(post, money, options)
+        currency = options[:currency] || currency(money)
         amount = {
-          value: amount(money),
-          currency: options[:currency] || currency(money)
+          value: localized_amount(money, currency),
+          currency: currency
         }
         post[:modificationAmount] = amount
       end
@@ -321,24 +328,12 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds(post, options)
         if three_ds_2_options = options[:three_ds_2]
-          if browser_info = three_ds_2_options[:browser_info]
-            post[:browserInfo] = {
-              acceptHeader: browser_info[:accept_header],
-              colorDepth: browser_info[:depth],
-              javaEnabled: browser_info[:java],
-              language: browser_info[:language],
-              screenHeight: browser_info[:height],
-              screenWidth: browser_info[:width],
-              timeZoneOffset: browser_info[:timezone],
-              userAgent: browser_info[:user_agent]
-            }
-
-            if device_channel = three_ds_2_options[:channel]
-              post[:threeDS2RequestData] = {
-                deviceChannel: device_channel,
-                notificationURL: three_ds_2_options[:notification_url] || 'https://example.com/notification'
-              }
-            end
+          device_channel = three_ds_2_options[:channel]
+          if device_channel == 'app'
+            post[:threeDS2RequestData] = { deviceChannel: device_channel }
+          else
+            add_browser_info(three_ds_2_options[:browser_info], post)
+            post[:threeDS2RequestData] = { deviceChannel: device_channel, notificationURL: three_ds_2_options[:notification_url] }
           end
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
@@ -449,6 +444,20 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
+      end
+
+      def add_browser_info(browser_info, post)
+        return unless browser_info
+        post[:browserInfo] = {
+          acceptHeader: browser_info[:accept_header],
+          colorDepth: browser_info[:depth],
+          javaEnabled: browser_info[:java],
+          language: browser_info[:language],
+          screenHeight: browser_info[:height],
+          screenWidth: browser_info[:width],
+          timeZoneOffset: browser_info[:timezone],
+          userAgent: browser_info[:user_agent]
+        }
       end
     end
   end
