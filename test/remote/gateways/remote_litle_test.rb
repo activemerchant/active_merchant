@@ -63,6 +63,18 @@ class RemoteLitleTest < Test::Unit::TestCase
         number:  "4457000300000007",
         payment_cryptogram: "BwABBJQ1AgAAAAAgJDUCAAAAAAA="
       })
+    @apple_pay = ActiveMerchant::Billing::ApplePayPaymentToken.new(
+      {
+        version: "EC_v1",
+        data: "VTaEeoutWYRw7hO8QJgrZGPR+GAjNB+/7L0gGS1K5vho0crvXq44qfW+fHfUvvphtMJfplVJ4hdRaQItd9rTl3VJGQyuOZTWmbgz4om0zH+", # truncated for better readability
+        header: {
+          ephemeralPublicKey: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEojYhj3NtEL4KlWjnT3ZUI+Jyt13y+A6Ykm6B1N83OUBTMdaxVTb4i50TicSEtq6r4dhFzjHz+uE7rpnF10i79w==",
+          applicationData: "35a40e4c26faf9f4914396a1bb1024caa932bb7c5c103f40f3fe3c63a15997bf",
+          publicKeyHash: "ofjHeuCZ58S5zcu7ljwkzX9KatXppp0ZKEoDn9rBkrI=",
+          transactionId: "e9228d025ccc01bcad91d0d15f4b93c957602bfdebc7e15bb0585a3a2a7fccd3"
+        }
+      }
+    )
     @check = check(
       name: 'Tom Black',
       routing_number:  '011075150',
@@ -165,6 +177,12 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_apple_pay
+    assert response = @gateway.purchase(10, @apple_pay)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_decrypted_apple_pay
     assert response = @gateway.purchase(10010, @decrypted_apple_pay)
     assert_success response
     assert_equal 'Approved', response.message

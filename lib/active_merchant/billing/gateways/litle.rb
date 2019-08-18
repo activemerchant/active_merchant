@@ -257,6 +257,23 @@ module ActiveMerchant #:nodoc:
         doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
+      def add_apple_payment(doc, payment_method)
+        doc.applepay do
+          doc.data payment_method.payment_data['data']
+          doc.header do
+            %i[applicationData
+               ephemeralPublicKey
+               publicKeyHash
+               transactionId].each do |key|
+              doc.send(key, payment_method.payment_data.dig('header', key))
+            end
+          end
+          %i[signature version].each do |key|
+            doc.send(key, payment_method.payment_data[key])
+          end
+        end
+      end
+
       def add_payment_method(doc, payment_method, options)
         if payment_method.is_a?(String)
           doc.token do
@@ -265,6 +282,8 @@ module ActiveMerchant #:nodoc:
               doc.expDate(exp_date(OpenStruct.new(options)))
             end
           end
+        elsif payment_method.is_a? ApplePayPaymentToken
+          add_apple_payment(doc, payment_method)
         elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.card do
             doc.track(payment_method.track_data)
@@ -300,12 +319,16 @@ module ActiveMerchant #:nodoc:
         return if payment_method.is_a?(String)
 
         doc.billToAddress do
-          if check?(payment_method)
-            doc.name(payment_method.name)
-            doc.firstName(payment_method.first_name)
-            doc.lastName(payment_method.last_name)
+          if payment_method.respond_to?(:name)
+            if check?(payment_method)
+              doc.name(payment_method.name)
+              doc.firstName(payment_method.first_name)
+              doc.lastName(payment_method.last_name)
+            else
+              doc.name(payment_method.name)
+            end
           else
-            doc.name(payment_method.name)
+            doc.name(options.dig(:billing_address, :name))
           end
           doc.email(options[:email]) if options[:email]
 
