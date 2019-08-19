@@ -18,6 +18,7 @@
 * Realex: Re-implement credit as general credit [leila-alderman] #3280
 * Braintree Blue: Support for stored credentials [hdeters] #3286
 * CardConnect: Move domain from gateway specific to gateway field [hdeters] #3283
+* Adds new Maestro BINs [tanyajajodia] #3305
 
 == Version 1.96.0 (Jul 26, 2019)
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229
