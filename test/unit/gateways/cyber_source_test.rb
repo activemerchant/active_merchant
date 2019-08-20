@@ -255,10 +255,31 @@ class CyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_credit_card_update_request
-    @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_update_subscription_response)
+    @gateway.stubs(:ssl_post).returns(successful_create_subscription_response)
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert response.success?
     assert response.test?
+
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_match %r'<accountNumber>4111111111111111</accountNumber>', request_body
+      true
+    end.returns(successful_update_subscription_response)
+    assert response = @gateway.update(response.authorization, @credit_card, @subscription_options)
+    assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_credit_card_update_request_without_card_number
+    @gateway.stubs(:ssl_post).returns(successful_create_subscription_response)
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert response.success?
+    assert response.test?
+
+    @gateway.expects(:ssl_post).with do |_host, request_body|
+      assert_not_match %r'accountNumber', request_body
+      true
+    end.returns(successful_update_subscription_response)
+    @credit_card.number = nil
     assert response = @gateway.update(response.authorization, @credit_card, @subscription_options)
     assert response.success?
     assert response.test?

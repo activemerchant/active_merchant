@@ -471,7 +471,7 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(xml, creditcard)
         xml.tag! 'card' do
-          xml.tag! 'accountNumber', creditcard.number
+          xml.tag!('accountNumber', creditcard.number) unless creditcard.number.blank?
           xml.tag! 'expirationMonth', format(creditcard.month, :two_digits)
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
           xml.tag!('cvNumber', creditcard.verification_value) unless @options[:ignore_cvv] || creditcard.verification_value.blank?
