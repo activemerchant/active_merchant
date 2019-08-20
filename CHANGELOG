@@ -4,6 +4,9 @@
 * Stripe Payment Intents: Add new gateway [britth] #3290
 * Stripe: Send cardholder name and address when creating sources for 3DS 1.0 [jknipp] #3300
 * Checkout_v2: Support for native 3DS2.0 [nfarve] #3303
+* eWAY Rapid: If no address is available, default to the name associated with the payment method when setting the Customer fields [jasonxp] #3306
+* eWAY Rapid: Fix a bug in which the email was not set in Customer fields if no address was provided [jasonxp] #3306
+* eWAY Rapid: Support both `phone` and `phone_number` fields under the `shipping_address` option [jasonxp] #3306
 
 == Version 1.97.0 (Aug 15, 2019)
 * CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296
