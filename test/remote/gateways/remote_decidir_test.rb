@@ -78,7 +78,7 @@ class RemoteDecidirTest < Test::Unit::TestCase
 
     assert capture = @gateway_for_auth.capture(1, auth.authorization)
     assert_failure capture
-    assert_equal 'amount: Amount out of ranges: 100 - 100', capture.message
+    assert_equal 'amount: Amount out of ranges: 80 - 105', capture.message
     assert_equal 'invalid_request_error', capture.error_code
     assert_nil capture.authorization
   end

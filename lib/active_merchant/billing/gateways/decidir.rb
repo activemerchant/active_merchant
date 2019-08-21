@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AR']
       self.money_format = :cents
       self.default_currency = 'ARS'
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :naranja]
 
       self.homepage_url = 'http://www.decidir.com'
       self.display_name = 'Decidir'
@@ -99,7 +99,8 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((apikey: )\w+)i, '\1[FILTERED]').
           gsub(%r((\"card_number\\\":\\\")\d+), '\1[FILTERED]').
-          gsub(%r((\"security_code\\\":\\\")\d+), '\1[FILTERED]')
+          gsub(%r((\"security_code\\\":\\\")\d+), '\1[FILTERED]').
+          gsub(%r((\"emv_issuer_data\\\":\\\")\d+), '\1[FILTERED]')
       end
 
       private
