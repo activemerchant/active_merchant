@@ -196,6 +196,7 @@ module ActiveMerchant #:nodoc:
           buyer[:fullName] = buyer_hash[:name]
           buyer[:dniNumber] = buyer_hash[:dni_number]
           buyer[:dniType] = buyer_hash[:dni_type]
+          buyer[:merchantBuyerId] = buyer_hash[:merchant_buyer_id]
           buyer[:cnpj] = buyer_hash[:cnpj] if @options[:payment_country] == 'BR'
           buyer[:emailAddress] = buyer_hash[:email]
           buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''
@@ -204,6 +205,7 @@ module ActiveMerchant #:nodoc:
           buyer[:fullName] = payment_method.name.strip
           buyer[:dniNumber] = options[:dni_number]
           buyer[:dniType] = options[:dni_type]
+          buyer[:merchantBuyerId] = options[:merchant_buyer_id]
           buyer[:cnpj] = options[:cnpj] if @options[:payment_country] == 'BR'
           buyer[:emailAddress] = options[:email]
           buyer[:contactPhone] = (options[:billing_address][:phone] if options[:billing_address]) || (options[:shipping_address][:phone] if options[:shipping_address]) || ''

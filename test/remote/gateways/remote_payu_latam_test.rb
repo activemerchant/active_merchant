@@ -12,6 +12,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
 
     @options = {
       dni_number: '5415668464654',
+      merchant_buyer_id: '1',
       currency: 'ARS',
       order_id: generate_unique_id,
       description: 'Active Merchant Transaction',
@@ -64,7 +65,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successul_purchase_with_buyer
+  def test_successful_purchase_with_buyer
     gateway = PayuLatamGateway.new(fixtures(:payu_latam).update(:account_id => '512327', payment_country: 'BR'))
 
     options_buyer = {
@@ -91,6 +92,7 @@ class RemotePayuLatamTest < Test::Unit::TestCase
         name: 'Jorge Borges',
         dni_number: '5415668464123',
         dni_type: 'TI',
+        merchant_buyer_id: '2',
         cnpj: '32593371000110',
         email: 'axaxaxas@mlo.org'
       }

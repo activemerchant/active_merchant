@@ -16,6 +16,7 @@ class PayuLatamTest < Test::Unit::TestCase
     @options = {
       dni_number: '5415668464654',
       dni_type: 'TI',
+      merchant_buyer_id: '1',
       currency: 'ARS',
       order_id: generate_unique_id,
       description: 'Active Merchant Transaction',
@@ -147,6 +148,14 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_merchant_buyer_id
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/"merchantBuyerId":"1"/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_verify_good_credentials
     @gateway.expects(:ssl_post).returns(credentials_are_legit_response)
     assert @gateway.verify_credentials
@@ -237,6 +246,7 @@ class PayuLatamTest < Test::Unit::TestCase
       buyer: {
         name: 'Jorge Borges',
         dni_number: '5415668464456',
+        merchant_buyer_id: '1',
         email: 'axaxaxas@mlo.org'
       }
     }
@@ -244,7 +254,7 @@ class PayuLatamTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.update(options_buyer))
     end.check_request do |endpoint, data, headers|
-      assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":null,\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"7563126\",\"shippingAddress\":{\"street1\":\"Calle 200\",\"street2\":\"N107\",\"city\":\"Sao Paulo\",\"state\":\"SP\",\"country\":\"BR\",\"postalCode\":\"01019-030\",\"phone\":\"\(11\)756312345\"}}/, data)
+      assert_match(/\"buyer\":{\"fullName\":\"Jorge Borges\",\"dniNumber\":\"5415668464456\",\"dniType\":null,\"merchantBuyerId\":\"1\",\"emailAddress\":\"axaxaxas@mlo.org\",\"contactPhone\":\"7563126\",\"shippingAddress\":{\"street1\":\"Calle 200\",\"street2\":\"N107\",\"city\":\"Sao Paulo\",\"state\":\"SP\",\"country\":\"BR\",\"postalCode\":\"01019-030\",\"phone\":\"\(11\)756312345\"}}/, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -252,7 +262,7 @@ class PayuLatamTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match(/\"buyer\":{\"fullName\":\"APPROVED\",\"dniNumber\":\"5415668464654\",\"dniType\":\"TI\",\"emailAddress\":\"username@domain.com\",\"contactPhone\":\"7563126\"/, data)
+      assert_match(/\"buyer\":{\"fullName\":\"APPROVED\",\"dniNumber\":\"5415668464654\",\"dniType\":\"TI\",\"merchantBuyerId\":\"1\",\"emailAddress\":\"username@domain.com\",\"contactPhone\":\"7563126\"/, data)
     end.respond_with(successful_purchase_response)
   end
 
