@@ -937,5 +937,4 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal expected_avs_code, response.avs_result['code']
   end
-
 end

@@ -647,11 +647,11 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::TransactionGateway.
       any_instance.
       expects(:sale).
-      with(has_entries(three_d_secure_pass_thru: {
+      with(has_entries(three_d_secure_pass_thru: has_entries(
         cavv: 'cavv',
         eci_flag: 'eci',
         xid: 'xid',
-      })).
+      ))).
       returns(braintree_result)
 
     @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {cavv: 'cavv', eci: 'eci', xid: 'xid'})

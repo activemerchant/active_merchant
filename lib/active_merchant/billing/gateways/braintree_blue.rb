@@ -630,13 +630,7 @@ module ActiveMerchant #:nodoc:
           }
         end
 
-        if options[:three_d_secure]
-          parameters[:three_d_secure_pass_thru] = {
-            cavv: options[:three_d_secure][:cavv],
-            eci_flag: options[:three_d_secure][:eci],
-            xid: options[:three_d_secure][:xid],
-          }
-        end
+        add_3ds_info(parameters, options[:three_d_secure])
 
         parameters[:tax_amount] = options[:tax_amount] if options[:tax_amount]
         parameters[:tax_exempt] = options[:tax_exempt] if options[:tax_exempt]
@@ -649,6 +643,31 @@ module ActiveMerchant #:nodoc:
         parameters[:line_items] = options[:line_items] if options[:line_items]
 
         parameters
+      end
+
+      def add_3ds_info(parameters, three_d_secure_opts)
+        return if empty?(three_d_secure_opts)
+
+        parameters[:three_d_secure_pass_thru] = {
+          three_d_secure_version: three_d_secure_opts[:version],
+          eci_flag: three_d_secure_opts[:eci],
+          cavv_algorithm: three_d_secure_opts[:cavv_algorithm],
+          cavv: three_d_secure_opts[:cavv],
+          directory_response: three_d_secure_opts[:directory_response_status],
+          authentication_response: three_d_secure_opts[:authentication_response_status],
+        }.merge(xid_or_ds_trans_id(three_d_secure_opts))
+      end
+
+      def xid_or_ds_trans_id(three_d_secure_opts)
+        if three_d_secure_opts[:vesion] =~ /^2/
+          {
+            ds_transaction_id: three_d_secure_opts[:ds_transaction_id],
+          }
+        else
+          {
+            xid: three_d_secure_opts[:xid],
+          }
+        end
       end
 
       def add_stored_credential_data(parameters, credit_card_or_vault_id, options)
