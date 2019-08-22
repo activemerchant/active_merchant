@@ -411,6 +411,30 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_payment_intents_and_failed_payment
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).with do |_, endpoint, post, _|
+      post && post.include?("off_session=true") && endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(failed_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, post, _|
+      post && post.include?("setup_future_usage=off") && endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_payment_methods_for_customer)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_payment_methods_for_customer)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: true))
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'pi_test_payment_intents', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase_with_token_string
     @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
@@ -1773,6 +1797,23 @@ class StripeTest < Test::Unit::TestCase
       "livemode": false,
       "created": 1309131571,
       "currency": "usd"
+    }
+    RESPONSE
+  end
+
+  def failed_purchase_response_with_payment_intents
+    <<-RESPONSE
+    {
+      "error": {
+          "charge": "ch_1F9YPEKajOcZzbwkY0J5uuyt",
+          "code": "authentication_required",
+          "decline_code": "authentication_required",
+          "message": "Your card was declined. This transaction requires authentication.",
+          "payment_intent": {
+            "status": "requires_source"
+          }
+        },
+      "status": "failed"
     }
     RESPONSE
   end

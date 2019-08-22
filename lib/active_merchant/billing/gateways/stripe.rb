@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
           return r
         end
 
-        MultiResponse.run do |r|
+        r = MultiResponse.run do |r|
           if payment.is_a?(ApplePayPaymentToken)
             r.process { tokenize_apple_pay_token(payment) }
             payment = StripePaymentToken.new(r.params["token"]) if r.success?
@@ -105,6 +105,14 @@ module ActiveMerchant #:nodoc:
             commit(:post, options[:three_d_secure] && post[:payment_method] ? 'payment_intents' : 'charges', post, options)
           end
         end.responses.last
+
+        if options[:three_d_secure] && !r.success? && r.params.dig("error", "payment_intent", "status") == "requires_source"
+          options[:three_d_secure] = "setup_future_usage"
+          post = create_post_for_auth_or_purchase(money, payment, options)
+          r = commit(:post, 'payment_intents', post, options)
+        end
+
+        r
       end
 
       def capture(money, authorization, options = {})
@@ -295,7 +303,11 @@ module ActiveMerchant #:nodoc:
           if payment_method
             post[:confirmation_method] = "manual"
             post[:confirm] = "true"
-            post[:setup_future_usage] = "off_session"
+            if options[:three_d_secure] == "setup_future_usage"
+              post[:setup_future_usage] = "off_session"
+            else
+              post[:off_session] = true
+            end
             post[:save_payment_method] = "true"
             post[:payment_method] = payment_method
           end
