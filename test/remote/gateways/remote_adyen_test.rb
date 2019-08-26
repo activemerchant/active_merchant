@@ -184,16 +184,16 @@ class RemoteAdyenTest < Test::Unit::TestCase
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
     cavv_algorithm = '1'
     xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
-    veres_response = 'Y'
-    pa_response = 'Y'
+    directory_response_status = 'Y'
+    authentication_response_status = 'Y'
     options = @options.merge(
       three_d_secure: {
         eci: eci,
         cavv: cavv,
         cavv_algorithm: cavv_algorithm,
         xid: xid,
-        veres_response: veres_response,
-        pa_response: pa_response
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
       }
     )
 
@@ -212,8 +212,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
     eci = '02'
     cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
-    trans_status_ares = 'C'
-    trans_status_rreq = 'Y'
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
 
     options = @options.merge(
       three_d_secure: {
@@ -221,8 +221,8 @@ class RemoteAdyenTest < Test::Unit::TestCase
         eci: eci,
         cavv: cavv,
         ds_transaction_id: ds_transaction_id,
-        trans_status_ares: trans_status_ares,
-        trans_status_rreq: trans_status_rreq
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
       }
     )
 
@@ -482,7 +482,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success authorize
 
     options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'],
-      requested_test_acquirer_response_code: '2')
+                             requested_test_acquirer_response_code: '2')
     assert adjust = @gateway.adjust(200, authorize.authorization, options)
     assert_failure adjust
     assert_equal 'Refused', adjust.message

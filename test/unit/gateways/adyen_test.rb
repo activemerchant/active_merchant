@@ -135,16 +135,16 @@ class AdyenTest < Test::Unit::TestCase
     cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
     cavv_algorithm = '1'
     xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
-    veres_response = 'C'
-    pa_response = 'Y'
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
     options_with_3ds1_standalone = @options.merge(
       three_d_secure: {
         eci: eci,
         cavv: cavv,
         cavv_algorithm: cavv_algorithm,
         xid: xid,
-        veres_response: veres_response,
-        pa_response: pa_response
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
       }
     )
     stub_comms do
@@ -154,8 +154,8 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
       assert_equal cavv_algorithm, JSON.parse(data)['mpiData']['cavvAlgorithm']
       assert_equal xid, JSON.parse(data)['mpiData']['xid']
-      assert_equal veres_response, JSON.parse(data)['mpiData']['directoryResponse']
-      assert_equal pa_response, JSON.parse(data)['mpiData']['authenticationResponse']
+      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
     end.respond_with(successful_authorize_response)
   end
 
@@ -164,16 +164,16 @@ class AdyenTest < Test::Unit::TestCase
     eci = '02'
     cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
-    trans_status_ares = 'C'
-    trans_status_rreq = 'Y'
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
     options_with_3ds2_standalone = @options.merge(
       three_d_secure: {
         version: version,
         eci: eci,
         cavv: cavv,
         ds_transaction_id: ds_transaction_id,
-        trans_status_ares: trans_status_ares,
-        trans_status_rreq: trans_status_rreq
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
       }
     )
     stub_comms do
@@ -183,8 +183,8 @@ class AdyenTest < Test::Unit::TestCase
       assert_equal eci, JSON.parse(data)['mpiData']['eci']
       assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
       assert_equal ds_transaction_id, JSON.parse(data)['mpiData']['dsTransID']
-      assert_equal trans_status_ares, JSON.parse(data)['mpiData']['directoryResponse']
-      assert_equal trans_status_rreq, JSON.parse(data)['mpiData']['authenticationResponse']
+      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
     end.respond_with(successful_authorize_response)
   end
 
