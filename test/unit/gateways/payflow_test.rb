@@ -867,10 +867,6 @@ Conn close
   end
 
   def assert_three_d_secure(xml_doc, buyer_auth_result_path)
-    assert_equal 'Y', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/Status").text
-    assert_equal 'QvDbSAxSiaQs241899E0', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/AuthenticationId").text
-    assert_equal 'pareq block', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/PAReq").text
-    assert_equal 'https://bankacs.bank.com/ascurl', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ACSUrl").text
     assert_equal '02', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/ECI").text
     assert_equal 'jGvQIvG/5UhjAREALGYa6Vu/hto=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/CAVV").text
     assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
@@ -886,15 +882,11 @@ Conn close
 
   def three_d_secure_option
     {
-        :three_d_secure => {
-            :status => 'Y',
-            :authentication_id => 'QvDbSAxSiaQs241899E0',
-            :pareq => 'pareq block',
-            :acs_url => 'https://bankacs.bank.com/ascurl',
-            :eci => '02',
-            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-        }
+      three_d_secure: {
+        eci: '02',
+        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+      }
     }
   end
 end

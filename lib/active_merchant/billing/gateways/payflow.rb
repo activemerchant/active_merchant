@@ -261,20 +261,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ExpDate', expdate(credit_card)
           xml.tag! 'NameOnCard', credit_card.first_name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
-
-          if options[:three_d_secure]
-            three_d_secure = options[:three_d_secure]
-            xml.tag! 'BuyerAuthResult' do
-              xml.tag! 'Status', three_d_secure[:status] unless three_d_secure[:status].blank?
-              xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
-              xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
-              xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
-              xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
-              xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
-              xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
-            end
-          end
-
+          add_3ds_options(xml, options[:three_d_secure])
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
         end
       end
@@ -377,6 +364,15 @@ module ActiveMerchant #:nodoc:
 
       def build_response(success, message, response, options = {})
         PayflowResponse.new(success, message, response, options)
+      end
+
+      def add_3ds_options(xml, three_d_secure_opts)
+        return unless three_d_secure_opts
+        xml.tag! 'BuyerAuthResult' do
+          xml.tag! 'ECI', three_d_secure_opts[:eci] unless three_d_secure_opts[:eci].blank?
+          xml.tag! 'CAVV', three_d_secure_opts[:cavv] unless three_d_secure_opts[:cavv].blank?
+          xml.tag! 'XID', three_d_secure_opts[:xid] unless three_d_secure_opts[:xid].blank?
+        end
       end
     end
   end

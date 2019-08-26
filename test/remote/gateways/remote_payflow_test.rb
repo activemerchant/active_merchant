@@ -455,13 +455,11 @@ class RemotePayflowTest < Test::Unit::TestCase
 
   def three_d_secure_option
     {
-        :three_d_secure => {
-            :status => 'Y',
-            :authentication_id => 'QvDbSAxSiaQs241899E0',
-            :eci => '02',
-            :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
-        }
+      three_d_secure: {
+        eci: '02',
+        cavv: 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
+        xid: 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
+      }
     }
   end
 
