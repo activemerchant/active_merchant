@@ -186,6 +186,7 @@
 * Payeezy: Add `stored_credentials` [nfarve] #3083
 * Fix CVC validation for 0 length CVC [filipebarcos] #3082
 * NMI: Supports vendor_id and processor_id fields [molbrown] #3085
+* Update Braintree Gem [curiousepic] #3311
 
 == Version 1.88.0 (November 30, 2018)
 * Added ActiveSupport/Rails master support [Edouard-chin] #3065
