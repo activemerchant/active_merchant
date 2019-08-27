@@ -159,6 +159,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
+        add_custom_fields(parameters, options)
+
         commit('preauth', parameters)
       end
 
@@ -174,6 +176,8 @@ module ActiveMerchant #:nodoc:
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
+        add_custom_fields(parameters, options)
+
         commit('sale', parameters)
       end
 
@@ -187,6 +191,7 @@ module ActiveMerchant #:nodoc:
           :transid => transaction_id,
         }
         add_aggregator(parameters, options)
+        add_custom_fields(parameters, options)
 
         commit('postauth', parameters)
       end
@@ -195,11 +200,14 @@ module ActiveMerchant #:nodoc:
       # that you want to refund, and a TC transid for the transaction that you are refunding.
       def refund(money, identification, options = {})
         transaction_id, _ = split_authorization(identification)
+
         parameters = {
           :amount => amount(money),
           :transid => transaction_id
         }
+
         add_aggregator(parameters, options)
+        add_custom_fields(parameters, options)
 
         commit('credit', parameters)
       end
@@ -233,7 +241,9 @@ module ActiveMerchant #:nodoc:
         parameters = {
           :transid => transaction_id,
         }
+
         add_aggregator(parameters, options)
+        add_custom_fields(parameters, options)
 
         commit(action, parameters)
       end
@@ -294,6 +304,8 @@ module ActiveMerchant #:nodoc:
 
         add_creditcard(parameters, creditcard)
         add_addresses(parameters, options)
+        add_custom_fields(parameters, options)
+
         commit('store', parameters)
       end
 
@@ -303,6 +315,8 @@ module ActiveMerchant #:nodoc:
         parameters = {
           :billingid => identification,
         }
+
+        add_custom_fields(parameters, options)
 
         commit('unstore', parameters)
       end
@@ -320,6 +334,12 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def add_custom_fields(params, options)
+        options[:custom_fields]&.each do |key, value|
+          params[key.to_sym] = value
+        end
+      end
 
       def add_aggregator(params, options)
         if @options[:aggregator_id] || application_id != Gateway.application_id
@@ -419,7 +439,7 @@ module ActiveMerchant #:nodoc:
                  TCLink.send(parameters)
                else
                  parse(ssl_post(self.live_url, post_data(parameters)))
-        end
+               end
 
         # to be considered successful, transaction status must be either "approved" or "accepted"
         success = SUCCESS_TYPES.include?(data['status'])
@@ -463,7 +483,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def split_authorization(authorization)
-        authorization.split('|')
+        authorization&.split('|')
       end
     end
   end

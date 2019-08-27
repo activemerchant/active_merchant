@@ -9,6 +9,7 @@
 * eWAY Rapid: Support both `phone` and `phone_number` fields under the `shipping_address` option [jasonxp] #3306
 * PayU Latam: Add support for the `merchant_buyer_id` field in the `options` and `buyer` hashes [jasonxp] #3308
 * Fat Zebra: Send metadata for purchase and authorize [montdidier] #3101
+* TrustCommerce: Add support for custom fields [jasonxp] #3313
 
 == Version 1.97.0 (Aug 15, 2019)
 * CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296

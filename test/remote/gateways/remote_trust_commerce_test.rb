@@ -5,6 +5,7 @@ class TrustCommerceTest < Test::Unit::TestCase
     @gateway = TrustCommerceGateway.new(fixtures(:trust_commerce))
 
     @credit_card = credit_card('4111111111111111')
+    @declined_credit_card = credit_card('4111111111111112')
     @check = check({account_number: 55544433221, routing_number: 789456124})
 
     @amount = 100
@@ -28,12 +29,21 @@ class TrustCommerceTest < Test::Unit::TestCase
       :zip => '94062'
     }
 
+    # The Trust Commerce API does not return anything different when custom fields are present.
+    # To confirm that the field values are being stored with the transactions, add a custom
+    # field in your account in the Vault UI, then examine the transactions after running the
+    # test suite.
+    custom_fields = {
+      'customfield1' => 'test1'
+    }
+
     @options = {
       :ip => '10.10.10.10',
       :order_id => '#1000.1',
       :email => 'cody@example.com',
       :billing_address => @valid_address,
-      :shipping_address => @valid_address
+      :shipping_address => @valid_address,
+      :custom_fields => custom_fields
     }
   end
 
@@ -158,26 +168,38 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_store_failure
+  def test_successful_store
     assert response = @gateway.store(@credit_card)
 
     assert_equal Response, response.class
-    assert_match %r{The merchant can't accept data passed in this field}, response.message
-    assert_failure response
+    assert_equal 'approved', response.params['status']
+    assert_match %r{The transaction was successful}, response.message
+  end
+
+  def test_failed_store
+    assert response = @gateway.store(@declined_credit_card)
+
+    assert_bad_data_response(response)
   end
 
   def test_unstore_failure
-    assert response = @gateway.unstore('testme')
+    assert response = @gateway.unstore('does-not-exist')
 
-    assert_match %r{The merchant can't accept data passed in this field}, response.message
+    assert_match %r{A field was longer or shorter than the server allows}, response.message
     assert_failure response
   end
 
-  def test_recurring_failure
+  def test_successful_recurring
     assert response = @gateway.recurring(@amount, @credit_card, :periodicity => :weekly)
 
-    assert_match %r{The merchant can't accept data passed in this field}, response.message
-    assert_failure response
+    assert_match %r{The transaction was successful}, response.message
+    assert_success response
+  end
+
+  def test_failed_recurring
+    assert response = @gateway.recurring(@amount, @declined_credit_card, :periodicity => :weekly)
+
+    assert_bad_data_response(response)
   end
 
   def test_transcript_scrubbing
@@ -189,5 +211,13 @@ class TrustCommerceTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
+  end
+
+  private
+
+  def assert_bad_data_response(response)
+    assert_equal Response, response.class
+    assert_equal 'A field was improperly formatted, such as non-digit characters in a number field', response.message
+    assert_equal 'baddata', response.params['status']
   end
 end
