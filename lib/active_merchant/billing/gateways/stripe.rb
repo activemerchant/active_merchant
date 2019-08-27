@@ -211,16 +211,20 @@ module ActiveMerchant #:nodoc:
           add_external_account(post, params, payment)
           commit(:post, "accounts/#{CGI.escape(options[:account])}/external_accounts", post, options)
         elsif options[:customer]
-          MultiResponse.run(:first) do |r|
-            # The /cards endpoint does not update other customer parameters.
-            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
+          if payment.is_a?(Check) # bank account
+            commit(:post, "customers/#{CGI.escape(options[:customer])}/sources", params, options)
+          else # credit card
+            MultiResponse.run(:first) do |r|
+              # The /cards endpoint does not update other customer parameters.
+              r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", params, options) }
 
-            if options[:set_default] and r.success? and !r.params['id'].blank?
-              post[:default_card] = r.params['id']
-            end
+              if options[:set_default] and r.success? and !r.params['id'].blank?
+                post[:default_card] = r.params['id']
+              end
 
-            if post.count > 0
-              r.process { update_customer(options[:customer], post) }
+              if post.count > 0
+                r.process { update_customer(options[:customer], post) }
+              end
             end
           end
         else
