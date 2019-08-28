@@ -58,6 +58,7 @@ module ActiveMerchant #:nodoc:
 
         commit('authonly', post)
       end
+      alias_method :store, :authorize
 
       def purchase(money, payment_method, options={})
         post = build_xml_request('AUTH') do |xml|
@@ -134,7 +135,7 @@ module ActiveMerchant #:nodoc:
 
       def add_merchant(xml, options = {})
         xml.merchant do
-          xml.orderreference options[:unique_identifier]
+          xml.orderreference options[:unique_identifier] || options[:order_id]
         end
       end
 
@@ -168,11 +169,23 @@ module ActiveMerchant #:nodoc:
           #
           xml.accounttypedescription account_type(action)
 
-          xml.credentialsonfile '1'
-          
+          xml.credentialsonfile get_credential_on_file_number(action, options)
+
           if options[:parent_transaction_reference].present?
             xml.parenttransactionreference options[:parent_transaction_reference]
           end
+        end
+      end
+
+
+      # '1' identify that credentials are going to be stored for later
+      # '2' Customer Initiated Transaction (CIT) from previously-stored credentials
+      #
+      def get_credential_on_file_number(action, options)
+        if action == 'purchase' && options[:parent_transaction_reference].present?
+          '2'
+        else
+          '1'
         end
       end
 
