@@ -1100,6 +1100,31 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @options[:tracking_number], post[:shipping][:tracking_number]
   end
 
+  def test_add_shipping_info_requires_name
+    post = {}
+    @options[:shipping_address][:name] = nil
+
+    @gateway.send(:add_shipping_info, post, @options)
+    assert_equal nil, post[:shipping]
+  end
+
+  def test_add_shipping_info_requires_address1
+    post = {}
+    @options[:shipping_address][:address1] = nil
+
+    @gateway.send(:add_shipping_info, post, @options)
+    assert_equal nil, post[:shipping]
+  end
+
+  def test_add_shipping_info_city_is_optional
+    post = {}
+    @options[:shipping_address][:city] = nil
+
+    @gateway.send(:add_shipping_info, post, @options)
+    assert_equal nil, post[:shipping][:address][:city]
+    assert_equal @options[:shipping_address][:address1], post[:shipping][:address][:line1]
+  end
+
   def test_ensure_does_not_respond_to_credit
     assert !@gateway.respond_to?(:credit)
   end

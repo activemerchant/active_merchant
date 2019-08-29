@@ -140,6 +140,15 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal custom_options[:tracking_number], response.params['shipping']['tracking_number']
   end
 
+  def test_successful_purchase_with_invalid_shipping_info
+    custom_options = @options.merge(:shipping_address => address(name: nil), :carrier => 'UPS', :tracking_number => '12345')
+    assert response = @gateway.purchase(@amount, @credit_card, custom_options)
+    assert_success response
+    assert_equal 'charge', response.params['object']
+    assert response.params['paid']
+    assert_equal nil, response.params['shipping']
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
