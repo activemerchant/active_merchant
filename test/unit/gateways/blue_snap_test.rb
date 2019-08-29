@@ -1,3 +1,5 @@
+# coding: utf-8
+
 require 'test_helper'
 
 class BlueSnapTest < Test::Unit::TestCase
@@ -9,6 +11,15 @@ class BlueSnapTest < Test::Unit::TestCase
     @check = check
     @amount = 100
     @options = { order_id: '1', personal_identification_number: 'CNPJ' }
+    @options_3ds2 = @options.merge(
+      three_d_secure: {
+        eci: '05',
+        cavv: 'AAABAWFlmQAAAABjRWWZEEFgFz+A',
+        xid: 'MGpHWm5ZWVpKclo0aUk0VmltVDA=',
+        ds_transaction_id: 'jhg34-sdgds87-sdg87-sdfg7',
+        version: '2.2.0'
+      }
+    )
     @valid_check_options = {
       billing_address: {
         address1: '123 Street',
@@ -55,6 +66,37 @@ class BlueSnapTest < Test::Unit::TestCase
     assert_equal '1019803029', response.authorization
   end
 
+  def test_successful_purchase_with_3ds_auth
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options_3ds2)
+    end.check_request do |method, url, data|
+      assert_match(/<three-d-secure>/, data)
+      assert_match(/<eci>#{Regexp.quote(@options_3ds2[:three_d_secure][:eci])}<\/eci>/, data)
+      assert_match(/<cavv>#{Regexp.quote(@options_3ds2[:three_d_secure][:cavv])}<\/cavv>/, data)
+      assert_match(/<xid>#{Regexp.quote(@options_3ds2[:three_d_secure][:xid])}<\/xid>/, data)
+      assert_match(/<three-d-secure-version>#{Regexp.quote(@options_3ds2[:three_d_secure][:version])}<\/three-d-secure-version>/, data)
+      assert_match(/<ds-transaction-id>#{Regexp.quote(@options_3ds2[:three_d_secure][:ds_transaction_id])}<\/ds-transaction-id>/, data)
+    end.respond_with(successful_purchase_with_3ds_auth_response)
+
+    assert_success response
+    assert_equal '1024951831', response.authorization
+    assert_equal '019082915501456', response.params['original-network-transaction-id']
+    assert_equal '019082915501456', response.params['network-transaction-id']
+  end
+
+  def test_does_not_send_3ds_auth_when_empty
+    stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, url, data|
+      assert_not_match(/<three-d-secure>/, data)
+      assert_not_match(/<eci>/, data)
+      assert_not_match(/<cavv>/, data)
+      assert_not_match(/<xid>/, data)
+      assert_not_match(/<three-d-secure-version>/, data)
+      assert_not_match(/<ds-transaction-id>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:raw_ssl_request).returns(failed_purchase_response)
 
@@ -80,6 +122,24 @@ class BlueSnapTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal '1012082893', response.authorization
+  end
+
+  def test_successful_authorize_with_3ds_auth
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.authorize(@amount, @credit_card, @options_3ds2)
+    end.check_request do |type, endpoint, data, headers|
+      assert_match(/<three-d-secure>/, data)
+      assert_match(/<eci>#{Regexp.quote(@options_3ds2[:three_d_secure][:eci])}<\/eci>/, data)
+      assert_match(/<cavv>#{Regexp.quote(@options_3ds2[:three_d_secure][:cavv])}<\/cavv>/, data)
+      assert_match(/<xid>#{Regexp.quote(@options_3ds2[:three_d_secure][:xid])}<\/xid>/, data)
+      assert_match(/<three-d-secure-version>#{Regexp.quote(@options_3ds2[:three_d_secure][:version])}<\/three-d-secure-version>/, data)
+      assert_match(/<ds-transaction-id>#{Regexp.quote(@options_3ds2[:three_d_secure][:ds_transaction_id])}<\/ds-transaction-id>/, data)
+    end.respond_with(successful_authorize_with_3ds_auth_response)
+
+    assert_success response
+    assert_equal '1024951833', response.authorization
+    assert_equal 'MCC8929120829', response.params['original-network-transaction-id']
+    assert_equal 'MCC8929120829', response.params['network-transaction-id']
   end
 
   def test_failed_authorize
@@ -340,6 +400,51 @@ class BlueSnapTest < Test::Unit::TestCase
     XML
   end
 
+  def successful_purchase_with_3ds_auth_response
+    MockResponse.succeeded <<-XML
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <card-transaction xmlns="http://ws.plimus.com">
+        <card-transaction-type>AUTH_CAPTURE</card-transaction-type>
+        <transaction-id>1024951831</transaction-id>
+        <recurring-transaction>ECOMMERCE</recurring-transaction>
+        <soft-descriptor>BLS&#x2a;Spreedly</soft-descriptor>
+        <amount>1.00</amount>
+        <usd-amount>1.00</usd-amount>
+        <currency>USD</currency>
+        <avs-response-code>N</avs-response-code>
+        <card-holder-info>
+          <first-name>Longbob</first-name>
+          <last-name>Longsen</last-name>
+          <country>CA</country>
+          <state>ON</state>
+          <city>Ottawa</city>
+          <zip>K1C2N6</zip>
+        </card-holder-info>
+        <vaulted-shopper-id>25105083</vaulted-shopper-id>
+        <credit-card>
+          <card-last-four-digits>1091</card-last-four-digits>
+          <card-type>VISA</card-type>
+          <card-sub-type>CREDIT</card-sub-type>
+          <bin-category>CONSUMER</bin-category>
+          <card-regulated>N</card-regulated>
+          <issuing-country-code>us</issuing-country-code>
+        </credit-card>
+        <network-transaction-info>
+          <original-network-transaction-id>019082915501456</original-network-transaction-id>
+          <network-transaction-id>019082915501456</network-transaction-id>
+        </network-transaction-info>
+        <processing-info>
+          <processing-status>success</processing-status>
+          <cvv-response-code>NR</cvv-response-code>
+          <avs-response-code-zip>N</avs-response-code-zip>
+          <avs-response-code-address>N</avs-response-code-address>
+          <avs-response-code-name>U</avs-response-code-name>
+          <network-transaction-id>019082915501456</network-transaction-id>
+        </processing-info>
+      </card-transaction>
+    XML
+  end
+
   def successful_echeck_purchase_response
     MockResponse.succeeded <<-XML
       <?xml version="1.0" encoding="UTF-8"?>
@@ -468,6 +573,53 @@ class BlueSnapTest < Test::Unit::TestCase
           <avs-response-code-address>U</avs-response-code-address>
           <avs-response-code-name>U</avs-response-code-name>
       </processing-info>
+      </card-transaction>
+    XML
+  end
+
+  def successful_authorize_with_3ds_auth_response
+    MockResponse.succeeded <<-XML
+      <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      <card-transaction xmlns="http://ws.plimus.com">
+        <card-transaction-type>AUTH_ONLY</card-transaction-type>
+        <transaction-id>1024951833</transaction-id>
+        <recurring-transaction>ECOMMERCE</recurring-transaction>
+        <soft-descriptor>BLS&#x2a;Spreedly</soft-descriptor>
+        <amount>1.00</amount>
+        <usd-amount>1.00</usd-amount>
+        <currency>USD</currency>
+        <avs-response-code>S</avs-response-code>
+        <card-holder-info>
+          <first-name>Longbob</first-name>
+          <last-name>Longsen</last-name>
+          <country>CA</country>
+          <state>ON</state>
+          <city>Ottawa</city>
+          <zip>K1C2N6</zip>
+        </card-holder-info>
+        <vaulted-shopper-id>25105085</vaulted-shopper-id>
+        <credit-card>
+          <card-last-four-digits>1096</card-last-four-digits>
+          <card-type>MASTERCARD</card-type>
+          <card-sub-type>CREDIT</card-sub-type>
+          <card-category>STANDARD</card-category>
+          <bin-category>CONSUMER</bin-category>
+          <card-regulated>N</card-regulated>
+          <issuing-bank>PUBLIC BANK BERHAD</issuing-bank>
+          <issuing-country-code>my</issuing-country-code>
+        </credit-card>
+        <network-transaction-info>
+          <original-network-transaction-id>MCC8929120829</original-network-transaction-id>
+          <network-transaction-id>MCC8929120829</network-transaction-id>
+        </network-transaction-info>
+        <processing-info>
+          <processing-status>success</processing-status>
+          <cvv-response-code>NC</cvv-response-code>
+          <avs-response-code-zip>U</avs-response-code-zip>
+          <avs-response-code-address>U</avs-response-code-address>
+          <avs-response-code-name>U</avs-response-code-name>
+          <network-transaction-id>MCC8929120829</network-transaction-id>
+        </processing-info>
       </card-transaction>
     XML
   end

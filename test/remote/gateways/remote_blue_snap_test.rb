@@ -8,7 +8,19 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     @credit_card = credit_card('4263982640269299')
     @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
     @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
+    @three_ds_visa_card = credit_card('4000000000001091', month: 1)
+    @three_ds_master_card = credit_card('5200000000001096', month: 1)
+
     @options = { billing_address: address }
+    @options_3ds2 = @options.merge(
+      three_d_secure: {
+        eci: '05',
+        cavv: 'AAABAWFlmQAAAABjRWWZEEFgFz+A',
+        xid: 'MGpHWm5ZWVpKclo0aUk0VmltVDA=',
+        ds_transaction_id: 'jhg34-sdgds87-sdg87-sdfg7',
+        version: '2.2.0'
+      }
+    )
 
     @check = check
     @invalid_check = check(:routing_number => '123456', :account_number => '123456789')
@@ -47,6 +59,12 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     })
 
     response = @gateway.purchase(@amount, @credit_card, more_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_3ds2_auth
+    response = @gateway.purchase(@amount, @three_ds_visa_card, @options_3ds2)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -181,6 +199,15 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(@amount - 1, auth.authorization)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_3ds2_auth
+    auth = @gateway.authorize(@amount, @three_ds_master_card, @options_3ds2)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'Success', capture.message
   end
