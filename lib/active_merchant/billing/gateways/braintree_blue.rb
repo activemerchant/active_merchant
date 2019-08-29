@@ -647,26 +647,23 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds_info(parameters, three_d_secure_opts)
         return if empty?(three_d_secure_opts)
+        pass_thru = {}
 
-        parameters[:three_d_secure_pass_thru] = {
-          three_d_secure_version: three_d_secure_opts[:version],
-          eci_flag: three_d_secure_opts[:eci],
-          cavv_algorithm: three_d_secure_opts[:cavv_algorithm],
-          cavv: three_d_secure_opts[:cavv],
-          directory_response: three_d_secure_opts[:directory_response_status],
-          authentication_response: three_d_secure_opts[:authentication_response_status],
-        }.merge(xid_or_ds_trans_id(three_d_secure_opts))
+        pass_thru[:three_d_secure_version] = three_d_secure_opts[:version] if three_d_secure_opts[:version]
+        pass_thru[:eci_flag] = three_d_secure_opts[:eci] if three_d_secure_opts[:eci]
+        pass_thru[:cavv_algorithm] = three_d_secure_opts[:cavv_algorithm] if three_d_secure_opts[:cavv_algorithm]
+        pass_thru[:cavv] = three_d_secure_opts[:cavv] if three_d_secure_opts[:cavv]
+        pass_thru[:directory_response] = three_d_secure_opts[:directory_response_status] if three_d_secure_opts[:directory_response_status]
+        pass_thru[:authentication_response] = three_d_secure_opts[:authentication_response_status] if three_d_secure_opts[:authentication_response_status]
+
+        parameters[:three_d_secure_pass_thru] = pass_thru.merge(xid_or_ds_trans_id(three_d_secure_opts))
       end
 
       def xid_or_ds_trans_id(three_d_secure_opts)
-        if three_d_secure_opts[:vesion] =~ /^2/
-          {
-            ds_transaction_id: three_d_secure_opts[:ds_transaction_id],
-          }
+        if three_d_secure_opts[:version].to_f >= 2
+          { ds_transaction_id: three_d_secure_opts[:ds_transaction_id] }
         else
-          {
-            xid: three_d_secure_opts[:xid],
-          }
+          { xid: three_d_secure_opts[:xid] }
         end
       end
 
