@@ -54,6 +54,7 @@ module ActiveMerchant #:nodoc:
         post[:card][:exp_month] = payment_method.month
         post[:card][:exp_year] = payment_method.year
         post[:card][:cvc] = payment_method.verification_value if payment_method.verification_value
+        add_billing_address(post, options)
 
         commit(:post, 'payment_methods', post, options)
       end
@@ -214,6 +215,22 @@ module ActiveMerchant #:nodoc:
         post[:on_behalf_of] = options[:on_behalf_of] if options[:on_behalf_of]
         post[:transfer_group] = options[:transfer_group] if options[:transfer_group]
         post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
+        post
+      end
+
+      def add_billing_address(post, options = {})
+        return unless billing = options[:billing_address] || options[:address]
+        post[:billing_details] = {}
+        post[:billing_details][:address] = {}
+        post[:billing_details][:address][:city] = billing[:city] if billing[:city]
+        post[:billing_details][:address][:country] = billing[:country] if billing[:country]
+        post[:billing_details][:address][:line1] = billing[:address1] if billing[:address1]
+        post[:billing_details][:address][:line2] = billing[:address2] if billing[:address2]
+        post[:billing_details][:address][:postal_code] = billing[:zip] if billing[:zip]
+        post[:billing_details][:address][:state] = billing[:state] if billing[:state]
+        post[:billing_details][:email] = billing[:email] if billing[:email]
+        post[:billing_details][:name] = billing[:name] if billing[:name]
+        post[:billing_details][:phone] = billing[:phone] if billing[:phone]
         post
       end
 

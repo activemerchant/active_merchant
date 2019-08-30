@@ -206,6 +206,20 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'John Doe', response.params['shipping']['name']
   end
 
+  def test_create_payment_intent_with_billing_address
+    options = {
+      currency: 'USD',
+      customer: @customer,
+      billing_address: address,
+      confirm: true
+    }
+
+    assert response = @gateway.create_intent(@amount, @visa_card, options)
+    assert_success response
+    assert billing = response.params.dig('charges', 'data')[0].dig('billing_details', 'address')
+    assert_equal 'Ottawa', billing['city']
+  end
+
   def test_create_payment_intent_with_connected_account
     options = {
       currency: 'USD',
