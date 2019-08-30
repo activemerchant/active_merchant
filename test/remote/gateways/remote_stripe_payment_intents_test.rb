@@ -211,7 +211,7 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
       currency: 'USD',
       customer: @customer,
       application_fee: 100,
-      transfer_data: {destination: @destination_account}
+      transfer_destination: @destination_account
     }
 
     assert response = @gateway.create_intent(@amount, nil, options)
