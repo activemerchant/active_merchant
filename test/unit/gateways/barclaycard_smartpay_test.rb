@@ -182,11 +182,24 @@ class BarclaycardSmartpayTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_extra_options
+    shopper_interaction = 'ContAuth'
+    shopper_statement   = 'One-year premium subscription'
+    device_fingerprint  = 'abcde123'
+
     response = stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(shopper_interaction: 'ContAuth', device_fingerprint: 'abcde123'))
+      @gateway.authorize(
+        @amount,
+        @credit_card,
+        @options.merge(
+          shopper_interaction: shopper_interaction,
+          device_fingerprint: device_fingerprint,
+          shopper_statement: shopper_statement
+        )
+      )
     end.check_request do |endpoint, data, headers|
-      assert_match(/shopperInteraction=ContAuth/, data)
-      assert_match(/deviceFingerprint=abcde123/, data)
+      assert_match(/shopperInteraction=#{shopper_interaction}/, data)
+      assert_match(/shopperStatement=#{Regexp.quote(CGI.escape(shopper_statement))}/, data)
+      assert_match(/deviceFingerprint=#{device_fingerprint}/, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response

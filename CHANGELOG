@@ -11,6 +11,7 @@
 * Fat Zebra: Send metadata for purchase and authorize [montdidier] #3101
 * TrustCommerce: Add support for custom fields [jasonxp] #3313
 * Stripe Payment Intents: Support option fields `transfer_destination` and `transfer_amount` and remove `transfer_data` hash [britth] #3317
+* Barclaycard Smartpay: Add support for `shopperStatement` gateway-specific field [jasonxp] #3319
 
 == Version 1.97.0 (Aug 15, 2019)
 * CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296

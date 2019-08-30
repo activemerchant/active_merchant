@@ -37,6 +37,8 @@ module ActiveMerchant #:nodoc:
         post[:card] = credit_card_hash(creditcard)
         post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
         post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
+        post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
+
         add_3ds(post, options)
         commit('authorise', post)
       end
