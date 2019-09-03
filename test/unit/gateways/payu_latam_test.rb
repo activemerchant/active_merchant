@@ -12,6 +12,7 @@ class PayuLatamTest < Test::Unit::TestCase
     @pending_card = credit_card('4097440000000004', verification_value: '222', first_name: 'PENDING', last_name: '')
     @no_cvv_visa_card = credit_card('4097440000000004', verification_value: ' ')
     @no_cvv_amex_card = credit_card('4097440000000004', verification_value: ' ', brand: 'american_express')
+    @cabal_credit_card = credit_card('5896570000000004', :verification_value => '123', :first_name => 'APPROVED', :last_name => '', :brand => 'cabal')
 
     @options = {
       dni_number: '5415668464654',
@@ -57,6 +58,15 @@ class PayuLatamTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_purchase_with_cabal_card
+    @gateway.expects(:ssl_post).returns(successful_purchase_with_cabal_response)
+
+    response = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert response.test?
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -81,6 +91,15 @@ class PayuLatamTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/"language":"es"/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_authorize_with_cabal_card
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_cabal_response)
+
+    response = @gateway.authorize(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+    assert_match %r(^\d+\|(\w|-)+$), response.authorization
   end
 
   def test_failed_authorize
@@ -461,6 +480,37 @@ class PayuLatamTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_purchase_with_cabal_response
+    <<-RESPONSE
+    {
+    	"code":"SUCCESS",
+    	"error":null,
+    	"transactionResponse": {
+    	  "orderId":846449068,
+	  "transactionId":"34fa1616-f16c-4474-98dc-6163cb05f6d1",
+    	  "state":"APPROVED",
+	  "paymentNetworkResponseCode":null,
+	  "paymentNetworkResponseErrorMessage":null,
+	  "trazabilityCode":"00000000",
+	  "authorizationCode":"00000000",
+	  "pendingReason":null,
+	  "responseCode":"APPROVED",
+	  "errorCode":null,
+	  "responseMessage":null,
+	  "transactionDate":null,
+	  "transactionTime":null,
+	  "operationDate":1567524354749,
+	  "referenceQuestionnaire":null,
+	  "extraParameters": {
+	    "PAYMENT_WAY_ID":"28",
+	    "BANK_REFERENCED_CODE":"DEBIT"
+	    },
+	  "additionalInfo":null
+	}
+    }
+    RESPONSE
+  end
+
   def failed_purchase_response
     <<-RESPONSE
     {
@@ -511,6 +561,38 @@ class PayuLatamTest < Test::Unit::TestCase
           "extraParameters": null
        }
     }
+    RESPONSE
+  end
+
+  def successful_authorize_with_cabal_response
+    <<-RESPONSE
+    {
+    	"code":"SUCCESS",
+    	"error":null,
+    	"transactionResponse": {
+    	  "orderId":846449155,
+    	  "transactionId":"c15e6015-87c2-4db9-9100-894bf5564330",
+    	  "state":"APPROVED",
+	  "paymentNetworkResponseCode":null,
+	  "paymentNetworkResponseErrorMessage":null,
+	  "trazabilityCode":"00000000",
+	  "authorizationCode":"00000000",
+	  "pendingReason":null,
+	  "responseCode":"APPROVED",
+	  "errorCode":null,
+	  "responseMessage":null,
+	  "transactionDate":null,
+	  "transactionTime":null,
+	  "operationDate":1567524806987,
+	  "referenceQuestionnaire":null,
+	  "extraParameters": {
+	    "PAYMENT_WAY_ID":"28",
+	    "BANK_REFERENCED_CODE":"DEBIT"
+	  },
+	  "additionalInfo":null
+	}
+    }
+
     RESPONSE
   end
 

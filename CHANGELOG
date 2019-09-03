@@ -19,6 +19,7 @@
 * Global Collect: Add Cabal card [leila-alderman] #3310
 * WorldPay: Add Cabal card [leila-alderman] #3316
 * Decidir: Add Cabal card [leila-alderman] #3322
+* PayU Latam: Add Cabal card [leila-alderman] #3324
 
 == Version 1.97.0 (Aug 15, 2019)
 * CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296
