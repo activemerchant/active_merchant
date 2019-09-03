@@ -6,10 +6,12 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4263982640269299')
+    @cabal_credit_card = credit_card('6271701225979642')
     @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
     @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
     @three_ds_visa_card = credit_card('4000000000001091', month: 1)
     @three_ds_master_card = credit_card('5200000000001096', month: 1)
+    @invalid_cabal_card = credit_card('5896 5700 0000 0000', month: 1, year: 2023)
 
     @options = { billing_address: address }
     @options_3ds2 = @options.merge(
@@ -155,6 +157,13 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_failure response
     assert_match(/Authorization has failed for this transaction/, response.message)
     assert_equal '14002', response.error_code
+  end
+
+  def test_failed_purchase_with_invalid_cabal_card
+    response = @gateway.purchase(@amount, @invalid_cabal_card, @options)
+    assert_failure response
+    assert_match(/'Card Number' should be a valid Credit Card/, response.message)
+    assert_equal '10001', response.error_code
   end
 
   def test_cvv_result
