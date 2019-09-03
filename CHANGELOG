@@ -13,6 +13,7 @@
 * Stripe Payment Intents: Support option fields `transfer_destination` and `transfer_amount` and remove `transfer_data` hash [britth] #3317
 * Barclaycard Smartpay: Add support for `shopperStatement` gateway-specific field [jasonxp] #3319
 * Stripe Payment Intents: Add support for billing_details on payment methods [britth] #3320
+* BlueSnap: add standardized 3DS 2 auth fields [bayprogrammer] #3318
 
 == Version 1.97.0 (Aug 15, 2019)
 * CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296
