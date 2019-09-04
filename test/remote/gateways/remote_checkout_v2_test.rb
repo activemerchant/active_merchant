@@ -63,6 +63,13 @@ class RemoteCheckoutV2Test < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_purchase_with_moto_flag
+    response = @gateway.authorize(@amount, @credit_card, @options.merge(transaction_indicator: 3))
+
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_includes_avs_result
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

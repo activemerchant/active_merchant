@@ -5,6 +5,9 @@ module ActiveMerchant #:nodoc:
     # This gateway uses the current Stripe {Payment Intents API}[https://stripe.com/docs/api/payment_intents].
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
+
+      self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
+
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
       CREATE_INTENT_ATTRIBUTES = %i[description statement_descriptor receipt_email save_payment_method]
@@ -24,6 +27,7 @@ module ActiveMerchant #:nodoc:
         add_connected_account(post, options)
         add_shipping_address(post, options)
         setup_future_usage(post, options)
+        add_exemption(post, options)
 
         CREATE_INTENT_ATTRIBUTES.each do |attribute|
           add_whitelisted_attribute(post, options, attribute)
@@ -199,6 +203,13 @@ module ActiveMerchant #:nodoc:
 
         post[:payment_method_types] = Array(payment_method_types)
         post
+      end
+
+      def add_exemption(post, options = {})
+        return unless options[:confirm]
+        post[:payment_method_options] ||= {}
+        post[:payment_method_options][:card] ||= {}
+        post[:payment_method_options][:card][:moto] = true if options[:moto]
       end
 
       def setup_future_usage(post, options = {})

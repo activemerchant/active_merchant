@@ -8,6 +8,8 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     @three_ds_payment_method = 'pm_card_threeDSecure2Required'
     @visa_payment_method = 'pm_card_visa'
     @declined_payment_method = 'pm_card_chargeDeclined'
+    @three_ds_moto_enabled = 'pm_card_authenticationRequiredOnSetup'
+    @three_ds_authentication_required = 'pm_card_authenticationRequired'
     @three_ds_credit_card = credit_card('4000000000003220',
       verification_value: '737',
       month: 10,
@@ -380,6 +382,40 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
 
     assert unstore = @gateway.unstore(store.authorization)
     assert_nil unstore.params['customer']
+  end
+
+  def test_moto_enabled_card_requires_action_when_not_marked
+    options = {
+      currency: 'GBP',
+      confirm: true,
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_moto_enabled, options)
+
+    assert_equal 'requires_action', purchase.params['status']
+  end
+
+  def test_moto_enabled_card_succeeds_when_marked
+    options = {
+      currency: 'GBP',
+      confirm: true,
+      moto: true,
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_moto_enabled, options)
+
+    assert_equal 'succeeded', purchase.params['status']
+    assert purchase.params.dig('charges', 'data')[0]['captured']
+  end
+
+  def test_certain_cards_require_action_even_when_marked_as_moto
+    options = {
+      currency: 'GBP',
+      confirm: true,
+      moto: true,
+    }
+    assert purchase = @gateway.purchase(@amount, @three_ds_authentication_required, options)
+
+    assert_failure purchase
+    assert_equal 'Your card was declined. This transaction requires authentication.', purchase.message
   end
 
   def test_transcript_scrubbing
