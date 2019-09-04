@@ -643,7 +643,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card('41111111111111111111'), :customer => {:first_name => 'Longbob', :last_name => 'Longsen'})
   end
 
-  def test_three_d_secure_pass_thru_handling
+  def test_three_d_secure_pass_thru_handling_version_1
     Braintree::TransactionGateway.
       any_instance.
       expects(:sale).
@@ -655,6 +655,39 @@ class BraintreeBlueTest < Test::Unit::TestCase
       returns(braintree_result)
 
     @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {cavv: 'cavv', eci: 'eci', xid: 'xid'})
+  end
+
+  def test_three_d_secure_pass_thru_handling_version_2
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(has_entries(three_d_secure_pass_thru: has_entries(
+        three_d_secure_version: '2.0',
+        cavv: 'cavv',
+        eci_flag: 'eci',
+        ds_transaction_id: 'trans_id',
+        cavv_algorithm: 'algorithm',
+        directory_response: 'directory',
+        authentication_response: 'auth'
+      ))).
+      returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {version: '2.0', cavv: 'cavv', eci: 'eci', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth'})
+  end
+
+  def test_three_d_secure_pass_thru_some_fields
+    Braintree::TransactionGateway.
+      any_instance.
+      expects(:sale).
+      with(has_entries(three_d_secure_pass_thru: has_entries(
+        three_d_secure_version: '2.0',
+        cavv: 'cavv',
+        eci_flag: 'eci',
+        ds_transaction_id: 'trans_id'
+      ))).
+      returns(braintree_result)
+
+    @gateway.purchase(100, credit_card('41111111111111111111'), three_d_secure: {version: '2.0', cavv: 'cavv', eci: 'eci', ds_transaction_id: 'trans_id'})
   end
 
   def test_passes_recurring_flag

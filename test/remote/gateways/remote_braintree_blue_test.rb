@@ -538,8 +538,16 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_three_d_secure_pass_thru
-    three_d_secure_params = { eci: '05', cavv: 'cavv', xid: 'xid' }
-    assert response = @gateway.purchase(@amount, @credit_card,
+    three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' }
+    response = @gateway.purchase(@amount, @credit_card,
+      three_d_secure: three_d_secure_params
+    )
+    assert_success response
+  end
+
+  def test_successful_purchase_with_some_three_d_secure_pass_thru_fields
+    three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id' }
+    response = @gateway.purchase(@amount, @credit_card,
       three_d_secure: three_d_secure_params
     )
     assert_success response
@@ -937,5 +945,4 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal expected_avs_code, response.avs_result['code']
   end
-
 end
