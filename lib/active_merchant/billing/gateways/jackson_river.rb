@@ -65,10 +65,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
-        post[:payment_method] = 'credit'
-        post[:card_number] = payment.number
-        post[:card_expiration_month] = payment.month
-        post[:card_expiration_year]  = format(payment.year, :four_digits)
+        if payment.respond_to?(:routing_number)
+          post[:payment_method] = 'bank account'
+          post[:accType] = payment.account_type
+          post[:routingNum] = payment.routing_number
+          post[:accNum] = payment.account_number
+        else
+          post[:payment_method] = 'credit'
+          post[:card_number] = payment.number
+          post[:card_expiration_month] = payment.month
+          post[:card_expiration_year] = format(payment.year, :four_digits)
+        end
       end
 
       def add_metadata(post, options = {})
