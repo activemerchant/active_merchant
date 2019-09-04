@@ -207,6 +207,7 @@ module ActiveMerchant #:nodoc:
               if options[:instalments]
                 add_instalments_data(xml, options)
               end
+              add_moto_flag(xml, options) if options.dig(:metadata, :manual_entry)
             end
           end
         end
@@ -421,6 +422,10 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'instalments', options[:instalments]
           xml.tag! 'cpf', options[:cpf] if options[:cpf]
         end
+      end
+
+      def add_moto_flag(xml, options)
+        xml.tag! 'dynamicInteractionType', 'type' => 'MOTO'
       end
 
       def address_with_defaults(address)
