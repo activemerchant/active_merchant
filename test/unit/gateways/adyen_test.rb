@@ -130,6 +130,64 @@ class AdyenTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+  def test_adds_3ds1_standalone_fields
+    eci = '05'
+    cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+    cavv_algorithm = '1'
+    xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
+    options_with_3ds1_standalone = @options.merge(
+      three_d_secure: {
+        eci: eci,
+        cavv: cavv,
+        cavv_algorithm: cavv_algorithm,
+        xid: xid,
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
+      }
+    )
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options_with_3ds1_standalone)
+    end.check_request do |endpoint, data, headers|
+      assert_equal eci, JSON.parse(data)['mpiData']['eci']
+      assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
+      assert_equal cavv_algorithm, JSON.parse(data)['mpiData']['cavvAlgorithm']
+      assert_equal xid, JSON.parse(data)['mpiData']['xid']
+      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_adds_3ds2_standalone_fields
+    version = '2.1.0'
+    eci = '02'
+    cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
+    options_with_3ds2_standalone = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
+      }
+    )
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options_with_3ds2_standalone)
+    end.check_request do |endpoint, data, headers|
+      assert_equal version, JSON.parse(data)['mpiData']['threeDSVersion']
+      assert_equal eci, JSON.parse(data)['mpiData']['eci']
+      assert_equal cavv, JSON.parse(data)['mpiData']['cavv']
+      assert_equal ds_transaction_id, JSON.parse(data)['mpiData']['dsTransID']
+      assert_equal directory_response_status, JSON.parse(data)['mpiData']['directoryResponse']
+      assert_equal authentication_response_status, JSON.parse(data)['mpiData']['authenticationResponse']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 

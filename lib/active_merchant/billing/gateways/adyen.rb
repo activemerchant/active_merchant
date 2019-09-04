@@ -56,6 +56,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_installments(post, options) if options[:installments]
         add_3ds(post, options)
+        add_3ds_authenticated_data(post, options)
         commit('authorise', post, options)
       end
 
@@ -340,6 +341,44 @@ module ActiveMerchant #:nodoc:
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
           post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
         end
+      end
+
+      def add_3ds_authenticated_data(post, options)
+        if options[:three_d_secure] && options[:three_d_secure][:eci] && options[:three_d_secure][:xid]
+          add_3ds1_authenticated_data(post, options)
+        elsif options[:three_d_secure]
+          add_3ds2_authenticated_data(post, options)
+        end
+      end
+
+      def add_3ds1_authenticated_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+        post[:mpiData] = {
+          cavv: three_d_secure_options[:cavv],
+          cavvAlgorithm: three_d_secure_options[:cavv_algorithm],
+          eci: three_d_secure_options[:eci],
+          xid: three_d_secure_options[:xid],
+          directoryResponse: three_d_secure_options[:directory_response_status],
+          authenticationResponse: three_d_secure_options[:authentication_response_status]
+        }
+      end
+
+      def add_3ds2_authenticated_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+        # If the transaction was authenticated in a frictionless flow, send the transStatus from the ARes.
+        if(three_d_secure_options[:authentication_response_status].nil?)
+          authentication_response = three_d_secure_options[:directory_response_status]
+        else
+          authentication_response = three_d_secure_options[:authentication_response_status]
+        end
+        post[:mpiData] = {
+          threeDSVersion: three_d_secure_options[:version],
+          eci: three_d_secure_options[:eci],
+          cavv: three_d_secure_options[:cavv],
+          dsTransID: three_d_secure_options[:ds_transaction_id],
+          directoryResponse: three_d_secure_options[:directory_response_status],
+          authenticationResponse: authentication_response
+        }
       end
 
       def parse(body)
