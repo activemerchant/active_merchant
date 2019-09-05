@@ -84,6 +84,12 @@ class AdyenTest < Test::Unit::TestCase
         }
       }
     }
+
+    @moto_options = @options.merge({
+      metadata: {
+        manual_entry: true,
+      }
+    })
   end
 
   # Subdomains are only valid for production gateways, so the test_url check must be manually bypassed for this test to pass.
@@ -128,6 +134,26 @@ class AdyenTest < Test::Unit::TestCase
     refute response.params['issuerUrl'].blank?
     refute response.params['md'].blank?
     refute response.params['paRequest'].blank?
+  end
+
+  def test_successful_authorize_with_moto
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @moto_options)
+    assert_success response
+
+    assert_equal '#7914775043909934#', response.authorization
+    assert_equal 'R', response.avs_result['code']
+    assert_equal 'M', response.cvv_result['code']
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_moto_verify_parameter
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @moto_options)
+    end. check_request do |endpoit, data, headers|
+      assert_equal 'Moto', JSON.parse(data)['shopperInteraction']
+    end.respond_with(successful_authorize_response)
   end
 
   def test_adds_3ds1_standalone_fields

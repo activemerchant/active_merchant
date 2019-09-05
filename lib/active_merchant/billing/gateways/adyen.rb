@@ -205,7 +205,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shopper_interaction(post, payment, options={})
-        if options.dig(:stored_credential, :initial_transaction) || (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
+        if options.dig(:metadata, :manual_entry)
+          shopper_interaction = 'Moto'
+        elsif options.dig(:stored_credential, :initial_transaction) || (payment.respond_to?(:verification_value) && payment.verification_value) || payment.is_a?(NetworkTokenizationCreditCard)
           shopper_interaction = 'Ecommerce'
         else
           shopper_interaction = 'ContAuth'
