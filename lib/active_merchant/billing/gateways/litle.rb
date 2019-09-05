@@ -261,14 +261,14 @@ module ActiveMerchant #:nodoc:
         doc.applepay do
           doc.data payment_method.payment_data['data']
           doc.header do
-            %i[applicationData
+            %w[applicationData
                ephemeralPublicKey
                publicKeyHash
                transactionId].each do |key|
               doc.send(key, payment_method.payment_data.dig('header', key))
             end
           end
-          %i[signature version].each do |key|
+          %w[signature version].each do |key|
             doc.send(key, payment_method.payment_data[key])
           end
         end

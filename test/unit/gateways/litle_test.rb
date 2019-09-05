@@ -69,6 +69,34 @@ class LitleTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_apple_pay_request
+    apple_pay = ActiveMerchant::Billing::ApplePayPaymentToken.new(
+      'header' => {
+        'applicationData' => 'applicationData',
+        'ephemeralPublicKey' => 'ephemeralPublicKey',
+        'publicKeyHash' => 'publicKeyHash',
+        'transactionId' => 'transactionId',
+      },
+      'signature' => 'signature',
+      'version' => 'version'
+    )
+    response = stub_comms do
+      @gateway.purchase(@amount, apple_pay)
+    end.check_request do |endpoint, data, headers|
+      Nokogiri::XML(data).tap do |doc|
+        doc.remove_namespaces!
+        assert_equal "applicationData", doc.at_xpath("//applicationData").content
+        assert_equal "ephemeralPublicKey", doc.at_xpath("//ephemeralPublicKey").content
+        assert_equal "publicKeyHash", doc.at_xpath("//publicKeyHash").content
+        assert_equal "transactionId", doc.at_xpath("//transactionId").content
+        assert_equal "signature", doc.at_xpath("//signature").content
+        assert_equal "version", doc.at_xpath("//version").content
+      end
+    end.respond_with(successful_purchase_with_apple_pay_response)
+
+    assert_success response
+  end
+
   def test_successful_purchase_with_echeck
     response = stub_comms do
       @gateway.purchase(2004, @check)
