@@ -52,6 +52,16 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_unsuccessful_error_new_customer_with_apple_pay_payment_token
+    @gateway.expects(:tokenize_apple_pay_token).returns(Response.new(false, 'cannot tokenize', token: nil))
+
+    assert response = @gateway.store(@apple_pay_payment_token, @options)
+    assert_instance_of Response, response
+    assert_failure response
+
+    assert_equal 'cannot tokenize', response.message
+  end
+
   def test_successful_new_customer_with_emv_credit_card
     @gateway.expects(:ssl_request).returns(successful_new_customer_response)
 
