@@ -638,6 +638,16 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
+  def test_three_d_secure_info_with_valid_nonce
+    assert response = @gateway.three_d_secure_info("fake-three-d-secure-visa-full-authentication-nonce")
+    assert_equal Braintree::ThreeDSecureInfo, response.class
+  end
+
+  def test_three_d_secure_info_with_invalid_nonce
+    assert response = @gateway.three_d_secure_info("invalid-nonce")
+    assert_equal Braintree::NotFoundError, response.class
+  end
+
   private
   def assert_avs(address1, zip, expected_avs_code)
     response = @gateway.purchase(@amount, @credit_card, billing_address: {address1: address1, zip: zip})
