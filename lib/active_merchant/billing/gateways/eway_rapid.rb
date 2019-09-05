@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
       def add_metadata(params, options)
         params['RedirectUrl'] = options[:redirect_url] || 'http://example.com'
         params['CustomerIP'] = options[:ip] if options[:ip]
-        params['TransactionType'] = options[:transaction_type] || 'Purchase'
+        params['TransactionType'] = transaction_type(options)
         params['DeviceID'] = options[:application_id] || application_id
         if partner = options[:partner_id] || partner_id
           params['PartnerID'] = truncate(partner, 50)
@@ -376,6 +376,13 @@ module ActiveMerchant #:nodoc:
         else
           'P'
         end
+      end
+
+      def transaction_type(options)
+        moto = if options.dig(:metadata, :manual_entry)
+                 'MOTO'
+               end
+        options[:transaction_type] || moto || 'Purchase'
       end
 
       MESSAGES = {
