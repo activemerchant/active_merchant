@@ -190,7 +190,8 @@ module ActiveMerchant #:nodoc:
 
         if payment.is_a?(ApplePayPaymentToken)
           token_exchange_response = tokenize_apple_pay_token(payment)
-          params = { card: token_exchange_response.params["token"]["id"] } if token_exchange_response.success?
+          return token_exchange_response unless token_exchange_response.success?
+          params = { card: token_exchange_response.params["token"]["id"] }
         elsif payment.is_a?(StripePaymentToken)
           add_payment_token(params, payment, options)
         elsif payment.is_a?(Check)
