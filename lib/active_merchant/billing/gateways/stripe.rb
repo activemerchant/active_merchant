@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if options[:three_d_secure]
-          payment_method = card_payment_method_for_customer(options[:customer])
+          payment_method = default_source_for_customer_if_card(options[:customer])
 
           if payment_method
             post[:confirmation_method] = "manual"
@@ -330,9 +330,9 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def card_payment_method_for_customer(customer)
-        r = commit(:get, "payment_methods?customer=#{customer}&type=card", nil, options)
-        r.params["data"].present? ? r.params["data"][0]["id"] : nil
+      def default_source_for_customer_if_card(customer)
+        r = commit(:get, "customers/#{customer}", nil, options)
+        r.params["default_source"].start_with?("card_") ? r.params["default_source"] : nil
       end
 
       def add_amount(post, money, options, include_currency = false)
