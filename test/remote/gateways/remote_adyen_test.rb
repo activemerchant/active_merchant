@@ -104,6 +104,17 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal 'Authorised', response.message
   end
 
+  def test_successful_authorize_moto
+    options = @options.merge({
+      metadata: {
+        manual_entry: true,
+      }
+    })
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'Authorised', response.message
+  end
+
   def test_successful_authorize_avs
     # Account configuration may need to be done: https://docs.adyen.com/developers/api-reference/payments-api#paymentresultadditionaldata
     options = @options.update({
