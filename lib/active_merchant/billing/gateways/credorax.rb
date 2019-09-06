@@ -270,6 +270,30 @@ module ActiveMerchant #:nodoc:
       def add_3d_secure(post, options)
         if options[:eci] && options[:xid]
           add_3d_secure_1_data(post, options)
+        elsif options[:execute_threed] && options[:three_ds_2]
+          three_ds_2_options = options[:three_ds_2]
+          browser_info = three_ds_2_options[:browser_info]
+          post[:'3ds_initiate'] = options[:three_ds_initiate] || '01'
+          post[:'3ds_purchasedate'] = Time.now.utc.strftime('%Y%m%d%I%M%S')
+          post[:'3ds_channel'] = '02'
+          post[:'3ds_redirect_url'] = three_ds_2_options[:notification_url]
+          post[:'3ds_challengewindowsize'] = options[:three_ds_challenge_window_size] || '03'
+          post[:d5] = browser_info[:user_agent]
+          post[:'3ds_browsertz'] = browser_info[:timezone]
+          post[:'3ds_browserscreenwidth'] = browser_info[:width]
+          post[:'3ds_browserscreenheight'] = browser_info[:height]
+          post[:'3ds_browsercolordepth'] = browser_info[:depth]
+          post[:d6] = browser_info[:language]
+          post[:'3ds_browserjavaenabled'] = browser_info[:java]
+          post[:'3ds_browseracceptheader'] = browser_info[:accept_header]
+          if (shipping_address = options[:shipping_address])
+            post[:'3ds_shipaddrstate'] = shipping_address[:state]
+            post[:'3ds_shipaddrpostcode'] = shipping_address[:zip]
+            post[:'3ds_shipaddrline2'] = shipping_address[:address2]
+            post[:'3ds_shipaddrline1'] = shipping_address[:address1]
+            post[:'3ds_shipaddrcountry'] = shipping_address[:country]
+            post[:'3ds_shipaddrcity'] = shipping_address[:city]
+          end
         elsif options[:three_d_secure]
           add_normalized_3d_secure_2_data(post, options)
         end
@@ -277,6 +301,7 @@ module ActiveMerchant #:nodoc:
 
       def add_3d_secure_1_data(post, options)
         post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
+        post[:r1] = 'CREDORAX'
       end
 
       def add_normalized_3d_secure_2_data(post, options)
@@ -288,6 +313,7 @@ module ActiveMerchant #:nodoc:
         )
         post[:'3ds_version'] = three_d_secure_options[:version]
         post[:'3ds_dstrxid'] = three_d_secure_options[:ds_transaction_id]
+        post[:r1] = 'CREDORAX'
       end
 
       def build_i8(eci, cavv=nil, xid=nil)
@@ -317,7 +343,8 @@ module ActiveMerchant #:nodoc:
         credit: '6',
         purchase_void: '7',
         refund_void: '8',
-        capture_void: '9'
+        capture_void: '9',
+        threeds_completion: '92'
       }
 
       def commit(action, params, reference_action = nil)

@@ -10,6 +10,7 @@
 * MercadoPago: Add remote and unit tests for Naranja card [hdeters] #3345
 * CyberSource: Pass commerce indicator if present [curiousepic] #3350
 * Worldpay: Add 3DS2 Support [nfarve] #3344
+* Credorax: Add 3DS 2.0 [nfarve] #3342
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290

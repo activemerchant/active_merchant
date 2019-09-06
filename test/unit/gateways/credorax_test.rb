@@ -12,6 +12,33 @@ class CredoraxTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      shipping_address: address(),
+      order_id: '123',
+      execute_threed: true,
+      three_ds_challenge_window_size: '01',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'browser',
+        notification_url: 'www.example.com',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 100,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      }
+    }
   end
 
   def test_successful_purchase
@@ -172,6 +199,37 @@ class CredoraxTest < Test::Unit::TestCase
 
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
+  def test_adds_3d2_secure_fields
+    options_with_3ds = @normalized_3ds_2_options
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/3ds_channel=02/, data)
+      assert_match(/3ds_redirect_url=www.example.com/, data)
+      assert_match(/3ds_challengewindowsize=01/, data)
+      assert_match(/d5=unknown/, data)
+      assert_match(/3ds_browsertz=-120/, data)
+      assert_match(/3ds_browserscreenwidth=500/, data)
+      assert_match(/3ds_browserscreenheight=1000/, data)
+      assert_match(/3ds_browsercolordepth=100/, data)
+      assert_match(/d6=US/, data)
+      assert_match(/3ds_browserjavaenabled=false/, data)
+      assert_match(/3ds_browseracceptheader=unknown/, data)
+      assert_match(/3ds_shipaddrstate=ON/, data)
+      assert_match(/3ds_shipaddrpostcode=K1C2N6/, data)
+      assert_match(/3ds_shipaddrline2=Apt\+1/, data)
+      assert_match(/3ds_shipaddrline1=456\+My\+Street/, data)
+      assert_match(/3ds_shipaddrcountry=CA/, data)
+      assert_match(/3ds_shipaddrcity=Ottawa/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
   end
 
   def test_adds_3d_secure_fields

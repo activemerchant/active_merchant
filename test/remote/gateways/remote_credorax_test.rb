@@ -8,11 +8,38 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     @credit_card = credit_card('4176661000001015', verification_value: '281', month: '12', year: '2022')
     @fully_auth_card = credit_card('5223450000000007', brand: 'mastercard', verification_value: '090', month: '12', year: '2025')
     @declined_card = credit_card('4176661000001111', verification_value: '681', month: '12', year: '2022')
+    @three_ds_card = credit_card('5185520050000010', verification_value: '737', month: '12', year: '2022')
     @options = {
       order_id: '1',
       currency: 'EUR',
       billing_address: address,
       description: 'Store Purchase'
+    }
+    @normalized_3ds_2_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      shipping_address: address(),
+      order_id: '123',
+      execute_threed: true,
+      three_ds_challenge_window_size: '01',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'browser',
+        notification_url: 'www.example.com',
+        browser_info: {
+          accept_header: 'unknown',
+          depth: 24,
+          java: false,
+          language: 'US',
+          height: 1000,
+          width: 500,
+          timezone: '-120',
+          user_agent: 'unknown'
+        }
+      }
     }
   end
 
@@ -47,6 +74,12 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_success response
     assert_equal '1', response.params['H9']
     assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_purchase_with_3ds2_fields
+    options = @options.merge(@normalized_3ds_2_options)
+    response = @gateway.purchase(@amount, @three_ds_card, options)
+    assert_equal 'Transaction pending cardholder authentication.', response.message
   end
 
   def test_successful_purchase_with_auth_data_via_normalized_3ds2_options
@@ -91,7 +124,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_failed_purchase_invalid_auth_data_via_normalized_3ds2_options
     version = '2.0'
     eci = '02'
-    cavv = 'BOGUS'
+    cavv = 'BOGUS;:'
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     options = @options.merge(
       three_d_secure: {
