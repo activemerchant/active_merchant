@@ -43,7 +43,7 @@ module ActiveMerchant
       @read_timeout = READ_TIMEOUT
       @retry_safe   = RETRY_SAFE
       @verify_peer  = VERIFY_PEER
-      @ca_file      = CA_FILE
+      @ca_file      = nil
       @ca_path      = CA_PATH
       @max_retries  = MAX_RETRIES
       @ignore_http_status = false

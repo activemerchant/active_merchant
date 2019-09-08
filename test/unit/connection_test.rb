@@ -125,8 +125,7 @@ class ConnectionTest < Test::Unit::TestCase
   end
 
   def test_default_ca_file
-    assert_equal ActiveMerchant::Connection::CA_FILE, @connection.ca_file
-    assert_equal ActiveMerchant::Connection::CA_FILE, @connection.send(:http).ca_file
+    assert_equal nil, @connection.ca_file
   end
 
   def test_override_ca_file
