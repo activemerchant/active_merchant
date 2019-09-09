@@ -64,8 +64,8 @@ module ActiveMerchant #:nodoc:
         super
       end
       
-      def add_3dsecure(post, three_d_secure)
-        if three_d_secure.eci == '02' || three_d_secure.eci == '05'
+      def add_3dsecure(post, options)
+        if options[:eci] == '02' || options[:eci] == '05'
             post[:3DSTATUS]  = 'Y'
             post[:3DENROLLED]  = 'Y'
             post[:3DSIGNVAL] = 'Y'
@@ -76,17 +76,17 @@ module ActiveMerchant #:nodoc:
             post[:3DSIGNVAL] = 'N'
             post[:3DERROR] = '10000'
         end
-        post[:3DECI]  = three_d_secure.eci
-        post[:3DXID] = three_d_secure.xid
-        post[:3DCAVV] = three_d_secure.cavv
-        post[:3DCAVVALGO] = '0000000001'
+        post[:3DECI]  = options[:eci]
+        post[:3DXID] = options[:xid]
+        post[:3DCAVV] = options[:cavv]
+        post[:3DCAVVALGO] = options[:ccavv_algorithm]
       end
       
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
-        add_3dsecure(post, three_d_secure)
+        add_3dsecure(post, options)
         add_amount(post, money, options)
 
         commit('authorization', money, post)
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)
-        add_3dsecure(post, three_d_secure)
+        add_3dsecure(post, options)
         add_amount(post, money, options)
 
         commit('purchase', money, post)
