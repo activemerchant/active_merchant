@@ -229,17 +229,17 @@ module ActiveMerchant #:nodoc:
         return unless post[:card]&.kind_of?(Hash)
         if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:billingAddress] = {}
-          post[:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
+          post[:billingAddress][:street] = address[:address1] || 'NA'
+          post[:billingAddress][:houseNumberOrName] = address[:address2] || 'NA'
           post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
-          post[:billingAddress][:city] = address[:city] || 'N/A'
+          post[:billingAddress][:city] = address[:city] || 'NA'
           post[:billingAddress][:stateOrProvince] = get_state(address)
           post[:billingAddress][:country] = address[:country] if address[:country]
         end
       end
 
       def get_state(address)
-        address[:state] && !address[:state].blank? ? address[:state] : 'N/A'
+        address[:state] && !address[:state].blank? ? address[:state] : 'NA'
       end
 
       def add_invoice(post, money, options)

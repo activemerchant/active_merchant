@@ -2,6 +2,7 @@
 
 == HEAD
 * Adyen: Add functionality to set 3DS exemptions via API [britth] #3331
+* Adyen: Send "NA" instead of "N/A" [leila-alderman] #3339
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290
