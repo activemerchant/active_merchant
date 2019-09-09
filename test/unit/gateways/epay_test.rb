@@ -10,6 +10,7 @@ class EpayTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @options = {three_d_secure: { eci: '7', xid: '123', cavv: '456', version: '2', ds_transaction_id: '798' }}
   end
 
   def test_successful_purchase
@@ -27,6 +28,22 @@ class EpayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The payment was declined. Try again in a moment or try with another credit card.',
       response.message
+  end
+
+  def test_successful_3ds_purchase
+    @gateway.expects(:raw_ssl_request).returns(valid_authorize_3ds_response)
+
+    assert response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+    assert_equal '123', response.authorization
+  end
+
+  def test_failed_3ds_purchase
+    @gateway.expects(:raw_ssl_request).returns(invalid_authorize_3ds_response)
+
+    assert response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+    assert_equal '123', response.authorization
   end
 
   def test_invalid_characters_in_response
@@ -130,6 +147,14 @@ class EpayTest < Test::Unit::TestCase
 
   def invalid_authorize_response_with_invalid_characters
     { 'Location' => 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?decline=1&error=209&errortext=The payment was declined of unknown reasons. For more information contact the bank. E.g. try with another credit card.<br />Denied - Call your bank for information' }
+  end
+
+  def valid_authorize_3ds_response
+    { 'Location' => 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?accept=1&tid=123&&amount=100&cur=208&date=20101117&time=2357&cardnopostfix=3000&fraud=1&cardid=18&transfee=0&eci=7&xci=123&cavv=456&threeds_version=2&ds_transaction_id=798' }
+  end
+
+  def invalid_authorize_3ds_response
+    { 'Location' => 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?accept=1&tid=123&&amount=100&cur=208&date=20101117&time=2357&cardnopostfix=3000&fraud=1&cardid=18&transfee=0&eci=5&xci=1234&cavv=3456&threeds_version=1&ds_transaction_id=6798' }
   end
 
   def valid_capture_response
