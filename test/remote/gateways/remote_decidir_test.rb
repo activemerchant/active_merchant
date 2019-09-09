@@ -7,6 +7,8 @@ class RemoteDecidirTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4507990000004905')
+    @cabal_credit_card = credit_card('5896570000000008')
+    @naranja_credit_card = credit_card('5895627823453005')
     @declined_card = credit_card('4000300011112220')
     @options = {
       order_id: SecureRandom.uuid,
@@ -17,6 +19,20 @@ class RemoteDecidirTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway_for_purchase.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_cabal
+    response = @gateway_for_purchase.purchase(@amount, @cabal_credit_card, @options)
+    assert_success response
+    assert_equal 'approved', response.message
+    assert response.authorization
+  end
+
+  def test_successful_purchase_with_naranja
+    response = @gateway_for_purchase.purchase(@amount, @naranja_credit_card, @options)
     assert_success response
     assert_equal 'approved', response.message
     assert response.authorization

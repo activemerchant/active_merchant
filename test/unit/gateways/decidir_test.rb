@@ -240,6 +240,26 @@ class DecidirTest < Test::Unit::TestCase
     assert_equal @gateway_for_purchase.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_payment_method_id_with_visa
+    post = {}
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, @credit_card, @options)
+    assert_equal 1, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_cabal
+    post = {}
+    credit_card = credit_card('5896570000000008')
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card, @options)
+    assert_equal 63, post[:payment_method_id]
+  end
+
+  def test_payment_method_id_with_naranja
+    post = {}
+    credit_card = credit_card('5895627823453005')
+    @gateway_for_purchase.send(:add_auth_purchase_params, post, @amount, credit_card, @options)
+    assert_equal 24, post[:payment_method_id]
+  end
+
   private
 
   def pre_scrubbed

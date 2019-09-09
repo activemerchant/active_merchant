@@ -23,6 +23,7 @@
 * Credorax: Enable selecting a processor [leila-alderman] #3302
 * WorldPay: Revert "Worldpay: Switch to Nokogiri" [dtykocki] #3372
 * Adyen: Add Cabal card [leila-alderman] #3361
+* Decidir: Add remote tests for Cabal and Naranja [leila-alderman] #3337
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290
