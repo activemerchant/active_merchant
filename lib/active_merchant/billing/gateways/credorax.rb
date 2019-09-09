@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         add_3d_secure(post, options)
         add_echo(post, options)
         add_submerchant_id(post, options)
-        add_transaction_type(post, options)
+        add_stored_credential(post, options)
         add_processor(post, options)
 
         commit(:purchase, post)
@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
         add_3d_secure(post, options)
         add_echo(post, options)
         add_submerchant_id(post, options)
-        add_transaction_type(post, options)
+        add_stored_credential(post, options)
         add_processor(post, options)
 
         commit(:authorize, post)
@@ -249,6 +249,22 @@ module ActiveMerchant #:nodoc:
         post[:b3] = format(payment_method.month, :two_digits)
       end
 
+      def add_stored_credential(post, options)
+        add_transaction_type(post, options)
+        # if :transaction_type option is not passed, then check for :stored_credential options
+        return unless (stored_credential = options[:stored_credential]) && options.dig(:transaction_type).nil?
+        if stored_credential[:initiator] == 'merchant'
+          case stored_credential[:reason_type]
+          when 'recurring'
+            stored_credential[:initial_transaction] ? post[:a9] = '1' : post[:a9] = '2'
+          when 'installment', 'unscheduled'
+            post[:a9] = '8'
+          end
+        else
+          post[:a9] = '9'
+        end
+      end
+
       def add_customer_data(post, options)
         post[:d1] = options[:ip] || '127.0.0.1'
         if (billing_address = options[:billing_address])
@@ -281,7 +297,7 @@ module ActiveMerchant #:nodoc:
           browser_info = three_ds_2_options[:browser_info]
           post[:'3ds_initiate'] = options[:three_ds_initiate] || '01'
           post[:'3ds_purchasedate'] = Time.now.utc.strftime('%Y%m%d%I%M%S')
-          post[:'3ds_channel'] = '02'
+          options.dig(:stored_credential, :initiator) == 'merchant' ? post[:'3ds_channel'] = '03' : post[:'3ds_channel'] = '02'
           post[:'3ds_redirect_url'] = three_ds_2_options[:notification_url]
           post[:'3ds_challengewindowsize'] = options[:three_ds_challenge_window_size] || '03'
           post[:'3ds_version'] = options[:three_ds_version] if options[:three_ds_version]

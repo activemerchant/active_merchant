@@ -248,6 +248,22 @@ class CredoraxTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_3ds_channel_field_set_by_stored_credential_initiator
+    options_with_3ds = @normalized_3ds_2_options.merge(stored_credential_options(:merchant, :unscheduled, id: 'abc123'))
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_3ds)
+    end.check_request do |endpoint, data, headers|
+      p data
+      assert_match(/3ds_channel=03/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+
+    assert_equal '8a82944a5351570601535955efeb513c;006596;02617cf5f02ccaed239b6521748298c5;purchase', response.authorization
+    assert response.test?
+  end
+
   def test_authorize_adds_3d_secure_fields
     options_with_3ds = @options.merge({eci: 'sample-eci', cavv: 'sample-cavv', xid: 'sample-xid'})
 
@@ -564,7 +580,171 @@ class CredoraxTest < Test::Unit::TestCase
     end.respond_with(successful_credit_response)
   end
 
+  def test_stored_credential_recurring_cit_initial
+    options = stored_credential_options(:cardholder, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=9/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_cit_used
+    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=9/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_initial
+    options = stored_credential_options(:merchant, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=1/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_used
+    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=2/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_cit_initial
+    options = stored_credential_options(:cardholder, :installment, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=9/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_cit_used
+    options = stored_credential_options(:cardholder, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=9/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_mit_initial
+    options = stored_credential_options(:merchant, :installment, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=8/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_mit_used
+    options = stored_credential_options(:merchant, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=8/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_initial
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=9/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_used
+    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=9/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_initial
+    options = stored_credential_options(:merchant, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=8/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_used
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=8/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_purchase_with_stored_credential
+    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=2/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
+  def test_add_transaction_type_overrides_stored_credential_option
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123').merge(transaction_type: '6')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/a9=6/, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   private
+
+  def stored_credential_options(*args, id: nil)
+    {
+      order_id: '#1001',
+      description: 'AM test',
+      currency: 'GBP',
+      customer: '123',
+      stored_credential: stored_credential(*args, id: id)
+    }
+  end
 
   def successful_purchase_response
     'M=SPREE978&O=1&T=03%2F09%2F2016+03%3A05%3A16&V=413&a1=02617cf5f02ccaed239b6521748298c5&a2=2&a4=100&a9=6&z1=8a82944a5351570601535955efeb513c&z13=606944188282&z14=U&z15=100&z2=0&z3=Transaction+has+been+executed+successfully.&z4=006596&z5=0&z6=00&z9=X&K=057e123af2fba5a37b4df76a7cb5cfb6'
