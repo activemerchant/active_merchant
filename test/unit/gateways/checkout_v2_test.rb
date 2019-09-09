@@ -117,6 +117,19 @@ class CheckoutV2Test < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_moto_transaction_is_properly_set
+    response = stub_comms do
+      options = {
+        metadata: { manual_entry: true}
+      }
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"payment_type":"MOTO"}, data)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+  end
+
   def test_3ds_passed
     response = stub_comms do
       options = {
