@@ -277,6 +277,60 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      refute JSON.parse(data)['additionalData']['scaExemption']
+      assert_false JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_if_execute_threed_missing_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({scaExemption: 'lowValue'}))
+    end.check_request do |endpoint, data, headers|
+      refute JSON.parse(data)['additionalData']['scaExemption']
+      refute JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_false_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({sca_exemption: 'lowValue', execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'lowValue', JSON.parse(data)['additionalData']['scaExemption']
+      assert_false JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_and_execute_threed_true_sent_3ds2
+    stub_comms do
+      @gateway.authorize(@amount, '123', @normalized_3ds_2_options.merge({sca_exemption: 'lowValue', execute_threed: true}))
+    end.check_request do |endpoint, data, headers|
+      assert_equal 'lowValue', JSON.parse(data)['additionalData']['scaExemption']
+      assert JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_true_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, '123', @options.merge({sca_exemption: 'lowValue', execute_threed: true}))
+    end.check_request do |endpoint, data, headers|
+      refute JSON.parse(data)['additionalData']['scaExemption']
+      assert JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_sca_exemption_not_sent_when_execute_threed_false_3ds1
+    stub_comms do
+      @gateway.authorize(@amount, '123', @options.merge({sca_exemption: 'lowValue', execute_threed: false}))
+    end.check_request do |endpoint, data, headers|
+      refute JSON.parse(data)['additionalData']['scaExemption']
+      refute JSON.parse(data)['additionalData']['executeThreeD']
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_update_shopper_statement_and_industry_usage_sent
     stub_comms do
       @gateway.adjust(@amount, '123', @options.merge({update_shopper_statement: 'statement note', industry_usage: 'DelayedCharge'}))

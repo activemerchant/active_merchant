@@ -33,7 +33,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :brand => 'elo'
     )
 
-    @three_ds_enrolled_card = credit_card('4917610000000000', brand: :visa)
+    @three_ds_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
 
     @declined_card = credit_card('4000300011112220')
 
@@ -156,6 +156,28 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_3ds2_browser_client_data
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options)
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_false
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: false, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'Authorised'
+  end
+
+  # According to Adyen documentation, if execute_threed is set to true and an exemption provided
+  # the gateway will apply and request for the specified exemption in the authentication request,
+  # after the device fingerprint is submitted to the issuer.
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_true
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: true, sca_exemption: 'lowValue'))
     assert response.test?
     refute response.authorization.blank?
 
