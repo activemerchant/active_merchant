@@ -277,6 +277,8 @@ module ActiveMerchant #:nodoc:
       # These optional elements are added to all transaction types:
       # +purchase+, +authorize+, +capture+, +refund+, +store+
       def add_optional_elements(xml, options)
+        options[:client_type] = :moto if options.dig(:metadata, :manual_entry)
+
         if client_type = normalized_client_type(options[:client_type])
           xml.add_element('ClientType').text = client_type
         end

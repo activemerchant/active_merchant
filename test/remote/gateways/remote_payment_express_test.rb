@@ -24,6 +24,13 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_not_nil response.authorization
   end
 
+  def test_successful_purchase_with_moto
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata: { manual_entry: true }))
+    assert_success response
+    assert_equal 'The Transaction was approved', response.message
+    assert_not_nil response.authorization
+  end
+
   def test_successful_purchase_with_reference_id
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'The Transaction was approved', response.message
