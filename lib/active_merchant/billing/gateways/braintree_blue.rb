@@ -169,11 +169,11 @@ module ActiveMerchant #:nodoc:
         true
       end
 
-      def three_d_secure_info(payment_method_nonce)
+      def check_payment_method_nonce(payment_method_nonce)
         result = @braintree_gateway.payment_method_nonce.find(payment_method_nonce)
-        return result.payment_method_nonce.three_d_secure_info
-      rescue Braintree::NotFoundError => e
-        e
+        Response.new(true, 'OK', { payment_method_nonce: result.payment_method_nonce })
+      rescue Braintree::NotFoundError
+        return Response.new(false, 'Braintree::NotFoundError')
       end
 
       private
