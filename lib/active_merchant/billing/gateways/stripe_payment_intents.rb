@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
           end
           commit(:post, "payment_methods/#{params[:payment_method]}/attach", { customer: customer_id }, options)
         else
-          super(payment, options)
+          super(payment_method, options)
         end
       end
 
