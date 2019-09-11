@@ -273,6 +273,28 @@ class RemoteStripeIntentsTest < Test::Unit::TestCase
     assert_equal 'Payment complete.', capture_response.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
   end
 
+  def test_auth_and_capture_with_destination_account_and_fee
+    options = {
+      currency: 'GBP',
+      customer: @customer,
+      confirmation_method: 'manual',
+      capture_method: 'manual',
+      transfer_destination: @destination_account,
+      confirm: true
+    }
+    assert create_response = @gateway.create_intent(@amount, @visa_payment_method, options)
+    intent_id = create_response.params['id']
+    assert_equal 'requires_capture', create_response.params['status']
+    assert_equal @destination_account, create_response.params['transfer_data']['destination']
+    assert_nil create_response.params['application_fee_amount']
+
+    assert capture_response = @gateway.capture(@amount, intent_id, { application_fee: 100 })
+    assert_equal 'succeeded', capture_response.params['status']
+    assert_equal @destination_account, capture_response.params['transfer_data']['destination']
+    assert_equal 100, capture_response.params['application_fee_amount']
+    assert_equal 'Payment complete.', capture_response.params.dig('charges', 'data')[0].dig('outcome', 'seller_message')
+  end
+
   def test_create_a_payment_intent_and_automatically_capture
     options = {
       currency: 'GBP',

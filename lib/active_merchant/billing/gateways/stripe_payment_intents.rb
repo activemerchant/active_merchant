@@ -92,7 +92,11 @@ module ActiveMerchant #:nodoc:
       def capture(money, intent_id, options = {})
         post = {}
         post[:amount_to_capture] = money
-        add_connected_account(post, options)
+        if options[:transfer_amount]
+          post[:transfer_data] = {}
+          post[:transfer_data][:amount] = options[:transfer_amount]
+        end
+        post[:application_fee_amount] = options[:application_fee] if options[:application_fee]
         commit(:post, "payment_intents/#{intent_id}/capture", post, options)
       end
 
