@@ -11,6 +11,7 @@
 * CyberSource: Pass commerce indicator if present [curiousepic] #3350
 * Worldpay: Add 3DS2 Support [nfarve] #3344
 * Credorax: Add 3DS 2.0 [nfarve] #3342
+* TNS: Update verison and support pay mode [curiousepic] #3355
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290

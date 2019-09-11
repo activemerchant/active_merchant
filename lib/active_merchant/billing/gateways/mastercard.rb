@@ -7,9 +7,20 @@ module ActiveMerchant
       end
 
       def purchase(amount, payment_method, options={})
-        MultiResponse.run do |r|
-          r.process { authorize(amount, payment_method, options) }
-          r.process { capture(amount, r.authorization, options) }
+        if options[:pay_mode]
+          post = new_post
+          add_invoice(post, amount, options)
+          add_reference(post, *new_authorization)
+          add_payment_method(post, payment_method)
+          add_customer_data(post, payment_method, options)
+          add_3dsecure_id(post, options)
+
+          commit('pay', post)
+        else
+          MultiResponse.run do |r|
+            r.process { authorize(amount, payment_method, options) }
+            r.process { capture(amount, r.authorization, options) }
+          end
         end
       end
 
