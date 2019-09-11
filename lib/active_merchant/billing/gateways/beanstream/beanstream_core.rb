@@ -317,7 +317,7 @@ module ActiveMerchant #:nodoc:
         post[:status] = options[:status]
 
         billing_address = options[:billing_address] || options[:address]
-        post[:trnCardOwner] = billing_address[:name]
+        post[:trnCardOwner] = billing_address ? billing_address[:name] : nil
       end
 
       def add_recurring_amount(post, money)

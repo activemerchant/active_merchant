@@ -187,6 +187,16 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_match %r{Invalid shipping country id}, response.message
   end
 
+  def test_authorize_and_void
+    assert auth = @gateway.authorize(@amount, @visa, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert_false auth.authorization.blank?
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+  end
+
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
