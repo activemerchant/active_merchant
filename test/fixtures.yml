@@ -1184,9 +1184,14 @@ tns:
   userid: TESTSPREEDLY01
   password: 3f34fe50334fbe6cbe04c283411a5860
 
+# This account seem to have expired
 tns_ap:
   userid: TESTUNISOLMAA01
   password: b7f8119fda3bd27c17656badb52c95bb
+
+tns_pay_mode:
+  userid: USERID
+  password: password
 
 trans_first:
   login: 45567
