@@ -7,6 +7,7 @@
 * TNS: Support Europe endpoint [curiousepic] #3346
 * Redsys: Add 3DS support to gateway [britth] #3336
 * Worldpay: Allow multiple refunds per authorization [jknipp] #3349
+* MercadoPago: Add remote and unit tests for Naranja card [hdeters] #3345
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290
