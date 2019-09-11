@@ -206,9 +206,23 @@ module ActiveMerchant
 
       def base_url
         if test?
-          @options[:region] == 'asia_pacific' ? test_ap_url : test_na_url
+          case @options[:region]
+          when 'asia_pacific'
+            test_ap_url
+          when 'europe'
+            test_eu_url
+          when 'north_america', nil
+            test_na_url
+          end
         else
-          @options[:region] == 'asia_pacific' ? live_ap_url : live_na_url
+          case @options[:region]
+          when 'asia_pacific'
+            live_ap_url
+          when 'europe'
+            live_eu_url
+          when 'north_america', nil
+            live_na_url
+          end
         end
       end
 
