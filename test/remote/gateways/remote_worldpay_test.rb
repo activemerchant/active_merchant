@@ -492,12 +492,30 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   #   puts 'auth: ' + response.authorization
   # end
   #
-  # def test_refund
-  #   refund = @gateway.refund(@amount, '39270fd70be13aab55f84e28be45cad3')
-  #   assert_success refund
-  #   assert_equal 'SUCCESS', refund.message
-  # end
-  #
+  def test_refund
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+    assert response.authorization
+
+    refund = @gateway.refund(@amount, response.authorization, authorization_validated: true)
+    assert_success refund
+    assert_equal 'SUCCESS', refund.message
+  end
+
+  def test_multiple_refunds
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert_equal 'SUCCESS', purchase.message
+
+    partial_amount = @amount - 1
+    assert_success refund1 = @gateway.refund(partial_amount, purchase.authorization, authorization_validated: true)
+    assert_equal 'SUCCESS', refund1.message
+
+    assert_success refund2 = @gateway.refund(@amount - partial_amount, purchase.authorization, authorization_validated: true)
+    assert_equal 'SUCCESS', refund2.message
+  end
+
   # def test_void_fails_unless_status_is_authorised
   #   response = @gateway.void('replace_with_authorization') # existing transaction in CAPTURED state
   #   assert_failure response

@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         authorization = order_id_from_authorization(authorization.to_s)
         response = MultiResponse.run do |r|
-          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') }
+          r.process { inquire_request(authorization, options, 'CAPTURED', 'SETTLED', 'SETTLED_BY_MERCHANT') } unless options[:authorization_validated]
           r.process { refund_request(money, authorization, options) }
         end
 
