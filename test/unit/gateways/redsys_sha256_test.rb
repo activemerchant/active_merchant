@@ -114,6 +114,24 @@ class RedsysSHA256Test < Test::Unit::TestCase
     end
   end
 
+  def test_successful_authorize_with_3ds
+    @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
+    response = @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156201452719' })
+    assert response.test?
+    assert response.params['ds_emv3ds']
+    assert_equal response.message, 'CardConfiguration'
+  end
+
+  def test_3ds_data_passed
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156201452719', terminal: 12 })
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/iniciaPeticion/, data)
+      assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
+      assert_match(/\"threeDSInfo\":\"CardData\"/, data)
+    end.respond_with(successful_authorize_with_3ds_response)
+  end
+
   def test_bad_order_id_format
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(100, credit_card, order_id: 'Una#cce-ptable44Format')
@@ -287,6 +305,10 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def successful_authorize_response
     "<?xml version='1.0' encoding=\"UTF-8\" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>100</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>144743367273</Ds_Order><Ds_Signature>29qv8K/6k3P1zyk5F+ZYmMel0uuOzC58kXCgp5rcnhI=</Ds_Signature><Ds_MerchantCode>091952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>399957</Ds_AuthorisationCode><Ds_TransactionType>1</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country></OPERACION></RETORNOXML>\n"
+  end
+
+  def successful_authorize_with_3ds_response
+    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Header/><soapenv:Body><p231:iniciaPeticionResponse xmlns:p231="http://webservice.sis.sermepa.es"><p231:iniciaPeticionReturn>&lt;RETORNOXML&gt;&lt;CODIGO&gt;0&lt;/CODIGO&gt;&lt;INFOTARJETA&gt;&lt;Ds_Order&gt;156270437866&lt;/Ds_Order&gt;&lt;Ds_MerchantCode&gt;091952713&lt;/Ds_MerchantCode&gt;&lt;Ds_Terminal&gt;1&lt;/Ds_Terminal&gt;&lt;Ds_TransactionType&gt;0&lt;/Ds_TransactionType&gt;&lt;Ds_EMV3DS&gt;{&quot;protocolVersion&quot;:&quot;NO_3DS_v2&quot;,&quot;threeDSInfo&quot;:&quot;CardConfiguration&quot;}&lt;/Ds_EMV3DS&gt;&lt;Ds_Signature&gt;LIWUaQh+lwsE0DBNpv2EOYALCY6ZxHDQ6gLvOcWiSB4=&lt;/Ds_Signature&gt;&lt;/INFOTARJETA&gt;&lt;/RETORNOXML&gt;</p231:iniciaPeticionReturn></p231:iniciaPeticionResponse></soapenv:Body></soapenv:Envelope>'
   end
 
   def failed_authorize_response
