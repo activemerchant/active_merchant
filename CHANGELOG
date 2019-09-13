@@ -14,6 +14,7 @@
 * TNS: Update verison and support pay mode [curiousepic] #3355
 * Stripe: Add supported countries [therufs] #3358
 * Stripe Payment Intents: Add supported countries [therufs] #3359
+* Mundipagg: Append error messages to the message response field [jasonxp] #3353
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290
