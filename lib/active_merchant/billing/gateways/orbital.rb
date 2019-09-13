@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
     class OrbitalGateway < Gateway
       include Empty
 
-      API_VERSION = "7.1"
+      API_VERSION = "7.9"
 
       POST_HEADERS = {
         "MIME-Version" => "1.1",
@@ -520,7 +520,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mastercard_three_d_secure(xml, creditcard, parameters)
-        xml.tag! :AAV, parameters[:cavv] if parameters[:cavv] && creditcard.brand == 'master'
+        if creditcard.brand == 'master'
+          xml.tag! :AAV, parameters[:cavv] if parameters[:cavv]
+          xml.tag! :UCAFInd, parameters[:ucaf] if parameters[:ucaf]
+        end
       end
 
       def parse(body)

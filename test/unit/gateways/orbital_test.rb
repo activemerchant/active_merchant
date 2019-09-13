@@ -86,10 +86,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_three_d_secure_master
     stub_comms do
-      @gateway.purchase(50, credit_card('5105105105105100', brand: 'master'), @options.merge(eci: '05', cavv: "encodedCAVV", xid: "encodedXID"))
+      @gateway.purchase(50, credit_card('5105105105105100', brand: 'master'), @options.merge(eci: '05', cavv: "encodedCAVV", xid: "encodedXID", ucaf: "2"))
     end.check_request do |endpoint, data, headers|
       assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
       assert_match %{<AAV>encodedCAVV</AAV>}, data
+      assert_match %{<UCAFInd>2</UCAFInd>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -570,7 +571,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address)
     end.check_request do |endpoint, data, headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI54.xsd")
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI79.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
       assert xsd.valid?(doc), "Request does not adhere to DTD"
@@ -582,7 +583,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:country => 'DE'))
     end.check_request do |endpoint, data, headers|
-      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI54.xsd")
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI79.xsd")
       doc = Nokogiri::XML(data)
       xsd = Nokogiri::XML::Schema(schema_file)
       assert xsd.valid?(doc), "Request does not adhere to DTD"
