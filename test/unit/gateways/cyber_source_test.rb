@@ -118,6 +118,14 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_authorize_includes_commerce_indicator
+    stub_comms do
+      @gateway.authorize(100, @credit_card, commerce_indicator: 'internet')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<commerceIndicator>internet<\/commerceIndicator>/m, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   def test_successful_check_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 

@@ -55,7 +55,8 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       ],
       :currency => 'USD',
       :ignore_avs => 'true',
-      :ignore_cvv => 'true'
+      :ignore_cvv => 'true',
+      :commerce_indicator => 'internet'
     }
 
     @subscription_options = {
