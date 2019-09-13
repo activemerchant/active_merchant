@@ -530,19 +530,14 @@ module ActiveMerchant #:nodoc:
           add_auth_network_tokenization(xml, payment_method, options)
         else
           xml.tag! 'ccAuthService', {'run' => 'true'} do
-            check_for_stored_cred_commerce_indicator(xml, options)
+            indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
+            xml.tag!('commerceIndicator', indicator) if indicator
           end
         end
       end
 
-      def check_for_stored_cred_commerce_indicator(xml, options)
+      def stored_credential_commerce_indicator(options)
         return unless options[:stored_credential]
-        if commerce_indicator(options)
-          xml.tag!('commerceIndicator', commerce_indicator(options))
-        end
-      end
-
-      def commerce_indicator(options)
         return if options[:stored_credential][:initial_transaction]
         case options[:stored_credential][:reason_type]
         when 'installment' then 'install'
