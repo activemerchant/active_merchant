@@ -685,6 +685,7 @@ module ActiveMerchant #:nodoc:
           }
         end
 
+        parameters[:payment_method_nonce] = options[:three_ds_token] if options[:three_ds]
         parameters
       end
     end
