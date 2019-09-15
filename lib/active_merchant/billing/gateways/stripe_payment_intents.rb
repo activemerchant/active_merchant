@@ -103,12 +103,20 @@ module ActiveMerchant #:nodoc:
       def void(intent_id, options = {})
         post = {}
         post[:cancellation_reason] = options[:cancellation_reason] if ALLOWED_CANCELLATION_REASONS.include?(options[:cancellation_reason])
-        commit(:post, "payment_intents/#{intent_id}/cancel", post, options)
+        if intent_id.include?("pi_")
+          commit(:post, "payment_intents/#{intent_id}/cancel", post, options)
+        else
+          super(intent_id, options)
+        end
       end
 
       def refund(money, intent_id, options = {})
-        intent = commit(:get, "payment_intents/#{intent_id}", nil, options)
-        charge_id = intent.params.dig('charges', 'data')[0].dig('id')
+        if intent_id.include?("pi_")
+          intent = commit(:get, "payment_intents/#{intent_id}", nil, options)
+          charge_id = intent.params.dig('charges', 'data')[0].dig('id')
+        else
+          charge_id = intent_id
+        end
         super(money, charge_id, options)
       end
 
