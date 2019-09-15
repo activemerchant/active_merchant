@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, intent_id, options = {})
-        if intent_id.include?("pi_")
+        if intent_id.include?('pi_')
           intent = commit(:get, "payment_intents/#{intent_id}", nil, options)
           charge_id = intent.params.dig('charges', 'data')[0].dig('id')
         else
