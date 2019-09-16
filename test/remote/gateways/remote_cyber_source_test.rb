@@ -33,6 +33,12 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       year: (Time.now.year + 2).to_s,
       brand: :visa
     )
+    @three_ds_enrolled_mastercard = credit_card('5200000000001005',
+      verification_value: '321',
+      month: '12',
+      year: (Time.now.year + 2).to_s,
+      brand: :master
+    )
 
     @amount = 100
 
@@ -494,6 +500,78 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.authorize(1202, @three_ds_invalid_card, @options.merge(payer_auth_validate_service: true, pares: pares))
     assert_equal '476', response.params['reasonCode']
     assert !response.success?
+  end
+
+  def test_successful_authorize_via_normalized_3ds2_fields
+    options = @options.merge(
+      three_d_secure: {
+        version: '2.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        cavv_algorithm: 1,
+        authentication_response_status: 'Y'
+      },
+      veres_enrolled: 'N',
+      commerce_indicator: 'vbv'
+    )
+
+    response = @gateway.authorize(@amount, @three_ds_enrolled_card, options)
+    assert_success response
+    assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_mastercard_authorize_via_normalized_3ds2_fields
+    options = @options.merge(
+      three_d_secure: {
+        version: '2.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+      },
+      commerce_indicator: 'spa',
+      collection_indicator: 2
+    )
+
+    response = @gateway.authorize(@amount, @three_ds_enrolled_mastercard, options)
+    assert_success response
+    assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_purchase_via_normalized_3ds2_fields
+    options = @options.merge(
+      three_d_secure: {
+        version: '2.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+      }
+    )
+
+    response = @gateway.purchase(@amount, @three_ds_enrolled_card, options)
+    assert_success response
+    assert_equal 'Successful transaction', response.message
+  end
+
+  def test_successful_mastercard_purchase_via_normalized_3ds2_fields
+    options = @options.merge(
+      three_d_secure: {
+        version: '2.0',
+        eci: '05',
+        cavv: 'jJ81HADVRtXfCBATEp01CJUAAAA=',
+        xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC'
+      },
+      commerce_indicator: 'spa',
+      collection_indicator: 2
+    )
+
+    response = @gateway.purchase(@amount, @three_ds_enrolled_mastercard, options)
+    assert_success response
+    assert_equal 'Successful transaction', response.message
   end
 
   def test_successful_first_unscheduled_cof_transaction

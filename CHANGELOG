@@ -17,6 +17,7 @@
 * Mundipagg: Append error messages to the message response field [jasonxp] #3353
 * Redsys: Add ability to pass sca_exemption and moto fields to request exemptions [britth] #3354
 * Credorax: Add A Mandatory 3DS field [nfarve] #3360
+* CyberSource: Support 3DS2 pass-through fields [curiousepic] #3363
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290
