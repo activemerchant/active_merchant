@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.barclaycardsmartpay.com/'
       self.display_name = 'Barclaycard Smartpay'
 
-      API_VERSION = 'v40'
+      API_VERSION = 'v30'
 
       def initialize(options = {})
         requires!(options, :company, :merchant, :password)
@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_avs_code(response)
-        AVS_MAPPING[response['additionalData']['avsResult'][0..1].strip] if response.dig('additionalData', 'avsResult')
+        AVS_MAPPING[response['avsResult'][0..1].strip] if response['avsResult']
       end
 
       def flatten_hash(hash, prefix = nil)
@@ -212,18 +212,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(response)
-        parsed_response = {}
-        params = CGI.parse(response)
-        params.each do |key, value|
-          parsed_key = key.split('.', 2)
-          if parsed_key.size > 1
-            parsed_response[parsed_key[0]] ||= {}
-            parsed_response[parsed_key[0]][parsed_key[1]] = value[0]
-          else
-            parsed_response[parsed_key[0]] = value[0]
+        Hash[
+          response.split('&').map do |x|
+            key, val = x.split('=', 2)
+            [key.split('.').last, CGI.unescape(val)]
           end
-        end
-        parsed_response
+        ]
       end
 
       def post_data(data)

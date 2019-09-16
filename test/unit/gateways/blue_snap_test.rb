@@ -170,6 +170,7 @@ class BlueSnapTest < Test::Unit::TestCase
       assert_match(/<currency>USD<\/currency>/, data)
     end.respond_with(successful_capture_response)
 
+    response = @gateway.capture(@amount, 'Authorization')
     assert_success response
     assert_equal '1012082881', response.authorization
   end

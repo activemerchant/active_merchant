@@ -113,30 +113,6 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
         zip:      '95014',
         country:  'US'
         })
-
-    @normalized_3ds_2_options = {
-      reference: '345123',
-      shopper_email: 'john.smith@test.com',
-      shopper_ip: '77.110.174.153',
-      shopper_reference: 'John Smith',
-      billing_address: address(),
-      order_id: '123',
-      stored_credential: {reason_type: 'unscheduled'},
-      three_ds_2: {
-        channel: 'browser',
-        browser_info: {
-          accept_header: 'unknown',
-          depth: 100,
-          java: false,
-          language: 'US',
-          height: 1000,
-          width: 500,
-          timezone: '-120',
-          user_agent: 'unknown'
-        },
-        notification_url: 'https://example.com/notification'
-      }
-    }
   end
 
   def teardown
