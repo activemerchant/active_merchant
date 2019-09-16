@@ -7,6 +7,7 @@ class RemoteRedsysTest < Test::Unit::TestCase
     @declined_card = credit_card
     @options = {
       order_id: generate_order_id,
+      sca_exception: 'MIT',
       description: 'Test Description'
     }
     @amount = 100

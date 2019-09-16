@@ -199,6 +199,7 @@ module ActiveMerchant #:nodoc:
         add_payment(data, payment)
         add_threeds(data, options) if options[:execute_threed]
         data[:description] = options[:description]
+        data[:sca_exception] = options[:sca_exception] if options[:sca_exception]
         data[:store_in_vault] = options[:store]
 
         commit data, options
@@ -214,6 +215,7 @@ module ActiveMerchant #:nodoc:
         add_payment(data, payment)
         add_threeds(data, options) if options[:execute_threed]
         data[:description] = options[:description]
+        data[:sca_exception] = options[:sca_exception] if options[:sca_exception]
         data[:store_in_vault] = options[:store]
 
         commit data, options
@@ -425,6 +427,7 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_ORDER              data[:order_id]
           xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
           xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          xml.DS_MERCHANT_EXCEP_SCA          data[:sca_exception] if data[:sca_exception]
           xml.DS_MERCHANT_TERMINAL           options[:terminal] || @options[:terminal]
           xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
           xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data) unless sha256_authentication?
