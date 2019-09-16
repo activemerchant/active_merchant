@@ -9,12 +9,8 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AT', 'AU', 'BE', 'BG', 'BR', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'SI', 'US']
       self.default_currency = 'USD'
-<<<<<<< HEAD
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo]
-=======
       self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo, :naranja]
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
 
       self.money_format = :cents
 
@@ -232,24 +228,16 @@ module ActiveMerchant #:nodoc:
           post[:billingAddress][:street] = address[:address1] || 'NA'
           post[:billingAddress][:houseNumberOrName] = address[:address2] || 'NA'
           post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
-<<<<<<< HEAD
-          post[:billingAddress][:city] = address[:city] || 'N/A'
-          post[:billingAddress][:stateOrProvince] = address[:state] || 'N/A'
-=======
           post[:billingAddress][:city] = address[:city] || 'NA'
           post[:billingAddress][:stateOrProvince] = get_state(address)
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
           post[:billingAddress][:country] = address[:country] if address[:country]
         end
       end
 
-<<<<<<< HEAD
-=======
       def get_state(address)
         address[:state] && !address[:state].blank? ? address[:state] : 'NA'
       end
 
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
       def add_invoice(post, money, options)
         amount = {
           value: amount(money),

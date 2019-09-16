@@ -99,8 +99,6 @@ module ActiveMerchant #:nodoc:
         651652..651667, 651675..651678, 655000..655010, 655012..655015, 655051..655052, 655056..655057
       ]
 
-<<<<<<< HEAD
-=======
       # Alelo provides BIN ranges by e-mailing them out periodically.
       # The BINs beginning with the digit 4 overlap with Visa's range of valid card numbers.
       # By placing the 'alelo' entry in CARD_COMPANY_DETECTORS below the 'visa' entry, we
@@ -124,7 +122,6 @@ module ActiveMerchant #:nodoc:
         589562..589562
       ]
 
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
       def self.included(base)
         base.extend(ClassMethods)
       end

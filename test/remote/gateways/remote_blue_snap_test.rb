@@ -203,8 +203,6 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', capture.message
   end
 
-<<<<<<< HEAD
-=======
   def test_successful_authorize_and_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -223,7 +221,6 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', capture.message
   end
 
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response

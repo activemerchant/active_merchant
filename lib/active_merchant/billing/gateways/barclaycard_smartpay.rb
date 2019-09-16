@@ -37,13 +37,9 @@ module ActiveMerchant #:nodoc:
         post[:card] = credit_card_hash(creditcard)
         post[:billingAddress] = billing_address_hash(options) if options[:billing_address]
         post[:deliveryAddress] = shipping_address_hash(options) if options[:shipping_address]
-<<<<<<< HEAD
-        add_3ds(post, options) if options[:execute_threed]
-=======
         post[:shopperStatement] = options[:shopper_statement] if options[:shopper_statement]
 
         add_3ds(post, options)
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
         commit('authorise', post)
       end
 
@@ -349,10 +345,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3ds(post, options)
-<<<<<<< HEAD
-        post[:additionalData] = { executeThreeD: 'true' }
-        post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
-=======
         if three_ds_2_options = options[:three_ds_2]
           device_channel = three_ds_2_options[:channel]
           if device_channel == 'app'
@@ -366,7 +358,6 @@ module ActiveMerchant #:nodoc:
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
           post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
         end
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
       end
 
       def add_browser_info(browser_info, post)

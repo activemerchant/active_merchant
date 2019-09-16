@@ -95,10 +95,7 @@ module ActiveMerchant
         commit(:capture, :put) do |doc|
           add_authorization(doc, authorization)
           add_order(doc, options)
-<<<<<<< HEAD
-=======
           add_amount(doc, money, options) if options[:include_capture_amount] == true
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
         end
       end
 

@@ -188,8 +188,6 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
-<<<<<<< HEAD
-=======
   def test_successful_authorize_with_3ds2_browser_client_data
     assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, @normalized_3ds_2_options)
     assert response.test?
@@ -225,7 +223,6 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.publicKey'].blank?
   end
 
->>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
