@@ -33,7 +33,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       :brand => 'elo'
     )
 
-    @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
+    @three_ds_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
 
     @declined_card = credit_card('4000300011112220')
 
@@ -83,6 +83,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
       stored_credential: {reason_type: 'unscheduled'},
       three_ds_2: {
         channel: 'browser',
+        notification_url: 'https://example.com/notification',
         browser_info: {
           accept_header: 'unknown',
           depth: 100,
@@ -157,10 +158,58 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options)
     assert response.test?
     refute response.authorization.blank?
+
     assert_equal response.params['resultCode'], 'IdentifyShopper'
     refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
     refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
     refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_false
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: false, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'Authorised'
+  end
+
+  # According to Adyen documentation, if execute_threed is set to true and an exemption provided
+  # the gateway will apply and request for the specified exemption in the authentication request,
+  # after the device fingerprint is submitted to the issuer.
+  def test_successful_purchase_with_3ds2_exemption_requested_and_execute_threed_true
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @normalized_3ds_2_options.merge(execute_threed: true, sca_exemption: 'lowValue'))
+    assert response.test?
+    refute response.authorization.blank?
+
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_authorize_with_3ds2_app_based_request
+    three_ds_app_based_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'app',
+      }
+    }
+
+    assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, three_ds_app_based_options)
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.algorithm'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.directoryServerId'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.publicKey'].blank?
   end
 
   # with rule set in merchant account to skip 3DS for cards of this brand
@@ -177,6 +226,62 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert response.test?
     refute response.authorization.blank?
     assert_equal response.params['resultCode'], 'Authorised'
+  end
+
+  def test_successful_purchase_with_auth_data_via_threeds1_standalone
+    eci = '05'
+    cavv = '3q2+78r+ur7erb7vyv66vv\/\/\/\/8='
+    cavv_algorithm = '1'
+    xid = 'ODUzNTYzOTcwODU5NzY3Qw=='
+    directory_response_status = 'Y'
+    authentication_response_status = 'Y'
+    options = @options.merge(
+      three_d_secure: {
+        eci: eci,
+        cavv: cavv,
+        cavv_algorithm: cavv_algorithm,
+        xid: xid,
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
+      }
+    )
+
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+    assert_equal 'Authorised', auth.message
+    assert_equal 'true', auth.params['additionalData']['liabilityShift']
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
+  def test_successful_purchase_with_auth_data_via_threeds2_standalone
+    version = '2.1.0'
+    eci = '02'
+    cavv = 'jJ81HADVRtXfCBATEp01CJUAAAA='
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    directory_response_status = 'C'
+    authentication_response_status = 'Y'
+
+    options = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        directory_response_status: directory_response_status,
+        authentication_response_status: authentication_response_status
+      }
+    )
+
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+    assert_equal 'Authorised', auth.message
+    assert_equal 'true', auth.params['additionalData']['liabilityShift']
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
   end
 
   def test_successful_authorize_with_no_address
@@ -426,7 +531,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success authorize
 
     options = @options.merge(adjust_authorisation_data: authorize.params['additionalData']['adjustAuthorisationData'],
-      requested_test_acquirer_response_code: '2')
+                             requested_test_acquirer_response_code: '2')
     assert adjust = @gateway.adjust(200, authorize.authorization, options)
     assert_failure adjust
     assert_equal 'Refused', adjust.message

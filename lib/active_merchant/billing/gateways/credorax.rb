@@ -6,6 +6,10 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Credorax Gateway'
       self.homepage_url = 'https://www.credorax.com/'
 
+      # NOTE: the IP address you run the remote tests from will need to be
+      # whitelisted by Credorax; contact support@credorax.com as necessary to
+      # request your IP address be added to the whitelist for your test
+      # account.
       self.test_url = 'https://intconsole.credorax.com/intenv/service/gateway'
 
       # The live URL is assigned on a per merchant basis once certification has passed
@@ -264,8 +268,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_3d_secure(post, options)
-        return unless options[:eci] && options[:xid]
-        post[:i8] = "#{options[:eci]}:#{(options[:cavv] || "none")}:#{options[:xid]}"
+        if options[:eci] && options[:xid]
+          add_3d_secure_1_data(post, options)
+        elsif options[:three_d_secure]
+          add_normalized_3d_secure_2_data(post, options)
+        end
+      end
+
+      def add_3d_secure_1_data(post, options)
+        post[:i8] = build_i8(options[:eci], options[:cavv], options[:xid])
+      end
+
+      def add_normalized_3d_secure_2_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+
+        post[:i8] = build_i8(
+          three_d_secure_options[:eci],
+          three_d_secure_options[:cavv]
+        )
+        post[:'3ds_version'] = three_d_secure_options[:version]
+        post[:'3ds_dstrxid'] = three_d_secure_options[:ds_transaction_id]
+      end
+
+      def build_i8(eci, cavv=nil, xid=nil)
+        "#{eci}:#{cavv || 'none'}:#{xid || 'none'}"
       end
 
       def add_echo(post, options)

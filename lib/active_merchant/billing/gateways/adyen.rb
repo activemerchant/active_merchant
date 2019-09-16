@@ -9,7 +9,12 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['AT', 'AU', 'BE', 'BG', 'BR', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'SI', 'US']
       self.default_currency = 'USD'
+<<<<<<< HEAD
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo]
+=======
+      self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo, :naranja]
+>>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
 
       self.money_format = :cents
 
@@ -55,6 +60,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_installments(post, options) if options[:installments]
         add_3ds(post, options)
+        add_3ds_authenticated_data(post, options)
         commit('authorise', post, options)
       end
 
@@ -223,15 +229,27 @@ module ActiveMerchant #:nodoc:
         return unless post[:card]&.kind_of?(Hash)
         if (address = options[:billing_address] || options[:address]) && address[:country]
           post[:billingAddress] = {}
-          post[:billingAddress][:street] = address[:address1] || 'N/A'
-          post[:billingAddress][:houseNumberOrName] = address[:address2] || 'N/A'
+          post[:billingAddress][:street] = address[:address1] || 'NA'
+          post[:billingAddress][:houseNumberOrName] = address[:address2] || 'NA'
           post[:billingAddress][:postalCode] = address[:zip] if address[:zip]
+<<<<<<< HEAD
           post[:billingAddress][:city] = address[:city] || 'N/A'
           post[:billingAddress][:stateOrProvince] = address[:state] || 'N/A'
+=======
+          post[:billingAddress][:city] = address[:city] || 'NA'
+          post[:billingAddress][:stateOrProvince] = get_state(address)
+>>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
           post[:billingAddress][:country] = address[:country] if address[:country]
         end
       end
 
+<<<<<<< HEAD
+=======
+      def get_state(address)
+        address[:state] && !address[:state].blank? ? address[:state] : 'NA'
+      end
+
+>>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
       def add_invoice(post, money, options)
         amount = {
           value: amount(money),
@@ -317,30 +335,61 @@ module ActiveMerchant #:nodoc:
 
       def add_3ds(post, options)
         if three_ds_2_options = options[:three_ds_2]
-          if browser_info = three_ds_2_options[:browser_info]
-            post[:browserInfo] = {
-              acceptHeader: browser_info[:accept_header],
-              colorDepth: browser_info[:depth],
-              javaEnabled: browser_info[:java],
-              language: browser_info[:language],
-              screenHeight: browser_info[:height],
-              screenWidth: browser_info[:width],
-              timeZoneOffset: browser_info[:timezone],
-              userAgent: browser_info[:user_agent]
-            }
+          device_channel = three_ds_2_options[:channel]
+          if device_channel == 'app'
+            post[:threeDS2RequestData] = { deviceChannel: device_channel }
+          else
+            add_browser_info(three_ds_2_options[:browser_info], post)
+            post[:threeDS2RequestData] = { deviceChannel: device_channel, notificationURL: three_ds_2_options[:notification_url] }
+          end
 
-            if device_channel = three_ds_2_options[:channel]
-              post[:threeDS2RequestData] = {
-                deviceChannel: device_channel,
-                notificationURL: three_ds_2_options[:notification_url] || 'https://example.com/notification'
-              }
-            end
+          if options.has_key?(:execute_threed)
+            post[:additionalData][:executeThreeD] = options[:execute_threed]
+            post[:additionalData][:scaExemption] = options[:sca_exemption] if options[:sca_exemption]
           end
         else
           return unless options[:execute_threed] || options[:threed_dynamic]
           post[:browserInfo] = { userAgent: options[:user_agent], acceptHeader: options[:accept_header] }
           post[:additionalData] = { executeThreeD: 'true' } if options[:execute_threed]
         end
+      end
+
+      def add_3ds_authenticated_data(post, options)
+        if options[:three_d_secure] && options[:three_d_secure][:eci] && options[:three_d_secure][:xid]
+          add_3ds1_authenticated_data(post, options)
+        elsif options[:three_d_secure]
+          add_3ds2_authenticated_data(post, options)
+        end
+      end
+
+      def add_3ds1_authenticated_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+        post[:mpiData] = {
+          cavv: three_d_secure_options[:cavv],
+          cavvAlgorithm: three_d_secure_options[:cavv_algorithm],
+          eci: three_d_secure_options[:eci],
+          xid: three_d_secure_options[:xid],
+          directoryResponse: three_d_secure_options[:directory_response_status],
+          authenticationResponse: three_d_secure_options[:authentication_response_status]
+        }
+      end
+
+      def add_3ds2_authenticated_data(post, options)
+        three_d_secure_options = options[:three_d_secure]
+        # If the transaction was authenticated in a frictionless flow, send the transStatus from the ARes.
+        if(three_d_secure_options[:authentication_response_status].nil?)
+          authentication_response = three_d_secure_options[:directory_response_status]
+        else
+          authentication_response = three_d_secure_options[:authentication_response_status]
+        end
+        post[:mpiData] = {
+          threeDSVersion: three_d_secure_options[:version],
+          eci: three_d_secure_options[:eci],
+          cavv: three_d_secure_options[:cavv],
+          dsTransID: three_d_secure_options[:ds_transaction_id],
+          directoryResponse: three_d_secure_options[:directory_response_status],
+          authenticationResponse: authentication_response
+        }
       end
 
       def parse(body)
@@ -445,6 +494,20 @@ module ActiveMerchant #:nodoc:
 
       def error_code_from(response)
         STANDARD_ERROR_CODE_MAPPING[response['errorCode']]
+      end
+
+      def add_browser_info(browser_info, post)
+        return unless browser_info
+        post[:browserInfo] = {
+          acceptHeader: browser_info[:accept_header],
+          colorDepth: browser_info[:depth],
+          javaEnabled: browser_info[:java],
+          language: browser_info[:language],
+          screenHeight: browser_info[:height],
+          screenWidth: browser_info[:width],
+          timeZoneOffset: browser_info[:timezone],
+          userAgent: browser_info[:user_agent]
+        }
       end
     end
   end

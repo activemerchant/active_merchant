@@ -226,6 +226,9 @@ creditcall:
   terminal_id: '99961426'
   transaction_key: '9drdRU9wJ65SNRw3'
 
+# NOTE: the IP address you run the remote tests from will need to be
+# whitelisted by Credorax; contact support@credorax.com as necessary to request
+# your IP address be added to the whitelist for your test account.
 credorax:
   merchant_id: 'merchant_id'
   cipher_key: 'cipher_key'
@@ -1044,6 +1047,12 @@ realex_visa:
   number: '4263970000005262'
   month: '6'
   year: '2020'
+  verification_value: '123'
+
+realex_visa_3ds_enrolled:
+  number: '4012001037141112'
+  month: '9'
+  year: '2021'
   verification_value: '123'
 
 realex_visa_coms_error:

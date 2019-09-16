@@ -1,12 +1,66 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+* Adyen: Add functionality to set 3DS exemptions via API [britth] #3331
+* Adyen: Send "NA" instead of "N/A" [leila-alderman] #3339
+* Stripe Payment Intents: Set application fee or transfer amount on capture  [britth] #3340
+* TNS: Support Europe endpoint [curiousepic] #3346
+* Redsys: Add 3DS support to gateway [britth] #3336
+* Worldpay: Allow multiple refunds per authorization [jknipp] #3349
+* MercadoPago: Add remote and unit tests for Naranja card [hdeters] #3345
+* CyberSource: Pass commerce indicator if present [curiousepic] #3350
+
+== Version 1.98.0 (Sep 9, 2019)
+* Stripe Payment Intents: Add new gateway [britth] #3290
+* Stripe: Send cardholder name and address when creating sources for 3DS 1.0 [jknipp] #3300
+* Checkout_v2: Support for native 3DS2.0 [nfarve] #3303
+* Adds new Maestro BINs [tanyajajodia] #3305
+* eWAY Rapid: If no address is available, default to the name associated with the payment method when setting the Customer fields [jasonxp] #3306
+* eWAY Rapid: Fix a bug in which the email was not set in Customer fields if no address was provided [jasonxp] #3306
+* eWAY Rapid: Support both `phone` and `phone_number` fields under the `shipping_address` option [jasonxp] #3306
+* PayU Latam: Add support for the `merchant_buyer_id` field in the `options` and `buyer` hashes [jasonxp] #3308
+* Update Braintree Gem [curiousepic] #3311
+* Fat Zebra: Send metadata for purchase and authorize [montdidier] #3101
+* TrustCommerce: Add support for custom fields [jasonxp] #3313
+* Stripe Payment Intents: Support option fields `transfer_destination` and `transfer_amount` and remove `transfer_data` hash [britth] #3317
+* Barclaycard Smartpay: Add support for `shopperStatement` gateway-specific field [jasonxp] #3319
+* Stripe Payment Intents: Add support for billing_details on payment methods [britth] #3320
+* BlueSnap: add standardized 3DS 2 auth fields [bayprogrammer] #3318
+* Barclaycard Smartpay: Add app based 3DS requests for auth and purchase [britth] #3327
+* Stripe Payment Intents, Checkout V2: Add support for `MOTO` flagging [britth] #3323
+* Braintree Blue: Adding 3DS2 passthru support [molbrown] #3328
+* Global Collect: Add Cabal card [leila-alderman] #3310
+* WorldPay: Add Cabal card [leila-alderman] #3316
+* Decidir: Add Cabal card [leila-alderman] #3322
+* PayU Latam: Add Cabal card [leila-alderman] #3324
+* dLocal: Add Cabal card [leila-alderman] #3325
+* BlueSnap: Add Cabal card [leila-alderman] #3326
+* Adyen: added 3DS support through external [rikterbeek] #3294
+* Worldpay: Add support for MOTO flagging [britth] #3329
+* ePay: 3DS support [AllaWLie] #3321
+* Checkout.com: added options[:metadata][:manual_entry] support for MOTO transactions [filipebarcos] #3330
+
+== Version 1.97.0 (Aug 15, 2019)
+* CyberSource: Add issuer `additionalData` gateway-specific field [jasonxp] #3296
+* PayU Latam: Add Naranja card type [hdeters] #3299
+* Adyen: Add app based 3DS requests for auth and purchase [jeremywrowe] #3298
+* MercadoPago: Add Cabal card type [leila-alderman] #3295
+* MONEI: Add external MPI 3DS 1 support [jimmyn] #3292
+* Bambora formerly Beanstream: Pass card owner when storing tokenized cards [alexdunae] #3006
+* Realex: Prevent error calculating `refund_hash` or `credit_hash` when the secret is nil [jasonxp] #3291
+* Orbital: Add external MPI support for 3DS1 [pi3r] #3261
+* Paymill: Add currency and amount to store requests [jasonxp] #3289
+* Realex: Re-implement credit as general credit [leila-alderman] #3280
+* Braintree Blue: Support for stored credentials [hdeters] #3286
+* CardConnect: Move domain from gateway specific to gateway field [hdeters] #3283
+
+== Version 1.96.0 (Jul 26, 2019)
 * Bluesnap: Omit state codes for unsupported countries [therufs] #3229
 * Adyen: Pass updateShopperStatement, industryUsage [curiousepic] #3233
 * TransFirst Transaction Express: Fix blank address2 values [britth] #3231
 * WorldPay: Add support for store method [bayprogrammer] #3232
 * Adyen: Support for additional AVS code mapping [jknipp] #3236
-* Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
+* Adyen: Update message for AVS result code 'A' to generically cover postal code mismatches [jknipp] #3237
 * CyberSource: Update CyberSource SOAP documentation link [vince-smith] #3204
 * USAePay: Handle additional error codes and add default error code [estelendur] #3167
 * Braintree: Add `skip_avs` and `skip_cvv` gateway specific fields [leila-alderman] #3241
@@ -16,6 +70,7 @@
 * NMI: Add support for stored credentials [bayprogrammer] #3243
 * Spreedly: Consolidate API requests and support bank accounts [lancecarlson] #3105
 * BPoint: Hook up merchant_reference and CRN fields [curiousepic] #3249
+* Checkout V2: Stop sending phone number to Checkout V2 integration [filipebarcos] #3248
 * Barclaycard Smartpay: Add support for 3DS2 [britth] #3251
 * Adyen: Add support for non-fractional currencies [molbrown] #3257
 * Decidir: Add new gateway [jknipp] #3254
@@ -25,7 +80,7 @@
 * Kushki: Update supported countries [molbrown] #3260
 * Paypal: Update supported countries [molbrown] #3260
 * BlueSnap: Send amount in capture requests [jknipp] #3262
-* Adds Elo card type in general, and specifically to Mundipagg [jasonxp] #3255
+* Mundipagg: Add Alelo card support [jasonxp] #3255
 * Adyen: Remove temporary amount modification for non-fractional currencies [molbrown] #3263
 * Adyen: Set blank state to N/A [therufs] #3252
 * MiGS: Add tx_source gateway specific field [leila-alderman] #3264
@@ -35,6 +90,14 @@
 * CardConnect: Fix parsing of level 3 fields [hdeters] #3273
 * TrustCommerce: Support void after purchase [jknipp] #3265
 * Payflow: Support arbitrary level 2 + level 3 fields [therufs] #3272
+* BlueSnap: Default to not send amount on capture [molbrown] #3270
+* Spreedly: extra fields, remove extraneous check [montdidier] #3102 #3281
+* Cecabank: Update encryption to SHA2 [leila-alderman] #3278
+* Checkout V2: Fix 3DS 1&2 integration [nicolas-maalouf-cko] #3240
+* Credorax: add 3DS2 MPI auth data support [bayprogrammer] #3274
+* Add Kosovo to the list of countries [AnotherJoSmith] #3226
+* Realex: Adds 3DS 1&2 support through external MPI [filipebarcos] #3284
+* PayPal: Adds 3DS 1 support through external MPI [nebdil] #3279
 
 == Version 1.95.0 (May 23, 2019)
 * Adyen: Constantize version to fix subdomains [curiousepic] #3228

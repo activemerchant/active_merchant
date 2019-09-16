@@ -524,8 +524,16 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_three_d_secure_pass_thru
-    three_d_secure_params = { eci: '05', cavv: 'cavv', xid: 'xid' }
-    assert response = @gateway.purchase(@amount, @credit_card,
+    three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id', cavv_algorithm: 'algorithm', directory_response_status: 'directory', authentication_response_status: 'auth' }
+    response = @gateway.purchase(@amount, @credit_card,
+      three_d_secure: three_d_secure_params
+    )
+    assert_success response
+  end
+
+  def test_successful_purchase_with_some_three_d_secure_pass_thru_fields
+    three_d_secure_params = { version: '2.0', cavv: 'cavv', eci: '02', ds_transaction_id: 'trans_id' }
+    response = @gateway.purchase(@amount, @credit_card,
       three_d_secure: three_d_secure_params
     )
     assert_success response
@@ -860,7 +868,62 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert !gateway.verify_credentials
   end
 
+  def test_successful_merchant_purchase_initial
+    creds_options = stored_credential_options(:merchant, :recurring, :initial)
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+  end
+
+  def test_successful_subsequent_merchant_unscheduled_transaction
+    creds_options = stored_credential_options(:merchant, :unscheduled, id: '020190722142652')
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_subsequent_merchant_recurring_transaction
+    creds_options = stored_credential_options(:cardholder, :recurring, id: '020190722142652')
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_cardholder_purchase_initial
+    creds_options = stored_credential_options(:cardholder, :recurring, :initial)
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_not_nil response.params['braintree_transaction']['network_transaction_id']
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_cardholder_purchase_recurring
+    creds_options = stored_credential_options(:cardholder, :recurring, id: '020190722142652')
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
+  def test_successful_cardholder_purchase_unscheduled
+    creds_options = stored_credential_options(:cardholder, :unscheduled, id: '020190722142652')
+    response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(stored_credential: creds_options))
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params['braintree_transaction']['status']
+  end
+
   private
+
+  def stored_credential_options(*args, id: nil)
+    stored_credential(*args, id: id)
+  end
 
   def assert_avs(address1, zip, expected_avs_code)
     response = @gateway.purchase(@amount, @credit_card, billing_address: {address1: address1, zip: zip})
@@ -868,5 +931,4 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal expected_avs_code, response.avs_result['code']
   end
-
 end

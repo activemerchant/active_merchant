@@ -6,9 +6,23 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4263982640269299')
+    @cabal_credit_card = credit_card('6271701225979642')
     @declined_card = credit_card('4917484589897107', month: 1, year: 2023)
     @invalid_card = credit_card('4917484589897106', month: 1, year: 2023)
+    @three_ds_visa_card = credit_card('4000000000001091', month: 1)
+    @three_ds_master_card = credit_card('5200000000001096', month: 1)
+    @invalid_cabal_card = credit_card('5896 5700 0000 0000', month: 1, year: 2023)
+
     @options = { billing_address: address }
+    @options_3ds2 = @options.merge(
+      three_d_secure: {
+        eci: '05',
+        cavv: 'AAABAWFlmQAAAABjRWWZEEFgFz+A',
+        xid: 'MGpHWm5ZWVpKclo0aUk0VmltVDA=',
+        ds_transaction_id: 'jhg34-sdgds87-sdg87-sdfg7',
+        version: '2.2.0'
+      }
+    )
 
     @check = check
     @invalid_check = check(:routing_number => '123456', :account_number => '123456789')
@@ -47,6 +61,12 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     })
 
     response = @gateway.purchase(@amount, @credit_card, more_options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_3ds2_auth
+    response = @gateway.purchase(@amount, @three_ds_visa_card, @options_3ds2)
     assert_success response
     assert_equal 'Success', response.message
   end
@@ -139,6 +159,13 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal '14002', response.error_code
   end
 
+  def test_failed_purchase_with_invalid_cabal_card
+    response = @gateway.purchase(@amount, @invalid_cabal_card, @options)
+    assert_failure response
+    assert_match(/'Card Number' should be a valid Credit Card/, response.message)
+    assert_equal '10001', response.error_code
+  end
+
   def test_cvv_result
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -176,6 +203,27 @@ class RemoteBlueSnapTest < Test::Unit::TestCase
     assert_equal 'Success', capture.message
   end
 
+<<<<<<< HEAD
+=======
+  def test_successful_authorize_and_partial_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount - 1, auth.authorization)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_3ds2_auth
+    auth = @gateway.authorize(@amount, @three_ds_master_card, @options_3ds2)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
+
+>>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response

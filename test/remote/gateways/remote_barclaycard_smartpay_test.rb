@@ -10,6 +10,7 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', :month => 10, :year => 2020, :verification_value => 737)
     @declined_card = credit_card('4000300011112220', :month => 3, :year => 2030, :verification_value => 737)
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
+    @three_ds_2_enrolled_card = credit_card('4917610000000000', brand: :visa)
 
     @options = {
       order_id: '1',
@@ -166,6 +167,17 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_shopper_statement
+    response = @gateway.purchase(
+      @amount,
+      @credit_card,
+      @options.merge(shopper_statement: 'One-year premium subscription')
+    )
+
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_successful_authorize_with_3ds
     assert response = @gateway.authorize(@amount, @three_ds_enrolled_card, @options.merge(execute_threed: true))
     assert_equal 'RedirectShopper', response.message
@@ -176,6 +188,44 @@ class RemoteBarclaycardSmartpayTest < Test::Unit::TestCase
     refute response.params['paRequest'].blank?
   end
 
+<<<<<<< HEAD
+=======
+  def test_successful_authorize_with_3ds2_browser_client_data
+    assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, @normalized_3ds_2_options)
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDSMethodURL'].blank?
+  end
+
+  def test_successful_authorize_with_3ds2_app_based_request
+    three_ds_app_based_options = {
+      reference: '345123',
+      shopper_email: 'john.smith@test.com',
+      shopper_ip: '77.110.174.153',
+      shopper_reference: 'John Smith',
+      billing_address: address(),
+      order_id: '123',
+      stored_credential: {reason_type: 'unscheduled'},
+      three_ds_2: {
+        channel: 'app',
+      }
+    }
+
+    assert response = @gateway.authorize(@amount, @three_ds_2_enrolled_card, three_ds_app_based_options)
+    assert response.test?
+    refute response.authorization.blank?
+    assert_equal response.params['resultCode'], 'IdentifyShopper'
+    refute response.params['additionalData']['threeds2.threeDS2Token'].blank?
+    refute response.params['additionalData']['threeds2.threeDSServerTransID'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.algorithm'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.directoryServerId'].blank?
+    refute response.params['additionalData']['threeds2.threeDS2DirectoryServerInformation.publicKey'].blank?
+  end
+
+>>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth

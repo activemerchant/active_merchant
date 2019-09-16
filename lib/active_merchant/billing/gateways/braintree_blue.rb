@@ -445,7 +445,6 @@ module ActiveMerchant #:nodoc:
 
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
-
         commit do
           result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
@@ -565,6 +564,7 @@ module ActiveMerchant #:nodoc:
           'vault_customer'          => vault_customer,
           'merchant_account_id'     => transaction.merchant_account_id,
           'risk_data'               => risk_data,
+          'network_transaction_id'  => transaction.network_transaction_id || nil,
           'processor_response_code' => response_code_from_result(result)
         }
       end
@@ -604,6 +604,7 @@ module ActiveMerchant #:nodoc:
         end
 
         add_payment_method(parameters, credit_card_or_vault_id, options)
+        add_stored_credential_data(parameters, credit_card_or_vault_id, options)
 
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
@@ -619,13 +620,7 @@ module ActiveMerchant #:nodoc:
           }
         end
 
-        if options[:three_d_secure]
-          parameters[:three_d_secure_pass_thru] = {
-            cavv: options[:three_d_secure][:cavv],
-            eci_flag: options[:three_d_secure][:eci],
-            xid: options[:three_d_secure][:xid],
-          }
-        end
+        add_3ds_info(parameters, options[:three_d_secure])
 
         parameters[:tax_amount] = options[:tax_amount] if options[:tax_amount]
         parameters[:tax_exempt] = options[:tax_exempt] if options[:tax_exempt]
@@ -638,6 +633,48 @@ module ActiveMerchant #:nodoc:
         parameters[:line_items] = options[:line_items] if options[:line_items]
 
         parameters
+      end
+
+      def add_3ds_info(parameters, three_d_secure_opts)
+        return if empty?(three_d_secure_opts)
+        pass_thru = {}
+
+        pass_thru[:three_d_secure_version] = three_d_secure_opts[:version] if three_d_secure_opts[:version]
+        pass_thru[:eci_flag] = three_d_secure_opts[:eci] if three_d_secure_opts[:eci]
+        pass_thru[:cavv_algorithm] = three_d_secure_opts[:cavv_algorithm] if three_d_secure_opts[:cavv_algorithm]
+        pass_thru[:cavv] = three_d_secure_opts[:cavv] if three_d_secure_opts[:cavv]
+        pass_thru[:directory_response] = three_d_secure_opts[:directory_response_status] if three_d_secure_opts[:directory_response_status]
+        pass_thru[:authentication_response] = three_d_secure_opts[:authentication_response_status] if three_d_secure_opts[:authentication_response_status]
+
+        parameters[:three_d_secure_pass_thru] = pass_thru.merge(xid_or_ds_trans_id(three_d_secure_opts))
+      end
+
+      def xid_or_ds_trans_id(three_d_secure_opts)
+        if three_d_secure_opts[:version].to_f >= 2
+          { ds_transaction_id: three_d_secure_opts[:ds_transaction_id] }
+        else
+          { xid: three_d_secure_opts[:xid] }
+        end
+      end
+
+      def add_stored_credential_data(parameters, credit_card_or_vault_id, options)
+        return unless (stored_credential = options[:stored_credential])
+        parameters[:external_vault] = {}
+        if stored_credential[:initial_transaction]
+          parameters[:external_vault][:status] = 'will_vault'
+        else
+          parameters[:external_vault][:status] = 'vaulted'
+          parameters[:external_vault][:previous_network_transaction_id] = stored_credential[:network_transaction_id]
+        end
+        if stored_credential[:initiator] == 'merchant'
+          if stored_credential[:reason_type] == 'installment'
+            parameters[:transaction_source] = 'recurring'
+          else
+            parameters[:transaction_source] = stored_credential[:reason_type]
+          end
+        else
+          parameters[:transaction_source] = ''
+        end
       end
 
       def add_payment_method(parameters, credit_card_or_vault_id, options)

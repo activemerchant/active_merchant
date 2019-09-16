@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
-        add_customer_data(params, options)
+        add_customer_data(params, options, payment_method)
         add_credit_card(params, payment_method, options)
         params['Method'] = payment_method.respond_to?(:number) ? 'ProcessPayment' : 'TokenPayment'
         commit(url_for('Transaction'), params)
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
-        add_customer_data(params, options)
+        add_customer_data(params, options, payment_method)
         add_credit_card(params, payment_method, options)
         params['Method'] = 'Authorise'
         commit(url_for('Authorisation'), params)
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         add_metadata(params, options)
         add_invoice(params, 0, options)
-        add_customer_data(params, options)
+        add_customer_data(params, options, payment_method)
         add_credit_card(params, payment_method, options)
         params['Method'] = 'CreateTokenCustomer'
         commit(url_for('Transaction'), params)
@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
         params = {}
         add_metadata(params, options)
         add_invoice(params, 0, options)
-        add_customer_data(params, options)
+        add_customer_data(params, options, payment_method)
         add_credit_card(params, payment_method, options)
         add_customer_token(params, customer_token)
         params['Method'] = 'UpdateTokenCustomer'
@@ -212,17 +212,48 @@ module ActiveMerchant #:nodoc:
         params['TransactionID'] = reference
       end
 
-      def add_customer_data(params, options)
-        params['Customer'] ||= {}
-        add_address(params['Customer'], (options[:billing_address] || options[:address]), {:email => options[:email]})
-        params['ShippingAddress'] = {}
-        add_address(params['ShippingAddress'], options[:shipping_address], {:skip_company => true})
+      def add_customer_data(params, options, payment_method = nil)
+        add_customer_fields(params, options, payment_method)
+        add_shipping_fields(params, options)
+      end
+
+      def add_customer_fields(params, options, payment_method)
+        key = 'Customer'
+        params[key] ||= {}
+
+        customer_address = options[:billing_address] || options[:address]
+
+        add_name_and_email(params[key], customer_address, options[:email], payment_method)
+        add_address(params[key], customer_address)
+      end
+
+      def add_shipping_fields(params, options)
+        key = 'ShippingAddress'
+        params[key] = {}
+
+        add_name_and_email(params[key], options[:shipping_address], options[:email])
+        add_address(params[key], options[:shipping_address], {:skip_company => true})
+      end
+
+      def add_name_and_email(params, address, email, payment_method = nil)
+        if address.present?
+          params['FirstName'], params['LastName'] = split_names(address[:name])
+        elsif payment_method_name_available?(payment_method)
+          params['FirstName'] = payment_method.first_name
+          params['LastName'] = payment_method.last_name
+        end
+
+        params['Email'] = email
+      end
+
+      def payment_method_name_available?(payment_method)
+        payment_method.respond_to?(:first_name) && payment_method.respond_to?(:last_name) &&
+          payment_method.first_name.present? && payment_method.last_name.present?
       end
 
       def add_address(params, address, options={})
         return unless address
 
-        params['FirstName'], params['LastName'] = split_names(address[:name])
         params['Title'] = address[:title]
         params['CompanyName'] = address[:company] unless options[:skip_company]
         params['Street1'] = truncate(address[:address1], 50)
@@ -231,9 +262,8 @@ module ActiveMerchant #:nodoc:
         params['State'] = address[:state]
         params['PostalCode'] = address[:zip]
         params['Country'] = address[:country].to_s.downcase
-        params['Phone'] = address[:phone]
+        params['Phone'] = address[:phone] || address[:phone_number]
         params['Fax'] = address[:fax]
-        params['Email'] = options[:email]
       end
 
       def add_credit_card(params, credit_card, options)

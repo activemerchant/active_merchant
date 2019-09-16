@@ -90,12 +90,25 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Payer', options[:email]
             add_address(xml, 'n2:Address', address)
           end
+
+          add_three_d_secure(xml, options) if options[:three_d_secure]
         end
       end
 
       def add_descriptors(xml, options)
         xml.tag! 'n2:SoftDescriptor', options[:soft_descriptor] unless options[:soft_descriptor].blank?
         xml.tag! 'n2:SoftDescriptorCity', options[:soft_descriptor_city] unless options[:soft_descriptor_city].blank?
+      end
+
+      def add_three_d_secure(xml, options)
+        three_d_secure = options[:three_d_secure]
+        xml.tag! 'ThreeDSecureRequest' do
+          xml.tag! 'MpiVendor3ds', 'Y'
+          xml.tag! 'AuthStatus3ds', three_d_secure[:trans_status] unless three_d_secure[:trans_status].blank?
+          xml.tag! 'Cavv', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+          xml.tag! 'Eci3ds', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+          xml.tag! 'Xid', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+        end
       end
 
       def credit_card_type(type)

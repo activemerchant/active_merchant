@@ -19,6 +19,12 @@ module ActiveMerchant #:nodoc:
     # * Maestro
     # * Forbrugsforeningen
     # * Elo
+<<<<<<< HEAD
+=======
+    # * Alelo
+    # * Cabal
+    # * Naranja
+>>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
     #
     # For testing purposes, use the 'bogus' credit card brand. This skips the vast majority of
     # validations, allowing you to focus on your core concerns until you're ready to be more concerned
@@ -90,6 +96,12 @@ module ActiveMerchant #:nodoc:
       # * +'maestro'+
       # * +'forbrugsforeningen'+
       # * +'elo'+
+<<<<<<< HEAD
+=======
+      # * +'alelo'+
+      # * +'cabal'+
+      # * +'naranja'+
+>>>>>>> ac7100fe30d82a461de977a9bbea4fccc5f88477
       #
       # Or, if you wish to test your implementation, +'bogus'+.
       #

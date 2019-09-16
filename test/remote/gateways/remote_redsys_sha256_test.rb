@@ -5,6 +5,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     @gateway = RedsysGateway.new(fixtures(:redsys_sha256))
     @credit_card = credit_card('4548812049400004')
     @declined_card = credit_card
+    @threeds2_credit_card = credit_card('4918019199883839')
     @options = {
       order_id: generate_order_id,
     }
@@ -14,6 +15,25 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
     assert_equal 'Transaction Approved', response.message
+  end
+
+  def test_successful_authorize_3ds
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.authorize(100, @credit_card, options)
+    assert_success response
+    assert response.params['ds_emv3ds']
+    assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
+    assert_equal 'CardConfiguration', response.message
+  end
+
+  def test_successful_purchase_3ds
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.purchase(100, @threeds2_credit_card, options)
+    assert_success response
+    assert three_ds_data = JSON.parse(response.params['ds_emv3ds'])
+    assert_equal '2.1.0', three_ds_data['protocolVersion']
+    assert_equal 'https://sis-d.redsys.es/sis-simulador-web/threeDsMethod.jsp', three_ds_data['threeDSMethodURL']
+    assert_equal 'CardConfiguration', response.message
   end
 
   def test_purchase_with_invalid_order_id
