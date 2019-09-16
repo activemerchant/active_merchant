@@ -25,8 +25,8 @@ module ActiveMerchant #:nodoc:
       self.live_url = 'https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor'
 
       # Schema files can be found here: https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/
-      TEST_XSD_VERSION = '1.156'
-      PRODUCTION_XSD_VERSION = '1.155'
+      TEST_XSD_VERSION = '1.159'
+      PRODUCTION_XSD_VERSION = '1.159'
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :dankort, :maestro, :elo]
       self.supported_countries = %w(US BR CA CN DK FI FR DE IN JP MX NO SE GB SG LB PK)
@@ -258,6 +258,7 @@ module ActiveMerchant #:nodoc:
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
+        add_threeds_2_ucaf_data(xml, creditcard_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         add_auth_service(xml, creditcard_or_reference, options)
@@ -295,6 +296,7 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
+        add_threeds_2_ucaf_data(xml, payment_method_or_reference, options)
         add_decision_manager_fields(xml, options)
         add_mdd_fields(xml, options)
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
@@ -530,9 +532,36 @@ module ActiveMerchant #:nodoc:
           add_auth_network_tokenization(xml, payment_method, options)
         else
           xml.tag! 'ccAuthService', {'run' => 'true'} do
-            indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
-            xml.tag!('commerceIndicator', indicator) if indicator
+            if options[:three_d_secure]
+              add_normalized_threeds_2_data(xml, payment_method, options)
+            else
+              indicator = options[:commerce_indicator] || stored_credential_commerce_indicator(options)
+              xml.tag!('commerceIndicator', indicator) if indicator
+            end
           end
+        end
+      end
+
+      def add_normalized_threeds_2_data(xml, payment_method, options)
+        threeds_2_options = options[:three_d_secure]
+
+        xml.tag!('cavv', threeds_2_options[:cavv]) if threeds_2_options[:cavv] && card_brand(payment_method).to_sym != :master
+        xml.tag!('cavvAlgorithm', threeds_2_options[:cavv_algorithm]) if threeds_2_options[:cavv_algorithm]
+        xml.tag!('paSpecificationVersion', threeds_2_options[:version]) if threeds_2_options[:version]
+        xml.tag!('directoryServerTransactionID', threeds_2_options[:ds_transaction_id]) if threeds_2_options[:ds_transaction_id]
+        xml.tag!('commerceIndicator', options[:commerce_indicator]) if options[:commerce_indicator]
+        xml.tag!('eciRaw', threeds_2_options[:eci]) if threeds_2_options[:eci]
+        xml.tag!('xid', threeds_2_options[:xid]) if threeds_2_options[:xid]
+        xml.tag!('veresEnrolled', options[:veres_enrolled]) if options[:veres_enrolled]
+        xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
+      end
+
+      def add_threeds_2_ucaf_data(xml, payment_method, options)
+        return unless options[:three_d_secure] && card_brand(payment_method).to_sym == :master
+
+        xml.tag! 'ucaf' do
+          xml.tag!('authenticationData', options[:three_d_secure][:cavv])
+          xml.tag!('collectionIndicator', options[:collection_indicator]) if options[:collection_indicator]
         end
       end
 

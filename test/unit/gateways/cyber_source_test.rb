@@ -15,6 +15,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @amount = 100
     @customer_ip = '127.0.0.1'
     @credit_card = credit_card('4111111111111111', :brand => 'visa')
+    @master_credit_card = credit_card('4111111111111111', :brand => 'master')
     @elo_credit_card = credit_card('5067310000000010', :brand => 'elo')
     @declined_card = credit_card('801111111111111', :brand => 'visa')
     @check = check()
@@ -615,6 +616,75 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_threedeesecure_validate_response)
 
     assert_success validation
+  end
+
+  def test_adds_3ds2_fields_via_normalized_hash
+    version = '2.0'
+    eci = '05'
+    cavv = '637574652070757070792026206b697474656e73'
+    cavv_algorithm = 2
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    commerce_indicator = 'vbv'
+    authentication_response_status = 'Y'
+    veres_enrolled = 'N'
+    options_with_normalized_3ds = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        cavv_algorithm: cavv_algorithm,
+        authentication_response_status: authentication_response_status
+      },
+      veres_enrolled: veres_enrolled,
+      commerce_indicator: commerce_indicator
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_normalized_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<eciRaw\>#{eci}/, data)
+      assert_match(/<cavv\>#{cavv}/, data)
+      assert_match(/<paSpecificationVersion\>#{version}/, data)
+      assert_match(/<directoryServerTransactionID\>#{ds_transaction_id}/, data)
+      assert_match(/<paresStatus\>#{authentication_response_status}/, data)
+      assert_match(/<cavvAlgorithm\>#{cavv_algorithm}/, data)
+      assert_match(/<commerceIndicator\>#{commerce_indicator}/, data)
+      assert_match(/<veresEnrolled\>#{veres_enrolled}/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_adds_mastercard_3ds2_fields_via_normalized_hash
+    version = '2.0'
+    eci = '05'
+    cavv = '637574652070757070792026206b697474656e73'
+    cavv_algorithm = 1
+    ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
+    commerce_indicator = 'spa'
+    collection_indicator = 2
+    options_with_normalized_3ds = @options.merge(
+      three_d_secure: {
+        version: version,
+        eci: eci,
+        cavv: cavv,
+        ds_transaction_id: ds_transaction_id,
+        cavv_algorithm: cavv_algorithm
+      },
+      commerce_indicator: commerce_indicator,
+      collection_indicator: collection_indicator
+    )
+
+    stub_comms do
+      @gateway.purchase(@amount, @master_credit_card, options_with_normalized_3ds)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<eciRaw\>#{eci}/, data)
+      assert_match(/<authenticationData\>#{cavv}/, data)
+      assert_match(/<paSpecificationVersion\>#{version}/, data)
+      assert_match(/<directoryServerTransactionID\>#{ds_transaction_id}/, data)
+      assert_match(/<cavvAlgorithm\>#{cavv_algorithm}/, data)
+      assert_match(/<commerceIndicator\>#{commerce_indicator}/, data)
+      assert_match(/<collectionIndicator\>#{collection_indicator}/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_scrub
