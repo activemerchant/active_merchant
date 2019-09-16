@@ -21,7 +21,7 @@ class GlobalTransportTest < Test::Unit::TestCase
     assert_equal '3648838', response.authorization
     assert response.test?
     assert_equal 'CVV matches', response.cvv_result['message']
-    assert_equal 'Street address and postal code do not match.', response.avs_result['message']
+    assert_equal 'Street address and postal code do not match. For American Express: Card member\'s name, street address and postal code do not match.', response.avs_result['message']
   end
 
   def test_failed_purchase

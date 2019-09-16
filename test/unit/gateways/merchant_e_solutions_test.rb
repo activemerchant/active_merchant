@@ -122,7 +122,7 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=A')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal response.avs_result['code'], 'A'
-    assert_equal response.avs_result['message'], 'Street address matches, but 5-digit and 9-digit postal code do not match.'
+    assert_equal response.avs_result['message'], 'Street address matches, but postal code does not match.'
     assert_equal response.avs_result['street_match'], 'Y'
     assert_equal response.avs_result['postal_match'], 'N'
   end
