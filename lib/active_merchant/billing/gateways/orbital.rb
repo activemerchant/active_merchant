@@ -520,9 +520,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mastercard_three_d_secure(xml, creditcard, parameters)
-        if creditcard.brand == 'master'
+        if creditcard&.brand == 'master'
           xml.tag! :AAV, parameters[:cavv] if parameters[:cavv]
-          xml.tag! :UCAFInd, parameters[:ucaf] if parameters[:ucaf]
+          xml.tag! :UCAFInd, parameters[:ucaf_ind] if parameters[:ucaf_ind]
         end
       end
 
