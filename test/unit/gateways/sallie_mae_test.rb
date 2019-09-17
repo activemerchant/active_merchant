@@ -35,7 +35,7 @@ class SallieMaeTest < Test::Unit::TestCase
   end
 
   def test_test_account
-    gateway = SallieMaeGateway.new(:login => "TEST0")
+    gateway = SallieMaeGateway.new(:login => 'TEST0')
     assert gateway.test?
   end
 
@@ -43,11 +43,11 @@ class SallieMaeTest < Test::Unit::TestCase
 
   # Place raw successful response from gateway here
   def successful_purchase_response
-    "Status=Accepted"
+    'Status=Accepted'
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
-    "Status=Declined"
+    'Status=Declined'
   end
 end

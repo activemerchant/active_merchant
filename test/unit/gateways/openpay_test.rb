@@ -178,6 +178,17 @@ class OpenpayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_passing_payment_installments
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, payments: '6')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(%r{"payments":"6"}, data)
+      assert_match(%r{"payment_plan":}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_transcript_scrubbing
     assert_equal scrubbed_transcript, @gateway.scrub(transcript)
   end
@@ -300,7 +311,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-20T17:08:43-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
   end
@@ -334,7 +346,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:01:10-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
   end
@@ -368,7 +381,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:01:10-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
       RESPONSE
   end
@@ -410,7 +424,8 @@ class OpenpayTest < Test::Unit::TestCase
     "creation_date": "2014-01-18T21:49:38-06:00",
     "description": "Store Purchase",
     "error_message": null,
-    "order_id": null
+    "order_id": null,
+    "error_code": null
 }
     RESPONSE
   end

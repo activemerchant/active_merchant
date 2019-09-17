@@ -4,15 +4,15 @@ class RemotePaySecureTest < Test::Unit::TestCase
 
   def setup
     @gateway = PaySecureGateway.new(fixtures(:pay_secure))
-    
+
     @credit_card = credit_card('4000100011112224')
-    @options = { 
+    @options = {
       :billing_address => address,
       :order_id => generate_unique_id
     }
     @amount = 100
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -26,7 +26,7 @@ class RemotePaySecureTest < Test::Unit::TestCase
     assert_equal 'Declined, card expired', response.message
     assert_failure response
   end
-  
+
   def test_invalid_login
     gateway = PaySecureGateway.new(
                 :login => '',

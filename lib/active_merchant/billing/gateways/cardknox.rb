@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class CardknoxGateway < Gateway
       self.live_url = 'https://x1.cardknox.com/gateway'
 
-      self.supported_countries = ['US','CA','GB']
+      self.supported_countries = ['US', 'CA', 'GB']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
@@ -81,8 +81,8 @@ module ActiveMerchant #:nodoc:
 
       def verify(credit_card, options={})
         MultiResponse.run(:use_first_response) do |r|
-         r.process { authorize(100, credit_card, options) }
-         r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def split_authorization(authorization)
-        authorization.split(";")
+        authorization.split(';')
       end
 
       def add_reference(post, reference)
@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
 
       def source_type_from(authorization)
         _, _, source_type = split_authorization(authorization)
-        (source_type || "credit_card").to_sym
+        (source_type || 'credit_card').to_sym
       end
 
       def add_source(post, source)
@@ -255,7 +255,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         fields = {}
         for line in body.split('&')
-          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
+          key, value = *line.scan(%r{^(\w+)\=(.*)$}).flatten
           fields[key] = CGI.unescape(value.to_s)
         end
 
@@ -276,14 +276,13 @@ module ActiveMerchant #:nodoc:
           amount:            fields['xAuthAmount'],
           masked_card_num:   fields['xMaskedCardNumber'],
           masked_account_number: fields['MaskedAccountNumber']
-        }.delete_if{|k, v| v.nil?}
+        }.delete_if { |k, v| v.nil? }
       end
-
 
       def commit(action, source_type, parameters)
         response = parse(ssl_post(live_url, post_data(COMMANDS[source_type][action], parameters)))
 
-       Response.new(
+        Response.new(
           (response[:status] == 'Approved'),
           message_from(response),
           response,
@@ -294,10 +293,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response[:status] == "Approved"
-          "Success"
+        if response[:status] == 'Approved'
+          'Success'
         elsif response[:error].blank?
-          "Unspecified error"
+          'Unspecified error'
         else
           response[:error]
         end
@@ -310,9 +309,9 @@ module ActiveMerchant #:nodoc:
       def post_data(command, parameters = {})
         initial_parameters = {
           Key: @options[:api_key],
-          Version: "4.5.4",
+          Version: '4.5.4',
           SoftwareName: 'Active Merchant',
-          SoftwareVersion: "#{ActiveMerchant::VERSION}",
+          SoftwareVersion: ActiveMerchant::VERSION.to_s,
           Command: command,
         }
 
@@ -321,7 +320,7 @@ module ActiveMerchant #:nodoc:
         initial_parameters[:Hash] = "s/#{seed}/#{hash}/n" unless @options[:pin].blank?
         parameters = initial_parameters.merge(parameters)
 
-        parameters.reject{|k, v| v.blank?}.collect{ |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.reject { |k, v| v.blank? }.collect { |key, value| "x#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
     end
   end

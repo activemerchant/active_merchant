@@ -26,35 +26,35 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert response.test?
     assert_success response
-    assert_equal "6677348", response.params["create_customer_result"]
+    assert_equal '6677348', response.params['create_customer_result']
   end
 
   def test_modify_customer_credit_card
     @gateway.expects(:ssl_post).returns(successful_modify_customer_credit_card_response)
 
-    assert response = @gateway.modify_customer_credit_card("10001", @credit_card)
+    assert response = @gateway.modify_customer_credit_card('10001', @credit_card)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
-    assert_equal "6677757", response.params["modify_customer_credit_card_result"]
+    assert_equal '6677757', response.params['modify_customer_credit_card_result']
   end
 
   def test_successful_credit_card_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-    assert response = @gateway.authorize_credit_card_payment("10001", @amount)
+    assert response = @gateway.authorize_credit_card_payment('10001', @amount)
     assert_instance_of Response, response
     assert response.test?
 
     assert_success response
-    assert_equal "18713505", response.params["trans_id"]
-    assert_equal "RESPONSECODE=A\nAUTHCODE=020411\nDECLINEREASON=\nAVSDATA=Z\nTRANSID=C00 17093294", response.params["auth_string"]
-    assert_equal "Approved", response.params["message_text"]
-    assert_equal "true", response.params["approved"]
-    assert_equal "Z", response.params["avs_code"]
-    assert_equal "020411", response.params["auth_code"]
-    assert_equal "C00 17093294", response.params["trans_code"]
-    assert_equal "18713505", response.authorization
+    assert_equal '18713505', response.params['trans_id']
+    assert_equal "RESPONSECODE=A\nAUTHCODE=020411\nDECLINEREASON=\nAVSDATA=Z\nTRANSID=C00 17093294", response.params['auth_string']
+    assert_equal 'Approved', response.params['message_text']
+    assert_equal 'true', response.params['approved']
+    assert_equal 'Z', response.params['avs_code']
+    assert_equal '020411', response.params['auth_code']
+    assert_equal 'C00 17093294', response.params['trans_code']
+    assert_equal '18713505', response.authorization
     assert_equal ModernPaymentsCimGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'Z', response.avs_result['code']
   end
@@ -62,12 +62,12 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
   def test_unsuccessful_credit_card_authorization
     @gateway.expects(:ssl_post).returns(unsuccessful_credit_card_authorization_response)
 
-    assert response = @gateway.authorize_credit_card_payment("10001", @amount)
+    assert response = @gateway.authorize_credit_card_payment('10001', @amount)
     assert_instance_of Response, response
     assert response.test?
     assert_failure response
-    assert_equal "999", response.authorization
-    assert_match %r{RESPONSECODE=D}, response.params["message_text"]
+    assert_equal '999', response.authorization
+    assert_match %r{RESPONSECODE=D}, response.params['message_text']
   end
 
   def test_soap_fault_response
@@ -77,7 +77,7 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert response.test?
     assert_failure response
-    assert_equal "soap:Client", response.params["faultcode"]
+    assert_equal 'soap:Client', response.params['faultcode']
   end
 
   private

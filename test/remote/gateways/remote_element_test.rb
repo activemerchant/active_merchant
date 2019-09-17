@@ -18,8 +18,8 @@ class RemoteElementTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
-    assert_match %r{Street address and postal code do not match}, response.avs_result["message"]
-    assert_match %r{CVV matches}, response.cvv_result["message"]
+    assert_match %r{Street address and postal code do not match}, response.avs_result['message']
+    assert_match %r{CVV matches}, response.cvv_result['message']
   end
 
   def test_failed_purchase
@@ -45,7 +45,7 @@ class RemoteElementTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_shipping_address
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address(address1: "Shipping")))
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(shipping_address: address(address1: 'Shipping')))
     assert_success response
     assert_equal 'Approved', response.message
   end

@@ -18,14 +18,14 @@ class Flo2cashTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_id: "boom")
+      @gateway.purchase(@amount, @credit_card, order_id: 'boom')
     end.check_request do |endpoint, data, headers|
       assert_match(%r{<Reference>boom</Reference>}, data)
     end.respond_with(successful_authorize_response, successful_capture_response)
 
     assert_success response
 
-    assert_equal "P150100005006789", response.authorization
+    assert_equal 'P150100005006789', response.authorization
     assert response.test?
   end
 
@@ -35,7 +35,7 @@ class Flo2cashTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Transaction Declined - Bank Error", response.message
+    assert_equal 'Transaction Declined - Bank Error', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.responses.first.error_code
     assert response.test?
   end
@@ -46,7 +46,7 @@ class Flo2cashTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     assert_success response
-    assert_equal "P150100005006789", response.authorization
+    assert_equal 'P150100005006789', response.authorization
 
     capture = stub_comms do
       @gateway.capture(@amount, response.authorization)
@@ -63,7 +63,7 @@ class Flo2cashTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response)
 
     assert_failure response
-    assert_equal "Transaction Declined - Bank Error", response.message
+    assert_equal 'Transaction Declined - Bank Error', response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     assert response.test?
   end
@@ -74,7 +74,7 @@ class Flo2cashTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response, successful_capture_response)
 
     assert_success response
-    assert_equal "P150100005006789", response.authorization
+    assert_equal 'P150100005006789', response.authorization
 
     refund = stub_comms do
       @gateway.refund(@amount, response.authorization)
@@ -91,7 +91,7 @@ class Flo2cashTest < Test::Unit::TestCase
     end.respond_with(empty_purchase_response)
 
     assert_failure response
-    assert_equal "Unable to read error message", response.message
+    assert_equal 'Unable to read error message', response.message
   end
 
   def test_transcript_scrubbing

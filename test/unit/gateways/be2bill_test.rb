@@ -41,11 +41,11 @@ class Be2billTest < Test::Unit::TestCase
 
   # Place raw successful response from gateway here
   def successful_purchase_response
-    {"OPERATIONTYPE"=>"payment", "TRANSACTIONID"=>"A189063", "EXECCODE"=>"0000", "MESSAGE"=>"The transaction has been accepted.", "ALIAS"=>"A189063", "DESCRIPTOR"=>"RENTABILITEST"}.to_json
+    {'OPERATIONTYPE'=>'payment', 'TRANSACTIONID'=>'A189063', 'EXECCODE'=>'0000', 'MESSAGE'=>'The transaction has been accepted.', 'ALIAS'=>'A189063', 'DESCRIPTOR'=>'RENTABILITEST'}.to_json
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
-    {"OPERATIONTYPE"=>"payment", "TRANSACTIONID"=>"A189063", "EXECCODE"=>"1001", "MESSAGE"=>"The parameter \"CARDCODE\" is missing.\n", "DESCRIPTOR"=>"RENTABILITEST"}.to_json
+    {'OPERATIONTYPE'=>'payment', 'TRANSACTIONID'=>'A189063', 'EXECCODE'=>'1001', 'MESSAGE'=>"The parameter \"CARDCODE\" is missing.\n", 'DESCRIPTOR'=>'RENTABILITEST'}.to_json
   end
 end

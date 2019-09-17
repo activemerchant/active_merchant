@@ -1,5 +1,4 @@
 require 'test_helper'
-
 class ProPayTest < Test::Unit::TestCase
   include CommStub
 
@@ -56,7 +55,7 @@ class ProPayTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, "auth", @options)
+    response = @gateway.capture(@amount, 'auth', @options)
     assert_success response
 
     assert_equal '24', response.authorization
@@ -66,7 +65,7 @@ class ProPayTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, "invalid-auth", @options)
+    response = @gateway.capture(@amount, 'invalid-auth', @options)
     assert_failure response
     assert_equal '51', response.error_code
     assert_equal 'Invalid transNum and/or Unable to act perform actions on transNum due to funding', response.message
@@ -145,12 +144,22 @@ class ProPayTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_failure response
-    assert_equal "58", response.error_code
+    assert_equal '58', response.error_code
   end
 
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_does_not_send_dashed_zip_code
+    options = @options.merge(billing_address: address.update(zip: '12345-3456'))
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<zip>123453456</, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private

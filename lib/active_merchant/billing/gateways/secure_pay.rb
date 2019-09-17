@@ -95,14 +95,14 @@ module ActiveMerchant #:nodoc:
         post[:version]        = API_VERSION
         post[:login]          = @options[:login]
         post[:tran_key]       = @options[:password]
-        post[:relay_response] = "FALSE"
+        post[:relay_response] = 'FALSE'
         post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
+        post[:delim_data]     = 'TRUE'
+        post[:delim_char]     = ','
+        post[:encap_char]     = '$'
         post[:solution_ID]    = application_id if application_id
 
-        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
         request
       end
 
@@ -183,9 +183,9 @@ module ActiveMerchant #:nodoc:
 
       def message_from(results)
         if results[:response_code] == DECLINED
-          return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
+          return CVVResult.messages[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
           if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[ results[:avs_result_code] ]
+            return AVSResult.messages[results[:avs_result_code]]
           end
         end
 
@@ -198,4 +198,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

@@ -113,9 +113,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
-          .gsub(%r{(<CARDNUMBER>\d{6})\d+(\d{4}</CARDNUMBER>)}, '\1...\2')
-          .gsub(%r{(<CVV>)\d+(</CVV)}, '\1...\2')
+        transcript.
+          gsub(%r{(<CARDNUMBER>\d{6})\d+(\d{4}</CARDNUMBER>)}, '\1...\2').
+          gsub(%r{(<CVV>)\d+(</CVV)}, '\1...\2')
       end
 
       private

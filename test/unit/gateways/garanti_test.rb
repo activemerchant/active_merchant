@@ -5,16 +5,12 @@ require 'test_helper'
 class GarantiTest < Test::Unit::TestCase
   def setup
     @original_kcode = nil
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
 
     Base.mode = :test
     @gateway = GarantiGateway.new(:login => 'a', :password => 'b', :terminal_id => 'c', :merchant_id => 'd')
 
     @credit_card = credit_card(4242424242424242)
-    @amount = 1000 #1000 cents, 10$
+    @amount = 1000 # 1000 cents, 10$
 
     @options = {
       :order_id => 'db4af18c5222503d845180350fbda516',
@@ -51,12 +47,9 @@ class GarantiTest < Test::Unit::TestCase
     if ActiveSupport::Inflector.method(:transliterate).arity == -2
       assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
       assert_equal 'abccdefgghiijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
-    elsif RUBY_VERSION >= '1.9'
+    else
       assert_equal 'ABCDEFGHIJKLMNOPRSTUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
       assert_equal 'abcdefghijklmnoprstuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
-    else
-      assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
-      assert_equal 'abccdefgghijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
     end
   end
 

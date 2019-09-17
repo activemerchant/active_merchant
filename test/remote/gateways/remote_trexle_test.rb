@@ -40,7 +40,7 @@ class RemoteTrexleTest < Test::Unit::TestCase
   end
 
   def test_failed_capture_due_to_invalid_token
-    response = @gateway.capture(@amount, "bogus", @options)
+    response = @gateway.capture(@amount, 'bogus', @options)
     assert_failure response
   end
 
@@ -70,8 +70,8 @@ class RemoteTrexleTest < Test::Unit::TestCase
   # falls outside of active merchant
   def test_store_and_charge_with_trexle_js_card_token
     headers = {
-      "Content-Type" => "application/json",
-      "Authorization" => "Basic #{Base64.strict_encode64(@gateway.options[:api_key] + ':').strip}"
+      'Content-Type' => 'application/json',
+      'Authorization' => "Basic #{Base64.strict_encode64(@gateway.options[:api_key] + ':').strip}"
     }
     # Get a token equivalent to what is returned by trexle.js
     card_attrs = {
@@ -80,18 +80,18 @@ class RemoteTrexleTest < Test::Unit::TestCase
       expiry_year: @credit_card.year,
       cvc: @credit_card.verification_value,
       name: "#{@credit_card.first_name} #{@credit_card.last_name}",
-      address_line1: "321 Shoreline Park",
-      address_line2: "suite #7",
-      address_city: "Mountain View",
-      address_postcode: "94043",
-      address_state: "CA",
-      address_country: "United States"
+      address_line1: '321 Shoreline Park',
+      address_line2: 'suite #7',
+      address_city: 'Mountain View',
+      address_postcode: '94043',
+      address_state: 'CA',
+      address_country: 'United States'
     }
-    url = @gateway.test_url + "/tokens"
+    url = @gateway.test_url + '/tokens'
 
     body = JSON.parse(@gateway.ssl_post(url, card_attrs.to_json, headers))
 
-    card_token = body["response"]["token"]
+    card_token = body['response']['token']
 
     store = @gateway.store(card_token, @options)
     assert_success store
@@ -163,7 +163,7 @@ class RemoteTrexleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end
     clean_transcript = @gateway.scrub(transcript)
-    
+
     assert_scrubbed(@credit_card.number, clean_transcript)
     assert_scrubbed(@credit_card.verification_value.to_s, clean_transcript)
   end

@@ -14,34 +14,39 @@ class BogusTest < Test::Unit::TestCase
 
     @creditcard = credit_card(CC_SUCCESS_PLACEHOLDER)
 
-    @response = ActiveMerchant::Billing::Response.new(true, "Transaction successful", :transid => BogusGateway::AUTHORIZATION)
+    @response = ActiveMerchant::Billing::Response.new(true, 'Transaction successful', :transid => BogusGateway::AUTHORIZATION)
   end
 
   def test_authorize
-    assert  @gateway.authorize(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.authorize(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response = @gateway.authorize(1000, credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.authorize(1000, credit_card('123'))
     end
-    assert_equal("Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error", e.message)
+    assert_equal('Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error', e.message)
+  end
+
+  def test_authorize_using_credit_card_token
+    token = @gateway.store(credit_card(CC_SUCCESS_PLACEHOLDER)).authorization
+    assert @gateway.authorize(1000, token).success?
   end
 
   def test_purchase
-    assert  @gateway.purchase(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.purchase(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response = @gateway.purchase(1000, credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.purchase(1000, credit_card('123'))
     end
-    assert_equal("Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error", e.message)
+    assert_equal('Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_capture
     assert  @gateway.capture(1000, '1337').success?
-    assert  @gateway.capture(1000, @response.params["transid"]).success?
+    assert  @gateway.capture(1000, @response.params['transid']).success?
     response =  @gateway.capture(1000, CC_FAILURE_PLACEHOLDER)
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
@@ -51,19 +56,19 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_credit
-    assert  @gateway.credit(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.credit(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response =  @gateway.credit(1000, credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.credit(1000, credit_card('123'))
     end
-    assert_equal("Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error", e.message)
+    assert_equal('Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_refund
     assert  @gateway.refund(1000, '1337').success?
-    assert  @gateway.refund(1000, @response.params["transid"]).success?
+    assert  @gateway.refund(1000, @response.params['transid']).success?
     response = @gateway.refund(1000, CC_FAILURE_PLACEHOLDER)
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
@@ -82,7 +87,7 @@ class BogusTest < Test::Unit::TestCase
 
   def test_void
     assert  @gateway.void('1337').success?
-    assert  @gateway.void(@response.params["transid"]).success?
+    assert  @gateway.void(@response.params['transid']).success?
     response = @gateway.void(CC_FAILURE_PLACEHOLDER)
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
@@ -92,14 +97,14 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_store
-    assert  @gateway.store(credit_card(CC_SUCCESS_PLACEHOLDER)).success?
+    assert @gateway.store(credit_card(CC_SUCCESS_PLACEHOLDER)).success?
     response = @gateway.store(credit_card(CC_FAILURE_PLACEHOLDER))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.store(credit_card('123'))
     end
-    assert_equal("Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error", e.message)
+    assert_equal('Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_unstore
@@ -125,7 +130,7 @@ class BogusTest < Test::Unit::TestCase
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.authorize(1000, check(:account_number => '123', :number => nil))
     end
-    assert_equal("Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error", e.message)
+    assert_equal('Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_purchase_with_check
@@ -138,7 +143,7 @@ class BogusTest < Test::Unit::TestCase
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.purchase(1000, check(:account_number => '123', :number => nil))
     end
-    assert_equal("Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error", e.message)
+    assert_equal('Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_store_with_check
@@ -147,7 +152,7 @@ class BogusTest < Test::Unit::TestCase
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.store(check(:account_number => '123', :number => nil))
     end
-    assert_equal("Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error", e.message)
+    assert_equal('Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_credit_with_check
@@ -156,7 +161,7 @@ class BogusTest < Test::Unit::TestCase
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.credit(1000, check(:account_number => '123', :number => nil))
     end
-    assert_equal("Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error", e.message)
+    assert_equal('Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error', e.message)
   end
 
   def test_store_then_purchase_with_check
@@ -175,17 +180,17 @@ class BogusTest < Test::Unit::TestCase
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.authorize(1001, credit_card('123', {icc_data: 'DEADBEEF'}))
     end
-    assert_equal("Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception", e.message)
+    assert_equal('Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception', e.message)
   end
 
   def test_purchase_emv
-    assert  @gateway.purchase(1000, credit_card('123', {icc_data: 'DEADBEEF'})).success?
+    assert @gateway.purchase(1000, credit_card('123', {icc_data: 'DEADBEEF'})).success?
     response = @gateway.purchase(1005, credit_card('123', {icc_data: 'DEADBEEF'}))
     refute response.success?
     assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.purchase(1001, credit_card('123', {icc_data: 'DEADBEEF'}))
     end
-    assert_equal("Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception", e.message)
+    assert_equal('Bogus Gateway: Use amount ending in 00 for success, 05 for failure and anything else for exception', e.message)
   end
 end

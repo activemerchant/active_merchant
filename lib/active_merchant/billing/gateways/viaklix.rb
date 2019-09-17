@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
       # Viaklix does not support credits by reference. You must pass in the credit card
       def credit(money, creditcard, options = {})
         if creditcard.is_a?(String)
-          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card"
+          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card'
         end
 
         form = {}
@@ -63,6 +63,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def add_test_mode(form, options)
         form[:test_mode] = 'TRUE' if options[:test_mode]
       end
@@ -72,12 +73,12 @@ module ActiveMerchant #:nodoc:
         form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
       end
 
-      def add_invoice(form,options)
+      def add_invoice(form, options)
         form[:invoice_number] = (options[:order_id] || options[:invoice]).to_s.slice(0, 10)
         form[:description] = options[:description].to_s.slice(0, 255)
       end
 
-      def add_address(form,options)
+      def add_address(form, options)
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
@@ -137,7 +138,7 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = self.actions[action]
 
-        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)) )
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)))
 
         Response.new(response['result'] == APPROVED, message_from(response), response,
           :test => @options[:test] || test?,
@@ -158,16 +159,16 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters)
         result = preamble
         result.merge!(parameters)
-        result.collect { |key, value| "ssl_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        result.collect { |key, value| "ssl_#{key}=#{CGI.escape(value.to_s)}" }.join('&')
       end
 
       # Parse the response message
       def parse(msg)
         resp = {}
-        msg.split(self.delimiter).collect{|li|
-            key, value = li.split("=")
-            resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
-          }
+        msg.split(self.delimiter).collect { |li|
+          key, value = li.split('=')
+          resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
+        }
         resp
       end
     end

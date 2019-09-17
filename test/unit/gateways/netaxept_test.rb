@@ -18,7 +18,7 @@ class NetaxeptTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_get).returns(successful_purchase_response[0]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[1]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[2]).in_sequence(s)
@@ -32,7 +32,7 @@ class NetaxeptTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_get).returns(successful_purchase_response[0]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[1]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(failed_purchase_response).in_sequence(s)
@@ -51,7 +51,7 @@ class NetaxeptTest < Test::Unit::TestCase
   end
 
   def test_handles_currency_with_money
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_get).with(regexp_matches(/currencyCode=USD/)).returns(successful_purchase_response[0]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[1]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[2]).in_sequence(s)
@@ -61,7 +61,7 @@ class NetaxeptTest < Test::Unit::TestCase
   end
 
   def test_handles_currency_with_option
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_get).with(regexp_matches(/currencyCode=USD/)).returns(successful_purchase_response[0]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[1]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[2]).in_sequence(s)
@@ -80,7 +80,7 @@ class NetaxeptTest < Test::Unit::TestCase
   end
 
   def test_handles_query_error
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_get).returns(successful_purchase_response[0]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[1]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(error_purchase_response[2]).in_sequence(s)
@@ -93,7 +93,7 @@ class NetaxeptTest < Test::Unit::TestCase
   def test_url_escape_password
     @gateway = NetaxeptGateway.new(:login => 'login', :password => '1a=W+Yr2')
 
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_get).with(regexp_matches(/token=1a%3DW%2BYr2/)).returns(successful_purchase_response[0]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[1]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[2]).in_sequence(s)
@@ -103,7 +103,7 @@ class NetaxeptTest < Test::Unit::TestCase
   end
 
   def test_using_credit_card_transaction_service_type
-    s = sequence("request")
+    s = sequence('request')
     @gateway.expects(:ssl_get).with(regexp_matches(/serviceType=M/)).returns(successful_purchase_response[0]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[1]).in_sequence(s)
     @gateway.expects(:ssl_get).returns(successful_purchase_response[2]).in_sequence(s)

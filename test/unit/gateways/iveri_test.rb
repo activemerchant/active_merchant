@@ -19,7 +19,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "{F0568958-D10B-4093-A3BF-663168B06140}|{5CEF96FD-960E-4EA5-811F-D02CE6E36A96}|48b63446223ce91451fc3c1641a9ec03", response.authorization
+    assert_equal '{F0568958-D10B-4093-A3BF-663168B06140}|{5CEF96FD-960E-4EA5-811F-D02CE6E36A96}|48b63446223ce91451fc3c1641a9ec03', response.authorization
     assert response.test?
   end
 
@@ -36,7 +36,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "{B90D7CDB-C8E8-4477-BDF2-695F28137874}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b", response.authorization
+    assert_equal '{B90D7CDB-C8E8-4477-BDF2-695F28137874}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b', response.authorization
     assert response.test?
   end
 
@@ -53,7 +53,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.capture(@amount, '{B90D7CDB-C8E8-4477-BDF2-695F28137874}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b')
     assert_success response
-    assert_equal "{7C91245F-607D-44AE-8958-C26E447BAEB7}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b", response.authorization
+    assert_equal '{7C91245F-607D-44AE-8958-C26E447BAEB7}|{EF0DC64E-2D00-4B6C-BDA0-2AD265391317}|23b4125c3b8e2777bffee52e196a863b', response.authorization
     assert response.test?
   end
 
@@ -70,7 +70,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.refund(@amount, '{33C8274D-6811-409A-BF86-661F24084A2F}|{D50DB1B4-B6EC-4AF1-AFF7-71C2AA4A957B}|5be2c040bd46b7eebc70274659779acf')
     assert_success response
-    assert_equal "{097C55B5-D020-40AD-8949-F9F5E4102F1D}|{D50DB1B4-B6EC-4AF1-AFF7-71C2AA4A957B}|5be2c040bd46b7eebc70274659779acf", response.authorization
+    assert_equal '{097C55B5-D020-40AD-8949-F9F5E4102F1D}|{D50DB1B4-B6EC-4AF1-AFF7-71C2AA4A957B}|5be2c040bd46b7eebc70274659779acf', response.authorization
     assert response.test?
   end
 
@@ -87,7 +87,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.void('{230390C8-4A9E-4426-BDD3-15D072F135FE}|{3CC6E6A8-13E0-41A6-AB1E-71BE1AEEAE58}|1435f1a008137cd8508bf43751e07495')
     assert_success response
-    assert_equal "{0A1A3FFF-C2A3-4B91-85FD-10D1C25B765B}||", response.authorization
+    assert_equal '{0A1A3FFF-C2A3-4B91-85FD-10D1C25B765B}||', response.authorization
     assert response.test?
   end
 
@@ -104,7 +104,7 @@ class IveriTest < Test::Unit::TestCase
 
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "{F4337D04-B526-4A7E-A400-2A6DEADDCF57}|{5D5F8BF7-2D9D-42C3-AF32-08C5E62CD45E}|c0006d1d739905afc9e70beaf4194ea3", response.authorization
+    assert_equal '{F4337D04-B526-4A7E-A400-2A6DEADDCF57}|{5D5F8BF7-2D9D-42C3-AF32-08C5E62CD45E}|c0006d1d739905afc9e70beaf4194ea3', response.authorization
     assert response.test?
   end
 
