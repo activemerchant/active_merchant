@@ -13,6 +13,7 @@
 * Credorax: Add 3DS 2.0 [nfarve] #3342
 * TNS: Update verison and support pay mode [curiousepic] #3355
 * Stripe: Add supported countries [therufs] #3358
+* Stripe Payment Intents: Add supported countries [therufs] #3359
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290

@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
     # For the legacy API, see the Stripe gateway
     class StripePaymentIntentsGateway < StripeGateway
 
-      self.supported_countries = %w(AT AU BE BR CA CH DE DK ES FI FR GB HK IE IT JP LU MX NL NO NZ PT SE SG US)
+      self.supported_countries = %w(AT AU BE BR CA CH DE DK EE ES FI FR GB GR HK IE IT JP LT LU LV MX NL NO NZ PL PT SE SG SI SK US)
 
       ALLOWED_METHOD_STATES = %w[automatic manual].freeze
       ALLOWED_CANCELLATION_REASONS = %w[duplicate fraudulent requested_by_customer abandoned].freeze
