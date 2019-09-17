@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'THB'
       self.money_format     = :cents
 
-      #Country supported by Omise
+      # Country supported by Omise
       # * Thailand
       self.supported_countries = %w( TH JP )
 
@@ -164,7 +164,7 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(/(Authorization: Basic )\w+/i, '\1[FILTERED]').
           gsub(/(\\"number\\":)\\"\d+\\"/, '\1[FILTERED]').
-          gsub(/(\\"security_code\\":)\\"\d+\\"/,'\1[FILTERED]')
+          gsub(/(\\"security_code\\":)\\"\d+\\"/, '\1[FILTERED]')
       end
 
       private
@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
         key = options[:key] || @secret_key
         {
           'Content-Type'    => 'application/json;utf-8',
-          'Omise-Version'   => @api_version || "2014-07-27",
+          'Omise-Version'   => @api_version || '2014-07-27',
           'User-Agent'      => "ActiveMerchantBindings/#{ActiveMerchant::VERSION} Ruby/#{RUBY_VERSION}",
           'Authorization'   => 'Basic ' + Base64.encode64(key.to_s + ':').strip,
           'Accept-Encoding' => 'utf-8'
@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def json_error(raw_response)
-        msg  = "Invalid response received from Omise API. Please contact support@omise.co if you continue to receive this message."
+        msg  = 'Invalid response received from Omise API. Please contact support@omise.co if you continue to receive this message.'
         msg += "The raw response returned by the API was #{raw_response.inspect})"
         { message: msg }
       end
@@ -246,16 +246,16 @@ module ActiveMerchant #:nodoc:
       def message_to_standard_error_code_from(response)
         message = response['message'] if response['code'] == 'invalid_card'
         case message
-          when /brand not supported/
-            STANDARD_ERROR_CODE[:invalid_number]
-          when /number is invalid/
-            STANDARD_ERROR_CODE[:incorrect_number]
-          when /expiration date cannot be in the past/
-            STANDARD_ERROR_CODE[:expired_card]
-          when /expiration \w+ is invalid/
-            STANDARD_ERROR_CODE[:invalid_expiry_date]
-          else
-            STANDARD_ERROR_CODE[:processing_error]
+        when /brand not supported/
+          STANDARD_ERROR_CODE[:invalid_number]
+        when /number is invalid/
+          STANDARD_ERROR_CODE[:incorrect_number]
+        when /expiration date cannot be in the past/
+          STANDARD_ERROR_CODE[:expired_card]
+        when /expiration \w+ is invalid/
+          STANDARD_ERROR_CODE[:invalid_expiry_date]
+        else
+          STANDARD_ERROR_CODE[:processing_error]
         end
       end
 
@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
         if successful?(response)
           'Success'
         else
-          (response['message'] ? response['message'] : response['failure_message'])
+          response['message'] || response['failure_message']
         end
       end
 

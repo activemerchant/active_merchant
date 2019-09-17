@@ -7,11 +7,11 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :test_url, :live_url, :delimiter, :actions
 
-      self.test_url = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do'
-      self.live_url = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do'
+      self.test_url = 'https://api.demo.convergepay.com/VirtualMerchantDemo/process.do'
+      self.live_url = 'https://api.convergepay.com/VirtualMerchant/process.do'
 
       self.display_name = 'Elavon MyVirtualMerchant'
-      self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL)
+      self.supported_countries = %w(US CA PR DE IE NO PL LU BE NL MX)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.elavon.com/'
 
@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
         else
           add_creditcard(form, payment_method)
         end
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -54,6 +55,7 @@ module ActiveMerchant #:nodoc:
         add_salestax(form, options)
         add_invoice(form, options)
         add_creditcard(form, creditcard)
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -69,6 +71,7 @@ module ActiveMerchant #:nodoc:
           add_approval_code(form, authorization)
           add_invoice(form, options)
           add_creditcard(form, options[:credit_card])
+          add_currency(form, money, options)
           add_customer_data(form, options)
           add_test_mode(form, options)
         else
@@ -96,12 +99,13 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, creditcard, options = {})
         if creditcard.is_a?(String)
-          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card or use the #refund method."
+          raise ArgumentError, 'Reference credits are not supported. Please supply the original credit card or use the #refund method.'
         end
 
         form = {}
         add_invoice(form, options)
         add_creditcard(form, creditcard)
+        add_currency(form, money, options)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -136,9 +140,20 @@ module ActiveMerchant #:nodoc:
         commit(:update, nil, form, options)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((&?ssl_pin=)[^&]*)i, '\1[FILTERED]').
+          gsub(%r((&?ssl_card_number=)[^&\\n\r\n]*)i, '\1[FILTERED]').
+          gsub(%r((&?ssl_cvv2cvc2=)[^&]*)i, '\1[FILTERED]')
+      end
+
       private
 
-      def add_invoice(form,options)
+      def add_invoice(form, options)
         form[:invoice_number] = truncate((options[:order_id] || options[:invoice]), 10)
         form[:description] = truncate(options[:description], 255)
       end
@@ -167,6 +182,11 @@ module ActiveMerchant #:nodoc:
         form[:last_name] = truncate(creditcard.last_name, 30)
       end
 
+      def add_currency(form, money, options)
+        currency = options[:currency] || currency(money)
+        form[:transaction_currency] = currency if currency && (@options[:multi_currency] || options[:multi_currency])
+      end
+
       def add_token(form, token)
         form[:token] = token
       end
@@ -180,10 +200,8 @@ module ActiveMerchant #:nodoc:
         form[:email] = truncate(options[:email], 100) unless empty?(options[:email])
         form[:customer_code] = truncate(options[:customer], 10) unless empty?(options[:customer])
         form[:customer_number] = options[:customer_number] unless empty?(options[:customer_number])
-        if options[:custom_fields]
-          options[:custom_fields].each do |key, value|
-            form[key.to_s] = value
-          end
+        options[:custom_fields]&.each do |key, value|
+          form[key.to_s] = value
         end
       end
 
@@ -247,7 +265,7 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = self.actions[action]
 
-        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)) )
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(parameters, options)))
 
         Response.new(response['result'] == '0', message_from(response), response,
           :test => @options[:test] || test?,
@@ -260,7 +278,7 @@ module ActiveMerchant #:nodoc:
       def post_data(parameters, options)
         result = preamble
         result.merge!(parameters)
-        result.collect { |key, value| post_data_string(key, value, options) }.join("&")
+        result.collect { |key, value| post_data_string(key, value, options) }.join('&')
       end
 
       def post_data_string(key, value, options)
@@ -272,7 +290,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def custom_field?(field_name, options)
-        return true if options[:custom_fields] && options[:custom_fields].include?(field_name.to_sym)
+        return true if options[:custom_fields]&.include?(field_name.to_sym)
         field_name == :customer_number
       end
 
@@ -290,10 +308,10 @@ module ActiveMerchant #:nodoc:
 
       def parse(msg)
         resp = {}
-        msg.split(self.delimiter).collect{|li|
-            key, value = li.split("=")
-            resp[key.to_s.strip.gsub(/^ssl_/, '')] = value.to_s.strip
-          }
+        msg.split(self.delimiter).collect { |li|
+          key, value = li.split('=')
+          resp[key.to_s.strip.gsub(/^ssl_/, '')] = value.to_s.strip
+        }
         resp
       end
 

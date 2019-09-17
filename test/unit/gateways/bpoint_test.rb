@@ -46,7 +46,7 @@ class BpointTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Declined", response.message
+    assert_equal 'Declined', response.message
   end
 
   def test_successful_authorize
@@ -127,6 +127,15 @@ class BpointTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, { biller_code: '1234' })
     end.check_request do |endpoint, data, headers|
       assert_match(%r(<BillerCode>1234</BillerCode>)m, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_passing_reference_and_crn
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge({ crn1: 'ref' }))
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<MerchantReference>1</MerchantReference>)m, data)
+      assert_match(%r(<CRN1>ref</CRN1>)m, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -399,23 +408,23 @@ class BpointTest < Test::Unit::TestCase
   end
 
   def successful_store_response
-   %(
-    <?xml version="1.0" encoding="UTF-8"?>
-    <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <soap:Body>
-        <AddTokenResponse xmlns="urn:Eve_1_4_4">
-          <AddTokenResult>
-            <Token>5999992142370790</Token>
-            <MaskedCardNumber>498765...769</MaskedCardNumber>
-            <CardType>VC</CardType>
-          </AddTokenResult>
-          <response>
-            <ResponseCode>SUCCESS</ResponseCode>
-          </response>
-        </AddTokenResponse>
-      </soap:Body>
-    </soap:Envelope>
-   )
+    %(
+     <?xml version="1.0" encoding="UTF-8"?>
+     <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+       <soap:Body>
+         <AddTokenResponse xmlns="urn:Eve_1_4_4">
+           <AddTokenResult>
+             <Token>5999992142370790</Token>
+             <MaskedCardNumber>498765...769</MaskedCardNumber>
+             <CardType>VC</CardType>
+           </AddTokenResult>
+           <response>
+             <ResponseCode>SUCCESS</ResponseCode>
+           </response>
+         </AddTokenResponse>
+       </soap:Body>
+     </soap:Envelope>
+    )
   end
 
   def failed_store_response

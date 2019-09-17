@@ -30,7 +30,6 @@ class PayGateTest < Test::Unit::TestCase
     assert response.test?
   end
 
-
   def test_successful_settlement
     @gateway.expects(:ssl_post).returns(successful_settlement_response)
 
@@ -102,6 +101,5 @@ class PayGateTest < Test::Unit::TestCase
     </protocol>
     ENDOFXML
   end
-
 
 end

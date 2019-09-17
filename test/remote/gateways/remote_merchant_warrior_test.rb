@@ -10,7 +10,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     @credit_card = credit_card(
       '5123456789012346',
       :month => 5,
-      :year => 17,
+      :year => Time.now.year + 2,
       :verification_value => '123',
       :brand => 'master'
     )
@@ -32,13 +32,13 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@success_amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Transaction approved', auth.message
-    assert_not_nil auth.params["transaction_id"]
-    assert_equal auth.params["transaction_id"], auth.authorization
+    assert_not_nil auth.params['transaction_id']
+    assert_equal auth.params['transaction_id'], auth.authorization
 
     assert capture = @gateway.capture(@success_amount, auth.authorization)
     assert_success capture
-    assert_not_nil capture.params["transaction_id"]
-    assert_equal capture.params["transaction_id"], capture.authorization
+    assert_not_nil capture.params['transaction_id']
+    assert_equal capture.params['transaction_id'], capture.authorization
     assert_not_equal auth.authorization, capture.authorization
   end
 
@@ -46,16 +46,16 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_equal 'Transaction approved', purchase.message
     assert_success purchase
-    assert_not_nil purchase.params["transaction_id"]
-    assert_equal purchase.params["transaction_id"], purchase.authorization
+    assert_not_nil purchase.params['transaction_id']
+    assert_equal purchase.params['transaction_id'], purchase.authorization
   end
 
   def test_failed_purchase
     assert purchase = @gateway.purchase(@failure_amount, @credit_card, @options)
     assert_equal 'Transaction declined', purchase.message
     assert_failure purchase
-    assert_not_nil purchase.params["transaction_id"]
-    assert_equal purchase.params["transaction_id"], purchase.authorization
+    assert_not_nil purchase.params['transaction_id']
+    assert_equal purchase.params['transaction_id'], purchase.authorization
   end
 
   def test_successful_refund
@@ -105,12 +105,37 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_funky_names
-    @credit_card.first_name = "Phillips & Sons"
+    @credit_card.first_name = 'Phillips & Sons'
     @credit_card.last_name = "Other-Things; MW. doesn't like"
-    @options[:billing_address][:name] = "Merchant Warrior wants % alphanumerics"
+    @options[:billing_address][:name] = 'Merchant Warrior wants % alphanumerics'
 
     assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_equal 'Transaction approved', purchase.message
     assert_success purchase
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@success_amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_match(%r{paymentCardCSC\=\[FILTERED\]}, transcript)
+    assert_no_match(%r{paymentCardCSC=#{@credit_card.verification_value}}, transcript)
+    assert_scrubbed(@gateway.options[:api_passphrase], transcript)
+    assert_scrubbed(@gateway.options[:api_key], transcript)
+  end
+
+  def test_transcript_scrubbing_store
+    transcript = capture_transcript(@gateway) do
+      @gateway.store(@credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:api_passphrase], transcript)
+    assert_scrubbed(@gateway.options[:api_key], transcript)
   end
 end

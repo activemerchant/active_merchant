@@ -1,14 +1,14 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class KushkiGateway < Gateway
-      self.display_name = "Kushki"
-      self.homepage_url = "https://www.kushkipagos.com"
+      self.display_name = 'Kushki'
+      self.homepage_url = 'https://www.kushkipagos.com'
 
-      self.test_url = "https://api-uat.kushkipagos.com/v1/"
-      self.live_url = "https://api.kushkipagos.com/v1/"
+      self.test_url = 'https://api-uat.kushkipagos.com/v1/'
+      self.live_url = 'https://api.kushkipagos.com/v1/'
 
-      self.supported_countries = ["CO", "EC"]
-      self.default_currency = "USD"
+      self.supported_countries = ['CL', 'CO', 'EC', 'MX', 'PE']
+      self.default_currency = 'USD'
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
 
@@ -24,8 +24,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def refund(amount, authorization, options={})
+        action = 'refund'
+
+        post = {}
+        post[:ticketNumber] = authorization
+
+        commit(action, post)
+      end
+
       def void(authorization, options={})
-        action = "void"
+        action = 'void'
 
         post = {}
         post[:ticketNumber] = authorization
@@ -47,7 +56,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def tokenize(amount, payment_method, options)
-        action = "tokenize"
+        action = 'tokenize'
 
         post = {}
         add_invoice(action, post, amount, options)
@@ -57,7 +66,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def charge(amount, authorization, options)
-        action = "charge"
+        action = 'charge'
 
         post = {}
         add_reference(post, authorization, options)
@@ -67,7 +76,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(action, post, money, options)
-        if action == "tokenize"
+        if action == 'tokenize'
           post[:totalAmount] = amount(money).to_f
           post[:currency] = options[:currency] || currency(money)
           post[:isDeferred] = false
@@ -85,14 +94,7 @@ module ActiveMerchant #:nodoc:
         sum[:iva] = 0
         sum[:subtotalIva0] = 0
 
-        if sum[:currency] == "COP"
-          extra_taxes = {}
-          extra_taxes[:propina] = 0
-          extra_taxes[:tasaAeroportuaria] = 0
-          extra_taxes[:agenciaDeViaje] = 0
-          extra_taxes[:iac] = 0
-          sum[:extraTaxes] = extra_taxes
-        else
+        if sum[:currency] != 'COP'
           sum[:ice] = 0
         end
       end
@@ -103,7 +105,8 @@ module ActiveMerchant #:nodoc:
           sum[:iva] = amount[:iva].to_f if amount[:iva]
           sum[:subtotalIva0] = amount[:subtotal_iva_0].to_f if amount[:subtotal_iva_0]
           sum[:ice] = amount[:ice].to_f if amount[:ice]
-          if extra_taxes = amount[:extra_taxes] && sum[:currency] == "COP"
+          if (extra_taxes = amount[:extra_taxes]) && sum[:currency] == 'COP'
+            sum[:extraTaxes] ||= Hash.new
             sum[:extraTaxes][:propina] = extra_taxes[:propina].to_f if extra_taxes[:propina]
             sum[:extraTaxes][:tasaAeroportuaria] = extra_taxes[:tasa_aeroportuaria].to_f if extra_taxes[:tasa_aeroportuaria]
             sum[:extraTaxes][:agenciaDeViaje] = extra_taxes[:agencia_de_viaje].to_f if extra_taxes[:agencia_de_viaje]
@@ -127,9 +130,10 @@ module ActiveMerchant #:nodoc:
       end
 
       ENDPOINT = {
-        "tokenize" => "tokens",
-        "charge" => "charges",
-        "void" => "charges"
+        'tokenize' => 'tokens',
+        'charge' => 'charges',
+        'void' => 'charges',
+        'refund' => 'refund'
       }
 
       def commit(action, params)
@@ -152,7 +156,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def ssl_invoke(action, params)
-        if action == "void"
+        if ['void', 'refund'].include?(action)
           ssl_request(:delete, url(action, params), nil, headers(action))
         else
           ssl_post(url(action, params), post_data(params), headers(action))
@@ -161,9 +165,9 @@ module ActiveMerchant #:nodoc:
 
       def headers(action)
         hfields = {}
-        hfields["Public-Merchant-Id"] = @options[:public_merchant_id] if action == "tokenize"
-        hfields["Private-Merchant-Id"] = @options[:private_merchant_id] unless action == "tokenize"
-        hfields["Content-Type"] = "application/json"
+        hfields['Public-Merchant-Id'] = @options[:public_merchant_id] if action == 'tokenize'
+        hfields['Private-Merchant-Id'] = @options[:private_merchant_id] unless action == 'tokenize'
+        hfields['Content-Type'] = 'application/json'
         hfields
       end
 
@@ -174,43 +178,41 @@ module ActiveMerchant #:nodoc:
       def url(action, params)
         base_url = test? ? test_url : live_url
 
-        if action == "void"
-          base_url + ENDPOINT[action] + "/" + params[:ticketNumber]
+        if ['void', 'refund'].include?(action)
+          base_url + ENDPOINT[action] + '/' + params[:ticketNumber].to_s
         else
           base_url + ENDPOINT[action]
         end
       end
 
       def parse(body)
-        begin
-          JSON.parse(body)
-        rescue JSON::ParserError
-          message = "Invalid JSON response received from KushkiGateway. Please contact KushkiGateway if you continue to receive this message."
-          message += " (The raw response returned by the API was #{body.inspect})"
-          {
-            "message" => message
-          }
-        end
+        JSON.parse(body)
+      rescue JSON::ParserError
+        message = 'Invalid JSON response received from KushkiGateway. Please contact KushkiGateway if you continue to receive this message.'
+        message += " (The raw response returned by the API was #{body.inspect})"
+        {
+          'message' => message
+        }
       end
 
       def success_from(response)
-        return true if response["token"] || response["ticketNumber"]
+        return true if response['token'] || response['ticketNumber'] || response['code'] == 'K000'
       end
 
       def message_from(succeeded, response)
         if succeeded
-          "Succeeded"
+          'Succeeded'
         else
-          response["message"]
+          response['message']
         end
       end
 
       def authorization_from(response)
-        response["token"] || response["ticketNumber"]
+        response['token'] || response['ticketNumber']
       end
 
       def error_from(response)
-        response["code"]
+        response['code']
       end
     end
   end

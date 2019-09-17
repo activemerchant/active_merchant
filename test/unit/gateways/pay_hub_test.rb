@@ -3,9 +3,9 @@ require 'test_helper'
 class PayHubTest < Test::Unit::TestCase
   def setup
     @gateway = PayHubGateway.new(
-      orgid: "123456",
-      username: "abc123DEF",
-      password: "abc123DEF",
+      orgid: '123456',
+      username: 'abc123DEF',
+      password: 'abc123DEF',
       tid: '123'
     )
     @credit_card = credit_card
@@ -31,7 +31,7 @@ class PayHubTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
-    assert_equal "SUCCESS", response.message
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_purchase_without_options
@@ -39,7 +39,7 @@ class PayHubTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card)
     assert_success response
-    assert_equal "SUCCESS", response.message
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_authorize
@@ -47,7 +47,7 @@ class PayHubTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "SUCCESS", response.message
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_capture
@@ -56,7 +56,7 @@ class PayHubTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, 123)
 
     assert_success response
-    assert_equal "TRANSACTION CAPTURED SUCCESSFULLY", response.message
+    assert_equal 'TRANSACTION CAPTURED SUCCESSFULLY', response.message
   end
 
   def test_unsuccessful_capture
@@ -65,7 +65,7 @@ class PayHubTest < Test::Unit::TestCase
 
     response = @gateway.capture(amount, 123)
     assert_failure response
-    assert_equal "UNABLE TO CAPTURE", response.message
+    assert_equal 'UNABLE TO CAPTURE', response.message
   end
 
   def test_successful_settled_refund
@@ -74,7 +74,7 @@ class PayHubTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, 123)
 
     assert_success response
-    assert_equal "SUCCESS", response.message
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_unsettled_refund
@@ -83,7 +83,7 @@ class PayHubTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, 123)
 
     assert_success response
-    assert_equal "SUCCESS", response.message
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_unsuccessful_refund
@@ -92,7 +92,7 @@ class PayHubTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, 123)
 
     assert_failure response
-    assert_equal "Unable to refund the previous transaction.", response.message
+    assert_equal 'Unable to refund the previous transaction.', response.message
   end
 
   def test_invalid_raw_response

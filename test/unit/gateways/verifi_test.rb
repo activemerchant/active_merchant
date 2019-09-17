@@ -13,7 +13,7 @@ class VerifiTest < Test::Unit::TestCase
 
     @options = {
       :order_id => '37',
-      :email => "paul@example.com",
+      :email => 'paul@example.com',
       :billing_address => address
     }
 
@@ -38,30 +38,30 @@ class VerifiTest < Test::Unit::TestCase
   end
 
   def test_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/ccnumber=#{@credit_card.number}/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/ccnumber=#{@credit_card.number}/), anything).returns('')
     @gateway.expects(:parse).returns({})
     @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/transactionid=transaction_id/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/transactionid=transaction_id/), anything).returns('')
     @gateway.expects(:parse).returns({})
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      @gateway.credit(@amount, "transaction_id", @options)
+      @gateway.credit(@amount, 'transaction_id', @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/transactionid=transaction_id/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/transactionid=transaction_id/), anything).returns('')
     @gateway.expects(:parse).returns({})
-    @gateway.refund(@amount, "transaction_id", @options)
+    @gateway.refund(@amount, 'transaction_id', @options)
   end
 
   def test_amount_style
     assert_equal '10.34', @gateway.send(:amount, 1034)
 
     assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
+      @gateway.send(:amount, '10.34')
     end
   end
 
@@ -69,12 +69,11 @@ class VerifiTest < Test::Unit::TestCase
     result = {}
     @gateway.send(:add_invoice_data, result, :description => 'My Purchase is great')
     assert_equal 'My Purchase is great', result[:orderdescription]
-
   end
 
   def test_purchase_meets_minimum_requirements
     post = VerifiGateway::VerifiPostData.new
-    post[:amount] = "1.01"
+    post[:amount] = '1.01'
 
     @gateway.send(:add_credit_card, post, @credit_card)
 
@@ -83,7 +82,6 @@ class VerifiTest < Test::Unit::TestCase
     minimum_requirements.each do |key|
       assert_not_nil(data =~ /#{key}=/)
     end
-
   end
 
   def test_avs_result
@@ -107,10 +105,10 @@ class VerifiTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    "response=1&responsetext=SUCCESS&authcode=123456&transactionid=546061538&avsresponse=N&cvvresponse=N&orderid=37&type=sale&response_code=100"
+    'response=1&responsetext=SUCCESS&authcode=123456&transactionid=546061538&avsresponse=N&cvvresponse=N&orderid=37&type=sale&response_code=100'
   end
 
   def unsuccessful_purchase_response
-    "response=3&responsetext=Field required: ccnumber REFID:12109909&authcode=&transactionid=0&avsresponse=&cvvresponse=&orderid=37&type=sale&response_code=300"
+    'response=3&responsetext=Field required: ccnumber REFID:12109909&authcode=&transactionid=0&avsresponse=&cvvresponse=&orderid=37&type=sale&response_code=300'
   end
 end

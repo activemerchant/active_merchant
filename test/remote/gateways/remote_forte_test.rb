@@ -21,15 +21,16 @@ class RemoteForteTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      order_id: '1'
     }
   end
 
   def test_invalid_login
-    gateway = ForteGateway.new(api_key: "InvalidKey", secret: "InvalidSecret", location_id: "11", account_id: "323")
+    gateway = ForteGateway.new(api_key: 'InvalidKey', secret: 'InvalidSecret', location_id: '11', account_id: '323')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match "combination not found.", response.message
+    assert_match 'combination not found.', response.message
   end
 
   def test_successful_purchase
@@ -53,14 +54,14 @@ class RemoteForteTest < Test::Unit::TestCase
   def test_successful_purchase_with_more_options
     options = {
       order_id: '1',
-      ip: "127.0.0.1",
-      email: "joe@example.com",
+      ip: '127.0.0.1',
+      email: 'joe@example.com',
       address: address
     }
 
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
-    assert_equal "1", response.params["order_number"]
+    assert_equal '1', response.params['order_number']
     assert_equal 'TEST APPROVAL', response.message
   end
 
@@ -76,9 +77,25 @@ class RemoteForteTest < Test::Unit::TestCase
 
     wait_for_authorization_to_clear
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
     assert_equal 'APPROVED', capture.message
+  end
+
+  def test_successful_authorize_capture_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    wait_for_authorization_to_clear
+
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
+    assert_success capture
+    assert_match auth.authorization.split('#')[0], capture.authorization
+    assert_match auth.authorization.split('#')[1], capture.authorization
+    assert_equal 'APPROVED', capture.message
+
+    void = @gateway.void(capture.authorization)
+    assert_success void
   end
 
   def test_failed_authorize
@@ -94,12 +111,12 @@ class RemoteForteTest < Test::Unit::TestCase
 
     wait_for_authorization_to_clear
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount-1, auth.authorization, @options)
     assert_success capture
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, '')
+    response = @gateway.capture(@amount, '', @options)
     assert_failure response
     assert_match 'field transaction_id', response.message
   end
@@ -141,6 +158,24 @@ class RemoteForteTest < Test::Unit::TestCase
     response = @gateway.void('')
     assert_failure response
     assert_match 'field transaction_id', response.message
+  end
+
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    wait_for_authorization_to_clear
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success refund
+    assert_equal 'TEST APPROVAL', refund.message
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(@amount, '', @options)
+    assert_failure response
+    assert_match 'field authorization_code', response.message
+    assert_match 'field original_transaction_id', response.message
   end
 
   def test_successful_verify

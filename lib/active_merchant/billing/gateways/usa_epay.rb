@@ -9,15 +9,15 @@ module ActiveMerchant #:nodoc:
       self.abstract_class = true
 
       ##
-      # Creates an instance of UsaEpayTransactionGateway by default, but if 
+      # Creates an instance of UsaEpayTransactionGateway by default, but if
       # :software id or :live_url are passed in the options hash it will
       # create an instance of UsaEpayAdvancedGateway.
       #
       def self.new(options={})
-        unless options.has_key?(:software_id) || options.has_key?(:live_url)
-          UsaEpayTransactionGateway.new(options)
-        else
+        if options.has_key?(:software_id) || options.has_key?(:live_url)
           UsaEpayAdvancedGateway.new(options)
+        else
+          UsaEpayTransactionGateway.new(options)
         end
       end
     end

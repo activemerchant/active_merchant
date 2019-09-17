@@ -12,7 +12,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = PayJunctionV2Gateway.new(api_login: "", api_password: "", api_key: "")
+    gateway = PayJunctionV2Gateway.new(api_login: '', api_password: '', api_key: '')
 
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -62,7 +62,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount-1, auth.authorization)
     assert_success capture
-    assert_equal sprintf("%.2f", (@amount-1).to_f / 100), capture.params["amountTotal"]
+    assert_equal sprintf('%.2f', (@amount-1).to_f / 100), capture.params['amountTotal']
   end
 
   def test_failed_capture
@@ -87,7 +87,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount-50, purchase.authorization)
     assert_success refund
     assert_equal 'Approved', refund.message
-    assert_equal sprintf("%.2f", (@amount-50).to_f / 100), refund.params["amountTotal"]
+    assert_equal sprintf('%.2f', (@amount-50).to_f / 100), refund.params['amountTotal']
   end
 
   def test_failed_refund
@@ -99,14 +99,14 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
   def test_successful_credit
     response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_credit
     amount = 0
     response = @gateway.credit(amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Amount Base must be greater than 0.|", response.message
+    assert_equal 'Amount Base must be greater than 0.|', response.message
   end
 
   def test_successful_void
@@ -127,7 +127,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_verify
@@ -141,7 +141,7 @@ class RemotePayJunctionV2Test < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert response.authorization
-    assert_equal "Approved", response.message
+    assert_equal 'Approved', response.message
 
     response = @gateway.purchase(@amount, response.authorization, @options)
     assert_success response

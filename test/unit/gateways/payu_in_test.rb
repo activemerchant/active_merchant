@@ -1,24 +1,24 @@
-require "test_helper"
+require 'test_helper'
 
 class PayuInTest < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = PayuInGateway.new(
-      key: "key",
-      salt: "salt"
+      key: 'key',
+      salt: 'salt'
     )
 
     @credit_card = credit_card
 
     @options = {
-      order_id: "1"
+      order_id: '1'
     }
   end
 
   def assert_parameter(parameter, expected_value, data, options={})
     assert (data =~ %r{(?:^|&)#{parameter}=([^&]*)(?:&|$)}), "Unable to find #{parameter} in #{data}"
-    value = CGI.unescape($1 || "")
+    value = CGI.unescape($1 || '')
     case expected_value
     when Regexp
       assert_match expected_value, value, "#{parameter} value does not match expected"
@@ -34,41 +34,41 @@ class PayuInTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(100, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_equal "identity", headers["Accept-Encoding"]
+      assert_equal 'identity', headers['Accept-Encoding']
       case endpoint
       when /_payment/
-        assert_parameter("amount", "1.00", data)
-        assert_parameter("txnid", "1", data)
-        assert_parameter("productinfo", "Purchase", data)
-        assert_parameter("surl", "http://example.com", data)
-        assert_parameter("furl", "http://example.com", data)
-        assert_parameter("pg", "CC", data)
-        assert_parameter("firstname", @credit_card.first_name, data)
-        assert_parameter("bankcode", @credit_card.brand.upcase, data)
-        assert_parameter("ccnum", @credit_card.number, data)
-        assert_parameter("ccvv", @credit_card.verification_value, data)
-        assert_parameter("ccname", @credit_card.name, data)
-        assert_parameter("ccexpmon", "%02d" % @credit_card.month.to_i, data)
-        assert_parameter("ccexpyr", @credit_card.year, data)
-        assert_parameter("email", "unknown@example.com", data)
-        assert_parameter("phone", "11111111111", data)
-        assert_parameter("key", "key", data)
-        assert_parameter("txn_s2s_flow", "1", data)
-        assert_parameter("hash", "5199c0735c21d647f287a2781024743d35fabfd640bc20f2ae7b5277e3d7d06fa315fcdda266cfa64920517944244c632e5f38768481626b22e2b0d70c806d60", data)
+        assert_parameter('amount', '1.00', data)
+        assert_parameter('txnid', '1', data)
+        assert_parameter('productinfo', 'Purchase', data)
+        assert_parameter('surl', 'http://example.com', data)
+        assert_parameter('furl', 'http://example.com', data)
+        assert_parameter('pg', 'CC', data)
+        assert_parameter('firstname', @credit_card.first_name, data)
+        assert_parameter('bankcode', @credit_card.brand.upcase, data)
+        assert_parameter('ccnum', @credit_card.number, data)
+        assert_parameter('ccvv', @credit_card.verification_value, data)
+        assert_parameter('ccname', @credit_card.name, data)
+        assert_parameter('ccexpmon', '%02d' % @credit_card.month.to_i, data)
+        assert_parameter('ccexpyr', @credit_card.year, data)
+        assert_parameter('email', 'unknown@example.com', data)
+        assert_parameter('phone', '11111111111', data)
+        assert_parameter('key', 'key', data)
+        assert_parameter('txn_s2s_flow', '1', data)
+        assert_parameter('hash', '5199c0735c21d647f287a2781024743d35fabfd640bc20f2ae7b5277e3d7d06fa315fcdda266cfa64920517944244c632e5f38768481626b22e2b0d70c806d60', data)
       when /hdfc_not_enrolled/
-        assert_parameter("transactionId", "6e7e62723683934e6c5507675df11bdd86197c5c935878ff72e344205f3c8a1d", data)
-        assert_parameter("pgId", "8", data)
-        assert_parameter("eci", "7", data)
-        assert_parameter("nonEnrolled", "1", data)
-        assert_parameter("nonDomestic", "0", data)
-        assert_parameter("bank", "VISA", data)
-        assert_parameter("cccat", "creditcard", data)
-        assert_parameter("ccnum", "4b5c9002295c6cd8e5289e2f9c312dc737810a747b84e71665cf077c78fe245a", data)
-        assert_parameter("ccname", "53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0", data)
-        assert_parameter("ccvv", "cc8d6cfb6b03f94e2a64b490ae10c261c10747f543b1fba09d7f56f9ef6aac04", data)
-        assert_parameter("ccexpmon", "5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079", data)
-        assert_parameter("ccexpyr", "5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d", data)
-        assert_parameter("is_seamless", "1", data)
+        assert_parameter('transactionId', '6e7e62723683934e6c5507675df11bdd86197c5c935878ff72e344205f3c8a1d', data)
+        assert_parameter('pgId', '8', data)
+        assert_parameter('eci', '7', data)
+        assert_parameter('nonEnrolled', '1', data)
+        assert_parameter('nonDomestic', '0', data)
+        assert_parameter('bank', 'VISA', data)
+        assert_parameter('cccat', 'creditcard', data)
+        assert_parameter('ccnum', '4b5c9002295c6cd8e5289e2f9c312dc737810a747b84e71665cf077c78fe245a', data)
+        assert_parameter('ccname', '53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0', data)
+        assert_parameter('ccvv', 'cc8d6cfb6b03f94e2a64b490ae10c261c10747f543b1fba09d7f56f9ef6aac04', data)
+        assert_parameter('ccexpmon', '5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079', data)
+        assert_parameter('ccexpyr', '5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d', data)
+        assert_parameter('is_seamless', '1', data)
       else
         flunk "Unknown endpoint #{endpoint}"
       end
@@ -76,8 +76,8 @@ class PayuInTest < Test::Unit::TestCase
 
     assert_success response
 
-    assert_equal "403993715512145540", response.authorization
-    assert_equal "No Error", response.message
+    assert_equal '403993715512145540', response.authorization
+    assert_equal 'No Error', response.message
     assert response.test?
   end
 
@@ -85,83 +85,83 @@ class PayuInTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(
         100,
-        credit_card("4242424242424242", name: "Bobby Jimbob", verification_value: "678", month: "4", year: "2015"),
-        order_id: "99",
-        description: "Awesome!",
-        email: "jim@example.com",
+        credit_card('4242424242424242', name: 'Bobby Jimbob', verification_value: '678', month: '4', year: '2015'),
+        order_id: '99',
+        description: 'Awesome!',
+        email: 'jim@example.com',
         billing_address: {
-          name: "Jim Smith",
-          address1: "123 Road",
-          address2: "Suite 123",
-          city: "Somewhere",
-          state: "ZZ",
-          country: "US",
-          zip: "12345",
-          phone: "12223334444"
+          name: 'Jim Smith',
+          address1: '123 Road',
+          address2: 'Suite 123',
+          city: 'Somewhere',
+          state: 'ZZ',
+          country: 'US',
+          zip: '12345',
+          phone: '12223334444'
         },
         shipping_address: {
-          name: "Joe Bob",
-          address1: "987 Street",
-          address2: "Suite 987",
-          city: "Anyplace",
-          state: "AA",
-          country: "IN",
-          zip: "98765",
-          phone: "98887776666"
+          name: 'Joe Bob',
+          address1: '987 Street',
+          address2: 'Suite 987',
+          city: 'Anyplace',
+          state: 'AA',
+          country: 'IN',
+          zip: '98765',
+          phone: '98887776666'
         }
       )
     end.check_request do |endpoint, data, headers|
-      assert_equal "identity", headers["Accept-Encoding"]
+      assert_equal 'identity', headers['Accept-Encoding']
       case endpoint
       when /_payment/
-        assert_parameter("amount", "1.00", data)
-        assert_parameter("txnid", "99", data)
-        assert_parameter("productinfo", "Awesome!", data)
-        assert_parameter("surl", "http://example.com", data)
-        assert_parameter("furl", "http://example.com", data)
-        assert_parameter("pg", "CC", data)
-        assert_parameter("firstname", "Bobby", data)
-        assert_parameter("lastname", "Jimbob", data)
-        assert_parameter("bankcode", "VISA", data)
-        assert_parameter("ccnum", "4242424242424242", data)
-        assert_parameter("ccvv", "678", data)
-        assert_parameter("ccname", "Bobby Jimbob", data)
-        assert_parameter("ccexpmon", "04", data)
-        assert_parameter("ccexpyr", "2015", data)
-        assert_parameter("email", "jim@example.com", data)
-        assert_parameter("phone", "12223334444", data)
-        assert_parameter("key", "key", data)
-        assert_parameter("txn_s2s_flow", "1", data)
-        assert_parameter("hash", "1ee17ee9615b55fdee4cd92cee4f28bd88e0c7ff16bd7525cb7b0a792728502f71ffba37606b1b77504d1d0b9d520d39cb1829fffd1aa5eef27dfa4c4a887f61", data)
-        assert_parameter("address1", "123 Road", data)
-        assert_parameter("address2", "Suite 123", data)
-        assert_parameter("city", "Somewhere", data)
-        assert_parameter("state", "ZZ", data)
-        assert_parameter("country", "US", data)
-        assert_parameter("zipcode", "12345", data)
-        assert_parameter("shipping_firstname", "Joe", data)
-        assert_parameter("shipping_lastname", "Bob", data)
-        assert_parameter("shipping_address1", "987 Street", data)
-        assert_parameter("shipping_address2", "Suite 987", data)
-        assert_parameter("shipping_city", "Anyplace", data)
-        assert_parameter("shipping_state", "AA", data)
-        assert_parameter("shipping_country", "IN", data)
-        assert_parameter("shipping_zipcode", "98765", data)
-        assert_parameter("shipping_phone", "98887776666", data)
+        assert_parameter('amount', '1.00', data)
+        assert_parameter('txnid', '99', data)
+        assert_parameter('productinfo', 'Awesome!', data)
+        assert_parameter('surl', 'http://example.com', data)
+        assert_parameter('furl', 'http://example.com', data)
+        assert_parameter('pg', 'CC', data)
+        assert_parameter('firstname', 'Bobby', data)
+        assert_parameter('lastname', 'Jimbob', data)
+        assert_parameter('bankcode', 'VISA', data)
+        assert_parameter('ccnum', '4242424242424242', data)
+        assert_parameter('ccvv', '678', data)
+        assert_parameter('ccname', 'Bobby Jimbob', data)
+        assert_parameter('ccexpmon', '04', data)
+        assert_parameter('ccexpyr', '2015', data)
+        assert_parameter('email', 'jim@example.com', data)
+        assert_parameter('phone', '12223334444', data)
+        assert_parameter('key', 'key', data)
+        assert_parameter('txn_s2s_flow', '1', data)
+        assert_parameter('hash', '1ee17ee9615b55fdee4cd92cee4f28bd88e0c7ff16bd7525cb7b0a792728502f71ffba37606b1b77504d1d0b9d520d39cb1829fffd1aa5eef27dfa4c4a887f61', data)
+        assert_parameter('address1', '123 Road', data)
+        assert_parameter('address2', 'Suite 123', data)
+        assert_parameter('city', 'Somewhere', data)
+        assert_parameter('state', 'ZZ', data)
+        assert_parameter('country', 'US', data)
+        assert_parameter('zipcode', '12345', data)
+        assert_parameter('shipping_firstname', 'Joe', data)
+        assert_parameter('shipping_lastname', 'Bob', data)
+        assert_parameter('shipping_address1', '987 Street', data)
+        assert_parameter('shipping_address2', 'Suite 987', data)
+        assert_parameter('shipping_city', 'Anyplace', data)
+        assert_parameter('shipping_state', 'AA', data)
+        assert_parameter('shipping_country', 'IN', data)
+        assert_parameter('shipping_zipcode', '98765', data)
+        assert_parameter('shipping_phone', '98887776666', data)
       when /hdfc_not_enrolled/
-        assert_parameter("transactionId", "6e7e62723683934e6c5507675df11bdd86197c5c935878ff72e344205f3c8a1d", data)
-        assert_parameter("pgId", "8", data)
-        assert_parameter("eci", "7", data)
-        assert_parameter("nonEnrolled", "1", data)
-        assert_parameter("nonDomestic", "0", data)
-        assert_parameter("bank", "VISA", data)
-        assert_parameter("cccat", "creditcard", data)
-        assert_parameter("ccnum", "4b5c9002295c6cd8e5289e2f9c312dc737810a747b84e71665cf077c78fe245a", data)
-        assert_parameter("ccname", "53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0", data)
-        assert_parameter("ccvv", "cc8d6cfb6b03f94e2a64b490ae10c261c10747f543b1fba09d7f56f9ef6aac04", data)
-        assert_parameter("ccexpmon", "5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079", data)
-        assert_parameter("ccexpyr", "5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d", data)
-        assert_parameter("is_seamless", "1", data)
+        assert_parameter('transactionId', '6e7e62723683934e6c5507675df11bdd86197c5c935878ff72e344205f3c8a1d', data)
+        assert_parameter('pgId', '8', data)
+        assert_parameter('eci', '7', data)
+        assert_parameter('nonEnrolled', '1', data)
+        assert_parameter('nonDomestic', '0', data)
+        assert_parameter('bank', 'VISA', data)
+        assert_parameter('cccat', 'creditcard', data)
+        assert_parameter('ccnum', '4b5c9002295c6cd8e5289e2f9c312dc737810a747b84e71665cf077c78fe245a', data)
+        assert_parameter('ccname', '53ab689fdb1b025c7e9c53c6b4a6e27f51e0d627579e7c12af2cb6cbc4944cc0', data)
+        assert_parameter('ccvv', 'cc8d6cfb6b03f94e2a64b490ae10c261c10747f543b1fba09d7f56f9ef6aac04', data)
+        assert_parameter('ccexpmon', '5ddf3702e74f473ec89762f6efece025737c2ab999e695cf10496e6fa3946079', data)
+        assert_parameter('ccexpyr', '5da83563fcaa945063dc4c2094c48e800badf7c8246c9d13b43757fe99d63e6d', data)
+        assert_parameter('is_seamless', '1', data)
       else
         flunk "Unknown endpoint #{endpoint}"
       end
@@ -175,60 +175,60 @@ class PayuInTest < Test::Unit::TestCase
       @gateway.purchase(
         100,
         credit_card(
-          "4242424242424242",
-          first_name: ("3" + ("a" * 61)),
-          last_name: ("3" + ("a" * 21)),
-          month: "4",
-          year: "2015"
+          '4242424242424242',
+          first_name: ('3' + ('a' * 61)),
+          last_name: ('3' + ('a' * 21)),
+          month: '4',
+          year: '2015'
         ),
-        order_id: ("!@#" + ("a" * 31)),
-        description: ("a" * 101),
-        email: ("c" * 51),
+        order_id: ('!@#' + ('a' * 31)),
+        description: ('a' * 101),
+        email: ('c' * 51),
         billing_address: {
-          name: "Jim Smith",
-          address1: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 101)),
-          address2: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 101)),
-          city: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 51)),
-          state: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 51)),
-          country: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 51)),
-          zip: ("a-" + ("1" * 21)),
-          phone: ("a-" + ("1" * 51))
+          name: 'Jim Smith',
+          address1: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 101)),
+          address2: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 101)),
+          city: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
+          state: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
+          country: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
+          zip: ('a-' + ('1' * 21)),
+          phone: ('a-' + ('1' * 51))
         },
         shipping_address: {
-          name: (("3" + ("a" * 61)) + " " + ("3" + ("a" * 21))),
-          address1: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 101)),
-          address2: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 101)),
-          city: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 51)),
-          state: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 51)),
-          country: ("!#$%^&'\"()" + "Aa0@-_/ ." + ("a" * 51)),
-          zip: ("a-" + ("1" * 21)),
-          phone: ("a-" + ("1" * 51))
+          name: (('3' + ('a' * 61)) + ' ' + ('3' + ('a' * 21))),
+          address1: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 101)),
+          address2: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 101)),
+          city: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
+          state: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
+          country: ("!#$%^&'\"()" + 'Aa0@-_/ .' + ('a' * 51)),
+          zip: ('a-' + ('1' * 21)),
+          phone: ('a-' + ('1' * 51))
         }
       )
     end.check_request do |endpoint, data, headers|
       case endpoint
       when /_payment/
-        assert_parameter("txnid", /^a/, data, length: 30)
-        assert_parameter("productinfo", /^a/, data, length: 100)
-        assert_parameter("firstname", /^a/, data, length: 60)
-        assert_parameter("lastname", /^a/, data, length: 20)
-        assert_parameter("email", /^c/, data, length: 50)
-        assert_parameter("phone", /^\d/, data, length: 50)
-        assert_parameter("address1", /^Aa0@-_\/ \.a/, data, length: 100)
-        assert_parameter("address2", /^Aa0@-_\/ \.a/, data, length: 100)
-        assert_parameter("city", /^Aa0@-_\/ \.a/, data, length: 50)
-        assert_parameter("state", /^Aa0@-_\/ \.a/, data, length: 50)
-        assert_parameter("country", /^Aa0@-_\/ \.a/, data, length: 50)
-        assert_parameter("zipcode", /^1/, data, length: 20)
-        assert_parameter("shipping_firstname", /^a/, data, length: 60)
-        assert_parameter("shipping_lastname", /^a/, data, length: 20)
-        assert_parameter("shipping_address1", /^Aa0@-_\/ \.a/, data, length: 100)
-        assert_parameter("shipping_address2", /^Aa0@-_\/ \.a/, data, length: 100)
-        assert_parameter("shipping_city", /^Aa0@-_\/ \.a/, data, length: 50)
-        assert_parameter("shipping_state", /^Aa0@-_\/ \.a/, data, length: 50)
-        assert_parameter("shipping_country", /^Aa0@-_\/ \.a/, data, length: 50)
-        assert_parameter("shipping_zipcode", /^1/, data, length: 20)
-        assert_parameter("shipping_phone", /^\d/, data, length: 50)
+        assert_parameter('txnid', /^a/, data, length: 30)
+        assert_parameter('productinfo', /^a/, data, length: 100)
+        assert_parameter('firstname', /^a/, data, length: 60)
+        assert_parameter('lastname', /^a/, data, length: 20)
+        assert_parameter('email', /^c/, data, length: 50)
+        assert_parameter('phone', /^\d/, data, length: 50)
+        assert_parameter('address1', /^Aa0@-_\/ \.a/, data, length: 100)
+        assert_parameter('address2', /^Aa0@-_\/ \.a/, data, length: 100)
+        assert_parameter('city', /^Aa0@-_\/ \.a/, data, length: 50)
+        assert_parameter('state', /^Aa0@-_\/ \.a/, data, length: 50)
+        assert_parameter('country', /^Aa0@-_\/ \.a/, data, length: 50)
+        assert_parameter('zipcode', /^1/, data, length: 20)
+        assert_parameter('shipping_firstname', /^a/, data, length: 60)
+        assert_parameter('shipping_lastname', /^a/, data, length: 20)
+        assert_parameter('shipping_address1', /^Aa0@-_\/ \.a/, data, length: 100)
+        assert_parameter('shipping_address2', /^Aa0@-_\/ \.a/, data, length: 100)
+        assert_parameter('shipping_city', /^Aa0@-_\/ \.a/, data, length: 50)
+        assert_parameter('shipping_state', /^Aa0@-_\/ \.a/, data, length: 50)
+        assert_parameter('shipping_country', /^Aa0@-_\/ \.a/, data, length: 50)
+        assert_parameter('shipping_zipcode', /^1/, data, length: 20)
+        assert_parameter('shipping_phone', /^\d/, data, length: 50)
       end
     end.respond_with(successful_purchase_setup_response, successful_purchase_response)
 
@@ -237,47 +237,47 @@ class PayuInTest < Test::Unit::TestCase
 
   def test_brand_mappings
     stub_comms do
-      @gateway.purchase(100, credit_card("4242424242424242", brand: :visa), @options)
+      @gateway.purchase(100, credit_card('4242424242424242', brand: :visa), @options)
     end.check_request do |endpoint, data, _|
       case endpoint
       when /_payment/
-        assert_parameter("bankcode", "VISA", data)
+        assert_parameter('bankcode', 'VISA', data)
       end
     end.respond_with(successful_purchase_response)
 
     stub_comms do
-      @gateway.purchase(100, credit_card("4242424242424242", brand: :master), @options)
+      @gateway.purchase(100, credit_card('4242424242424242', brand: :master), @options)
     end.check_request do |endpoint, data, _|
       case endpoint
       when /_payment/
-        assert_parameter("bankcode", "MAST", data)
+        assert_parameter('bankcode', 'MAST', data)
       end
     end.respond_with(successful_purchase_response)
 
     stub_comms do
-      @gateway.purchase(100, credit_card("4242424242424242", brand: :american_express), @options)
+      @gateway.purchase(100, credit_card('4242424242424242', brand: :american_express), @options)
     end.check_request do |endpoint, data, _|
       case endpoint
       when /_payment/
-        assert_parameter("bankcode", "AMEX", data)
+        assert_parameter('bankcode', 'AMEX', data)
       end
     end.respond_with(successful_purchase_response)
 
     stub_comms do
-      @gateway.purchase(100, credit_card("4242424242424242", brand: :diners_club), @options)
+      @gateway.purchase(100, credit_card('4242424242424242', brand: :diners_club), @options)
     end.check_request do |endpoint, data, _|
       case endpoint
       when /_payment/
-        assert_parameter("bankcode", "DINR", data)
+        assert_parameter('bankcode', 'DINR', data)
       end
     end.respond_with(successful_purchase_response)
 
     stub_comms do
-      @gateway.purchase(100, credit_card("4242424242424242", brand: :maestro), @options)
+      @gateway.purchase(100, credit_card('4242424242424242', brand: :maestro), @options)
     end.check_request do |endpoint, data, _|
       case endpoint
       when /_payment/
-        assert_parameter("bankcode", "MAES", data)
+        assert_parameter('bankcode', 'MAES', data)
       end
     end.respond_with(successful_purchase_response)
   end
@@ -287,37 +287,37 @@ class PayuInTest < Test::Unit::TestCase
 
     response = @gateway.purchase(100, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid amount  @~@ ExceptionConstant : INVALID_AMOUNT", response.message
+    assert_equal 'Invalid amount  @~@ ExceptionConstant : INVALID_AMOUNT', response.message
   end
 
   def test_successful_refund
     response = stub_comms do
-      @gateway.refund(100, "abc")
+      @gateway.refund(100, 'abc')
     end.check_request do |endpoint, data, headers|
-      assert_parameter("command", "cancel_refund_transaction", data)
-      assert_parameter("var1", "abc", data)
-      assert_parameter("var2", /./, data)
-      assert_parameter("var3", "1.00", data)
-      assert_parameter("key", "key", data)
-      assert_parameter("txn_s2s_flow", "1", data)
-      assert_parameter("hash", "06ee55774af4e3eee3f946d4079d34efca243453199b0d4a1328f248b93428ed5c6342c6d73010c0b86d19afc04ae7a1c62c68c472cc0811d00a9a10ecf28791", data)
+      assert_parameter('command', 'cancel_refund_transaction', data)
+      assert_parameter('var1', 'abc', data)
+      assert_parameter('var2', /./, data)
+      assert_parameter('var3', '1.00', data)
+      assert_parameter('key', 'key', data)
+      assert_parameter('txn_s2s_flow', '1', data)
+      assert_parameter('hash', '06ee55774af4e3eee3f946d4079d34efca243453199b0d4a1328f248b93428ed5c6342c6d73010c0b86d19afc04ae7a1c62c68c472cc0811d00a9a10ecf28791', data)
     end.respond_with(successful_refund_response)
 
     assert_success response
-    assert_equal "Refund Request Queued", response.message
+    assert_equal 'Refund Request Queued', response.message
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(100, "abc")
+    response = @gateway.refund(100, 'abc')
     assert_failure response
-    assert_equal "Invalid payuid", response.message
+    assert_equal 'Invalid payuid', response.message
   end
 
   def test_refund_without_amount
     assert_raise ArgumentError do
-      @gateway.refund(nil, "abc")
+      @gateway.refund(nil, 'abc')
     end
   end
 
@@ -326,7 +326,7 @@ class PayuInTest < Test::Unit::TestCase
 
     response = @gateway.purchase(100, @credit_card, @options)
     assert_failure response
-    assert_equal "3D-secure enrolled cards are not supported.", response.message
+    assert_equal '3D-secure enrolled cards are not supported.', response.message
   end
 
   def test_scrub

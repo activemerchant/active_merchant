@@ -34,7 +34,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
     assert_equal 'invalid:cardNumber', purchase.params['ErrorCode']
     assert_equal 'Invalid:CardNumber', purchase.params['Status']
     assert_equal 'ok', purchase.params['RequestResult']
-    assert_equal "Error processing transaction because CardNumber \"0000\" is not between 12 and 19 in length.", purchase.params['Message']
+    assert_equal 'Error processing transaction because CardNumber "0000" is not between 12 and 19 in length.', purchase.params['Message']
   end
 
   def test_expired_credit_card_purchese
@@ -47,7 +47,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
     assert_equal 'invalid:CustomerCardExpiryDate', purchase.params['ErrorCode']
     assert_equal 'Invalid:CustomerCardExpiryDate', purchase.params['Status']
     assert_equal 'ok', purchase.params['RequestResult']
-    assert_equal "Invalid because the card expiry date (mmyy) \"0912\" is not a date in the future", purchase.params['Message']
+    assert_equal 'Invalid because the card expiry date (mmyy) "0912" is not a date in the future', purchase.params['Message']
   end
 
   def test_declined_purchase
@@ -77,7 +77,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
     assert_equal 'invalid:cardNumber', auth.params['ErrorCode']
     assert_equal 'Invalid:CardNumber', auth.params['Status']
     assert_equal 'ok', auth.params['RequestResult']
-    assert_equal "Error processing transaction because CardNumber \"0000\" is not between 12 and 19 in length.", auth.params['Message']
+    assert_equal 'Error processing transaction because CardNumber "0000" is not between 12 and 19 in length.', auth.params['Message']
   end
 
   def test_expired_credit_card_authorization
@@ -90,7 +90,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
     assert_equal 'invalid:CustomerCardExpiryDate', auth.params['ErrorCode']
     assert_equal 'Invalid:CustomerCardExpiryDate', auth.params['Status']
     assert_equal 'ok', auth.params['RequestResult']
-    assert_equal "Invalid because the card expiry date (mmyy) \"0912\" is not a date in the future", auth.params['Message']
+    assert_equal 'Invalid because the card expiry date (mmyy) "0912" is not a date in the future', auth.params['Message']
   end
 
   def test_declined_authorization
@@ -123,7 +123,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
     assert_equal 'invalid:RefundAmountGreaterThanOriginalAmount', refund.params['ErrorCode']
     assert_equal 'Invalid:RefundAmountGreaterThanOriginalAmount', refund.params['Status']
     assert_equal 'ok', refund.params['RequestResult']
-    assert_equal "Invalid because the payment amount cannot be greater than the original charge.", refund.params['Message']
+    assert_equal 'Invalid because the payment amount cannot be greater than the original charge.', refund.params['Message']
     assert_equal 'Invalid because the payment amount cannot be greater than the original charge.', refund.message
   end
 
@@ -137,7 +137,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
     assert_equal 'ok', void.params['RequestResult']
     assert_nil void.params['Message']
     assert_equal 'Voided', void.params['Status']
-    assert_equal "This transaction has been voided", void.message
+    assert_equal 'This transaction has been voided', void.message
   end
 
   def test_authorize_and_void
@@ -150,7 +150,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
     assert_equal 'ok', void.params['RequestResult']
     assert_nil void.params['Message']
     assert_equal 'Voided', void.params['Status']
-    assert_equal "This transaction has been voided", void.message
+    assert_equal 'This transaction has been voided', void.message
   end
 
   def test_authorize_capture_and_void
@@ -164,7 +164,7 @@ class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
     assert_equal 'ok', void.params['RequestResult']
     assert_nil void.params['Message']
     assert_equal 'Voided', void.params['Status']
-    assert_equal "This transaction has been voided", void.message
+    assert_equal 'This transaction has been voided', void.message
   end
 
   def test_successful_capture
