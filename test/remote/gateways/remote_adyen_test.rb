@@ -35,6 +35,24 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @three_ds_enrolled_card = credit_card('4917610000000000', month: 10, year: 2020, verification_value: '737', brand: :visa)
 
+    @cabal_credit_card = credit_card('6035 2277 1642 7021',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'cabal'
+    )
+
+    @invalid_cabal_credit_card = credit_card('6035 2200 0000 0006',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'cabal'
+    )
+
     @declined_card = credit_card('4000300011112220')
 
     @improperly_branded_maestro = credit_card(
@@ -376,10 +394,22 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[capture-received]', response.message
   end
 
+  def test_successful_purchase_with_cabal_card
+    response = @gateway.purchase(@amount, @cabal_credit_card, @options.merge(currency: 'ARS'))
+    assert_success response
+    assert_equal '[capture-received]', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'CVC Declined', response.message
+  end
+
+  def test_failed_purchase_with_invalid_cabal_card
+    response = @gateway.purchase(@amount, @invalid_cabal_credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid card number', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -393,6 +423,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_authorize_and_capture_with_elo_card
     auth = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal '[capture-received]', capture.message
+  end
+
+  def test_successful_authorize_and_capture_with_cabal_card
+    auth = @gateway.authorize(@amount, @cabal_credit_card, @options)
     assert_success auth
 
     assert capture = @gateway.capture(@amount, auth.authorization)
@@ -432,6 +471,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_equal '[refund-received]', refund.message
   end
 
+  def test_successful_refund_with_cabal_card
+    purchase = @gateway.purchase(@amount, @cabal_credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal '[refund-received]', refund.message
+  end
+
   def test_partial_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
@@ -457,6 +505,15 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
   def test_successful_void_with_elo_card
     auth = @gateway.authorize(@amount, @elo_credit_card, @options)
+    assert_success auth
+
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal '[cancel-received]', void.message
+  end
+
+  def test_successful_void_with_cabal_card
+    auth = @gateway.authorize(@amount, @cabal_credit_card, @options)
     assert_success auth
 
     assert void = @gateway.void(auth.authorization)
@@ -551,6 +608,13 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_success response
     assert !response.authorization.split('#')[2].nil?
     assert_equal 'Authorised', response.message
+  end
+
+  # Adyen does not currently support recurring transactions with Cabal cards
+  def test_failed_store_with_cabal_card
+    assert response = @gateway.store(@cabal_credit_card, @options)
+    assert_failure response
+    assert_equal 'Recurring transactions are not supported for this card type.', response.message
   end
 
   def test_failed_store

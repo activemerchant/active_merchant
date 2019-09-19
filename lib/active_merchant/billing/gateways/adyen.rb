@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AT', 'AU', 'BE', 'BG', 'BR', 'CH', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GI', 'GR', 'HK', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MC', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SG', 'SK', 'SI', 'US']
       self.default_currency = 'USD'
       self.currencies_without_fractions = %w(CVE DJF GNF IDR JPY KMF KRW PYG RWF UGX VND VUV XAF XOF XPF)
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo, :naranja]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb, :dankort, :maestro,  :discover, :elo, :naranja, :cabal]
 
       self.money_format = :cents
 
@@ -97,7 +97,14 @@ module ActiveMerchant #:nodoc:
         add_stored_credentials(post, credit_card, options)
         add_recurring_contract(post, options)
         add_address(post, options)
-        commit('authorise', post, options)
+
+        initial_response = commit('authorise', post, options)
+
+        if initial_response.success? && card_not_stored?(initial_response)
+          unsupported_failure_response(initial_response)
+        else
+          initial_response
+        end
       end
 
       def verify(credit_card, options={})
@@ -502,6 +509,23 @@ module ActiveMerchant #:nodoc:
           timeZoneOffset: browser_info[:timezone],
           userAgent: browser_info[:user_agent]
         }
+      end
+
+      def unsupported_failure_response(initial_response)
+        Response.new(
+          false,
+          'Recurring transactions are not supported for this card type.',
+          initial_response.params,
+          authorization: initial_response.authorization,
+          test: initial_response.test,
+          error_code: initial_response.error_code,
+          avs_result: initial_response.avs_result,
+          cvv_result: initial_response.cvv_result[:code]
+        )
+      end
+
+      def card_not_stored?(response)
+        response.authorization ? response.authorization.split('#')[2].nil? : true
       end
     end
   end

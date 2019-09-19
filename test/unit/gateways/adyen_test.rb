@@ -28,6 +28,15 @@ class AdyenTest < Test::Unit::TestCase
       :brand => 'elo'
     )
 
+    @cabal_credit_card = credit_card('6035 2277 1642 7021',
+      :month => 10,
+      :year => 2020,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :verification_value => '737',
+      :brand => 'cabal'
+    )
+
     @three_ds_enrolled_card = credit_card('4212345678901237', brand: :visa)
 
     @apple_pay_card = network_tokenization_credit_card('4111111111111111',
@@ -227,6 +236,15 @@ class AdyenTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_with_elo_response, successful_capture_with_elo_repsonse)
     assert_success response
     assert_equal '8835511210681145#8835511210689965#', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_cabal_card
+    response = stub_comms do
+      @gateway.purchase(@amount, @cabal_credit_card, @options)
+    end.respond_with(successful_authorize_with_cabal_response, successful_capture_with_cabal_repsonse)
+    assert_success response
+    assert_equal '883567090118045A#883567090119063C#', response.authorization
     assert response.test?
   end
 
@@ -742,6 +760,25 @@ class AdyenTest < Test::Unit::TestCase
     <<-RESPONSE
     {
       "pspReference":"8835511210689965",
+      "response":"[capture-received]"
+    }
+    RESPONSE
+  end
+
+  def successful_authorize_with_cabal_response
+    <<-RESPONSE
+    {
+      "pspReference":"883567090118045A",
+      "resultCode":"Authorised",
+      "authCode":"77651"
+    }
+    RESPONSE
+  end
+
+  def successful_capture_with_cabal_repsonse
+    <<-RESPONSE
+    {
+      "pspReference":"883567090119063C",
       "response":"[capture-received]"
     }
     RESPONSE
