@@ -208,6 +208,7 @@ class CredoraxTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, options_with_3ds)
     end.check_request do |endpoint, data, headers|
       assert_match(/3ds_channel=02/, data)
+      assert_match(/3ds_transtype=01/, data)
       assert_match(/3ds_redirect_url=www.example.com/, data)
       assert_match(/3ds_challengewindowsize=01/, data)
       assert_match(/d5=unknown/, data)

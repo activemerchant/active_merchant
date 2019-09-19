@@ -24,6 +24,7 @@ class RemoteCredoraxTest < Test::Unit::TestCase
       shipping_address: address(),
       order_id: '123',
       execute_threed: true,
+      three_ds_version: '2',
       three_ds_challenge_window_size: '01',
       stored_credential: {reason_type: 'unscheduled'},
       three_ds_2: {
@@ -79,7 +80,8 @@ class RemoteCredoraxTest < Test::Unit::TestCase
   def test_successful_purchase_with_3ds2_fields
     options = @options.merge(@normalized_3ds_2_options)
     response = @gateway.purchase(@amount, @three_ds_card, options)
-    assert_equal 'Transaction pending cardholder authentication.', response.message
+    assert_success response
+    assert_equal 'Succeeded', response.message
   end
 
   def test_successful_purchase_with_auth_data_via_normalized_3ds2_options
