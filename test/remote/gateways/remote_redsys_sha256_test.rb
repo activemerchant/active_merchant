@@ -36,6 +36,21 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_equal 'CardConfiguration', response.message
   end
 
+  # Requires account configuration to allow setting moto flag
+  def test_purchase_with_moto_flag
+    response = @gateway.purchase(100, @credit_card, @options.merge(moto: true, metadata: { manual_entry: true }))
+    assert_equal 'SIS0488 ERROR', response.message
+  end
+
+  def test_successful_3ds_authorize_with_exemption
+    options = @options.merge(execute_threed: true, terminal: 12)
+    response = @gateway.authorize(100, @credit_card, options.merge(sca_exemption: 'LWV'))
+    assert_success response
+    assert response.params['ds_emv3ds']
+    assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
+    assert_equal 'CardConfiguration', response.message
+  end
+
   def test_purchase_with_invalid_order_id
     response = @gateway.purchase(100, @credit_card, order_id: "a%4#{generate_order_id}")
     assert_success response

@@ -15,6 +15,7 @@
 * Stripe: Add supported countries [therufs] #3358
 * Stripe Payment Intents: Add supported countries [therufs] #3359
 * Mundipagg: Append error messages to the message response field [jasonxp] #3353
+* Redsys: Add ability to pass sca_exemption and moto fields to request exemptions [britth] #3354
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290

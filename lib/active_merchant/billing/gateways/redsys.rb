@@ -200,6 +200,7 @@ module ActiveMerchant #:nodoc:
         add_threeds(data, options) if options[:execute_threed]
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
+        data[:sca_exemption] = options[:sca_exemption]
 
         commit data, options
       end
@@ -215,6 +216,7 @@ module ActiveMerchant #:nodoc:
         add_threeds(data, options) if options[:execute_threed]
         data[:description] = options[:description]
         data[:store_in_vault] = options[:store]
+        data[:sca_exemption] = options[:sca_exemption]
 
         commit data, options
       end
@@ -428,6 +430,7 @@ module ActiveMerchant #:nodoc:
           xml.DS_MERCHANT_TERMINAL           options[:terminal] || @options[:terminal]
           xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
           xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data) unless sha256_authentication?
+          xml.DS_MERCHANT_EXCEP_SCA          data[:sca_exemption] if data[:sca_exemption]
 
           # Only when card is present
           if data[:card]
@@ -439,6 +442,12 @@ module ActiveMerchant #:nodoc:
           elsif data[:credit_card_token]
             xml.DS_MERCHANT_IDENTIFIER data[:credit_card_token]
             xml.DS_MERCHANT_DIRECTPAYMENT 'true'
+          end
+
+          # Set moto flag only if explicitly requested via moto field
+          # Requires account configuration to be able to use
+          if options.dig(:moto) && options.dig(:metadata, :manual_entry)
+            xml.DS_MERCHANT_DIRECTPAYMENT 'moto'
           end
 
           if data[:threeds]
