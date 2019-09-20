@@ -280,6 +280,9 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
             xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
           end
+
+          xml.tag! 'ExtData', 'Name' => 'THREEDSVERSION', 'Value' =>  three_d_secure[:version] unless three_d_secure[:version].blank?
+          xml.tag! 'ExtData', 'Name' => 'DSTRANSACTIONID', 'Value' =>  three_d_secure[:ds_transaction_id] unless three_d_secure[:ds_transaction_id].blank?
         end
       end
 

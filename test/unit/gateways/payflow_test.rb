@@ -60,6 +60,7 @@ class PayflowTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |endpoint, data, headers|
       assert_three_d_secure REXML::Document.new(data), authorize_buyer_auth_result_path
+      assert_three_d_secure_2(data)
     end.respond_with(successful_authorization_response)
     assert_equal 'Approved', response.message
     assert_success response
@@ -109,6 +110,7 @@ class PayflowTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure_option))
     end.check_request do |endpoint, data, headers|
       assert_three_d_secure REXML::Document.new(data), purchase_buyer_auth_result_path
+      assert_three_d_secure_2(data)
     end.respond_with(successful_purchase_with_fraud_review_response)
     assert_success response
     assert_equal '126', response.params['result']
@@ -440,6 +442,7 @@ class PayflowTest < Test::Unit::TestCase
 
     @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option))
     assert_three_d_secure REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
+    assert_three_d_secure_2(xml)
   end
 
   def test_add_credit_card_with_three_d_secure_frictionless
@@ -451,6 +454,7 @@ class PayflowTest < Test::Unit::TestCase
 
     @gateway.send(:add_credit_card, xml, credit_card, @options.merge(three_d_secure_option_frictionless))
     assert_three_d_secure_frictionless REXML::Document.new(xml.target!), '/Card/BuyerAuthResult'
+    assert_three_d_secure_2(xml)
   end
 
   def test_duplicate_response_flag
@@ -897,6 +901,11 @@ Conn close
     assert_equal 'UXZEYlNBeFNpYVFzMjQxODk5RTA=', REXML::XPath.first(xml_doc, "#{buyer_auth_result_path}/XID").text
   end
 
+  def assert_three_d_secure_2(data)
+    assert_match %r(<ExtData Name=\"THREEDSVERSION\" Value=\"1.0.2\"/>), data
+    assert_match %r(<ExtData Name=\"DSTRANSACTIONID\" Value=\"a ds transaction id\"/>), data
+  end
+
   def authorize_buyer_auth_result_path
     '/XMLPayRequest/RequestData/Transactions/Transaction/Authorization/PayData/Tender/Card/BuyerAuthResult'
   end
@@ -914,7 +923,9 @@ Conn close
             :acs_url => 'https://bankacs.bank.com/ascurl',
             :eci => '02',
             :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
+            :ds_transaction_id => 'a ds transaction id',
+            :version => '1.0.2'
         }
     }
   end
@@ -928,7 +939,9 @@ Conn close
             :acs_url => 'https://bankacs.bank.com/ascurl',
             :eci => '02',
             :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
+            :ds_transaction_id => 'a ds transaction id',
+            :version => '1.0.2'
         }
     }
   end
