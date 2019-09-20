@@ -262,20 +262,32 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'NameOnCard', credit_card.first_name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
 
-          if options[:three_d_secure]
-            three_d_secure = options[:three_d_secure]
-            xml.tag! 'BuyerAuthResult' do
-              xml.tag! 'Status', three_d_secure[:status] unless three_d_secure[:status].blank?
-              xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
-              xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
-              xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
-              xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
-              xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
-              xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
-            end
-          end
+          add_three_d_secure(options, xml)
 
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
+        end
+      end
+
+      def add_three_d_secure(options, xml)
+        if options[:three_d_secure]
+          three_d_secure = options[:three_d_secure]
+          xml.tag! 'BuyerAuthResult' do
+            authentication_status(three_d_secure, xml)
+            xml.tag! 'AuthenticationId', three_d_secure[:authentication_id] unless three_d_secure[:authentication_id].blank?
+            xml.tag! 'PAReq', three_d_secure[:pareq] unless three_d_secure[:pareq].blank?
+            xml.tag! 'ACSUrl', three_d_secure[:acs_url] unless three_d_secure[:acs_url].blank?
+            xml.tag! 'ECI', three_d_secure[:eci] unless three_d_secure[:eci].blank?
+            xml.tag! 'CAVV', three_d_secure[:cavv] unless three_d_secure[:cavv].blank?
+            xml.tag! 'XID', three_d_secure[:xid] unless three_d_secure[:xid].blank?
+          end
+        end
+      end
+
+      def authentication_status(three_d_secure, xml)
+        if three_d_secure[:authentication_response_status].present?
+          xml.tag! 'Status', three_d_secure[:authentication_response_status]
+        elsif three_d_secure[:directory_response_status].present?
+          xml.tag! 'Status', three_d_secure[:directory_response_status]
         end
       end
 
