@@ -2,11 +2,11 @@ require 'test_helper'
 require 'nokogiri'
 require 'yaml'
 
-class FirstdataE4Test < Test::Unit::TestCase
+class FirstdataE4V11Test < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = FirstdataE4Gateway.new(
+    @gateway = FirstdataE4V11Gateway.new(
       :login    => 'A00427-01',
       :password => 'testus'
     )
@@ -38,7 +38,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
 
-    FirstdataE4Gateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
+    FirstdataE4V11Gateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
   end
 
   def test_successful_purchase_with_specified_currency
@@ -51,7 +51,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_equal 'Transaction Normal - Approved', response.message
     assert_equal 'GBP', response.params['currency']
 
-    FirstdataE4Gateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
+    FirstdataE4V11Gateway::SENSITIVE_FIELDS.each { |f| assert !response.params.has_key?(f.to_s) }
   end
 
   def test_successful_purchase_with_token
@@ -136,11 +136,11 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], FirstdataE4Gateway.supported_countries
+    assert_equal ['CA', 'US'], FirstdataE4V11Gateway.supported_countries
   end
 
   def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4Gateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4V11Gateway.supported_cardtypes
   end
 
   def test_avs_result

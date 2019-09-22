@@ -1,6 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class FirstdataE4Gateway < Gateway
+    class FirstdataE4V11Gateway < Gateway
       # TransArmor support requires v11 or lower
       self.test_url = 'https://api.demo.globalgatewaye4.firstdata.com/transaction/v11'
       self.live_url = 'https://api.globalgatewaye4.firstdata.com/transaction/v11'
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['CA', 'US']
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.firstdata.com'
-      self.display_name = 'FirstData Global Gateway e4'
+      self.display_name = 'FirstData Global Gateway e4 v11'
 
       STANDARD_ERROR_CODE_MAPPING = {
         # Bank error codes: https://firstdata.zendesk.com/entries/471297-First-Data-Global-Gateway-e4-Bank-Response-Codes
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         '42' => STANDARD_ERROR_CODE[:processing_error]
       }
 
-      # Create a new FirstdataE4Gateway
+      # Create a new FirstdataE4V11Gateway
       #
       # The gateway requires that a valid login and password be passed
       # in the +options+ hash.
