@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_amount(post, money, options)
-
+        add_3dsecure(post, three_d_secure)
         commit('authorization', money, post)
       end
 
@@ -78,6 +78,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_amount(post, money, options)
+        add_3dsecure(post, three_d_secure)
 
         commit('purchase', money, post)
       end
@@ -129,7 +130,25 @@ module ActiveMerchant #:nodoc:
         post[:dateval] = expdate(creditcard)
         post[:cvv] = creditcard.verification_value if creditcard.verification_value?
       end
-
+      
+      def add_3dsecure(post, three_d_secure)
+        if three_d_secure.eci == '02' || three_d_secure.eci == '05'
+            post[:3DSTATUS]  = 'Y'
+            post[:3DENROLLED]  = 'Y'
+            post[:3DSIGNVAL] = 'Y'
+            post[:3DERROR] = '0'
+        else 
+            post[:3DSTATUS]  = 'N'
+            post[:3DENROLLED]  = 'N'
+            post[:3DSIGNVAL] = 'N'
+            post[:3DERROR] = '10000'
+        end
+        post[:3DECI]  = three_d_secure.eci
+        post[:3DXID] = three_d_secure.xid
+        post[:3DCAVV] = three_d_secure.cavv
+        post[:3DCAVVALGO] = '0000000001'
+      end  
+      
       def add_reference(post, identification)
         post[:numappel] = identification[0, 10]
         post[:numtrans] = identification[10, 10]
