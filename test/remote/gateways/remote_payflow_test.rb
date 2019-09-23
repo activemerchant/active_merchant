@@ -456,11 +456,13 @@ class RemotePayflowTest < Test::Unit::TestCase
   def three_d_secure_option
     {
         :three_d_secure => {
-            :status => 'Y',
             :authentication_id => 'QvDbSAxSiaQs241899E0',
+            :authentication_response_status => 'Y',
             :eci => '02',
             :cavv => 'jGvQIvG/5UhjAREALGYa6Vu/hto=',
-            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA='
+            :xid => 'UXZEYlNBeFNpYVFzMjQxODk5RTA=',
+            :ds_transaction_id => 'a ds transaction id',
+            :version => '1.0.2'
         }
     }
   end
