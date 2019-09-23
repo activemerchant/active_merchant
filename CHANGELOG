@@ -18,6 +18,7 @@
 * Redsys: Add ability to pass sca_exemption and moto fields to request exemptions [britth] #3354
 * Credorax: Add A Mandatory 3DS field [nfarve] #3360
 * CyberSource: Support 3DS2 pass-through fields [curiousepic] #3363
+* Worldpay: Switch to Nokogiri [nfarve] #3364
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290
