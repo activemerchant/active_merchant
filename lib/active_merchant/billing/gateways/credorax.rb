@@ -334,6 +334,7 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction_type(post, options)
         post[:a9] = options[:transaction_type] if options[:transaction_type]
+        post[:a2] = '3' if options.dig(:metadata, :manual_entry)
       end
 
       ACTIONS = {

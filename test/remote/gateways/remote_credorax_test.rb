@@ -84,6 +84,14 @@ class RemoteCredoraxTest < Test::Unit::TestCase
     assert_equal 'Succeeded', response.message
   end
 
+  def test_successful_moto_purchase
+    response = @gateway.purchase(@amount, @three_ds_card, @options.merge(metadata: { manual_entry: true }))
+    assert_success response
+    assert_equal '1', response.params['H9']
+    assert_equal '3', response.params['A2']
+    assert_equal 'Succeeded', response.message
+  end
+
   def test_successful_purchase_with_auth_data_via_normalized_3ds2_options
     version = '2.0'
     eci = '02'
