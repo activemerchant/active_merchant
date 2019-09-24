@@ -57,6 +57,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
         cavv: 'TESTCAVV',
       }
     }
+    @three_d_secure_2_options = {
+      three_d_secure: {
+        eci: '5',
+        cavv: 'TESTCAVV',
+        ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
+        ucaf_collection_ind: '1',
+        version: '2.1.0',
+      }
+    }
   end
 
   def test_successful_purchase
@@ -99,7 +108,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_visa_purchase
+  def test_three_d_secure_1_data_on_visa_purchase
     stub_comms do
       @gateway.purchase(50, credit_card, @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
@@ -109,7 +118,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_visa_authorization
+  def test_three_d_secure_1_data_on_visa_authorization
     stub_comms do
       @gateway.authorize(50, credit_card, @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
@@ -120,7 +129,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_master_purchase
+  def test_three_d_secure_2_data_on_visa_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card, @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<CAVV>TESTCAVV</CAVV>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_2_data_on_visa_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card, @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<CAVV>TESTCAVV</CAVV>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_1_data_on_master_purchase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
@@ -129,7 +157,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_master_authorization
+  def test_three_d_secure_1_data_on_master_authorization
     stub_comms do
       @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
@@ -139,7 +167,32 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_american_express_purchase
+  def test_three_d_secure_2_data_on_master_purchase
+    stub_comms do
+      @gateway.purchase(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598-FAE6-48F2-8083-C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>1</UCAFInd>}, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_2_data_on_master_authorization
+    stub_comms do
+      @gateway.authorize(50, credit_card(nil, brand: 'master'), @options.merge(@three_d_secure_2_options))
+    end.check_request do |endpoint, data, headers|
+      assert_match %{<AuthenticationECIInd>5</AuthenticationECIInd>}, data
+      assert_match %{<AAV>TESTCAVV</AAV>}, data
+      assert_match %{<MCProgramProtocol>2</MCProgramProtocol>}, data
+      assert_match %{<MCDirectoryTransID>97267598-FAE6-48F2-8083-C23433990FBC</MCDirectoryTransID>}, data
+      assert_match %{<UCAFInd>1</UCAFInd>}, data
+      assert_xml_valid_to_xsd(data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_three_d_secure_1_data_on_american_express_purchase
     stub_comms do
       @gateway.purchase(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|
@@ -149,7 +202,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_three_d_secure_data_on_american_express_authorization
+  def test_three_d_secure_1_data_on_american_express_authorization
     stub_comms do
       @gateway.authorize(50, credit_card(nil, brand: 'american_express'), @options.merge(@three_d_secure_options))
     end.check_request do |endpoint, data, headers|

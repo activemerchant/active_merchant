@@ -521,6 +521,24 @@ module ActiveMerchant #:nodoc:
         xml.tag!(:PymtBrandProgramCode, 'ASK')
       end
 
+      def add_mc_program_protocol(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:MCProgramProtocol, three_d_secure[:version].to_i) if three_d_secure[:version]
+      end
+
+      def add_mc_directory_trans_id(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:MCDirectoryTransID, three_d_secure[:ds_transaction_id]) if three_d_secure[:ds_transaction_id]
+      end
+
+      def add_ucaf_ind(xml, creditcard, three_d_secure)
+        return unless three_d_secure && creditcard.brand == 'master'
+
+        xml.tag!(:UCAFInd, three_d_secure[:ucaf_collection_ind]) if three_d_secure[:ucaf_collection_ind]
+      end
+
       def add_refund(xml, currency=nil)
         xml.tag! :AccountNum, nil
 
@@ -716,6 +734,9 @@ module ActiveMerchant #:nodoc:
             add_level_2_purchase(xml, parameters)
             add_stored_credentials(xml, parameters)
             add_pymt_brand_program_code(xml, creditcard, three_d_secure)
+            add_mc_program_protocol(xml, creditcard, three_d_secure)
+            add_mc_directory_trans_id(xml, creditcard, three_d_secure)
+            add_ucaf_ind(xml, creditcard, three_d_secure)
           end
         end
         xml.target!
