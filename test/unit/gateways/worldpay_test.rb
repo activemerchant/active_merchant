@@ -1393,7 +1393,6 @@ class WorldpayTest < Test::Unit::TestCase
                 <cardBrand>VISA</cardBrand>
                 <cardSubBrand>VISA_CREDIT</cardSubBrand>
                 <issuerCountryCode>N/A</issuerCountryCode>
-                <issuerName>TARGOBANK AG & CO. KGAA</issuerName>
                 <obfuscatedPAN>4111********1111</obfuscatedPAN>
               </derived>
             </cardDetails>

@@ -1,5 +1,3 @@
-require 'nokogiri'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
@@ -457,27 +455,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, xml)
-        doc = Nokogiri::XML(xml)
-        doc.remove_namespaces!
-        resp_params = {:action => action}
-
-        parse_elements(doc.root, resp_params)
-        resp_params
+        parse_element({:action => action}, REXML::Document.new(xml))
       end
 
-      def parse_elements(node, response)
+      def parse_element(raw, node)
         node_name = node.name.underscore
         node.attributes.each do |k, v|
-          response["#{node_name}_#{k.underscore}".to_sym] = v.value
+          raw["#{node_name}_#{k.underscore}".to_sym] = v
         end
-        if node.elements.empty?
-          response[node_name.to_sym] = node.text unless node.text.blank?
+        if node.has_elements?
+          raw[node_name.to_sym] = true unless node.name.blank?
+          node.elements.each { |e| parse_element(raw, e) }
+        elsif node.children.count > 1
+          raw[node_name.to_sym] = node.children.join(' ').strip
         else
-          response[node_name.to_sym] = true unless node.name.blank?
-          node.elements.each do |childnode|
-            parse_elements(childnode, response)
-          end
+          raw[node_name.to_sym] = node.text unless node.text.nil?
         end
+        raw
       end
 
       def headers(options)
