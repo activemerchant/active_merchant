@@ -626,7 +626,7 @@ class CyberSourceTest < Test::Unit::TestCase
     ds_transaction_id = '97267598-FAE6-48F2-8083-C23433990FBC'
     commerce_indicator = 'vbv'
     authentication_response_status = 'Y'
-    veres_enrolled = 'N'
+    enrolled = 'Y'
     options_with_normalized_3ds = @options.merge(
       three_d_secure: {
         version: version,
@@ -634,9 +634,9 @@ class CyberSourceTest < Test::Unit::TestCase
         cavv: cavv,
         ds_transaction_id: ds_transaction_id,
         cavv_algorithm: cavv_algorithm,
+        enrolled: enrolled,
         authentication_response_status: authentication_response_status
       },
-      veres_enrolled: veres_enrolled,
       commerce_indicator: commerce_indicator
     )
 
@@ -650,7 +650,7 @@ class CyberSourceTest < Test::Unit::TestCase
       assert_match(/<paresStatus\>#{authentication_response_status}/, data)
       assert_match(/<cavvAlgorithm\>#{cavv_algorithm}/, data)
       assert_match(/<commerceIndicator\>#{commerce_indicator}/, data)
-      assert_match(/<veresEnrolled\>#{veres_enrolled}/, data)
+      assert_match(/<veresEnrolled\>#{enrolled}/, data)
     end.respond_with(successful_purchase_response)
   end
 

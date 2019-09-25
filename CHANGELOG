@@ -24,6 +24,7 @@
 * WorldPay: Revert "Worldpay: Switch to Nokogiri" [dtykocki] #3372
 * Adyen: Add Cabal card [leila-alderman] #3361
 * Decidir: Add remote tests for Cabal and Naranja [leila-alderman] #3337
+* CyberSource: Use 3DS hash for enrolled field [curiousepic] #3371
 
 == Version 1.98.0 (Sep 9, 2019)
 * Stripe Payment Intents: Add new gateway [britth] #3290

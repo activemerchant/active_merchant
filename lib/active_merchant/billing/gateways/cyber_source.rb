@@ -552,7 +552,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!('commerceIndicator', options[:commerce_indicator]) if options[:commerce_indicator]
         xml.tag!('eciRaw', threeds_2_options[:eci]) if threeds_2_options[:eci]
         xml.tag!('xid', threeds_2_options[:xid]) if threeds_2_options[:xid]
-        xml.tag!('veresEnrolled', options[:veres_enrolled]) if options[:veres_enrolled]
+        xml.tag!('veresEnrolled', threeds_2_options[:enrolled]) if threeds_2_options[:enrolled]
         xml.tag!('paresStatus', threeds_2_options[:authentication_response_status]) if threeds_2_options[:authentication_response_status]
       end
 
