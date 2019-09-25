@@ -511,9 +511,9 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
         xid: 'BwABBJQ1AgAAAAAgJDUCAAAAAAA=',
         ds_transaction_id: '97267598-FAE6-48F2-8083-C23433990FBC',
         cavv_algorithm: 1,
+        enrolled: 'Y',
         authentication_response_status: 'Y'
       },
-      veres_enrolled: 'N',
       commerce_indicator: 'vbv'
     )
 
