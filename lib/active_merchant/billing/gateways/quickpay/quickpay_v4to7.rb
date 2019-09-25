@@ -29,7 +29,6 @@ module ActiveMerchant #:nodoc:
         add_creditcard_or_reference(post, credit_card_or_reference, options)
         add_autocapture(post, false)
         add_fraud_parameters(post, options) if action.eql?(:authorize)
-        add_testmode(post)
 
         commit(action, post)
       end
@@ -87,7 +86,6 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_description(post, options)
         add_fraud_parameters(post, options)
-        add_testmode(post)
 
         commit(:subscribe, post)
       end
@@ -137,11 +135,6 @@ module ActiveMerchant #:nodoc:
 
       def add_description(post, options)
         post[:description] = options[:description] || "Description"
-      end
-
-      def add_testmode(post)
-        return if post[:transaction].present?
-        post[:testmode] = test? ? '1' : '0'
       end
 
       def add_fraud_parameters(post, options)
