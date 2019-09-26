@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 == HEAD
+== Version 1.99.0 (Sep 26, 2019)
 * Adyen: Add functionality to set 3DS exemptions via API [britth] #3331
 * Adyen: Send "NA" instead of "N/A" [leila-alderman] #3339
 * Stripe Payment Intents: Set application fee or transfer amount on capture  [britth] #3340
@@ -18,12 +19,11 @@
 * Redsys: Add ability to pass sca_exemption and moto fields to request exemptions [britth] #3354
 * Credorax: Add A Mandatory 3DS field [nfarve] #3360
 * CyberSource: Support 3DS2 pass-through fields [curiousepic] #3363
-* Worldpay: Switch to Nokogiri [nfarve] #3364
 * Credorax: Add support for MOTO flagging [britth] #3366
 * Credorax: Enable selecting a processor [leila-alderman] #3302
-* WorldPay: Revert "Worldpay: Switch to Nokogiri" [dtykocki] #3372
 * Adyen: Add Cabal card [leila-alderman] #3361
 * Decidir: Add remote tests for Cabal and Naranja [leila-alderman] #3337
+* Payflow: Pass correct field in Status for 3DS in Payflow [nebdil] #3362
 * CyberSource: Use 3DS hash for enrolled field [curiousepic] #3371
 
 == Version 1.98.0 (Sep 9, 2019)
