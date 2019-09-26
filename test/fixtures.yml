@@ -443,6 +443,10 @@ iveri:
   cert_id: CB69E68D-C7E7-46B9-9B7A-025DCABAD6EF
   app_id: d10a603d-4ade-405b-93f1-826dfc0181e8
 
+ixopay:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
 jetpay:
   login: TESTTERMINAL
 
