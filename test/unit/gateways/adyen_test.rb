@@ -205,6 +205,15 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_authorise3d
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.send(:commit, 'authorise3d', {}, {})
+
+    assert_equal 'Expired Card', response.message
+    assert_failure response
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     response = @gateway.capture(@amount, '7914775043909934')
