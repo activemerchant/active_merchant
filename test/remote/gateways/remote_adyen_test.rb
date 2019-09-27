@@ -337,7 +337,12 @@ class RemoteAdyenTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_more_options
-    options = @options.merge!(fraudOffset: '1', installments: 2, shopper_statement: 'statement note', device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA')
+    options = @options.merge!(
+      fraudOffset: '1',
+      installments: 2,
+      shopper_statement: 'statement note',
+      device_fingerprint: 'm7Cmrf++0cW4P6XfF7m/rA',
+      capture_delay_hours: 4)
     response = @gateway.purchase(@amount, @credit_card, options)
     assert_success response
     assert_equal '[capture-received]', response.message
