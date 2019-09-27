@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if options[:three_d_secure]
-          payment_method = default_source_for_customer_if_card(options[:customer])
+          payment_method = card_payment_method_for_customer(options[:customer])
 
           if payment_method
             post[:confirmation_method] = "manual"
@@ -330,9 +330,24 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def default_source_for_customer_if_card(customer)
+      def card_payment_method_for_customer(customer)
+        # if customer has only one payment method we choose that one
+        r = commit(:get, "payment_methods?customer=#{customer}&type=card", nil, options)
+        payment_methods = r.params["data"]
+        return payment_methods[0]["id"] if payment_methods&.count == 1
+
         r = commit(:get, "customers/#{customer}", nil, options)
-        r.params["default_source"].start_with?("card_") ? r.params["default_source"] : nil
+        # if customer has default payment method
+        default_payment_method = r.params.dig("invoice_settings", "default_payment_method")
+        return default_payment_method if default_payment_method
+
+        # in last resort we choose default source
+        default_source = r.params["default_source"]
+        return default_source if default_source&.start_with?("card_")
+
+        if payment_methods&.count > 1 && !default_payment_method
+          raise "Customer has more than one payment method but doesn't have default one."
+        end
       end
 
       def add_amount(post, money, options, include_currency = false)

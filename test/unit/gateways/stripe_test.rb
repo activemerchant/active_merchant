@@ -435,6 +435,78 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_exception_with_payment_intents_and_two_payment_method_without_default
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_multiple_payment_methods_for_customer)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/customers/')
+    end.returns(successful_customer_response_without_default_source_and_payment_method)
+
+    assert_raise RuntimeError.new("Customer has more than one payment method but doesn't have default one.") do
+      @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: true))
+    end
+  end
+
+  def test_successful_purchase_with_payment_intents_and_two_payment_method_with_default_payment_method
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).with do |_, endpoint, post, _|
+      post && post.include?("off_session=true") && endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(failed_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, post, _|
+      post && post.include?("setup_future_usage=off") && endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_multiple_payment_methods_for_customer)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_multiple_payment_methods_for_customer)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/customers/')
+    end.returns(successful_customer_response_with_default_payment_method)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/customers')
+    end.returns(successful_customer_response_with_default_payment_method)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: true))
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'pi_test_payment_intents', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_payment_intents_and_two_payment_method_with_default_source
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:add_creditcard)
+    @gateway.expects(:ssl_request).with do |_, endpoint, post, _|
+      post && post.include?("off_session=true") && endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(failed_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, post, _|
+      post && post.include?("setup_future_usage=off") && endpoint.start_with?('https://api.stripe.com/v1/payment_intents')
+    end.returns(successful_purchase_response_with_payment_intents)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_payment_methods_for_customer)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/payment_methods?customer')
+    end.returns(successful_multiple_payment_methods_for_customer)
+    @gateway.expects(:ssl_request).with do |_, endpoint, _, _|
+      endpoint.start_with?('https://api.stripe.com/v1/customers')
+    end.returns(successful_customer_response_with_default_source)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(three_d_secure: true))
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'pi_test_payment_intents', response.authorization
+    assert response.test?
+  end
+
+
   def test_successful_purchase_with_token_string
     @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
@@ -2181,6 +2253,285 @@ class StripeTest < Test::Unit::TestCase
         }
       ]
     }
+    RESPONSE
+  end
+
+  def successful_multiple_payment_methods_for_customer
+    <<~RESPONSE
+    {
+      "data": [
+        {
+          "id": "pm_1FMYnWKajOcZzbwkEHbooNa4",
+          "object": "payment_method",
+          "billing_details": {
+            "address": {
+              "city": null,
+              "country": null,
+              "line1": null,
+              "line2": null,
+              "postal_code": null,
+              "state": null
+            },
+            "email": null,
+            "name": "John Doe",
+            "phone": null
+          },
+          "card": {
+            "brand": "visa",
+            "checks": {
+              "address_line1_check": null,
+              "address_postal_code_check": null,
+              "cvc_check": "pass"
+            },
+            "country": "US",
+            "exp_month": 5,
+            "exp_year": 2024,
+            "fingerprint": "CdXRxPXtbWEnWs5q",
+            "funding": "credit",
+            "generated_from": null,
+            "last4": "3155",
+            "three_d_secure_usage": {"supported": true},
+            "wallet": null
+          },
+          "created": 1564665140,
+          "customer": "cus_FXjWtbC8cvVmXu",
+          "livemode": false,
+          "metadata": {},
+          "type": "card"
+        },
+        {
+          "id": "pm_1FMVkqKajOcZzbwkM3yFiI4c",
+          "object": "payment_method",
+          "billing_details": {
+            "address": {
+              "city": null,
+              "country": null,
+              "line1": null,
+              "line2": null,
+              "postal_code": null,
+              "state": null
+            },
+            "email": null,
+            "name": "John Doe",
+            "phone": null
+          },
+          "card": {
+            "brand": "visa",
+            "checks": {
+              "address_line1_check": null,
+              "address_postal_code_check": null,
+              "cvc_check": "pass"
+            },
+            "country": "US",
+            "exp_month": 5,
+            "exp_year": 2024,
+            "fingerprint": "CdXRxPXtbWEnWs5q",
+            "funding": "credit",
+            "generated_from": null,
+            "last4": "3155",
+            "three_d_secure_usage": {"supported": true},
+            "wallet": null
+          },
+          "created": 1564665140,
+          "customer": "cus_FXjWtbC8cvVmXu",
+          "livemode": false,
+          "metadata": {},
+          "type": "card"
+        }
+      ]
+    }
+    RESPONSE
+  end
+
+  def successful_customer_response_without_default_source_and_payment_method
+    <<~RESPONSE
+      {
+        "id": "cus_FsGEXE03yAgAJQ",
+        "object": "customer",
+        "account_balance": 0,
+        "address": null,
+        "balance": 0,
+        "created": 1569399535,
+        "currency": null,
+        "default_source": null,
+        "delinquent": false,
+        "description": "Customer for jenny.rosen@example.com",
+        "discount": null,
+        "email": null,
+        "invoice_prefix": "90B0C120",
+        "invoice_settings": {
+          "custom_fields": null,
+          "default_payment_method": null,
+          "footer": null
+        },
+        "livemode": false,
+        "metadata": {
+        },
+        "name": null,
+        "phone": null,
+        "preferred_locales": [
+
+        ],
+        "shipping": null,
+        "sources": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/sources"
+        },
+        "subscriptions": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/subscriptions"
+        },
+        "tax_exempt": "none",
+        "tax_ids": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/tax_ids"
+        },
+        "tax_info": null,
+        "tax_info_verification": null
+      }
+    RESPONSE
+  end
+
+  def successful_customer_response_with_default_payment_method
+    <<~RESPONSE
+      {
+        "id": "cus_FsGEXE03yAgAJ3",
+        "object": "customer",
+        "account_balance": 0,
+        "address": null,
+        "balance": 0,
+        "created": 1569399535,
+        "currency": null,
+        "default_source": null,
+        "delinquent": false,
+        "description": "Customer for jenny.rosen@example.com",
+        "discount": null,
+        "email": null,
+        "invoice_prefix": "90B0C120",
+        "invoice_settings": {
+          "custom_fields": null,
+          "default_payment_method": "pm_1FMVkqKajOcZzbwkM3yFiI4c",
+          "footer": null
+        },
+        "livemode": false,
+        "metadata": {
+        },
+        "name": null,
+        "phone": null,
+        "preferred_locales": [
+
+        ],
+        "shipping": null,
+        "sources": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/sources"
+        },
+        "subscriptions": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/subscriptions"
+        },
+        "tax_exempt": "none",
+        "tax_ids": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/tax_ids"
+        },
+        "tax_info": null,
+        "tax_info_verification": null
+      }
+    RESPONSE
+  end
+
+  def successful_customer_response_with_default_source
+    <<~RESPONSE
+      {
+        "id": "cus_FsGEXE03yAgAJ3",
+        "object": "customer",
+        "account_balance": 0,
+        "address": null,
+        "balance": 0,
+        "created": 1569399535,
+        "currency": null,
+        "default_source": "card_1F2e3vKajOcZzbwk5tgSLkge",
+        "delinquent": false,
+        "description": "Customer for jenny.rosen@example.com",
+        "discount": null,
+        "email": null,
+        "invoice_prefix": "90B0C120",
+        "invoice_settings": {
+          "custom_fields": null,
+          "default_payment_method": null,
+          "footer": null
+        },
+        "livemode": false,
+        "metadata": {
+        },
+        "name": null,
+        "phone": null,
+        "preferred_locales": [
+
+        ],
+        "shipping": null,
+        "sources": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/sources"
+        },
+        "subscriptions": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/subscriptions"
+        },
+        "tax_exempt": "none",
+        "tax_ids": {
+          "object": "list",
+          "data": [
+
+          ],
+          "has_more": false,
+          "total_count": 0,
+          "url": "/v1/customers/cus_FsGEXE03yAgAJQ/tax_ids"
+        },
+        "tax_info": null,
+        "tax_info_verification": null
+      }
     RESPONSE
   end
 end
