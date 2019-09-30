@@ -31,9 +31,9 @@ require 'active_support/core_ext/enumerable.rb'
 
 if(!defined?(ActiveSupport::VERSION) || (ActiveSupport::VERSION::STRING < "4.1"))
   require 'active_support/core_ext/class/attribute_accessors'
+  require 'active_support/core_ext/class/delegating_attributes'
 end
 
-require 'active_support/core_ext/class/delegating_attributes'
 require 'active_support/core_ext/module/attribute_accessors'
 
 begin
