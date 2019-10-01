@@ -16,6 +16,8 @@ class RemoteWorldpayTest < Test::Unit::TestCase
       :verification_value => '737',
       :brand => 'elo'
     )
+    @cabal_card = credit_card('6035220000000006')
+    @naranja_card = credit_card('5895620000000002')
     @sodexo_voucher = credit_card('6060704495764400', brand: 'sodexo')
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
     @threeDS_card = credit_card('4111111111111111', :first_name => nil, :last_name => '3D')
@@ -40,6 +42,18 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_elo
     assert response = @gateway.purchase(@amount, @elo_credit_card, @options.merge(currency: 'BRL'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_cabal
+    response = @gateway.purchase(@amount, @cabal_card, @options.merge(currency: 'ARS'))
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_naranja
+    response = @gateway.purchase(@amount, @naranja_card, @options.merge(currency: 'ARS'))
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
