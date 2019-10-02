@@ -390,7 +390,187 @@ class MonerisTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
   end
 
+  def test_stored_credential_recurring_cit_initial
+    options = stored_credential_options(:cardholder, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id><\/issuer_id>/, data)
+      assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
+      assert_match(/<payment_information>0<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_cit_used
+    options = stored_credential_options(:cardholder, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
+      assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
+      assert_match(/<payment_information>2<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_initial
+    options = stored_credential_options(:merchant, :recurring, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id><\/issuer_id>/, data)
+      assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
+      assert_match(/<payment_information>0<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_recurring_mit_used
+    options = stored_credential_options(:merchant, :recurring, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
+      assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
+      assert_match(/<payment_information>2<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_cit_initial
+    options = stored_credential_options(:cardholder, :installment, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id><\/issuer_id>/, data)
+      assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
+      assert_match(/<payment_information>0<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_cit_used
+    options = stored_credential_options(:cardholder, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
+      assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
+      assert_match(/<payment_information>2<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_mit_initial
+    options = stored_credential_options(:merchant, :installment, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id><\/issuer_id>/, data)
+      assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
+      assert_match(/<payment_information>0<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_installment_mit_used
+    options = stored_credential_options(:merchant, :installment, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
+      assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
+      assert_match(/<payment_information>2<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_initial
+    options = stored_credential_options(:cardholder, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id><\/issuer_id>/, data)
+      assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
+      assert_match(/<payment_information>0<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_cit_used
+    options = stored_credential_options(:cardholder, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
+      assert_match(/<payment_indicator>Z<\/payment_indicator>/, data)
+      assert_match(/<payment_information>2<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_initial
+    options = stored_credential_options(:merchant, :unscheduled, :initial)
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id><\/issuer_id>/, data)
+      assert_match(/<payment_indicator>C<\/payment_indicator>/, data)
+      assert_match(/<payment_information>0<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_stored_credential_unscheduled_mit_used
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id>abc123<\/issuer_id>/, data)
+      assert_match(/<payment_indicator>U<\/payment_indicator>/, data)
+      assert_match(/<payment_information>2<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
+  def test_add_cof_overrides_stored_credential_option
+    options = stored_credential_options(:merchant, :unscheduled, id: 'abc123').merge(issuer_id: 'xyz987', payment_indicator: 'R', payment_information: '0')
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<issuer_id>xyz987<\/issuer_id>/, data)
+      assert_match(/<payment_indicator>R<\/payment_indicator>/, data)
+      assert_match(/<payment_information>0<\/payment_information>/, data)
+    end.respond_with(successful_first_cof_authorize_response)
+
+    assert_success response
+  end
+
   private
+
+  def stored_credential_options(*args, id: nil)
+    {
+      order_id: '#1001',
+      description: 'AM test',
+      currency: 'CAD',
+      customer: '123',
+      stored_credential: stored_credential(*args, id: id),
+      issuer_id: ''
+    }
+  end
 
   def successful_purchase_response
     <<-RESPONSE
