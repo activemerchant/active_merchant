@@ -473,6 +473,7 @@ module ActiveMerchant #:nodoc:
             params[element.name.downcase.to_sym] = element.text
           end
           message = response_text_3ds(xml, params)
+          options[:authorization] = build_authorization(params)
           success = params.size > 0 && is_success_response?(params[:ds_response])
         elsif code == '0'
           op = xml.xpath('//RETORNOXML/OPERACION')

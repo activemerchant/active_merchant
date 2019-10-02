@@ -116,15 +116,16 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def test_successful_authorize_with_3ds
     @gateway.expects(:ssl_post).returns(successful_authorize_with_3ds_response)
-    response = @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156201452719' })
+    response = @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156270437866' })
     assert response.test?
     assert response.params['ds_emv3ds']
     assert_equal response.message, 'CardConfiguration'
+    assert_equal response.authorization, '156270437866||'
   end
 
   def test_3ds_data_passed
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156201452719', terminal: 12, sca_exemption: 'LWV' })
+      @gateway.authorize(100, credit_card, { execute_threed: true, order_id: '156270437866', terminal: 12, sca_exemption: 'LWV' })
     end.check_request do |method, endpoint, data, headers|
       assert_match(/iniciaPeticion/, data)
       assert_match(/<DS_MERCHANT_TERMINAL>12<\/DS_MERCHANT_TERMINAL>/, data)
@@ -135,7 +136,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def test_moto_flag_passed
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(100, credit_card, { order_id: '156201452719', moto: true, metadata: { manual_entry: true } })
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', moto: true, metadata: { manual_entry: true } })
     end.check_request do |method, endpoint, data, headers|
       assert_match(/DS_MERCHANT_DIRECTPAYMENT%3Emoto%3C%2FDS_MERCHANT_DIRECTPAYMENT/, data)
     end.respond_with(successful_authorize_with_3ds_response)
@@ -143,7 +144,7 @@ class RedsysSHA256Test < Test::Unit::TestCase
 
   def test_moto_flag_not_passed_if_not_explicitly_requested
     stub_comms(@gateway, :ssl_request) do
-      @gateway.authorize(100, credit_card, { order_id: '156201452719', metadata: { manual_entry: true } })
+      @gateway.authorize(100, credit_card, { order_id: '156270437866', metadata: { manual_entry: true } })
     end.check_request do |method, endpoint, data, headers|
       refute_match(/DS_MERCHANT_DIRECTPAYMENT%3Emoto%3C%2FDS_MERCHANT_DIRECTPAYMENT/, data)
     end.respond_with(successful_authorize_with_3ds_response)

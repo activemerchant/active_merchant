@@ -24,6 +24,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert response.params['ds_emv3ds']
     assert_equal 'NO_3DS_v2', JSON.parse(response.params['ds_emv3ds'])['protocolVersion']
     assert_equal 'CardConfiguration', response.message
+    assert response.authorization
   end
 
   def test_successful_purchase_3ds
@@ -34,6 +35,7 @@ class RemoteRedsysSHA256Test < Test::Unit::TestCase
     assert_equal '2.1.0', three_ds_data['protocolVersion']
     assert_equal 'https://sis-d.redsys.es/sis-simulador-web/threeDsMethod.jsp', three_ds_data['threeDSMethodURL']
     assert_equal 'CardConfiguration', response.message
+    assert response.authorization
   end
 
   # Requires account configuration to allow setting moto flag
