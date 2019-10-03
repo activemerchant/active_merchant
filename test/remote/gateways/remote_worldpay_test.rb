@@ -152,10 +152,11 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     refute first_message.params['session_id'].blank?
   end
 
-  # Requires additional account configuration to proceed successfully
+  # Ensure the account is configured to use this feature to proceed successfully
   def test_marking_3ds_purchase_as_moto
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(metadata: { manual_entry: true }))
-    assert_equal 'AllowDynamicInteractionType property is disabled for this merchant', response.message
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_successful_auth_and_capture_with_normalized_stored_credential
