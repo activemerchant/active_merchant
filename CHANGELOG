@@ -9,6 +9,7 @@
 * BlueSnap: Add remote tests for Cabal and Naranja [leila-alderman] #3382
 * WorldPay: Add Cabal and Naranja remote tests [leila-alderman] #3378
 * Rubocop: Indentions [nfarve] #3383
+* Worldpay: Handle parse errors gracefully [curiousepic] #3380
 
 == Version 1.99.0 (Sep 26, 2019)
 * Adyen: Add functionality to set 3DS exemptions via API [britth] #3331
