@@ -836,6 +836,14 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal '3d4187536044bd39ad6a289c4339c41c', response.authorization
   end
 
+  def test_handles_plain_text_response
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.respond_with('Temporary Failure, please Retry')
+    assert_failure response
+    assert_match "Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message. \(The raw response returned by the API was: \"Temporary Failure, please Retry\"\)", response.message
+  end
+
   private
 
   def assert_tag_with_attributes(tag, attributes, string)

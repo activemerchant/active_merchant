@@ -457,7 +457,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, xml)
-        doc = Nokogiri::XML(xml)
+        xml = xml.strip.gsub(/\&/, '&amp;')
+        doc = Nokogiri::XML(xml, &:strict)
         doc.remove_namespaces!
         resp_params = {:action => action}
 
@@ -512,6 +513,8 @@ module ActiveMerchant #:nodoc:
           :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
           :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
         )
+      rescue Nokogiri::SyntaxError => e
+        unparsable_response(xml)
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)
@@ -522,6 +525,12 @@ module ActiveMerchant #:nodoc:
 
       def url
         test? ? self.test_url : self.live_url
+      end
+
+      def unparsable_response(raw_response)
+        message = 'Unparsable response received from Worldpay. Please contact Worldpay if you continue to receive this message.'
+        message += " (The raw response returned by the API was: #{raw_response.inspect})"
+        return Response.new(false, message)
       end
 
       # Override the regular handle response so we can access the headers
